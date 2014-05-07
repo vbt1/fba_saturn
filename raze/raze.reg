@@ -1,0 +1,189 @@
+! RAZE - register definitions
+changecom(`!')
+divert(-1)
+
+!----------------------------------------------------------------------------!
+! Flags
+define(`FLAG_C',`0x01') ! 01h         ! carry
+define(`FLAG_N',`0x02') ! 02h         ! negative
+define(`FLAG_P',`0x04') ! 04h         ! parity/overflow
+define(`FLAG_3',`0x08') ! 08h         ! bit 3
+define(`FLAG_H',`0x10') ! 10h         ! half-carry
+define(`FLAG_5',`0x20') ! 20h         ! bit 5
+define(`FLAG_Z',`0x40') ! 40h         ! zero
+define(`FLAG_S',`0x80') ! 80h         ! sign
+
+define(`FLG_N',`0x04') ! 04h         ! negative
+define(`FLG_V',`0x01') ! 01h         ! parity/overflow
+define(`FLG_P',`0x01') ! 01h         ! parity/overflow
+define(`FLG_H',`0x02') ! 02h         ! half-carry
+define(`FLG_iV',`0x08') ! 08h        ! V flag indicator
+
+
+! set the register mappings.
+! we avoid bugs this way and make it simpler.
+
+define(`OPTABLE_REG',   `r4')
+define(`REF_REG',       `r5')
+define(`ICOUNT_REG',    `r7')
+define(`FLAGS_REG',     `r8')
+define(`zF',            `r8')
+define(`FETCH_REG',     `r9')
+define(`MEM_REG',       `r10')
+define(`FLAGS_C',       `r11')
+define(`ZFINISH',       `r12')
+define(`FLAGS_ZSP',     `r13')
+define(`zR',            `r14')
+
+define(`TMP_REG',       `r1')
+define(`DIRT_REG',      `r2')
+define(`DIRTY_REG',      `r2')
+
+define(`REF',`_z80_BC')
+
+
+! 16-bit registers
+define(`zAF',`zF') ! ax
+define(`zHL',`@(_z80_HL - REF,REF_REG)') ! bx
+define(`zBC',`@(_z80_BC - REF,REF_REG)') ! cx
+define(`zDE',`@(_z80_DE - REF,REF_REG)') ! word [_z80_DE]
+define(`zPC',`r6') ! si
+define(`zSP',`@(_z80_SP - REF,REF_REG)') ! word [_z80_SP]
+define(`zIX',`@(_z80_IX - REF,REF_REG)') ! word [_z80_IX]
+define(`zIY',`@(_z80_IY - REF,REF_REG)') ! word [_z80_IY]
+define(`zR2',`@(_z80_R2 - REF,REF_REG)') ! R2
+
+! 16-bit registers, zero-extended to 32-bit
+! for when a dword transfer is better
+define(`ezAF',`zAF')  ! eax
+define(`ezHL',`zHL')  ! ebx
+define(`ezBC',`zBC')  ! ecx
+define(`ezDE',`zDE')  ! dword [_z80_DE]
+define(`ezPC',`zPC')  ! esi
+define(`ezSP',`zSP') ! dword [_z80_SP]
+define(`ezIX',`zIX') ! dword [_z80_IX]
+define(`ezIY',`zIY') ! dword [_z80_IY]
+
+! 16-bit registers, zero-extended to 32-bit
+! for when a dword transfer is better
+! memory storage
+define(`ezAF_MEM',`@(_z80_AF - REF,REF_REG)')
+define(`ezHL_MEM',`@(_z80_HL - REF,REF_REG)')
+define(`ezBC_MEM',`@(_z80_BC - REF,REF_REG)')
+define(`ezDE_MEM',`@(_z80_DE - REF,REF_REG)')
+define(`ezPC_MEM',`@(_z80_PC - REF,REF_REG)')
+define(`ezSP_MEM',`@(_z80_SP - REF,REF_REG)') ! dword [_z80_SP]
+define(`ezIX_MEM',`@(_z80_IX - REF,REF_REG)') ! dword [_z80_IX]
+define(`ezIY_MEM',`@(_z80_IY - REF,REF_REG)') ! dword [_z80_IY]
+
+! 8-bit registers
+define(`zA',`r3')
+ifdef(`BIG_ENDIAN',
+`
+define(`zB',`@(_z80_BC - REF,REF_REG)')
+define(`zC',`@(_z80_BC - REF + 1,REF_REG)')
+define(`zD',`@(_z80_DE - REF,REF_REG)')
+define(`zE',`@(_z80_DE - REF + 1,REF_REG)')
+define(`zH',`@(_z80_HL - REF,REF_REG)')
+define(`zL',`@(_z80_HL - REF + 1,REF_REG)')
+define(`zIXh',`@(_z80_IX - REF,REF_REG)') ! byte [_z80_IX+1]
+define(`zIXl',`@(_z80_IX - REF + 1,REF_REG)')     ! byte [_z80_IX]
+define(`zIYh',`@(_z80_IY - REF,REF_REG)') ! byte [_z80_IY+1]
+define(`zIYl',`@(_z80_IY - REF + 1,REF_REG)')     ! byte [_z80_IY]
+',
+`
+define(`zB',`@(_z80_BC - REF + 1,REF_REG)')
+define(`zC',`@(_z80_BC - REF,REF_REG)')
+define(`zD',`@(_z80_DE - REF + 1,REF_REG)')
+define(`zE',`@(_z80_DE - REF,REF_REG)')
+define(`zH',`@(_z80_HL - REF + 1,REF_REG)')
+define(`zL',`@(_z80_HL - REF,REF_REG)')
+define(`zIXh',`@(_z80_IX - REF + 1,REF_REG)') ! byte [_z80_IX+1]
+define(`zIXl',`@(_z80_IX - REF,REF_REG)')     ! byte [_z80_IX]
+define(`zIYh',`@(_z80_IY - REF + 1,REF_REG)') ! byte [_z80_IY+1]
+define(`zIYl',`@(_z80_IY - REF,REF_REG)')     ! byte [_z80_IY]
+')
+
+! 8-bit registers, (accessible by 16-bit registers with l or h)
+define(`hzAF',`zA')
+define(`lzAF',`zF')
+define(`hzBC',`zB')
+define(`lzBC',`zC')
+define(`hzDE',`zD')
+define(`lzDE',`zE')
+define(`hzHL',`zH')
+define(`lzHL',`zL')
+define(`hzIX',`zIXh')
+define(`lzIX',`zIXl')
+define(`hzIY',`zIYh')
+define(`lzIY',`zIYl')
+
+idef(`BIG_ENDIAN',
+`
+	define(`hzSP',`@(_z80_SP - REF, REF_REG)')         ! byte [_z80_SP+1]
+	define(`lzSP',`@(_z80_SP - REF + 1,REF_REG)')      ! byte [_z80_SP]
+',
+`
+	define(`hzSP',`@(_z80_SP - REF + 1, REF_REG)') ! byte [_z80_SP+1]
+	define(`lzSP',`@(_z80_SP - REF,REF_REG)')      ! byte [_z80_SP]
+')
+
+! 16-bit registers (prime)
+define(`zAF2',`@(_z80_AF2 - REF,REF_REG)') ! word [_z80_AF2]
+define(`zHL2',`@(_z80_HL2 - REF,REF_REG)') ! word [_z80_HL2]
+define(`zBC2',`@(_z80_BC2 - REF,REF_REG)') ! word [_z80_BC2]
+define(`zDE2',`@(_z80_DE2 - REF,REF_REG)') ! word [_z80_DE2]
+
+! 16-bit registers (prime), zero-extended to 32-bit
+! for when a dword transfer is better
+define(`ezAF2',`@(_z80_AF2 - REF,REF_REG)') ! dword [_z80_AF2]
+define(`ezHL2',`@(_z80_HL2 - REF,REF_REG)') ! dword [_z80_HL2]
+define(`ezBC2',`@(_z80_BC2 - REF,REF_REG)') ! dword [_z80_BC2]
+define(`ezDE2',`@(_z80_DE2 - REF,REF_REG)') ! dword [_z80_DE2]
+
+! Misc
+define(`zI',`@(_z80_I - REF,REF_REG)') ! byte [_z80_I]
+define(`zFetch_Callback',`@(_z80_Fetch_Callback - _z80_Fetch,FETCH_REG)')
+define(`zIRQLine',`@(_z80_IRQLine - REF,REF_REG)')
+define(`zIRQVector',`@(_z80_IRQVector - REF,REF_REG)')
+define(`zIFF1',`@(_z80_IFF1 - REF,REF_REG)')
+define(`zIFF2',`@(_z80_IFF2 - REF,REF_REG)')
+define(`zhalted',`@(_z80_halted - REF,REF_REG)')
+define(`zIM',`@(_z80_IM - REF,REF_REG)')
+! define(`',`@(_z80_flag35 - REF,REF_REG)')
+
+! Misc
+! memory storage
+define(`zI_MEM',`@(_z80_I - REF,REF_REG)') ! byte [_z80_I]
+define(`zR_MEM',`@(_z80_R - REF,REF_REG)') ! r6
+
+ifdef(`BIG_ENDIAN',
+`
+	define(`FLAGS_MEM',`@(_z80_AF - REF + 1,REF_REG)')
+',
+`
+	define(`FLAGS_MEM',`@(_z80_AF - REF,REF_REG)')
+')
+
+divert
+
+! get/set reg values
+define(`Z80_REG_AF',`0')
+define(`Z80_REG_BC',`1')
+define(`Z80_REG_DE',`2')
+define(`Z80_REG_HL',`3')
+define(`Z80_REG_IX',`4')
+define(`Z80_REG_IY',`5')
+define(`Z80_REG_PC',`6')
+define(`Z80_REG_SP',`7')
+define(`Z80_REG_AF2',`8')
+define(`Z80_REG_BC2',`9')
+define(`Z80_REG_DE2',`10')
+define(`Z80_REG_HL2',`11')
+define(`Z80_REG_IFF1',`12')
+define(`Z80_REG_IFF2',`13')
+define(`Z80_REG_IR',`14')
+define(`Z80_REG_IM',`15')
+define(`Z80_REG_IRQVector',`16')
+define(`Z80_REG_IRQLine',`17')
+define(`Z80_REG_Halted',`18')
