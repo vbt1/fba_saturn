@@ -1,0 +1,89 @@
+MEMORY 
+  {
+  ram  : ORIGIN = 0x6000000, l = 1M
+    ram2  : ORIGIN = 0x00200000, l = 1M
+  }
+
+SECTIONS {
+
+	.stack 0x6002000 (NOLOAD):
+	{
+		root/sl.coff (".stack")
+         	_stack = . ;
+	} > ram
+
+	.shared 0x6003500 (NOLOAD):
+	{
+		root/sl.coff (".shared")
+		_play = .;
+		_hz = . + 2;
+		_col = . + 4;
+		_nBurnDrvCount = . + 20;
+		_nBurnDrvSelect = . + 24;
+		_nBurnSoundRate = . + 28;
+		_nBurnSprites = . + 32;
+		_nBurnLinescrollSize = . + 36;
+		_nBurnFunction = . + 40;
+		_nSoundBufferPos = . + 44;
+		_SclProcess = . + 48;
+		_SclColRamAlloc256 = . + 52;
+		_shared = . + 84;
+	} > ram
+
+	.entry 0x6004000  (NOLOAD):
+	{
+		root/sl.coff (".entry")
+	}  > ram
+
+	text ALIGN(4)  (NOLOAD):
+	{
+		root/sl.coff (".text")
+	} > ram
+
+	.bss ALIGN(4) (NOLOAD):			
+	{
+		__bstart = . ;
+		_bss_start = . ;
+		root/sl.coff (.bss)
+		root/sl.coff ("COMMON")
+		. = ALIGN(4);
+		_bss_end = . ;
+		__bend = . ;
+		_end = .;
+	} > ram
+ 
+  .overlaydma ALIGN(4) (NOLOAD):
+  {
+	_bss_start = . ;
+	*(.bss)
+	*("B")
+	*("SEGA_B")
+		*("COMMON")
+		. = ALIGN(4);
+	_bss_end = .;
+
+	_end = .;
+  } > ram
+
+         .ovl 0x00200000:
+        {
+                _ovlstart = .;
+		*(.boot)
+		*(".text")
+		*("P")
+		*("SEGA_P")
+		*("C")
+		*("SEGA_C")
+		*(".strings")
+		. = ALIGN(4);
+		*(.ctors)
+		*(.dtors)
+		. = ALIGN(4);
+		*(.data)
+		*("D")
+		*("SEGA_D")
+		. = ALIGN(4);
+		
+        } > ram2
+
+}

@@ -1,0 +1,84 @@
+SECTIONS {
+
+	.stack 0x6002000 (NOLOAD):
+	{
+	        *(.stack)
+         	_stack = .;
+	} 
+
+	.shared 0x6003500 (NOLOAD):
+	{
+	        *(.shared)
+                . = ALIGN(4);
+		_play = .;
+		_hz = . + 2;
+		_col = . + 4;
+		_nBurnDrvCount = . + 20;
+		_nBurnDrvSelect = . + 24;
+		_nBurnSoundRate = . + 28;
+		_nBurnSprites = . + 32;
+		_nBurnLinescrollSize = . + 36;
+		_nBurnFunction = . + 40;
+		_nSoundBufferPos = . + 44;
+		_SclProcess = . + 48;
+		_SclColRamAlloc256 = . + 52;
+		_shared = . + 84;
+	} 
+
+        .entry 0x06004000 :
+        {
+		*(.entry)
+        } 
+
+	.text ALIGN(4) :
+	{
+		*(.text)
+                *("P")
+                *("SEGA_P")
+                *("C")
+                *("SEGA_C")
+		*(.strings)
+
+
+                ___ctors = . ;
+                *(.ctors)
+                ___ctors_end = . ;
+                ___dtors = . ;
+                *(.dtors)
+                ___dtors_end = . ;
+
+                *(.data)
+                *("D")
+                *("SEGA_D")
+                . = ALIGN(4);
+
+	} 
+
+	.rodata  :			
+	{			
+		*(.rodata)	
+		. = ALIGN(4);
+	} 
+	
+
+	.bss  ALIGN(4) (NOLOAD):
+	{
+		__bstart = . ;
+		_bss_start = . ;
+		*(.bss)
+		*("B")
+		*("SEGA_B")
+		*("COMMON")
+		. = ALIGN(4);
+
+		_bss_end = . ;
+		__bend = . ;
+		_end = .;
+ 	}
+	
+	.overlay 0x060A0000:
+        {
+                _overlaystart = .;
+        }
+
+}
