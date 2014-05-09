@@ -33,6 +33,7 @@
 #define	_smpc_SYSRES()		_smpc_sendcommand( SMPC_COMREG_SYSRES )
 #define	_smpc_SSHOFF()		_smpc_sendcommand( SMPC_COMREG_SSHOFF )
 
+
 #define	REGADDR	    0x25F80000
 #define SOUNDRATE   7680L //
 #define CSH_4WAY    ((Uint16)0x0000)

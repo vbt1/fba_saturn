@@ -146,7 +146,7 @@ int ovlInit(char *szShortName)
 
 #ifdef CACHE
 #ifdef RAZE
-static void __fastcall bankp_write_f000(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write_f000(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
@@ -155,7 +155,7 @@ static void __fastcall bankp_write_f000(unsigned short address, unsigned char da
 	}
 }
 
-static void __fastcall bankp_write_f400(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write_f400(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
@@ -164,7 +164,7 @@ static void __fastcall bankp_write_f400(unsigned short address, unsigned char da
 	}
 }
 
-static void __fastcall bankp_write_f800(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write_f800(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
@@ -173,7 +173,7 @@ static void __fastcall bankp_write_f800(unsigned short address, unsigned char da
 	}
 }
 
-static void __fastcall bankp_write_fc00(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write_fc00(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
@@ -182,7 +182,7 @@ static void __fastcall bankp_write_fc00(unsigned short address, unsigned char da
 	}
 }
 #else
-static void __fastcall bankp_write(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write(unsigned short address, unsigned char data)
 {
 //	if (address >= 0xf000 && address <= 0xf3ff) 
 	if (address >= 0xf000 && address <= 0xf7ff) 
@@ -232,7 +232,7 @@ static void __fastcall bankp_write(unsigned short address, unsigned char data)
 #endif
 #endif
 
-static UINT8 __fastcall bankp_in(UINT16 address)
+/*static*/ UINT8 __fastcall bankp_in(UINT16 address)
 {
 	UINT8 ret = 0;
 
@@ -274,7 +274,7 @@ static UINT8 __fastcall bankp_in(UINT16 address)
 	return 0;
 }
 
-static void __fastcall bankp_out(UINT16 address, UINT8 data)
+/*static*/ void __fastcall bankp_out(UINT16 address, UINT8 data)
 {
 	switch (address & 0xff)
 	{
@@ -322,7 +322,7 @@ static void __fastcall bankp_out(UINT16 address, UINT8 data)
 	}
 }
 
-static INT32 DrvDoReset()
+/*static*/ INT32 DrvDoReset()
 {
 	DrvReset = 0;
 
@@ -340,7 +340,7 @@ static INT32 DrvDoReset()
 	return 0;
 }
 
-static INT32 bankp_palette_init()
+/*static*/ INT32 bankp_palette_init()
 {
 	unsigned int t_pal[32];
 	unsigned int i;
@@ -366,12 +366,12 @@ static INT32 bankp_palette_init()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*inline*/ static int readbit(const UINT8 *src, int bitnum)
+/*inline*/ /*static*/ int readbit(const UINT8 *src, int bitnum)
 {
 	return src[bitnum / 8] & (0x80 >> (bitnum % 8));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
+/*static*/ void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
 {
 	int c;
 //	wait_vblank();
@@ -402,7 +402,7 @@ static void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int plan
 //	wait_vblank();
 }
 
-static int bankp_gfx_decode()
+/*static*/ int bankp_gfx_decode()
 {
 	/*static*/ int Char1PlaneOffsets[2] = { 0x00, 0x04 };
 	/*static*/ int Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
@@ -430,7 +430,7 @@ static int bankp_gfx_decode()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initLayers()
+/*static*/ void initLayers()
 {
     Uint16	CycleTb[]={
 		0x1f56, 0xffff, //A0
@@ -465,7 +465,7 @@ static void initLayers()
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initPosition()
+/*static*/ void initPosition()
 {
 	SCL_Open();
 	ss_reg->n1_move_y =  16 <<16;
@@ -473,7 +473,7 @@ static void initPosition()
 	SCL_Close();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initColors()
+/*static*/ void initColors()
 {
 	/*unsigned short palette[8]=
 {
@@ -487,7 +487,7 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut(void)
+/*static*/ void make_lut(void)
 {
 	unsigned int i,delta=0;
 	int sx, sy;
@@ -509,7 +509,7 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void SaturnInitMem()
+/*static*/ void SaturnInitMem()
 {
 	UINT8 *Next; Next = (UINT8 *)SaturnMem;
 	bg_dirtybuffer	= Next; Next += 0x400 * sizeof(UINT8);
@@ -518,7 +518,7 @@ static void SaturnInitMem()
 	MemEnd			= Next;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvInitSaturn()
+/*static*/ void DrvInitSaturn()
 {
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
 	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
@@ -547,18 +547,19 @@ static void DrvInitSaturn()
 	initLayers();
 	initPosition();
 	initColors();
-	drawWindow(0,224,0,6,66);
+	drawWindow(0,224,240,6,66);
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvExit()
+/*static*/ INT32 DrvExit()
 {
 #ifdef RAZE
-//	z80_reset();
+	z80_reset();
 #else
 	CZetExit();
 #endif	
 //	SN76496Exit();
+
 	Rom  = 	Gfx0 = Gfx1 = Prom = Palette = NULL;
 	MemEnd = map_offset_lut = bg_dirtybuffer = fg_dirtybuffer = NULL;
 
@@ -572,11 +573,11 @@ static INT32 DrvExit()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void 	 bg_line(INT32 offs,INT32 flipx)
+/*static*/ void 	 bg_line(INT32 offs,INT32 flipx)
 {
 	INT32 code, color, x;
 	code = Rom[0xf800+offs] | ((Rom[0xfc00+offs] & 7) << 8);
-	color = Rom[0xfc00+offs] >> 4;
+	color = (Rom[0xfc00+offs] >> 4) & 0x0f;
 
 	if (!flipscreen) flipx = (Rom[0xfc00+offs] & 0x08) << 11;
 	x = map_offset_lut[offs];
@@ -587,11 +588,11 @@ static void 	 bg_line(INT32 offs,INT32 flipx)
 	else									ss_map2[x+1] = ss_map2[x+0x41] = code+0x2800;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void 	 fg_line(INT32 offs,INT32 flipx)
+/*static*/ void 	 fg_line(INT32 offs,INT32 flipx)
 {
 	INT32 code, color, x;
 	code = Rom[0xf000+offs] | ((Rom[0xf400+offs] & 3) << 8);
-	color = (Rom[0xf400+offs] >> 3);
+	color = (Rom[0xf400+offs] >> 3) & 0x1f;
 
 	if(!flipscreen)	flipx = (Rom[0xf400+offs] & 0x04) << 12;
 	x = map_offset_lut[offs];
@@ -602,7 +603,7 @@ static void 	 fg_line(INT32 offs,INT32 flipx)
 	else											ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = code+0x1800;//2048  //0x1800
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvDraw()
+/*static*/ INT32 DrvDraw()
 {
 	INT32 flipx;
 	if (flipscreen) flipx = (0x3<< 14);
@@ -623,7 +624,7 @@ static INT32 DrvDraw()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvFrame()
+/*static*/ INT32 DrvFrame()
 {
 	if (DrvReset) {
 		DrvDoReset();

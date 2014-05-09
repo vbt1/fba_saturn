@@ -7,19 +7,19 @@ void (*BurnYM2413Render)(short* pSoundBuf, int nSegmentLength);
 //unsigned char BurnYM2151Registers[0x0100];
 //unsigned int nBurnCurrentYM2151Register;
 
-static int nBurnYM2413SoundRate;
+/*static*/ int nBurnYM2413SoundRate;
 
-static short* pBuffer;
-static short* pYM2413Buffer[2];
+/*static*/ short* pBuffer;
+/*static*/ short* pYM2413Buffer[2];
 
-static int nBurnPosition;
-static unsigned int nSampleSize;
-static unsigned int nFractionalPosition;
-static unsigned int nSamplesRendered;
+/*static*/ int nBurnPosition;
+/*static*/ unsigned int nSampleSize;
+/*static*/ unsigned int nFractionalPosition;
+/*static*/ unsigned int nSamplesRendered;
 
-static int nYM2413Volume;
+/*static*/ int nYM2413Volume;
 
-static void YM2413RenderResample(short* pSoundBuf, int nSegmentLength)
+/*static*/ void YM2413RenderResample(short* pSoundBuf, int nSegmentLength)
 {
 	unsigned int i;
 	nBurnPosition += nSegmentLength;
@@ -77,7 +77,7 @@ static void YM2413RenderResample(short* pSoundBuf, int nSegmentLength)
 	}
 }
 
-static void YM2413RenderNormal(short* pSoundBuf, int nSegmentLength)
+/*static*/ void YM2413RenderNormal(short* pSoundBuf, int nSegmentLength)
 {
 	int n;
 	nBurnPosition += nSegmentLength;

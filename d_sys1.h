@@ -16,29 +16,6 @@
 /*==============================================================================================
 Input Definitions
 ===============================================================================================*/
-
-/*static*/ struct BurnInputInfo BlockgalInputList[] = {
-	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
-	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
-	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
-	{"Start 2"           , BIT_DIGITAL  , System1InputPort2 + 5, "p2 start"  },
-
-	{"P1 Left"           , BIT_DIGITAL  , System1InputPort0 + 0, "p1 left"   },
-	{"P1 Right"          , BIT_DIGITAL  , System1InputPort0 + 1, "p1 right"  },
-	{"P1 Fire 1"         , BIT_DIGITAL  , System1InputPort2 + 6, "p1 fire 1" },
-
-	{"P2 Left"           , BIT_DIGITAL  , System1InputPort0 + 2, "p2 left"   },
-	{"P2 Right"          , BIT_DIGITAL  , System1InputPort0 + 3, "p2 right"  },
-	{"P2 Fire 1"         , BIT_DIGITAL  , System1InputPort2 + 7, "p2 fire 1" },
-
-	{"Reset"             , BIT_DIGITAL  , &System1Reset        , "reset"     },
-	{"Service"           , BIT_DIGITAL  , System1InputPort2 + 3, "service"   },
-	{"Dip 1"             , BIT_DIPSWITCH, System1Dip + 0       , "dip"       },
-	{"Dip 2"             , BIT_DIPSWITCH, System1Dip + 1       , "dip"       },
-};
-
-STDINPUTINFO(Blockgal)
-
 /*static*/ struct BurnInputInfo WboyInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
@@ -64,34 +41,7 @@ STDINPUTINFO(Blockgal)
 
 STDINPUTINFO(Wboy)
 
-/*static*/ struct BurnInputInfo MyheroInputList[] = {
-	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
-	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
-	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
-	{"Start 2"           , BIT_DIGITAL  , System1InputPort2 + 5, "p2 start"  },
 
-	{"P1 Up"             , BIT_DIGITAL  , System1InputPort0 + 5, "p1 up"     },
-	{"P1 Down"           , BIT_DIGITAL  , System1InputPort0 + 4, "p1 down"   },
-	{"P1 Left"           , BIT_DIGITAL  , System1InputPort0 + 7, "p1 left"   },
-	{"P1 Right"          , BIT_DIGITAL  , System1InputPort0 + 6, "p1 right"  },
-	{"P1 Fire 1"         , BIT_DIGITAL  , System1InputPort0 + 1, "p1 fire 1" },
-	{"P1 Fire 2"         , BIT_DIGITAL  , System1InputPort0 + 2, "p1 fire 2" },
-
-	{"P2 Up"             , BIT_DIGITAL  , System1InputPort1 + 5, "p2 up"     },
-	{"P2 Down"           , BIT_DIGITAL  , System1InputPort1 + 4, "p2 down"   },
-	{"P2 Left"           , BIT_DIGITAL  , System1InputPort1 + 7, "p2 left"   },
-	{"P2 Right"          , BIT_DIGITAL  , System1InputPort1 + 6, "p2 right"  },
-	{"P2 Fire 1"         , BIT_DIGITAL  , System1InputPort1 + 1, "p2 fire 1" },
-	{"P2 Fire 2"         , BIT_DIGITAL  , System1InputPort1 + 2, "p2 fire 2" },
-
-	{"Reset"             , BIT_DIGITAL  , &System1Reset        , "reset"     },
-	{"Service"           , BIT_DIGITAL  , System1InputPort2 + 3, "service"   },
-	{"Test"              , BIT_DIGITAL  , System1InputPort2 + 2, "diag"      },
-	{"Dip 1"             , BIT_DIPSWITCH, System1Dip + 0       , "dip"       },
-	{"Dip 2"             , BIT_DIPSWITCH, System1Dip + 1       , "dip"       },
-};
-
-STDINPUTINFO(Myhero)
 /*static*/ /*struct BurnInputInfo WbmljbInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
@@ -175,42 +125,6 @@ STDINPUTINFO(Seganinj)
 
 STDINPUTINFO(Flicky)
 
-#define SYSTEM1_COINAGE(dipval)								\
-	{0   , 0xfe, 0   , 16   , "Coin A"                },				\
-	{dipval, 0x01, 0x0f, 0x07, "4 Coins 1 Credit"       },				\
-	{dipval, 0x01, 0x0f, 0x08, "3 Coins 1 Credit"       },				\
-	{dipval, 0x01, 0x0f, 0x09, "2 Coins 1 Credit"       },				\
-	{dipval, 0x01, 0x0f, 0x05, "2 Coins 1 Credit 4/2 5/3 6/4"},			\
-	{dipval, 0x01, 0x0f, 0x04, "2 Coins 1 Credit 4/3"   },				\
-	{dipval, 0x01, 0x0f, 0x0f, "1 Coin  1 Credit"       },				\
-	{dipval, 0x01, 0x0f, 0x00, "1 Coin  1 Credit"       },				\
-	{dipval, 0x01, 0x0f, 0x03, "1 Coin  1 Credit 5/6"   },				\
-	{dipval, 0x01, 0x0f, 0x02, "1 Coin  1 Credit 4/5"   },				\
-	{dipval, 0x01, 0x0f, 0x01, "1 Coin  1 Credit 2/3"   },				\
-	{dipval, 0x01, 0x0f, 0x06, "2 Coins 3 Credits"      },				\
-	{dipval, 0x01, 0x0f, 0x0e, "1 Coin  2 Credits"      },				\
-	{dipval, 0x01, 0x0f, 0x0d, "1 Coin  3 Credits"      },				\
-	{dipval, 0x01, 0x0f, 0x0c, "1 Coin  4 Credits"      },				\
-	{dipval, 0x01, 0x0f, 0x0b, "1 Coin  5 Credits"      },				\
-	{dipval, 0x01, 0x0f, 0x0a, "1 Coin  6 Credits"      },				\
-											\
-	{0   , 0xfe, 0   , 16   , "Coin B"                },				\
-	{dipval, 0x01, 0xf0, 0x70, "4 Coins 1 Credit"       },				\
-	{dipval, 0x01, 0xf0, 0x80, "3 Coins 1 Credit"       },				\
-	{dipval, 0x01, 0xf0, 0x90, "2 Coins 1 Credit"       },				\
-	{dipval, 0x01, 0xf0, 0x50, "2 Coins 1 Credit 4/2 5/3 6/4"},			\
-	{dipval, 0x01, 0xf0, 0x40, "2 Coins 1 Credit 4/3"   },				\
-	{dipval, 0x01, 0xf0, 0xf0, "1 Coin  1 Credit"       },				\
-	{dipval, 0x01, 0xf0, 0x00, "1 Coin  1 Credit"       },				\
-	{dipval, 0x01, 0xf0, 0x30, "1 Coin  1 Credit 5/6"   },				\
-	{dipval, 0x01, 0xf0, 0x20, "1 Coin  1 Credit 4/5"   },				\
-	{dipval, 0x01, 0xf0, 0x10, "1 Coin  1 Credit 2/3"   },				\
-	{dipval, 0x01, 0xf0, 0x60, "2 Coins 3 Credits"      },				\
-	{dipval, 0x01, 0xf0, 0xe0, "1 Coin  2 Credits"      },				\
-	{dipval, 0x01, 0xf0, 0xd0, "1 Coin  3 Credits"      },				\
-	{dipval, 0x01, 0xf0, 0xc0, "1 Coin  4 Credits"      },				\
-	{dipval, 0x01, 0xf0, 0xb0, "1 Coin  5 Credits"      },				\
-	{dipval, 0x01, 0xf0, 0xa0, "1 Coin  6 Credits"      },
 /*
 /*static*/ /*struct BurnDIPInfo WboyDIPList[]=
 {
@@ -251,44 +165,6 @@ STDINPUTINFO(Flicky)
 
 STDDIPINFO(Wboy)
  */
-/*
-/*static*/ /*struct BurnDIPInfo BlockgalDIPList[]=
-{
-	// Default Values
-	{0x0c, 0xff, 0xff, 0xd7, NULL                     },
-	{0x0d, 0xff, 0xff, 0xff, NULL                     },
-
-	// Dip 1
-	{0   , 0xfe, 0   , 2   , "Cabinet"                },
-	{0x0c, 0x01, 0x01, 0x00, "Upright"                },
-	{0x0c, 0x01, 0x01, 0x01, "Cocktail"               },
-	
-	{0   , 0xfe, 0   , 2   , "Demo Sounds"            },
-	{0x0c, 0x01, 0x02, 0x00, "Off"                    },
-	{0x0c, 0x01, 0x02, 0x02, "On"                     },
-	
-	{0   , 0xfe, 0   , 2   , "Lives"                  },
-	{0x0c, 0x01, 0x08, 0x08, "2"                      },
-	{0x0c, 0x01, 0x08, 0x00, "3"                      },
-	
-	{0   , 0xfe, 0   , 2   , "Bonus Life"             },
-	{0x0c, 0x01, 0x10, 0x10, "10k 30k 60k 100k 150k"  },
-	{0x0c, 0x01, 0x10, 0x00, "30k 50k 100k 200k 300k" },
-	
-	{0   , 0xfe, 0   , 2   , "Allow Continue"         },
-	{0x0c, 0x01, 0x20, 0x20, "Off"                    },
-	{0x0c, 0x01, 0x20, 0x00, "On"                     },
-	
-	{0   , 0xfe, 0   , 2   , "Service Mode"           },
-	{0x0c, 0x01, 0x80, 0x80, "Off"                    },
-	{0x0c, 0x01, 0x80, 0x00, "On"                     },
-	
-	// Dip 2
-	SYSTEM1_COINAGE(0x0d)
-};
-
-STDDIPINFO(Blockgal)
-*/
 
 /*static*/ struct BurnDIPInfo WboyuDIPList[]=
 {

@@ -1,13 +1,14 @@
 #include "saturn.h"
 //#include "sc_saturn.h"
 #define GAME_BY_PAGE 12
-#define OVLADDR  0x06090000
+#define OVLADDR  0x060A5000
 #define LOWADDR 0x00200000
 volatile SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
 //static unsigned char ServiceRequest = 0;
 //static unsigned char *ServiceDip = 0;
 extern unsigned char play;
+unsigned char drvquit;
 //struct BurnDriver* oDriver;
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	UsrVblankIn( void )
@@ -41,7 +42,6 @@ void	UsrVblankIn( void )
 #ifndef ACTION_REPLAY
 	}
 #endif
-     
 //	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -250,10 +250,10 @@ static void initSaturn()
 {
 //	nBurnLinescrollSize = 0x400;//0x400
 //	nBurnSprites = 131;
-
+//	INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
 	nBurnFunction = NULL;
 	nSoundBufferPos = 0;
-	PER_SMPC_SSH_OFF();
+//	PER_SMPC_SSH_OFF();
 //	SPR_InitSlaveSH();
 	play=1;
 //	cleanSprites();
@@ -264,19 +264,19 @@ static void initSaturn()
 
 	InitCD();
 	VDP2_InitVRAM();
+	initLayers();
 //	PCM_MeReset(pcm);
 //	SetVblank();
 //wait_vblank();
 	memset4_fast(SCL_VDP2_VRAM_A0,0,0x20000);
 	memset4_fast(SCL_VDP2_VRAM_A1,0,0x20000);
 
-	memset4_fast(SCL_VDP2_VRAM_B1,0,0x20000);
+	memset4_fast(SCL_VDP2_VRAM_B0,0,0x20000);
 	memset4_fast(SCL_VDP2_VRAM_B1,0,0x20000);
 
 	play = 0;
-	initLayers();
 	initColors();
-	initSprites(352-1,480-1,0,0,0,0);
+	initSprites(352-1,240-1,0,0,0,0);
 //	_spr2_transfercommand();
 	//SclProcess = 2;
 	SetVblank();
@@ -323,7 +323,7 @@ static void ss_main(void)
 	initSound();
 	CSH_Init(CSH_4WAY);
 //	SPR_InitSlaveSH();
-	BurnLibInit();
+//	BurnLibInit();
 
 	initSaturn();
 //	testTga();
@@ -427,7 +427,6 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 					case PER_DGT_S:
 					run_fba_emulator();
 					loaded[0] = 0;
-					memset4_fast(SCL_VDP2_VRAM_A1,0,0x20000);
 
 					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"A:Help",12,201);
 					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"C:Credits",127,201);
@@ -442,17 +441,16 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 	return 0;
 }
 //--------------------------------------------------------------------------------------------------------------
-//int toto =0;
+//int the_loop=1;
 static void display_menu(void)
 {
-
-
 //	_spr2_initialize();	
 //	SetVblank();
 //	set_imask(0);
 	unsigned int l;
 	unsigned char loaded=0;
 //	sc_init();
+//	the_loop = 1;
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
 
@@ -461,6 +459,7 @@ static void display_menu(void)
 	{
 		if(!loaded)
 		{
+			BurnLibInit();
 			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			load_img(0);	
 			loaded=1;
@@ -491,8 +490,55 @@ static void display_menu(void)
 //		scd_logout("display_menu",0);
 
 	}while(1);
+	
 
 }
+
+#if 0
+inline void restart()
+{
+/*Uint8	*dst;
+	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)&_bend; dst++)
+		{
+		SetVblank();
+		*dst = 0;
+		}			*/
+// n馗essaire en sortant de green beret 
+//		SetVblank();
+//		wait_vblank();
+		set_imask(1);
+		BurnDrvExit();
+		PCM_MeStop(pcm);
+
+		_smpc_SSHOFF();
+		_smpc_SNDOFF();
+
+	 Uint8	*dst;
+    Uint16  loop;	
+	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)&_bend; dst++)
+		*dst = 0;
+
+	
+	for (dst = (Uint8 *)SystemWork, loop = 0; loop < SystemSize; loop++)
+		*dst = 0;
+ 	for (dst = (Uint8 *)OVLADDR; dst < (Uint8 *)SystemWork; dst++)
+		{
+		*dst = 0;
+		}
+//#define SystemWork2  0x060ffc00              /* System Variable Address */
+//#define SystemSize2  (0x06100000-0x060ffc00) /* System Variable Size */
+//xxxx
+		/*
+	ss_reg = ss_regs = ss_SpPriNum = ss_BgPriNum = ss_OtherPri = colAddr = NULL;
+	aVRAM = cache = colBgAddr = colBgAddr2 = ss_font = ss_map = ss_map2 = ss_scl = NULL;
+		*/
+		INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
+		void (*fp)(void);
+		fp = (void *)0x6004000;
+		(*fp)();
+//		main();
+}
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void SCL_ParametersInit(void)
 {
@@ -1539,7 +1585,7 @@ static int DrvExit()
 	}
 	BurnExtLoadRom = NULL;
 
-	nBurnDrvSelect = ~0U;			// no driver selected
+	nBurnDrvSelect = 0;			// no driver selected
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1556,46 +1602,28 @@ static int nDrvInit(int nDrvNum)
 	int nRet=0;
 	void (*fp)(char *);
 	char drv_file[14];
-	DrvExit(); // Make sure exited
+//	DrvExit(); // Make sure exited
 	nBurnDrvSelect = nDrvNum; // set the driver number
 	BurnExtLoadRom = SaturnLoadRom;
 
 	shared   = pDriver[nBurnDrvSelect];
-//	SS_REG   = &Scl_n_reg;
-//	SS_SPRAM = &aVRAM[0];
-//	SS_N0PRI = &SclBgPriNum;
-//	SS_SPPRI = &SclSpPriNum;
-//	SS_SPRIT = &smsSprite[0];
-//	SS_SCL	 = &ls_tbl[0];
 
 	if(BurnDrvGetTextA(DRV_PARENT)==NULL)
 		sprintf(drv_file,"d_%s.bin",BurnDrvGetTextA(DRV_NAME));
 	else
 		sprintf(drv_file,"d_%s.bin",BurnDrvGetTextA(DRV_PARENT));
-	
-
-//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"bef run func",1,60);
-//				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)drv_file,1,70);
-		   /*
-#define     SystemSize      (0x060ffc00-OVLADDR) 
-		Uint16  loop;
-		Uint8	*dst;
-		for (dst = (Uint8 *)OVLADDR, loop = 0; loop < SystemSize; loop++)
-			*dst = 0;		 */
 
 
     GFS_Load(GFS_NameToId(strupr(drv_file)), 0, (void *)OVLADDR, GFS_BUFSIZ_INF);
 	ChangeDir(BurnDrvGetTextA(DRV_NAME));
-//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"bef run func",1,60);
+
 	fp = (void *)OVLADDR;
 	(*fp)(pDriver[nBurnDrvSelect]->szShortName);
-//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"aft run func",1,60);
 	nRet=DoLibInit(); // Init the Burn library's driver
 
 	if (nRet!=0) 
 	{
 		BurnDrvExit(); // Exit the driver
-	//	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"There was an error starting '%s'.\n", BurnDrvGetTextA(DRV_NAME),1,50);
 		return 1;
 	}
 	BurnExtLoadRom = SaturnLoadRom;
@@ -1606,44 +1634,6 @@ static int nDrvInit(int nDrvNum)
 	cache  = (Uint8  *)SS_CACHE;
 
 	return 0;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-static int SlaveInWork()
-{
-  return ((*(Uint8 *)0xfffffe11 & 0x80) == 0);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-static void InitSlaveSH(void)
-{
-    volatile Uint16 i;
-
-static void **SlaveSHEntry = (void **)0x6000250;   /* BOOT ROMs dispatch address */
-static volatile Uint8 *SMPC_COM = (Uint8 *)0x2010001F;   /* SMPC command register */
-static volatile Uint8 *SMPC_RET = (Uint8 *)0x2010005f;   /* SMPC result register */
-static volatile Uint8 *SMPC_SF  = (Uint8 *)0x20100063;   /* SMPC status flag */
-static const Uint8 SMPC_SSHON  = 0x02;          /* SMPC slave SH on command */
-static const Uint8 SMPC_SSHOFF = 0x03;          /* SMPC slave SH off command */
-
-    *(volatile Uint8 *)0xfffffe10  = 0x01;    /* TIER FRT INT disable */
-//    SPR_SlaveState = 0;                /* set RUNNING state */
-    /* SlaveSH のリセット状態を設定する */
-    while((*SMPC_SF & 0x01) == 0x01);
-    *SMPC_SF = 1;                 /* --- SMPC StatusFlag SET */
-    *SMPC_COM = SMPC_SSHOFF;      /* --- Slave SH OFF SET */
-    while((*SMPC_SF & 0x01) == 0x01);
-    for(i = 0 ; i < 1000; i++);   /* slave reset assert length */
-    *(void **)SlaveSHEntry = (void *)0x6000646; /* dispatch address set */
-    /* SlaveSH のリセット状態を解除する */
-    *SMPC_SF = 1;                 /* --- SMPC StatusFlag SET */
-    *SMPC_COM = SMPC_SSHON;       /* --- Slave SH ON SET */
-    while((*SMPC_SF & 0x01) == 0x01);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-static void  WaitEndSlave(void)
-{
-    while((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80);
-    *(volatile Uint8 *)0xfffffe11 = 0x00; /* FTCSR clear */
-    *(volatile Uint16 *)0xfffffe92 |= 0x10; /* chache parse all */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void check_exit(Uint16 data)
@@ -1661,42 +1651,8 @@ static void check_exit(Uint16 data)
 			   && ((data & PER_DGT_C) != 0)
 	   )
 	{
-//		 SYS_Exit(1);
-
-/*		 if(SlaveInWork())
-		{
-//			 int i = 0;
-//			FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"SlaveInWork   yes            ",10,20);	
-//			InitSlaveSH();
-			*( Uint16 * )0x21800000 = 0xffff;
-//			*( Uint16 * )0x21000000 = 0xffff;
-//			while(SlaveInWork())
-//			{
-				WaitEndSlave();
-//			}	  
-		}
-		wait_vblank();
-		_smpc_SSHOFF(); */
-//		else
-//			FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"SlaveInWork   no            ",10,20);	
-//		while(1);
 		play = 0;
-		wait_vblank();
-/*Uint8	*dst;
-	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)&_bend; dst++)
-		{
-		SetVblank();
-		*dst = 0;
-		}			*/
-// n馗essaire en sortant de green beret 
-		SetVblank();
-//		wait_vblank();
-		set_imask(1);
-		BurnDrvExit();
-		SetVblank();
-//		PCM_Task(pcm);
-//		PCM_MeStop(pcm);	
-		initSaturn();
+		drvquit = 1;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1752,25 +1708,21 @@ static void do_keypad()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void run_fba_emulator()
 {
-//	nBurnDrvSelect = 0;
 	nBurnSoundRate = SOUNDRATE;
-	//nBurnSoundLen  = 128; // defini dans chaque driver
-//	nBurnLinescrollSize = 0x300;
-	ChangeDir("GAMES");
 
-//	InpInit();
-//	InpDIP();
+	ChangeDir("GAMES");
 
 	if (nDrvInit(nBurnDrvSelect) != 0) 
 	{
 		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"Driver initialisation failed! Likely causes are:",1,180);
 		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"- Corrupt/Missing ROM(s)\n- I/O Error\n- Memory error\n\n",1,190);
+//		while(1);
 
-		goto finish;
 	}
 	InpInit();
 	InpDIP();
 	play = 1;
+	drvquit = 0;
 //	PCM_Start(pcm);
 	PCM_MeSetVolume(pcm,255);
 	PCM_DrvChangePcmPara(pcm,-1,-1);
@@ -1779,8 +1731,6 @@ static void run_fba_emulator()
 
 	while (play)
 	{
-//		sc_check();
-//		scd_logout("BurnDrvFrame",0);
 		BurnDrvFrame();
 		SCL_SetLineParam2(&lp);
 		_spr2_transfercommand();
@@ -1790,7 +1740,13 @@ static void run_fba_emulator()
 //			wait_vblank();
 	}
 
-finish:
+	if(drvquit==1)
+	{
+		DrvExit();
+//		_smpc_SSHOFF();
+		initSaturn();
+//		nBurnDrvSelect=0;
+	}
 	asm("nop\n");
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1851,10 +1807,10 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
 		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
 	}
 	
-		play=0;
-		SclProcess = 1;
-		SetVblank();
-		wait_vblank();
-		play=1;
+//		play=0;
+//		SclProcess = 1;
+//		SetVblank();
+//		wait_vblank();
+//		play=1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

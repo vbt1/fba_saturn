@@ -300,7 +300,10 @@ Reset Functions
 	System1RomBank = 0;
 	System1BgBankLatch =  0;
 	System1BgBank = 0;
-	
+	System1BankedRom = 0;
+	System1BankSwitch =0;
+	System1Reset = 0;
+
 	return 0;
 }
 
@@ -310,14 +313,15 @@ Memory Handlers
 
 void System1BankRom()
 {
-	int BankAddress = (System1RomBank * 0x4000) + 0x10000;
-
+//	int BankAddress = (System1RomBank * 0x4000) + 0x10000;
+	int BankAddress = (System1RomBank << 14) + 0x10000;
+//	CZetOpen(0);
 	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
-	if (DecodeFunction) {
+//	if (DecodeFunction) {
 		CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + BankAddress, System1Rom1 + BankAddress);
-	} else {
-		CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
-	}
+//	} else {
+//		CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
+//	}
 }
 
 UINT8 __fastcall System1Z801PortRead(unsigned short a)
@@ -641,26 +645,28 @@ void initLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
-	SPR_InitSlaveSH();
 	nBurnSprites  = 35;
-
 	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
 	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
 	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = cache     =(Uint8  *)SCL_VDP2_VRAM_A0;
-
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
-
 	ss_sprite  = (SprSpCmd *)SS_SPRIT;
 	ss_vram   = (UINT8 *)SS_SPRAM;
 	ss_scl      = (Fixed32 *)SS_SCL;
 
+//FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"DrvInitSaturn    ",10,40);
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
-	SaturnMem = (UINT8 *)malloc(nLen); 
+	if((SaturnMem = (UINT8 *)malloc(nLen))==NULL)
+	{
+		FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"Malloc SaturnMem failed    ",10,50);	
+		return 1;
+	}
 	SaturnInitMem();
+//	FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"Malloc SaturnMem done    ",10,40);	
 
 	if(flipscreen)
 	{
@@ -681,15 +687,15 @@ void initLayers()
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(5);
 	SS_SET_N0PRIN(7);
-
 	initLayers();
 	initColors();
 	initSpritesS1();
-
+	SPR_InitSlaveSH();
+	
 	if(flipscreen)
 		drawWindow(0,240,0,8,64);
 	else
-		drawWindow(0,224,0,0,66);
+		drawWindow(0,224,240,0,66);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*inline*/ /*static*/ int readbit(const UINT8 *src, int bitnum)
@@ -726,7 +732,6 @@ void initLayers()
 int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2Size, int nTileRomNum, int nTileRomSize, int nSpriteRomNum, int nSpriteRomSize, bool bReset)
 {
 	int nRet = 0, nLen, i, RomOffset;
-
 	System1NumTiles = (nTileRomNum * nTileRomSize) / 24;
 	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
 	DrvInitSaturn();
@@ -744,7 +749,9 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	MemIndex();
 
 	UINT8 *	System1TempRom = (UINT8*)0x00200000;
+	memset(System1TempRom, 0, 0x18000);
 	// Load Z80 #1 Program roms
+
 	RomOffset = 0;
 	for (i = 0; i < nZ80Rom1Num; i++) {
 		nRet = BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1); if (nRet != 0) return 1;
@@ -771,8 +778,16 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	for (i = 0; i < nTileRomNum; i++) {
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
 	}
+
+	int TilePlaneOffsets[3]  = { 0, 0x20000, 0x40000 };
+	int TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	int TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
+
 	if (System1NumTiles > 0x800)
+	{
+		int NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
 		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, NoboranbTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
+	}
 	else
 		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
 
@@ -781,9 +796,8 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	spriteCache = (UINT16*)(0x00200000);
 	memset4_fast((void*)spriteCache,0xFFFFFFFF,0x40000);
-	
 	System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
-// vbt à laisser !!!!
+
 	memset(System1Sprites, 0x11, System1SpriteRomSize);
 	// Load Sprite roms
 	RomOffset += nTileRomNum;
@@ -791,7 +805,6 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	{
 		nRet = BurnLoadRom(System1Sprites + (i * nSpriteRomSize), i + RomOffset, 1);
 	}
-
 	// Load Colour proms
 	if (System1ColourProms) {
 		RomOffset += nSpriteRomNum;
@@ -854,6 +867,17 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	CZetMapArea(0xfc00, 0xffff, 2, System1fcRam);	
 	CZetMemEnd();
 	CZetClose();
+//	FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"before raze                   ",10,40);		
+/*
+	INT32 context_size = z80_get_context_size();
+//	UINT8 *context =  (UINT8*)malloc(context_size);
+	UINT8 *context =  NULL;
+	z80_get_context(context);
+	memset(context,0,context_size);
+	z80_set_context(context);
+
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)zz,10,20);
+*/
 
 	z80_init_memmap();
 	z80_add_read(0xe000, 0xe001, 1, (void *)&System1Z802ProgRead); 
@@ -893,9 +917,17 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 //-------------------------------------------------------------------------------------------------------------------------------------
 int System1Exit()
 {
-//	z80_stop_emulating();
-//	z80_reset();
+	z80_stop_emulating();
+//	z80_set_context(NULL);
+//	z80_skip_idle();
+//z80_reset();
 	CZetExit();
+//	SN76496Exit();
+//	*( unsigned short * )0x21000000 = 0xffff;
+//	SPR_InitSlaveSH();
+//	SPR_RunSlaveSH((PARA_RTN*)NULL,NULL);
+//	*( unsigned short * )0x21000000 = 0xffff;
+//	stop_slave();
 
 //Mem                 = NULL;
 MemEnd                 = NULL;
@@ -936,14 +968,6 @@ width_lut = NULL;
 ss_vram = NULL;
 spriteCache = NULL;
 
-/*
-DrvInitSaturn 
-malloc SaturnMem
-initsystem1
-malloc Mem
-malloc SpriteOnScreenMap
-malloc System1Sprites
-*/
 	free(System1Sprites);
 	System1Sprites = NULL;
 	free(SpriteOnScreenMap);
@@ -966,7 +990,16 @@ malloc System1Sprites
 	System1NumTiles = 0;
 	System1ColourProms = 0;
 	System1BankedRom = 0;
+	System1BankSwitch =0;
+	System1Reset = 0;
 	
+	nCyclesDone[0] = nCyclesDone[1] = 0;
+	nCyclesTotal[0] = nCyclesTotal[1] = 0;
+	nCyclesSegment = 0;
+
+	nextSprite=0;
+	flipscreen=0;
+
 	DecodeFunction = NULL;
 	MakeInputsFunction = NULL;
 
@@ -1135,11 +1168,6 @@ void System1DrawSprites()
 	nSoundBufferPos[0]+=(nSegmentLength<<1);
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ int SlaveInWork()
-{
-  return ((*(Uint8 *)0xfffffe11 & 0x80) == 0);
-}
 /*==============================================================================================
 Frame functions
 ===============================================================================================*/

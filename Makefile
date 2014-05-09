@@ -12,7 +12,7 @@ MAKEFILE = Makefile
 
 CCFLAGS = -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
 CCFLAGS2 = -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -D_SH -DMODEL_S -c -I.
-CCOVLFLAGS = -m2 -std=gnu99 -Wfatal-errors -O3 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
+CCOVLFLAGS = -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
 #LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles  -nostdlib
 
@@ -23,7 +23,7 @@ MPFILE     = $(TARGET:.coff=.maps)
 LDFLAGS = -m2 -O2 -Xlinker -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
 #SRCS       = burn.c load.c saturn/font.c saturn/file.c saturn/saturn.c saturn/low.s saturn/sc_saturn_vbt.c
 SRCS       = saturn/iapetus/cd/cd.c burn.c load.c saturn/font.c saturn/file.c saturn/saturn.c saturn/low.s 
-OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o  $(SRCS:.c=.o)
+OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 
 OVLIMG                 = root/img.coff
 OVLIMG1               = root/img.bin
@@ -37,7 +37,7 @@ OVERLAY	       = root/d_bankp.coff
 OVERLAY1     = root/d_bankp.bin
 MPOVLFILE    = $(OVERLAY:.coff=.maps)
 LDOVLFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVL         = d_bankp.c czet.c cz80/cz80.c sn76496.c 
+SRCOVL         = d_bankp.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
 OBJOVL         = $(SRCOVL:.c=.o)
 
 OVLNEWS                 = root/d_news.coff
@@ -51,14 +51,14 @@ OVLGBERET                 = root/d_gberet.coff
 OVLGBERET1               = root/d_gberet.bin
 MPOVLGBERETFILE    = $(OVLGBERET:.coff=.maps)
 LDOVLGBERETFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGBERETFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLGBERET         = d_gberet.c sn76496.c 
+SRCOVLGBERET         = d_gberet.c sn76496.c saturn/ovl.c 
 OBJOVLGBERET         = $(SRCOVLGBERET:.c=.o)
 
 OVLHIGEMARU                 = root/d_higemaru.coff
 OVLHIGEMARU1               = root/d_higema.bin
 MPOVLHIGEMARUFILE    = $(OVLHIGEMARU:.coff=.maps)
 LDOVLHIGEMARUFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLHIGEMARUFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLHIGEMARU         = d_higemaru.c ay8910.c 
+SRCOVLHIGEMARU         = d_higemaru.c ay8910.c  saturn/ovl.c
 OBJOVLHIGEMARU         = $(SRCOVLHIGEMARU:.c=.o)
 
 OVLPKUNW                 = root/d_pkunw.coff
@@ -86,28 +86,28 @@ OVLSYS1                 = root/d_sys1.coff
 OVLSYS11               = root/d_sys1.bin
 MPOVLSYS1FILE    = $(OVLSYS1:.coff=.maps)
 LDOVLSYS1FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSYS1         = d_sys1.c czet.c cz80sys1/cz80.c sn76496.c
+SRCOVLSYS1         = d_sys1.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
 OBJOVLSYS1         = $(SRCOVLSYS1:.c=.o)
 
 OVLSYS1H                 = root/d_SYS1H.coff
 OVLSYS1H1               = root/d_SYS1H.bin
 MPOVLSYS1HFILE    = $(OVLSYS1H:.coff=.maps)
 LDOVLSYS1HFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1HFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSYS1H         = d_sys1h.c czet.c cz80sys1/cz80.c sn76496.c mc8123.c
+SRCOVLSYS1H         = d_sys1h.c czet.c cz80/cz80.c sn76496.c mc8123.c saturn/ovl.c
 OBJOVLSYS1H         = $(SRCOVLSYS1H:.c=.o)
 
 OVLSYS2                 = root/d_sys2.coff
 OVLSYS21               = root/d_sys2.bin
 MPOVLSYS2FILE    = $(OVLSYS2:.coff=.maps)
 LDOVLSYS2FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS2FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSYS2         = d_sys2.c czet.c cz80/cz80.c sn76496.c
+SRCOVLSYS2         = d_sys2.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
 OBJOVLSYS2         = $(SRCOVLSYS2:.c=.o)
 
 OVLPACM                 = root/d_pacm.coff
 OVLPACM1               = root/d_pacm.bin
 MPOVLPACMFILE    = $(OVLPACM:.coff=.maps)
 LDOVLPACMFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPACMFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLPACM         = d_pacman.c czet.c cz80/cz80.c namco_snd.c 
+SRCOVLPACM         = d_pacman.c czet.c cz80/cz80.c namco_snd.c saturn/ovl.c
 #SRCOVLPACM         = d_pacman_zet.c zet.c z80.c z80daisy.c namco_snd.c 
 OBJOVLPACM         = $(SRCOVLPACM:.c=.o)
 
@@ -148,7 +148,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
 # Use gcc to link so it will automagically find correct libs directory
 
 $(TARGET) : $(OBJS2) $(MAKEFILE) $(OBJECTS) $(LDFILE)
-	$(CC) $(LDFLAGS)  $(OBJS2) $(LIBS2) -o $@
+	$(CC) $(LDFLAGS)  $(OBJS2) $(LIBS2) $(LIBSOVL)  -o $@
 
 $(TARGET1) : $(SYSOBJS) $(OBJS2) $(MAKEFILE) $(LDFILE)
 	$(CONV) -O binary $(TARGET) $(TARGET1)

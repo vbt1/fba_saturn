@@ -176,14 +176,14 @@
 #define IN(A)				CPU->IN_Port(A)
 #define OUT(A, D)			CPU->OUT_Port(A, D)
 
-static UINT8 SZ[256];
-static UINT8 SZP[256];
-static UINT8 SZ_BIT[256];
-static UINT8 SZHV_inc[256];
-static UINT8 SZHV_dec[256];
+/*static*/ UINT8 SZ[256];
+/*static*/ UINT8 SZP[256];
+/*static*/ UINT8 SZ_BIT[256];
+/*static*/ UINT8 SZHV_inc[256];
+/*static*/ UINT8 SZHV_dec[256];
 #if CZ80_BIG_FLAGS_ARRAY
-static UINT8 SZHVC_add[2*256*256];
-static UINT8 SZHVC_sub[2*256*256];
+/*static*/ UINT8 SZHVC_add[2*256*256];
+/*static*/ UINT8 SZHVC_sub[2*256*256];
 #endif
 
 
@@ -497,7 +497,8 @@ void Cz80_Set_PC(cz80_struc *CPU, UINT32 val)
 
 void Cz80_Reset(cz80_struc *CPU)
 {
-	memset(CPU, 0, (INT32)&CPU->nCyclesTotal - (INT32)CPU);
+//	memset(CPU, 0, (INT32)&CPU->nCyclesTotal - (INT32)CPU);
+	memset(CPU, 0, 24);
 
 	zIX = zIY = 0xffff;
 	zF = ZF;

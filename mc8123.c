@@ -1,7 +1,7 @@
 #include "burnint.h"
 #include "bitswap.h"
 
-static int decrypt_type0(int val,int param,int swap)
+/*static*/  int decrypt_type0(int val,int param,int swap)
 {
 	if (swap == 0) val = BITSWAP08(val,7,5,3,1,2,0,6,4);
 	if (swap == 1) val = BITSWAP08(val,5,3,7,2,1,0,4,6);
@@ -33,7 +33,7 @@ static int decrypt_type0(int val,int param,int swap)
 }
 
 
-static int decrypt_type1a(int val,int param,int swap)
+/*static*/  int decrypt_type1a(int val,int param,int swap)
 {
 	if (swap == 0) val = BITSWAP08(val,4,2,6,5,3,7,1,0);
 	if (swap == 1) val = BITSWAP08(val,6,0,5,4,3,2,1,7);
@@ -61,7 +61,7 @@ static int decrypt_type1a(int val,int param,int swap)
 	return val;
 }
 
-static int decrypt_type1b(int val,int param,int swap)
+/*static*/  int decrypt_type1b(int val,int param,int swap)
 {
 	if (swap == 0) val = BITSWAP08(val,1,0,3,2,5,6,4,7);
 	if (swap == 1) val = BITSWAP08(val,2,0,5,1,7,4,6,3);
@@ -89,7 +89,7 @@ static int decrypt_type1b(int val,int param,int swap)
 	return val;
 }
 
-static int decrypt_type2a(int val,int param,int swap)
+/*static*/  int decrypt_type2a(int val,int param,int swap)
 {
 	if (swap == 0) val = BITSWAP08(val,0,1,4,3,5,6,2,7);
 	if (swap == 1) val = BITSWAP08(val,6,3,0,5,7,4,1,2);
@@ -125,7 +125,7 @@ static int decrypt_type2a(int val,int param,int swap)
 	return val;
 }
 
-static int decrypt_type2b(int val,int param,int swap)
+/*static*/  int decrypt_type2b(int val,int param,int swap)
 {
 	// only 0x20 possible encryptions for this method - all others have 0x40
 	// this happens because BIT(param,2) cancels the other three
@@ -163,7 +163,7 @@ static int decrypt_type2b(int val,int param,int swap)
 	return val;
 }
 
-static int decrypt_type3a(int val,int param,int swap)
+/*static*/  int decrypt_type3a(int val,int param,int swap)
 {
 	if (swap == 0) val = BITSWAP08(val,5,3,1,7,0,2,6,4);
 	if (swap == 1) val = BITSWAP08(val,3,1,2,5,4,7,0,6);
@@ -193,7 +193,7 @@ static int decrypt_type3a(int val,int param,int swap)
 	return val;
 }
 
-static int decrypt_type3b(int val,int param,int swap)
+/*static*/  int decrypt_type3b(int val,int param,int swap)
 {
 	if (swap == 0) val = BITSWAP08(val,3,7,5,4,0,6,2,1);
 	if (swap == 1) val = BITSWAP08(val,7,5,4,6,1,2,0,3);
@@ -231,7 +231,7 @@ static int decrypt_type3b(int val,int param,int swap)
 	return val;
 }
 
-static int decrypt(int val, int key, int opcode)
+/*static*/  int decrypt(int val, int key, int opcode)
 {
 	int type = 0;
 	int swap = 0;
@@ -288,7 +288,7 @@ static int decrypt(int val, int key, int opcode)
 	}
 }
 
-static UINT8 mc8123_decrypt(int addr,UINT8 val,const UINT8 *key,int opcode)
+/*static*/  UINT8 mc8123_decrypt(int addr,UINT8 val,const UINT8 *key,int opcode)
 {
 	int tbl_num;
 

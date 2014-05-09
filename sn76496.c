@@ -27,7 +27,7 @@ struct SN76496
 };
 
 /*static*/ int NumChips;
-/*static*/ struct SN76496 Chip0;// = NULL;
+/*static*/struct SN76496 Chip0;// = NULL;
 /*static*/ struct SN76496 Chip1;// = NULL;
 /*static*/ struct SN76496 Chip2;// = NULL;
 /*static*/ struct SN76496 Chip3;// = NULL;
@@ -261,7 +261,7 @@ void SN76496Write(int Num, int Data)
 	}
 }
 
-static void SN76496SetGain(struct SN76496 *R,int Gain)
+/*static*/ void SN76496SetGain(struct SN76496 *R,int Gain)
 {
 	int i;
 	double Out;
@@ -285,7 +285,7 @@ static void SN76496SetGain(struct SN76496 *R,int Gain)
 	R->VolTable[15] = 0;
 }
 
-static void SN76496Init2(struct SN76496 *R, int Clock)
+/*static*/ void SN76496Init2(struct SN76496 *R, int Clock)
 {
 	int i;
 	
@@ -312,7 +312,7 @@ static void SN76496Init2(struct SN76496 *R, int Clock)
 	R->Output[3] = R->RNG & 1;
 }
 
-static void GenericStart(int Num, int Clock, int FeedbackMask, int NoiseTaps, int NoiseInvert, int SignalAdd)
+/*static*/ void GenericStart(int Num, int Clock, int FeedbackMask, int NoiseTaps, int NoiseInvert, int SignalAdd)
 {
 	if (Num >= MAX_SN76496_CHIPS) return;
 	

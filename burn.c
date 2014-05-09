@@ -3,161 +3,161 @@
 #include "burnint.h"
 #include "saturn/ovl.h"
 
-static struct BurnDriver BurnDrvbankp = {
+/*static*/ struct BurnDriver BurnDrvbankp = {
 	"bankp", NULL,
 	"Bank Panic\0", 
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvcombh = {
+/*static*/ struct BurnDriver BurnDrvcombh = {
 	"combh", "bankp", 
 	"Combat Hawk\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvNewsa = {
+/*static*/ struct BurnDriver BurnDrvNewsa = {
 	"newsa", "news", 
 	"News (set 2)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvNews = {
+/*static*/ struct BurnDriver BurnDrvNews = {
 	"news", NULL,
 	"News (set 1)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvGberet = {
+/*static*/ struct BurnDriver BurnDrvGberet = {
 	"gberet", NULL,
 	"Green Beret\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvMrgoemon = {
+/*static*/ struct BurnDriver BurnDrvMrgoemon = {
 	"mrgoemon", "gberet",
 	"Mr. Goemon (Japan)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvhigemaru = {
+/*static*/ struct BurnDriver BurnDrvhigemaru = {
 	"higema", NULL,
 	"Pirate Ship Higemaru\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvpkunwar = {
+/*static*/ struct BurnDriver BurnDrvpkunwar = {
 	"pkunw", NULL,
 	"Penguin-Kun Wars (US)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvPang = {
+/*static*/ struct BurnDriver BurnDrvPang = {
 	"pang", "mitch",
 	"Pang (World)\0", 
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvSpang = {
+/*static*/ struct BurnDriver BurnDrvSpang = {
 	"spang", "mitch",
 	"Super Pang (World 900914)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
   
-static struct BurnDriver BurnDrvGnga = {
+/*static*/ struct BurnDriver BurnDrvGnga = {
 	"gnga", "gng",
 	"Ghosts'n Goblins (World? set 2)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-static struct BurnDriver BurnDrvBlockgal = {
+/*static*/ struct BurnDriver BurnDrvBlockgal = {
 	"blockgal", "sys1h",
 	"Block Gal (MC-8123B, 317-0029)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 	
-static struct BurnDriver BurnDrvWboyu = {
+/*static*/ struct BurnDriver BurnDrvWboyu = {
 	"wboyu", "sys1",
 	"Wonder Boy (not encrypted)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-struct BurnDriver BurnDrvChplftb = {
+/*static*/ struct BurnDriver BurnDrvChplftb = {
 	"chplftb", "sys2",
 	"Choplifter (Alternate)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-struct BurnDriver BurnDrvGardia = {
+/*static*/ struct BurnDriver BurnDrvGardia = {
 	"gardia", "sys1h",
 	"Gardia (317-0006)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-struct BurnDriver BurnDrvFlickys2 = {
+/*static*/ struct BurnDriver BurnDrvFlickys2 = {
 	"flickys2", "sys1",
 	"Flicky (128k, System 2, not encrypted)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-struct BurnDriver BurnDrvMyhero = {
+/*static*/ struct BurnDriver BurnDrvMyhero = {
 	"myhero", "sys1", 
 	"My Hero (US, not encrypted)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
  
-struct BurnDriver BurnDrvTeddybb = {
+/*static*/ struct BurnDriver BurnDrvTeddybb = {
 	"teddybb", "sys1",
 	"TeddyBoy Blues (315-5115, New Ver.)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-struct BurnDriver BurnDrvPitfall2u = {
+/*static*/ struct BurnDriver BurnDrvPitfall2u = {
 	"pitfal2u", "sys1",
 	"Pitfall II (not encrypted)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-struct BurnDriver BurnDrvWbdeluxe = {
+/*static*/ struct BurnDriver BurnDrvWbdeluxe = {
 	"wbdeluxe", "sys1",
 	"Wonder Boy Deluxe\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-struct BurnDriver BurnDrvpengo2u = {
+/*static*/ struct BurnDriver BurnDrvpengo2u = {
 	"pengo2u", "pacm",
 	"Pengo (set 2 not encrypted)\0",
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-struct BurnDriver BurnDrvStarjack = {
+/*static*/ struct BurnDriver BurnDrvStarjack = {
 	"starjack", "sys1h",
 	"Star Jacker (Sega)\0", 
 	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL
 };
 
-struct BurnDriver BurnDrvRaflesia = {
+/*static*/ struct BurnDriver BurnDrvRaflesia = {
 	"raflesia", "sys1h",
 	"Rafflesia (315-5162)\0", 
 	NULL, NULL, NULL, NULL,
@@ -171,14 +171,14 @@ struct BurnDriver BurnDrvpacman = {
 	NULL, NULL, NULL, NULL
 };	  */
 
-	struct BurnDriver BurnDrvAtetris = {
+/*static*/ struct BurnDriver BurnDrvAtetris = {
 		"atetris", "tetris",
 		"Tetris (set 1)\0",
 		NULL, NULL, NULL, NULL,
 		NULL, NULL, NULL, NULL
 };
 
-	struct BurnDriver BurnDrvFourdwarrio = {
+/*static*/ struct BurnDriver BurnDrvFourdwarrio = {
 		"4dwarrio", "sys1",
 		"4-D Warriors (315-5162)\0",
 		NULL, NULL, NULL, NULL,
@@ -244,6 +244,19 @@ int BurnLibInit()
 {
 	nBurnDrvSelect=0;
 	nBurnDrvCount = sizeof(pDriver) / sizeof(pDriver[0]);	// count available drivers
+
+	BurnDrvWbdeluxe.szShortName = "wbdeluxe";
+	BurnDrvWbdeluxe.szParent = "sys1";
+	BurnDrvWbdeluxe.szFullNameA = "Wonder Boy Deluxe\0";
+
+	BurnDrvGardia.szShortName = "gardia";
+	BurnDrvGardia.szParent = "sys1h";
+	BurnDrvGardia.szFullNameA = "Gardia (317-0006)\0";
+
+	BurnDrvFourdwarrio.szShortName = "4dwarrio";
+	BurnDrvFourdwarrio.szParent = "sys1";
+	BurnDrvFourdwarrio.szFullNameA = "4-D Warriors (315-5162)\0";
+
 	return 0;
 }
 // ----------------------------------------------------------------------------

@@ -3,7 +3,8 @@
 //#define ACB_DRIVER_DATA	 (64)
 
 /*static*/ cz80_struc* CZetCPUContext = NULL;
-//static cz80_struc CZetCPUContext[2];
+//static 
+//cz80_struc CZetCPUContext[2];
 /*static*/ cz80_struc* lastCZetCPUContext = NULL;
 
 /*static*/ int nOpenedCPU = -1;
@@ -173,9 +174,11 @@ int CZetMemEnd()
 void CZetExit()
 {
 	CZetRunEnd();
+//	CZetClose(0);
+//	CZetClose(1);
 //	CZetReset();
 //	Cz80_InitFlags();
-
+ /*
 	unsigned int i;
 
 	for (i = 0; i < nCPUCount; i++) {
@@ -188,17 +191,17 @@ void CZetExit()
 		CZetCPUContext[i].Write_Word = NULL;
 		CZetCPUContext[i].IN_Port = NULL;
 		CZetCPUContext[i].OUT_Port = NULL;
-	}
+	}	*/
 //	if(lastCZetCPUContext!=NULL)
 //		free(lastCZetCPUContext);
-	lastCZetCPUContext = NULL;
-//	if (CZetCPUContext!=NULL)
+//	lastCZetCPUContext = NULL;
+	if (CZetCPUContext!=NULL)
 //	while(CZetCPUContext!=NULL)
 	{
 		free( CZetCPUContext );
 		CZetCPUContext = NULL;
 	}
-
+	lastCZetCPUContext = NULL;
 	nOpenedCPU = -1;
 	nCPUCount = 0;
 }

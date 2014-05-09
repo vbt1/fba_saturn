@@ -23,7 +23,7 @@
 #define	SCL_MAXLINE	 256//256
 #define	SCL_MAXCELL	32//32
 
-static void DrvInitSaturn();
+/*static*/  void DrvInitSaturn();
 extern void (*nBurnFunction)();
 extern Uint32 SclColRamAlloc256[8];
 extern SclLineparam lp;

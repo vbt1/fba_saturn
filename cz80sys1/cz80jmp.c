@@ -6,7 +6,7 @@
 
 ******************************************************************************/
 
-static const void *JumpTable[0x100] =
+/*static*/ const void *JumpTable[0x100] =
 {
 	&&OP0x00, &&OP0x01, &&OP0x02, &&OP0x03,
 	&&OP0x04, &&OP0x05, &&OP0x06, &&OP0x07,
@@ -89,7 +89,7 @@ static const void *JumpTable[0x100] =
 	&&OP0xfc, &&OP0xfd, &&OP0xfe, &&OP0xff
 };
 
-static const void *JumpTableCB[0x100] =
+/*static*/ const void *JumpTableCB[0x100] =
 {
 	&&OPCB0x00, &&OPCB0x01, &&OPCB0x02, &&OPCB0x03,
 	&&OPCB0x04, &&OPCB0x05, &&OPCB0x06, &&OPCB0x07,
@@ -172,7 +172,7 @@ static const void *JumpTableCB[0x100] =
 	&&OPCB0xfc, &&OPCB0xfd, &&OPCB0xfe, &&OPCB0xff
 };
 
-static const void *JumpTableED[0x100] =
+/*static*/ const void *JumpTableED[0x100] =
 {
 	&&OPED0x00, &&OPED0x01, &&OPED0x02, &&OPED0x03,
 	&&OPED0x04, &&OPED0x05, &&OPED0x06, &&OPED0x07,
@@ -255,7 +255,7 @@ static const void *JumpTableED[0x100] =
 	&&OPED0xfc, &&OPED0xfd, &&OPED0xfe, &&OPED0xff
 };
 
-static const void *JumpTableXY[0x100] =
+/*static*/ const void *JumpTableXY[0x100] =
 {
 	&&OPXY0x00, &&OPXY0x01, &&OPXY0x02, &&OPXY0x03,
 	&&OPXY0x04, &&OPXY0x05, &&OPXY0x06, &&OPXY0x07,
@@ -338,7 +338,7 @@ static const void *JumpTableXY[0x100] =
 	&&OPXY0xfc, &&OPXY0xfd, &&OPXY0xfe, &&OPXY0xff
 };
 
-static const void *JumpTableXYCB[0x100] =
+/*static*/ const void *JumpTableXYCB[0x100] =
 {
 	&&OPXYCB0x00, &&OPXYCB0x01, &&OPXYCB0x02, &&OPXYCB0x03,
 	&&OPXYCB0x04, &&OPXYCB0x05, &&OPXYCB0x06, &&OPXYCB0x07,

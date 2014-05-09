@@ -1,6 +1,5 @@
 #ifndef _OVL_H_
 #define _OVL_H_
-#include "ovl.c"
 
 //extern Uint32   _bstart, _bend;
 extern Uint32 *shared;
