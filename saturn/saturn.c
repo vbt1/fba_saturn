@@ -323,7 +323,7 @@ static void ss_main(void)
 	initSound();
 	CSH_Init(CSH_4WAY);
 //	SPR_InitSlaveSH();
-//	BurnLibInit();
+	BurnLibInit();
 
 	initSaturn();
 //	testTga();
@@ -459,7 +459,6 @@ static void display_menu(void)
 	{
 		if(!loaded)
 		{
-			BurnLibInit();
 			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			load_img(0);	
 			loaded=1;
