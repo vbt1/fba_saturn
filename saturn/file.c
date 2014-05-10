@@ -36,7 +36,7 @@ static GfsDirName dir_name[MAX_DIR];
 static Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
 #endif
 
-#define VBT
+//#define VBT
 
 #ifdef VBT
 #define SYS_CDINIT1(i) \
@@ -85,6 +85,7 @@ void ChangeDir(char *dirname)
 	dir_upr = strupr(dir_upr);
     fid = GFS_NameToId((Sint8 *)dir_upr);
 	free(dir_upr);
+	dir_upr = NULL;
 
 	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
 	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;

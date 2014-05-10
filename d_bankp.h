@@ -9,12 +9,12 @@
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
 /*static*/ UINT8 *SaturnMem = NULL;
-/*static*/ UINT8 *MemEnd;
-/*static*/ UINT16 *map_offset_lut;
-/*static*/ unsigned char 	*bg_dirtybuffer;
-/*static*/ unsigned char 	*fg_dirtybuffer;
-/*static*/ unsigned char *Mem, *Rom, *Gfx0, *Gfx1, *Prom;
-/*static*/ int *Palette;
+/*static*/ UINT8 *MemEnd = NULL;
+/*static*/ UINT16 *map_offset_lut = NULL;
+/*static*/ unsigned char 	*bg_dirtybuffer = NULL;
+/*static*/ unsigned char 	*fg_dirtybuffer = NULL;
+/*static*/ unsigned char *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
+/*static*/ int *Palette = NULL;
 /*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvReset, DrvDips;
 /*static*/ unsigned char /*scroll_x,*/ priority, flipscreen, interrupt_enable;
 

@@ -18,7 +18,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ unsigned char 	bg_dirtybuffer[2048];
 #endif
 
-/*static*/ unsigned short *Palette;
+/*static*/ unsigned short *Palette = NULL;
 /*static*/ unsigned int _30_HZ=0;
 
 /*static*/ unsigned int nCyclesDone, nCyclesTotal=3072000 / 7 / (6000 / 256);
