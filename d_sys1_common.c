@@ -918,16 +918,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 int System1Exit()
 {
 	z80_stop_emulating();
-//	z80_set_context(NULL);
-//	z80_skip_idle();
-//z80_reset();
 	CZetExit();
-//	SN76496Exit();
-//	*( unsigned short * )0x21000000 = 0xffff;
-//	SPR_InitSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)NULL,NULL);
-//	*( unsigned short * )0x21000000 = 0xffff;
-//	stop_slave();
 
 //Mem                 = NULL;
 MemEnd                 = NULL;
@@ -1021,8 +1012,10 @@ Graphics Rendering
 	{
 		if (y < 0 || y > 255) continue;
 
-		yr = (((y - System1BgScrollY) & 0xff) / 8)*32;
-		y256 = y *256;
+//		yr = (((y - System1BgScrollY) & 0xff) / 8)*32;
+//		y256 = y *256;
+		yr = (((y - System1BgScrollY) & 0xff) >>3)<<5;
+		y256 = y<<8;
 
 		for(x=values[0];x<xend;x++)
 		{

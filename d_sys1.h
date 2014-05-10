@@ -11,7 +11,7 @@
 ///*static*/ int NprincsuInit();
 ///*static*/ int SeganinuInit();
 /*static*/ INT32 Flicks2Init();
-/*static*/ INT32 FourdwarrioInit();
+///*static*/ INT32 FourdwarrioInit();
 
 /*==============================================================================================
 Input Definitions
@@ -482,7 +482,7 @@ STDDIPINFO(Flicky)
 
 STDDIPINFO(Wbdeluxe)
 
-/*static*/ struct BurnDIPInfo FourdwarrioDIPList[]=
+/*static*/ /*struct BurnDIPInfo FourdwarrioDIPList[]=
 {
 	// Default Values
 	{0x13, 0xff, 0xff, 0xff, NULL                     },
@@ -518,7 +518,7 @@ STDDIPINFO(Wbdeluxe)
 };
 
 STDDIPINFO(Fourdwarrio)
-
+*/
 #undef SYSTEM1_COINAGE
 
 /*==============================================================================================
@@ -782,7 +782,7 @@ STD_ROM_FN(Flickys2)
 STD_ROM_PICK(Wbdeluxe)
 STD_ROM_FN(Wbdeluxe)
 
-/*static*/ struct BurnRomInfo FourdwarrioRomDesc[] = {
+/*static*/ /*struct BurnRomInfo FourdwarrioRomDesc[] = {
 	{ "4d.116",            0x004000, 0x546d1bc7, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "4d.109",            0x004000, 0xf1074ec3, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "4d.96",             0x004000, 0x387c1e8f, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -806,7 +806,7 @@ STD_ROM_FN(Wbdeluxe)
 
 STD_ROM_PICK(Fourdwarrio)
 STD_ROM_FN(Fourdwarrio)
-
+*/
 /*static*/ /*struct BurnRomInfo WbmljbRomDesc[] = {
 	{ "wbml.01",          0x010000, 0x66482638, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "m6.bin",             0x010000, 0x8c08cd11, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code

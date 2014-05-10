@@ -59,14 +59,14 @@ int ovlInit(char *szShortName)
 		Pitfall2uRomInfo, Pitfall2uRomName, MyheroInputInfo, PitfalluDIPInfo,
 		PitfalluInit, System1Exit, System1Frame, NULL//, NULL//,
 	};
-
+ /*
 	struct BurnDriver nBurnDrvFourdwarrio = {
 		"4dwarrio", "sys1",
 		"4-D Warriors (315-5162)\0",
 		FourdwarrioRomInfo, FourdwarrioRomName, MyheroInputInfo, FourdwarrioDIPInfo,
 		FourdwarrioInit, System1Exit, System1Frame, NULL
 	};
-
+*/
 	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
     if (strcmp(nBurnDrvWboyu.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvWboyu,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvFlickys2.szShortName, szShortName) == 0)	memcpy(fba_drv,&nBurnDrvFlickys2,sizeof(struct BurnDriver));
@@ -75,7 +75,7 @@ int ovlInit(char *szShortName)
     if (strcmp(nBurnDrvPitfall2u.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvPitfall2u,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvTeddybb,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvWbdeluxe.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvWbdeluxe,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvFourdwarrio.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvFourdwarrio,sizeof(struct BurnDriver));
+//    if (strcmp(nBurnDrvFourdwarrio.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvFourdwarrio,sizeof(struct BurnDriver));
    
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;

@@ -1585,7 +1585,7 @@ static int DrvExit()
 	}
 	BurnExtLoadRom = NULL;
 
-	nBurnDrvSelect = 0;			// no driver selected
+//	nBurnDrvSelect = 0;			// no driver selected
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

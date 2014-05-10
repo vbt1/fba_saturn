@@ -18,13 +18,13 @@
 
 #define STEP 0x8000
 
-static void (*AYStreamUpdate)(void);
+/*static*/ void (*AYStreamUpdate)(void);
 
 int ay8910_index_ym = 0;
-static int num = 0, ym_num = 0;
+/*static*/ int num = 0, ym_num = 0;
 
-static double AY8910Volumes[3 * 6];
-static int AY8910RouteDirs[3 * 6];
+/*static*/ double AY8910Volumes[3 * 6];
+/*static*/ int AY8910RouteDirs[3 * 6];
 
 struct AY8910
 {
@@ -69,11 +69,11 @@ struct AY8910
 #define AY_PORTB	(15)
 
 
-static struct AY8910 AYPSG[MAX_8910];		/* array of PSG's */
+/*static*/ struct AY8910 AYPSG[MAX_8910];		/* array of PSG's */
 
 
 
-static void _AYWriteReg(int n, int r, int v)
+/*static*/ void _AYWriteReg(int n, int r, int v)
 {
 	struct AY8910 *PSG = &AYPSG[n];
 	int old;
@@ -249,7 +249,7 @@ static void _AYWriteReg(int n, int r, int v)
 
 
 /* write a register on AY8910 chip number 'n' */
-static void AYWriteReg(int chip, int r, int v)
+/*static*/ void AYWriteReg(int chip, int r, int v)
 {
 	if (r > 15) return;
 	if (r < 14)
@@ -269,7 +269,7 @@ static void AYWriteReg(int chip, int r, int v)
 
 
 
-static unsigned char AYReadReg(int n, int r)
+/*static*/ unsigned char AYReadReg(int n, int r)
 {
 	struct AY8910 *PSG = &AYPSG[n];
 
@@ -599,7 +599,7 @@ void AY8910_set_clock(int chip, int clock)
 }
 
 
-static void build_mixer_table(int chip)
+/*static*/ void build_mixer_table(int chip)
 {
 	struct AY8910 *PSG = &AYPSG[chip];
 	int i;
@@ -650,7 +650,7 @@ void AY8910Exit(int chip)
 	ay8910_index_ym = 0;
 }
 
-static void dummy_callback(void)
+/*static*/ void dummy_callback(void)
 {
 	return;
 }

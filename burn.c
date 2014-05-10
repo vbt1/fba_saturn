@@ -178,12 +178,12 @@ struct BurnDriver BurnDrvpacman = {
 		NULL, NULL, NULL, NULL
 };
 
-/*static*/ struct BurnDriver BurnDrvFourdwarrio = {
+/*static*//* struct BurnDriver BurnDrvFourdwarrio = {
 		"4dwarrio", "sys1",
 		"4-D Warriors (315-5162)\0",
 		NULL, NULL, NULL, NULL,
 		NULL, NULL, NULL, NULL
-	};
+	};	  */
 /*
 	struct BurnDriver BurnDrvmspacman = {
 		"mspacman", "pacm",
@@ -201,7 +201,7 @@ struct BurnDriver BurnDrvpacman = {
 */
 struct BurnDriver* pDriver[] __attribute__((aligned (4)))
 	/*__attribute__ ((section(".pdriver")))*/ = {
-&BurnDrvFourdwarrio,
+//&BurnDrvFourdwarrio,
 &BurnDrvStarjack,
 &BurnDrvRaflesia,
 &BurnDrvbankp,
@@ -252,10 +252,6 @@ int BurnLibInit()
 	BurnDrvGardia.szShortName = "gardia";
 	BurnDrvGardia.szParent = "sys1h";
 	BurnDrvGardia.szFullNameA = "Gardia (317-0006)\0";
-
-	BurnDrvFourdwarrio.szShortName = "4dwarrio";
-	BurnDrvFourdwarrio.szParent = "sys1";
-	BurnDrvFourdwarrio.szFullNameA = "4-D Warriors (315-5162)\0";
 
 	return 0;
 }

@@ -554,7 +554,7 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 /*static*/ INT32 DrvExit()
 {
 #ifdef RAZE
-	z80_reset();
+	z80_stop_emulating();
 #else
 	CZetExit();
 #endif	

@@ -12,7 +12,7 @@ static SclSysreg	*ss_regs;
 static SclSpPriNumRegister  *ss_SpPriNum;
 static SclBgPriNumRegister  *ss_BgPriNum;
 static SclOtherPriRegister    *ss_OtherPri;
-static SprSpCmd				*ss_sprite;
+/*static*/ SprSpCmd				*ss_sprite;
 //static struct BurnDriver *fba_drv;
 
 static UINT16  *colAddr; 
