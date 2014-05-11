@@ -694,8 +694,9 @@ static void dummy(void)
 	ss_regs->tvmode = 0x8011;//0x0013;//0x0001; ou 0x0011
 	ss_reg->linecontrl = (lp.h_enbl << 1) & 0x0002;
 //	SclProcess =1;
-
+#ifdef LOOP
 	memset(bg_dirtybuffer,1,4096);
+#endif
 	color_dirty = 1;
 
 	initLayers();
@@ -749,7 +750,9 @@ static void dummy(void)
 	if(Mem!=NULL)	free(Mem);
 //	free(Mem);
 	Mem = NULL;
-//	bg_dirtybuffer = NULL;
+#ifdef LOOP
+	bg_dirtybuffer = NULL;
+#endif
 //	DrvPaletteRam = NULL;
 	color_dirty = 0;
 	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam =DrvChars = DrvSprites = NULL;
@@ -813,7 +816,7 @@ static void dummy(void)
 		color_dirty = 0;
 	}
 }
-
+#ifdef LOOP
 /*static*/ void DrvRenderBgLayer()
 {
 	unsigned int Code, Attr, x, TileIndex = 0;
@@ -833,7 +836,7 @@ static void dummy(void)
 			}
 	}
 }
-
+#endif
 /*static*/ void DrvRenderSpriteLayer()
 {
 	SprSpCmd *ss_spritePtr;
@@ -852,14 +855,14 @@ static void dummy(void)
 		ss_spritePtr->color     = (Colour<<4);
 	}
 }
-
+#ifdef LOOP
 /*static*/ void DrvDraw()
 {			 
 	SPR_RunSlaveSH((PARA_RTN*)DrvRenderBgLayer, NULL);
 	DrvRenderSpriteLayer();
 	SPR_WaitEndSlaveSH();
 }
-
+#endif
 /*static*/ int DrvFrame()
 {
 	int nInterleave = 10;

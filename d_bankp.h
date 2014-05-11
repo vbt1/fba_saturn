@@ -11,12 +11,12 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ UINT8 *SaturnMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
-/*static*/ unsigned char 	*bg_dirtybuffer = NULL;
-/*static*/ unsigned char 	*fg_dirtybuffer = NULL;
+/*static*/ //unsigned char 	*bg_dirtybuffer = NULL;
+/*static*/ //unsigned char 	*fg_dirtybuffer = NULL;
 /*static*/ unsigned char *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
 /*static*/ int *Palette = NULL;
-/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvReset, DrvDips;
-/*static*/ unsigned char /*scroll_x,*/ priority, flipscreen, interrupt_enable;
+/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvReset=0, DrvDips;
+/*static*/ unsigned char /*scroll_x,*/ priority=0, flipscreen=0, interrupt_enable=0;
 
 /*static*/ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 /*static*/ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
@@ -32,7 +32,7 @@ void __fastcall bankp_write_fc00(unsigned short address, unsigned char data);
 /*static*/ INT32 DrvDoReset();
 /*static*/ INT32 DrvExit();
 /*static*/ INT32 DrvFrame();
-/*static*/ INT32 DrvDraw();
+/*static*/ //INT32 DrvDraw();
 /*static*/ INT32 DrvInit();
 /*static*/ INT32 DrvChInit();
 

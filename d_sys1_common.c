@@ -683,7 +683,6 @@ void initLayers()
 		}
 	}
 	memset(&ss_vram[0x1100],0x00,0x7EF00);
-	
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(5);
 	SS_SET_N0PRIN(7);
@@ -790,12 +789,13 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	}
 	else
 		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
+	memset(&ss_map2[2048],0,768);
 
 	if(flipscreen==1)			rotate_tile(System1NumTiles,0,System1Tiles);
 	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,System1Tiles);
 
 	spriteCache = (UINT16*)(0x00200000);
-	memset4_fast((void*)spriteCache,0xFFFFFFFF,0x40000);
+	memset4_fast((void*)spriteCache,0xFFFFFFFF,0x80000);
 	System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
 
 	memset(System1Sprites, 0x11, System1SpriteRomSize);

@@ -13,14 +13,14 @@ int ovlInit(char *szShortName)
 	"bankp", NULL, 
 	"Bank Panic\0",  
 	bankpRomInfo, bankpRomName, bankpInputInfo, bankpDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw//, NULL, 
+	DrvInit, DrvExit, DrvFrame, NULL//, NULL, 
 	};
 
 	struct BurnDriver nBurnDrvcombh = {
 	"combh", "bankp", 
 	"Combat Hawk\0",
 	combhRomInfo, combhRomName, combhInputInfo, combhDIPInfo,
-	DrvChInit, DrvExit, DrvFrame, DrvDraw//, NULL
+	DrvChInit, DrvExit, DrvFrame, NULL//, NULL
 	};
 	
 	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
@@ -34,13 +34,12 @@ int ovlInit(char *szShortName)
 		flipscreen = 1;
 		memcpy(fba_drv,&nBurnDrvcombh,sizeof(struct BurnDriver));
 	}
-	ss_reg          = (SclNorscl *)SS_REG;
-
+	ss_reg    = (SclNorscl *)SS_REG;
+	ss_regs  = (SclSysreg *)SS_REGS;
 }
 
 /*static*/ INT32 DrvChInit()
 {
-	flipscreen = 1;
 	DrvInit();
 	ss_reg->n2_move_y =  0;//(0<<16) ;
 	ss_reg->n2_move_x =  0;
@@ -113,7 +112,7 @@ int ovlInit(char *szShortName)
 	z80_set_out((void (*)(unsigned short, unsigned char))&bankp_out);
 #else
 	CZetInit(1);
-//	CZetOpen(0);
+	CZetOpen(0);
 	CZetSetInHandler(bankp_in);
 	CZetSetOutHandler(bankp_out);
 	CZetMapArea(0x0000, 0xdfff, 0, Rom + 0x0000);
@@ -184,50 +183,27 @@ int ovlInit(char *szShortName)
 #else
 /*static*/ void __fastcall bankp_write(unsigned short address, unsigned char data)
 {
-//	if (address >= 0xf000 && address <= 0xf3ff) 
 	if (address >= 0xf000 && address <= 0xf7ff) 
 	{
 		if(Rom[address]!=data)
 		{
-//			fg_dirtybuffer[address-0xf000] = 1;
-			fg_dirtybuffer[address&0x3ff] = 1;
+//			fg_dirtybuffer[address&0x3ff] = 1;
 			Rom[address] = data;
+			fg_line(address&0x3ff, (0x3<< 14));
 		}
 		return;
 	}
-/*
-	if (address >= 0xf400 && address <= 0xf7ff) 
-	{
-		if(Rom[address]!=data)
-		{
-			fg_dirtybuffer[address-0xf400] = 1;
-			Rom[address] = data;
-		}
-		return;
-	}
-*/
-//	if (address >= 0xf800 && address <= 0xfbff) 
+
 	if (address >= 0xf800 && address <= 0xffff) 
 	{
 		if(Rom[address]!=data)
 		{
-//			bg_dirtybuffer[address-0xf800] = 1;
-			bg_dirtybuffer[address&0x3ff] = 1;
+//			bg_dirtybuffer[address&0x3ff] = 1;
 			Rom[address] = data;
+			bg_line(address&0x3ff, (0x3<< 14));
 		}
 		return;
 	}
-/*
-	if (address >= 0xfc00 && address <= 0xffff) 
-	{
-		if(Rom[address]!=data)
-		{
-			bg_dirtybuffer[address-0xfc00] = 1;
-			Rom[address] = data;
-		}
-		return;
-	}
-*/
 }
 #endif
 #endif
@@ -512,8 +488,8 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 /*static*/ void SaturnInitMem()
 {
 	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-	bg_dirtybuffer	= Next; Next += 0x400 * sizeof(UINT8);
-	fg_dirtybuffer		= Next; Next += 0x400 * sizeof(UINT8);
+//	bg_dirtybuffer	= Next; Next += 0x400 * sizeof(UINT8);
+//	fg_dirtybuffer		= Next; Next += 0x400 * sizeof(UINT8);
 	map_offset_lut	= Next; Next += 0x400 * sizeof(UINT16);
 	MemEnd			= Next;
 }
@@ -536,8 +512,8 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	SaturnInitMem();
 	make_lut();
 
-	memset(bg_dirtybuffer,1,1024);
-	memset(fg_dirtybuffer,1,1024);
+//	memset(bg_dirtybuffer,1,1024);
+//	memset(fg_dirtybuffer,1,1024);
 //3 nbg
 	SS_SET_N0PRIN(7);
 	SS_SET_N1PRIN(4);
@@ -561,7 +537,7 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 //	SN76496Exit();
 
 	Rom  = 	Gfx0 = Gfx1 = Prom = Palette = NULL;
-	MemEnd = map_offset_lut = bg_dirtybuffer = fg_dirtybuffer = NULL;
+	MemEnd = map_offset_lut = /*bg_dirtybuffer = fg_dirtybuffer =*/ NULL;
 
 	free(Mem);
 	Mem = NULL;
@@ -603,27 +579,6 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	else											ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = code+0x1800;//2048  //0x1800
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ INT32 DrvDraw()
-{
-	INT32 flipx;
-	if (flipscreen) flipx = (0x3<< 14);
-
-	for (INT32 offs = 0x00; offs < 0x400; offs++)
-	{
-			if (bg_dirtybuffer[offs])
-			{
-				bg_dirtybuffer[offs] = 0;
-				bg_line(offs,flipx);
-			}
-
-			if (fg_dirtybuffer[offs])
-			{
-				fg_dirtybuffer[offs] = 0;
-				fg_line(offs,flipx);
-			}
-	}
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvFrame()
 {
 	if (DrvReset) {
@@ -654,6 +609,6 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 		nSoundBufferPos=0;
 	}
 
-	DrvDraw();
+//	DrvDraw();
 	return 0;
 }
