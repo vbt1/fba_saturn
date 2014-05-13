@@ -1806,10 +1806,10 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
 		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
 	}
 	
-//		play=0;
-//		SclProcess = 1;
-//		SetVblank();
-//		wait_vblank();
-//		play=1;
+		play=0;
+		SclProcess = 1;
+		SetVblank();
+		wait_vblank();
+		play=1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

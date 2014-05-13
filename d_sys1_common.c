@@ -245,7 +245,7 @@ Allocate Memory
 	System1PaletteRam      = Next; Next += 0x000600;
 	System1BgRam           = Next; Next += 0x000800;
 	System1VideoRam        = Next; Next += 0x000700;
-	RamStart						= System1VideoRam-0xe800;
+	RamStart1 = RamStart	= System1VideoRam-0xe800;
 //	RamStart16					= (UINT16 *)RamStart;
 	System1ScrollXRam	   = System1VideoRam + 0x7C0;
 	System1BgCollisionRam  = Next; Next += 0x000400;
@@ -269,28 +269,11 @@ Reset Functions
 
 /*static*/ int System1DoReset()
 {
-#ifdef CZ80
-#ifdef USE_RAZE0
-//	z80_set_context(context1);
-	z80_reset();
-//	z80_get_context(context1);
-#else
 	CZetOpen(0);
 	CZetReset();
 	CZetClose();
-#endif
-#ifdef CPU2_ENABLED
-#ifdef USE_RAZE1
-//	z80_set_context(context);
 	z80_reset();
-//	z80_get_context(context);
-#else
-	CZetOpen(1);
-	CZetReset();
-	CZetClose();
-#endif
-#endif
-#endif
+
 	System1ScrollX[0] = System1ScrollX[1] = System1ScrollY[0] = 0;
 	System1BgScrollX = 0;
 	System1BgScrollY = 0;
@@ -313,15 +296,16 @@ Memory Handlers
 
 void System1BankRom()
 {
-//	int BankAddress = (System1RomBank * 0x4000) + 0x10000;
 	int BankAddress = (System1RomBank << 14) + 0x10000;
-//	CZetOpen(0);
 	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
-//	if (DecodeFunction) {
-		CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + BankAddress, System1Rom1 + BankAddress);
-//	} else {
-//		CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
-//	}
+	CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + BankAddress, System1Rom1 + BankAddress);
+}
+
+void System1BankRomNoDecode()
+{
+	int BankAddress = (System1RomBank << 14) + 0x10000;
+	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
+	CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
 }
 
 UINT8 __fastcall System1Z801PortRead(unsigned short a)
@@ -371,40 +355,76 @@ void __fastcall System1Z801PortWrite(unsigned short a, UINT8 d)
 }
 
 void system1_backgroundram_w(unsigned short a, UINT8 d)
-{
+{	 
 	if(RamStart[a]!=d)
 	{
 		RamStart[a] = d;
 		a&=~1;
 		int Code;//, Colour;
 		Code = (RamStart[a + 1] << 8) | RamStart[a + 0];
+		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		unsigned int x = map_offset_lut[a&0x7ff];
 		ss_map[x]     = ss_map[x+0x40] = ss_map[x+0x1000] = ss_map[x+0x1040] = (Code >> 5) & 0x3f;;//color_lut[Code];
-		ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = code_lut[Code&(System1NumTiles-1)];
+		ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = Code & (System1NumTiles-1);
 	}
 }
 
 void system1_foregroundram_w(unsigned short a, UINT8 d) 
 {
-	if(RamStart[a]!=d)
+	if(RamStart1[a]!=d)
 	{
 		int Offs;
-		RamStart[a] = d;
+		RamStart1[a] = d;
 		a&=~1;
 
 		int Code;//, Colour;
-		Code = (RamStart[a + 1] << 8) | RamStart[a + 0];
+		Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
+		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		unsigned int x = map_offset_lut[a&0x7ff];
 		ss_map2[x]   = (Code >> 5) & 0x3f;//color_lut[Code];
-		ss_map2[x+1] = code_lut[Code&(System1NumTiles-1)];
+		ss_map2[x+1] = Code & (System1NumTiles-1);
 	}
 }
 
 void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 {
 	(*p[(a>>8)-0xd8])(a, d);
+/*
+	if (a >= 0xe000 && a <= 0xe7ff) { system1_backgroundram_w(a-0xe000,d); return; }
+	if (a >= 0xe800 && a <= 0xeeff) { system1_foregroundram_w(a-0xe800,d); return; }
+	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
+	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
+	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w(a,d); return; }
+	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
+	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
+	
+	switch (a) {
+		case 0xefbd: {
+			//System1ScrollY = d;
+//			if(flipscreen)d+=8;
+				ss_reg->n0_move_y = d<<16;
+			break;
+		}
+		
+		case 0xeffc: {
+			System1ScrollX[0] = d;
+//			ss_reg->n2_move_x = 1-d;
+			break;
+		}
+		
+		case 0xeffd: {
+			System1ScrollX[1] = d;
+			break;
+		}
+	}
+	
+	if (a >= 0xef00 && a <= 0xefff) {
+		System1efRam[a - 0xef00] = d;
+		return;
+	}
+	*/
 }
 
 void system1_bgcollisionram_w(unsigned short a, UINT8 d)
@@ -481,7 +501,7 @@ void __fastcall System1Z802ProgWrite(unsigned int a, UINT8 d)
 Driver Inits
 ===============================================================================================*/
 void initColors()
-{
+{		 
  	colAddr             = (Uint16*)COLADDR;//(Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	colBgAddr         = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
@@ -583,7 +603,7 @@ void initLayers()
 		map_offset_lut[i] = ((sx) | sy)<<1;
 	}
 
-	for (i = 0; i < System1NumTiles;i++)code_lut[i] = ((i >> 4) & 0x800) | (i & 0x7ff);
+//	for (i = 0; i < System1NumTiles;i++)code_lut[i] = (((i >> 4) & 0x800) | (i & 0x7ff))& (System1NumTiles-1);
 	for (i = 0; i < 10; i++)						cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;
 	for(i=0;i<256;i++)							if(i%8==0)	width_lut[i] = i;else	width_lut[i] = (i + (7)) & ~(7);
 //		width_lut[i] = (i + (7)) & ~(7);
@@ -598,7 +618,7 @@ void initLayers()
 	cram_lut			= Next; Next += 256 * sizeof(UINT16);
 	remap8to16_lut	= Next; Next += 512 * sizeof(UINT16);
 	map_offset_lut	= Next; Next += 0x800 * sizeof(UINT16);
-	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
+//	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
 	cpu_lut				= Next; Next += 10*sizeof(int);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
 	MemEnd			= Next;
@@ -813,7 +833,8 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1PromBlue, 2 + RomOffset, 1);
 	}
 	// Setup the Z80 emulation
-	CZetInit(1);
+// remettre 1 plus tard quand choplifter sera corrigé
+	CZetInit(2);
 
 	CZetOpen(0);
 	CZetSetWriteHandler(System1Z801ProgWrite);
@@ -840,7 +861,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	CZetMapArea(0xd200, 0xd7ff, 2, System1Ram1 + 0x1000);
 	CZetMapArea(0xd800, 0xddff, 0, System1PaletteRam);
 //	CZetMapArea(0xd800, 0xddff, 1, System1PaletteRam);
-	CZetMapArea(0xd800, 0xddff, 2, System1PaletteRam);
+//	CZetMapArea(0xd800, 0xddff, 2, System1PaletteRam);
 	CZetMapArea(0xde00, 0xdfff, 0, System1deRam);
 	CZetMapArea(0xde00, 0xdfff, 1, System1deRam);
 	CZetMapArea(0xde00, 0xdfff, 2, System1deRam);
@@ -922,7 +943,7 @@ int System1Exit()
 
 //Mem                 = NULL;
 MemEnd                 = NULL;
-RamStart               = NULL;
+RamStart1 = RamStart               = NULL;
 System1Rom1            = NULL;
 System1Rom2            = NULL;
 System1PromRed         = NULL;
@@ -952,7 +973,7 @@ System1ScrollY = NULL;
 //SaturnMem = NULL;
 remap8to16_lut = NULL;
 map_offset_lut = NULL;
-code_lut = NULL;
+//code_lut = NULL;
 cpu_lut = NULL;
 cram_lut = NULL;
 width_lut = NULL;
@@ -990,7 +1011,7 @@ spriteCache = NULL;
 
 	nextSprite=0;
 	flipscreen=0;
-
+	nBurnFunction = NULL;
 	DecodeFunction = NULL;
 	MakeInputsFunction = NULL;
 
