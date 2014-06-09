@@ -178,6 +178,13 @@ struct BurnDriver BurnDrvpacman = {
 		NULL, NULL, NULL, NULL
 };
 
+/*static*/ struct BurnDriver BurnDrvsms_akmw = {
+		"sms", NULL,
+		"Sega Master System\0",
+		NULL, NULL, NULL, NULL,
+		NULL, NULL, NULL, NULL
+};
+
 /*static*//* struct BurnDriver BurnDrvFourdwarrio = {
 		"4dwarrio", "sys1",
 		"4-D Warriors (315-5162)\0",
@@ -202,42 +209,42 @@ struct BurnDriver BurnDrvpacman = {
 struct BurnDriver* pDriver[] __attribute__((aligned (4)))
 	/*__attribute__ ((section(".pdriver")))*/ = {
 //&BurnDrvFourdwarrio,
-&BurnDrvStarjack,
-&BurnDrvRaflesia,
+&BurnDrvsms_akmw,
 &BurnDrvbankp,
 &BurnDrvBlockgal,
 &BurnDrvChplftb,
 &BurnDrvcombh,
 &BurnDrvFlickys2,
-//&BurnDrvGnga//
-//&BurnDrvpuckman,
-//&BurnDrvmspacman,
-&BurnDrvAtetris,
-//&BurnDrvpacman,
-&BurnDrvpengo2u,
-&BurnDrvWboyu,
-&BurnDrvWbdeluxe ,
-//&BurnDrvBlckgalb,
-//&BurnDrvChaknpop, 
 &BurnDrvGardia,
-&BurnDrvGberet,
 &BurnDrvGnga,
-&BurnDrvhigemaru,
+&BurnDrvGberet,
 &BurnDrvMrgoemon,
 &BurnDrvMyhero,
 &BurnDrvNews,
-&BurnDrvNewsa,/* 
-//&BurnDrvNprincesu, */
+&BurnDrvNewsa,
 &BurnDrvPang,
 &BurnDrvSpang,
 &BurnDrvpkunwar,	   
+&BurnDrvpengo2u,
+&BurnDrvhigemaru,
 &BurnDrvPitfall2u,
-//&BurnDrvSeganinju,
+&BurnDrvRaflesia,
+&BurnDrvStarjack,
+//&BurnDrvGnga//
+//&BurnDrvpuckman,
+//&BurnDrvmspacman,
 &BurnDrvTeddybb,
+&BurnDrvAtetris,
+//&BurnDrvpacman,
+&BurnDrvWboyu,
+&BurnDrvWbdeluxe
+//&BurnDrvBlckgalb,
+//&BurnDrvChaknpop, 
+/* 
+//&BurnDrvNprincesu, */
+//&BurnDrvSeganinju,
 //&BurnDrvVigilant,
 //&BurnDrvWbmljb,
-&BurnDrvWboyu,
-&BurnDrvWbdeluxe//,
 //&BurnDrvPengo2u
 };
 int BurnLibInit()
@@ -320,6 +327,7 @@ int BurnDrvFrame()
 	return pDriver[nBurnDrvSelect]->Frame();		// Forward to drivers function
 }
 // Force redraw of the screen
+/*
 int BurnDrvRedraw()
 {
 	if (pDriver[nBurnDrvSelect]->Redraw) {
@@ -328,6 +336,6 @@ int BurnDrvRedraw()
 
 	return 1;										// No funtion provide, so simply return
 }
-
+*/
 // Application-defined rom loading function:
 int (__cdecl *BurnExtLoadRom)(unsigned char *Dest,int *pnWrote,int i, int nGap,int bXor) = NULL;
