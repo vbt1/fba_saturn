@@ -37,7 +37,7 @@ OVERLAY	       = root/d_bankp.coff
 OVERLAY1     = root/d_bankp.bin
 MPOVLFILE    = $(OVERLAY:.coff=.maps)
 LDOVLFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVL         = d_bankp.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+SRCOVL         = d_bankp.c sn76496.c saturn/ovl.c
 OBJOVL         = $(SRCOVL:.c=.o)
 
 OVLNEWS                 = root/d_news.coff
@@ -111,6 +111,13 @@ SRCOVLPACM         = d_pacman.c czet.c cz80/cz80.c namco_snd.c saturn/ovl.c
 #SRCOVLPACM         = d_pacman_zet.c zet.c z80.c z80daisy.c namco_snd.c 
 OBJOVLPACM         = $(SRCOVLPACM:.c=.o)
 
+OVLSMS                 = root/d_sms.coff
+OVLSMS1               = root/d_sms.bin
+MPOVLSMSFILE    = $(OVLSMS:.coff=.maps)
+LDOVLSMSFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLSMS         = d_sms.c psg_sms.c 
+OBJOVLSMS         = $(SRCOVLSMS:.c=.o)
+
 OVLTETRIS                 = root/d_tetris.coff
 OVLTETRIS1               = root/d_TETRIS.bin
 MPOVLTETRISFILE    = $(OVLTETRIS:.coff=.maps)
@@ -143,7 +150,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLMITCH) $(OVLMITCH1) $(OVLGNG) $(OVLGNG1) \
      $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
-     $(OVLTETRIS) $(OVLTETRIS1)
+     $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -160,7 +167,7 @@ $(OVLIMG1) : $(OBJOVLIMG) $(MAKEFILE) $(LDOVLIMGFILE)
 	$(CONV) -O binary $(OVLIMG) $(OVLIMG1)
 
 $(OVERLAY) : $(OBJOVL) $(MAKEFILE) $(OBJOVL) $(LDOVLFILE)
-	$(CC) $(LDOVLFLAGS) $(OBJOVL) -o $@
+	$(CC) $(LDOVLFLAGS) $(OBJOVL) raze/raze.o -o $@
 
 $(OVERLAY1) : $(OBJOVL) $(MAKEFILE) $(LDOVLFILE)
 	$(CONV) -O binary $(OVERLAY) $(OVERLAY1)
@@ -230,6 +237,12 @@ $(OVLTETRIS) : $(OBJOVLTETRIS) $(MAKEFILE) $(OBJOVLTETRIS) $(LDOVLTETRISFILE)
 
 $(OVLTETRIS1) : $(OBJOVLTETRIS) $(MAKEFILE) $(LDOVLTETRISFILE)
 	$(CONV) -O binary $(OVLTETRIS) $(OVLTETRIS1)
+
+$(OVLSMS) : $(OBJOVLSMS) $(MAKEFILE) $(OBJOVLSMS) $(LDOVLSMSFILE)
+	$(CC) $(LDOVLSMSFLAGS) $(OBJOVLSMS) $(LIBSOVL) raze_sms/raze.o -o $@
+
+$(OVLSMS1) : $(OBJOVLSMS) $(MAKEFILE) $(LDOVLSMSFILE)
+	$(CONV) -O binary $(OVLSMS) $(OVLSMS1)
 
 # suffix
 .SUFFIXES: .asm
