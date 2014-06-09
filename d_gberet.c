@@ -371,28 +371,22 @@ int ovlInit(char *szShortName)
 //	FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"bet initsaturn     ",1,70);
 
 	DrvInitSaturn();
-//	FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"aft initsaturn     ",1,70);
 
 	int nLen;
 	Mem = NULL;
 	MemIndex();
 	nLen = MemEnd - (unsigned char *)0;
-//	FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"bef malloc        ",1,70);
 	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	MemIndex();
-//	FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"aft malloc        ",1,70);
 	if (GetRoms()) return 1;
 	/*if (game_type == 1) {
 		BootGfxDecode();
 	} else*/ 
-//	FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"aft get rom        ",1,70);
 	{
 		DrvGfxDecode();
 	}
-//	FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"aft gfxdecode        ",1,70);
 	DrvCreatePalette();
-//		FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"aft palette        ",1,70);
 
 #ifdef CZ80
 //	if(game_type&2)
@@ -571,7 +565,6 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
 #ifdef CACHE
-//	bg_dirtybuffer = (unsigned char *)malloc(2048);
 	memset(bg_dirtybuffer,1,2048);
 #endif
 

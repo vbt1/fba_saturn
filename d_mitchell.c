@@ -676,7 +676,6 @@ static void dummy(void)
 {
 	nBurnSprites  = 131;
 //	TVOFF;
-//	bg_dirtybuffer = (unsigned char *)malloc(4096);
 	SS_MAP2    = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT    = ss_font     = (Uint16 *)NULL;//(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_MAP      = ss_map    = (Uint16 *)NULL;

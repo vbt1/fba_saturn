@@ -273,11 +273,10 @@ int ovlInit(char *szShortName)
 	nRet = BurnLoadRom(NewsTempGfx + 0x00001, 2, 2); //if (nRet != 0) return 1;
 
 	GfxDecode4Bpp(16384, 4, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x100, NewsTempGfx, cache);//NewsTiles);
+	NewsTempGfx = NULL;
 
-	if ((MSM6295ROM = (unsigned char *)malloc(0x40000)) == NULL)
-	{	
-		return 1;
-	}
+	MSM6295ROM = (unsigned char *)0x00200000;
+	memset(MSM6295ROM,0x00,0x40000);
 
 	nRet = BurnLoadRom(MSM6295ROM, 3, 1); //if (nRet != 0) return 1;
 	// Setup the Z80 emulation
@@ -437,7 +436,6 @@ int ovlInit(char *szShortName)
 #else
 //	ZetExit();
 #endif
-	free(MSM6295ROM);
 	MSM6295ROM = NULL;
 	RamStart = NewsRom = NewsRam = NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
 	free(Mem);

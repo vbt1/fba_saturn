@@ -14,12 +14,11 @@ int ovlInit(char *szShortName)
 		DrvInit, DrvExit, DrvFrame, NULL, //NULL
 	};
 
-	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
-	memcpy(fba_drv,&nBurnDrvhigemaru,sizeof(struct BurnDriver));
+	memcpy(shared,&nBurnDrvhigemaru,sizeof(struct BurnDriver));
 	ss_reg          = (SclNorscl *)SS_REG;
 }
 
-/*static*/ void __fastcall higemaru_write(unsigned short address, unsigned char data)
+static void __fastcall higemaru_write(unsigned short address, unsigned char data)
 {
 	switch (address)
 	{
@@ -40,7 +39,7 @@ int ovlInit(char *szShortName)
 }
 
 #ifdef RAZE
-/*static*/ void __fastcall higemaru_write_d000(unsigned short address, unsigned char data)
+static void __fastcall higemaru_write_d000(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
@@ -51,7 +50,7 @@ int ovlInit(char *szShortName)
 #endif
 
 
-/*static*/ unsigned char __fastcall higemaru_read(unsigned short address)
+static unsigned char __fastcall higemaru_read(unsigned short address)
 {
 	unsigned char ret;
 	unsigned int i;
@@ -104,7 +103,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/ int MemIndex()
+static int MemIndex()
 {
 	unsigned char *Next; Next = Mem;
 
@@ -121,7 +120,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/ int DrvDoReset()
+static int DrvDoReset()
 {
 	memset (Rom + 0xd000, 0, 0x2000);
 
@@ -139,7 +138,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/ void DrvPaletteInit()
+static void DrvPaletteInit()
 {
 	unsigned int tmp[0x20];
 	unsigned int i;
@@ -172,12 +171,12 @@ for (i = 0; i < 0x80; i+=4)
 	//colAddr[0x000] = RGB(10,10,10);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*inline*/ /*static*/ int readbit(const UINT8 *src, int bitnum)
+/*inline*/ static int readbit(const UINT8 *src, int bitnum)
 {
 	return src[bitnum / 8] & (0x80 >> (bitnum % 8));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
+static void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
 {
 	int c;
 //	wait_vblank();
@@ -208,12 +207,12 @@ for (i = 0; i < 0x80; i+=4)
 //	wait_vblank();
 }
 
-/*static*/ int DrvGfxDecode()
+static int DrvGfxDecode()
 {
-	/*static*/ int Planes[4] = { 0x10004, 0x10000, 0x00004, 0x00000 };
-	/*static*/ int XOffs[16] = { 0x000, 0x001, 0x002, 0x003, 0x008, 0x009, 0x00a, 0x00b,
+	static int Planes[4] = { 0x10004, 0x10000, 0x00004, 0x00000 };
+	static int XOffs[16] = { 0x000, 0x001, 0x002, 0x003, 0x008, 0x009, 0x00a, 0x00b,
 				 0x100, 0x101, 0x102, 0x103, 0x108, 0x109, 0x10a, 0x10b };
-	/*static*/ int YOffs[16] = { 0x000, 0x010, 0x020, 0x030, 0x040, 0x050, 0x060, 0x070,
+	static int YOffs[16] = { 0x000, 0x010, 0x020, 0x030, 0x040, 0x050, 0x060, 0x070,
 				 0x080, 0x090, 0x0a0, 0x0b0, 0x0c0, 0x0d0, 0x0e0, 0x0f0 };
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 
@@ -232,7 +231,7 @@ for (i = 0; i < 0x80; i+=4)
 	return 0;
 }
 
-/*static*/ int DrvInit()
+static int DrvInit()
 {
 	int nLen;
 	unsigned int i;
@@ -316,7 +315,7 @@ for (i = 0; i < 0x80; i+=4)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initLayers()
+static void initLayers()
 {
     Uint16	CycleTb[]={
 		0x1f5f, 0xffff, //A0
@@ -352,7 +351,7 @@ for (i = 0; i < 0x80; i+=4)
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initPosition()
+static void initPosition()
 {
 	SCL_Open();
 	ss_reg->n1_move_x =  (-8<<16) ;
@@ -360,7 +359,7 @@ for (i = 0; i < 0x80; i+=4)
 	SCL_Close();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initColors()
+static void initColors()
 {
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
@@ -368,7 +367,7 @@ for (i = 0; i < 0x80; i+=4)
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void make_lut(void)
+static void make_lut(void)
 {
 	unsigned int i,delta=0;
 	int sx, sy, row,col;
@@ -381,7 +380,7 @@ void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn()
+static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	nBurnSprites  = 51;//27;
@@ -410,7 +409,7 @@ void make_lut(void)
 	drawWindow(0,224,0,2,62); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ int DrvExit()
+static int DrvExit()
 {
 	unsigned int i;
 #ifdef RAZE
@@ -435,7 +434,7 @@ void make_lut(void)
 	return 0;
 }
 
-/*static*/ inline void DrvDrawSprites()
+static inline void DrvDrawSprites()
 {
 	 // sprites
 	for (int offs = 0x170; offs >= 0; offs -= 16)
@@ -459,7 +458,7 @@ void make_lut(void)
 		ss_sprite[delta].color      = (color<<4);		
 	}
 }
-/*static*/ void DrvDrawBackground()
+static void DrvDrawBackground()
 {
  // back ground
 	for (int offs = 0x40; offs < 0x3c0; offs++)
@@ -479,7 +478,7 @@ void make_lut(void)
 }
 
 
-/*static*/ int DrvFrame()
+static int DrvFrame()
 {
 	if (DrvReset) {
 		DrvDoReset();

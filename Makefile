@@ -107,7 +107,7 @@ OVLPACM                 = root/d_pacm.coff
 OVLPACM1               = root/d_pacm.bin
 MPOVLPACMFILE    = $(OVLPACM:.coff=.maps)
 LDOVLPACMFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPACMFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLPACM         = d_pacman.c czet.c cz80/cz80.c namco_snd.c saturn/ovl.c
+SRCOVLPACM         = d_pacman.c czet.c cz80/cz80.c saturn/ovl.c
 #SRCOVLPACM         = d_pacman_zet.c zet.c z80.c z80daisy.c namco_snd.c 
 OBJOVLPACM         = $(SRCOVLPACM:.c=.o)
 

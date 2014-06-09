@@ -16,10 +16,11 @@ UINT16 map_offset_lut[1024];
 
 /*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvDips[3], DrvReset;
 
-/*static*/ int DrvGfxDecode();
-/*static*/ int DrvFrame();
-/*static*/ int DrvExit();
-/*static*/ int DrvInit();
+static int DrvGfxDecode();
+static int DrvFrame();
+static int DrvExit();
+static int DrvInit();
+static void DrvInitSaturn();
 
 /*static*/ struct BurnInputInfo DrvInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy3 + 7,	"p1 coin"  },

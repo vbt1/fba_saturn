@@ -1866,6 +1866,8 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 	smsSprite[2].cy         = sy;
 
 	smsSprite[3].control    = CTRL_END;
+
+	_spr2_transfercommand();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright)

@@ -16,13 +16,8 @@ int ovlInit(char *szShortName)
 		pengouInit, DrvExit, DrvFrame, DrvDraw //, NULL, &DrvRecalc, 0x200,
 	};
 
-	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
-//	if (strcmp(nBurnDrvpengob.szShortName, szShortName) == 0) memcpy(fba_drv,&nBurnDrvpengob,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvpengo2u.szShortName, szShortName) == 0) memcpy(fba_drv,&nBurnDrvpengo2u,sizeof(struct BurnDriver));
-//	if (strcmp(nBurnDrvmspacman.szShortName, szShortName) == 0) memcpy(fba_drv,&nBurnDrvmspacman,sizeof(struct BurnDriver));
-
-//	if (strcmp(nBurnDrvpacman.szShortName, szShortName) == 0) memcpy(fba_drv,&nBurnDrvpacman,sizeof(struct BurnDriver));
-//	if (strcmp(nBurnDrvpuckman.szShortName, szShortName) == 0) memcpy(fba_drv,&nBurnDrvpuckman,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvpengo2u.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvpengo2u,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -43,42 +38,6 @@ UINT8 __fastcall pacman_read(UINT16 a)
 	return 0;
 }
 
-void __fastcall pacman_write(UINT16 a, UINT8 d)
-{
-	if ((a & 0xffe0) == 0x5040) {
-		NamcoSoundWrite(a & 0x1f, d);
-		return;
-	}
-
-	if ((a & 0xfff0) == 0x5060) {
-		DrvSprRAM2[a & 0x0f] = d;
-		return;
-	}
-
-	switch (a)
-	{
-		case 0x5000:
-			interrupt_mask = d & 1;
-		break;
-
-		case 0x5001:
-			// pacman_sound_enable_w
-		break;
-
-		case 0x5003:
-			*flipscreen = d & 1;
-		break;
-
-		case 0x5002:// nop
-		case 0x5007:// coin counter
-		break;
-
-		case 0x50c0:
-			watchdog = 0;
-		break;
-	}
-}
-
 void __fastcall pacman_out_port(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
@@ -93,99 +52,7 @@ void __fastcall pacman_out_port(UINT16 a, UINT8 d)
 		CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 	}
 }
-/*
-UINT8 __fastcall mspacman_read(UINT16 a)
-{
-	if ((a < 0x4000) || (a >= 0x8000 && a <= 0xbfff))
-	{
-		if ((a >= 0x0038 && a <= 0x003f) |
-		    (a >= 0x03b0 && a <= 0x03b7) |
-		    (a >= 0x1600 && a <= 0x1607) |
-		    (a >= 0x2120 && a <= 0x2127) |
-		    (a >= 0x3ff0 && a <= 0x3ff7) |
-		    (a >= 0x8000 && a <= 0x8007) |
-		    (a >= 0x97f0 && a <= 0x97f7))
-		{
-			nPacBank = 0;
-		}
 
-		if (a >= 0x3ff8 && a <= 0x3fff) {
-			nPacBank = 1;
-		}
-
-		return DrvZ80ROM[(nPacBank << 16) + a];
-	}
-
-	if ((a & 0xfc00) == 0x4800) return 0xbf; // unmapped read
-
-	if ((a & 0xff00) == 0x5000) a &= ~0x003f;
-
-	switch (a)
-	{
-		case 0x5000: return DrvInputs[0];
-		case 0x5040: return DrvInputs[1];
-		case 0x5080: return DrvDips[2];
-		case 0x50c0: return DrvDips[3];
-	}
-
-	return 0;
-}
-
-void __fastcall mspacman_write(UINT16 a, UINT8 d)
-{
-	if ((a >= 0x0038 && a <= 0x003f) |
-	    (a >= 0x03b0 && a <= 0x03b7) |
-	    (a >= 0x1600 && a <= 0x1607) |
-	    (a >= 0x2120 && a <= 0x2127) |
-	    (a >= 0x3ff0 && a <= 0x3ff7) |
-	    (a >= 0x8000 && a <= 0x8007) |
-	    (a >= 0x97f0 && a <= 0x97f7))
-	{
-		nPacBank = 0;
-	}
-
-	if (a >= 0x3ff8 && a <= 0x3fff) {
-		nPacBank = 1;
-	}
-
-	if ((a & 0xffe0) == 0x5040) {
-		NamcoSoundWrite(a & 0x1f, d);
-		return;
-	}
-
-	if ((a & 0xfff0) == 0x5060) {
-		DrvSprRAM2[a & 0x0f] = d;
-		return;
-	}
-
-	switch (a)
-	{
-		case 0x5000:
-			interrupt_mask = d & 1;
-		break;
-
-		case 0x5001:
-			// pacman_sound_enable_w
-		break;
-
-		case 0x5003:
-			*flipscreen = d & 1;
-		break;
-
-		case 0x5002: // nop
-		case 0x5004:
-		case 0x5005: // leds
-		case 0x5006: // coin lockout
-		case 0x5007: // coin counter
-		case 0x5080: // nop
-		return;
-
-		case 0x50c0:
-			watchdog = 0;
-		break;
-	}
-}
-*/
 void __fastcall pengo_write(UINT16 a, UINT8 d)
 {
 #ifdef CACHE
@@ -202,7 +69,7 @@ void __fastcall pengo_write(UINT16 a, UINT8 d)
 	////	CZetMapArea(0x8400, 0x87ff, 1, DrvColRAM);
 
 	if ((a & 0xffe0) == 0x9000) {
-		NamcoSoundWrite(a & 0x1f, d);
+//		NamcoSoundWrite(a & 0x1f, d);
 		return;
 	}
 
@@ -222,7 +89,7 @@ void __fastcall pengo_write(UINT16 a, UINT8 d)
 		return;
 
 		case 0x9043:
-			*flipscreen = d & 1;
+//			*flipscreen = d & 1;
 		return;
 
 		case 0x9044:
@@ -259,7 +126,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 
 //------------------------------------------------------------------------------------------------------
 
-/*static*/ INT32 DrvDoReset(INT32 clear_ram)
+static INT32 DrvDoReset(INT32 clear_ram)
 {
 	if (clear_ram) {
 		memset (AllRam, 0, RamEnd - AllRam);
@@ -288,14 +155,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	return 0;
 }
 
-/*static*/ void DrvTransTableInit()
-{
-	for (INT32 i = 0; i < 0x100; i++) {
-		DrvTransTable[i] = (DrvColPROM[(i & 0xff) + 0x100] & 0x0f) ? 1 : 0;
-	}
-}
-
-/*static*/ void pacman_palette_init()
+static void pacman_palette_init()
 {
 	UINT32 t_pal[32];
 
@@ -323,23 +183,23 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	{
 		UINT8 ctabentry = DrvColPROM[i + 0x100] & 0x0f;
 
-		/*colAddr[i]=*/colBgAddr[delta] = Palette[0x000 + i] = t_pal[ctabentry + 0x00];
-		/*colAddr[i+256]=*/colBgAddr[delta+1024] = Palette[0x100 + i] = t_pal[ctabentry + 0x10];
+		/*colAddr[i]=*/colBgAddr[delta] = /*Palette[0x000 + i] =*/ t_pal[ctabentry + 0x00];
+		/*colAddr[i+256]=*/colBgAddr[delta+1024] = /*Palette[0x100 + i] =*/ t_pal[ctabentry + 0x10];
 		delta++; if ((delta & 3) == 0) delta += 12;
 
 //		Palette[0x000 + i] = t_pal[ctabentry + 0x00];
 //		Palette[0x100 + i] = t_pal[ctabentry + 0x10];
 	}
 
-	DrvRecalc = 1;
+//	DrvRecalc = 1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*inline*/ /*static*/ int readbit(const UINT8 *src, int bitnum)
+/*inline*/ static int readbit(const UINT8 *src, int bitnum)
 {
 	return src[bitnum / 8] & (0x80 >> (bitnum % 8));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target)
+static void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target)
 {
 	unsigned int i,j,k,l=0;
 	unsigned char temp[16][16];
@@ -373,7 +233,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 
-/*static*/ void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
+static void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
 {
 	int c;
 //	wait_vblank();
@@ -404,33 +264,30 @@ UINT8 __fastcall pengo_read(UINT16 a)
 //	wait_vblank();
 }
 
-/*static*/ void convert_gfx()
+static void convert_gfx()
 {
-	/*static*/ INT32 PlaneOffsets[2]  = { 0, 4 };
-	/*static*/ INT32 CharXOffsets[8]  = { 64, 65, 66, 67, 0, 1, 2, 3 };
-	/*static*/ INT32 SpriXOffsets[16] = { 8*8, 8*8+1, 8*8+2, 8*8+3, 16*8+0, 16*8+1, 16*8+2, 16*8+3, 24*8+0, 24*8+1, 24*8+2, 24*8+3, 0, 1, 2, 3 };
-	/*static*/ INT32 YOffsets[16]     = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 32*8, 33*8, 34*8, 35*8, 36*8, 37*8, 38*8, 39*8 };
+	static INT32 PlaneOffsets[2]  = { 0, 4 };
+	static INT32 CharXOffsets[8]  = { 64, 65, 66, 67, 0, 1, 2, 3 };
+	static INT32 SpriXOffsets[16] = { 8*8, 8*8+1, 8*8+2, 8*8+3, 16*8+0, 16*8+1, 16*8+2, 16*8+3, 24*8+0, 24*8+1, 24*8+2, 24*8+3, 0, 1, 2, 3 };
+	static INT32 YOffsets[16]     = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 32*8, 33*8, 34*8, 35*8, 36*8, 37*8, 38*8, 39*8 };
 
 	INT32 size = (game_select == PENGO) ? 0x2000 : 0x1000;
 
-	UINT8 *tmp = (UINT8*)malloc( size * 2 );
+	UINT8 *tmp = (UINT8*)0x00200000;
+	memset(tmp,0x00,size * 2);
 
-	if (tmp)
-	{
-		memcpy (tmp, DrvGfxROM, size * 2);
-		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-		GfxDecode4Bpp(((size * 4) / 0x040), 2,  8,  8, PlaneOffsets, CharXOffsets + 0, YOffsets, 0x080, tmp,        cache);//DrvGfxROM + 0x0000);
-		GfxDecode4Bpp(((size * 4) / 0x100), 2, 16, 16, PlaneOffsets, SpriXOffsets + 0, YOffsets, 0x200, tmp + size, &ss_vram[0x1100]);//DrvGfxROM + 0x8000);
-		rotate_tile(((size * 4) / 0x040),0,cache);
-		rotate_tile16x16(((size * 4) / 0x100),0,&ss_vram[0x1100]);
-		ss_vram = NULL;
-	}
+	memcpy (tmp, DrvGfxROM, size * 2);
+	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	GfxDecode4Bpp(((size * 4) / 0x040), 2,  8,  8, PlaneOffsets, CharXOffsets + 0, YOffsets, 0x080, tmp,        cache);//DrvGfxROM + 0x0000);
+	GfxDecode4Bpp(((size * 4) / 0x100), 2, 16, 16, PlaneOffsets, SpriXOffsets + 0, YOffsets, 0x200, tmp + size, &ss_vram[0x1100]);//DrvGfxROM + 0x8000);
+	rotate_tile(((size * 4) / 0x040),0,cache);
+	rotate_tile16x16(((size * 4) / 0x100),0,&ss_vram[0x1100]);
+	ss_vram = NULL;
 	
-	free (tmp);
 	tmp = NULL;
 }
 
-/*static*/ INT32 pacman_load()
+static INT32 pacman_load()
 {
 	char* pRomName;
 	struct BurnRomInfo ri;
@@ -438,7 +295,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	INT32 pOffset = 0;
 	UINT8 *gLoad = DrvGfxROM;
 	UINT8 *cLoad = DrvColPROM;
-	UINT8 *sLoad = NamcoSoundProm;
+//	UINT8 *sLoad = NamcoSoundProm;
 	UINT8 *qLoad = DrvQROM;
 
 	for (INT32 i = 0; !BurnDrvGetRomName(&pRomName, i, 0); i++) {
@@ -447,16 +304,16 @@ UINT8 __fastcall pengo_read(UINT16 a)
 
 		if ((ri.nType & 7) == 1) {
 			if (BurnLoadRom(DrvZ80ROM + pOffset, i, 1)) return 1;
-
+		  /*
 			if (game_select == MSPACMAN) {
 				pOffset += 0x1000;
-			} else {
+			} else {		*/
 				pOffset += ri.nLen;
-			}
+		//	}
 
-			if (pOffset == 0x4000 && game_select != PENGO) {
+	/*		if (pOffset == 0x4000 && game_select != PENGO) {
 				pOffset = 0x8000;
-			}
+			}			*/
 
 			continue;
 		}
@@ -474,14 +331,14 @@ UINT8 __fastcall pengo_read(UINT16 a)
 
 			continue;
 		}
-		
+/*		
 		if ((ri.nType & 7) == 4) {
 			if (BurnLoadRom(sLoad, i, 1)) return 1;
 			sLoad += 0x100;
 
 			continue;
 		}
-
+*/
 		if ((ri.nType & 7) == 7) {
 			if (BurnLoadRom(qLoad, i, 1)) return 1;
 			qLoad += ri.nLen;
@@ -493,7 +350,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	return 0;
 }
 
-/*static*/ INT32 MemIndex()
+static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
@@ -502,18 +359,17 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	DrvQROM			= Next;
 	DrvGfxROM		= (UINT8 *)cache;
 	DrvColPROM		= Next; Next += 0x000500;
-	NamcoSoundProm		= Next; Next += 0x000200;
-	DrvTransTable		= Next; Next += 0x000200;
-	Palette			= (UINT32*)Next; Next += 0x0200 * sizeof(UINT32);
+//	NamcoSoundProm		= Next; Next += 0x000200;
+	//Palette			= (UINT32*)Next; Next += 0x0200 * sizeof(UINT32);
 	AllRam			= Next;
 
 	DrvZ80RAM		= Next; Next += 0x001000;
-	DrvSprRAM		= DrvZ80RAM + ((game_select == ALIBABA) ? 0x6f0 : 0x7f0);
+	DrvSprRAM		= DrvZ80RAM + 0x7f0;
 	DrvSprRAM2		= Next; Next += 0x000010;
 	PengoStart		= Next - 0x8000;
 	DrvVidRAM		= Next; Next += 0x000400;
 	DrvColRAM		= Next; Next += 0x000400;
-	flipscreen		= Next; Next += 0x000001;
+//	flipscreen		= Next; Next += 0x000001;
 
 	RamEnd			= Next;
 /*
@@ -521,39 +377,16 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	pAY8910Buffer[1] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 	pAY8910Buffer[2] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 */
-//	MemEnd			= Next;
+	bg_dirtybuffer	= Next; Next += 0x400 * sizeof(UINT8);
+	map_offset_lut	= Next; Next += 0x400 * sizeof(UINT16);
+	ofst_lut				= Next; Next += 0x400 * sizeof(UINT16);
+
+	MemEnd			= Next;
 
 	return 0;
 }
 
-/*static*/ void StandardMap()
-{
-	for (INT32 i = 0; i <= 0x8000; i += 0x8000)// mirror
-	{
-		CZetMapArea(0x0000 + i, 0x3fff + i, 0, DrvZ80ROM);
-		CZetMapArea(0x0000 + i, 0x3fff + i, 2, DrvZ80ROM);
-
-		for (INT32 j = 0; j <= 0x2000; j+= 0x2000) // mirrors
-		{
-			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 0, DrvVidRAM);
-			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 1, DrvVidRAM);
-			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 2, DrvVidRAM);
-			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 0, DrvColRAM);
-			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 1, DrvColRAM);
-			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 2, DrvColRAM);
-			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 0, DrvZ80RAM + 0x0400);
-			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 1, DrvZ80RAM + 0x0400);
-			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 2, DrvZ80RAM + 0x0400);
-		}
-	}
-
-	CZetSetWriteHandler(pacman_write);
-	CZetSetReadHandler(pacman_read);
-	CZetSetOutHandler(pacman_out_port);
-//	CZetSetInHandler(pacman_in_port);
-}
-
-/*static*/ void PengoMap()
+static void PengoMap()
 {
 	CZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM);
 //	CZetMapArea(0x0000, 0x7fff, 2, DrvZ80ROM);
@@ -576,41 +409,22 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	CZetSetReadHandler(pengo_read);
 }
 
-/*static*/ /*void MspacmanMap()
-{
-	for (INT32 i = 0; i <= 0x8000; i += 0x8000)// mirror
-	{
-		for (INT32 j = 0; j <= 0x2000; j+= 0x2000) // mirrors
-		{
-			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 0, DrvVidRAM);
-			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 1, DrvVidRAM);
-			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 2, DrvVidRAM);
-			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 0, DrvColRAM);
-			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 1, DrvColRAM);
-			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 2, DrvColRAM);
-			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 0, DrvZ80RAM + 0x0400);
-			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 1, DrvZ80RAM + 0x0400);
-			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 2, DrvZ80RAM + 0x0400);
-		}
-	}
-
-	CZetSetWriteHandler(mspacman_write);
-	CZetSetReadHandler(mspacman_read);
-	CZetSetOutHandler(pacman_out_port);
-}
-*/
-/*static*/ INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 select)
+static INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 select)
 {
 	DrvInitSaturn();
 	game_select = select;
 
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = RamEnd - (UINT8 *)0;
+	INT32 nLen = MemEnd - (UINT8 *)0;
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
 
 	memset(AllMem, 0, nLen);
 	MemIndex();
+
+	make_lut();
+	memset(bg_dirtybuffer,1,0x400);
+
 	if (pacman_load()) return 1;
 
 	if (pInitCallback) {
@@ -618,12 +432,9 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	}
 	convert_gfx();
 	pacman_palette_init();
-	DrvTransTableInit();
 
 	CZetInit(1);
-
 	CZetOpen(0);
-
 	mapCallback();
 	CZetClose();
 
@@ -636,8 +447,8 @@ UINT8 __fastcall pengo_read(UINT16 a)
 //	SN76496SetRoute(0, 0.75, BURN_SND_ROUTE_BOTH);
 //	SN76496SetRoute(1, 0.75, BURN_SND_ROUTE_BOTH);
 
-	NamcoSoundInit(18432000 / 6 / 32, 3);
-	NacmoSoundSetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
+//	NamcoSoundInit(18432000 / 6 / 32, 3);
+//	NacmoSoundSetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 
 //	GenericTilesInit();
 //  	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset   before            ",10,20);	
@@ -683,14 +494,14 @@ void initLayers()
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initColors()
+static void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_lut(void)
+static void make_lut(void)
 {
 	unsigned int i,delta=0;
 	int sx, sy, row,col;
@@ -715,15 +526,6 @@ void initLayers()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void SaturnInitMem()
-{
-	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-	bg_dirtybuffer	= Next; Next += 0x400 * sizeof(UINT8);
-	map_offset_lut	= Next; Next += 0x400 * sizeof(UINT16);
-	ofst_lut				= Next; Next += 0x400 * sizeof(UINT16);
-	MemEnd			= Next;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
 	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
@@ -746,14 +548,7 @@ void DrvInitSaturn()
 	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
 
 	nBurnLinescrollSize = 0x300;
-	nBurnSprites = 128+3;
-
-	SaturnInitMem();
-	int nLen = MemEnd - (UINT8 *)0;
-	SaturnMem = (UINT8 *)malloc(nLen); 
-	SaturnInitMem();
-	make_lut();
-	memset(bg_dirtybuffer,1,0x400);
+	nBurnSprites = 32+3;
 
 //3 nbg
 	SS_SET_N0PRIN(7);
@@ -769,29 +564,24 @@ void DrvInitSaturn()
 
 
 
-/*static*/ INT32 DrvExit()
+static INT32 DrvExit()
 {
-	NamcoSoundExit();
+//	NamcoSoundExit();
 	CZetExit();
 
 	game_select = PACMAN;
 	nPacBank = -1;
 
-	DrvZ80ROM = DrvQROM = DrvGfxROM = DrvColPROM = NamcoSoundProm = NULL;
-	DrvTransTable = Palette = AllRam = DrvZ80RAM = DrvSprRAM = DrvSprRAM2 = NULL;
-	DrvColRAM= DrvVidRAM = flipscreen = RamEnd = NULL;
+	DrvZ80ROM = DrvQROM = DrvGfxROM = DrvColPROM = /*NamcoSoundProm =*/ NULL;
+	/*/DrvTransTable = Palette =*/ AllRam = DrvZ80RAM = DrvSprRAM = DrvSprRAM2 = NULL;
+	DrvColRAM= DrvVidRAM = /*flipscreen =*/ RamEnd = NULL;
 	PengoStart = bg_dirtybuffer = map_offset_lut = ofst_lut = MemEnd = NULL;
-
 	free (AllMem);
 	AllMem = NULL;
-
-	free(SaturnMem);
-	SaturnMem = NULL;
-
 	return 0;
 }
 
-/*static*/ void DrawBackground()
+static void DrawBackground()
 {
 	for (UINT16 offs = 0; offs < 36 * 28; offs++)
 	{
@@ -813,7 +603,7 @@ void DrvInitSaturn()
 	}
 }
 
-/*static*/ void DrawSprites()
+static void DrawSprites()
 {
 	for (INT32 offs = 0x10 - 2;offs >= 0;offs -= 2)
 	{
@@ -838,20 +628,15 @@ void DrvInitSaturn()
 	}
 }
 
-/*static*/ INT32 DrvDraw()
+static INT32 DrvDraw()
 {
-	if (DrvRecalc) {
-		pacman_palette_init();
-		DrvRecalc = 0;
-	}
-
 	DrawBackground();
 	DrawSprites();
 
 	return 0;
 }
 
-/*static*/ INT32 DrvFrame()
+static INT32 DrvFrame()
 {
 	watchdog++;
 	if (watchdog >= 16) {
@@ -870,12 +655,12 @@ void DrvInitSaturn()
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		}
 
-		if (/*!acitya &&*/ game_select != SHOOTBUL) {
+//		if (/*!acitya &&*/ game_select != SHOOTBUL) {
 			if ((DrvInputs[0] & 6) == 6) DrvInputs[0] &= ~0x06;
 			if ((DrvInputs[0] & 9) == 9) DrvInputs[0] &= ~0x09;
 			if ((DrvInputs[1] & 6) == 6) DrvInputs[1] &= ~0x06;
 			if ((DrvInputs[1] & 9) == 9) DrvInputs[1] &= ~0x09;
-		}
+//		}
 
 		DrvInputs[0] ^= DrvDips[0];
 		DrvInputs[1] ^= DrvDips[1];
@@ -975,35 +760,28 @@ void DrvInitSaturn()
 	return 0;
 }
 //------------------------------------------------------------------------------------------------------
-/*static*/ /*INT32 puckmanInit()
+static void PengoGraphicsReorder()
 {
-	return DrvInit(StandardMap, NULL, PACMAN);
-}
-*/
-/*static*/ void PengoGraphicsReorder()
-{
-	UINT8 *tmp = (UINT8*)malloc(0x2000);
-
+	UINT8 *tmp = (UINT8*)0x00200000;
+	memset(tmp,0x00,0x20000);
 	memcpy (tmp + 0x0000, DrvGfxROM + 0x2000, 0x1000);
 	memcpy (tmp + 0x1000, DrvGfxROM + 0x1000, 0x1000);
 	memcpy (DrvGfxROM + 0x1000, tmp + 0x0000, 0x2000);
-
-	free (tmp);
 	tmp = NULL;
 }
 
-/*static*/ void PengouCallback()
+static void PengouCallback()
 {
 	memcpy (DrvZ80ROM + 0x8000, DrvZ80ROM, 0x8000);
 
 	PengoGraphicsReorder();
 }
 
-/*static*/ INT32 pengouInit()
+static INT32 pengouInit()
 {
 	return DrvInit(PengoMap, PengouCallback, PENGO);
 }
-/*static*/ /*void MspacmanDecode()
+/*static void MspacmanDecode()
 {
 #define ADD0SWAP(x) BITSWAP16(x,15,14,13,12,11,3,7,9,10,8,6,5,4,2,1,0)
 #define ADD1SWAP(x) BITSWAP16(x,15,14,13,12,11,8,7,5,9,10,6,3,4,2,1,0)
@@ -1047,7 +825,7 @@ void DrvInitSaturn()
 	memcpy (DrvZ80ROM + 0x8000, DrvZ80ROM, 0x4000);
 }
 */
-/*static*//* INT32 mspacmanInit()
+/*static INT32 mspacmanInit()
 {
 	return DrvInit(MspacmanMap, MspacmanDecode, MSPACMAN);
 }

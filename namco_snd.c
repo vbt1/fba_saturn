@@ -25,7 +25,7 @@ typedef struct
 	INT32 waveform_select;
 } sound_channel;
 
-static UINT8 *namco_soundregs;
+static UINT8 namco_soundregs[0x40];
 static UINT8 *namco_wavedata;
 
 struct namco_sound
@@ -493,7 +493,7 @@ void NamcoSoundInit(INT32 clock, INT32 num_voices)
 	chip = (struct namco_sound*)malloc(sizeof(*chip));
 	memset(chip, 0, sizeof(*chip));
 	
-	namco_soundregs = (UINT8*)malloc(0x40);
+//	namco_soundregs = (UINT8*)malloc(0x40);
 	memset(namco_soundregs, 0, 0x40);
 
 	chip->num_voices = num_voices;
@@ -555,10 +555,13 @@ void NamcoSoundExit()
 //	if (!DebugSnd_NamcoSndInitted) bprintf(PRINT_ERROR, _T("NamcoSoundExit called without init\n"));
 #endif
 
-	if (namco_soundregs) {
-		free(namco_soundregs);
-		namco_soundregs = NULL;
-	}
+	namco_wavedata = NULL;
+	NamcoSoundProm = NULL;
+
+//	if (namco_soundregs) {
+//		free(namco_soundregs);
+//		namco_soundregs = NULL;
+//	}
 
 	if (chip) {
 		free(chip);

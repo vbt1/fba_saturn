@@ -11,11 +11,10 @@ int ovlInit(char *szShortName)
 		"pkunw", NULL,
 		"Penguin-Kun Wars (US)\0",
 		pkunwarRomInfo, pkunwarRomName, DrvInputInfo, DrvDIPInfo,
-		DrvInit, DrvExit, DrvFrame, DrvDraw//, NULL
+		DrvInit, DrvExit, DrvFrame, NULL//, DrvDraw//, NULL
 	};
 
-	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
-	memcpy(fba_drv,&nBurnDrvpkunwar,sizeof(struct BurnDriver));
+	memcpy(shared,&nBurnDrvpkunwar,sizeof(struct BurnDriver));
 	ss_reg          = (SclNorscl *)SS_REG;
 }
 
@@ -216,10 +215,8 @@ int ovlInit(char *szShortName)
 /*static*/ int LoadRoms()
 {
 	unsigned int i;
-	unsigned char *tmp = (unsigned char*)malloc(0x10000);
-	if (tmp == NULL) {
-		return 1;
-	}
+	UINT8 *tmp = (UINT8*)0x00200000;
+	memset(tmp,0x00,0x20000);
 
 	if (BurnLoadRom(Rom  + 0x0000, 0, 1)) return 1;
 	if (BurnLoadRom(Rom  + 0x4000, 1, 1)) return 1;
@@ -241,7 +238,6 @@ int ovlInit(char *szShortName)
 
 	pkunwar_palette_init(tmp);
 
-	free (tmp);
 	tmp = NULL;
 
 	return 0;
@@ -372,6 +368,7 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
+	cleanSprites();
 	SPR_InitSlaveSH();
 	nBurnSprites  = 67;
 
