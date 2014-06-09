@@ -22,7 +22,8 @@
 #include "sega_pcm.h"
 #include "sega_snd.h"
 #include "burnint.h"
-#include "ovl.h"
+//#include "ovl.h"
+#include "globals.h"
 
 #define	AD_SMPC_COMREG	0x2010001F
 #define	SMPC_COMREG		(*( volatile Uint8 * )AD_SMPC_COMREG)
@@ -91,8 +92,8 @@ static    Uint16 pad_asign[]={
 
 unsigned short palette[8]=
 {
-RGB( 164>>3, 181>>3, 197>>3),RGB( 0,0,0 ),RGB( 164>>3, 181>>3, 197>>3),RGB( 214>>3, 230>>3, 247>>3 ),
-RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 148>>3 ),
+RGB( 254>>3, 254>>3, 254>>3),RGB( 0,0,0 ),RGB( 254>>3, 254>>3, 254>>3),RGB( 221>>3, 220>>3, 219>>3 ),
+RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 241>>3, 192>>3, 0>>3 ),RGB( 252>>3, 201>>3, 0>>3 ),
 };
 
 static unsigned char P1P2Start = 0;
@@ -116,17 +117,17 @@ unsigned char hz=0;
 #endif
 
 static Uint8        *aVRAM;
-static Uint16       *colAddr; //sprite color
+//static Uint16       *colAddr; //sprite color
 //Uint16       *colBgAddr2;
 //Uint16       *colBgAddr; // color
 //static Uint32       SclColRamAlloc256[8];
 static SprSpCmd     smsSprite[128+3];
 SclLineparam lp;
 
-static Uint16 *ss_font;
-static Uint16 *ss_map;
-static Uint16 *ss_map2;
-static unsigned char *cache;
+//static Uint16 *ss_font;
+//static Uint16 *ss_map;
+//static Uint16 *ss_map2;
+//static unsigned char *cache;
 
 static Uint32	SclAddrLsTbl[2];
 static Fixed32	ls_tbl[SCL_MAXLINE];

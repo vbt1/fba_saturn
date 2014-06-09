@@ -1,6 +1,8 @@
 #include "saturn.h"
+
 //#include "sc_saturn.h"
-#define GAME_BY_PAGE 12
+#define GAME_BY_PAGE 16
+//#define OVLADDR  0x060A5000
 #define OVLADDR  0x060A5000
 #define LOWADDR 0x00200000
 volatile SysPort	*__port;
@@ -10,6 +12,18 @@ static trigger_t	pltrigger[2],pltriggerE[2];
 extern unsigned char play;
 unsigned char drvquit;
 //struct BurnDriver* oDriver;
+/*typedef struct  {
+  int arena;    // total space allocated from system 
+  int ordblks;  // number of non-inuse chunks 
+  int smblks;   //* unused -- always zero 
+  int hblks;    //* number of mmapped regions 
+  int hblkhd;   //* total space in mmapped regions 
+  int usmblks;  //* unused -- always zero 
+  int fsmblks;  //* unused -- always zero 
+  int uordblks; //* total allocated space 
+  int fordblks; //* total non-inuse space 
+  int keepcost; // top-most, releasable (via malloc_trim) space 
+}mallinfo;	*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	UsrVblankIn( void )
 {
@@ -33,7 +47,7 @@ void	UsrVblankIn( void )
 				if(frame_displayed!=frame_x)
 				{
 					sprintf(xx,"%03d",frame_x);
-					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)xx,136,20);
+					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)xx,136,20);
 					frame_displayed = frame_x;
 				}
 				frame_y=frame_x=0;
@@ -51,7 +65,7 @@ void   UsrVblankOut( void )
 	InpMake(FBA_KEYPAD);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void	SetVblank( void )
+/*static*/ void	SetVblank( void )
 {
 	INT_ChgMsk(INT_MSK_NULL,INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT);
 	INT_SetScuFunc(INT_SCU_VBLK_IN,UsrVblankIn);
@@ -96,7 +110,7 @@ static void	_spr2_initialize( void )
 	SPR_Initial(&aVRAM);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static __inline__ void	_spr2_transfercommand()
+/*static*/ __inline__ void	_spr2_transfercommand()
 {
 	  memcpyl(aVRAM,smsSprite,(nBurnSprites<<5) ) ;
 }
@@ -175,7 +189,7 @@ static void initSound()
 	PCM_Start(pcm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initLayers()
+void resetLayers()
 {
 	Uint16	CycleTb[]={
 		0x55ee, 0xeeee, //A1
@@ -185,14 +199,13 @@ static void initLayers()
 	};
  	SclConfig	scfg;
 
-	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_MAP  = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_MAP2 = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A0;
-	cache = (Uint8 *)SS_CACHE;
+	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_MAP  = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_MAP2 = (Uint16 *)SCL_VDP2_VRAM_A0;
 //	memset(SCL_VDP2_VRAM,0,0x80000);
 //	memset(ss_map,0,0x20000);
 //	memset(ss_map2,0,0x20000);
-	memset4_fast(cache,0,0x30000);
+//	memset4_fast(SS_CACHE,0,0x30000);
 //	cache    =(Uint16 *)NULL;
 
 	SCL_ParametersInit();
@@ -203,12 +216,12 @@ static void initLayers()
 	scfg.mapover       = SCL_OVER_0;
 
 	scfg.coltype 	   = SCL_COL_TYPE_256;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-	scfg.plate_addr[0] = (Uint32)ss_map;
+	scfg.plate_addr[0] = (Uint32)SS_MAP;
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
 	scfg.coltype 	       = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-	scfg.plate_addr[0]= (Uint32)ss_font;
+	scfg.plate_addr[0]= (Uint32)SS_FONT;
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
@@ -224,7 +237,7 @@ static void initLayers()
     SCL_SET_N2PRIN(1);
 }
 //--------------------------------------------------------------------------------------------------------------
-static void initColors()
+/*static*/ void resetColors()
 {
 	Uint16 i;
 	Uint16 *VRAM;
@@ -246,15 +259,25 @@ static void initColors()
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initSaturn()
+/*static*/ void initSaturn()
 {
+
+	Uint8	*dst;
+//	malloc_trim();
+   Uint32 __malloc_sbrk_base;
+/*   
+	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)_bend; dst++)
+		*dst = 0;
+    for (dst = (Uint8 *)&__malloc_sbrk_base; dst < (Uint8 *)OVLADDR; dst++)
+//		if(	!(dst>=0x6003500 && dst <0x6004000))
+		*dst = 0;
+  */
 //	nBurnLinescrollSize = 0x400;//0x400
 //	nBurnSprites = 131;
 //	INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
 	nBurnFunction = NULL;
 	nSoundBufferPos = 0;
-//	PER_SMPC_SSH_OFF();
-//	SPR_InitSlaveSH();
+
 	play=1;
 //	cleanSprites();
 //	_spr2_transfercommand();
@@ -264,7 +287,7 @@ static void initSaturn()
 
 	InitCD();
 	VDP2_InitVRAM();
-	initLayers();
+	resetLayers();
 //	PCM_MeReset(pcm);
 //	SetVblank();
 //wait_vblank();
@@ -274,8 +297,11 @@ static void initSaturn()
 	memset4_fast(SCL_VDP2_VRAM_B0,0,0x20000);
 	memset4_fast(SCL_VDP2_VRAM_B1,0,0x20000);
 
+	memset(pltrigger[0],0x00,sizeof(trigger_t));
+	memset(pltriggerE[0],0x00,sizeof(trigger_t));
+
 	play = 0;
-	initColors();
+	resetColors();
 	initSprites(352-1,240-1,0,0,0,0);
 //	_spr2_transfercommand();
 	//SclProcess = 2;
@@ -311,6 +337,13 @@ wait_vblank();
 //
 //	SetVblank();
 //		initColors();
+/*
+#ifndef ACTION_REPLAY
+	if(FntAsciiFontData2bpp==NULL)
+		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
+	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
+#endif
+	*/
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void ss_main(void)
@@ -323,19 +356,18 @@ static void ss_main(void)
 	initSound();
 	CSH_Init(CSH_4WAY);
 //	SPR_InitSlaveSH();
-	BurnLibInit();
-
+//	slob_init();
 	initSaturn();
+	BurnLibInit();
+	BurnDrvAssignList();
 //	testTga();
 
 #ifndef ACTION_REPLAY
-	FntAsciiFontData2bpp = (Uint8*)malloc(1600);
+	if(FntAsciiFontData2bpp==NULL)
+		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-//	sc_init();
-	memset(pltrigger[0],0x00,sizeof(trigger_t));
-	memset(pltriggerE[0],0x00,sizeof(trigger_t));
-	
+
 	while(1)
 	{
 		__port = PER_OpenPort();
@@ -385,7 +417,7 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 	unsigned int i=0;
 	SysDevice	*device;
 
-	if(( device = PER_GetDeviceR( &__port[0], 0 )) != NULL )
+	if(play==0 && ( device = PER_GetDeviceR( &__port[0], 0 )) != NULL )
 	{
 		pltriggerE[0] = pltrigger[0];
 		pltrigger[0]  = PER_GetTrigger( device );
@@ -427,9 +459,37 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 					case PER_DGT_S:
 					run_fba_emulator();
 					loaded[0] = 0;
+/*
+                0x0000000006019acc                ___malloc_current_mallinfo
+                0x0000000006019af4                ___malloc_max_total_mem
+                0x0000000006019af8                ___malloc_max_sbrked_mem
+                0x0000000006019afc                ___malloc_top_pad
+*/
+/*
+	char toto[50];
+	extern int __malloc_max_total_mem;
+	extern int __malloc_max_sbrked_mem;
+	extern Uint32 __malloc_sbrk_base;
+	extern mallinfo  __malloc_current_mallinfo;
 
-					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"A:Help",12,201);
-					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"C:Credits",127,201);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
+
+	sprintf (toto,"arena %08x",__malloc_current_mallinfo.arena) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,171);
+
+	sprintf (toto,"ordblks %08x",__malloc_current_mallinfo.ordblks) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,181);
+
+	sprintf (toto,"hblks %08x",__malloc_current_mallinfo.hblks) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,191);
+
+	sprintf (toto,"hblkhd %08x",__malloc_current_mallinfo.hblkhd) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,201);
+
+	sprintf (toto,"keepcost %08x",__malloc_current_mallinfo.keepcost) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
+  */
 					break;
 
 					default:
@@ -447,13 +507,39 @@ static void display_menu(void)
 //	_spr2_initialize();	
 //	SetVblank();
 //	set_imask(0);
+	
 	unsigned int l;
 	unsigned char loaded=0;
 //	sc_init();
 //	the_loop = 1;
+	/*
+	char toto[50];
+	extern int __malloc_max_total_mem;
+	extern int __malloc_max_sbrked_mem;
+	extern Uint32 __malloc_sbrk_base;
+	extern int __malloc_trim_threshold;
+	extern mallinfo  __malloc_current_mallinfo;
+
+	__malloc_trim_threshold = 1024;
+
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
 
+	sprintf (toto,"arena %08x",__malloc_current_mallinfo.arena) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,181);
+
+	sprintf (toto,"malloc_trim_threshold %08x",__malloc_trim_threshold) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,191);
+
+	sprintf (toto,"uordblks %08x",__malloc_current_mallinfo.uordblks) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,201);
+
+	sprintf (toto,"fordblks %08x",__malloc_current_mallinfo.fordblks) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
+
+	sprintf (toto,"keepcost %08x",__malloc_current_mallinfo.keepcost) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,221);
+	  */
 	unsigned int current_page = 1,m;
 	do
 	{
@@ -464,24 +550,23 @@ static void display_menu(void)
 			loaded=1;
 		}
 		m=0;
-		char page_header[50];
-		sprintf(page_header,"Game list:                       %02d/%02d",current_page, (nBurnDrvCount+GAME_BY_PAGE-1)/GAME_BY_PAGE);
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)page_header,12,12);
+//		char page_header[50];
+		char game_name[50];
+//		sprintf(page_header,"Game list:                       %02d/%02d",current_page, (nBurnDrvCount+GAME_BY_PAGE-1)/GAME_BY_PAGE);
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)page_header,12,12);
 
 		for (l=(current_page-1)*GAME_BY_PAGE;l<(current_page)*GAME_BY_PAGE && l<nBurnDrvCount;l++ )
 		{
-			char game_name[50];
 			sprintf(game_name,"%-38s",pDriver[l]->szFullNameA);
-			if(l==nBurnDrvSelect)	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,12,50+m);	  //12+m
-			else					 FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,12,50+m);
+			if(l==nBurnDrvSelect)	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);	  //12+m
+			else					 FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
 			m+=10;
 		}
 
 		for (;l<(current_page)*GAME_BY_PAGE;l++ )
 		{
-			char game_name[50];
 			sprintf(game_name,"%-38s"," ");
-			FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,12,50+m);
+			FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
 			m+=10;
 		}
 		update_input(&current_page,&loaded);
@@ -1626,12 +1711,12 @@ static int nDrvInit(int nDrvNum)
 		return 1;
 	}
 	BurnExtLoadRom = SaturnLoadRom;
-
+ /*
 	ss_map = (Uint16 *)SS_MAP;
 	ss_map2= (Uint16 *)SS_MAP2;
 	ss_font= (Uint16 *)SS_FONT;
 	cache  = (Uint8  *)SS_CACHE;
-
+   */
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1713,8 +1798,8 @@ static void run_fba_emulator()
 
 	if (nDrvInit(nBurnDrvSelect) != 0) 
 	{
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"Driver initialisation failed! Likely causes are:",1,180);
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"- Corrupt/Missing ROM(s)\n- I/O Error\n- Memory error\n\n",1,190);
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Driver initialisation failed! Likely causes are:",1,180);
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Corrupt/Missing ROM(s)\n- I/O Error\n- Memory error\n\n",1,190);
 //		while(1);
 
 	}
@@ -1744,6 +1829,8 @@ static void run_fba_emulator()
 		DrvExit();
 //		_smpc_SSHOFF();
 		initSaturn();
+//		BurnLibInit();
+		BurnDrvAssignList();
 //		nBurnDrvSelect=0;
 	}
 	asm("nop\n");
@@ -1813,3 +1900,4 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
 		play=1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+

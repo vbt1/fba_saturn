@@ -3,27 +3,27 @@
 
 //extern Uint32   _bstart, _bend;
 extern Uint32 *shared;
-extern struct BurnDriver* pDriver[];
+//extern struct BurnDriver* pDriver[];
 //static int nBurnSoundLen;
 //static Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
 extern unsigned int  nSoundBufferPos;
-static SclNorscl *ss_reg;
-static SclSysreg	*ss_regs;
-static SclSpPriNumRegister  *ss_SpPriNum;
-static SclBgPriNumRegister  *ss_BgPriNum;
-static SclOtherPriRegister    *ss_OtherPri;
-/*static*/ SprSpCmd				*ss_sprite;
+static SclNorscl *ss_reg = NULL;
+/*static*/ SclSysreg	*ss_regs = NULL;
+/*static*/ SclSpPriNumRegister  *ss_SpPriNum = NULL;
+/*static*/ SclBgPriNumRegister  *ss_BgPriNum = NULL;
+/*static*/ SclOtherPriRegister    *ss_OtherPri = NULL;
+/*static*/ SprSpCmd				*ss_sprite = NULL;
 //static struct BurnDriver *fba_drv;
 
-static UINT16  *colAddr; 
-static UINT16  *colBgAddr; // color
-static UINT16  *colBgAddr2;
-static Uint16  *ss_font;
-static Uint16  *ss_map;
-static Uint16  *ss_map2;
-static Fixed32 *ss_scl;
+/*static*/ UINT16  *colAddr = NULL; 
+/*static*/ UINT16  *colBgAddr = NULL; // color
+/*static*/ UINT16  *colBgAddr2 = NULL;
+/*static*/ Uint16  *ss_font = NULL;
+/*static*/ Uint16  *ss_map = NULL;
+/*static*/ Uint16  *ss_map2 = NULL;
+/*static*/ Fixed32 *ss_scl = NULL;
 
-static unsigned char *cache;
+static unsigned char *cache = NULL;
 
 //#define	REGADDR	    0x25F80000
 #define TVMD        (*(Uint16 *)0x25F80000)

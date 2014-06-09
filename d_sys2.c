@@ -21,8 +21,8 @@ int ovlInit(char *szShortName)
 		ChplftbInit, System1Exit, System1Frame, NULL//, NULL//,
 	};
 
-	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
-	memcpy(fba_drv,&nBurnDrvChplftb,sizeof(struct BurnDriver));
+//	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
+	memcpy(shared,&nBurnDrvChplftb,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;

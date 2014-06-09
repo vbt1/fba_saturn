@@ -48,11 +48,11 @@ struct BurnDriver nBurnDrvRaflesia = {
 	RaflesiaInit, System1Exit, System1Frame, NULL
 };
 
-	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
-    if (strcmp(nBurnDrvBlockgal.szShortName, szShortName) == 0)	memcpy(fba_drv,&nBurnDrvBlockgal,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvGardia.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvGardia,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvStarjack.szShortName, szShortName) == 0)	memcpy(fba_drv,&nBurnDrvStarjack,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvRaflesia.szShortName, szShortName) == 0)	memcpy(fba_drv,&nBurnDrvRaflesia,sizeof(struct BurnDriver));
+//	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
+    if (strcmp(nBurnDrvBlockgal.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvBlockgal,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvGardia.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvGardia,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvStarjack.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvStarjack,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvRaflesia.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvRaflesia,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;

@@ -67,14 +67,14 @@ int ovlInit(char *szShortName)
 		FourdwarrioInit, System1Exit, System1Frame, NULL
 	};
 */
-	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
-    if (strcmp(nBurnDrvWboyu.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvWboyu,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvFlickys2.szShortName, szShortName) == 0)	memcpy(fba_drv,&nBurnDrvFlickys2,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvMyhero.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvMyhero,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvMyhero,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvPitfall2u.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvPitfall2u,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvTeddybb,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvWbdeluxe.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvWbdeluxe,sizeof(struct BurnDriver));
+//	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
+    if (strcmp(nBurnDrvWboyu.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvWboyu,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvFlickys2.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvFlickys2,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvMyhero.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvMyhero,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvMyhero,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvPitfall2u.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvPitfall2u,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvTeddybb,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvWbdeluxe.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvWbdeluxe,sizeof(struct BurnDriver));
 //    if (strcmp(nBurnDrvFourdwarrio.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvFourdwarrio,sizeof(struct BurnDriver));
    
 	ss_reg    = (SclNorscl *)SS_REG;

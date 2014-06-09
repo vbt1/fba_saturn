@@ -569,3 +569,4 @@ void NamcoSoundExit()
 	
 //	DebugSnd_NamcoSndInitted = 0;
 }
+

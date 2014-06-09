@@ -250,7 +250,7 @@ static	void  FNT_Print1Char256_8x8_2bppSel(volatile Uint8 *vram,Uint8 code,
 {
 Sint32	i=0,j;
 Uint8	*codep;
-unsigned int col[4]={14,13,14,15};
+unsigned int col[4]={0,13,14,15};
 
 	codep = ((Uint8 *)(FONT_ADDR+((Uint32 )(code-0x20)<<4)));//FNT_SerchFont8_2bpp(code);
 	Uint8 *vramL = &vram[x	+ (y<<8)];

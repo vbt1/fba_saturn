@@ -9,42 +9,13 @@
 
 int ovlInit(char *szShortName)
 {
-/*	struct BurnDriver nBurnDrvpengob = {
-		"pengob", "pacm",
-		"Pengo (bootleg)\0",
-		pengobRomInfo, pengobRomName, PengoInputInfo, PengoDIPInfo,
-		pengobInit, DrvExit, DrvFrame, DrvDraw
-	};
-*/
-/*
-	struct BurnDriver nBurnDrvpuckman = {
-		"puckman", "pacm",
-		"Puck Man (Japan set 1)\0",
-		puckmanRomInfo, puckmanRomName, DrvInputInfo, DrvDIPInfo,
-		puckmanInit, DrvExit, DrvFrame, DrvDraw //, DrvScan, &DrvRecalc, 0x200,
-	};
-*/
 	struct BurnDriver nBurnDrvpengo2u = {
 		"pengo2u", "pacm",
 		"Pengo (set 2 not encrypted)\0",
 		pengo2uRomInfo, pengo2uRomName, PengoInputInfo, PengoDIPInfo,
 		pengouInit, DrvExit, DrvFrame, DrvDraw //, NULL, &DrvRecalc, 0x200,
 	};
-/*
-	struct BurnDriver nBurnDrvmspacman = {
-		"mspacman", "pacm",
-		"MS Pacman\0",
-		mspacmanRomInfo, mspacmanRomName, DrvInputInfo, mspacmanDIPInfo,
-		mspacmanInit, DrvExit, DrvFrame, DrvDraw //, DrvScan, &DrvRecalc, 0x200,
-	};
- 
-	struct BurnDriver nBurnDrvpacman = {
-		"pacman", "pacm",
-		"Pac-Man (Midway)\0",
-		pacmanRomInfo, pacmanRomName, DrvInputInfo, DrvDIPInfo,
-		puckmanInit, DrvExit, DrvFrame, DrvDraw //, NULL, &DrvRecalc, 0x200,
-	};
-*/
+
 	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
 //	if (strcmp(nBurnDrvpengob.szShortName, szShortName) == 0) memcpy(fba_drv,&nBurnDrvpengob,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvpengo2u.szShortName, szShortName) == 0) memcpy(fba_drv,&nBurnDrvpengo2u,sizeof(struct BurnDriver));

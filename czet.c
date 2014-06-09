@@ -178,7 +178,7 @@ void CZetExit()
 //	CZetClose(1);
 //	CZetReset();
 //	Cz80_InitFlags();
- /*
+ 
 	unsigned int i;
 
 	for (i = 0; i < nCPUCount; i++) {
@@ -191,7 +191,7 @@ void CZetExit()
 		CZetCPUContext[i].Write_Word = NULL;
 		CZetCPUContext[i].IN_Port = NULL;
 		CZetCPUContext[i].OUT_Port = NULL;
-	}	*/
+	}	
 //	if(lastCZetCPUContext!=NULL)
 //		free(lastCZetCPUContext);
 //	lastCZetCPUContext = NULL;

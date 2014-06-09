@@ -8,33 +8,38 @@
 #define SOUND_LEN 256
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
-/*static*/ UINT8 *SaturnMem = NULL;
+/*static*/ //UINT8 *SaturnMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
-/*static*/ //unsigned char 	*bg_dirtybuffer = NULL;
-/*static*/ //unsigned char 	*fg_dirtybuffer = NULL;
-/*static*/ unsigned char *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
+/*static*/ UINT8 *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
 /*static*/ int *Palette = NULL;
-/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvReset=0, DrvDips;
+/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvReset=0, DrvDips=0;
 /*static*/ unsigned char /*scroll_x,*/ priority=0, flipscreen=0, interrupt_enable=0;
+static void make_lut(void);
+static void DrvInitSaturn();
+static void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
+static void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
+static unsigned char __fastcall bankp_in(unsigned short address);
+static void 	 bg_line(INT32 offs,INT32 flipx);
+static void 	 fg_line(INT32 offs,INT32 flipx);
+static void __fastcall bankp_out(unsigned short address, unsigned char data);
+static void __fastcall bankp_write(unsigned short address, unsigned char data);
 
-/*static*/ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
-/*static*/ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
-/*static*/ unsigned char __fastcall bankp_in(unsigned short address);
-/*static*/ void __fastcall bankp_out(unsigned short address, unsigned char data);
-/*static*/ void __fastcall bankp_write(unsigned short address, unsigned char data);
-void __fastcall bankp_write_f000(unsigned short address, unsigned char data);
-void __fastcall bankp_write_f400(unsigned short address, unsigned char data);
-void __fastcall bankp_write_f800(unsigned short address, unsigned char data);
-void __fastcall bankp_write_fc00(unsigned short address, unsigned char data);
-/*static*/ int bankp_palette_init();
-/*static*/ int bankp_gfx_decode();
-/*static*/ INT32 DrvDoReset();
-/*static*/ INT32 DrvExit();
-/*static*/ INT32 DrvFrame();
-/*static*/ //INT32 DrvDraw();
-/*static*/ INT32 DrvInit();
-/*static*/ INT32 DrvChInit();
+static void __fastcall bankp_write_f000(unsigned short address, unsigned char data);
+static void __fastcall bankp_write_f400(unsigned short address, unsigned char data);
+static void __fastcall bankp_write_f800(unsigned short address, unsigned char data);
+static void __fastcall bankp_write_fc00(unsigned short address, unsigned char data);
+
+void 	 bg_line(INT32 offs,INT32 flipx);
+void 	 fg_line(INT32 offs,INT32 flipx);
+
+static int bankp_palette_init();
+static int bankp_gfx_decode();
+static INT32 DrvDoReset();
+static INT32 DrvExit();
+static INT32 DrvFrame();
+static INT32 DrvInit();
+static INT32 DrvChInit();
 
 /*static*/ struct BurnInputInfo bankpInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy1 + 5,	"p1 coin"  },

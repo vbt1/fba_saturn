@@ -129,8 +129,8 @@ int BurnLibExit();
 int BurnDrvInit();
 int BurnDrvExit();
 int BurnDrvFrame();
-int BurnDrvRedraw();
-int BurnRecalcPal();
+//int BurnDrvRedraw();
+//int BurnRecalcPal();
 // ---------------------------------------------------------------------------
 // Retrieve driver information
 

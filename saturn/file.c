@@ -50,8 +50,6 @@ static Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
 //int LoadFile(char *name, Uint8 *location, Uint32 size);
 //00200000H
 //--------------------------------------------------------------------------------------------------------------------------------------
-
-
 void InitCD()
 {
 	Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
