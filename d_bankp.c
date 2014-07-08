@@ -552,7 +552,7 @@ static void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
 {
-		PCM_Task(pcm); // bon emplacement
+		//PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 #ifdef RAZE
 	z80_stop_emulating();
@@ -621,8 +621,7 @@ static INT32 DrvFrame()
 	if (interrupt_enable) CZetNmi();
 //	CZetClose();
 #endif	
-//	Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
-	short int *nSoundBuffer = (short int *)0x25a20000;
+	short *nSoundBuffer = (short *)0x25a20000;
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 	SN76496Update(1, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 	SN76496Update(2, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);

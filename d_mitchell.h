@@ -13,6 +13,8 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int DrvExit();
 /*static*/ int SpangInit();
 /*static*/ int PangInit();
+/*static*/ void DrvInitSaturn();
+void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 
 /*static*/ Uint16 cram_lut[4096];
 ///*static*/ Uint16 *cram_lut;

@@ -2,8 +2,8 @@
 // Based on MAME driver by Mirko Buffoni
 //#define CZ80 1
 #define RAZE 1
-
-#include "d_higemaru.h"
+ 
+ #include "d_higemaru.h"
 
 int ovlInit(char *szShortName)
 {
@@ -296,7 +296,6 @@ static int DrvInit()
 
 //	z80_add_write(0xc800, 0xcfff, 1, (void *)&higemaru_write);
 //	z80_add_read(0xc000, 0xc1ff, 1, (void *)&higemaru_read);
-
    
    	z80_add_write(0xd000, 0xd7ff, 1, (void *)&higemaru_write_d000);
 	z80_add_write(0xc800, 0xc804, 1, (void *)&higemaru_write);
@@ -420,13 +419,14 @@ static int DrvExit()
 	AY8910Exit(0);
 	AY8910Exit(1);
 	MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
+	for (i = 0; i < 6; i++) {
+		pAY8910Buffer[i] = NULL;
+	}	
+	
 	pFMBuffer = NULL;
 	free (Mem);
 	Mem = NULL;
 
-	for (i = 0; i < 6; i++) {
-		pAY8910Buffer[i] = NULL;
-	}
 	nSoundBufferPos=0;
 //	flipscreen = 0;
 //	DrvRecalc = 0;
@@ -510,7 +510,7 @@ static int DrvFrame()
   	SPR_RunSlaveSH((PARA_RTN*)DrvDrawBackground, NULL);
 
 	int nSample;
-   Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
+   signed short *nSoundBuffer = (signed short *)0x25a20000;
 
 	AY8910Update(0, &pAY8910Buffer[0], SOUND_LEN);
 	AY8910Update(1, &pAY8910Buffer[3], SOUND_LEN);
@@ -529,8 +529,7 @@ static int DrvFrame()
 				nSample = 32767;
 			}
 		}
-		nSoundBuffer[nSoundBufferPos + (n << 1) + 0] = (nSample>>8);//&0xFF;//pAY8910Buffer[5][n];//nSample;
-		nSoundBuffer[nSoundBufferPos + (n << 1) + 1] = nSample;//&0xFF;//pAY8910Buffer[5][n];//nSample;
+		nSoundBuffer[nSoundBufferPos + n] = nSample;//(nSample>>8);//&0xFF;//pAY8910Buffer[5][n];//nSample;
 	}
 
 //	SPR_RunSlaveSH((PARA_RTN*)DrvDrawBackground, NULL);
@@ -538,10 +537,10 @@ static int DrvFrame()
 	DrvDrawSprites();
 //	DrvDrawBackground();
 
-	nSoundBufferPos+=(SOUND_LEN<<1); // DOIT etre deux fois la taille copiee
+	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
 
 //	if(nSoundBufferPos>=0x4800)
-	if(nSoundBufferPos>=RING_BUF_SIZE)
+	if(nSoundBufferPos>=RING_BUF_SIZE/2)
 	{
 		nSoundBufferPos=0;
 		PCM_Task(pcm); // bon emplacement

@@ -421,14 +421,14 @@ int ovlInit(char *szShortName)
 	nBurnSprites=128;
 	cleanSprites();
 
+	for (int i = 0; i < 6; i++) {
+		pAY8910Buffer[i] = NULL;
+	}
+
 	free (pFMBuffer);
 	pFMBuffer = NULL;
 	free (Mem);
 	Mem = NULL;
-
-	for (int i = 0; i < 6; i++) {
-		pAY8910Buffer[i] = NULL;
-	}
 
 	vblank /*= flipscreen */= 0;
 
@@ -547,7 +547,7 @@ int ovlInit(char *szShortName)
 	int nSample;
 	int n;
 	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
-	Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 
 //	soundLenSlave = SOUND_LEN);
@@ -574,17 +574,16 @@ int ovlInit(char *szShortName)
 				nSample = 32767;
 			}
 		}
-		nSoundBuffer[deltaSlave + (n << 1) + 0] = (nSample>>8)&0xFF;//pAY8910Buffer[5][n];//nSample;
-		nSoundBuffer[deltaSlave + (n << 1) + 1] = nSample&0xFF;//pAY8910Buffer[5][n];//nSample;
+		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
 	}
 
-	if(deltaSlave>=RING_BUF_SIZE)
+	if(deltaSlave>=RING_BUF_SIZE/2)
 	{
 		deltaSlave=0;
 		PCM_Task(pcm); // bon emplacement
 	}
 
-	deltaSlave+=(SOUND_LEN*2); // DOIT etre deux fois la taille copiee
+	deltaSlave+=SOUND_LEN;
 
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }

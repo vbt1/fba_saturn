@@ -4,6 +4,7 @@
 #include "burnint.h"
 #include "ay8910.h"
 #include "saturn/ovl.h"
+#include "raze/raze.h"
 //#include "saturn/sc_saturn.h"
 
 #define SOUND_LEN 160
@@ -21,6 +22,9 @@ static int DrvFrame();
 static int DrvExit();
 static int DrvInit();
 static void DrvInitSaturn();
+void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
+void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
+void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 
 /*static*/ struct BurnInputInfo DrvInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy3 + 7,	"p1 coin"  },

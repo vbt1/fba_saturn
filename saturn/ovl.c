@@ -63,7 +63,6 @@ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 	}	
 }		*/
 //-------------------------------------------------------------------------------------------------------------------------------------
-
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom)
 {
 	unsigned int i;

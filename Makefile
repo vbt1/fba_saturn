@@ -132,17 +132,21 @@ OBJOVLTETRIS         = $(SRCOVLTETRIS:.c=.o)
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
+../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a \
+../../SBL6/SEGALIB/SPR/vbtelf1/spr_slv.o \
 ../../SBL6/SEGALIB/INT/elf/int.o ../../SBL6/SEGALIB/INT/elf/int_trmp.o \
-../../SBL6/SEGALIB/GFS/elf13/gfs2.o ../../SBL6/SEGALIB/GFS/elf13/gfs_cdb2.o \
-../../SBL6/SEGALIB/GFS/elf13/gfs_cdc2.o ../../SBL6/SEGALIB/GFS/elf13/gfs_cdf2.o \
-../../SBL6/SEGALIB/GFS/elf13/gfs_trn2.o ../../SBL6/SEGALIB/GFS/elf13/gfs_buf2.o \
-../../SBL6/SEGALIB/GFS/elf13/gfs_dir2.o ../../SBL6/SEGALIB/PCM/elf13/pcm_audi2.o \
-../../SBL6/SEGALIB/PCM/elf13/pcm_drv2.o ../../SBL6/SEGALIB/PCM/elf13/pcm_time2.o \
-../../SBL6/SEGALIB/PCM/elf13/pcm_etc2.o ../../SBL6/SEGALIB/PCM/elf13/pcm_mp2.o \
-../../SBL6/SEGALIB/PCM/elf13/pcm_lib2.o cdc/cdcrep.a
+../../SBL6/SEGALIB/GFS/vbtelf/gfs2.o ../../SBL6/SEGALIB/GFS/vbtelf/gfs_cdb2.o \
+../../SBL6/SEGALIB/GFS/vbtelf/gfs_cdc2.o ../../SBL6/SEGALIB/GFS/vbtelf/gfs_cdf2.o \
+../../SBL6/SEGALIB/GFS/vbtelf/gfs_trn2.o ../../SBL6/SEGALIB/GFS/vbtelf/gfs_buf2.o \
+../../SBL6/SEGALIB/GFS/vbtelf/gfs_dir2.o ../../SBL6/SEGALIB/PCM/vbtelf/pcm_audi2.o \
+../../SBL6/SEGALIB/PCM/vbtelf/pcm_drv2.o ../../SBL6/SEGALIB/PCM/vbtelf/pcm_time2.o \
+../../SBL6/SEGALIB/PCM/vbtelf/pcm_etc2.o ../../SBL6/SEGALIB/PCM/vbtelf/pcm_mp2.o \
+../../SBL6/SEGALIB/PCM/vbtelf/pcm_lib2.o cdc/cdcrep.a
 
-LIBSOVL = l:/GNUSHv13/sh-elf/sh-elf/lib/m2/libm.a \
-../../SBL6/SEGALIB/LIB/elf13/sega_spr.a 
+#LIBSOVL = l:/GNUSHv13/sh-elf/sh-elf/lib/m2/libm.a \
+#LIBSOVL = L:/VBTSH/sh-elf/lib/m2/libm.a \
+LIBSOVL = ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a 
+
 
 all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \
@@ -173,7 +177,7 @@ $(OVERLAY1) : $(OBJOVL) $(MAKEFILE) $(LDOVLFILE)
 	$(CONV) -O binary $(OVERLAY) $(OVERLAY1)
 
 $(OVLNEWS) : $(OBJOVLNEWS) $(MAKEFILE) $(OBJOVLNEWS) $(LDOVLNEWSFILE)
-	$(CC) $(LDOVLNEWSFLAGS) $(OBJOVLNEWS) $(LIBSOVL) -o $@
+	$(CC) $(LDOVLNEWSFLAGS) $(OBJOVLNEWS) $(LIBSOVL) -lm -o $@
 
 $(OVLNEWS1) : $(OBJOVLNEWS) $(MAKEFILE) $(LDOVLNEWSFILE)
 	$(CONV) -O binary $(OVLNEWS) $(OVLNEWS1)

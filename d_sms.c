@@ -7,7 +7,6 @@
 int ovlInit(char *szShortName)
 {
 //	struct BurnDriver *fba_drv = NULL;
-
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"sms", NULL,
 		"Sega Master System\0",
@@ -53,12 +52,12 @@ void	SetVblank2( void ){
 #ifndef OLD_SOUND
 /*static*/ void sh2slave(unsigned int *nSoundBufferPos)
 {
-	Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
+	volatile short *nSoundBuffer = (short *)0x25a20000;
 //	PSG_Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
 	PSG_Update(&nSoundBuffer[nSoundBufferPos[0]],  128);
 //	SN76496Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
-	nSoundBufferPos[0]+=256; 
-	if(nSoundBufferPos[0]>=7680<<1)//256*hz)
+	nSoundBufferPos[0]+=128;//256; 
+	if(nSoundBufferPos[0]>=7680)//<<1)//256*hz)
 		nSoundBufferPos[0]=0;
 	PCM_Task(pcm);
 
@@ -196,7 +195,7 @@ void InitCDsms()
 	GFS_LoadDir(fid, &dirtbl2);  */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void getNbFiles()
+Sint32 getNbFiles()
 {
 	Sint32 fid;
 	GfsDirTbl dirtbl; 
@@ -281,25 +280,22 @@ INT32 SMSFrame(void)
 	if(running)
 	{
 		*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
-
-		sms_frame(0);
+		sms_frame();
 		
 #ifdef OLD_SOUND //
-
 //		if(sound)
 		{
-			Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
+			short *nSoundBuffer = (short *)0x25a20000;
 //			PSG_Update(0,&nSoundBuffer[nSoundBufferPos],  128);
 			PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
 //			SN76496Update(0,&nSoundBuffer[nSoundBufferPos],  128);
-			nSoundBufferPos+=256; // DOIT etre deux fois la taille copiee
+			nSoundBufferPos+=128;//256; // DOIT etre deux fois la taille copiee
 
-			if(nSoundBufferPos>=SAMPLE*2)//256*hz)
+			if(nSoundBufferPos>=SAMPLE)//256*hz)
 				nSoundBufferPos=0;
 			PCM_Task(pcm);
 		}
-
-#else
+ #else
 //		if(sound)
 		{
 			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
@@ -317,7 +313,7 @@ INT32 SMSFrame(void)
 //__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void sms_frame()
+void sms_frame(void)
 {
 #if PROFILING
 //		TIM_FRT_SET_16(0);
@@ -923,7 +919,7 @@ void sms_reset(void)
 
 	z80_map_read (0x4000, 0x7FFF, &cart.rom[0x4000]); 
 	z80_map_read (0x8000, 0xBFFF, &cart.rom[0x8000]); 
-	z80_map_write(0x0000, 0xBFFF, (unsigned)dummy_write);
+	z80_map_write(0x0000, 0xBFFF, (unsigned char*)dummy_write);
 
 	z80_map_read (0xC000, 0xDFFF, (unsigned char *)(&sms.ram[0])); 
 	z80_map_write (0xC000, 0xDFFF, (unsigned char *)(&sms.ram[0])); 
@@ -958,35 +954,35 @@ void cpu_writemem8(unsigned int address, unsigned int data)
                 {
 					offset = (data & 0x4) ? 0x4000 : 0x0000;
 
-					z80_map_fetch(0x8000, 0xBFFF, (unsigned)(sms.sram + offset));
-					z80_map_read(0x8000, 0xBFFF, (unsigned)(sms.sram + offset));
-					z80_map_write(0x8000, 0xBFFF, (unsigned)(sms.sram + offset));
+					z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
+					z80_map_read(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
+					z80_map_write(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
                 }
                 else
                 {
 					offset = ((sms.fcr[3] % cart.pages) << 14);
 // vbt 15/05/2008 : exophase :	 data & cart.pages, and set cart.pages to one less than you are
-					z80_map_fetch(0x8000, 0xBFFF, (unsigned)(cart.rom + offset));
-					z80_map_read(0x8000, 0xBFFF, (unsigned)(cart.rom + offset));
-					z80_map_write(0x8000, 0xBFFF, (unsigned)(dummy_write));
+					z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
+					z80_map_read(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
+					z80_map_write(0x8000, 0xBFFF, (unsigned char *)(dummy_write));
                 }
 				break;
             case 1:
-				z80_map_fetch(0x0000, 0x3FFF, (unsigned)(cart.rom + offset));
-				z80_map_read(0x0000, 0x3FFF, (unsigned)(cart.rom + offset));
+				z80_map_fetch(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
+				z80_map_read(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
 			break;
 
             case 2:
-				z80_map_fetch(0x4000, 0x7FFF, (unsigned)(cart.rom + offset));
-				z80_map_read(0x4000, 0x7FFF, (unsigned)(cart.rom + offset));
+				z80_map_fetch(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
+				z80_map_read(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
             break;
 
             case 3:
 
 			if(!(sms.fcr[0] & 0x08))
             {
-					z80_map_fetch(0x8000, 0xBFFF, (unsigned)(cart.rom + offset));
-					z80_map_read(0x8000, 0xBFFF, (unsigned)(cart.rom + offset));
+					z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
+					z80_map_read(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
             }
             break;
         }

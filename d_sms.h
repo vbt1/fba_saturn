@@ -4,10 +4,14 @@
 #include "burnint.h"
 #include "saturn/ovl.h"
 #include "sega_int.h"
+#include "raze/raze.h"
+
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 UINT8 update_input1(void);
 void make_lut();
-
+void memcpyl(void *, void *, int);
+void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
+void *memset4_fast(void *, long, size_t);
 UINT8 SMSJoy1[1];
 
 /* Game image structure */
@@ -115,7 +119,23 @@ INT32 SMSInit();
 INT32 SMSExit();
 INT32 SMSDraw();
 INT32 SMSFrame();
+void z80_init(void);
+void sms_init(void);
+void sms_reset(void);
+void sms_frame(void);
+void vdp_run(t_vdp *vdp);
+void vdp_reset(void);
+void system_init(void);
 void cpu_writemem8(unsigned int address, unsigned int data);
+void PSG_Update(signed short *buffer, unsigned int length);
+void PSG_Init(unsigned int clock, unsigned int rate);
+void PSG_Write(unsigned int data);
+Sint32 getNbFiles();
+Sint32 GetFileSize(int file_id);
+void load_rom(void);
+void initScrolling(Uint8 enabled);
+void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
+void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 
 //INT32 SMSScan(INT32 nAction, INT32 *pnMin);
 /* Return values from the V counter */

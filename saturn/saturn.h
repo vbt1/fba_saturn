@@ -25,6 +25,19 @@
 //#include "ovl.h"
 #include "globals.h"
 
+void PCM_MeVblIn(void);
+void	PCM_MeSetLoop( PcmHn	hn, Sint32	cnt_loop );
+void PCM_MeSetVolume(PcmHn hn, Uint32 level);
+void PCM_DrvChangePcmPara(PcmHn hn, Sint32 level, Sint32 pan);
+void PCM_MeInit(void);
+void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
+void  FNT_Print256_2bppSel(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
+static void initSound();
+void memcpyb(void *, void *, int);
+void memcpyw(void *, void *, int);
+void memcpyl(void *, void *, int);
+void *memset4_fast(void *, long, size_t);
+
 #define	AD_SMPC_COMREG	0x2010001F
 #define	SMPC_COMREG		(*( volatile Uint8 * )AD_SMPC_COMREG)
 #define	SMPC_COMREG_SYSRES		0x0D

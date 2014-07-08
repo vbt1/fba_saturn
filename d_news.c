@@ -29,7 +29,6 @@ int ovlInit(char *szShortName)
 	else
 		memcpy(shared,&nBurnDrvNews,sizeof(struct BurnDriver));
 	ss_reg          = (SclNorscl *)SS_REG;
-
 }
 
 /*static*/ inline void NewsClearOpposites(unsigned char* nJoystickInputs)
@@ -527,11 +526,11 @@ int ovlInit(char *szShortName)
 #endif
 
 	NewsDraw();
-	Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
+	short *nSoundBuffer = (short *)0x25a20000;
 	MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
-	nSoundBufferPos+=(SOUND_LEN*2); // DOIT etre deux fois la taille copiee
+	nSoundBufferPos+=SOUND_LEN;
 
-	if(nSoundBufferPos>0x3600)
+	if(nSoundBufferPos>0x1B00)
 	{
 		nSoundBufferPos=0;
 		PCM_Task(pcm); // bon emplacement

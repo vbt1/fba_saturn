@@ -46,7 +46,7 @@ SECTIONS {
                 ___dtors = . ;
                 *(.dtors)
                 ___dtors_end = . ;
-
+		*(.eh_frame); 
                 *(.data)
                 *("D")
                 *("SEGA_D")
@@ -60,7 +60,6 @@ SECTIONS {
 		. = ALIGN(4);
 	} 
 	
-
 	.bss  ALIGN(4) (NOLOAD):
 	{
 		__bstart = . ;

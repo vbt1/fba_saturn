@@ -3,8 +3,8 @@
 
 #include "burnint.h"
 #include "bitswap.h"
-#include "sn76496.h"
-#include "namco_snd.h"
+//#include "sn76496.h"
+//#include "namco_snd.h"
 //extern "C" {
 //#include "ay8910.h"
 //}
@@ -63,15 +63,15 @@ enum { PACMAN=0, PENGO };
 
 /*static*/ //UINT8 *flipscreen = 0;
 
-/*static*/ INT32 interrupt_mode;
-/*static*/ INT32 interrupt_mask;
+/*static*/ INT32 interrupt_mode = 0;
+/*static*/ INT32 interrupt_mask = 0;
 
-/*static*/ UINT8 colortablebank;
-/*static*/ UINT8 palettebank;
-/*static*/ UINT8 spritebank;
-/*static*/ UINT8 charbank;
-/*static*/ INT32 nPacBank;
-/*static*/ UINT32 watchdog;
+/*static*/ UINT8 colortablebank = 0;
+/*static*/ UINT8 palettebank = 0;
+/*static*/ UINT8 spritebank = 0;
+/*static*/ UINT8 charbank = 0;
+/*static*/ INT32 nPacBank = 0;
+/*static*/ UINT32 watchdog = 0;
 //------------------------------------------------------------------------------------------------------
 /*static*/ struct BurnInputInfo PengoInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 coin"},

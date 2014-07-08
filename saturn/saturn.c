@@ -164,7 +164,7 @@ static void initSound()
 	memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
 	st = &g_movie_work.status;
 	st->need_ci = PCM_ON;
-
+ 
 	PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
 	PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
 	PCM_INFO_FILE_SIZE(&info) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
@@ -178,14 +178,15 @@ static void initSound()
 
 	PCM_SetPcmStreamNo(pcm, 0);
 
-
 	PCM_SetInfo(pcm, &info);
 	PCM_ChangePcmPara(pcm);
 
 	PCM_MeSetLoop(pcm, 0x1FF);//SOUNDRATE*60);
-	if (pcm == NULL) {
-		return;
-	}
+
+//	if (pcm == NULL) {
+//		while(1);
+//		return;
+//	}
 	PCM_Start(pcm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1763,7 +1764,7 @@ static void do_keypad()
 
 		check_exit(pltrigger[0]);
 
-		for(i=0;i<14;i++)
+		for(i=0;i<12;i++)
 		{
 			if((pltrigger[0] & pad_asign[i])!=0)
 			{
@@ -1844,7 +1845,6 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 	SPR_WRITE_REG(SPR_W_TVMR, 0x0007 & SPR_TV_NORMAL);//SPR_TV_ROT8);//SPR_TV_NORMAL);
 	SPR_SetEraseData( 0x0000, 0, 0, sx, sy );
 //	SPR_SetEraseData( RGB(31,0,0), 0, 0, sx, sy );
-	
 // 	CSH_Init(CSH_4WAY);
 //	SPR_InitSlaveSH();
 	memset(smsSprite,0,sizeof(SprSpCmd)*131);

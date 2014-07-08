@@ -13,6 +13,8 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ short *pAY8910Buffer[6], *pFMBuffer = NULL;
 /*static*/ unsigned char *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL;
 
+ void DrvInitSaturn();
+ void cleanSprites();
 ///*static*/ int flipscreen, vblank;
 /*static*/ int vblank;
 /*static*/ int DrvDraw();

@@ -682,8 +682,8 @@ void initLayers()
 	int nLen = MemEnd - (UINT8 *)0;
 	if((SaturnMem = (UINT8 *)malloc(nLen))==NULL)
 	{
-		FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"Malloc SaturnMem failed    ",10,50);	
-		return 1;
+//		FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"Malloc SaturnMem failed    ",10,50);	
+		return;
 	}
 	SaturnInitMem();
 //	FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"Malloc SaturnMem done    ",10,40);	
@@ -1176,10 +1176,10 @@ void System1DrawSprites()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void renderSound(unsigned int *nSoundBufferPos)
 {
-	Sint8 *	nSoundBuffer = (Sint8 *)0x25a20000;
+	short *	nSoundBuffer = (short *)0x25a20000;
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos[0]], nSegmentLength);
 	SN76496Update(1, &nSoundBuffer[nSoundBufferPos[0]], nSegmentLength);
-	nSoundBufferPos[0]+=(nSegmentLength<<1);
+	nSoundBufferPos[0]+= nSegmentLength;
 }
 
 /*==============================================================================================
@@ -1224,7 +1224,8 @@ int System1Frame()
 		{
 			z80_raise_IRQ(0);
 			z80_emulate(1);
-			z80_lower_IRQ(0);
+//			z80_lower_IRQ(0);
+			z80_lower_IRQ();
 			z80_emulate(1);
 		}
 #endif
@@ -1238,7 +1239,7 @@ int System1Frame()
 	}
 	System1Render();
 
-	if(nSoundBufferPos>=RING_BUF_SIZE)//0x4800-nSegmentLength)//
+	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
 	{
 		nSoundBufferPos=0;
 	}

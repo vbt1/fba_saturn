@@ -16,6 +16,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int NewsFrame();
 /*static*/ int NewsInit();
 /*static*/ int NewsExit();
+int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength);
 
 /*static*/ Uint16 cram_lut[8192];
 UINT16 map_offset_lut[0x400];

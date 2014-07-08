@@ -662,31 +662,14 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	}
 	return 0;
 }
-
-/*static*//* void renderSound() //unsigned int *ySoundBufferPos)
-{
-	Sint8 *	nSoundBuffer = (Sint8 *)0x25a20000;
-	unsigned int nSoundBufferPosSlave = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-
-	SN76496Update(0, &nSoundBuffer[nSoundBufferPosSlave], SOUND_LEN);
-	nSoundBufferPosSlave+=(SOUND_LEN*2);
-
-	if(nSoundBufferPosSlave>=RING_BUF_SIZE)//0x2400)
-	{
-		nSoundBufferPosSlave=0;
-		PCM_Task(pcm); // bon emplacement
-	}
-
-	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = nSoundBufferPosSlave;
-} */
 //-------------------------------------------------------------------------------------------------------------------------------------
 void renderSound(unsigned int *nSoundBufferPos)
 {
-	Sint8 *	nSoundBuffer = (Sint8 *)0x25a20000;
+	short *	nSoundBuffer = (short *)0x25a20000;
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos[0]], SOUND_LEN);
-	nSoundBufferPos[0]+=(SOUND_LEN<<1);
+	nSoundBufferPos[0]+=SOUND_LEN;
 
-	if(nSoundBufferPos[0]>=RING_BUF_SIZE)//0x2400)
+	if(nSoundBufferPos[0]>=RING_BUF_SIZE/2)//0x2400)
 	{
 		nSoundBufferPos[0]=0;
 		PCM_Task(pcm); // bon emplacement

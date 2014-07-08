@@ -4,7 +4,7 @@
 #include "sn76496.h"
 #include "burnint.h"
 #include "saturn/ovl.h"
-
+#include "raze/raze.h"
 #define SOUND_LEN 256
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
@@ -17,8 +17,10 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ unsigned char /*scroll_x,*/ priority=0, flipscreen=0, interrupt_enable=0;
 static void make_lut(void);
 static void DrvInitSaturn();
-static void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
-static void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
+
+
+void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
+void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 static unsigned char __fastcall bankp_in(unsigned short address);
 static void 	 bg_line(INT32 offs,INT32 flipx);
 static void 	 fg_line(INT32 offs,INT32 flipx);

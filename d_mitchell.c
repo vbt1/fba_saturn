@@ -725,7 +725,7 @@ static void dummy(void)
 	SS_SET_N0PRIN(6);
 	}
 	SPR_InitSlaveSH();
-	initScrolling(OFF);
+//	initScrolling(OFF);
 //	drawWindow(0,0,0,0,0);
 //	drawWindow(0,240,0,2,66);
 	make_lut();

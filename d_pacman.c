@@ -533,19 +533,25 @@ void DrvInitSaturn()
 	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE= cache    =(Uint8  *)SCL_VDP2_VRAM_A0;
 
+	ss_BgPriNum     = (SclSpPriNumRegister *)SS_N0PRI;
+	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
+	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
+
 	ss_sprite  = (SprSpCmd *)SS_SPRIT;
 //	ss_regs->tvmode = 0x8011;
 	ss_regs->tvmode = 0x80d1;
 //	ss_regs->tvmode = 0x8081;
 //	ss_reg->n1_delta_y = FIXED(1.2);
 //	ss_reg->n0_delta_y = FIXED(0.5);
-
+ 
+//	SCL_Open();
+/*	ss_reg->n0_move_x = 0;
+	ss_reg->n1_move_x = 0;
+	ss_reg->n0_move_y = 0;
+	ss_reg->n1_move_y = 0;
+ */  
 	ss_reg->n1_delta_y = FIXED(0.6);
 	ss_reg->n0_delta_y = FIXED(0.5);
-
-	ss_BgPriNum     = (SclSpPriNumRegister *)SS_N0PRI;
-	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
-	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
 
 	nBurnLinescrollSize = 0x300;
 	nBurnSprites = 32+3;
