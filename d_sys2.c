@@ -63,22 +63,22 @@ int ovlInit(char *szShortName)
 		case 0x15:{chplft_bankswitch_w(d);	return;}
 	}
 }
-
+/*
 void system1_paletteram_w_color_rom(unsigned short a, UINT8 d)
 {
-	a&= 0x1ff;
+	a -= 0xd800;
 //	if(System1PaletteRam[a]!=d)
 	{
-//		{colAddr[a] = cram_lut[d];	System1PaletteRam[a] = d;}
+		{System1PaletteRam[a] = d;}
 	//	{colAddr[a] = RGB(0,0,31);	System1PaletteRam[a] = d;}
 //		System1CalcPalette();
-//		colAddr[a] = cram_lut[System1PaletteRam[a]];
+		colAddr[a] = cram_lut[d];
 //		colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];	
-	//	System1PaletteRam[a] = d&0xff;
+		System1PaletteRam[a] = d;
 //		System1CalcSprPalette();
 	}
 }
-
+*/
 /*static*/ void __fastcall ChplftZ801ProgWrite(unsigned short a, UINT8 d)
 {
 	if (a >= 0xe000 && a <= 0xe7ff) { system1_foregroundram_w(a,d); return; }
@@ -118,7 +118,7 @@ void system1_paletteram_w_color_rom(unsigned short a, UINT8 d)
 }
 /*static*/ int System1CalcSprPalette()
 {
-	for (int i = 512; i > 0; i--) 
+	for (int i = 511; i > 0; i--) 
 	{
 		colAddr[i] = cram_lut[System1PaletteRam[i]];
 	}
@@ -140,6 +140,7 @@ void system1_paletteram_w_color_rom(unsigned short a, UINT8 d)
 	ss_reg->n1_move_x =  0 <<16;
 	make_cram_lut();
 	System1CalcPalette();
+//	System1CalcSprPalette();
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(7);
 	SS_SET_N2PRIN(5);

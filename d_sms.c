@@ -6,6 +6,12 @@
 
 int ovlInit(char *szShortName)
 {
+#define M_TRIM_THRESHOLD    -1
+#define M_TOP_PAD           -2
+
+	mallopt(M_TOP_PAD, 0);
+	mallopt(M_TRIM_THRESHOLD, 8);
+
 //	struct BurnDriver *fba_drv = NULL;
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"sms", NULL,
@@ -115,7 +121,7 @@ void initPosition(void)
 
 	UINT8 *Next; Next = (UINT8 *)SaturnMem;
 	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
-//	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
+	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
 	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
 	dummy_write= Next; Next += 0x100*sizeof(unsigned);
 	MemEnd			= Next;	
@@ -151,7 +157,7 @@ void initPosition(void)
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
 	SaturnMem = (UINT8 *)malloc(nLen);
-	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
+//	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
 	SaturnInitMem();
 
 	make_lut();
@@ -171,14 +177,45 @@ void initPosition(void)
 //	drawWindow(32,192,192,14,52);
 	drawWindow(0,192,192,0,66);
 	SetVblank2();
+
+//	extern int __malloc_trim_threshold;
+//	extern int __malloc_top_pad;
+//	extern mallinfo  __malloc_current_mallinfo;
+
+//	__malloc_trim_threshold = 1024;
+
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
+//			sauvegarder __malloc_sbrk_base puis restaurer à la fin
+//   Uint32 __malloc_sbrk_base;
+//__malloc_sbrk_base = &_bend;
+/*	Uint8	*dst;
+	for (dst = (Uint8 *)&_bend; dst < (Uint8 *)0x060A5000; dst++)
+		*dst = 0;  */
+ /*   for (dst = (Uint8 *)&__malloc_sbrk_base
+*/
+/*		Uint8	*dst;
+    for (dst = (Uint8 *)&bss_start; dst < (Uint8 *)&bss_end; dst++)
+			 *dst = 0;  
+  */
+	char toto[50];
+	extern Uint32 __malloc_sbrk_base, _bend,_bstart,bss_start,bss_end;
+	extern int __malloc_trim_threshold;
+	extern int __malloc_top_pad;
+
+	sprintf (toto,"malloc_top_pad %08x %08x",__malloc_top_pad,__malloc_sbrk_base) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,201);
+
+	sprintf (toto,"malloc_trim_threshold %08x %08x",__malloc_trim_threshold,sbrk(0)) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void InitCDsms()
 {
-	Uint32 lib_work[GFS_WORK_SIZE(8) / sizeof(Uint32)];
+/*	Uint32 lib_work[GFS_WORK_SIZE(8) / sizeof(Uint32)];
 	GfsDirTbl dirtbl; 
 	GfsDirTbl dirtbl2; 
-    Sint32 fid;
+    Sint32 fid;					  */
 /*
 	CDC_CdInit(0x00,0x00,0x05,0x0f);
     GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
@@ -254,13 +291,13 @@ INT32 SMSExit(void)
 //	int nLen = MemEnd - (UINT8 *)0;
 //	SaturnMem = (UINT8 *)malloc(nLen); 
 //	Uint8	*dst;
-   
+//	InpExit();   
 //	for (dst = (Uint8 *)SaturnMem; dst < (Uint8 *)(SaturnMem+nLen); dst++)
 //			*dst = 0;	
 //	memset(SaturnMem,0x00,nLen);
-	free(bp_lut	);
-
-	dummy_write = MemEnd = name_lut = bp_lut = cram_lut = NULL;
+//	free(bp_lut	);
+	bp_lut = NULL;
+	dummy_write = MemEnd = name_lut = cram_lut = NULL;
 	free(SaturnMem);
 
 /*
@@ -272,6 +309,9 @@ INT32 SMSExit(void)
 	dummy_write = MemEnd = name_lut = bp_lut = cram_lut = NULL;
 */
 	SaturnMem = NULL;
+
+//	free(DIPInfo.DIPData);
+//	DIPInfo.DIPData = NULL;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 

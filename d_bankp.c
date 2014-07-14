@@ -12,14 +12,14 @@ int ovlInit(char *szShortName)
 	"bankp", NULL, 
 	"Bank Panic\0",  
 	bankpRomInfo, bankpRomName, bankpInputInfo, bankpDIPInfo,
-	DrvInit, DrvExit, DrvFrame, NULL//, NULL, 
+	DrvInit, DrvBpExit, DrvFrame, NULL//, NULL, 
 	};
 
 	struct BurnDriver nBurnDrvcombh = {
 	"combh", "bankp", 
 	"Combat Hawk\0",
 	combhRomInfo, combhRomName, combhInputInfo, combhDIPInfo,
-	DrvChInit, DrvExit, DrvFrame, NULL//, NULL
+	DrvChInit, DrvBpExit, DrvFrame, NULL//, NULL
 	};
 
     if (strcmp(nBurnDrvbankp.szShortName, szShortName) == 0)
@@ -46,6 +46,7 @@ static INT32 DrvChInit()
 
 static INT32 MemIndex()
 {
+//	Mem = (UINT8 *)0x00200000;
 	unsigned char *Next; Next = Mem;
 
 	Rom = Next; Next += 0x10000;
@@ -72,6 +73,8 @@ static INT32 DrvInit()
 
 	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) return 1;
 	memset(Mem, 0, nLen);
+//	memset(Gfx0, 0, 0x10000);
+//	memset(Gfx1, 0, 0x20000);
 	MemIndex();
 
 	make_lut();
@@ -550,8 +553,9 @@ static void DrvInitSaturn()
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvExit()
+/*static*/ INT32 DrvBpExit()
 {
+//	InpExit();
 		//PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 #ifdef RAZE

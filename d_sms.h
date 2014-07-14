@@ -12,7 +12,7 @@ void make_lut();
 void memcpyl(void *, void *, int);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
 void *memset4_fast(void *, long, size_t);
-UINT8 SMSJoy1[1];
+UINT8 SMSJoy1[1]={NULL};
 
 /* Game image structure */
 typedef struct
@@ -78,13 +78,13 @@ unsigned int first = 1;
 unsigned int vsynch = 0;
 unsigned int file_max;
 int scroll_x=0,scroll_y=0;
-unsigned *dummy_write; //[0x100];
+unsigned *dummy_write  = NULL; //[0x100];
 /*static*/ UINT8 *SaturnMem = NULL;
 //UINT8	SaturnMem[0x10000*sizeof(UINT16)+0x10000*sizeof(UINT32)+0x40*sizeof(UINT16)+0x100*sizeof(unsigned)];
 /*static*/ UINT8 *MemEnd = NULL;
-UINT16 *name_lut;
-UINT32 *bp_lut; //[0x10000];
-UINT16 *cram_lut;//[0x40];
+UINT16 *name_lut = NULL;
+UINT32 *bp_lut = NULL; //[0x10000];
+UINT16 *cram_lut = NULL;//[0x40];
 //extern unsigned char play;
 extern int file_id;
 //unsigned char *game=NULL;

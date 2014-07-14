@@ -266,10 +266,10 @@ static void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int plan
 
 static void convert_gfx()
 {
-	static INT32 PlaneOffsets[2]  = { 0, 4 };
-	static INT32 CharXOffsets[8]  = { 64, 65, 66, 67, 0, 1, 2, 3 };
-	static INT32 SpriXOffsets[16] = { 8*8, 8*8+1, 8*8+2, 8*8+3, 16*8+0, 16*8+1, 16*8+2, 16*8+3, 24*8+0, 24*8+1, 24*8+2, 24*8+3, 0, 1, 2, 3 };
-	static INT32 YOffsets[16]     = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 32*8, 33*8, 34*8, 35*8, 36*8, 37*8, 38*8, 39*8 };
+	/*static*/ INT32 PlaneOffsets[2]  = { 0, 4 };
+	/*static*/ INT32 CharXOffsets[8]  = { 64, 65, 66, 67, 0, 1, 2, 3 };
+	/*static*/ INT32 SpriXOffsets[16] = { 8*8, 8*8+1, 8*8+2, 8*8+3, 16*8+0, 16*8+1, 16*8+2, 16*8+3, 24*8+0, 24*8+1, 24*8+2, 24*8+3, 0, 1, 2, 3 };
+	/*static*/ INT32 YOffsets[16]     = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 32*8, 33*8, 34*8, 35*8, 36*8, 37*8, 38*8, 39*8 };
 
 	INT32 size = (game_select == PENGO) ? 0x2000 : 0x1000;
 

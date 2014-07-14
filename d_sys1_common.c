@@ -244,7 +244,8 @@ Allocate Memory
 	System1SpriteRam       = Next; Next += 0x000200;
 	System1PaletteRam      = Next; Next += 0x000600;
 	System1BgRam           = Next; Next += 0x000800;
-	System1VideoRam        = Next; Next += 0x000700;
+//	System1VideoRam        = Next; Next += 0x000700;
+	System1VideoRam        = Next; Next += 0x000800;
 	RamStart1 = RamStart	= System1VideoRam-0xe800;
 //	RamStart16					= (UINT16 *)RamStart;
 	System1ScrollXRam	   = System1VideoRam + 0x7C0;
@@ -256,7 +257,7 @@ Allocate Memory
 	System1ScrollX           = System1efRam + 0xfc;
 	System1f4Ram           = Next; Next += 0x000400;
 	System1fcRam           = Next; Next += 0x000400;
-//	SpriteOnScreenMap      = Next; Next += (256 * 256);
+	SpriteOnScreenMap      = Next; Next += (256 * 256);
 //	System1Sprites         = Next; Next += System1SpriteRomSize;
 	System1Tiles           = cache;//Next; Next += (System1NumTiles * 8 * 8);
 	MemEnd = Next;
@@ -706,8 +707,10 @@ void initLayers()
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(5);
 	SS_SET_N0PRIN(7);
+	
 	initLayers();
 	initColors();
+
 	initSpritesS1();
 	SPR_InitSlaveSH();
 	
@@ -762,7 +765,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	nLen = MemEnd - (UINT8 *)0;
 
 	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) {	return 1;}
-	if ((SpriteOnScreenMap = (UINT8 *)malloc(256 * 256)) == NULL) {return 1;}
+//	if ((SpriteOnScreenMap = (UINT8 *)malloc(256 * 256)) == NULL) {return 1;}
 
 	memset(Mem, 0, nLen);
 	MemIndex();
@@ -809,6 +812,9 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	}
 	else
 		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
+
+	System1TempRom = NULL;
+	
 	memset(&ss_map2[2048],0,768);
 
 	if(flipscreen==1)			rotate_tile(System1NumTiles,0,System1Tiles);
@@ -816,7 +822,10 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	spriteCache = (UINT16*)(0x00200000);
 	memset4_fast((void*)spriteCache,0xFFFFFFFF,0x80000);
-	System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
+	if(System1SpriteRomSize!=0x20000)
+		System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
+	else
+		System1Sprites = (UINT8 *)0x02E0000;
 
 	memset(System1Sprites, 0x11, System1SpriteRomSize);
 	// Load Sprite roms
@@ -928,7 +937,6 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	
 	// Reset the driver
 	if (bReset) System1DoReset();
-
 	System1CalcPalette();
 
 	System1efRam[0xfe] = 0x4f;
@@ -940,6 +948,7 @@ int System1Exit()
 {
 	z80_stop_emulating();
 	CZetExit();
+	nBurnFunction = NULL;
 
 //Mem                 = NULL;
 MemEnd                 = NULL;
@@ -980,9 +989,10 @@ width_lut = NULL;
 ss_vram = NULL;
 spriteCache = NULL;
 
-	free(System1Sprites);
+	if(System1SpriteRomSize!=0x20000)
+		free(System1Sprites);
 	System1Sprites = NULL;
-	free(SpriteOnScreenMap);
+//	free(SpriteOnScreenMap);
 	SpriteOnScreenMap = NULL;
 	free(SaturnMem);
 	SaturnMem = NULL;
@@ -1011,7 +1021,7 @@ spriteCache = NULL;
 
 	nextSprite=0;
 	flipscreen=0;
-	nBurnFunction = NULL;
+
 	DecodeFunction = NULL;
 	MakeInputsFunction = NULL;
 
@@ -1063,11 +1073,11 @@ Graphics Rendering
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int System1CalcPalette()
 {
-	unsigned int i,delta=0;		
+	unsigned int delta=0;		
 	UINT8 *System1PaletteRam512   = System1PaletteRam+512;
 	UINT8 *System1PaletteRam1024 = System1PaletteRam+1024;
 
-	for (i = 512; i > 0; i--) 
+	for (int i = 511; i > 0; i--) 
 	{
 		colAddr[i]				    = cram_lut[System1PaletteRam[i]];
 		colBgAddr[delta]		= cram_lut[*System1PaletteRam512++];

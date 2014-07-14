@@ -268,11 +268,11 @@ void resetLayers()
    Uint32 __malloc_sbrk_base;
 /*   
 	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)_bend; dst++)
-		*dst = 0;
-    for (dst = (Uint8 *)&__malloc_sbrk_base; dst < (Uint8 *)OVLADDR; dst++)
+		*dst = 0;	 */
+ /*   for (dst = (Uint8 *)&_bend; dst < (Uint8 *)OVLADDR; dst++)
 //		if(	!(dst>=0x6003500 && dst <0x6004000))
 		*dst = 0;
-  */
+ */ 
 //	nBurnLinescrollSize = 0x400;//0x400
 //	nBurnSprites = 131;
 //	INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
@@ -1475,7 +1475,16 @@ static int DoInputBlank(int bDipSwitch)
   }
   return 0;
 }
-
+//-------------------------------------------------------------------------------------------------------------------------------------
+void InpExit()
+{
+//  bInputOk = false;
+//  nGameInpCount = 0;
+  if (DIPInfo.nDIP)
+	free (DIPInfo.DIPData);
+  DIPInfo.DIPData=NULL;
+//  return 0;
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 static int InpMake(unsigned int key[])
 {
@@ -1549,7 +1558,7 @@ void InpDIP()
 {
 	struct BurnDIPInfo bdi;
 	struct GameInp* pgi;
-	int i, j;
+	int i;  ///, j;
 	int nDIPOffset = 0;
 
 	// get dip switch offset 
@@ -1564,7 +1573,7 @@ void InpDIP()
 
 	// set DIP to default
 	i = 0;
-	j = 40;
+//	j = 40;
 	char bDifficultyFound = 0;
 	while (BurnDrvGetDIPInfo(&bdi, i) == 0) 
 	{
@@ -1577,7 +1586,7 @@ void InpDIP()
 			pgi = DIPInfo.DIPData + (bdi.nInput + nDIPOffset - DIPInfo.nFirstDIP);
 			pgi->nConst = (pgi->nConst & ~bdi.nMask) | (bdi.nSetting & bdi.nMask);
 		}
-		else
+/*		else
 		{
 			 if (bdi.nFlags == 0xFE) 
 			{
@@ -1601,7 +1610,7 @@ void InpDIP()
 					j+=10;
 				 }
 			}
-		}
+		}*/
 		/*		else 
 		if (bdi.nFlags == 0xFE) {
 			if ( bdi.szText )
@@ -1697,6 +1706,7 @@ static int nDrvInit(int nDrvNum)
 		sprintf(drv_file,"d_%s.bin",BurnDrvGetTextA(DRV_NAME));
 	else
 		sprintf(drv_file,"d_%s.bin",BurnDrvGetTextA(DRV_PARENT));
+
 
 
     GFS_Load(GFS_NameToId(strupr(drv_file)), 0, (void *)OVLADDR, GFS_BUFSIZ_INF);
@@ -1827,6 +1837,7 @@ static void run_fba_emulator()
 
 	if(drvquit==1)
 	{
+		InpExit();
 		DrvExit();
 //		_smpc_SSHOFF();
 		initSaturn();

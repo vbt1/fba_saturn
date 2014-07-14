@@ -38,7 +38,7 @@ void 	 fg_line(INT32 offs,INT32 flipx);
 static int bankp_palette_init();
 static int bankp_gfx_decode();
 static INT32 DrvDoReset();
-static INT32 DrvExit();
+/*static*/ INT32 DrvBpExit();
 static INT32 DrvFrame();
 static INT32 DrvInit();
 static INT32 DrvChInit();
