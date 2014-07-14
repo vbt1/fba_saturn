@@ -64,15 +64,30 @@ int ovlInit(char *szShortName)
 	}
 }
 
+void system1_paletteram_w_color_rom(unsigned short a, UINT8 d)
+{
+	a&= 0x1ff;
+//	if(System1PaletteRam[a]!=d)
+	{
+//		{colAddr[a] = cram_lut[d];	System1PaletteRam[a] = d;}
+	//	{colAddr[a] = RGB(0,0,31);	System1PaletteRam[a] = d;}
+//		System1CalcPalette();
+//		colAddr[a] = cram_lut[System1PaletteRam[a]];
+//		colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];	
+	//	System1PaletteRam[a] = d&0xff;
+//		System1CalcSprPalette();
+	}
+}
+
 /*static*/ void __fastcall ChplftZ801ProgWrite(unsigned short a, UINT8 d)
 {
 	if (a >= 0xe000 && a <= 0xe7ff) { system1_foregroundram_w(a,d); return; }
 	if (a >= 0xe800 && a <= 0xeeff) { system1_backgroundram_w(a,d); return; }
 	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
 	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
-//	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w(a,d); return; }
-//	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
-//	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
+//	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w_color_rom(a,d); return; }
+	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
+	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
 
 	switch (a) {
 		case 0xefbd: {
@@ -101,6 +116,14 @@ int ovlInit(char *szShortName)
 	
 //	bprintf(PRINT_NORMAL, _T("Prog Write %x, %x\n"), a, d);
 }
+/*static*/ int System1CalcSprPalette()
+{
+	for (int i = 512; i > 0; i--) 
+	{
+		colAddr[i] = cram_lut[System1PaletteRam[i]];
+	}
+	return 0;
+}
 
 /*static*/ int ChplftbInit()
 {
@@ -112,10 +135,11 @@ int ovlInit(char *szShortName)
 	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
 	initColors2();
 	initLayers2();
-	nBurnFunction = System1CalcPalette;
+	nBurnFunction = System1CalcSprPalette;//System1CalcPalette;
 	ss_reg->n1_move_y =  0 <<16;
 	ss_reg->n1_move_x =  0 <<16;
-
+	make_cram_lut();
+	System1CalcPalette();
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(7);
 	SS_SET_N2PRIN(5);
@@ -128,8 +152,10 @@ int ovlInit(char *szShortName)
 #ifndef USE_RAZE0
 	CZetOpen(0);
 
-	CZetMapArea(0xd800, 0xddff, 1, System1PaletteRam);
-	CZetMapArea(0xd800, 0xddff, 2, System1PaletteRam);
+	CZetMapArea(0xd800, 0xddff, 0, System1PaletteRam);
+//	CZetMapArea(0xd800, 0xddff, 1, System1PaletteRam);
+	CZetMapArea(0xd800, 0xd9ff, 1, System1PaletteRam);
+//	CZetMapArea(0xd800, 0xddff, 2, System1PaletteRam);
 
 	CZetMapArea(0xe7c0, 0xe7ff, 0, System1ScrollXRam);
 	CZetMapArea(0xe7c0, 0xe7ff, 1, System1ScrollXRam);
@@ -148,6 +174,7 @@ int ovlInit(char *szShortName)
 	CZetSetOutHandler(ChplftZ801PortWrite);
 	CZetClose();
 #endif
+//	nBurnFunction = System1CalcPalette;
 //	System1DoReset();
 	return nRet;
 }
