@@ -5,26 +5,26 @@
 
 /*static*//* struct BurnDriver BurnDrvFourdwarrio = {
 		"4dwarrio", "sys1",
-		"4-D Warriors (315-5162)\0",
+		"4-D Warriors (315-5162)",
 		NULL, NULL, NULL, NULL,
 		NULL, NULL, NULL, NULL
 	};	  */
 /*
 	struct BurnDriver BurnDrvmspacman = {
 		"mspacman", "pacm",
-		"MS Pacman\0",
+		"MS Pacman",
 		NULL, NULL, NULL, NULL,
 		NULL, NULL, NULL, NULL
 };
 
 	struct BurnDriver BurnDrvpuckman = {
 		"puckman", "pacm",
-		"Puck Man (Japan set 1)\0",
+		"Puck Man (Japan set 1)",
 		NULL, NULL, NULL, NULL,
 		NULL, NULL, NULL, NULL
 };
 */
-struct BurnDriver* pDriver[25] __attribute__((aligned (4)));
+struct BurnDriver* pDriver[26] __attribute__((aligned (4)));
 
 /*	 =
 		{
@@ -97,12 +97,12 @@ int BurnDrvGetRomName(char** pszName, unsigned int i, int nAka)		// Forward to d
 {
 	return pDriver[nBurnDrvSelect]->GetRomName(pszName, i, nAka);
 }
-
+ /*
 int BurnDrvGetInputInfo(struct BurnInputInfo* pii, unsigned int i)	// Forward to drivers function
 {
 	return pDriver[nBurnDrvSelect]->GetInputInfo(pii, i);
 }
-
+*/
 int BurnDrvGetDIPInfo(struct BurnDIPInfo* pdi, unsigned int i)
 {
 	if (pDriver[nBurnDrvSelect]->GetDIPInfo) {									// Forward to drivers function
@@ -131,22 +131,7 @@ int BurnDrvExit()
 		return pDriver[nBurnDrvSelect]->Exit();			// Forward to drivers function
 	}
 }
-// Do one frame of game emulation
-int BurnDrvFrame()
-{
-	return pDriver[nBurnDrvSelect]->Frame();		// Forward to drivers function
-}
-// Force redraw of the screen
-/*
-int BurnDrvRedraw()
-{
-	if (pDriver[nBurnDrvSelect]->Redraw) {
-		return pDriver[nBurnDrvSelect]->Redraw();	// Forward to drivers function
-	}
 
-	return 1;										// No funtion provide, so simply return
-}
-*/
 void BurnDrvAssignList()
 {
 	static struct BurnDriver BurnDrvbankp = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
@@ -174,113 +159,119 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvRaflesia = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvAtetris = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvCongo = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
-BurnDrvsms_akmw.szFullNameA="Sega Master System\0";
+BurnDrvsms_akmw.szFullNameA="Sega Master System";
 BurnDrvsms_akmw.szParent=NULL;
 
 BurnDrvbankp.szShortName="bankp";
-BurnDrvbankp.szFullNameA="Bank Panic\0";
+BurnDrvbankp.szFullNameA="Bank Panic";
 BurnDrvbankp.szParent=NULL;
 
 BurnDrvcombh.szShortName="combh";
-BurnDrvcombh.szFullNameA="Combat Hawk\0";
+BurnDrvcombh.szFullNameA="Combat Hawk";
 BurnDrvcombh.szParent="bankp";
 
 BurnDrvNewsa.szShortName="newsa";
-BurnDrvNewsa.szFullNameA="News (set 2)\0";
+BurnDrvNewsa.szFullNameA="News (set 2)";
 BurnDrvNewsa.szParent="news";
 
 BurnDrvNews.szShortName="news";
-BurnDrvNews.szFullNameA="News (set 1)\0";
+BurnDrvNews.szFullNameA="News (set 1)";
 BurnDrvNews.szParent=NULL;
 
 BurnDrvGberet.szShortName="gberet";
-BurnDrvGberet.szFullNameA="Green Beret\0";
+BurnDrvGberet.szFullNameA="Green Beret";
 BurnDrvGberet.szParent=NULL;
 
 BurnDrvMrgoemon.szShortName="mrgoemon";
-BurnDrvMrgoemon.szFullNameA="Mr. Goemon (Japan)\0";
+BurnDrvMrgoemon.szFullNameA="Mr. Goemon (Japan)";
 BurnDrvMrgoemon.szParent="gberet";
 
 BurnDrvhigemaru.szShortName="higema";
-BurnDrvhigemaru.szFullNameA="Pirate Ship Higemaru\0";
+BurnDrvhigemaru.szFullNameA="Pirate Ship Higemaru";
 BurnDrvhigemaru.szParent=NULL;
 
 BurnDrvpkunwar.szShortName="pkunw";
-BurnDrvpkunwar.szFullNameA="Penguin-Kun Wars (US)\0";
+BurnDrvpkunwar.szFullNameA="Penguin-Kun Wars (US)";
 BurnDrvpkunwar.szParent=NULL;
 
 BurnDrvPang.szShortName="pang";
-BurnDrvPang.szFullNameA="Pang (World)\0";
+BurnDrvPang.szFullNameA="Pang (World)";
 BurnDrvPang.szParent="mitch";
 
 BurnDrvSpang.szShortName="spang";
-BurnDrvSpang.szFullNameA="Super Pang (World 900914)\0";
+BurnDrvSpang.szFullNameA="Super Pang (World 900914)";
 BurnDrvSpang.szParent="mitch";
 
 BurnDrvGnga.szShortName="gnga";
-BurnDrvGnga.szFullNameA="Ghosts'n Goblins (World? set 2)\0";
+BurnDrvGnga.szFullNameA="Ghosts'n Goblins (World? set 2)";
 BurnDrvGnga.szParent="gng";
 
 BurnDrvBlockgal.szShortName="blockgal";
-BurnDrvBlockgal.szFullNameA="Block Gal (MC-8123B, 317-0029)\0";
+BurnDrvBlockgal.szFullNameA="Block Gal (MC-8123B, 317-0029)";
 BurnDrvBlockgal.szParent="sys1h";
 
 BurnDrvWboyu.szShortName="wboyu";
-BurnDrvWboyu.szFullNameA="Wonder Boy (not encrypted)\0";
+BurnDrvWboyu.szFullNameA="Wonder Boy (not encrypted)";
 BurnDrvWboyu.szParent="sys1";
 
 BurnDrvChplftb.szShortName="chplftb";
-BurnDrvChplftb.szFullNameA="Choplifter (Alternate)\0";
+BurnDrvChplftb.szFullNameA="Choplifter (Alternate)";
 BurnDrvChplftb.szParent="sys2";
 
 BurnDrvGardia.szShortName="gardia";
-BurnDrvGardia.szFullNameA="Gardia (317-0006)\0";
+BurnDrvGardia.szFullNameA="Gardia (317-0006)";
 BurnDrvGardia.szParent="sys1h";
 
 BurnDrvFlickys2.szShortName="flickys2";
-BurnDrvFlickys2.szFullNameA="Flicky (128k, System 2, not encrypted)\0";
+BurnDrvFlickys2.szFullNameA="Flicky (128k, System 2, not encrypted)";
 BurnDrvFlickys2.szParent="sys1";
 
 BurnDrvMyhero.szShortName="myhero";
-BurnDrvMyhero.szFullNameA="My Hero (US, not encrypted)\0";
+BurnDrvMyhero.szFullNameA="My Hero (US, not encrypted)";
 BurnDrvMyhero.szParent="sys1";
 
 BurnDrvTeddybb.szShortName="teddybb";
-BurnDrvTeddybb.szFullNameA="TeddyBoy Blues (315-5115, New Ver.)\0";
+BurnDrvTeddybb.szFullNameA="TeddyBoy Blues (315-5115, New Ver.)";
 BurnDrvTeddybb.szParent="sys1";
 
 BurnDrvPitfall2u.szShortName="pitfal2u";
-BurnDrvPitfall2u.szFullNameA="Pitfall II (not encrypted)\0";
+BurnDrvPitfall2u.szFullNameA="Pitfall II (not encrypted)";
 BurnDrvPitfall2u.szParent="sys1";
 
 BurnDrvWbdeluxe.szShortName="wbdeluxe";
-BurnDrvWbdeluxe.szFullNameA="Wonder Boy Deluxe\0";
+BurnDrvWbdeluxe.szFullNameA="Wonder Boy Deluxe";
 BurnDrvWbdeluxe.szParent="sys1";
 
 BurnDrvpengo2u.szShortName="pengo2u";
-BurnDrvpengo2u.szFullNameA="Pengo (set 2 not encrypted)\0";
+BurnDrvpengo2u.szFullNameA="Pengo (set 2 not encrypted)";
 BurnDrvpengo2u.szParent="pacm";
 
 BurnDrvStarjack.szShortName="starjack";
-BurnDrvStarjack.szFullNameA="Star Jacker (Sega)\0";
+BurnDrvStarjack.szFullNameA="Star Jacker (Sega)";
 BurnDrvStarjack.szParent="sys1h";
 
 BurnDrvRaflesia.szShortName="raflesia";
-BurnDrvRaflesia.szFullNameA="Rafflesia (315-5162)\0";
+BurnDrvRaflesia.szFullNameA="Rafflesia (315-5162)";
 BurnDrvRaflesia.szParent="sys1h";
 
 BurnDrvAtetris.szShortName="atetris";
-BurnDrvAtetris.szFullNameA="Tetris (set 1)\0";
+BurnDrvAtetris.szFullNameA="Tetris (set 1)";
 BurnDrvAtetris.szParent="tetris";
-
+			
+BurnDrvCongo.szShortName="congo";
+BurnDrvCongo.szFullNameA="Congo Bongo";
+BurnDrvCongo.szParent="zaxxon";
+			
 int i=0;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlockgal;
 pDriver[i++] = &BurnDrvChplftb;
 pDriver[i++] = &BurnDrvcombh;
+pDriver[i++] = &BurnDrvCongo;
 pDriver[i++] = &BurnDrvFlickys2;
 pDriver[i++] = &BurnDrvGardia;
 pDriver[i++] = &BurnDrvGnga;

@@ -1,6 +1,6 @@
 #include    "machine.h"
 #include "d_sms.h"
-#define OLD_SOUND 1
+//#define OLD_SOUND 1
 #define SAMPLE 7680L
 //GfsDirName dir_name_sms[512];
 
@@ -63,7 +63,7 @@ void	SetVblank2( void ){
 	PSG_Update(&nSoundBuffer[nSoundBufferPos[0]],  128);
 //	SN76496Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
 	nSoundBufferPos[0]+=128;//256; 
-	if(nSoundBufferPos[0]>=7680)//<<1)//256*hz)
+	if(nSoundBufferPos[0]>=SAMPLE)//<<1)//256*hz)
 		nSoundBufferPos[0]=0;
 	PCM_Task(pcm);
 
@@ -131,11 +131,16 @@ void initPosition(void)
 	dummy_write = (unsigned *)malloc(0x100*sizeof(unsigned));	 */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void dummy()
+{
+
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
 //	InitCDsms();
 	SPR_InitSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
+	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 	nBurnSprites  = 67;//131;//27;
 	nBurnLinescrollSize = 0x340;
 	nSoundBufferPos = 0;//sound position à renommer
@@ -338,8 +343,8 @@ INT32 SMSFrame(void)
  #else
 //		if(sound)
 		{
-			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-				SPR_WaitEndSlaveSH();
+//			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
+			SPR_WaitEndSlaveSH();
 			SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
 //			vb=1;
 		}		

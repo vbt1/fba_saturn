@@ -10,9 +10,9 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile
 
-CCFLAGS = -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
-CCFLAGS2 = -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -D_SH -DMODEL_S -c -I.
-CCOVLFLAGS = -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
+#CCFLAGS =  -mhitachi -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
+CCFLAGS2 =   -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -D_SH -DMODEL_S -c -I.
+CCOVLFLAGS = -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
 #LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles  -nostdlib
 
@@ -118,6 +118,13 @@ LDOVLSMSFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOV
 SRCOVLSMS         = d_sms.c psg_sms.c 
 OBJOVLSMS         = $(SRCOVLSMS:.c=.o)
 
+OVLZAXXON                 = root/d_zaxxon.coff
+OVLZAXXON1               = root/d_zaxxon.bin
+MPOVLZAXXONFILE    = $(OVLZAXXON:.coff=.maps)
+LDOVLZAXXONFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLZAXXONFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+OBJOVLZAXXON         = $(SRCOVLZAXXON:.c=.o)
+
 OVLTETRIS                 = root/d_tetris.coff
 OVLTETRIS1               = root/d_TETRIS.bin
 MPOVLTETRISFILE    = $(OVLTETRIS:.coff=.maps)
@@ -154,7 +161,8 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLMITCH) $(OVLMITCH1) $(OVLGNG) $(OVLGNG1) \
      $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
-     $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1)
+     $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
+     $(OVLZAXXON) $(OVLZAXXON)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -247,6 +255,12 @@ $(OVLSMS) : $(OBJOVLSMS) $(MAKEFILE) $(OBJOVLSMS) $(LDOVLSMSFILE)
 
 $(OVLSMS1) : $(OBJOVLSMS) $(MAKEFILE) $(LDOVLSMSFILE)
 	$(CONV) -O binary $(OVLSMS) $(OVLSMS1)
+
+$(OVLZAXXON) : $(OBJOVLZAXXON) $(MAKEFILE) $(OBJOVLZAXXON) $(LDOVLZAXXONFILE)
+	$(CC) $(LDOVLZAXXONFLAGS) $(OBJOVLZAXXON) $(LIBSOVL) -o $@
+
+$(OVLZAXXON1) : $(OBJOVLZAXXON) $(MAKEFILE) $(LDOVLZAXXONFILE)
+	$(CONV) -O binary $(OVLZAXXON) $(OVLZAXXON1)
 
 # suffix
 .SUFFIXES: .asm

@@ -48,7 +48,7 @@
  #define WRITE_UNICODE_BOM(file)
 #endif
 
-#define		INCLUDE_NEOGEO_MULTISLOT	1
+//#define		INCLUDE_NEOGEO_MULTISLOT	1
 
 typedef signed char INT8;
 typedef unsigned char UINT8;
@@ -57,7 +57,7 @@ typedef unsigned short UINT16;
 typedef signed int INT32;
 typedef unsigned int UINT32;
 
-extern int nBurnVer;						// Version number of the library
+//extern int nBurnVer;						// Version number of the library
 
 // ---------------------------------------------------------------------------
 // Callbacks
@@ -84,7 +84,7 @@ extern unsigned int (__cdecl *BurnHighCol) (int r, int g, int b, int i);
 #define BRF_NODUMP			(1 << 28)
 
 struct BurnRomInfo {
-	char szName[32];
+	char szName[13];
 	unsigned int nLen;
 	unsigned int nCrc;
 	unsigned int nType;
@@ -161,17 +161,17 @@ int BurnDrvGetAspect(int* pnXAspect, int* pnYAspect);
 int BurnDrvGetHardwareCode();
 int BurnDrvGetFlags();
 //bool BurnDrvIsWorking();
-int BurnDrvGetMaxPlayers();
-int BurnDrvSetVisibleSize(int pnWidth, int pnHeight);
-int BurnDrvSetAspect(int pnXAspect, int pnYAspect);
-int BurnDrvGetGenreFlags();
-int BurnDrvGetFamilyFlags();
-int BurnDoGameListLocalisation();
+//int BurnDrvGetMaxPlayers();
+//int BurnDrvSetVisibleSize(int pnWidth, int pnHeight);
+//int BurnDrvSetAspect(int pnXAspect, int pnYAspect);
+//int BurnDrvGetGenreFlags();
+//int BurnDrvGetFamilyFlags();
+//int BurnDoGameListLocalisation();
 
-void ApplyPatches(UINT8* base, char* rom_name);
+//void ApplyPatches(UINT8* base, char* rom_name);
 
-#define MAX_NEO_SLOTS	6
-extern unsigned int nNeoSlotDrvNum[MAX_NEO_SLOTS];
+//#define MAX_NEO_SLOTS	6
+//extern unsigned int nNeoSlotDrvNum[MAX_NEO_SLOTS];
 
 // ---------------------------------------------------------------------------
 // Flags used with the Burndriver structure

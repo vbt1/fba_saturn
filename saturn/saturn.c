@@ -262,11 +262,11 @@ void resetLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initSaturn()
 {
-
+/*
 	Uint8	*dst;
 //	malloc_trim();
    Uint32 __malloc_sbrk_base;
-/*   
+   
 	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)_bend; dst++)
 		*dst = 0;	 */
  /*   for (dst = (Uint8 *)&_bend; dst < (Uint8 *)OVLADDR; dst++)
@@ -292,11 +292,7 @@ void resetLayers()
 //	PCM_MeReset(pcm);
 //	SetVblank();
 //wait_vblank();
-	memset4_fast(SCL_VDP2_VRAM_A0,0,0x20000);
-	memset4_fast(SCL_VDP2_VRAM_A1,0,0x20000);
-
-	memset4_fast(SCL_VDP2_VRAM_B0,0,0x20000);
-	memset4_fast(SCL_VDP2_VRAM_B1,0,0x20000);
+	VDP2_InitVRAM();
 
 	memset(pltrigger[0],0x00,sizeof(trigger_t));
 	memset(pltriggerE[0],0x00,sizeof(trigger_t));
@@ -331,20 +327,6 @@ wait_vblank();
 	col[1]=9;
 	col[2]=10;
 	col[3]=11;
-
-//Scl_n_reg.n0_move_x = 0;
-//		SetVblank();
-//	SclProcess = 1;
-//
-//	SetVblank();
-//		initColors();
-/*
-#ifndef ACTION_REPLAY
-	if(FntAsciiFontData2bpp==NULL)
-		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
-	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
-#endif
-	*/
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void ss_main(void)
@@ -378,16 +360,8 @@ static void ss_main(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void VDP2_InitVRAM(void)
 {
-	/* Variables. */
-
-	Uint32	loop;
-	loop = 0;
-	while (loop < 0x40000)
-	{
-		*((Uint32 *) (SCL_VDP2_VRAM_A0 + loop)) = 0;
-		*((Uint32 *) (SCL_VDP2_VRAM_B0 + loop)) = 0;
-		loop += 4;
-	}
+	memset4_fast(SCL_VDP2_VRAM_A0,0,0x40000);
+	memset4_fast(SCL_VDP2_VRAM_B0,0,0x40000);
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 static void load_img(int id)
@@ -1339,7 +1313,8 @@ static int DoInputBlank(int bDipSwitch)
   {
     struct BurnInputInfo bii;
     memset(&bii,0,sizeof(bii));
-    BurnDrvGetInputInfo(&bii,i);
+//    BurnDrvGetInputInfo(&bii,i);
+	pDriver[nBurnDrvSelect]->GetInputInfo(&bii, i);
     
     //if (bDipSwitch==0 && bii.nType==2) continue; // Don't blank the dip switches
 	
@@ -1539,7 +1514,8 @@ int InpInit()
  nGameInpCount=0;
  for (i=0;i<0x1000;i++) 
 	  {
-    nRet = BurnDrvGetInputInfo(NULL,i);
+//    nRet = BurnDrvGetInputInfo(NULL,i);
+	nRet = pDriver[nBurnDrvSelect]->GetInputInfo(NULL, i);
     if (nRet!=0) {   // end of input list
     	nGameInpCount=i; 
     	break; 
@@ -1812,7 +1788,6 @@ static void run_fba_emulator()
 		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Driver initialisation failed! Likely causes are:",1,180);
 		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Corrupt/Missing ROM(s)\n- I/O Error\n- Memory error\n\n",1,190);
 //		while(1);
-
 	}
 	InpInit();
 	InpDIP();
@@ -1826,7 +1801,8 @@ static void run_fba_emulator()
 
 	while (play)
 	{
-		BurnDrvFrame();
+//		BurnDrvFrame();
+		pDriver[nBurnDrvSelect]->Frame();		// Forward to drivers function
 		SCL_SetLineParam2(&lp);
 		_spr2_transfercommand();
 		frame_x++;
