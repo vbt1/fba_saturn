@@ -33,11 +33,12 @@ void	UsrVblankIn( void )
 #endif
 	PCM_MeVblIn();
 	SCL_ScrollShow();
-	if(nBurnFunction!=NULL) nBurnFunction();
+	
 #ifndef ACTION_REPLAY
 
 	if(play)
 	{
+		if(nBurnFunction!=NULL) nBurnFunction();
 #endif
 #ifdef FONT
 		frame_y++;
@@ -341,7 +342,7 @@ static void ss_main(void)
 //	SPR_InitSlaveSH();
 //	slob_init();
 	initSaturn();
-	BurnLibInit();
+//	BurnLibInit();
 	BurnDrvAssignList();
 //	testTga();
 
@@ -526,7 +527,7 @@ static void display_menu(void)
 		}
 		m=0;
 //		char page_header[50];
-		char game_name[50];
+		char game_name[40];
 //		sprintf(page_header,"Game list:                       %02d/%02d",current_page, (nBurnDrvCount+GAME_BY_PAGE-1)/GAME_BY_PAGE);
 //		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)page_header,12,12);
 
@@ -552,52 +553,6 @@ static void display_menu(void)
 	
 
 }
-
-#if 0
-inline void restart()
-{
-/*Uint8	*dst;
-	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)&_bend; dst++)
-		{
-		SetVblank();
-		*dst = 0;
-		}			*/
-// nécessaire en sortant de green beret 
-//		SetVblank();
-//		wait_vblank();
-		set_imask(1);
-		BurnDrvExit();
-		PCM_MeStop(pcm);
-
-		_smpc_SSHOFF();
-		_smpc_SNDOFF();
-
-	 Uint8	*dst;
-    Uint16  loop;	
-	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)&_bend; dst++)
-		*dst = 0;
-
-	
-	for (dst = (Uint8 *)SystemWork, loop = 0; loop < SystemSize; loop++)
-		*dst = 0;
- 	for (dst = (Uint8 *)OVLADDR; dst < (Uint8 *)SystemWork; dst++)
-		{
-		*dst = 0;
-		}
-//#define SystemWork2  0x060ffc00              /* System Variable Address */
-//#define SystemSize2  (0x06100000-0x060ffc00) /* System Variable Size */
-//xxxx
-		/*
-	ss_reg = ss_regs = ss_SpPriNum = ss_BgPriNum = ss_OtherPri = colAddr = NULL;
-	aVRAM = cache = colBgAddr = colBgAddr2 = ss_font = ss_map = ss_map2 = ss_scl = NULL;
-		*/
-		INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
-		void (*fp)(void);
-		fp = (void *)0x6004000;
-		(*fp)();
-//		main();
-}
-#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void SCL_ParametersInit(void)
 {
@@ -1043,9 +998,11 @@ void SND_Init(SndIniDt *sys_ini)
     POKE_W(ADR_SCSP_REG, SCSP_REG_SET); 
                                                 /* SCSP‹¤’ÊÚ¼Þ½ÀÝ’è         */
 
-    DmaClrZero(ADR_SND_MEM, MEM_CLR_SIZE);      // DMAƒƒ‚ƒŠƒ[ƒƒNƒŠƒA       
+//    DmaClrZero(ADR_SND_MEM, MEM_CLR_SIZE);      // DMAƒƒ‚ƒŠƒ[ƒƒNƒŠƒA       
+		memset(ADR_SND_MEM, 0x00, MEM_CLR_SIZE);
 
-		CopyMem(ADR_SND_VECTOR,
+		//CopyMem(ADR_SND_VECTOR,
+		memcpyw(ADR_SND_VECTOR,
                    (void *)(SND_INI_PRG_ADR(*sys_ini)),
                    SND_INI_PRG_SZ(*sys_ini));   // 68KÌßÛ¸Þ×Ñ“]‘—            
 
@@ -1057,7 +1014,8 @@ void SND_Init(SndIniDt *sys_ini)
                                                 
     adr_com_block = adr_host_int_work;  /* Œ»Ý‘‚«ž‚ÝºÏÝÄÞÌÞÛ¯¸±ÄÞÚ½‰Šú‰» */
 
-		CopyMem((void *)
+//		CopyMem((void *)
+		memcpyw((void *)
                     (PEEK_L(adr_sys_info_tbl + ADR_ARA_ADR) + ADR_SND_MEM),
                    (void *)(SND_INI_ARA_ADR(*sys_ini)),
                    CHG_LONG(SND_INI_ARA_SZ(*sys_ini))); /* »³ÝÄÞ´Ø±Ï¯Ìß“]‘—  */
@@ -1089,15 +1047,15 @@ Uint8 SND_ChgMap(Uint8 area_no)
 
 #define DMA_SCU_END     0
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void CopyMem(void *dst, void *src, Uint32 cnt)
+/*static void CopyMem(void *dst, void *src, Uint32 cnt)
 {
 	memcpyw(dst, src, cnt);
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DmaClrZero(void *dst, Uint32 cnt)
+/*static void DmaClrZero(void *dst, Uint32 cnt)
 {
 	memset(dst, 0x00, cnt);
-}
+}		   */
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void sndInit(void)
 {

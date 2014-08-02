@@ -20,7 +20,7 @@
 #ifndef ACTION_REPLAY
 //#define	MAX_FILE		384
 #define MAX_OPEN        20 //a ne pas modifier
-#define MAX_DIR         48//384
+#define MAX_DIR         384//384
 #else
 //#define	MAX_FILE		1
 #define MAX_OPEN        2

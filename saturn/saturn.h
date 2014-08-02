@@ -157,7 +157,7 @@ SclBgPriNumRegister  SclBgPriNum;
 //-------------------------------------------------------------------------------------------------------------------------------------
 extern Uint8	*FntAsciiFontData2bpp;
 //Sint8 *g_movie_buf = (Sint8 *)0x25a20000;//0x04000000;
-PcmHn 			pcm;
+extern PcmHn 			pcm;
 
 extern Uint32   _bstart, _bend;
 static Uint32 intrflag;

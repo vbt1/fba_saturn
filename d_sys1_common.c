@@ -366,8 +366,11 @@ void system1_backgroundram_w(unsigned short a, UINT8 d)
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		unsigned int x = map_offset_lut[a&0x7ff];
-		ss_map[x]     = ss_map[x+0x40] = ss_map[x+0x1000] = ss_map[x+0x1040] = (Code >> 5) & 0x3f;;//color_lut[Code];
-		ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = Code & (System1NumTiles-1);
+		UINT16 *map = &ss_map[x]; 
+//		ss_map[x]     = ss_map[x+0x40] = ss_map[x+0x1000] = ss_map[x+0x1040] = (Code >> 5) & 0x3f;;//color_lut[Code];
+//		ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = Code & (System1NumTiles-1);
+		map[0] = map[0x40] = map[0x1000] = map[0x1040] = (Code >> 5) & 0x3f;;//color_lut[Code];
+		map[1] = map[0x41] = map[0x1001] = map[0x1041] = Code & (System1NumTiles-1);
 	}
 }
 

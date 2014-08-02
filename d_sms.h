@@ -85,6 +85,7 @@ unsigned *dummy_write  = NULL; //[0x100];
 UINT16 *name_lut = NULL;
 UINT32 *bp_lut = NULL; //[0x10000];
 UINT16 *cram_lut = NULL;//[0x40];
+UINT16 *map_lut = NULL;
 //extern unsigned char play;
 extern int file_id;
 //unsigned char *game=NULL;

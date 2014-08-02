@@ -48,6 +48,7 @@ void	SetVblank2( void ){
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
 {
+	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
 	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
@@ -123,6 +124,7 @@ void initPosition(void)
 	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
 	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
 	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
+	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
 	dummy_write= Next; Next += 0x100*sizeof(unsigned);
 	MemEnd			= Next;	
 	 
@@ -264,7 +266,7 @@ void sms_start()
 	
 	memset4_fast(&ss_vram[0x1100],0,0x10000-0x1100);
 	memset4_fast((Uint8 *)cache,0,0x20000);
-	memset4_fast((Uint8 *)SS_MAP,0,0x20000);
+	memset4_fast((Uint8 *)ss_map,0,0x20000);
 	memset4_fast((Uint8 *)SCL_VDP2_VRAM_A0,0,0x20000);					
 	memset(vdp.vram,0,sizeof(vdp.vram));
 	
@@ -302,7 +304,7 @@ INT32 SMSExit(void)
 //	memset(SaturnMem,0x00,nLen);
 //	free(bp_lut	);
 	bp_lut = NULL;
-	dummy_write = MemEnd = name_lut = cram_lut = NULL;
+	map_lut = dummy_write = MemEnd = name_lut = cram_lut = NULL;
 	free(SaturnMem);
 
 /*
@@ -324,7 +326,9 @@ INT32 SMSFrame(void)
 {
 	if(running)
 	{
-		*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
+//		*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
+//	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );//palette2[0];
+
 		sms_frame();
 		
 #ifdef OLD_SOUND //
@@ -370,34 +374,40 @@ void sms_frame(void)
 			z80_cause_NMI();
 			first = 0;
 	}
-
+	vdp.line = 0;
+	vdp.left = vdp.reg[10];
 //    for(vdp.line = 0; vdp.line < 262; vdp.line++)
-    for(vdp.line = 0; vdp.line < 262; vdp.line++)
+    for(; vdp.line <= 0xc0; vdp.line++)
 	{
 		z80_emulate(228);
-
-#if PROFILING
-		bcount += TIM_FRT_GET_16();
-#endif	
-
-		if 	(vdp.line < 0x10 && (vdp.reg[0] & 0x40))
-			ss_scl[vdp.line] = 0;
-		else
-			if (vdp.line < 0xC0)
-				ss_scl[vdp.line] = scroll_x;
-
-#ifdef PROFILING
-		TIM_FRT_SET_16(0);
-#endif
 		vdp_run(&vdp);
+		vdp.line++;
+		z80_emulate(228);
+		vdp_run(&vdp);
+		vdp.line++;
+		z80_emulate(228);
+		vdp_run(&vdp);
+	}
 
-#ifdef PROFILING
-				bcount  += TIM_FRT_GET_16();
-				bcNum++;
-				line++;
-				bcount2[line] = (int)(TIM_FRT_CNT_TO_MCR(bcount))/bcNum;
-				if(line>=21) line=0;
-#endif	
+    for(; vdp.line < 0xE0; vdp.line++)
+	{
+		z80_emulate(228);
+       vdp.left = vdp.reg[10];
+
+        if((vdp.status & 0x80) && (vdp.reg[1] & 0x20))
+        {
+            sms.irq = 1;
+            z80_raise_IRQ(0);
+        }
+	}
+
+    for(; vdp.line < 262; vdp.line++)
+	{
+		z80_emulate(228);
+       vdp.left = vdp.reg[10];
+		vdp.line++;
+		z80_emulate(228);
+       vdp.left = vdp.reg[10];
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -525,6 +535,29 @@ int vdp_ctrl_r(void)
     return (temp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void update_bg(t_vdp *vdp, int index)
+{
+//				if(index>=vdp.ntab && index<vdp.ntab+0x700)
+// VBT 04/02/2007 : modif compilo
+		if(index>=vdp->ntab)
+			if( index<vdp->ntab+0x700)
+		{
+			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
+			int delta = map_lut[index - vdp->ntab];
+			UINT16 *map = &ss_map[delta]; 
+			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
+		}
+		/* Mark patterns as dirty */
+		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+		UINT32 bp = *(UINT32 *)&vdp->vram[index & ~3];
+		UINT32 *pg = (UINT32 *) &cache[0x00000 | (index & ~3)];
+		UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index & ~3)];
+		UINT32 temp1 = bp_lut[bp & 0xFFFF];
+		UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
+		*sg= *pg = (temp1<<2 | temp2 );
+//        *pg = (temp1<<2 | temp2 );
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 /* Write data to the VDP's data port */
 void vdp_data_w(int data)
 {
@@ -548,32 +581,7 @@ void vdp_data_w(int data)
             {
 				/* Store VRAM byte */
                 vdp.vram[index] = data;
-
-//				if(index>=vdp.ntab && index<vdp.ntab+0x700)
-// VBT 04/02/2007 : modif compilo
-				if(index>=vdp.ntab)
-					if( index<vdp.ntab+0x700)
-				{
-					int row,column;
-					UINT16 temp;
-					delta =index - vdp.ntab;
-					row = delta & 0x7C0;	  //					row = (delta >> 6) & 0x1F;
-					column = (delta>>1) & 0x1F;
-					temp = *(UINT16 *)&vdp.vram[index&~1];
-//					delta = (row<<6)+column;
-					delta = row+column;
-					ss_map[delta] =ss_map[delta+32] =ss_map[0x700+delta] =ss_map[0x700+delta+32] =name_lut[temp];
-				}
-                /* Mark patterns as dirty */
-				UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-				UINT32 bp = *(UINT32 *)&vdp.vram[index & ~3];
-				UINT32 *pg = (UINT32 *) &cache[0x00000 | (index & ~3)];
-				UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index & ~3)];
-				UINT32 temp1 = bp_lut[bp & 0xFFFF];
-				UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
-				*sg= *pg = (temp1<<2 | temp2 );
-//        *pg = (temp1<<2 | temp2 );
-
+				update_bg(&vdp,index);
             }
 
 //VBT : A REMETTRE A LA PLACE  de rederSprite des que le probleme sur yp=208 est résolu
@@ -683,20 +691,36 @@ int vdp_data_r(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Process frame events */
 //void vdp_run(INT32 line)
+/*
+		if 	(vdp.line < 0x10 && (vdp.reg[0] & 0x40))
+			ss_scl[vdp.line] = 0;
+		else
+			if (vdp.line < 0xC0)
+				ss_scl[vdp.line] = scroll_x;
+*/
+
+
 void vdp_run(t_vdp *vdp)
 {
-    if(vdp->line <= 0xC0)
+//    if(vdp->line <= 0xC0)
     {
+		if 	(vdp->line < 0x10 && (vdp->reg[0] & 0x40))
+			ss_scl[vdp->line] = 0;
+		else
+			ss_scl[vdp->line] = scroll_x;
+
         if(vdp->line == 0xC0)
         {
            memcpyl(SS_SPRAM,ss_sprite,(nBurnSprites<<5) ) ;
             vdp->status |= 0x80;
         }
-
-		if(vdp->line == 0)
-        {
-            vdp->left = vdp->reg[10];
-        }
+	/*	else
+		{
+			if(vdp->line == 0)
+			{
+				vdp->left = vdp->reg[10];
+			} 
+		}	  */
 
         if(vdp->left == 0)
         {
@@ -713,7 +737,7 @@ void vdp_run(t_vdp *vdp)
             z80_raise_IRQ(0);
         }
     }
-    else
+/*    else
     {
         vdp->left = vdp->reg[10];
 
@@ -722,7 +746,7 @@ void vdp_run(t_vdp *vdp)
             sms.irq = 1;
             z80_raise_IRQ(0);
         }
-    }
+    }	*/
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 UINT8 vdp_vcounter_r(void)
@@ -1125,6 +1149,18 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 	z80_reset();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void make_map_lut()
+{
+	int row,column;
+
+	for (int i = 0; i < 0x800;i++) 
+	{
+		row = i & 0x7C0;
+		column = (i>>1) & 0x1F;
+		map_lut[i] = row+column;
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 void make_name_lut()
 {
 	int i, j;
@@ -1188,5 +1224,6 @@ void make_lut()
 	make_name_lut();
 	make_bp_lut();
 	make_cram_lut();
+	make_map_lut();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

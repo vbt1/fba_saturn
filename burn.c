@@ -3,75 +3,9 @@
 #include "burnint.h"
 //#include "saturn/ovl.h"
 
-/*static*//* struct BurnDriver BurnDrvFourdwarrio = {
-		"4dwarrio", "sys1",
-		"4-D Warriors (315-5162)",
-		NULL, NULL, NULL, NULL,
-		NULL, NULL, NULL, NULL
-	};	  */
-/*
-	struct BurnDriver BurnDrvmspacman = {
-		"mspacman", "pacm",
-		"MS Pacman",
-		NULL, NULL, NULL, NULL,
-		NULL, NULL, NULL, NULL
-};
-
-	struct BurnDriver BurnDrvpuckman = {
-		"puckman", "pacm",
-		"Puck Man (Japan set 1)",
-		NULL, NULL, NULL, NULL,
-		NULL, NULL, NULL, NULL
-};
-*/
-struct BurnDriver* pDriver[26] __attribute__((aligned (4)));
-
-/*	 =
-		{
-//&BurnDrvFourdwarrio,
-&BurnDrvsms_akmw,
-&BurnDrvbankp,
-&BurnDrvBlockgal,
-&BurnDrvChplftb,
-&BurnDrvcombh,
-&BurnDrvFlickys2,
-&BurnDrvGardia,
-&BurnDrvGnga,
-&BurnDrvGberet,
-&BurnDrvMrgoemon,
-&BurnDrvMyhero,
-&BurnDrvNews,
-&BurnDrvNewsa,
-&BurnDrvPang,
-&BurnDrvSpang,
-&BurnDrvpkunwar,	   
-&BurnDrvpengo2u,
-&BurnDrvhigemaru,
-&BurnDrvPitfall2u,
-&BurnDrvRaflesia,
-&BurnDrvStarjack,
-//&BurnDrvGnga//
-//&BurnDrvpuckman,
-//&BurnDrvmspacman,
-&BurnDrvTeddybb,
-&BurnDrvAtetris,
-//&BurnDrvpacman,
-&BurnDrvWboyu,
-&BurnDrvWbdeluxe
-//&BurnDrvBlckgalb,
-//&BurnDrvChaknpop, 
-//&BurnDrvSeganinju,
-//&BurnDrvVigilant,
-//&BurnDrvWbmljb,
-//&BurnDrvPengo2u
-};
-*/
-int BurnLibInit()
-{
-	nBurnDrvSelect=0;
-	nBurnDrvCount = sizeof(pDriver) / sizeof(pDriver[0]);	// count available drivers
-	return 0;
-}
+//char toto[0xF00] ={'0','0'};
+#define NB_DRV 28
+struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
 
@@ -97,19 +31,14 @@ int BurnDrvGetRomName(char** pszName, unsigned int i, int nAka)		// Forward to d
 {
 	return pDriver[nBurnDrvSelect]->GetRomName(pszName, i, nAka);
 }
- /*
-int BurnDrvGetInputInfo(struct BurnInputInfo* pii, unsigned int i)	// Forward to drivers function
-{
-	return pDriver[nBurnDrvSelect]->GetInputInfo(pii, i);
-}
-*/
+
 int BurnDrvGetDIPInfo(struct BurnDIPInfo* pdi, unsigned int i)
 {
 	if (pDriver[nBurnDrvSelect]->GetDIPInfo) {									// Forward to drivers function
 		return pDriver[nBurnDrvSelect]->GetDIPInfo(pdi, i);
 	}
 
-	return 1;																	// Fail automatically
+	return 1;	// Fail automatically
 }
 
 // Init game emulation (loading any needed roms)
@@ -134,6 +63,7 @@ int BurnDrvExit()
 
 void BurnDrvAssignList()
 {
+	nBurnDrvCount = NB_DRV;
 	static struct BurnDriver BurnDrvbankp = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvcombh = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvNewsa = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
@@ -160,6 +90,8 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvAtetris = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvCongo = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvZaxxon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvSzaxxon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System";
@@ -264,8 +196,19 @@ BurnDrvAtetris.szParent="tetris";
 BurnDrvCongo.szShortName="congo";
 BurnDrvCongo.szFullNameA="Congo Bongo";
 BurnDrvCongo.szParent="zaxxon";
-			
+
+BurnDrvZaxxon.szShortName="zaxxon";
+BurnDrvZaxxon.szFullNameA="Zaxxon (set 1)";
+BurnDrvZaxxon.szParent=NULL;
+
+BurnDrvSzaxxon.szShortName="szaxxon";
+BurnDrvSzaxxon.szFullNameA="Super Zaxxon";
+BurnDrvSzaxxon.szParent=NULL;			
+	
 int i=0;
+		
+pDriver[i++] = &BurnDrvZaxxon;
+pDriver[i++] = &BurnDrvSzaxxon;	  
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlockgal;
@@ -293,24 +236,6 @@ pDriver[i++] = &BurnDrvAtetris;
 pDriver[i++] = &BurnDrvWboyu;
 pDriver[i++] = &BurnDrvWbdeluxe;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Application-defined rom loading function:
 int (__cdecl *BurnExtLoadRom)(unsigned char *Dest,int *pnWrote,int i, int nGap,int bXor) = NULL;
