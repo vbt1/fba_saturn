@@ -122,7 +122,8 @@ OVLZAXXON                 = root/d_zaxxon.coff
 OVLZAXXON1               = root/d_zaxxon.bin
 MPOVLZAXXONFILE    = $(OVLZAXXON:.coff=.maps)
 LDOVLZAXXONFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLZAXXONFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+#SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+SRCOVLZAXXON         = d_ZAXXON.c saturn/ovl.c
 OBJOVLZAXXON         = $(SRCOVLZAXXON:.c=.o)
 
 OVLTETRIS                 = root/d_tetris.coff
@@ -135,6 +136,13 @@ SRCOVLTETRIS         = d_atetris_mame6502.c m6502.new/m6502.c m6502.new/m6502_in
 #SRCOVLTETRIS         = d_atetris.c m6502/m6502.c m6502_intf.c sn76496.c slapstic.c
 #SRCOVLTETRIS         = d_atetris.c Crab6502/Crab6502.c sn76496.c slapstic.c
 OBJOVLTETRIS         = $(SRCOVLTETRIS:.c=.o)
+
+OVLVIGIL                 = root/d_vigil.coff
+OVLVIGIL1               = root/d_vigil.bin
+MPOVLVIGILFILE    = $(OVLVIGIL:.coff=.maps)
+LDOVLVIGILFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLVIGILFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+OBJOVLVIGIL         = $(SRCOVLVIGIL:.c=.o)
 
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 
@@ -162,7 +170,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
      $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
-     $(OVLZAXXON) $(OVLZAXXON1)
+     $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -257,10 +265,16 @@ $(OVLSMS1) : $(OBJOVLSMS) $(MAKEFILE) $(LDOVLSMSFILE)
 	$(CONV) -O binary $(OVLSMS) $(OVLSMS1)
 
 $(OVLZAXXON) : $(OBJOVLZAXXON) $(MAKEFILE) $(OBJOVLZAXXON) $(LDOVLZAXXONFILE)
-	$(CC) $(LDOVLZAXXONFLAGS) $(OBJOVLZAXXON) $(LIBSOVL) -o $@
+	$(CC) $(LDOVLZAXXONFLAGS) $(OBJOVLZAXXON) $(LIBSOVL) raze/raze.o -o $@
 
 $(OVLZAXXON1) : $(OBJOVLZAXXON) $(MAKEFILE) $(LDOVLZAXXONFILE)
 	$(CONV) -O binary $(OVLZAXXON) $(OVLZAXXON1)
+
+$(OVLVIGIL) : $(OBJOVLVIGIL) $(MAKEFILE) $(OBJOVLVIGIL) $(LDOVLVIGILFILE)
+	$(CC) $(LDOVLVIGILFLAGS) $(OBJOVLVIGIL) $(LIBSOVL) -o $@
+
+ $(OVLVIGIL1) : $(OBJOVLVIGIL) $(MAKEFILE) $(LDOVLVIGILFILE)
+	$(CONV) -O binary $(OVLVIGIL) $(OVLVIGIL1)
 
 # suffix
 .SUFFIXES: .asm

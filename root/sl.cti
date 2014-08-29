@@ -1,0 +1,2279 @@
+Disc    CDROM SL.DSK
+
+LeadIn MODE1
+PostGap 150
+EndTrack
+
+Track MODE1
+	Pause 150     
+	Volume ISO9660 sl.DSK
+	SystemArea "ip.bin" ;
+	PrimaryVolume
+	SystemIdentifier        "SEGA SEGASATURN"
+	VolumeIdentifier        "SL"
+	VolumeSetIdentifier     "SL"
+	LogicalBlockSize        2048
+	PublisherIdentifier     "SEGA ENTERPRISES, LTD."
+	DataPreparerIdentifier  "SEGA ENTERPRISES, LTD."
+	ApplicationIdentifier   "SL"
+	CopyrightFileIdentifier "CPY.TXT"
+	AbstractFileIdentifier  "ABS.TXT"
+	BibliographicFileIdentifier  "BIB.TXT"
+
+	Lpath               ; Path tables as specified for Saturn
+	Mpath
+	
+	Hierarchy
+		File    00000SL.BIN;1
+			Source .\SL.BIN
+		EndFile
+		File    SDDRVS.TSK;1
+			Source .\SDDRVS.TSK
+		EndFile
+		File    FONT.BIN;1
+			Source .\FONT.BIN
+		EndFile
+
+		File    IMG.BIN;1
+			Source .\IMG.BIN
+		EndFile
+
+		File    ABS.TXT;1
+			Source .\ABS.TXT
+		EndFile
+		File    BIB.TXT;1
+			Source .\BIB.TXT
+		EndFile
+		File    CPY.TXT;1
+			Source .\CPY.TXT
+		EndFile
+		Directory GAMES
+
+			File D_BANKP.BIN;1
+				Source D_BANKP.BIN
+			EndFile
+
+			File D_NEWS.BIN;1
+				Source D_NEWS.BIN
+			EndFile
+
+			File D_GBERET.BIN;1
+				Source D_GBERET.BIN
+			EndFile
+
+			File D_HIGEMA.BIN;1
+				Source D_HIGEMA.BIN
+			EndFile
+
+			File D_PKUNW.BIN;1
+				Source D_PKUNW.BIN
+			EndFile
+
+			File D_MITCH.BIN;1
+				Source D_MITCH.BIN
+			EndFile
+
+			File D_GNG.BIN;1
+				Source D_GNG.BIN
+			EndFile
+
+ 			File D_SMS.BIN;1
+				Source D_SMS.BIN
+			EndFile
+
+			File D_SYS1.BIN;1
+				Source D_SYS1.BIN
+			EndFile
+
+			File D_SYS1H.BIN;1
+				Source D_SYS1H.BIN
+			EndFile
+
+			File D_SYS2.BIN;1
+				Source D_SYS2.BIN
+			EndFile
+
+			File D_PACM.BIN;1
+				Source D_PACM.BIN
+			EndFile
+			
+			File D_TETRIS.BIN;1
+				Source D_TETRIS.BIN
+			EndFile
+
+			File D_ZAXXON.BIN;1
+				Source D_ZAXXON.BIN
+			EndFile
+
+			File D_VIGIL.BIN;1
+				Source D_VIGIL.BIN
+			EndFile
+
+			Directory BANKP
+
+				File EPR6165.BIN;1
+					Source BANKP\EPR6165.BIN
+				EndFile
+				File EPR6166.BIN;1
+					Source BANKP\EPR6166.BIN
+				EndFile
+				File EPR6167.BIN;1
+					Source BANKP\EPR6167.BIN
+				EndFile
+				File EPR6168.BIN;1
+					Source BANKP\EPR6168.BIN
+				EndFile
+				File EPR6169.BIN;1
+					Source BANKP\EPR6169.BIN
+				EndFile
+				File EPR6170.BIN;1
+					Source BANKP\EPR6170.BIN
+				EndFile
+				File EPR6171.BIN;1
+					Source BANKP\EPR6171.BIN
+				EndFile
+				File EPR6172.BIN;1
+					Source BANKP\EPR6172.BIN
+				EndFile
+				File EPR6173.BIN;1
+					Source BANKP\EPR6173.BIN
+				EndFile
+				File EPR6174.BIN;1
+					Source BANKP\EPR6174.BIN
+				EndFile
+				File EPR6175.BIN;1
+					Source BANKP\EPR6175.BIN
+				EndFile
+				File EPR6176.BIN;1
+					Source BANKP\EPR6176.BIN
+				EndFile
+				File PR6177.CLR;1
+					Source BANKP\PR6177.CLR
+				EndFile
+				File PR6178.CLR;1
+					Source BANKP\PR6178.CLR
+				EndFile
+				File PR6179.CLR;1
+					Source BANKP\PR6179.CLR
+				EndFile
+				File 3155074.2C;1
+					Source COMBH\3155074.2C
+				EndFile
+			EndDirectory
+
+ 			Directory COMBH
+				File PR10900.8A;1
+					Source COMBH\PR10900.8A
+				EndFile
+				File PR10901.6F;1
+					Source COMBH\PR10901.6F
+				EndFile
+				File PR10902.5A;1
+					Source COMBH\PR10902.5A
+				EndFile
+				File 3155074.2C;1
+					Source COMBH\3155074.2C
+				EndFile
+				File EPR10903.7D;1
+					Source COMBH\EPR10903.7D
+				EndFile
+				File EPR10904.7E;1
+					Source COMBH\EPR10904.7E
+				EndFile
+				File EPR10905.7F;1
+					Source COMBH\EPR10905.7F
+				EndFile
+				File EPR10906.7H;1
+					Source COMBH\EPR10906.7H
+				EndFile
+				File EPR10907.5B;1
+					Source COMBH\EPR10907.5B
+				EndFile
+				File EPR10908.5D;1
+					Source COMBH\EPR10908.5D
+				EndFile
+				File EPR10909.5E;1
+					Source COMBH\EPR10909.5E
+				EndFile
+				File EPR10910.5F;1
+					Source COMBH\EPR10910.5F
+				EndFile
+				File EPR10911.5H;1
+					Source COMBH\EPR10911.5H
+				EndFile
+				File EPR10912.5I;1
+					Source COMBH\EPR10912.5I
+				EndFile
+				File EPR10913.5K;1
+					Source COMBH\EPR10913.5K
+				EndFile
+				File EPR10914.5L;1
+					Source COMBH\EPR10914.5L
+				EndFile
+			EndDirectory
+
+			Directory NEWS
+				File VIRUS.1;1
+					Source NEWS\VIRUS.1
+				EndFile
+				File VIRUS.2;1
+					Source NEWS\VIRUS.2
+				EndFile
+				File VIRUS.3;1
+					Source NEWS\VIRUS.3
+				EndFile
+				File VIRUS.4;1
+					Source NEWS\VIRUS.4
+				EndFile
+			EndDirectory
+
+			Directory NEWSA
+				File VIRUS.1;1
+					Source NEWSA\VIRUS.1
+				EndFile
+				File VIRUS.2;1
+					Source NEWSA\VIRUS.2
+				EndFile
+				File VIRUS.3;1
+					Source NEWSA\VIRUS.3
+				EndFile
+				File NEWSA.4;1
+					Source NEWSA\NEWSA.4
+				EndFile
+			EndDirectory
+
+			Directory GBERET
+				File    577h09.2f;1
+					Source .\GBERET\577h09.2f
+				EndFile
+				File    577h10.5f;1
+					Source .\GBERET\577h10.5f
+				EndFile
+				File    577h11.6f;1
+					Source .\GBERET\577h11.6f
+				EndFile
+				File    577l01.7c;1
+					Source .\GBERET\577l01.7c
+				EndFile
+				File    577l02.8c;1
+					Source .\GBERET\577l02.8c
+				EndFile
+				File    577l03.10c;1
+					Source .\GBERET\577l03.10c
+				EndFile
+				File    577l04.3e;1
+					Source .\GBERET\577l04.3e
+				EndFile 
+				File    577l05.4e;1
+					Source .\GBERET\577l05.4e
+				EndFile 
+				File    577l06.5e;1
+					Source .\GBERET\577l06.5e
+				EndFile 
+				File    577l07.3f;1
+					Source .\GBERET\577l07.3f
+				EndFile         
+				File    577l08.4f;1
+					Source .\GBERET\577l08.4f
+				EndFile          
+			EndDirectory
+			
+			Directory MRGOEMON
+				File 621A05.6D;1
+					Source MRGOEMON\621A05.6D
+				EndFile
+				File 621A06.5F;1
+					Source MRGOEMON\621A06.5F
+				EndFile
+				File 621A07.6F;1
+					Source MRGOEMON\621A07.6F
+				EndFile
+				File 621A08.7F;1
+					Source MRGOEMON\621A08.7F
+				EndFile
+				File 621D01.10C;1
+					Source MRGOEMON\621D01.10C
+				EndFile
+				File 621D02.12C;1
+					Source MRGOEMON\621D02.12C
+				EndFile
+				File 621D03.4D;1
+					Source MRGOEMON\621D03.4D
+				EndFile
+				File 621D04.5D;1
+					Source MRGOEMON\621D04.5D
+				EndFile                
+			EndDirectory  
+
+ 			Directory HIGEMA
+				File HG1.C14;1
+					Source HIGEMARU\HG1.C14
+				EndFile
+				File HG2.E14;1
+					Source HIGEMARU\HG2.E14
+				EndFile
+				File HG3.M1;1
+					Source HIGEMARU\HG3.M1
+				EndFile
+				File HG4.P12;1
+					Source HIGEMARU\HG4.P12
+				EndFile
+				File HG5.M12;1
+					Source HIGEMARU\HG5.M12
+				EndFile
+				File HG6.P11;1
+					Source HIGEMARU\HG6.P11
+				EndFile
+				File HG7.M11;1
+					Source HIGEMARU\HG7.M11
+				EndFile
+				File HGB1.H7;1
+					Source HIGEMARU\HGB1.H7
+				EndFile
+				File HGB2.K7;1
+					Source HIGEMARU\HGB2.K7
+				EndFile
+				File HGB3.L6;1
+					Source HIGEMARU\HGB3.L6
+				EndFile
+				File HGB4.L9;1
+					Source HIGEMARU\HGB4.L9
+				EndFile
+				File HGB5.M4;1
+					Source HIGEMARU\HGB5.M4
+				EndFile
+			EndDirectory
+
+			Directory PKUNW
+				File PKWAR.03R;1
+					Source PKUNWAR\PKWAR.03R
+				EndFile
+				File PKWAR.01Y;1
+					Source PKUNWAR\PKWAR.01Y
+				EndFile
+				File PKWAR.02Y;1
+					Source PKUNWAR\PKWAR.02Y
+				EndFile
+				File PKWAR.04Y;1
+					Source PKUNWAR\PKWAR.04Y
+				EndFile
+				File PKWAR.COL;1
+					Source PKUNWAR\PKWAR.COL
+				EndFile
+				File PKWAR.02R;1
+					Source PKUNWAR\PKWAR.02R
+				EndFile
+				File PKWAR.03Y;1
+					Source PKUNWAR\PKWAR.03Y
+				EndFile
+				File PKWAR.01R;1
+					Source PKUNWAR\PKWAR.01R
+				EndFile
+			EndDirectory
+
+ 			Directory PANG
+				File BB1.BIN;1
+					Source PANG\BB1.BIN
+				EndFile
+				File BB10.BIN;1
+					Source PANG\BB10.BIN
+				EndFile
+				File BB3.BIN;1
+					Source PANG\BB3.BIN
+				EndFile
+				File BB5.BIN;1
+					Source PANG\BB5.BIN
+				EndFile
+				File BB9.BIN;1
+					Source PANG\BB9.BIN
+				EndFile
+				File PANG6.BIN;1
+					Source PANG\PANG6.BIN
+				EndFile
+				File PANG7.BIN;1
+					Source PANG\PANG7.BIN
+				EndFile
+				File PANG09.BIN;1
+					Source PANG\PANG09.BIN
+				EndFile
+				File PANG11.BIN;1
+					Source PANG\PANG11.BIN
+				EndFile
+		File    SDDRVS.TSK;1
+			Source .\SDDRVS.TSK
+		EndFile
+
+			EndDirectory
+
+			Directory SPANG
+				File 03.BIN;1
+					Source SPANG\03.BIN
+				EndFile
+				File 05.BIN;1
+					Source SPANG\05.BIN
+				EndFile
+				File SPE01.ROM;1
+					Source SPANG\SPE01.ROM
+				EndFile
+				File SPE02.ROM;1
+					Source SPANG\SPE02.ROM
+				EndFile
+				File SPE04.ROM;1
+					Source SPANG\SPE04.ROM
+				EndFile
+				File SPE06.ROM;1
+					Source SPANG\SPE06.ROM
+				EndFile
+				File SPE07.ROM;1
+					Source SPANG\SPE07.ROM
+				EndFile
+				File SPE08.ROM;1
+					Source SPANG\SPE08.ROM
+				EndFile
+				File SPJ091K.BIN;1
+					Source SPANG\SPJ091K.BIN
+				EndFile
+				File SPJ102K.BIN;1
+					Source SPANG\SPJ102K.BIN
+				EndFile
+			EndDirectory
+
+			Directory GNGA
+				File GNG.N10;1
+					Source GNGA\GNG.N10
+				EndFile
+				File GNG.N9;1
+					Source GNGA\GNG.N9
+				EndFile
+				File GNG.N8;1
+					Source GNGA\GNG.N8
+				EndFile
+				File GNG.N13;1
+					Source GNGA\GNG.N13
+				EndFile
+				File GNG.N12;1
+					Source GNGA\GNG.N12
+				EndFile
+				File GG2.BIN;1
+					Source GNGA\GG2.BIN
+				EndFile
+				File GG1.BIN;1
+					Source GNGA\GG1.BIN
+				EndFile
+				File GG11.BIN;1
+					Source GNGA\GG11.BIN
+				EndFile
+				File GG10.BIN;1
+					Source GNGA\GG10.BIN
+				EndFile
+				File GG9.BIN;1
+					Source GNGA\GG9.BIN
+				EndFile
+				File GG8.BIN;1
+					Source GNGA\GG8.BIN
+				EndFile
+				File GG7.BIN;1
+					Source GNGA\GG7.BIN
+				EndFile
+				File GG6.BIN;1
+					Source GNGA\GG6.BIN
+				EndFile
+				File GG17.BIN;1
+					Source GNGA\GG17.BIN
+				EndFile
+				File GG16.BIN;1
+					Source GNGA\GG16.BIN
+				EndFile
+				File GG15.BIN;1
+					Source GNGA\GG15.BIN
+				EndFile
+				File GG14.BIN;1
+					Source GNGA\GG14.BIN
+				EndFile
+				File GG13.BIN;1
+					Source GNGA\GG13.BIN
+				EndFile
+				File GG12.BIN;1
+					Source GNGA\GG12.BIN
+				EndFile
+				File TBP24S10.14K;1
+					Source GNGA\TBP24S10.14K
+				EndFile
+				File 63S141.2E;1
+					Source GNGA\63S141.2E
+				EndFile
+
+			EndDirectory
+
+			Directory BLOCKGAL
+				File BG.117;1
+					Source BLOCKGAL\BG.117
+				EndFile
+				File BG.116;1
+					Source BLOCKGAL\BG.116
+				EndFile
+				File BG.109;1
+					Source BLOCKGAL\BG.109
+				EndFile
+				File BG.120;1
+					Source BLOCKGAL\BG.120
+				EndFile
+				File BG.62;1
+					Source BLOCKGAL\BG.62
+				EndFile
+				File BG.61;1
+					Source BLOCKGAL\BG.61
+				EndFile
+				File BG.64;1
+					Source BLOCKGAL\BG.64
+				EndFile
+				File BG.63;1
+					Source BLOCKGAL\BG.63
+				EndFile
+				File BG.66;1
+					Source BLOCKGAL\BG.66
+				EndFile
+				File BG.65;1
+					Source BLOCKGAL\BG.65
+				EndFile
+				File BG.04;1
+					Source BLOCKGAL\BG.04
+				EndFile
+				File BG.110;1
+					Source BLOCKGAL\BG.110
+				EndFile
+				File BG.05;1
+					Source BLOCKGAL\BG.05
+				EndFile
+				File PR5317.76;1
+					Source BLOCKGAL\PR5317.76
+				EndFile
+				File 3170029.KEY;1
+					Source BLOCKGAL\3170029.KEY
+				EndFile
+			EndDirectory
+
+			Directory WBOYU
+				File IC11689.BIN;1
+					Source WBOYU\IC11689.BIN
+				EndFile
+				File IC10990.BIN;1
+					Source WBOYU\IC10990.BIN
+				EndFile
+				File IC09691.BIN;1
+					Source WBOYU\IC09691.BIN
+				EndFile
+				File EPR7498.120;1
+					Source WBOYU\EPR7498.120
+				EndFile
+				File EPR7497.62;1
+					Source WBOYU\EPR7497.62
+				EndFile
+				File EPR7496.61;1
+					Source WBOYU\EPR7496.61
+				EndFile
+				File EPR7495.64;1
+					Source WBOYU\EPR7495.64
+				EndFile
+				File EPR7494.63;1
+					Source WBOYU\EPR7494.63
+				EndFile
+				File EPR7493.66;1
+					Source WBOYU\EPR7493.66
+				EndFile
+				File EPR7492.65;1
+					Source WBOYU\EPR7492.65
+				EndFile
+
+				File IC11785.BIN;1
+					Source WBOYU\IC11785.BIN
+				EndFile
+				File IC00487.BIN;1
+					Source WBOYU\IC00487.BIN
+				EndFile
+				File IC11086.BIN;1
+					Source WBOYU\IC11086.BIN
+				EndFile
+				File IC00588.BIN;1
+					Source WBOYU\IC00588.BIN
+				EndFile
+				File PR5317.76;1
+					Source WBOYU\PR5317.76
+				EndFile
+			EndDirectory
+
+			Directory CHPLFTB
+				File EPR7152.90;1
+					Source CHPLFTB\EPR7152.90
+				EndFile
+				File EPR7153.91;1
+					Source CHPLFTB\EPR7153.91
+				EndFile
+				File EPR7154.92;1
+					Source CHPLFTB\EPR7154.92
+				EndFile
+				File EPR7130.126;1
+					Source CHPLFTB\EPR7130.126
+				EndFile
+				File EPR7127.4;1
+					Source CHPLFTB\EPR7127.4
+				EndFile
+				File EPR7128.5;1
+					Source CHPLFTB\EPR7128.5
+				EndFile
+				File EPR7129.6;1
+					Source CHPLFTB\EPR7129.6
+				EndFile
+				File EPR7121.87;1
+					Source CHPLFTB\EPR7121.87
+				EndFile
+				File EPR7120.86;1
+					Source CHPLFTB\EPR7120.86
+				EndFile
+				File EPR7123.89;1
+					Source CHPLFTB\EPR7123.89
+				EndFile
+				File EPR7122.88;1
+					Source CHPLFTB\EPR7122.88
+				EndFile
+				File PR7119.20;1
+					Source CHPLFTB\PR7119.20
+				EndFile
+				File PR7117.8;1
+					Source CHPLFTB\PR7117.8
+				EndFile
+				File PR7118.14;1
+					Source CHPLFTB\PR7118.14
+				EndFile
+			EndDirectory
+
+			Directory GARDIA
+				File EPR10255.1;1
+					Source GARDIA\EPR10255.1
+				EndFile
+				File EPR10254.2;1
+					Source GARDIA\EPR10254.2
+				EndFile
+				File EPR10253.3;1
+					Source GARDIA\EPR10253.3
+				EndFile
+				File EPR10243.120;1
+					Source GARDIA\EPR10243.120
+				EndFile
+				File EPR10249.61;1
+					Source GARDIA\EPR10249.61
+				EndFile
+				File EPR10248.64;1
+					Source GARDIA\EPR10248.64
+				EndFile
+				File EPR10247.66;1
+					Source GARDIA\EPR10247.66
+				EndFile
+				File EPR10234.117;1
+					Source GARDIA\EPR10234.117
+				EndFile
+				File EPR10233.110;1
+					Source GARDIA\EPR10233.110
+				EndFile
+				File EPR10236.04;1
+					Source GARDIA\EPR10236.04
+				EndFile
+				File EPR10235.5;1
+					Source GARDIA\EPR10235.5
+				EndFile
+				File BPROM.3;1
+					Source GARDIA\BPROM.3
+				EndFile
+				File BPROM.2;1
+					Source GARDIA\BPROM.2
+				EndFile
+				File BPROM.1;1
+					Source GARDIA\BPROM.1
+				EndFile
+				File PR5317.4;1
+					Source GARDIA\PR5317.4
+				EndFile
+			EndDirectory
+
+			Directory MYHERO
+				File EPR6963B.116;1
+					Source MYHERO\EPR6963B.116
+				EndFile
+				File EPR6964A.109;1
+					Source MYHERO\EPR6964A.109
+				EndFile
+				File EPR6927.96;1
+					Source MYHERO\EPR6927.96
+				EndFile
+				File EPR69XX.120;1
+					Source MYHERO\EPR69XX.120
+				EndFile
+				File EPR6966.62;1
+					Source MYHERO\EPR6966.62
+				EndFile
+				File EPR6961.61;1
+					Source MYHERO\EPR6961.61
+				EndFile
+				File EPR6960.64;1
+					Source MYHERO\EPR6960.64
+				EndFile
+				File EPR6959.63;1
+					Source MYHERO\EPR6959.63
+				EndFile
+				File EPR6958.66;1
+					Source MYHERO\EPR6958.66
+				EndFile
+				File EPR6957.65;1
+					Source MYHERO\EPR6957.65
+				EndFile
+				File EPR6921.117;1
+					Source MYHERO\EPR6921.117
+				EndFile
+				File EPR6923.04;1
+					Source MYHERO\EPR6923.04
+				EndFile
+				File EPR6922.110;1
+					Source MYHERO\EPR6922.110
+				EndFile
+				File EPR6924.05;1
+					Source MYHERO\EPR6924.05
+				EndFile
+				File PR5317.76;1
+					Source MYHERO\PR5317.76
+				EndFile
+			EndDirectory
+
+			Directory FLICKYS2
+				File EPR6621.BIN;1
+					Source FLICKYS2\EPR6621.BIN
+				EndFile
+				File EPR6622.BIN;1
+					Source FLICKYS2\EPR6622.BIN
+				EndFile
+				File EPR5869.120;1
+					Source FLICKYS2\EPR5869.120
+				EndFile
+				File EPR5868.62;1
+					Source FLICKYS2\EPR5868.62
+				EndFile
+				File EPR5867.61;1
+					Source FLICKYS2\EPR5867.61
+				EndFile
+				File EPR5866.64;1
+					Source FLICKYS2\EPR5866.64
+				EndFile
+				File EPR5865.63;1
+					Source FLICKYS2\EPR5865.63
+				EndFile
+				File EPR5864.66;1
+					Source FLICKYS2\EPR5864.66
+				EndFile
+				File EPR5863.65;1
+					Source FLICKYS2\EPR5863.65
+				EndFile
+				File EPR5855.117;1
+					Source FLICKYS2\EPR5855.117
+				EndFile
+				File EPR5856.110;1
+					Source FLICKYS2\EPR5856.110
+				EndFile
+				File PR5317.76;1
+					Source FLICKYS2\PR5317.76
+				EndFile
+			EndDirectory
+
+			Directory TEDDYBB
+				File EPR6768.116;1
+					Source TEDDYBB\EPR6768.116
+				EndFile
+				File EPR6769.109;1
+					Source TEDDYBB\EPR6769.109
+				EndFile
+				File EPR6770.96;1
+					Source TEDDYBB\EPR6770.96
+				EndFile
+				File EPR6748X.120;1
+					Source TEDDYBB\EPR6748X.120
+				EndFile
+				File EPR6747.62;1
+					Source TEDDYBB\EPR6747.62
+				EndFile
+				File EPR6746.61;1
+					Source TEDDYBB\EPR6746.61
+				EndFile
+				File EPR6745.64;1
+					Source TEDDYBB\EPR6745.64
+				EndFile
+				File EPR6744.63;1
+					Source TEDDYBB\EPR6744.63
+				EndFile
+				File EPR6743.66;1
+					Source TEDDYBB\EPR6743.66
+				EndFile
+				File EPR6742.65;1
+					Source TEDDYBB\EPR6742.65
+				EndFile
+				File EPR6735.117;1
+					Source TEDDYBB\EPR6735.117
+				EndFile
+				File EPR6737.04;1
+					Source TEDDYBB\EPR6737.04
+				EndFile
+				File EPR6736.110;1
+					Source TEDDYBB\EPR6736.110
+				EndFile
+				File EPR6738.05;1
+					Source TEDDYBB\EPR6738.05
+				EndFile
+				File PR5317.76;1
+					Source TEDDYBB\PR5317.76
+				EndFile
+			EndDirectory
+
+			Directory PITFAL2U
+				File EPR6623.116;1
+					Source PITFAL2U\EPR6623.116
+				EndFile
+				File EPR6624A.109;1
+					Source PITFAL2U\EPR6624A.109
+				EndFile
+				File EPR6625.96;1
+					Source PITFAL2U\EPR6625.96
+				EndFile
+ 				File EPR6462.120;1
+					Source PITFAL2U\EPR6462.120
+				EndFile
+ 				File EPR6474A.62;1
+					Source PITFAL2U\EPR6474A.62
+				EndFile	
+ 				File EPR6473A.61;1
+					Source PITFAL2U\EPR6473A.61
+				EndFile
+ 				File EPR6472A.64;1
+					Source PITFAL2U\EPR6472A.64
+				EndFile
+ 				File EPR6471A.63;1
+					Source PITFAL2U\EPR6471A.63
+				EndFile
+ 				File EPR6470A.66;1
+					Source PITFAL2U\EPR6470A.66
+				EndFile
+ 				File EPR6469A.65;1
+					Source PITFAL2U\EPR6469A.65
+				EndFile
+ 				File EPR6454A.117;1
+					Source PITFAL2U\EPR6454A.117
+				EndFile
+ 				File EPR6455.05;1
+					Source PITFAL2U\EPR6455.05
+				EndFile
+ 				File PR5317.76;1
+					Source PITFAL2U\PR5317.76
+				EndFile
+			EndDirectory
+
+			Directory WBDELUXE
+				File WBD1.BIN;1
+					Source WBDELUXE\WBD1.BIN
+				EndFile
+				File IC13003.BIN;1
+					Source WBDELUXE\IC13003.BIN
+				EndFile
+				File WBD3.BIN;1
+					Source WBDELUXE\WBD3.BIN
+				EndFile
+				File IC13205.BIN;1
+					Source WBDELUXE\IC13205.BIN
+				EndFile
+				File WBD5.BIN;1
+					Source WBDELUXE\WBD5.BIN
+				EndFile
+				File WBD6.BIN;1
+					Source WBDELUXE\WBD6.BIN
+				EndFile
+				File EPR7498A.3;1
+					Source WBDELUXE\EPR7498A.3
+				EndFile
+				File EPR7497.62;1
+					Source WBDELUXE\EPR7497.62
+				EndFile
+				File EPR7496.61;1
+					Source WBDELUXE\EPR7496.61
+				EndFile
+				File EPR7495.64;1
+					Source WBDELUXE\EPR7495.64
+				EndFile
+				File EPR7494.63;1
+					Source WBDELUXE\EPR7494.63
+				EndFile
+				File EPR7493.66;1
+					Source WBDELUXE\EPR7493.66
+				EndFile
+				File EPR7492.65;1
+					Source WBDELUXE\EPR7492.65
+				EndFile
+
+ 				File EPR7485.117;1
+					Source WBDELUXE\EPR7485.117
+				EndFile
+				File EPR7487.04;1
+					Source WBDELUXE\EPR7487.04
+				EndFile
+				File EPR7486.110;1
+					Source WBDELUXE\EPR7486.110
+				EndFile
+				File EPR7488.05;1
+					Source WBDELUXE\EPR7488.05
+				EndFile
+				File PR5317.76;1
+					Source WBDELUXE\PR5317.76
+				EndFile
+
+			EndDirectory
+
+			Directory PENGO2U
+				File EPR5128.U8;1
+					Source PENGO2U\EPR5128.U8
+				EndFile
+				File EPR5129.U7;1
+					Source PENGO2U\EPR5129.U7
+				EndFile
+ 				File EPR5130.U15;1
+					Source PENGO2U\EPR5130.U15
+				EndFile
+ 				File EPR5131.U14;1
+					Source PENGO2U\EPR5131.U14
+				EndFile
+ 				File EP5124.21;1
+					Source PENGO2U\EP5124.21
+				EndFile
+ 				File EPR5133.U20;1
+					Source PENGO2U\EPR5133.U20
+				EndFile
+ 				File EP5126.32;1
+					Source PENGO2U\EP5126.32
+				EndFile
+ 				File EPR5135.U31;1
+					Source PENGO2U\EPR5135.U31
+				EndFile
+  				File EP1640.92;1
+					Source PENGO2U\EP1640.92
+				EndFile
+  				File EP1695.105;1
+					Source PENGO2U\EP1695.105
+				EndFile
+   				File PR1633.78;1
+					Source PENGO2U\PR1633.78
+				EndFile
+   				File PR1634.88;1
+					Source PENGO2U\PR1634.88
+				EndFile
+   				File PR1635.51;1
+					Source PENGO2U\PR1635.51
+				EndFile
+   				File PR1636.70;1
+					Source PENGO2U\PR1636.70
+				EndFile
+			EndDirectory
+
+			Directory PACMAN
+				File PACMAN.6E;1
+					Source PACMAN\PACMAN.6E
+				EndFile
+				File PACMAN.6F;1
+					Source PACMAN\PACMAN.6F
+				EndFile
+				File PACMAN.6H;1
+					Source PACMAN\PACMAN.6H
+				EndFile
+				File PACMAN.6J;1
+					Source PACMAN\PACMAN.6J
+				EndFile
+				File PACMAN.5E;1
+					Source PACMAN\PACMAN.5E
+				EndFile
+				File PACMAN.5F;1
+					Source PACMAN\PACMAN.5F
+				EndFile
+				File 82S123.7F;1
+					Source PACMAN\82S123.7F
+				EndFile
+				File 82S126.4A;1
+					Source PACMAN\82S126.4A
+				EndFile
+				File 82S126.1M;1
+					Source PACMAN\82S126.1M
+				EndFile
+				File 82S126.3M;1
+					Source PACMAN\82S126.3M
+				EndFile
+			EndDirectory
+
+			Directory ATETRIS
+				File 1100.45F;1
+					Source ATETRIS\1100.45F
+				EndFile
+				File 1101.35A;1
+					Source ATETRIS\1101.35A
+				EndFile
+			EndDirectory
+
+			Directory PUCKMAN
+				File PM1PRG8.6P;1
+					Source PUCKMAN\PM1PRG8.6P
+				EndFile
+				File PM1PRG7.6J;1
+					Source PUCKMAN\PM1PRG7.6J
+				EndFile
+
+				File PM1PRG7.6J;1
+					Source PUCKMAN\PM1PRG7.6J
+				EndFile
+				File PM1PRG6.6N;1
+					Source PUCKMAN\PM1PRG6.6N
+				EndFile
+				File PM1PRG5.6H;1
+					Source PUCKMAN\PM1PRG5.6H
+				EndFile
+
+				File PM1PRG4.6M;1
+					Source PUCKMAN\PM1PRG4.6M
+				EndFile
+				File PM1PRG3.6F;1
+					Source PUCKMAN\PM1PRG3.6F
+				EndFile
+			
+				File PM1PRG2.6K;1
+					Source PUCKMAN\PM1PRG2.6K
+				EndFile
+				File PM1PRG1.6E;1
+					Source PUCKMAN\PM1PRG1.6E
+				EndFile
+
+				File PM1CHG4.5J;1
+					Source PUCKMAN\PM1CHG4.5J
+				EndFile
+				File PM1CHG3.5F;1
+					Source PUCKMAN\PM1CHG3.5F
+				EndFile
+
+				File PM1CHG2.5H;1
+					Source PUCKMAN\PM1CHG2.5H
+				EndFile
+				File PM1CHG1.5E;1
+					Source PUCKMAN\PM1CHG1.5E
+				EndFile
+
+				File PM14.4A;1
+					Source PUCKMAN\PM14.4A
+				EndFile
+				File PM13.1M;1
+					Source PUCKMAN\PM13.1M
+				EndFile
+				File PM12.3M;1
+					Source PUCKMAN\PM12.3M
+				EndFile
+				File PM11.7F;1
+					Source PUCKMAN\PM11.7F
+				EndFile
+
+			EndDirectory
+
+			Directory MSPACMAN
+				File PACMAN.6E;1
+					Source MSPACMAN\PACMAN.6E
+				EndFile
+				File PACMAN.6F;1
+					Source MSPACMAN\PACMAN.6F
+				EndFile
+				File PACMAN.6H;1
+					Source MSPACMAN\PACMAN.6H
+				EndFile
+				File PACMAN.6J;1
+					Source MSPACMAN\PACMAN.6J
+				EndFile
+				File 82S126.3M;1
+					Source MSPACMAN\82S126.3M
+				EndFile
+				File 82S126.4A;1
+					Source MSPACMAN\82S126.4A
+				EndFile
+				File U5.BIN;1
+					Source MSPACMAN\U5.BIN
+				EndFile
+				File U6.BIN;1
+					Source MSPACMAN\U6.BIN
+				EndFile
+				File U7.BIN;1
+					Source MSPACMAN\U7.BIN
+				EndFile
+				File 5E.BIN;1
+					Source MSPACMAN\5E.BIN
+				EndFile
+				File 5F.BIN;1
+					Source MSPACMAN\5F.BIN
+				EndFile
+				File 82S123.7F;1
+					Source MSPACMAN\82S123.7F
+				EndFile
+				File 82S126.1M;1
+					Source MSPACMAN\82S126.1M
+				EndFile
+
+			EndDirectory
+
+			Directory STARJACK
+				File PR5317.106;1
+					Source STARJACK\PR5317.106
+				EndFile
+				File EPR5318.86;1
+					Source STARJACK\EPR5318.86
+				EndFile
+				File EPR5319.93;1
+					Source STARJACK\EPR5319.93
+				EndFile
+				File EPR5320B.129;1
+					Source STARJACK\EPR5320B.129
+				EndFile
+				File EPR5321A.130;1
+					Source STARJACK\EPR5321A.130
+				EndFile
+				File EPR5322A.131;1
+					Source STARJACK\EPR5322A.131
+				EndFile
+				File EPR5323.132;1
+					Source STARJACK\EPR5323.132
+				EndFile
+				File EPR5324.133;1
+					Source STARJACK\EPR5324.133
+				EndFile
+				File EPR5325.134;1
+					Source STARJACK\EPR5325.134
+				EndFile
+				File EPR5326.63;1
+					Source STARJACK\EPR5326.63
+				EndFile
+				File EPR5327.80;1
+					Source STARJACK\EPR5327.80
+				EndFile
+				File EPR5328.64;1
+					Source STARJACK\EPR5328.64
+				EndFile
+				File EPR5329.81;1
+					Source STARJACK\EPR5329.81
+				EndFile
+				File EPR5330.65;1
+					Source STARJACK\EPR5330.65
+				EndFile
+				File EPR5331.82;1
+					Source STARJACK\EPR5331.82
+				EndFile
+				File EPR5332.3;1
+					Source STARJACK\EPR5332.3
+				EndFile
+			EndDirectory
+
+			Directory RAFLESIA
+				File PR5317.76;1
+					Source RAFLESIA\PR5317.76
+				EndFile
+				File EPR7407.117;1
+					Source RAFLESIA\EPR7407.117
+				EndFile
+				File EPR7408.110;1
+					Source RAFLESIA\EPR7408.110
+				EndFile
+				File EPR7409.04;1
+					Source RAFLESIA\EPR7409.04
+				EndFile
+				File EPR7410.05;1
+					Source RAFLESIA\EPR7410.05
+				EndFile
+				File EPR7411.116;1
+					Source RAFLESIA\EPR7411.116
+				EndFile
+				File EPR7412.109;1
+					Source RAFLESIA\EPR7412.109
+				EndFile
+				File EPR7413.96;1
+					Source RAFLESIA\EPR7413.96
+				EndFile
+				File EPR7414.65;1
+					Source RAFLESIA\EPR7414.65
+				EndFile
+				File EPR7415.66;1
+					Source RAFLESIA\EPR7415.66
+				EndFile
+				File EPR7416.63;1
+					Source RAFLESIA\EPR7416.63
+				EndFile
+				File EPR7417.64;1
+					Source RAFLESIA\EPR7417.64
+				EndFile
+				File EPR7418.61;1
+					Source RAFLESIA\EPR7418.61
+				EndFile
+				File EPR7419.62;1
+					Source RAFLESIA\EPR7419.62
+				EndFile
+				File EPR7420.120;1
+					Source RAFLESIA\EPR7420.120
+				EndFile
+			EndDirectory
+
+			Directory 4DWARRIO
+				File PR5317.76;1
+					Source 4DWARRIO\PR5317.76
+				EndFile
+				File 4D.04;1
+					Source 4DWARRIO\4D.04
+				EndFile
+				File 4D.05;1
+					Source 4DWARRIO\4D.05
+				EndFile
+				File 4D.61;1
+					Source 4DWARRIO\4D.61
+				EndFile
+				File 4D.62;1
+					Source 4DWARRIO\4D.62
+				EndFile
+				File 4D.63;1
+					Source 4DWARRIO\4D.63
+				EndFile
+				File 4D.64;1
+					Source 4DWARRIO\4D.64
+				EndFile
+				File 4D.65;1
+					Source 4DWARRIO\4D.65
+				EndFile
+				File 4D.66;1
+					Source 4DWARRIO\4D.66
+				EndFile
+				File 4D.96;1
+					Source 4DWARRIO\4D.96
+				EndFile
+				File 4D.109;1
+					Source 4DWARRIO\4D.109
+				EndFile
+				File 4D.110;1
+					Source 4DWARRIO\4D.110
+				EndFile
+				File 4D.116;1
+					Source 4DWARRIO\4D.116
+				EndFile
+				File 4D.117;1
+					Source 4DWARRIO\4D.117
+				EndFile
+				File 4D.120;1
+					Source 4DWARRIO\4D.120
+				EndFile
+			EndDirectory
+
+			Directory SMS
+
+File ADDAMS_1.SMS;1
+	Source L:\PC\MASTER~2\OUTRUN.SMS
+EndFile
+File AERIAL_1.SMS;1
+	Source L:\PC\MASTER~2\SONIC_~4.SMS
+EndFile
+File AFTER__1.SMS;1
+	Source L:\PC\MASTER~2\POWER_~2.SMS
+EndFile
+File AIR_RE_1.SMS;1
+	Source L:\PC\MASTER~2\PSYCHO~1.SMS
+EndFile
+File ALADDIN.SMS;1
+	Source L:\PC\MASTER~2\ALADDIN.SMS
+EndFile
+File ALESTE.SMS;1
+	Source L:\PC\MASTER~2\ALESTE.SMS
+EndFile
+File ALEX_K_1.SMS;1
+	Source L:\PC\MASTER~2\ALEX_K~1.SMS
+EndFile
+File ALEX_K_2.SMS;1
+	Source L:\PC\MASTER~2\ALEX_K~2.SMS
+EndFile
+File ALEX_K_3.SMS;1
+	Source L:\PC\MASTER~2\ALEX_K~3.SMS
+EndFile
+File ALEX_K_4.SMS;1
+	Source L:\PC\MASTER~2\ALEX_K~4.SMS
+EndFile
+File AL0C77_1.SMS;1
+	Source L:\PC\MASTER~2\AL0C77~1.SMS
+EndFile
+File ALF.SMS;1
+	Source L:\PC\MASTER~2\ALF.SMS
+EndFile
+;File ALIEN_3.SMS;1
+;	Source L:\PC\MASTER~2\ALIEN_3.SMS
+;EndFile
+File ALIEN__1.SMS;1
+	Source L:\PC\MASTER~2\ALIEN_~1.SMS
+EndFile
+File ALIEN__2.SMS;1
+	Source L:\PC\MASTER~2\ALIEN_~2.SMS
+EndFile
+File ALTERE_1.SMS;1
+	Source L:\PC\MASTER~2\ALTERE~1.SMS
+EndFile
+File AMERIC_1.SMS;1
+	Source L:\PC\MASTER~2\AMERIC~1.SMS
+EndFile
+File AMERIC_2.SMS;1
+	Source L:\PC\MASTER~2\AMERIC~2.SMS
+EndFile
+File ANDRE__1.SMS;1
+	Source L:\PC\MASTER~2\ANDRE_~1.SMS
+EndFile
+File ARCADE_1.SMS;1
+	Source L:\PC\MASTER~2\ARCADE~1.SMS
+EndFile
+File ASTERIX.SMS;1
+	Source L:\PC\MASTER~2\ASTERIX.SMS
+EndFile
+File ASTERI_1.SMS;1
+	Source L:\PC\MASTER~2\ASTERI~1.SMS
+EndFile
+File ASTERI_2.SMS;1
+	Source L:\PC\MASTER~2\ASTERI~2.SMS
+EndFile
+File ASTRO__1.SMS;1
+	Source L:\PC\MASTER~2\ASTRO_~1.SMS
+EndFile
+File ASTRO__2.SMS;1
+	Source L:\PC\MASTER~2\ASTRO_~2.SMS
+EndFile
+File AZTEC__1.SMS;1
+	Source L:\PC\MASTER~2\AZTEC_~1.SMS
+EndFile
+File BACK_T_1.SMS;1
+	Source L:\PC\MASTER~2\BACK_T~1.SMS
+EndFile
+File BACK_T_2.SMS;1
+	Source L:\PC\MASTER~2\BACK_T~2.SMS
+EndFile
+File BAKU_B_1.SMS;1
+	Source L:\PC\MASTER~2\BAKU_B~1.SMS
+EndFile
+File BANK_P_1.SMS;1
+	Source L:\PC\MASTER~2\BANK_P~1.SMS
+EndFile
+File BART_V_1.SMS;1
+	Source L:\PC\MASTER~2\BART_V~1.SMS
+EndFile
+;File BART_V_2.SMS;1
+;	Source L:\PC\MASTER~2\BART_V~2.SMS
+;EndFile
+File BASKET_1.SMS;1
+	Source L:\PC\MASTER~2\BASKET~1.SMS
+EndFile
+File BATMAN_1.SMS;1
+	Source L:\PC\MASTER~2\BATMAN~1.SMS
+EndFile
+File BATTLE_1.SMS;1
+	Source L:\PC\MASTER~2\BATTLE~1.SMS
+EndFile
+File BLACK__1.SMS;1
+	Source L:\PC\MASTER~2\BLACK_~1.SMS
+EndFile
+File BLADE__1.SMS;1
+	Source L:\PC\MASTER~2\BLADE_~1.SMS
+EndFile
+File BOMBER_1.SMS;1
+	Source L:\PC\MASTER~2\BOMBER~1.SMS
+EndFile
+File BONZAN_1.SMS;1
+	Source L:\PC\MASTER~2\BONZAN~1.SMS
+EndFile
+File BORGMAN.SMS;1
+	Source L:\PC\MASTER~2\BORGMAN.SMS
+EndFile
+File BRAM_S_1.SMS;1
+	Source L:\PC\MASTER~2\BRAM_S~1.SMS
+EndFile
+File BUBBLE_1.SMS;1
+	Source L:\PC\MASTER~2\BUBBLE~1.SMS
+EndFile
+File BUGGY__1.SMS;1
+	Source L:\PC\MASTER~2\BUGGY_~1.SMS
+EndFile
+File CALIFO_1.SMS;1
+	Source L:\PC\MASTER~2\CALIFO~1.SMS
+EndFile
+File CALIFO_2.SMS;1
+	Source L:\PC\MASTER~2\CALIFO~2.SMS
+EndFile
+File CAPTAI_1.SMS;1
+	Source L:\PC\MASTER~2\CAPTAI~1.SMS
+EndFile
+File CASINO_1.SMS;1
+	Source L:\PC\MASTER~2\CASINO~1.SMS
+EndFile
+File CASTEL_1.SMS;1
+	Source L:\PC\MASTER~2\CASTEL~1.SMS
+EndFile
+File CHAMPI_1.SMS;1
+	Source L:\PC\MASTER~2\CHAMPI~1.SMS
+EndFile
+File CHAMPI_2.SMS;1
+	Source L:\PC\MASTER~2\CHAMPI~2.SMS
+EndFile
+File CHAPOL_1.SMS;1
+	Source L:\PC\MASTER~2\CHAPOL~1.SMS
+EndFile
+File CHEESE_1.SMS;1
+	Source L:\PC\MASTER~2\CHEESE~1.SMS
+EndFile
+File CHOPLI_1.SMS;1
+	Source L:\PC\MASTER~2\CHOPLI~1.SMS
+EndFile
+File CHUCK__1.SMS;1
+	Source L:\PC\MASTER~2\CHUCK_~1.SMS
+EndFile
+File CLOUD__1.SMS;1
+	Source L:\PC\MASTER~2\CLOUD_~1.SMS
+EndFile
+File COLUMNS.SMS;1
+	Source L:\PC\MASTER~2\COLUMNS.SMS
+EndFile
+File COOL_S_1.SMS;1
+	Source L:\PC\MASTER~2\COOL_S~1.SMS
+EndFile
+File CYBER__1.SMS;1
+	Source L:\PC\MASTER~2\CYBER_~1.SMS
+EndFile
+File CYBORG_1.SMS;1
+	Source L:\PC\MASTER~2\CYBORG~1.SMS
+EndFile
+File DAFFY__1.SMS;1
+	Source L:\PC\MASTER~2\DAFFY_~1.SMS
+EndFile
+File DANAN__1.SMS;1
+	Source L:\PC\MASTER~2\DANAN_~1.SMS
+EndFile
+File DEAD_A_1.SMS;1
+	Source L:\PC\MASTER~2\DEAD_A~1.SMS
+EndFile
+File DEEP_D_1.SMS;1
+	Source L:\PC\MASTER~2\DEEP_D~1.SMS
+EndFile
+File DESERT_1.SMS;1
+	Source L:\PC\MASTER~2\DESERT~1.SMS
+EndFile
+File DESERT_2.SMS;1
+	Source L:\PC\MASTER~2\DESERT~2.SMS
+EndFile
+File DICK_T_1.SMS;1
+	Source L:\PC\MASTER~2\DICK_T~1.SMS
+EndFile
+File DOUBLE_1.SMS;1
+	Source L:\PC\MASTER~2\DOUBLE~1.SMS
+EndFile
+File DOUBLE_2.SMS;1
+	Source L:\PC\MASTER~2\DOUBLE~2.SMS
+EndFile
+File DRAGON_1.SMS;1
+	Source L:\PC\MASTER~2\DRAGON~1.SMS
+EndFile
+File DRAGON_2.SMS;1
+	Source L:\PC\MASTER~2\DRAGON~2.SMS
+EndFile
+File DR__RO_1.SMS;1
+	Source L:\PC\MASTER~2\DR__RO~1.SMS
+EndFile
+File DYNAMI_1.SMS;1
+	Source L:\PC\MASTER~2\DYNAMI~1.SMS
+EndFile
+File DYNAMI_2.SMS;1
+	Source L:\PC\MASTER~2\DYNAMI~2.SMS
+EndFile
+File ECCO_T_1.SMS;1
+	Source L:\PC\MASTER~2\ECCO_T~1.SMS
+EndFile
+File ENDURO_1.SMS;1
+	Source L:\PC\MASTER~2\ENDURO~1.SMS
+EndFile
+File ESWAT__1.SMS;1
+	Source L:\PC\MASTER~2\ESWAT_~1.SMS
+EndFile
+File F16_FI_1.SMS;1
+	Source L:\PC\MASTER~2\F16_FI~1.SMS
+EndFile
+File F1_CHA_1.SMS;1
+	Source L:\PC\MASTER~2\F1_CHA~1.SMS
+EndFile
+File FANTAS_1.SMS;1
+	Source L:\PC\MASTER~2\FANTAS~1.SMS
+EndFile
+File FANTAS_2.SMS;1
+	Source L:\PC\MASTER~2\FANTAS~2.SMS
+EndFile
+File FANTAS_3.SMS;1
+	Source L:\PC\MASTER~2\FANTAS~3.SMS
+EndFile
+File FIRE___1.SMS;1
+	Source L:\PC\MASTER~2\FIRE__~1.SMS
+EndFile
+;File FLASH__1.SMS;1
+;	Source L:\PC\MASTER~2\FLASH_~1.SMS
+;EndFile
+File FLINTS_1.SMS;1
+	Source L:\PC\MASTER~2\FLINTS~1.SMS
+EndFile
+File FORGOT_1.SMS;1
+	Source L:\PC\MASTER~2\FORGOT~1.SMS
+EndFile
+File GAIN_G_1.SMS;1
+	Source L:\PC\MASTER~2\GAIN_G~1.SMS
+EndFile
+File GALACT_1.SMS;1
+	Source L:\PC\MASTER~2\GALACT~1.SMS
+EndFile
+File GALAXY_1.SMS;1
+	Source L:\PC\MASTER~2\GALAXY~1.SMS
+EndFile
+File GANGST_1.SMS;1
+	Source L:\PC\MASTER~2\GANGST~1.SMS
+EndFile
+File GAUNTLET.SMS;1
+	Source L:\PC\MASTER~2\GAUNTLET.SMS
+EndFile
+File GEORGE_1.SMS;1
+	Source L:\PC\MASTER~2\GEORGE~1.SMS
+EndFile
+File GHOSTB_1.SMS;1
+	Source L:\PC\MASTER~2\GHOSTB~1.SMS
+EndFile
+File GHOST__1.SMS;1
+	Source L:\PC\MASTER~2\GHOST_~1.SMS
+EndFile
+File GHOULS_1.SMS;1
+	Source L:\PC\MASTER~2\GHOULS~1.SMS
+EndFile
+File GLOBAL_1.SMS;1
+	Source L:\PC\MASTER~2\GLOBAL~1.SMS
+EndFile
+File GLOBAL_2.SMS;1
+	Source L:\PC\MASTER~2\GLOBAL~2.SMS
+EndFile
+File GOLDEN_1.SMS;1
+	Source L:\PC\MASTER~2\GOLDEN~1.SMS
+EndFile
+File GOLDEN_2.SMS;1
+	Source L:\PC\MASTER~2\GOLDEN~2.SMS
+EndFile
+File GOLF_M_1.SMS;1
+	Source L:\PC\MASTER~2\GOLF_M~1.SMS
+EndFile
+File GOLVEL_1.SMS;1
+	Source L:\PC\MASTER~2\GOLVEL~1.SMS
+EndFile
+File GP_RIDER.SMS;1
+	Source L:\PC\MASTER~2\GP_RIDER.SMS
+EndFile
+File GREAT__1.SMS;1
+	Source L:\PC\MASTER~2\GREAT_~1.SMS
+EndFile
+File GREAT__2.SMS;1
+	Source L:\PC\MASTER~2\GREAT_~2.SMS
+EndFile
+File GREAT__3.SMS;1
+	Source L:\PC\MASTER~2\GREAT_~3.SMS
+EndFile
+File GREAT__4.SMS;1
+	Source L:\PC\MASTER~2\GREAT_~4.SMS
+EndFile
+File GR22B1_1.SMS;1
+	Source L:\PC\MASTER~2\GR22B1~1.SMS
+EndFile
+File GRAF4B_1.SMS;1
+	Source L:\PC\MASTER~2\GRAF4B~1.SMS
+EndFile
+File G_LOC__1.SMS;1
+	Source L:\PC\MASTER~2\G_LOC_~1.SMS
+EndFile
+File HANG_ON.SMS;1
+	Source L:\PC\MASTER~2\HANG_ON.SMS
+EndFile
+File HANG_O_1.SMS;1
+	Source L:\PC\MASTER~2\HANG_O~1.SMS
+EndFile
+File HEAVYW_1.SMS;1
+	Source L:\PC\MASTER~2\HEAVYW~1.SMS
+EndFile
+File HEROES_1.SMS;1
+	Source L:\PC\MASTER~2\HEROES~1.SMS
+EndFile
+File HOME_A_1.SMS;1
+	Source L:\PC\MASTER~2\HOME_A~1.SMS
+EndFile
+File HOOK.SMS;1
+	Source L:\PC\MASTER~2\HOOK.SMS
+EndFile
+File IMPOSS_1.SMS;1
+	Source L:\PC\MASTER~2\IMPOSS~1.SMS
+EndFile
+File INCRED_1.SMS;1
+	Source L:\PC\MASTER~2\INCRED~1.SMS
+EndFile
+File INCRED_2.SMS;1
+	Source L:\PC\MASTER~2\INCRED~2.SMS
+EndFile
+File INDIAN_1.SMS;1
+	Source L:\PC\MASTER~2\INDIAN~1.SMS
+EndFile
+File JAMES__1.SMS;1
+	Source L:\PC\MASTER~2\JAMES_~1.SMS
+EndFile
+File JAMES__2.SMS;1
+	Source L:\PC\MASTER~2\JAMES_~2.SMS
+EndFile
+File JOE_MO_1.SMS;1
+	Source L:\PC\MASTER~2\JOE_MO~1.SMS
+EndFile
+File JUNGLE_1.SMS;1
+	Source L:\PC\MASTER~2\JUNGLE~1.SMS
+EndFile
+File JURASS_1.SMS;1
+	Source L:\PC\MASTER~2\JURASS~1.SMS
+EndFile
+File KENSEI_1.SMS;1
+	Source L:\PC\MASTER~2\KENSEI~1.SMS
+EndFile
+File KING_S_1.SMS;1
+	Source L:\PC\MASTER~2\KING_S~1.SMS
+EndFile
+File KLAX.SMS;1
+	Source L:\PC\MASTER~2\KLAX.SMS
+EndFile
+;File KRUSTY_1.SMS;1
+;	Source L:\PC\MASTER~2\KRUSTY~1.SMS
+;EndFile
+File KUNG_F_1.SMS;1
+	Source L:\PC\MASTER~2\KUNG_F~1.SMS
+EndFile
+File LASER__1.SMS;1
+	Source L:\PC\MASTER~2\LASER_~1.SMS
+EndFile
+File LEMMINGS.SMS;1
+	Source L:\PC\MASTER~2\LEMMINGS.SMS
+EndFile
+File LINE_O_1.SMS;1
+	Source L:\PC\MASTER~2\LINE_O~1.SMS
+EndFile
+File LION_K_1.SMS;1
+	Source L:\PC\MASTER~2\LION_K~1.SMS
+EndFile
+File LORD_O_1.SMS;1
+	Source L:\PC\MASTER~2\LORD_O~1.SMS
+EndFile
+File LUCKY__1.SMS;1
+	Source L:\PC\MASTER~2\LUCKY_~1.SMS
+EndFile
+File MARBLE_1.SMS;1
+	Source L:\PC\MASTER~2\MARBLE~1.SMS
+EndFile
+File MASTER_1.SMS;1
+	Source L:\PC\MASTER~2\MASTER~1.SMS
+EndFile
+File MASTER_2.SMS;1
+	Source L:\PC\MASTER~2\MASTER~2.SMS
+EndFile
+File MAZE_H_1.SMS;1
+	Source L:\PC\MASTER~2\MAZE_H~1.SMS
+EndFile
+File MERCS.SMS;1
+	Source L:\PC\MASTER~2\MERCS.SMS
+EndFile
+File MICHAE_1.SMS;1
+	Source L:\PC\MASTER~2\MICHAE~1.SMS
+EndFile
+File MICKEY_1.SMS;1
+	Source L:\PC\MASTER~2\MICKEY~1.SMS
+EndFile
+File MICKEY_2.SMS;1
+	Source L:\PC\MASTER~2\MICKEY~2.SMS
+EndFile
+File MICKEY_3.SMS;1
+	Source L:\PC\MASTER~2\MICKEY~3.SMS
+EndFile
+File MICK_A_1.SMS;1
+	Source L:\PC\MASTER~2\MICK_A~1.SMS
+EndFile
+File MIRACL_1.SMS;1
+	Source L:\PC\MASTER~2\MIRACL~1.SMS
+EndFile
+File MONOPOLY.SMS;1
+	Source L:\PC\MASTER~2\MONOPOLY.SMS
+EndFile
+File MONTEZ_1.SMS;1
+	Source L:\PC\MASTER~2\MONTEZ~1.SMS
+EndFile
+File MORTAL_1.SMS;1
+	Source L:\PC\MASTER~2\MORTAL~1.SMS
+EndFile
+File MORTAL_2.SMS;1
+	Source L:\PC\MASTER~2\MORTAL~2.SMS
+EndFile
+File MS__PA_1.SMS;1
+	Source L:\PC\MASTER~2\MS__PA~1.SMS
+EndFile
+File MY_HERO.SMS;1
+	Source L:\PC\MASTER~2\MY_HERO.SMS
+EndFile
+File NEW_ZE_1.SMS;1
+	Source L:\PC\MASTER~2\NEW_ZE~1.SMS
+EndFile
+File NINJA__1.SMS;1
+	Source L:\PC\MASTER~2\NINJA_~1.SMS
+EndFile
+File NINJA__2.SMS;1
+	Source L:\PC\MASTER~2\NINJA_~2.SMS
+EndFile
+File OLYMPI_1.SMS;1
+	Source L:\PC\MASTER~2\OLYMPI~1.SMS
+EndFile
+File OPERAT_1.SMS;1
+	Source L:\PC\MASTER~2\OPERAT~1.SMS
+EndFile
+File OTTIFA_1.SMS;1
+	Source L:\PC\MASTER~2\OTTIFA~1.SMS
+EndFile
+File OUTRUN.SMS;1
+	Source L:\PC\MASTER~2\OUTRUN.SMS
+EndFile
+;File OUTRUN_1.SMS;1
+;	Source L:\PC\MASTER~2\OUTRUN~1.SMS
+;EndFile
+File PAC_MA_1.SMS;1
+	Source L:\PC\MASTER~2\PAC_MA~1.SMS
+EndFile
+File PAPERBOY.SMS;1
+	Source L:\PC\MASTER~2\PAPERBOY.SMS
+EndFile
+File PARLOU_1.SMS;1
+	Source L:\PC\MASTER~2\PARLOU~1.SMS
+EndFile
+File PARTY__1.SMS;1
+	Source L:\PC\MASTER~2\PARTY_~1.SMS
+EndFile
+File PENGUI_1.SMS;1
+	Source L:\PC\MASTER~2\PENGUI~1.SMS
+EndFile
+File PGA_TO_1.SMS;1
+	Source L:\PC\MASTER~2\PGA_TO~1.SMS
+EndFile
+;File PHANTA_1.SMS;1
+;	Source L:\PC\MASTER~2\PHANTA~1.SMS
+;EndFile
+File PIT_FI_1.SMS;1
+	Source L:\PC\MASTER~2\PIT_FI~1.SMS
+EndFile
+File POPULOUS.SMS;1
+	Source L:\PC\MASTER~2\POPULOUS.SMS
+EndFile
+File POSEID_1.SMS;1
+	Source L:\PC\MASTER~2\POSEID~1.SMS
+EndFile
+File POWER__1.SMS;1
+	Source L:\PC\MASTER~2\POWER_~1.SMS
+EndFile
+File POWER__2.SMS;1
+	Source L:\PC\MASTER~2\POWER_~2.SMS
+EndFile
+;File PREDAT_1.SMS;1
+;	Source L:\PC\MASTER~2\PREDAT~1.SMS
+;EndFile
+;File PRINCE_1.SMS;1
+;	Source L:\PC\MASTER~2\PRINCE~1.SMS
+;EndFile
+File PRO_WR_1.SMS;1
+	Source L:\PC\MASTER~2\PRO_WR~1.SMS
+EndFile
+File PSYCHI_1.SMS;1
+	Source L:\PC\MASTER~2\PSYCHI~1.SMS
+EndFile
+File PSYCHO_1.SMS;1
+	Source L:\PC\MASTER~2\PSYCHO~1.SMS
+EndFile
+File PUTT_A_1.SMS;1
+	Source L:\PC\MASTER~2\PUTT_A~1.SMS
+EndFile
+File QUARTET.SMS;1
+	Source L:\PC\MASTER~2\QUARTET.SMS
+EndFile
+File RAINBO_1.SMS;1
+	Source L:\PC\MASTER~2\RAINBO~1.SMS
+EndFile
+File RAMBO_3.SMS;1
+	Source L:\PC\MASTER~2\RAMBO_3.SMS
+EndFile
+File RAMBO__1.SMS;1
+	Source L:\PC\MASTER~2\RAMBO_~1.SMS
+EndFile
+File RAMPAGE.SMS;1
+	Source L:\PC\MASTER~2\RAMPAGE.SMS
+EndFile
+File RAMPART.SMS;1
+	Source L:\PC\MASTER~2\RAMPART.SMS
+EndFile
+File RASTAN.SMS;1
+	Source L:\PC\MASTER~2\RASTAN.SMS
+EndFile
+File REGGIE_1.SMS;1
+	Source L:\PC\MASTER~2\REGGIE~1.SMS
+EndFile
+File RENEGADE.SMS;1
+	Source L:\PC\MASTER~2\RENEGADE.SMS
+EndFile
+File RESCUE_1.SMS;1
+	Source L:\PC\MASTER~2\RESCUE~1.SMS
+EndFile
+;File ROAD_R_1.SMS;1
+;	Source L:\PC\MASTER~2\ROAD_R~1.SMS
+;EndFile
+File ROBOCO_1.SMS;1
+	Source L:\PC\MASTER~2\ROBOCO~1.SMS
+EndFile
+File ROBOCO_2.SMS;1
+	Source L:\PC\MASTER~2\ROBOCO~2.SMS
+EndFile
+File ROCKY.SMS;1
+	Source L:\PC\MASTER~2\ROCKY.SMS
+EndFile
+File RUNNIN_1.SMS;1
+	Source L:\PC\MASTER~2\RUNNIN~1.SMS
+EndFile
+File R_C__G_1.SMS;1
+	Source L:\PC\MASTER~2\R_C__G~1.SMS
+EndFile
+File R_TYPE.SMS;1
+	Source L:\PC\MASTER~2\R_TYPE.SMS
+EndFile
+File SAGAIA.SMS;1
+	Source L:\PC\MASTER~2\SAGAIA.SMS
+EndFile
+File SCRAMB_1.SMS;1
+	Source L:\PC\MASTER~2\SCRAMB~1.SMS
+EndFile
+File SDI.SMS;1
+	Source L:\PC\MASTER~2\SDI.SMS
+EndFile
+File SECRET_1.SMS;1
+	Source L:\PC\MASTER~2\SECRET~1.SMS
+EndFile
+File SEGA_C_1.SMS;1
+	Source L:\PC\MASTER~2\SEGA_C~1.SMS
+EndFile
+File SENSIB_1.SMS;1
+	Source L:\PC\MASTER~2\SENSIB~1.SMS
+EndFile
+;File SHADOW_1.SMS;1
+;	Source L:\PC\MASTER~2\SHADOW~1.SMS
+;EndFile
+File SHADOW_2.SMS;1
+	Source L:\PC\MASTER~2\SHADOW~2.SMS
+EndFile
+;File SHANGHAI.SMS;1
+;	Source L:\PC\MASTER~2\SHANGHAI.SMS
+;EndFile
+File SHINOBI.SMS;1
+	Source L:\PC\MASTER~2\SHINOBI.SMS
+EndFile
+File SHOOTI_1.SMS;1
+	Source L:\PC\MASTER~2\SHOOTI~1.SMS
+EndFile
+File SLAP_S_1.SMS;1
+	Source L:\PC\MASTER~2\SLAP_S~1.SMS
+EndFile
+File SMASH_TV.SMS;1
+	Source L:\PC\MASTER~2\SMASH_TV.SMS
+EndFile
+File SMURFS_2.SMS;1
+	Source L:\PC\MASTER~2\SMURFS_2.SMS
+EndFile
+File SMURFS_1.SMS;1
+	Source L:\PC\MASTER~2\SMURFS~1.SMS
+EndFile
+;File SNAIL__1.SMS;1
+;	Source L:\PC\MASTER~2\SNAIL_~1.SMS
+;EndFile
+File SONIC__1.SMS;1
+	Source L:\PC\MASTER~2\SONIC_~1.SMS
+EndFile
+File SONIC__2.SMS;1
+	Source L:\PC\MASTER~2\SONIC_~2.SMS
+EndFile
+File SONIC__3.SMS;1
+	Source L:\PC\MASTER~2\SONIC_~3.SMS
+EndFile
+File SONIC__4.SMS;1
+	Source L:\PC\MASTER~2\SONIC_~4.SMS
+EndFile
+File SO883C_1.SMS;1
+	Source L:\PC\MASTER~2\SO883C~1.SMS
+EndFile
+;File SPACEGUN.SMS;1
+;	Source L:\PC\MASTER~2\SPACEGUN.SMS
+;EndFile
+File SPACE__1.SMS;1
+	Source L:\PC\MASTER~2\SPACE_~1.SMS
+EndFile
+;File SPACE__2.SMS;1
+;	Source L:\PC\MASTER~2\SPACE_~2.SMS
+;EndFile
+File SPEC_C_1.SMS;1
+	Source L:\PC\MASTER~2\SPEC_C~1.SMS
+EndFile
+File SPEEDB_1.SMS;1
+	Source L:\PC\MASTER~2\SPEEDB~1.SMS
+EndFile
+File SPEEDB_2.SMS;1
+	Source L:\PC\MASTER~2\SPEEDB~2.SMS
+EndFile
+File SPEEDB_3.SMS;1
+	Source L:\PC\MASTER~2\SPEEDB~3.SMS
+EndFile
+File SPELLC_1.SMS;1
+	Source L:\PC\MASTER~2\SPELLC~1.SMS
+EndFile
+;File SPIDER_1.SMS;1
+;	Source L:\PC\MASTER~2\SPIDER~1.SMS
+;EndFile
+File SPIDER_2.SMS;1
+	Source L:\PC\MASTER~2\SPIDER~2.SMS
+EndFile
+File SPY_VS_1.SMS;1
+	Source L:\PC\MASTER~2\SPY_VS~1.SMS
+EndFile
+File STAR_W_1.SMS;1
+	Source L:\PC\MASTER~2\STAR_W~1.SMS
+EndFile
+File STREET_1.SMS;1
+	Source L:\PC\MASTER~2\STREET~1.SMS
+EndFile
+File STREET_2.SMS;1
+	Source L:\PC\MASTER~2\STREET~2.SMS
+EndFile
+File STREET_3.SMS;1
+	Source L:\PC\MASTER~2\STREET~3.SMS
+EndFile
+File STRIDER.SMS;1
+	Source L:\PC\MASTER~2\STRIDER.SMS
+EndFile
+File STRIDE_1.SMS;1
+	Source L:\PC\MASTER~2\STRIDE~1.SMS
+EndFile
+File SUBMAR_1.SMS;1
+	Source L:\PC\MASTER~2\SUBMAR~1.SMS
+EndFile
+File SUMMER_1.SMS;1
+	Source L:\PC\MASTER~2\SUMMER~1.SMS
+EndFile
+File SUPERMAN.SMS;1
+	Source L:\PC\MASTER~2\SUPERMAN.SMS
+EndFile
+;File SUPER__1.SMS;1
+;	Source L:\PC\MASTER~2\SUPER_~1.SMS
+;EndFile
+File SUPER__2.SMS;1
+	Source L:\PC\MASTER~2\SUPER_~2.SMS
+EndFile
+File SUPER__3.SMS;1
+	Source L:\PC\MASTER~2\SUPER_~3.SMS
+EndFile
+File SUPER__4.SMS;1
+	Source L:\PC\MASTER~2\SUPER_~4.SMS
+EndFile
+File SU43FC_1.SMS;1
+	Source L:\PC\MASTER~2\SU43FC~1.SMS
+EndFile
+File SU6186_1.SMS;1
+	Source L:\PC\MASTER~2\SU6186~1.SMS
+EndFile
+File SUB50C_1.SMS;1
+	Source L:\PC\MASTER~2\SUB50C~1.SMS
+EndFile
+File SUA588_1.SMS;1
+	Source L:\PC\MASTER~2\SUA588~1.SMS
+EndFile
+File SUA190_1.SMS;1
+	Source L:\PC\MASTER~2\SUA190~1.SMS
+EndFile
+File TAZ_MA_1.SMS;1
+	Source L:\PC\MASTER~2\TAZ_MA~1.SMS
+EndFile
+File TECMO__1.SMS;1
+	Source L:\PC\MASTER~2\TECMO_~1.SMS
+EndFile
+File TEDDY__1.SMS;1
+	Source L:\PC\MASTER~2\TEDDY_~1.SMS
+EndFile
+File TENNIS_1.SMS;1
+	Source L:\PC\MASTER~2\TENNIS~1.SMS
+EndFile
+File TERMIN_1.SMS;1
+	Source L:\PC\MASTER~2\TERMIN~1.SMS
+EndFile
+File TERMIN_2.SMS;1
+	Source L:\PC\MASTER~2\TERMIN~2.SMS
+EndFile
+File TERMIN_3.SMS;1
+	Source L:\PC\MASTER~2\TERMIN~3.SMS
+EndFile
+File THUNDE_1.SMS;1
+	Source L:\PC\MASTER~2\THUNDE~1.SMS
+EndFile
+File TIME_S_1.SMS;1
+	Source L:\PC\MASTER~2\TIME_S~1.SMS
+EndFile
+File TOM_AN_1.SMS;1
+	Source L:\PC\MASTER~2\TOM_AN~1.SMS
+EndFile
+File TOM_AN_2.SMS;1
+	Source L:\PC\MASTER~2\TOM_AN~2.SMS
+EndFile
+File TRANS__1.SMS;1
+	Source L:\PC\MASTER~2\TRANS_~1.SMS
+EndFile
+File TRAP_M_1.SMS;1
+	Source L:\PC\MASTER~2\TRAP_M~1.SMS
+EndFile
+File TRIVIA_1.SMS;1
+	Source L:\PC\MASTER~2\TRIVIA~1.SMS
+EndFile
+;File TRI_FO_1.SMS;1
+;	Source L:\PC\MASTER~2\TRI_FO~1.SMS
+;EndFile
+File ULTIMA_1.SMS;1
+	Source L:\PC\MASTER~2\ULTIMA~1.SMS
+EndFile
+File ULTIMA_4.SMS;1
+	Source L:\PC\MASTER~2\ULTIMA_4.SMS
+EndFile
+File VAMPIRE.SMS;1
+	Source L:\PC\MASTER~2\VAMPIRE.SMS
+EndFile
+File VIGILA_1.SMS;1
+	Source L:\PC\MASTER~2\VIGILA~1.SMS
+EndFile
+File WANTED.SMS;1
+	Source L:\PC\MASTER~2\WANTED.SMS
+EndFile
+File WIMBEL_1.SMS;1
+	Source L:\PC\MASTER~2\WIMBEL~1.SMS
+EndFile
+File WINTER_1.SMS;1
+	Source L:\PC\MASTER~2\WINTER~1.SMS
+EndFile
+File WOLF_C_1.SMS;1
+	Source L:\PC\MASTER~2\WOLF_C~1.SMS
+EndFile
+File WONDER_1.SMS;1
+	Source L:\PC\MASTER~2\WONDER~1.SMS
+EndFile
+File WONDER_2.SMS;1
+	Source L:\PC\MASTER~2\WONDER~2.SMS
+EndFile
+File WONDER_3.SMS;1
+	Source L:\PC\MASTER~2\WONDER~3.SMS
+EndFile
+File WONDER_4.SMS;1
+	Source L:\PC\MASTER~2\WONDER~4.SMS
+EndFile
+File WORLD__1.SMS;1
+	Source L:\PC\MASTER~2\WORLD_~1.SMS
+EndFile
+File WORLD__2.SMS;1
+	Source L:\PC\MASTER~2\WORLD_~2.SMS
+EndFile
+File WORLD__3.SMS;1
+	Source L:\PC\MASTER~2\WORLD_~3.SMS
+EndFile
+File WORLD__4.SMS;1
+	Source L:\PC\MASTER~2\WORLD_~4.SMS
+EndFile
+File WO9A17_1.SMS;1
+	Source L:\PC\MASTER~2\WO9A17~1.SMS
+EndFile
+File WO1D08_1.SMS;1
+	Source L:\PC\MASTER~2\WO1D08~1.SMS
+EndFile
+File WO9859_1.SMS;1
+	Source L:\PC\MASTER~2\WO9859~1.SMS
+EndFile
+File WWF_ST_1.SMS;1
+	Source L:\PC\MASTER~2\WWF_ST~1.SMS
+EndFile
+;File XENON_2.SMS;1
+;	Source L:\PC\MASTER~2\XENON_2.SMS
+;EndFile
+File X_MEN__1.SMS;1
+	Source L:\PC\MASTER~2\X_MEN_~1.SMS
+EndFile
+File Y_S____1.SMS;1
+	Source L:\PC\MASTER~2\Y_S___~1.SMS
+EndFile
+File ZAXXON_1.SMS;1
+	Source L:\PC\MASTER~2\ZAXXON~1.SMS
+EndFile
+File ZILLION.SMS;1
+	Source L:\PC\MASTER~2\ZILLION.SMS
+EndFile
+File ZOOL.SMS;1
+	Source L:\PC\MASTER~2\ZOOL.SMS
+EndFile
+;File ZOOP_D_1.SMS;1
+;	Source L:\PC\MASTER~2\ZOOP_D~1.SMS
+;EndFile
+
+
+			EndDirectory
+
+			Directory CONGO
+				File CONGO1.U35;1
+					Source CONGO\CONGO1.U35
+				EndFile
+
+				File CONGO2.U34;1
+					Source CONGO\CONGO2.U34
+				EndFile
+
+				File CONGO3.U33;1
+					Source CONGO\CONGO3.U33
+				EndFile
+
+				File CONGO4.U32;1
+					Source CONGO\CONGO4.U32
+				EndFile
+
+				File CONGO17.U11;1
+					Source CONGO\CONGO17.U11
+				EndFile
+			
+				File CONGO5.U76;1
+					Source CONGO\CONGO5.U76
+				EndFile
+
+				File CONGO6.U57;1
+					Source CONGO\CONGO6.U57
+				EndFile
+
+				File CONGO7.U58;1
+					Source CONGO\CONGO7.U58
+				EndFile
+
+				File CONGO8.U93;1
+					Source CONGO\CONGO8.U93
+				EndFile
+
+				File CONGO9.U94;1
+					Source CONGO\CONGO9.U94
+				EndFile
+
+				File CONGO10.U95;1
+					Source CONGO\CONGO10.U95
+				EndFile
+
+				File CONGO11.U77;1
+					Source CONGO\CONGO11.U77
+				EndFile
+
+				File CONGO12.U78;1
+					Source CONGO\CONGO12.U78
+				EndFile
+
+				File CONGO13.U79;1
+					Source CONGO\CONGO13.U79
+				EndFile
+
+				File CONGO14.104;1
+					Source CONGO\CONGO14.104
+				EndFile
+
+				File CONGO15.105;1
+					Source CONGO\CONGO15.105
+				EndFile
+
+				File CONGO16.106;1
+					Source CONGO\CONGO16.106
+				EndFile
+
+				File CONGO.U68;1
+					Source CONGO\CONGO.U68
+				EndFile
+
+			EndDirectory
+
+			Directory ZAXXON
+				File ZAXXON1.U29;1
+					Source ZAXXON\ZAXXON1.U29
+				EndFile
+ 				File ZAXXON2.U28;1
+					Source ZAXXON\ZAXXON2.U28
+				EndFile
+ 				File ZAXXON3.U27;1
+					Source ZAXXON\ZAXXON3.U27
+				EndFile
+ 				File ZAXXON4.111;1
+					Source ZAXXON\ZAXXON4.111
+				EndFile
+ 				File ZAXXON5.112;1
+					Source ZAXXON\ZAXXON5.112
+				EndFile
+ 				File ZAXXON6.113;1
+					Source ZAXXON\ZAXXON6.113
+				EndFile
+
+ 				File ZAXXON7.U90;1
+					Source ZAXXON\ZAXXON7.U90
+				EndFile
+ 				File ZAXXON8.U91;1
+					Source ZAXXON\ZAXXON8.U91
+				EndFile
+ 				File ZAXXON9.U92;1
+					Source ZAXXON\ZAXXON9.U92
+				EndFile
+
+ 				File ZAXXON10.U93;1
+					Source ZAXXON\ZAXXON10.U93
+				EndFile
+ 				File ZAXXON11.U77;1
+					Source ZAXXON\ZAXXON11.U77
+				EndFile
+ 				File ZAXXON12.U78;1
+					Source ZAXXON\ZAXXON12.U78
+				EndFile
+
+ 				File ZAXXON13.U79;1
+					Source ZAXXON\ZAXXON13.U79
+				EndFile
+ 				File ZAXXON14.U68;1
+					Source ZAXXON\ZAXXON14.U68
+				EndFile
+ 				File ZAXXON15.U69;1
+					Source ZAXXON\ZAXXON15.U69
+				EndFile
+
+ 				File ZAXXON.U72;1
+					Source ZAXXON\ZAXXON.U72
+				EndFile
+ 				File ZAXXON.U98;1
+					Source ZAXXON\ZAXXON.U98
+				EndFile
+			EndDirectory
+
+		EndDirectory
+	EndHierarchy
+EndPrimaryVolume
+EndVolume
+PostGap 150
+EndTrack
+
+Leadout CDDA
+ Empty  500
+EndTrack
+EndDisc

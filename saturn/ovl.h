@@ -12,6 +12,7 @@ static SclNorscl *ss_reg = NULL;
 /*static*/ SclSpPriNumRegister  *ss_SpPriNum = NULL;
 /*static*/ SclBgPriNumRegister  *ss_BgPriNum = NULL;
 /*static*/ SclOtherPriRegister    *ss_OtherPri = NULL;
+/*static*/ SclBgColMixRegister  *ss_BgColMix = NULL;
 /*static*/ SprSpCmd				*ss_sprite = NULL;
 //static struct BurnDriver *fba_drv;
 
@@ -43,7 +44,8 @@ static unsigned char *cache = NULL;
 #define SS_SPPRI *(&shared + 9)
 #define SS_SPRIT *(&shared + 10)
 #define SS_OTHR *(&shared + 11)
-#define SS_SCL   *(&shared + 12)
+#define SS_BGMIX *(&shared + 12)
+#define SS_SCL   *(&shared + 13)
 
 #endif
 
@@ -62,3 +64,24 @@ static unsigned char *cache = NULL;
 #define SS_SET_SPCLMD(/* 1 bit */ spclmd) \
    (ss_OtherPri->SpriteControl \
    = (ss_OtherPri->SpriteControl & 0xFFDF) | ((spclmd) << 5))
+#define SS_SET_N0SPRM(/* 2bits */ n0sprm) \
+  (ss_OtherPri->SpecialPriorityMode \
+   = (ss_OtherPri->SpecialPriorityMode & 0xFFFC) | ((n0sprm)))
+#define SS_SET_N0SCCM(/* 2 bits */ n0sccm) \
+  ( ss_OtherPri->SpecialColorMixMode \
+   = (ss_OtherPri->SpecialColorMixMode & 0xFFFC) | ((n0sccm)))
+#define SS_SET_N0CCRT(/* 5 bits */ n0ccrt) \
+  ( ss_BgColMix->ColMixRateNBG01 \
+   = (ss_BgColMix->ColMixRateNBG01 & 0xFF00) | ((n0ccrt)))
+#define SS_SET_N0LCEN(/* 1bit */ n0lcen) \
+  ( ss_OtherPri->LineColorEnable \
+   = (ss_OtherPri->LineColorEnable & 0xFFFE) | ((n0lcen)))
+#define SS_SET_CCMD(/* 1 bit */ ccmd) \
+  (ss_OtherPri->ColorMixControl \
+   = (ss_OtherPri->ColorMixControl & 0xFEFF) | ((Uint32)(ccmd) << 8))  
+#define SS_SET_N0CCEN(/* 1 bit */ n0ccen) \
+  (ss_OtherPri->ColorMixControl \
+   = (ss_OtherPri->ColorMixControl & 0xFFFE) | ((n0ccen)))
+#define SS_SET_CCRTMD(/* 1 bit */ ccrtmd) \
+  (ss_OtherPri->ColorMixControl \
+   = (ss_OtherPri->ColorMixControl & 0xFDFF) | ((Uint32)(ccrtmd) << 9))
