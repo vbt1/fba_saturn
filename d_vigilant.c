@@ -1,10 +1,10 @@
 //#include "tiles_generic.h"
-//#include "burn_ym2151.h"
+#include "burn_ym2151.h"
 //#include "burn_ym2203.h"
-//#include "dac.h"
+#include "dac.h"
 
 #define BMP 1
-
+//#define SOUND 1
 #define CZ80 1
 #define RAZE1 1
 #define USE_MAP 1
@@ -12,7 +12,7 @@
 #define VBTLIB 1
 //#include "tiles_generic.h"
 //#include "burnint.h"
-#include "psg.h"
+//#include "psg.h"
 
 #define		_SPR3_
 #include "sega_spr.h"
@@ -80,7 +80,7 @@ int ovlInit(char *szShortName)
 
 /*static*/int MemIndex()
 {
-	unsigned char *Next; Next = Mem;
+	UINT8 *Next; Next = Mem;
 
 	DrvZ80Rom1             = Next; Next += 0x28000;
 	DrvZ80Rom2             = Next; Next += 0x10000;
@@ -93,7 +93,7 @@ int ovlInit(char *szShortName)
 	DrvSpriteRam           = Next; Next += 0x00100;
 	DrvPaletteRam          = Next; Next += 0x00800;
 	DrvVideoRam            = Next; Next += 0x01000;
-	DrvPalette             = (unsigned int*)Next; Next += (512 + 32) * sizeof(unsigned int);
+	DrvPalette             = (UINT32*)Next; Next += (512 + 32) * sizeof(UINT32);
 
 	RamEnd                 = Next;
 
@@ -111,7 +111,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/void DrvSetVector(int Status)
+/*static*/void DrvSetVector(INT32 Status)
 {
 	switch (Status) {
 		case VECTOR_INIT: {
@@ -152,16 +152,16 @@ int ovlInit(char *szShortName)
 
 /*static*/int DrvDoReset()
 {
-	unsigned int i;
-	for (i = 0; i < 2; i++) {
+	for (INT32 i = 0; i < 2; i++) {
 		CZetOpen(i);
 		CZetReset();
 		if (i == 1) DrvSetVector(VECTOR_INIT);
 		CZetClose();
 	}
 	
-
-//	DACReset();
+#ifdef SOUND
+	DACReset();
+#endif
 	
 	DrvRomBank = 0;
 	DrvSoundLatch = 0;
@@ -176,7 +176,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-unsigned char __fastcall VigilanteZ80Read1(unsigned short a)
+UINT8 __fastcall VigilanteZ80Read1(UINT16 a)
 {
 	switch (a) {
 		default: {
@@ -187,7 +187,7 @@ unsigned char __fastcall VigilanteZ80Read1(unsigned short a)
 	return 0;
 }
 
-void __fastcall VigilanteZ80Write1(unsigned short a, unsigned char d)
+void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
 {
 	if (a >= 0xc020 && a <= 0xc0df) {
 		DrvSpriteRam[a - 0xc020] = d;
@@ -237,10 +237,6 @@ void __fastcall VigilanteZ80Write1(unsigned short a, unsigned char d)
 		DrvVideoRam[a]=d;
 		fg_dirtybuffer[a>>1] = 1;
 	}
-
-
-
-
 	
 	switch (a) {
 		default: {
@@ -249,7 +245,7 @@ void __fastcall VigilanteZ80Write1(unsigned short a, unsigned char d)
 	}
 }
 
-unsigned char __fastcall VigilanteZ80PortRead1(unsigned short a)
+UINT8 __fastcall VigilanteZ80PortRead1(UINT16 a)
 {
 	a &= 0xff;
 	
@@ -282,8 +278,7 @@ unsigned char __fastcall VigilanteZ80PortRead1(unsigned short a)
 	return 0;
 }
 
-
-void __fastcall VigilanteZ80PortWrite1(unsigned short a, unsigned char d)
+void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
@@ -353,7 +348,7 @@ unsigned char __fastcall VigilanteZ80Read2(unsigned short a)
 	return 0;
 }
 
-void __fastcall VigilanteZ80Write2(unsigned short a, unsigned char d)
+void __fastcall VigilanteZ80Write2(UINT16 a, UINT8 d)
 {
 	switch (a) {
 		default: {
@@ -362,22 +357,25 @@ void __fastcall VigilanteZ80Write2(unsigned short a, unsigned char d)
 	}
 }
 
-unsigned char __fastcall VigilanteZ80PortRead2(unsigned short a)
+UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
 {
 	a &= 0xff;
 	
 	switch (a) {
 		case 0x01: {
-//			return BurnYM2151ReadStatus();
+#ifdef SOUND
+			return BurnYM2151ReadStatus();
+#else
 			return ;
+#endif
 		}
 		
 		case 0x80: {
-//			return DrvSoundLatch;
+			return DrvSoundLatch;
 		}
 		
 		case 0x84: {
-//			return DrvSamples[DrvSampleAddress];
+			return DrvSamples[DrvSampleAddress];
 		}
 		
 		default: {
@@ -388,34 +386,40 @@ unsigned char __fastcall VigilanteZ80PortRead2(unsigned short a)
 	return 0;
 }
 
-void __fastcall VigilanteZ80PortWrite2(unsigned short a, unsigned char d)
+void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
 	switch (a) {
 		case 0x00: {
-//			BurnYM2151SelectRegister(d);
+#ifdef SOUND
+			BurnYM2151SelectRegister(d);
+#endif
 			return;
 		}
 		
 		case 0x01: {			
-//			BurnYM2151WriteRegister(d);
+#ifdef SOUND
+			BurnYM2151WriteRegister(d);
+#endif
 			return;
 		}
 		
 		case 0x80: {
-//			DrvSampleAddress = (DrvSampleAddress & 0xff00) | ((d << 0) & 0x00ff);
+			DrvSampleAddress = (DrvSampleAddress & 0xff00) | ((d << 0) & 0x00ff);
 			return;
 		}
 		
 		case 0x81: {
-//			DrvSampleAddress = (DrvSampleAddress & 0x00ff) | ((d << 8) & 0xff00);
+			DrvSampleAddress = (DrvSampleAddress & 0x00ff) | ((d << 8) & 0xff00);
 			return;
 		}
 		
 		case 0x82: {
-//			DACSignedWrite(d);
-//			DrvSampleAddress = (DrvSampleAddress + 1) & 0xffff;
+#ifdef SOUND
+			DACSignedWrite(0, d);
+#endif
+			DrvSampleAddress = (DrvSampleAddress + 1) & 0xffff;
 			return;
 		}
 		
@@ -440,10 +444,11 @@ void __fastcall VigilanteZ80PortWrite2(unsigned short a, unsigned char d)
 	}
 }
 
-
-
-
-
+static INT32 VigilantSyncDAC()
+{
+//	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (nBurnFPS / 100.0000))));
+	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (60 / 100.0000))));
+}
 
 /*static*/int CharPlaneOffsets[4]         = { 0x80000, 0x80004, 0, 4 };
 /*static*/int CharXOffsets[8]             = { 0, 1, 2, 3, 64, 65, 66, 67 };
@@ -459,18 +464,17 @@ void __fastcall VigilanteZ80PortWrite2(unsigned short a, unsigned char d)
 {
 	DrvInitSaturn();
 
-	int nRet = 0, nLen;
+	INT32 nRet = 0, nLen;
 
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-	nLen = MemEnd - (unsigned char *)0;
-	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) return 1;
+	nLen = MemEnd - (UINT8 *)0;
+	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	MemIndex();
 
-//	DrvTempRom = (unsigned char *)malloc(0x80000);
-	DrvTempRom = (unsigned char*)(0x00200000);
+	DrvTempRom = (UINT8 *)(0x00200000);
 
 	// Load Z80 #1 Program Roms
 	nRet = BurnLoadRom(DrvZ80Rom1 + 0x00000,  0, 1); if (nRet != 0) return 1;
@@ -484,10 +488,6 @@ void __fastcall VigilanteZ80PortWrite2(unsigned short a, unsigned char d)
 	nRet = BurnLoadRom(DrvTempRom + 0x10000,  4, 1); if (nRet != 0) return 1;
 	GfxDecode4Bpp(0x1000, 4, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
 
-//memset(DrvChars,0x00,4*8);
-//memset(&DrvChars[0x20*4*8],0x33,4*8);
-//	GfxDecode4Bpp(0x1000, 4, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
-
 	// Load and decode the sprites
 	memset(DrvTempRom, 0, 0x80000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000,  5, 1); if (nRet != 0) return 1;
@@ -498,16 +498,13 @@ void __fastcall VigilanteZ80PortWrite2(unsigned short a, unsigned char d)
 	nRet = BurnLoadRom(DrvTempRom + 0x50000, 10, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x60000, 11, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x70000, 12, 1); if (nRet != 0) return 1;
-
-//	GfxDecode(0x1000, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x200, DrvTempRom, DrvSprites);
 	GfxDecode4Bpp(0x1000, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x200, DrvTempRom, DrvSprites);
+
 	// Load and decode the bg tiles
 	memset(DrvTempRom, 0, 0x80000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000, 13, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x10000, 14, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x20000, 15, 1); if (nRet != 0) return 1;
-
-//	GfxDecode4Bpp(0x4000, 4, 32, 1, BackTilePlaneOffsets, BackTileXOffsets, BackTileYOffsets, 0x80, DrvTempRom, DrvBackTiles);
 	GfxDecode4Bpp(0x4000, 4, 32, 1, BackTilePlaneOffsets, BackTileXOffsets, BackTileYOffsets, 0x80, DrvTempRom, DrvBackTiles);
 
 	Bitmap2Tile(DrvBackTiles);
@@ -551,19 +548,19 @@ void __fastcall VigilanteZ80PortWrite2(unsigned short a, unsigned char d)
 	CZetMemEnd();
 	CZetClose();
 	
-//	BurnSetRefreshRate(55.0);
 	nCyclesTotal[0] = 3579645 / 55 /2;
 	nCyclesTotal[1] = 3579645 / 55 /2;
 	
-//	GenericTilesInit();
-//	BurnYM2151Init(3579645, 25.0);
-//	BurnYM2151SetIrqHandler(&VigilantYM2151IrqHandler);	
-//	DACInit(0, 1);
-//	DACSetVolShift(1);
-	
+#ifdef SOUND
+	BurnYM2151Init(3579645);
+	BurnYM2151SetIrqHandler(&VigilantYM2151IrqHandler);	
+	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_1, 0.55, BURN_SND_ROUTE_LEFT);
+	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_2, 0.55, BURN_SND_ROUTE_RIGHT);
+	DACInit(0, 0, 1, VigilantSyncDAC);
+	DACSetRoute(0, 0.45, BURN_SND_ROUTE_BOTH);
+#endif
 	DrvDoReset();
-// 	memset4_fast(ss_font,0x00000000,0x10000);
-//		drawWindow(0,224,240,6,66);
+
 	return 0;
 }
 
@@ -598,12 +595,14 @@ void __fastcall VigilanteZ80PortWrite2(unsigned short a, unsigned char d)
 /*static*/void initLayers()
 {
     Uint16	CycleTb[]={
-		0x46ff, 0xffff, //A0
+		0x4526, 0xefff, //A0
 		0xffff, 0xffff,	//A1
-		0x025e,0xeeee,   //B0
+		0x0ff6,0xeeee,   //B0
 		0xffff, 0xeeee  //B1
 	};
-// nbg0 b1+a0
+// nbg0 map b1+ tile a0
+// nbg1 bitmap dans a1
+// nbg2 tile dans	 a1,b0 et map dans a1
 //4 tiles or bitmap
 //0 map
  	SclConfig	scfg;
@@ -701,7 +700,6 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void DrvInitSaturn()
 {
-//	nBurnSoundLen = 128;
 	nBurnSprites = 27;
 	nBurnLinescrollSize = 0x380;
 
@@ -833,13 +831,14 @@ int tile_start = 0x1800;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/int DrvExit()
+/*static*/ INT32 DrvExit()
 {
 	CZetExit();
-//	BurnYM2151Exit();
-//	BurnYM2203Exit();
-	
-//	GenericTilesExit();
+#ifdef SOUND
+	BurnYM2151Exit();
+	DACExit();
+#endif
+
 	
 	if (Mem) {
 		free(Mem);
@@ -906,7 +905,7 @@ int bg=-1;
 
 /*static*/void DrvDrawForeground(int Priority, int Opaque)
 {
-	int Scroll = ((DrvHorizScrollLo + DrvHorizScrollHi)& 0x1ff) +128;
+	INT32 Scroll = ((DrvHorizScrollLo + DrvHorizScrollHi)& 0x1ff) +128;
 	unsigned int Offset;
 	INT32 ScrollBg = 0x17a - (DrvRearHorizScrollLo + DrvRearHorizScrollHi);
 	if (ScrollBg > 0) Scroll -= 2048;
@@ -953,12 +952,9 @@ int bg=-1;
 
 /*static*/void DrvDrawSprites()
 {
-	int DrvSpriteRamSize = 0xc0;
-//	if (DrvKikcubicDraw) DrvSpriteRamSize = 0x100;
-//	unsigned int Offset;
+	INT32 DrvSpriteRamSize = 0xc0;
 
-//	for (Offset = 0; Offset < DrvSpriteRamSize; Offset += 8) {
-	for (int i = 0; i < DrvSpriteRamSize; i += 8) 
+	for (INT32 i = 0; i < DrvSpriteRamSize; i += 8) 
 	{
 		int Code, Colour, sx, sy, h,flip;//xFlip, yFlip, h;
 
@@ -982,90 +978,26 @@ int bg=-1;
 			ss_sprite[delta].charSize   = 0x200|(h<<4);  //0x100 16*16
 			ss_sprite[delta].charAddr   = 0x220+(Code<<4);
 
-/*
-		
-		if (0) {
-			sx -= 64;
-		} else {
-			sx -= 128;
-		}*/
-	//	int y;
-
-	//	for (y = 0; y < h; y++) 
-		//	{
-			/*int c = Code;
-
-			if (yFlip) {
-				c += h - 1 - y;
-			} else {
-				c += y;
-			}
-			*/
-/*
-			if (sx > 16 && sx < (nScreenWidth - 16) && (sy + (16 * y)) > 16 && (sy + (16 * y)) < (nScreenHeight - 16)) {
-				if (xFlip) {
-					if (yFlip) {
-						Render16x16Tile_Mask_FlipXY(pTransDraw, c, sx, sy + (16 * y), Colour, 4, 0, 0, DrvSprites);
-					} else {
-						Render16x16Tile_Mask_FlipX(pTransDraw, c, sx, sy + (16 * y), Colour, 4, 0, 0, DrvSprites);
-					}
-				} else {
-					if (yFlip) {
-						Render16x16Tile_Mask_FlipY(pTransDraw, c, sx, sy + (16 * y), Colour, 4, 0, 0, DrvSprites);
-					} else {
-						Render16x16Tile_Mask(pTransDraw, c, sx, sy + (16 * y), Colour, 4, 0, 0, DrvSprites);
-					}
-				}
-			} else {
-				if (xFlip) {
-					if (yFlip) {
-						Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, c, sx, sy + (16 * y), Colour, 4, 0, 0, DrvSprites);
-					} else {
-						Render16x16Tile_Mask_FlipX_Clip(pTransDraw, c, sx, sy + (16 * y), Colour, 4, 0, 0, DrvSprites);
-					}
-				} else {
-					if (yFlip) {
-						Render16x16Tile_Mask_FlipY_Clip(pTransDraw, c, sx, sy + (16 * y), Colour, 4, 0, 0, DrvSprites);
-					} else {
-						Render16x16Tile_Mask_Clip(pTransDraw, c, sx, sy + (16 * y), Colour, 4, 0, 0, DrvSprites);
-					}
-				}
-			}
-*/
-//		}
 	}
 }
 
 /*static*/void DrvDraw()
 {
-//	BurnTransferClear();	
-		
 	if (DrvRearDisable) {
 		DrvDrawForeground(0, 1);
-//		DrvDrawSprites();
-//		DrvDrawForeground(1, 0);
+		DrvDrawSprites();
 	} else {
 		DrvRenderBackground();
 		DrvDrawForeground(0, 0);
-//		DrvDrawSprites();
-//		DrvDrawForeground(1, 0);
+		DrvDrawSprites();
 	}
-//	DrvDrawForeground(0, 0);
-	DrvDrawSprites();
-//	BurnTransferCopy(DrvPalette);
+	
 }
-
 
 /*static*/int DrvFrame()
 {
-//	SS_SET_N0CCRT(50);
-
-	int nInterleave = nBurnSoundLen;
-	int nFireNmiEveryFrames = 3;
-	if (nBurnSoundRate == 11025) nFireNmiEveryFrames = 2;
-	if (nBurnSoundRate == 44100) nFireNmiEveryFrames = 6;
-	if (nBurnSoundRate == 48000) nFireNmiEveryFrames = 7;
-	int nSoundBufferPos = 0;
+	INT32 nInterleave = 3; //256; // dac needs 128 NMIs
+	INT32 nSoundBufferPos = 0;
 	
 	if (DrvReset) DrvDoReset();
 
@@ -1074,13 +1006,9 @@ int bg=-1;
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	
 	CZetNewFrame();
-	unsigned int i;
-
-//	nBurnSprites = 27;
-
-
-	for (i = 0; i < nInterleave; i++) {
-		int nCurrentCPU, nNext;
+	
+	for (INT32 i = 0; i < nInterleave; i++) {
+		INT32 nCurrentCPU, nNext;
 
 		// Run Z80 #1
 		nCurrentCPU = 0;
@@ -1091,63 +1019,46 @@ int bg=-1;
 		if (i == (nInterleave - 1)) CZetRaiseIrq(0);
 		CZetClose();
 
-		// Run Z80 #2
 		nCurrentCPU = 1;
 		CZetOpen(nCurrentCPU);
-		if (!DrvHasYM2203) {
+
 			nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 			nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 			nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
-		} else {
-//			BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
-		}
-		if ((i % nFireNmiEveryFrames) == 0) {
+		if (i & 1) {
 			CZetNmi();
 		}
 		CZetClose();
-/*		
-		if (pBurnSoundOut) {
-			int nSegmentLength = nBurnSoundLen / nInterleave;
-			short* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+
+#ifdef SOUND
+			short *	nSoundBuffer = (short *)0x25a20000;
+			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+			INT16* pSoundBuf = nSoundBuffer + (nSoundBufferPos << 1);
 			CZetOpen(1);
-			if (DrvHasYM2203) {
-//				BurnYM2203Update(pSoundBuf, nSegmentLength);
-			} else {
-//				BurnYM2151Render(pSoundBuf, nSegmentLength);
-			}
+			BurnYM2151Render(pSoundBuf, nSegmentLength);
 			CZetClose();
-//			DACUpdate(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
-		}
-*/
+#endif
 	}
-	
-	if (DrvHasYM2203) {
-		CZetOpen(1);
-//		BurnTimerEndFrame(nCyclesTotal[1]);
-		CZetClose();
-	}
-/*	
-	if (pBurnSoundOut) {
-		int nSegmentLength = nBurnSoundLen - nSoundBufferPos;
-		
-		if (nSegmentLength) {
-			short* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			CZetOpen(1);
-			if (DrvHasYM2203) {
-//				BurnYM2203Update(pSoundBuf, nSegmentLength);
-			} else {
-//				BurnYM2151Render(pSoundBuf, nSegmentLength);
-			}
-			CZetClose();
-//			DACUpdate(pSoundBuf, nSegmentLength);
-		}
-	}
-*/	
-//	if (pBurnDraw) 
+
+#ifdef SOUND
+	if (!DrvHasYM2203) 
 	{
-			DrvDraw();	
+		short *	nSoundBuffer = (short *)0x25a20000;
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
+		
+		if (nSegmentLength) 
+		{
+			INT16* pSoundBuf = nSoundBuffer + (nSoundBufferPos << 1);
+			CZetOpen(1);
+			BurnYM2151Render(pSoundBuf, nSegmentLength);
+			CZetClose();			
+		}
+		DACUpdate(nSoundBuffer, nBurnSoundLen);
 	}
+#endif
+			DrvDraw();	
+
 	return 0;
 }
 #undef VECTOR_INIT
@@ -1155,6 +1066,3 @@ int bg=-1;
 #undef YM2151_CLEAR
 #undef Z80_ASSERT
 #undef Z80_CLEAR
-
-
-

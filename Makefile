@@ -141,7 +141,7 @@ OVLVIGIL                 = root/d_vigil.coff
 OVLVIGIL1               = root/d_vigil.bin
 MPOVLVIGILFILE    = $(OVLVIGIL:.coff=.maps)
 LDOVLVIGILFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLVIGILFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c dac.c burn_ym2151.c ym2151.c saturn/ovl.c
 OBJOVLVIGIL         = $(SRCOVLVIGIL:.c=.o)
 
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
@@ -271,7 +271,7 @@ $(OVLZAXXON1) : $(OBJOVLZAXXON) $(MAKEFILE) $(LDOVLZAXXONFILE)
 	$(CONV) -O binary $(OVLZAXXON) $(OVLZAXXON1)
 
 $(OVLVIGIL) : $(OBJOVLVIGIL) $(MAKEFILE) $(OBJOVLVIGIL) $(LDOVLVIGILFILE)
-	$(CC) $(LDOVLVIGILFLAGS) $(OBJOVLVIGIL) $(LIBSOVL) -o $@
+	$(CC) $(LDOVLVIGILFLAGS) $(OBJOVLVIGIL) $(LIBSOVL) -lm -o $@
 
  $(OVLVIGIL1) : $(OBJOVLVIGIL) $(MAKEFILE) $(LDOVLVIGILFILE)
 	$(CONV) -O binary $(OVLVIGIL) $(OVLVIGIL1)
