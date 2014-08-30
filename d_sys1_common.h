@@ -40,7 +40,7 @@ typedef int bool;
 /*static*/ void make_cram_lut(void);
 /*static*/ void updateCollisions(int *values);
 void memcpyl(void *, void *, int);
-void initScrolling(Uint8 enabled);
+void initScrolling(Uint8 enabled,void *address);
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void DrawSprite(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase);

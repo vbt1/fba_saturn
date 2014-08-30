@@ -2266,6 +2266,62 @@ EndFile
 				EndFile
 			EndDirectory
 
+			Directory VIGIL
+				File D01C05.BIN;1
+					Source VIGILANT\D01C05.BIN
+				EndFile
+				File E01C06.BIN;1
+					Source VIGILANT\E01C06.BIN
+				EndFile
+				File F01C07.BIN;1
+					Source VIGILANT\F01C07.BIN
+				EndFile
+				File F05C08.BIN;1
+					Source VIGILANT\F05C08.BIN
+				EndFile
+				File G05C02.BIN;1
+					Source VIGILANT\G05C02.BIN
+				EndFile
+				File G07C03.BIN;1
+					Source VIGILANT\G07C03.BIN
+				EndFile
+				File H05C09.BIN;1
+					Source VIGILANT\H05C09.BIN
+				EndFile
+				File J07C04.BIN;1
+					Source VIGILANT\J07C04.BIN
+				EndFile
+				File K07C10.BIN;1
+					Source VIGILANT\K07C10.BIN
+				EndFile
+				File L07C11.BIN;1
+					Source VIGILANT\L07C11.BIN
+				EndFile
+				File N07C12.BIN;1
+					Source VIGILANT\N07C12.BIN
+				EndFile
+				File O07C13.BIN;1
+					Source VIGILANT\O07C13.BIN
+				EndFile
+				File P07C14.BIN;1
+					Source VIGILANT\P07C14.BIN
+				EndFile
+				File PAL16L8.4M;1
+					Source VIGILANT\PAL16L8.4M
+				EndFile
+				File S07C15.BIN;1
+					Source VIGILANT\S07C15.BIN
+				EndFile
+				File T07C16.BIN;1
+					Source VIGILANT\T07C16.BIN
+				EndFile
+				File V07C17.BIN;1
+					Source VIGILANT\V07C17.BIN
+				EndFile
+			EndDirectory
+
+ 
+
 		EndDirectory
 	EndHierarchy
 EndPrimaryVolume

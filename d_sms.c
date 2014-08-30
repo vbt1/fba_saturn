@@ -180,7 +180,7 @@ void dummy()
 
 	initSprites(256-1,192-1,0,0,0,0);
 	
-	 initScrolling(ON);
+	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	drawWindow(32,192,192,14,52);
 	drawWindow(0,192,192,0,66);
 	SetVblank2();

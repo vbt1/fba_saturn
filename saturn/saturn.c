@@ -116,7 +116,7 @@ static void	_spr2_initialize( void )
 	  memcpyl(aVRAM,smsSprite,(nBurnSprites<<5) ) ;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void initScrolling(Uint8 enabled)
+void initScrolling(Uint8 enabled,void *address)
 {
     SCL_InitLineParamTb(&lp);
 	lp.delta_enbl=OFF;
@@ -126,7 +126,7 @@ void initScrolling(Uint8 enabled)
 	if(enabled==ON)
 	{
 //		lp.line_addr=SCL_VDP2_VRAM_B1-0x600;
-		lp.line_addr=SCL_VDP2_VRAM_B0+0x4000;
+		lp.line_addr=(Uint32 )&address[0];//SCL_VDP2_VRAM_B0+0x4000;
 		SclAddrLsTbl[0] = lp.line_addr;//+0x20;
 		SclAddrLsTbl[1] = (Uint32 )&ls_tbl[0];
 	}
@@ -285,7 +285,7 @@ void resetLayers()
 //	_spr2_transfercommand();
 	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
 //	memset(ls_tbl,0,sizeof(ls_tbl));
-	initScrolling(OFF);
+	initScrolling(OFF,NULL);
 
 	InitCD();
 	VDP2_InitVRAM();
@@ -321,6 +321,7 @@ wait_vblank();
  	SS_N0PRI = &SclBgPriNum;
 	SS_SPPRI = &SclSpPriNum;
 	SS_OTHR  = &SclOtherPri;
+	SS_BGMIX = &SclBgColMix;
 	SS_SPRIT = &smsSprite[0];
 	SS_SCL	 = &ls_tbl[0];
 
@@ -604,6 +605,7 @@ static void SCL_CopyReg()
 		memcpyl((SclOtherPriRegister *)0x25F800E0, &SclOtherPri, sizeof(SclOtherPri));
 		memcpyl((SclSpPriNumRegister *)0x25F800F0, &SclSpPriNum, sizeof(SclSpPriNum));
 		memcpyl((SclBgPriNumRegister *)0x25F800F8, &SclBgPriNum, sizeof(SclBgPriNum));
+		memcpyl((SclBgColMixRegister *)0x25F80108, &SclBgColMix, sizeof(SclBgColMix));
 	}
     //SCL_Memcpyw(&regaddr[0x38], &Scl_n_reg, sizeof(SclNorscl));
 //	memcpyl(&regaddr[0x38], &Scl_n_reg, sizeof(SclNorscl));

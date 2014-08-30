@@ -579,7 +579,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	initSprites(256-1,224-1,8,0,0,-16);
 	//play=1;
 //	drawWindow(0,240,0,2,66);
-	initScrolling(ON);
+	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 	drawWindow(0,240,0,2,66);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }

@@ -134,7 +134,7 @@ void PSG_Write(unsigned int data);
 Sint32 getNbFiles();
 Sint32 GetFileSize(int file_id);
 void load_rom(void);
-void initScrolling(Uint8 enabled);
+void initScrolling(Uint8 enabled,void *address);
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 

@@ -153,6 +153,7 @@ SclDataset	Scl_d_reg;
 SclOtherPriRegister  SclOtherPri;
 SclSpPriNumRegister  SclSpPriNum;
 SclBgPriNumRegister  SclBgPriNum;
+SclBgColMixRegister  SclBgColMix;
 //SclPriBuffDirtyFlags SclPriBuffDirty;
 //-------------------------------------------------------------------------------------------------------------------------------------
 extern Uint8	*FntAsciiFontData2bpp;

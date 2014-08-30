@@ -145,7 +145,7 @@ void system1_paletteram_w_color_rom(unsigned short a, UINT8 d)
 	SS_SET_N1PRIN(7);
 	SS_SET_N2PRIN(5);
 	SS_SET_N0PRIN(3);
-	initScrolling(ON);
+	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 	drawWindow(0,224,0,0,64);
 
 	RamStart						= System1BgRam-0xe800;
