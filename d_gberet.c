@@ -624,19 +624,12 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	}*/  
 	unsigned char *ColorRom = &Rom[0xc000];
 	unsigned char *VideoRom = &Rom[0xc800];
+	int scroll = Rom[0xe006] | (Rom[0xe026] << 8);
+
+	memset4_fast(&ss_scl[16],scroll | (scroll<<16),0x340);
 
 	for (offs = 0x40; offs < 0x7c0; offs++)
 	{
-	//	int sx = (offs & 0x3f);
-		int sy = (offs >> 3) & 0xf8;
-
-		int scroll = Rom[0xe000 | (sy >> 3)] | (Rom[0xe020 | (sy >> 3)] << 8);
-		if (sy > 0x2f)
-		{
-			UINT16 *vbt = (UINT16*)&ss_scl[sy-4];
-			vbt[0] = vbt[2] = vbt[4] = vbt[6] = vbt[8] = vbt[10] = vbt[12] = vbt[14] = scroll;
-		}
-
 #ifdef CACHE
 		if (bg_dirtybuffer[offs])
 		{
@@ -651,14 +644,6 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 #ifdef CACHE
 		}
 #endif
-	}
-
-	if(game_type & 2)
-	{
-			ss_scl[32] = ss_scl[33] = ss_scl[34] = ss_scl[35] = ss_scl[36] =
-						 ss_scl[37] = ss_scl[38] = ss_scl[39] = ss_scl[48];
-
-			ss_scl[40] = ss_scl[41] = ss_scl[42] = ss_scl[43] = ss_scl[48];	
 	}
 	return 0;
 }

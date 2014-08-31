@@ -876,20 +876,16 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 		}
 }
 
-/*static*/void DrvDrawForeground(int Priority, int Opaque)
+/*static*/void DrvDrawForeground()
 {
 	INT32 Scroll = ((DrvHorizScrollLo + DrvHorizScrollHi)& 0x1ff) +128;
-	unsigned int Offset;
 	INT32 ScrollBg = 0x17a - (DrvRearHorizScrollLo + DrvRearHorizScrollHi);
 	if (ScrollBg > 0) Scroll -= 2048;
 
-	UINT16 *vbt = ((UINT16*)ss_scl);
-//	ss_reg->n2_move_x = Scroll;
-	for (Offset = 0; Offset < 0x1000; Offset += 2) 
-	{
-		if(Offset>=96 && Offset <448)
-			vbt[Offset] =Scroll;
+	memset4_fast(&ss_scl[32],Scroll | (Scroll<<16),0x300);
 
+	for (UINT32 Offset = 0; Offset < 0x1000; Offset += 2) 
+	{
 		if(fg_dirtybuffer[Offset>>1])
 		{
 			int Attr = DrvVideoRam[Offset + 1];
@@ -902,13 +898,13 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 			{
 //				map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c || Offset <=96) ?0x2000:0x0000);
 				if(Offset <=768)
-					map[0] = map[0x2000] = Colour + 0x2000;
+					map[0] = /*map[0x2000] =*/ Colour + 0x2000;
 				else
 					map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c) ?0x2000:0x0000);
 
 //				map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c || Offset <=96) ?0x2000:0x0000);
 			//	map[1] = map[0x2001] = (((Colour & 0x0c) == 0x0c) ?7:Tile);
-				map[1] = map[0x2001] = Tile;
+				map[1] = map[0x2001] = Tile;				 
 			}
 			else	  // transparence
 			{
@@ -949,19 +945,6 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 		ss_sprite[delta].charSize   = 0x200|(h<<4);  //0x100 16*16
 		ss_sprite[delta].charAddr   = 0x220+(Code<<4);
 	}
-}
-
-/*static*/void DrvDraw()
-{
-	if (DrvRearDisable) {
-		DrvDrawForeground(0, 1);
-		DrvDrawSprites();
-	} else {
-		DrvRenderBackground();
-		DrvDrawForeground(0, 0);
-		DrvDrawSprites();
-	}
-	
 }
 
 /*static*/int DrvFrame()
@@ -1051,8 +1034,13 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 		DACUpdate(nSoundBuffer, nBurnSoundLen);
 	}
 #endif
-			DrvDraw();	
 
+	DrvDrawForeground();
+	DrvDrawSprites();
+	if (!DrvRearDisable) 
+	{
+		DrvRenderBackground();
+	}
 	return 0;
 }
 #undef VECTOR_INIT
