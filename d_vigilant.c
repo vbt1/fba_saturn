@@ -169,7 +169,39 @@ UINT8 __fastcall VigilanteZ80Read1(UINT16 a)
 {
 	return 0;
 }
+#ifdef RAZE0
+void __fastcall VigilanteZ80Write1_c020(UINT16 a, UINT8 d)
+{
+		DrvSpriteRam[a - 0xc020] = d;
+}
 
+void __fastcall VigilanteZ80Write1_c800(UINT16 a, UINT8 d)
+{
+	int Offset = a & 0x7ff;
+
+	if (DrvPaletteRam[Offset]!=d)
+	{
+		int Bank = Offset & 0x400;
+		int r, g, b;
+		DrvPaletteRam[Offset] = d;
+		
+		Offset &= 0xff;
+		r = (DrvPaletteRam[Bank + Offset + 0x000] ) & 0x1f;//0x1c;
+		g = (DrvPaletteRam[Bank + Offset + 0x100] ) & 0x1f;//0x1c;
+		b = (DrvPaletteRam[Bank + Offset + 0x200] ) & 0x1f;//0x1c;
+	// 16 palettes	
+		colAddr[(Bank >> 2) + Offset] = RGB(r,g,b);
+	}
+}
+
+void __fastcall VigilanteZ80Write1_d000(UINT16 a, UINT8 d)
+{
+		a&=0xfff;
+		DrvVideoRam[a]=d;
+		fg_dirtybuffer[a>>1] = 1;
+}
+
+#else
 void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
 {
 	if (a >= 0xc020 && a <= 0xc0df) {
@@ -204,6 +236,7 @@ void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
 		fg_dirtybuffer[a>>1] = 1;
 	}
 }
+#endif
 
 UINT8 __fastcall VigilanteZ80PortRead1(UINT16 a)
 {
@@ -473,11 +506,15 @@ static INT32 VigilantSyncDAC()
 	CZetInit(2);
 #ifdef RAZE0
 	z80_init_memmap();
-	z80_add_read(0x0000, 0xffff, 1, (void *)&VigilanteZ80Read1); 
-	z80_add_write(0x0000, 0xffff, 1, (void *)&VigilanteZ80Write1);
+//	z80_add_read(0x0000, 0xffff, 1, (void *)&VigilanteZ80Read1); 	   // inutile
+//	z80_add_write(0x0000, 0xffff, 1, (void *)&VigilanteZ80Write1);
+	z80_add_write(0xc020, 0xc0df, 1, (void *)&VigilanteZ80Write1_c020);
+	z80_add_write(0xc800, 0xcfff,  1, (void *)&VigilanteZ80Write1_c800);
+	z80_add_write(0xd000, 0xdfff,  1, (void *)&VigilanteZ80Write1_d000);
+
 	z80_set_in((void (*)(unsigned short int, unsigned char))&VigilanteZ80PortRead1);
 	z80_set_out((void (*)(unsigned short int, unsigned char))&VigilanteZ80PortWrite1);
-
+ 
 	z80_map_read  (0x0000, 0x7fff, DrvZ80Rom1);
 	z80_map_fetch (0x0000, 0x7fff, DrvZ80Rom1);
 	z80_map_read  (0x8000, 0xbfff, DrvZ80Rom1 + 0x10000);
