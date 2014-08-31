@@ -2,10 +2,18 @@
 #define _D_VIGILANT_H_
 
 #include "burnint.h"
+#include "burn_ym2151.h"
+#include "dac.h"
+#include "sega_spr.h"
+#include "sega_scl2.h"
+#include "sega_pcm.h"
 #include "saturn/ovl.h"
 
 #define nBurnSoundLen 128
+unsigned int vbmap[4][0x1000];
 unsigned char 	fg_dirtybuffer[2048];
+int bg=-1;
+
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 int DrvInit();
 int DrvExit();

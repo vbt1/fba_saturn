@@ -1,29 +1,15 @@
-//#include "tiles_generic.h"
-#include "burn_ym2151.h"
-//#include "burn_ym2203.h"
-#include "dac.h"
 
 #define BMP 1
 //#define SOUND 1
 #define CZ80 1
 #define RAZE1 1
+//#define RAZE0 1
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
-//#include "tiles_generic.h"
-//#include "burnint.h"
-//#include "psg.h"
+#define RAZE1 1
 
-#define		_SPR3_
-#include "sega_spr.h"
-#include "sega_scl2.h"
-#include "sega_pcm.h"
-
- #include "d_vigilant.h"
-
-
-unsigned int vbmap[4][0x1000];
-
+#include "d_vigilant.h"
 
 int ovlInit(char *szShortName)
 {
@@ -38,7 +24,6 @@ int ovlInit(char *szShortName)
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
-
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*inline*/ /*static*/ int readbit(const UINT8 *src, int bitnum)
 {
@@ -73,9 +58,6 @@ int ovlInit(char *szShortName)
 	}
 //	wait_vblank();
 }
-
-
-
 /*static*/void DrvInitSaturn();
 
 /*static*/int MemIndex()
@@ -105,7 +87,6 @@ int ovlInit(char *szShortName)
 #else
 	DrvBackTiles           = cache+0x30000;//Next; Next += 0x4000 * 32;
 #endif
-
 	MemEnd                 = Next;
 
 	return 0;
@@ -155,6 +136,11 @@ int ovlInit(char *szShortName)
 	for (INT32 i = 0; i < 2; i++) {
 		CZetOpen(i);
 		CZetReset();
+
+#ifdef RAZE1
+		 z80_reset();
+#endif
+
 		if (i == 1) DrvSetVector(VECTOR_INIT);
 		CZetClose();
 	}
@@ -178,12 +164,6 @@ int ovlInit(char *szShortName)
 
 UINT8 __fastcall VigilanteZ80Read1(UINT16 a)
 {
-	switch (a) {
-		default: {
-//			bprintf(PRINT_NORMAL, _T("Z80 #1 Read => %04X\n"), a);
-		}
-	}
-
 	return 0;
 }
 
@@ -209,25 +189,8 @@ void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
 			g = (DrvPaletteRam[Bank + Offset + 0x100] ) & 0x1f;//0x1c;
 			b = (DrvPaletteRam[Bank + Offset + 0x200] ) & 0x1f;//0x1c;
 		// 16 palettes	
-			
-
-
-//			colAddr[(Bank >> 2) + Offset] = RGB(r,g,b)+2;
 			colAddr[(Bank >> 2) + Offset] = RGB(r,g,b);
-
-/*
-			if ((Bank >> 2) + Offset <256)
-			{
-				colAddr[(Bank >> 2) + Offset] = RGB(r,g,b);
-				//spr
-			}
-			else
-			{
-				colAddr[(Bank >> 2) + Offset] = RGB(r,g,b);
-			}
-			
-*/		}
-
+		}
 		return;
 	}
 
@@ -236,12 +199,6 @@ void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
 		a&=0xfff;
 		DrvVideoRam[a]=d;
 		fg_dirtybuffer[a>>1] = 1;
-	}
-	
-	switch (a) {
-		default: {
-//			bprintf(PRINT_NORMAL, _T("Z80 #1 Write => %04X, %02X\n"), a, d);
-		}
 	}
 }
 
@@ -339,22 +296,12 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 
 unsigned char __fastcall VigilanteZ80Read2(unsigned short a)
 {
-	switch (a) {
-		default: {
-//			bprintf(PRINT_NORMAL, _T("Z80 #2 Read => %04X\n"), a);
-		}
-	}
-
 	return 0;
 }
 
 void __fastcall VigilanteZ80Write2(UINT16 a, UINT8 d)
 {
-	switch (a) {
-		default: {
-//			bprintf(PRINT_NORMAL, _T("Z80 #2 Write => %04X, %02X\n"), a, d);
-		}
-	}
+
 }
 
 UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
@@ -433,7 +380,6 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		}
 	}
 }
-
 
 /*static*/void VigilantYM2151IrqHandler(int Irq)
 {
@@ -535,6 +481,18 @@ static INT32 VigilantSyncDAC()
 	CZetMemEnd();
 	CZetClose();
 	
+#ifdef RAZE1
+	z80_init_memmap();
+	z80_add_read(0x0000, 0xffff, 1, (void *)&VigilanteZ80Read2); 
+	z80_add_write(0x0000, 0xffff, 1, (void *)&VigilanteZ80Write2);
+
+	z80_map_read  (0x0000, 0xbfff, DrvZ80Rom2);
+	z80_map_fetch (0x0000, 0xbfff, DrvZ80Rom2);
+	z80_map_read  (0xf000, 0xffff, DrvZ80Ram2);
+	z80_map_write (0xf000, 0xffff, DrvZ80Ram2); //ajout
+	z80_map_fetch (0xf000, 0xffff, DrvZ80Ram2);
+	z80_end_memmap();
+#else
 	CZetOpen(1);
 	CZetSetReadHandler(VigilanteZ80Read2);
 	CZetSetWriteHandler(VigilanteZ80Write2);
@@ -547,7 +505,8 @@ static INT32 VigilantSyncDAC()
 	CZetMapArea(0xf000, 0xffff, 2, DrvZ80Ram2             );
 	CZetMemEnd();
 	CZetClose();
-	
+#endif
+
 	nCyclesTotal[0] = 3579645 / 55 /2;
 	nCyclesTotal[1] = 3579645 / 55 /2;
 	
@@ -568,13 +527,9 @@ static INT32 VigilantSyncDAC()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void initColors()
 {
-//#ifdef VBTLIB
-
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colAddr             = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);//
 	colBgAddr2          = (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
-//	SCL_AllocColRam(SCL_NBG1,ON);
-//	SCL_SetColRamOffset(SCL_NBG2, 1,OFF);
 #ifndef BMP
 	colBgAddr           = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	for(int i=0;i<4096;i++)
@@ -589,7 +544,6 @@ static INT32 VigilantSyncDAC()
 	SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 #endif
-
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void initLayers()
@@ -637,150 +591,16 @@ static INT32 VigilantSyncDAC()
 		scfg.plate_addr[0] = (Uint32)ss_font;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 #endif
-/*
-#ifdef USE_MAP		  // 3 nbg
-	scfg.dispenbl      = ON;
-	scfg.charsize      = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
-	scfg.pnamesize     = SCL_PN2WORD;
-	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
-	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-	scfg.datatype      = SCL_CELL;
-		scfg.plate_addr[0] = (Uint32)ss_map;
-		scfg.plate_addr[1] = 0x00;
-	SCL_SetConfig(SCL_NBG2, &scfg);
-#endif*/
-/********************************************/	
-//	SCL_InitConfigTb(&scfg);
-/*	scfg.dispenbl 		 = ON;
-	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
-	scfg.coltype 			 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-	scfg.datatype 		 = SCL_BITMAP;
-	scfg.mapover			 = SCL_OVER_0;
-	scfg.plate_addr[0]	 = (Uint32)ss_font;
-// 3 nbg	
-	SCL_SetConfig(SCL_NBG0, &scfg);
-*/
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/void initSpritesS1(void)
+void PrecalcBgMap(void)
 {
-    int i;
-
-//	initSprites(256-1,224-1,0,0,-128,0);
-	initSprites(352-1,224-1,0,0,0,0);
-
-	for (i=3;i<27 ;i++ )
-	{
-		ss_sprite[i].control = ( JUMP_NEXT | FUNC_NORMALSP );
-//		ss_sprite[i].drawMode   = ( COLOR_1 | ECD_DISABLE | COMPO_REP);		
-	}
-//	SCL_SET_SPCLMD(1);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void Bitmap2Tile(unsigned char *DrvBackTiles)
-{
-	char titi[8*256];
-	for (int m=0;m<0x30000;m+=8*256)
-	{
-		memcpy(titi,&DrvBackTiles[m],8*256);
-
-		for (int l=0; l<256; l+=4)
-		{
-			for (int k=0;k<256*8 ; k+=256)
-			{
-				DrvBackTiles[m+0+l*8+k/64]=titi[0+k+l];
-				DrvBackTiles[m+1+l*8+k/64]=titi[1+k+l];
-				DrvBackTiles[m+2+l*8+k/64]=titi[2+k+l];
-				DrvBackTiles[m+3+l*8+k/64]=titi[3+k+l];
-			}
-		}
-	}
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/void DrvInitSaturn()
-{
-	nBurnSprites = 27;
-	nBurnLinescrollSize = 0x380;
-
-	SS_MAP  = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1+0x8000;
-#ifdef BMP
-	SS_FONT = ss_font = (SCL_VDP2_VRAM_A1+0x00000); //(Uint16 *)SCL_VDP2_VRAM_A1;//(Uint16 *)SCL_VDP2_VRAM_B0;
-#endif
-	SS_CACHE= cache   =(Uint8 *)SCL_VDP2_VRAM_A0;
-
-	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
-	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
-	ss_OtherPri     = (SclOtherPriRegister *)SS_OTHR;
-	ss_BgColMix		= (SclBgColMixRegister *)SS_BGMIX;
-	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-//	ss_vram			= (UINT8 *)SS_SPRAM;
-	ss_scl			= (Fixed32 *)SS_SCL;
-
-//	Scl_s_reg.tvmode &= 0xfff0;
-//	Scl_s_reg.tvmode |= 0x0001;
-//	if(SclProcess == 0)	SclProcess = 1;
-
-//    SPR_WRITE_REG(SPR_W_TVMR, 0x0007 & SPR_TV_NORMAL);
-	
-//	SPR_SetEraseData( 0x0000, 0, 0, 320-1, 224-1 );
-
-	SS_SET_S0PRIN(4);
-	SS_SET_N0PRIN(4);
 #ifndef BMP
-	SS_SET_N2PRIN(6);
-	SS_SET_N1PRIN(2);
+	int tile_start = 0x1000;
 #else
-	SS_SET_N2PRIN(2);
-	SS_SET_N1PRIN(6);
+	int tile_start = 0x1800;
 #endif
-
-	SS_SET_N0SPRM(1);  // 1 for special priority
-
-	SS_SET_CCRTMD(0); // color calc ratio mode bit
-	SS_SET_CCMD(0);   // color calc mode bit
-
-	SS_SET_N0CCEN(1); // color calc enable
-	SS_SET_N0SCCM(2); // color calc mode 1 on tile, 2 by dot, 3 color data with msb
-	SS_SET_N0CCRT(23); // color calc ratio
-
-	ss_regs->specialcode=0x0001; // sfcode, upper 8bits, function b, lower 8bits function a
-	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
-
-    /* Enable line and vertical cell scroll for NBG0 */
-#ifdef VBTLIB
-	(*(Uint16 *)0x25F8009A) = 0x0003; 
-	(*(Uint16 *)0x25F80020) = 0x0303;
-#endif
-//SclBgColMixRegister  *SclRealBgColMix = (SclBgColMixRegister *)0x25F80108;
-//	memset(aVRAM+0x880,0x00,0x40000);
-//	memset(cache,0,sizeof(cache));
-
-	initLayers();
-
-//	initPosition();
-	initColors();
-	initSpritesS1();
-	initScrolling(ON,SCL_VDP2_VRAM_B1+(0x20000-0xC00));
-	drawWindow(0,224,240,0,64);
-
-//	initScrolling();
-//	drawGrey();
-#ifndef BMP
-int tile_start = 0x1000;
-#else
-int tile_start = 0x1800;
-#endif
-
-	Uint16 *vbt = ((Uint16*)ss_scl);
-//	for (Offset = 0; Offset < 0x1000; Offset += 2) 
-	for (int Offset = 0; Offset < 96; Offset += 2) 
-	{
-		vbt[Offset]=128;
-	}
-
-	memset(fg_dirtybuffer,1,2048);
 
 	for(int i=0;i<0x1000;i+=2)
 	{
@@ -788,7 +608,6 @@ int tile_start = 0x1800;
 			ss_map2[i]=0;
 		else
 			ss_map2[i]=1;
-
 
 		int	sx = (i>>1) & 0x3f;//% 32;
 
@@ -831,6 +650,90 @@ int tile_start = 0x1800;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void Bitmap2Tile(unsigned char *DrvBackTiles)
+{
+	char table[8*256];
+	for (int m=0;m<0x30000;m+=8*256)
+	{
+		memcpy(table,&DrvBackTiles[m],8*256);
+
+		for (int l=0; l<256; l+=4)
+		{
+			for (int k=0;k<256*8 ; k+=256)
+			{
+				DrvBackTiles[m+0+l*8+k/64]=table[0+k+l];
+				DrvBackTiles[m+1+l*8+k/64]=table[1+k+l];
+				DrvBackTiles[m+2+l*8+k/64]=table[2+k+l];
+				DrvBackTiles[m+3+l*8+k/64]=table[3+k+l];
+			}
+		}
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/void DrvInitSaturn()
+{
+	nBurnSprites = 27;
+	nBurnLinescrollSize = 0x380;
+
+	SS_MAP  = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_MAP2 = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1+0x8000;
+#ifdef BMP
+	SS_FONT = ss_font = (SCL_VDP2_VRAM_A1+0x00000); //(Uint16 *)SCL_VDP2_VRAM_A1;//(Uint16 *)SCL_VDP2_VRAM_B0;
+#endif
+	SS_CACHE= cache   =(Uint8 *)SCL_VDP2_VRAM_A0;
+
+	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
+	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
+	ss_OtherPri     = (SclOtherPriRegister *)SS_OTHR;
+	ss_BgColMix		= (SclBgColMixRegister *)SS_BGMIX;
+	ss_sprite		= (SprSpCmd *)SS_SPRIT;
+//	ss_vram			= (UINT8 *)SS_SPRAM;
+	ss_scl			= (Fixed32 *)SS_SCL;
+
+	SS_SET_S0PRIN(4);
+	SS_SET_N0PRIN(4);
+#ifndef BMP
+	SS_SET_N2PRIN(6);
+	SS_SET_N1PRIN(2);
+#else
+	SS_SET_N2PRIN(2);
+	SS_SET_N1PRIN(6);
+#endif
+
+	SS_SET_N0SPRM(1);  // 1 for special priority
+
+	SS_SET_CCRTMD(0); // color calc ratio mode bit
+	SS_SET_CCMD(0);   // color calc mode bit
+
+	SS_SET_N0CCEN(1); // color calc enable
+	SS_SET_N0SCCM(2); // color calc mode 1 on tile, 2 by dot, 3 color data with msb
+	SS_SET_N0CCRT(23); // color calc ratio
+
+	ss_regs->specialcode=0x0001; // sfcode, upper 8bits, function b, lower 8bits function a
+	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
+
+    /* Enable line and vertical cell scroll for NBG0 */
+#ifdef VBTLIB
+	(*(Uint16 *)0x25F8009A) = 0x0003; 
+	(*(Uint16 *)0x25F80020) = 0x0303;
+#endif
+	initLayers();
+	initColors();
+	initSprites(352-1,224-1,0,0,0,0);
+	initScrolling(ON,SCL_VDP2_VRAM_B1+(0x20000-0xC00));
+	drawWindow(0,224,240,0,64);
+
+	Uint16 *vbt = ((Uint16*)ss_scl);
+
+	for (int Offset = 0; Offset < 96; Offset += 2) 
+	{
+		vbt[Offset]=128;
+	}
+
+	memset(fg_dirtybuffer,1,2048);
+	PrecalcBgMap();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
 	CZetExit();
@@ -861,7 +764,7 @@ int tile_start = 0x1800;
 
 	return 0;
 }
-int bg=-1;
+
 /*static*/void DrvRenderBackground()
 {
 	int Scroll = 0x17a - (DrvRearHorizScrollLo + DrvRearHorizScrollHi);
@@ -925,8 +828,6 @@ int bg=-1;
 
 			UINT16 *map = &ss_map[Offset]; 
 
-
-
 			if( Colour >= 4) // pas de transp
 			{
 //				map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c || Offset <=96) ?0x2000:0x0000);
@@ -968,16 +869,15 @@ int bg=-1;
 
 		Code &= ~(h - 1);
 
-			int delta=(i>>3)+3;
-			ss_sprite[delta].ax = sx-128;
-			ss_sprite[delta].ay = sy;
-		//	ss_sprite[delta].color      = ((int)colAddr)>>3 | ((Colour<<2));//Colour<<4;
-			ss_sprite[delta].color      = Colour<<4;
-			ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
-			ss_sprite[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-			ss_sprite[delta].charSize   = 0x200|(h<<4);  //0x100 16*16
-			ss_sprite[delta].charAddr   = 0x220+(Code<<4);
-
+		int delta=(i>>3)+3;
+		ss_sprite[delta].ax = sx-128;
+		ss_sprite[delta].ay = sy;
+	//	ss_sprite[delta].color      = ((int)colAddr)>>3 | ((Colour<<2));//Colour<<4;
+		ss_sprite[delta].color      = Colour<<4;
+		ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
+		ss_sprite[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+		ss_sprite[delta].charSize   = 0x200|(h<<4);  //0x100 16*16
+		ss_sprite[delta].charAddr   = 0x220+(Code<<4);
 	}
 }
 
@@ -1019,6 +919,14 @@ int bg=-1;
 		if (i == (nInterleave - 1)) CZetRaiseIrq(0);
 		CZetClose();
 
+#ifdef RAZE1
+			nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+			nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+			nCyclesDone[nCurrentCPU] += z80_emulate(nCyclesSegment);
+		if (i & 1) {
+			z80_cause_NMI();
+		}
+#else
 		nCurrentCPU = 1;
 		CZetOpen(nCurrentCPU);
 
@@ -1029,6 +937,7 @@ int bg=-1;
 			CZetNmi();
 		}
 		CZetClose();
+#endif
 
 #ifdef SOUND
 			short *	nSoundBuffer = (short *)0x25a20000;
