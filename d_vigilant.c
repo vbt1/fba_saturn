@@ -197,8 +197,29 @@ void __fastcall VigilanteZ80Write1_c800(UINT16 a, UINT8 d)
 void __fastcall VigilanteZ80Write1_d000(UINT16 a, UINT8 d)
 {
 		a&=0xfff;
-		DrvVideoRam[a]=d;
-		fg_dirtybuffer[a>>1] = 1;
+		if(DrvVideoRam[a]!=d)
+		{
+			DrvVideoRam[a]=d;
+			a&=~1;
+			int Attr = DrvVideoRam[a + 1];
+			int Colour = Attr & 0x0f;
+			int Tile = DrvVideoRam[a + 0] | ((Attr & 0xf0) << 4);
+
+			UINT16 *map = &ss_map[a]; 
+
+			if( Colour >= 4) // pas de transp
+			{
+				if(a > 768)
+					map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c) ?0x2000:0x0000);
+				else
+					map[0] = Colour + 0x2000;	
+			}
+			else	  // transparence
+			{
+				map[0] = map[0x2000] = Colour + 0x1000;
+			}
+			map[1] = map[0x2001] = Tile;
+		}
 }
 
 #else
@@ -232,8 +253,29 @@ void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
 	if (a >= 0xd000 && a <= 0xdfff) 
 	{
 		a&=0xfff;
-		DrvVideoRam[a]=d;
-		fg_dirtybuffer[a>>1] = 1;
+		if(DrvVideoRam[a]!=d)
+		{
+			DrvVideoRam[a]=d;
+			a&=~1;
+			int Attr = DrvVideoRam[a + 1];
+			int Colour = Attr & 0x0f;
+			int Tile = DrvVideoRam[a + 0] | ((Attr & 0xf0) << 4);
+
+			UINT16 *map = &ss_map[a]; 
+
+			if( Colour >= 4) // pas de transp
+			{
+				if(a > 768)
+					map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c) ?0x2000:0x0000);
+				else
+					map[0] = Colour + 0x2000;	
+			}
+			else	  // transparence
+			{
+				map[0] = map[0x2000] = Colour + 0x1000;
+			}
+			map[1] = map[0x2001] = Tile;
+		}
 	}
 }
 #endif
@@ -799,8 +841,6 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 	{
 		vbt[Offset]=128;
 	}
-
-	memset(fg_dirtybuffer,1,2048);
 	PrecalcBgMap();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -883,38 +923,6 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 	if (ScrollBg > 0) Scroll -= 2048;
 
 	memset4_fast(&ss_scl[32],Scroll | (Scroll<<16),0x300);
-
-	for (UINT32 Offset = 0; Offset < 0x1000; Offset += 2) 
-	{
-		if(fg_dirtybuffer[Offset>>1])
-		{
-			int Attr = DrvVideoRam[Offset + 1];
-			int Colour = Attr & 0x0f;
-			int Tile = DrvVideoRam[Offset + 0] | ((Attr & 0xf0) << 4);
-
-			UINT16 *map = &ss_map[Offset]; 
-
-			if( Colour >= 4) // pas de transp
-			{
-//				map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c || Offset <=96) ?0x2000:0x0000);
-				if(Offset <=768)
-					map[0] = /*map[0x2000] =*/ Colour + 0x2000;
-				else
-					map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c) ?0x2000:0x0000);
-
-//				map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c || Offset <=96) ?0x2000:0x0000);
-			//	map[1] = map[0x2001] = (((Colour & 0x0c) == 0x0c) ?7:Tile);
-				map[1] = map[0x2001] = Tile;				 
-			}
-			else	  // transparence
-			{
-				map[0] = map[0x2000] = Colour + 0x1000;
-				map[1] = map[0x2001] = Tile;
-			}
-
-			fg_dirtybuffer[Offset>>1]=0;
-		}
-	}
 }
 
 /*static*/void DrvDrawSprites()

@@ -11,7 +11,6 @@
 
 #define nBurnSoundLen 128
 unsigned int vbmap[4][0x1000];
-unsigned char 	fg_dirtybuffer[2048];
 int bg=-1;
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
