@@ -2,12 +2,11 @@
 #define BMP 1
 //#define SOUND 1
 #define CZ80 1
-#define RAZE1 1
-//#define RAZE0 1
+//#define RAZE1 1
+#define RAZE0 1
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
-#define RAZE1 1
 
 #include "d_vigilant.h"
 
@@ -137,6 +136,10 @@ int ovlInit(char *szShortName)
 		CZetOpen(i);
 		CZetReset();
 
+#ifdef RAZE0
+		 z80_reset();
+#endif
+
 #ifdef RAZE1
 		 z80_reset();
 #endif
@@ -242,11 +245,15 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 	switch (a) {
 		case 0x00: {
 			DrvSoundLatch = d;
+#ifndef RAZE0
 			CZetClose();
+#endif
 			CZetOpen(1);
 			DrvSetVector(Z80_ASSERT);
 			CZetClose();
+#ifndef RAZE0
 			CZetOpen(0);
+#endif
 			return;
 		}
 		
@@ -257,8 +264,13 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 		
 		case 0x04: {
 			DrvRomBank = d & 0x07;
+#ifdef RAZE0
+			z80_map_read  (0x8000, 0xbfff, DrvZ80Rom1 + 0x10000 + (DrvRomBank * 0x4000));
+			z80_map_fetch (0x8000, 0xbfff, DrvZ80Rom1 + 0x10000 + (DrvRomBank * 0x4000));
+#else
 			CZetMapArea(0x8000, 0xbfff, 0, DrvZ80Rom1 + 0x10000 + (DrvRomBank * 0x4000));
 			CZetMapArea(0x8000, 0xbfff, 2, DrvZ80Rom1 + 0x10000 + (DrvRomBank * 0x4000));
+#endif
 			return;
 		}
 		
@@ -459,6 +471,26 @@ static INT32 VigilantSyncDAC()
 	nRet = BurnLoadRom(DrvSamples + 0x00000, 16, 1); if (nRet != 0) return 1;
 	// Setup the Z80 emulation
 	CZetInit(2);
+#ifdef RAZE0
+	z80_init_memmap();
+	z80_add_read(0x0000, 0xffff, 1, (void *)&VigilanteZ80Read1); 
+	z80_add_write(0x0000, 0xffff, 1, (void *)&VigilanteZ80Write1);
+	z80_set_in((void (*)(unsigned short int, unsigned char))&VigilanteZ80PortRead1);
+	z80_set_out((void (*)(unsigned short int, unsigned char))&VigilanteZ80PortWrite1);
+
+	z80_map_read  (0x0000, 0x7fff, DrvZ80Rom1);
+	z80_map_fetch (0x0000, 0x7fff, DrvZ80Rom1);
+	z80_map_read  (0x8000, 0xbfff, DrvZ80Rom1 + 0x10000);
+	z80_map_fetch (0x8000, 0xbfff, DrvZ80Rom1 + 0x10000);
+	z80_map_read  (0xc800, 0xcfff, DrvPaletteRam);
+	z80_map_fetch (0xc800, 0xcfff, DrvPaletteRam);
+	z80_map_read (0xd000, 0xdfff, DrvVideoRam);
+	z80_map_fetch (0xd000, 0xdfff, DrvVideoRam);
+	z80_map_read  (0xe000, 0xefff, DrvZ80Ram1);
+	z80_map_write (0xe000, 0xefff, DrvZ80Ram1);
+	z80_map_fetch (0xe000, 0xefff, DrvZ80Ram1);
+	z80_end_memmap();
+#else
 	CZetOpen(0);
 	CZetSetReadHandler(VigilanteZ80Read1);
 	CZetSetWriteHandler(VigilanteZ80Write1);
@@ -480,6 +512,7 @@ static INT32 VigilantSyncDAC()
 	CZetMapArea(0xe000, 0xefff, 2, DrvZ80Ram1             );
 	CZetMemEnd();
 	CZetClose();
+#endif
 	
 #ifdef RAZE1
 	z80_init_memmap();
@@ -911,6 +944,19 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 		INT32 nCurrentCPU, nNext;
 
 		// Run Z80 #1
+#ifdef RAZE0
+		nCurrentCPU = 0;
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+		nCyclesDone[nCurrentCPU] += z80_emulate(nCyclesSegment);
+		if (i == (nInterleave - 1)) 
+		{
+			z80_raise_IRQ(0);
+			z80_emulate(0);
+			z80_lower_IRQ(0);
+			z80_emulate(0);
+		}
+#else
 		nCurrentCPU = 0;
 		CZetOpen(nCurrentCPU);
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
@@ -918,8 +964,10 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 		nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
 		if (i == (nInterleave - 1)) CZetRaiseIrq(0);
 		CZetClose();
+#endif
 
 #ifdef RAZE1
+			nCurrentCPU = 1;
 			nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 			nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 			nCyclesDone[nCurrentCPU] += z80_emulate(nCyclesSegment);
