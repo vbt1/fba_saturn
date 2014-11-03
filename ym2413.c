@@ -440,7 +440,7 @@ static const Uint8 mul_tab[16]= {
 *	TL_RES_LEN - sinus resolution (X axis)
 */
 #define TL_TAB_LEN (11*2*TL_RES_LEN)
-static signed int tl_tab[TL_TAB_LEN];
+/*static*/ signed int tl_tab[TL_TAB_LEN];
 
 #define ENV_QUIET		(TL_TAB_LEN>>5)
 

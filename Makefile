@@ -11,8 +11,8 @@ CONV = sh-elf-objcopy
 MAKEFILE = Makefile
 
 #CCFLAGS =  -mhitachi -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
-CCFLAGS2 =   -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -D_SH -DMODEL_S -c -I.
-CCOVLFLAGS = -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
+CCFLAGS2 = -mno-fsrra -maccumulate-outgoing-args -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -D_SH -DMODEL_S -c -I.
+CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
 #LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles  -nostdlib
 
@@ -141,7 +141,8 @@ OVLVIGIL                 = root/d_vigil.coff
 OVLVIGIL1               = root/d_vigil.bin
 MPOVLVIGILFILE    = $(OVLVIGIL:.coff=.maps)
 LDOVLVIGILFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLVIGILFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c dac.c burn_ym2151.c ym2151.c saturn/ovl.c
+SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c dac.c burn_ym2151.c ym2151.c burn_sound_c.c saturn/ovl.c
+#SRCOVLVIGIL         = d_vigilant.c z80_intf.c z80.c z80daisy.c burn_ym2151.c ym2151.c dac.c burn_sound_c.c saturn/ovl.c
 OBJOVLVIGIL         = $(SRCOVLVIGIL:.c=.o)
 
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
@@ -158,8 +159,6 @@ LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
 ../../SBL6/SEGALIB/PCM/vbtelf/pcm_etc2.o ../../SBL6/SEGALIB/PCM/vbtelf/pcm_mp2.o \
 ../../SBL6/SEGALIB/PCM/vbtelf/pcm_lib2.o cdc/cdcrep.a
 
-#LIBSOVL = l:/GNUSHv13/sh-elf/sh-elf/lib/m2/libm.a \
-#LIBSOVL = L:/VBTSH/sh-elf/lib/m2/libm.a \
 LIBSOVL = ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a 
 
 
@@ -271,6 +270,7 @@ $(OVLZAXXON1) : $(OBJOVLZAXXON) $(MAKEFILE) $(LDOVLZAXXONFILE)
 	$(CONV) -O binary $(OVLZAXXON) $(OVLZAXXON1)
 
 $(OVLVIGIL) : $(OBJOVLVIGIL) $(MAKEFILE) $(OBJOVLVIGIL) $(LDOVLVIGILFILE)
+#	$(CC) $(LDOVLVIGILFLAGS) $(OBJOVLVIGIL) $(LIBSOVL) -lm -o $@
 	$(CC) $(LDOVLVIGILFLAGS) $(OBJOVLVIGIL) $(LIBSOVL) raze/raze.o -lm -o $@
 
  $(OVLVIGIL1) : $(OBJOVLVIGIL) $(MAKEFILE) $(LDOVLVIGILFILE)

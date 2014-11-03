@@ -1,7 +1,7 @@
 #include "burnint.h"
 #include "burn_sound.h"
 
-#define DAC_NUM		(8)	// Maximum DAC chips
+#define DAC_NUM		(1)	// Maximum DAC chips
 #define nBurnSoundLen 128
 typedef struct //dac_info
 {

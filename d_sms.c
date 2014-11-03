@@ -205,7 +205,7 @@ void dummy()
     for (dst = (Uint8 *)&bss_start; dst < (Uint8 *)&bss_end; dst++)
 			 *dst = 0;  
   */
-	char toto[50];
+/*	char toto[50];
 	extern Uint32 __malloc_sbrk_base, _bend,_bstart,bss_start,bss_end;
 	extern int __malloc_trim_threshold;
 	extern int __malloc_top_pad;
@@ -214,7 +214,7 @@ void dummy()
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,201);
 
 	sprintf (toto,"malloc_trim_threshold %08x %08x",__malloc_trim_threshold,sbrk(0)) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);	   */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void InitCDsms()

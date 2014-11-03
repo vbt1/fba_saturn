@@ -1,35 +1,35 @@
 // burn_ym2151.h
-//#include "driver.h"
+#include "driver.h"
 //extern "C" {
  #include "ym2151.h"
 //}
 
-int BurnYM2151Init(int nClockFrequency);
-void BurnYM2151SetRoute(int nIndex, double nVolume, int nRouteDir);
+INT32 BurnYM2151Init(INT32 nClockFrequency);
+void BurnYM2151SetRoute(INT32 nIndex, double nVolume, INT32 nRouteDir);
 void BurnYM2151Reset();
 void BurnYM2151Exit();
-extern void (*BurnYM2151Render)(signed short* pSoundBuf, int nSegmentLength);
-void BurnYM2151Scan(int nAction);
+extern void (*BurnYM2151Render)(INT16* pSoundBuf, INT32 nSegmentLength);
+void BurnYM2151Scan(INT32 nAction);
 
-static inline void BurnYM2151SelectRegister(const unsigned char nRegister)
+static inline void BurnYM2151SelectRegister(const UINT8 nRegister)
 {
 #if defined FBA_DEBUG
 	if (!DebugSnd_YM2151Initted) bprintf(PRINT_ERROR, _T("BurnYM2151SelectRegister called without init\n"));
 #endif
 
-	extern unsigned int nBurnCurrentYM2151Register;
+	extern UINT32 nBurnCurrentYM2151Register;
 
 	nBurnCurrentYM2151Register = nRegister;
 }
 
-static inline void BurnYM2151WriteRegister(const unsigned char nValue)
+static inline void BurnYM2151WriteRegister(const UINT8 nValue)
 {
 #if defined FBA_DEBUG
 	if (!DebugSnd_YM2151Initted) bprintf(PRINT_ERROR, _T("BurnYM2151WriteRegister called without init\n"));
 #endif
 
-	extern unsigned int nBurnCurrentYM2151Register;
-	/*extern unsigned char BurnYM2151Registers[0x0100];
+	extern UINT32 nBurnCurrentYM2151Register;
+	/*extern UINT8 BurnYM2151Registers[0x0100];
 
         if (nBurnCurrentYM2151Register >= 0x20 && // this is no longer necessary. June 24, 2014 - dink
             nBurnCurrentYM2151Register <= 0x3F) { // only(!) remember oper connections

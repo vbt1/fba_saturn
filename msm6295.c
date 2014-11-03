@@ -151,120 +151,7 @@ void MSM6295Render_Linear(int nChip, int* pBuf, int nSegmentLength)
 
 	MSM6295[nChip].nFractionalPosition = nFractionalPosition;
 }
-/*
-static void MSM6295Render_Cubic(int nChip, int* pBuf, int nSegmentLength)
-{
-	int nVolume = MSM6295[nChip].nVolume;
-	int nFractionalPosition;
 
-	int nChannel, nDelta, nSample, nOutput;
-	MSM6295ChannelInfo* pChannelInfo;
-
-	while (nSegmentLength--) {
-
-		nOutput = 0;
-
-		for (nChannel = 0; nChannel < 4; nChannel++) {
-			pChannelInfo = &MSM6295[nChip].ChannelInfo[nChannel];
-			nFractionalPosition = MSM6295[nChip].nFractionalPosition;
-
-			if (nMSM6295Status[nChip] & (1 << nChannel)) {
-
-				while (nFractionalPosition >= 0x1000) {
-
-					// Check for end of sample
-					if (pChannelInfo->nSampleCount-- <= 0) {
-						if (pChannelInfo->nSampleCount <= -2) {
-							nMSM6295Status[nChip] &= ~(1 << nChannel);
-						}
-
-						MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos++] = pChannelInfo->nOutput / 16;
-
-						break;
-
-					} else {
-						// Get new delta from ROM
-						if (pChannelInfo->nPosition & 1) {
-							nDelta = pChannelInfo->nDelta & 0x0F;
-						} else {
-							pChannelInfo->nDelta = MSM6295SampleData[nChip][pChannelInfo->nPosition >> 17][(pChannelInfo->nPosition >> 1) & 0xFFFF];
-							nDelta = pChannelInfo->nDelta >> 4;
-						}
-
-						// Compute new sample
-						nSample = pChannelInfo->nSample + MSM6295DeltaTable[(pChannelInfo->nStep << 4) + nDelta];
-						if (nSample > 2047) {
-							nSample = 2047;
-						} else {
-							if (nSample < -2048) {
-								nSample = -2048;
-							}
-						}
-						pChannelInfo->nSample = nSample;
-						pChannelInfo->nOutput = nSample * pChannelInfo->nVolume;
-
-						// Update step value
-						pChannelInfo->nStep = pChannelInfo->nStep + MSM6295StepShift[nDelta & 7];
-						if (pChannelInfo->nStep > 48) {
-							pChannelInfo->nStep = 48;
-						} else {
-							if (pChannelInfo->nStep < 0) {
-								pChannelInfo->nStep = 0;
-							}
-						}
-
-						// The interpolator needs a 16-bit sample, pChannelInfo->nOutput is now a 20-bit number
-						MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos++] = pChannelInfo->nOutput / 16;
-
-						// Advance sample position
-						pChannelInfo->nPosition++;
-						nFractionalPosition -= 0x1000;
-					}
-				}
-
-				if (pChannelInfo->nBufPos > 0x0FF0) {
-					MSM6295ChannelData[nChip][nChannel][0] = MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos - 4];
-					MSM6295ChannelData[nChip][nChannel][1] = MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos - 3];
-					MSM6295ChannelData[nChip][nChannel][2] = MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos - 2];
-					MSM6295ChannelData[nChip][nChannel][3] = MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos - 1];
-					pChannelInfo->nBufPos = 4;
-				}
-
-				nOutput += INTERPOLATE4PS_16BIT(nFractionalPosition,
-												MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos - 4],
-												MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos - 3],
-												MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos - 2],
-												MSM6295ChannelData[nChip][nChannel][pChannelInfo->nBufPos - 1]);
-			} else {
-				// Ramp channel output to 0
-				if (pChannelInfo->nOutput != 0) {
-					int nRamp = 2048 * 256 * 256 / nBurnSoundRate;
-					if (pChannelInfo->nOutput > 0) {
-						if (pChannelInfo->nOutput > nRamp) {
-							pChannelInfo->nOutput -= nRamp;
-						} else {
-							pChannelInfo->nOutput = 0;
-						}
-					} else {
-						if (pChannelInfo->nOutput < -nRamp) {
-							pChannelInfo->nOutput += nRamp;
-						} else {
-							pChannelInfo->nOutput = 0;
-						}
-					}
-					nOutput += pChannelInfo->nOutput / 16;
-				}
-			}
-		}
-
-		nOutput *= nVolume;
-
-		*pBuf++ += nOutput;
-
-		MSM6295[nChip].nFractionalPosition = (MSM6295[nChip].nFractionalPosition & 0x0FFF) + MSM6295[nChip].nSampleSize;
-	}
-}
-*/
 /*
 int MSM6295Render(int nChip, short* pSoundBuf, int nSegmentLength)
 {
@@ -423,7 +310,8 @@ int MSM6295Init(int nChip, int nSamplerate, float fMaxVolume, bool bAddSignal)
 	// Compute sample deltas
 // vbt correct
 	for (i = 0; i < 49; i++) {
-		int nStep = (int)(pow(1.1, (double)i) * 16.0);
+//		int nStep = (int)(pow(1.1, (double)i) * 16.0);
+		int nStep = (int)(powf(1.1, (double)i) * 16.0);
 		for (n = 0; n < 16; n++) {
 			int nDelta = nStep >> 3;
 			if (n & 1) {

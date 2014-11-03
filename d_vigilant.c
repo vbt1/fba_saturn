@@ -1,12 +1,14 @@
-
 #define BMP 1
-//#define SOUND 1
+#define SOUND 1
 #define CZ80 1
 //#define RAZE1 1
 #define RAZE0 1
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
+
+typedef unsigned int						UINT32;
+extern UINT32 nBurnCurrentYM2151Register;
 
 #include "d_vigilant.h"
 
@@ -121,12 +123,27 @@ int ovlInit(char *szShortName)
 	}
 	
 	if (DrvIrqVector == 0xff) {
-//		ZetSetVector(DrvIrqVector);
+
+#ifdef RAZE1
+//	z80_cause_NMI();
+	z80_raise_IRQ(DrvIrqVector);
+		nCyclesDone[1] += z80_emulate(1);
+#else
 		CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+#endif
+
 	} else {
-//		CZetSetVector(DrvIrqVector);
-		CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+
+#ifdef RAZE1
+//		z80_cause_NMI();
+		z80_raise_IRQ(DrvIrqVector);
+		nCyclesDone[1] += z80_emulate(1000);
+#else
+//		ZetSetVector(DrvIrqVector);
+		CZetSetIRQLine(DrvIrqVector, CZET_IRQSTATUS_ACK);
 		nCyclesDone[1] += CZetRun(1000);
+#endif
+
 	}
 }
 
@@ -145,10 +162,11 @@ int ovlInit(char *szShortName)
 #endif
 
 		if (i == 1) DrvSetVector(VECTOR_INIT);
-		CZetClose();
+	CZetClose();
 	}
 	
 #ifdef SOUND
+	BurnYM2151Reset();
 	DACReset();
 #endif
 	
@@ -320,6 +338,7 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 	switch (a) {
 		case 0x00: {
 			DrvSoundLatch = d;
+
 #ifndef RAZE0
 			CZetClose();
 #endif
@@ -339,6 +358,7 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 		
 		case 0x04: {
 			DrvRomBank = d & 0x07;
+
 #ifdef RAZE0
 			z80_map_read  (0x8000, 0xbfff, DrvZ80Rom1 + 0x10000 + (DrvRomBank * 0x4000));
 			z80_map_fetch (0x8000, 0xbfff, DrvZ80Rom1 + 0x10000 + (DrvRomBank * 0x4000));
@@ -398,17 +418,19 @@ UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
 	switch (a) {
 		case 0x01: {
 #ifdef SOUND
-			return BurnYM2151ReadStatus();
+			return YM2151ReadStatus(0);
 #else
 			return ;
 #endif
 		}
 		
 		case 0x80: {
+//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"R SoundLat",10,120);
 			return DrvSoundLatch;
 		}
 		
 		case 0x84: {
+//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"R DrvSamp",10,120);
 			return DrvSamples[DrvSampleAddress];
 		}
 		
@@ -427,24 +449,30 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	switch (a) {
 		case 0x00: {
 #ifdef SOUND
-			BurnYM2151SelectRegister(d);
+//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"W SelectR",10,120);
+//			BurnYM2151SelectRegister(d);
+			nBurnCurrentYM2151Register = d;
 #endif
 			return;
 		}
 		
 		case 0x01: {			
 #ifdef SOUND
-			BurnYM2151WriteRegister(d);
+//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"W WriteR",10,120);
+//			BurnYM2151WriteRegister(d);
+			YM2151WriteReg(0, nBurnCurrentYM2151Register, d);
 #endif
 			return;
 		}
 		
 		case 0x80: {
+//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"W Samp80",10,120);
 			DrvSampleAddress = (DrvSampleAddress & 0xff00) | ((d << 0) & 0x00ff);
 			return;
 		}
 		
 		case 0x81: {
+//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"W Samp81",10,120);
 			DrvSampleAddress = (DrvSampleAddress & 0x00ff) | ((d << 8) & 0xff00);
 			return;
 		}
@@ -508,7 +536,7 @@ static INT32 VigilantSyncDAC()
 	MemIndex();
 
 	DrvTempRom = (UINT8 *)(0x00200000);
-
+//FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom                 ",10,100);
 	// Load Z80 #1 Program Roms
 	nRet = BurnLoadRom(DrvZ80Rom1 + 0x00000,  0, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvZ80Rom1 + 0x10000,  1, 1); if (nRet != 0) return 1;
@@ -544,6 +572,7 @@ static INT32 VigilantSyncDAC()
 	
 	// Load sample Roms
 	nRet = BurnLoadRom(DrvSamples + 0x00000, 16, 1); if (nRet != 0) return 1;
+//FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom done                ",10,100);
 	// Setup the Z80 emulation
 	CZetInit(2);
 #ifdef RAZE0
@@ -597,6 +626,8 @@ static INT32 VigilantSyncDAC()
 	z80_init_memmap();
 	z80_add_read(0x0000, 0xffff, 1, (void *)&VigilanteZ80Read2); 
 	z80_add_write(0x0000, 0xffff, 1, (void *)&VigilanteZ80Write2);
+	z80_set_in((void (*)(unsigned short int, unsigned char))&VigilanteZ80PortRead2);
+	z80_set_out((void (*)(unsigned short int, unsigned char))&VigilanteZ80PortWrite2);	
 
 	z80_map_read  (0x0000, 0xbfff, DrvZ80Rom2);
 	z80_map_fetch (0x0000, 0xbfff, DrvZ80Rom2);
@@ -619,8 +650,8 @@ static INT32 VigilantSyncDAC()
 	CZetClose();
 #endif
 
-	nCyclesTotal[0] = 3579645 / 55 /2;
-	nCyclesTotal[1] = 3579645 / 55 /2;
+	nCyclesTotal[0] = 3579645 / 55 / 2;
+	nCyclesTotal[1] = 3579645 / 55 / 2;
 	
 #ifdef SOUND
 	BurnYM2151Init(3579645);
@@ -630,7 +661,9 @@ static INT32 VigilantSyncDAC()
 	DACInit(0, 0, 1, VigilantSyncDAC);
 	DACSetRoute(0, 0.45, BURN_SND_ROUTE_BOTH);
 #endif
+//FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"init cpu done                 ",10,100);
 	DrvDoReset();
+//	FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"reset done                 ",10,100);
 
 	return 0;
 }
@@ -706,6 +739,7 @@ static INT32 VigilantSyncDAC()
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+
 void PrecalcBgMap(void)
 {
 #ifndef BMP
@@ -761,7 +795,9 @@ void PrecalcBgMap(void)
 		}
 	}
 }
+
 //-------------------------------------------------------------------------------------------------------------------------------------
+
 void Bitmap2Tile(unsigned char *DrvBackTiles)
 {
 	char table[8*256];
@@ -781,6 +817,7 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 		}
 	}
 }
+
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void DrvInitSaturn()
 {
@@ -847,6 +884,7 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 /*static*/ INT32 DrvExit()
 {
 	CZetExit();
+
 #ifdef SOUND
 	BurnYM2151Exit();
 	DACExit();
@@ -955,10 +993,27 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 	}
 }
 
+
+///sprintf broken
+
+char buffer[80];
+int vspfunc(char *format, ...);
+  /*
+int vspfunc(char *format, ...)
+{
+   va_list aptr;
+   int ret;
+
+   va_start(aptr, format);
+   ret = vsprintf(buffer, format, aptr);
+   va_end(aptr);
+
+   return(ret);
+}
+*/
 /*static*/int DrvFrame()
 {
-	INT32 nInterleave = 3; //256; // dac needs 128 NMIs
-	INT32 nSoundBufferPos = 0;
+	INT32 nInterleave = 8; //128; // dac needs 128 NMIs
 	
 	if (DrvReset) DrvDoReset();
 
@@ -1000,6 +1055,7 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 			nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 			nCyclesDone[nCurrentCPU] += z80_emulate(nCyclesSegment);
 		if (i & 1) {
+//		if ((i % 2) == 0) {
 			z80_cause_NMI();
 		}
 #else
@@ -1010,39 +1066,54 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 			nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 			nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
 		if (i & 1) {
+//		if ((i % 2) == 0) {
 			CZetNmi();
 		}
 		CZetClose();
 #endif
 
 #ifdef SOUND
-			short *	nSoundBuffer = (short *)0x25a20000;
+			short *	pBurnSoundOut = (short *)0x25a20000;
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
-			INT16* pSoundBuf = nSoundBuffer + (nSoundBufferPos << 1);
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+//			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos);
+
 			CZetOpen(1);
-			BurnYM2151Render(pSoundBuf, nSegmentLength);
+//			YM2151RenderNormalVBT(pSoundBuf, nSegmentLength);
+			YM2151UpdateOne(0, pSoundBuf, nSegmentLength);
+//			YM2151RenderResample(pSoundBuf, nSegmentLength);
+//			YM2151RenderMono(pSoundBuf, nSegmentLength);
 			CZetClose();
+
 			nSoundBufferPos += nSegmentLength;
 #endif
 	}
 
 #ifdef SOUND
-	if (!DrvHasYM2203) 
-	{
-		short *	nSoundBuffer = (short *)0x25a20000;
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		
 		if (nSegmentLength) 
 		{
-			INT16* pSoundBuf = nSoundBuffer + (nSoundBufferPos << 1);
+			short *	pBurnSoundOut = (short *)0x25a20000;
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+//			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos);
+
 			CZetOpen(1);
-			BurnYM2151Render(pSoundBuf, nSegmentLength);
+//			YM2151RenderNormalVBT(pSoundBuf, nSegmentLength);
+			YM2151UpdateOne(0, pSoundBuf, nSegmentLength);
+//			YM2413RenderResample
+//			YM2151RenderMono(pSoundBuf, nSegmentLength);
 			CZetClose();			
 		}
-		DACUpdate(nSoundBuffer, nBurnSoundLen);
-	}
+//		DACUpdate(nSoundBuffer, nBurnSoundLen);
+//		BurnSoundCopyClamp_Mono_C(pBuffer, pSoundBuf, nSegmentLength);
 #endif
-
+	
+		if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x2400)
+		{
+			nSoundBufferPos=0;
+			PCM_Task(pcm); // bon emplacement
+		}
 	DrvDrawForeground();
 	DrvDrawSprites();
 	if (!DrvRearDisable) 

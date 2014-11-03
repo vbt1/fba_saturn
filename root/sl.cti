@@ -2270,6 +2270,10 @@ EndFile
 				File D01C05.BIN;1
 					Source VIGILANT\D01C05.BIN
 				EndFile
+				File D04C01.BIN;1
+					Source VIGILANT\D04C01.BIN
+				EndFile
+
 				File E01C06.BIN;1
 					Source VIGILANT\E01C06.BIN
 				EndFile

@@ -1849,4 +1849,24 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
 		play=1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*
+sprintf broken
+	  char toto[50];
+	 vspfunc("titi %04x %04x", pSoundBuf[(n << 1) + 0],pSoundBuf[(n << 1) + 1]);
 
+		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)buffer,10,100);
+char buffer[80];
+int vspfunc(char *format, ...);
+
+int vspfunc(char *format, ...)
+{
+   va_list aptr;
+   int ret;
+
+   va_start(aptr, format);
+   ret = vsprintf(buffer, format, aptr);
+   va_end(aptr);
+
+   return(ret);
+}
+*/
