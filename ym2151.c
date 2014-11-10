@@ -492,8 +492,8 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 
 /* these variables stay here for speedup purposes only */
 /*static*/ YM2151 * PSG;
-/*static*/ signed int chanout[8];
-/*static*/ signed int m2,c1,c2; /* Phase Modulation input for operators 2,3,4 */
+/*static*/  signed int chanout[8];
+/*static*/  signed int m2,c1,c2; /* Phase Modulation input for operators 2,3,4 */
 /*static*/ signed int mem;		/* one sample delay memory */
 
 
@@ -1507,7 +1507,7 @@ void YM2151ResetChip(int num)
 
 
 
-inline signed int op_calc(YM2151Operator * OP, unsigned int env, signed int pm)
+/*inline*/ signed int op_calc(YM2151Operator * OP, unsigned int env, signed int pm)
 {
 	UINT32 p;
 
@@ -1887,7 +1887,7 @@ rate 11 1         |
                                  --
 */
 
-inline void advance_eg(void)
+/*inline*/ void advance_eg(void)
 {
 	YM2151Operator *op;
 	unsigned int i;
@@ -1971,7 +1971,7 @@ inline void advance_eg(void)
 }
 
 
-inline void advance(void)
+/*inline*/ void advance(void)
 {
 	YM2151Operator *op;
 	unsigned int i;
@@ -2151,71 +2151,6 @@ inline void advance(void)
 	}
 }
 
-#if 0
-inline signed int acc_calc(signed int value)
-{
-	if (value>=0)
-	{
-		if (value < 0x0200)
-			return (value & ~0);
-		if (value < 0x0400)
-			return (value & ~1);
-		if (value < 0x0800)
-			return (value & ~3);
-		if (value < 0x1000)
-			return (value & ~7);
-		if (value < 0x2000)
-			return (value & ~15);
-		if (value < 0x4000)
-			return (value & ~31);
-		return (value & ~63);
-	}
-	/*else value < 0*/
-	if (value > -0x0200)
-		return (~abs(value) & ~0);
-	if (value > -0x0400)
-		return (~abs(value) & ~1);
-	if (value > -0x0800)
-		return (~abs(value) & ~3);
-	if (value > -0x1000)
-		return (~abs(value) & ~7);
-	if (value > -0x2000)
-		return (~abs(value) & ~15);
-	if (value > -0x4000)
-		return (~abs(value) & ~31);
-	return (~abs(value) & ~63);
-}
-#endif
-
-/* first macro saves left and right channels to mono file */
-/* second macro saves left and right channels to stereo file */
-#if 0	/*MONO*/
-	#ifdef SAVE_SEPARATE_CHANNELS
-	  #define SAVE_SINGLE_CHANNEL(j) \
-	  {	signed int pom= -(chanout[j] & PSG->pan[j*2]); \
-		if (pom > 32767) pom = 32767; else if (pom < -32768) pom = -32768; \
-		fputc((unsigned short)pom&0xff,sample[j]); \
-		fputc(((unsigned short)pom>>8)&0xff,sample[j]);  }
-	#else
-	  #define SAVE_SINGLE_CHANNEL(j)
-	#endif
-#else	/*STEREO*/
-	#ifdef SAVE_SEPARATE_CHANNELS
-	  #define SAVE_SINGLE_CHANNEL(j) \
-	  {	signed int pom = -(chanout[j] & PSG->pan[j*2]); \
-		if (pom > 32767) pom = 32767; else if (pom < -32768) pom = -32768; \
-		fputc((unsigned short)pom&0xff,sample[j]); \
-		fputc(((unsigned short)pom>>8)&0xff,sample[j]); \
-		pom = -(chanout[j] & PSG->pan[j*2+1]); \
-		if (pom > 32767) pom = 32767; else if (pom < -32768) pom = -32768; \
-		fputc((unsigned short)pom&0xff,sample[j]); \
-		fputc(((unsigned short)pom>>8)&0xff,sample[j]); \
-	  }
-	#else
-	  #define SAVE_SINGLE_CHANNEL(j)
-	#endif
-#endif
-
 /* first macro saves left and right channels to mono file */
 /* second macro saves left and right channels to stereo file */
 #if 1	/*MONO*/
@@ -2253,7 +2188,7 @@ inline signed int acc_calc(signed int value)
 *	'length' is the number of samples that should be generated
 */
  
-/*
+  /*
 int vspfunc(char *format, ...)
 {
    va_list aptr;
@@ -2266,14 +2201,84 @@ int vspfunc(char *format, ...)
    return(ret);
 }
 */ 
+void slaveRender(INT16 *buffers)
+{
+//		INT16 *buffers;
+//		INT16 buffer;
+		signed int outl,outr;
+
+		chanout[0] = 0;
+		chanout[1] = 0;
+		chanout[2] = 0;
+		chanout[3] = 0;
+		chanout[4] = 0;
+		chanout[5] = 0;
+		chanout[6] = 0;
+		chanout[7] = 0;
+  	
+		chan_calc(0);
+//		SAVE_SINGLE_CHANNEL(0)
+		chan_calc(1);
+//		SAVE_SINGLE_CHANNEL(1)
+		chan_calc(2);
+//		SAVE_SINGLE_CHANNEL(2)
+		chan_calc(3);
+//		SAVE_SINGLE_CHANNEL(3)
+		chan_calc(4);
+//		SAVE_SINGLE_CHANNEL(4)
+		chan_calc(5);
+//		SAVE_SINGLE_CHANNEL(5)
+		chan_calc(6);
+//		SAVE_SINGLE_CHANNEL(6)
+		chan7_calc();
+//		SAVE_SINGLE_CHANNEL(7)
+ 
+		outl = chanout[0] & PSG->pan[0];
+		outr = chanout[0] & PSG->pan[1];
+		outl += (chanout[1] & PSG->pan[2]);
+		outr += (chanout[1] & PSG->pan[3]);
+		outl += (chanout[2] & PSG->pan[4]);
+		outr += (chanout[2] & PSG->pan[5]);
+		outl += (chanout[3] & PSG->pan[6]);
+		outr += (chanout[3] & PSG->pan[7]);
+		outl += (chanout[4] & PSG->pan[8]);
+		outr += (chanout[4] & PSG->pan[9]);
+		outl += (chanout[5] & PSG->pan[10]);
+		outr += (chanout[5] & PSG->pan[11]);
+		outl += (chanout[6] & PSG->pan[12]);
+		outr += (chanout[6] & PSG->pan[13]);
+		outl += (chanout[7] & PSG->pan[14]);
+		outr += (chanout[7] & PSG->pan[15]);
+
+		outl >>= FINAL_SH;
+		outr >>= FINAL_SH;
+		if (outl > MAXOUT) outl = MAXOUT;
+			else if (outl < MINOUT) outl = MINOUT;
+		if (outr > MAXOUT) outr = MAXOUT;
+			else if (outr < MINOUT) outr = MINOUT;
+//		((SAMP*)bufL)[i] = (SAMP)outl;
+//		((SAMP*)bufR)[i] = (SAMP)outr;
+
+//		buffers[i] = ((int)(outl) + outr) / 2;
+		buffers[0] = (outl + outr) / 2;
+}
+
+
+
+
+
+
+
+
+
 
 
 //void YM2151UpdateOne(int num, INT16 **buffers, INT16* pSoundBuf, int length)
 void YM2151UpdateOne(int num, INT16 *buffers, int length)
 {
 	int i;
-	signed int outl,outr;
-	SAMP *bufL, *bufR;
+//	signed int outl,outr;
+//	SAMP *bufL, *bufR;
 
 //	bufL = buffers[0];
 //	bufR = buffers[1];
@@ -2303,6 +2308,8 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 	{
 		advance_eg();
 
+		SPR_RunSlaveSH((void *)slaveRender, &buffers[i]);
+	/*
 		chanout[0] = 0;
 		chanout[1] = 0;
 		chanout[2] = 0;
@@ -2311,7 +2318,7 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 		chanout[5] = 0;
 		chanout[6] = 0;
 		chanout[7] = 0;
-
+  	
 		chan_calc(0);
 		SAVE_SINGLE_CHANNEL(0)
 		chan_calc(1);
@@ -2328,7 +2335,7 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 		SAVE_SINGLE_CHANNEL(6)
 		chan7_calc();
 		SAVE_SINGLE_CHANNEL(7)
-
+ 
 		outl = chanout[0] & PSG->pan[0];
 		outr = chanout[0] & PSG->pan[1];
 		outl += (chanout[1] & PSG->pan[2]);
@@ -2345,16 +2352,9 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 		outr += (chanout[6] & PSG->pan[13]);
 		outl += (chanout[7] & PSG->pan[14]);
 		outr += (chanout[7] & PSG->pan[15]);
-	/*
-	  char toto[50];
-	 vspfunc("out[0]%03x out[1] %03x out[2] %03x out[3] %03x", chanout[0],chanout[1],chanout[2],chanout[3]);
 
-		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)buffer,4,80);
-
-	 vspfunc("out[4]%03x out[5] %03x out[6] %03x out[7] %03x", chanout[4],chanout[5],chanout[6],chanout[7]);
-
-				FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)buffer,4,90);
-   */
+		
+	
 
 		outl >>= FINAL_SH;
 		outr >>= FINAL_SH;
@@ -2365,7 +2365,21 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 //		((SAMP*)bufL)[i] = (SAMP)outl;
 //		((SAMP*)bufR)[i] = (SAMP)outr;
 
-		buffers[i] = ((int)(outl) + outr) / 2;
+//		buffers[i] = ((int)(outl) + outr) / 2;
+		buffers[i] = (outl + outr) / 2;
+ */
+
+/*	
+	  char toto[50];
+	 vspfunc("%03d ", sizeof(YM2151));
+
+		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)buffer,4,80);
+*/
+//	 vspfunc("out[4]%03x out[5] %03x out[6] %03x out[7] %03x", chanout[4],chanout[5],chanout[6],chanout[7]);
+
+//				FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)buffer,4,90);
+   
+
 
 #ifdef USE_MAME_TIMERS
 		/* ASG 980324 - handled by real timers now */

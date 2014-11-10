@@ -9,7 +9,7 @@
 #include "sega_pcm.h"
 #include "saturn/ovl.h"
 
-#define nBurnSoundLen 128
+#define nBurnSoundLen 140 //128//7680/55.0
 unsigned int vbmap[4][0x1000];
 int bg=-1;
 
