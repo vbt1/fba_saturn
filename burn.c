@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 29
+#define NB_DRV 30
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -91,6 +91,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvCongo = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvZaxxon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvZaxxonb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvSzaxxon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvVigilant = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
@@ -202,6 +203,10 @@ BurnDrvZaxxon.szShortName="zaxxon";
 BurnDrvZaxxon.szFullNameA="Zaxxon (set 1)";
 BurnDrvZaxxon.szParent=NULL;
 
+BurnDrvZaxxonb.szShortName="zaxxonb";
+BurnDrvZaxxonb.szFullNameA="Jackson";
+BurnDrvZaxxonb.szParent="zaxxon";
+
 BurnDrvSzaxxon.szShortName="szaxxon";
 BurnDrvSzaxxon.szFullNameA="Super Zaxxon";
 BurnDrvSzaxxon.szParent=NULL;			
@@ -211,10 +216,10 @@ BurnDrvVigilant.szFullNameA="Vigilante (World)";
 BurnDrvVigilant.szParent=NULL;	
 
 int i=0;
-
-pDriver[i++] = &BurnDrvVigilant;
+//pDriver[i++] = &BurnDrvZaxxonb;
 pDriver[i++] = &BurnDrvZaxxon;
 pDriver[i++] = &BurnDrvSzaxxon;	  
+pDriver[i++] = &BurnDrvVigilant;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlockgal;

@@ -1042,7 +1042,7 @@ Graphics Rendering
 	int Num=values[4];
 	int y256;
 
-	for (;y<yend ; y++)
+	for (;y<yend ; ++y)
 	{
 		if (y < 0 || y > 255) continue;
 
@@ -1051,7 +1051,7 @@ Graphics Rendering
 		yr = (((y - System1BgScrollY) & 0xff) >>3)<<5;
 		y256 = y<<8;
 
-		for(x=values[0];x<xend;x++)
+		for(x=values[0];x<xend;++x)
 		{
 			if (x < 0 || x > 255) continue;
 
@@ -1082,9 +1082,14 @@ Graphics Rendering
 
 	for (int i = 511; i > 0; i--) 
 	{
-		colAddr[i]				    = cram_lut[System1PaletteRam[i]];
+/*		colAddr[i]				    = cram_lut[System1PaletteRam[i]];
 		colBgAddr[delta]		= cram_lut[*System1PaletteRam512++];
-		colBgAddr2[delta]		= cram_lut[*System1PaletteRam1024++];
+		colBgAddr2[delta]		= cram_lut[*System1PaletteRam1024++];	  */
+		colAddr[i]				    = cram_lut[System1PaletteRam[i]];
+		colBgAddr[delta]		= cram_lut[*System1PaletteRam512];
+		++System1PaletteRam512;
+		colBgAddr2[delta]		= cram_lut[*System1PaletteRam1024];
+		++System1PaletteRam1024;
 		delta++; if ((delta & 7) == 0) delta += 8;  
 	}
 	return 0;
@@ -1104,7 +1109,7 @@ void renderSpriteCache(int *values)
 	int Row;
 	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(aNextSprite<<3)];
 
-	for (Row = 0; Row < Height; Row++) 
+	for (Row = 0; Row < Height; ++Row) 
 	{
 		int x=0, /*y,*/ Src2;
 		Src = Src2 = Src + Skip;
@@ -1118,7 +1123,7 @@ void renderSpriteCache(int *values)
 				UINT8 Colour1, Colour2, Data;
 				Data = System1Sprites[Bank + (Src2 & 0x7fff)];
 
-				Src2--;
+				--Src2;
 				Colour1 = Data & 0x0f;
 
 				if (Colour1 == 0x0f) break;
@@ -1129,7 +1134,7 @@ void renderSpriteCache(int *values)
 				}
 				Colour2 = Data >> 4;
 				spriteVRam[n+x]=Colour2 | (Colour1<<4);
-				x++;
+				++x;
 //					if(x>=abs(Skip)) break;
 			}
 		}
@@ -1140,7 +1145,7 @@ void renderSpriteCache(int *values)
 				UINT8 Colour1, Colour2, Data;
 				Data = System1Sprites[Bank + (Src2 & 0x7fff)];
 
-				Src2++;
+				++Src2;
 				Colour1 = Data >> 4;
 
 				if (Colour1 == 0x0f) break;
@@ -1152,7 +1157,7 @@ void renderSpriteCache(int *values)
 					break;
 				}
 				spriteVRam[n+x]=Colour2 | (Colour1<<4);
-				x++;
+				++x;
 //					if(x>=abs(Skip)) break;
 			}
 		}
@@ -1166,7 +1171,7 @@ void System1DrawSprites()
 
 	memset4_fast(SpriteOnScreenMap, 255, 0x10000);
 
-	for (i = 0; i < 32; i++) 
+	for (i = 0; i < 32; ++i) 
 	{
 		SpriteBase = System1SpriteRam + (i << 4);
 		if (SpriteBase[1] && (SpriteBase[1] - SpriteBase[0] > 0))
@@ -1207,7 +1212,7 @@ int System1Frame()
 	MakeInputsFunction();
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	
-	for (i = 0; i < nInterleave; i++) {
+	for (i = 0; i < nInterleave; ++i) {
 		
 		// Run Z80 #1
 #ifdef CZ80

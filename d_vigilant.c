@@ -6,7 +6,7 @@
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
-#define nInterleave 4 // dac needs 128 NMIs
+#define nInterleave 8 // dac needs 128 NMIs
 #define nSegmentLength1 nBurnSoundLen / nInterleave
 
 typedef unsigned int						UINT32;
@@ -398,7 +398,7 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 			{
 				DrvRearColour = d & 0x0d;
 
-				for (unsigned int i = 0; i < 16; i++) 
+				for (unsigned int i = 0; i < 16; ++i) 
 				{
 					int r, g, b;
 
@@ -962,15 +962,31 @@ void dummy()
 	if (bg!=-Scroll/384)
 	{
 		bg=-Scroll/384;
-
-		for (unsigned int Offset = 0; Offset < 0x1000; Offset += 2) 
+		unsigned int *map1 = (unsigned int *)vbmap[bg];
+		for (unsigned int Offset = 0x300; Offset < 0x1000;) 
 		{
 			UINT16 *map2 = &ss_map2[Offset];
 //			map2[0] = 0; // couleur précalculée
-			map2[1] = vbmap[bg][Offset/2];
+			map2[1] = map1[Offset/2];
+			Offset += 2;
+			map2[3] = map1[Offset/2];
+			Offset += 2;
+			map2[5] = map1[Offset/2];
+			Offset += 2;
+			map2[7] = map1[Offset/2];
+			Offset += 2;
+
+			map2[9] = map1[Offset/2];
+			Offset += 2;
+			map2[11] = map1[Offset/2];
+			Offset += 2;
+			map2[13] = map1[Offset/2];
+			Offset += 2;
+			map2[15] = map1[Offset/2];
+			Offset += 2;
 		}
 	}
-		  
+/*		  
 		for (unsigned int i = 0; i < 16; i++) 
 		{
 			int r, g, b;
@@ -987,7 +1003,7 @@ void dummy()
 
 			colBgAddr[16 + i] = RGB(r,g,b);//BurnHighCol(r, g, b, 0);
 		}
-		
+	*/	
 }
 
 /*static*/void DrvDrawForeground()
@@ -1084,7 +1100,7 @@ int vspfunc(char *format, ...)
 	
 	CZetNewFrame();
 	
-	for (INT32 i = 0; i < nInterleave; i++) {
+	for (INT32 i = 0; i < nInterleave; ++i) {
 		INT32 nCurrentCPU, nNext;
 
 		// Run Z80 #1
@@ -1096,9 +1112,9 @@ int vspfunc(char *format, ...)
 		if (i == (nInterleave - 1)) 
 		{
 			z80_raise_IRQ(0);
-			z80_emulate(0);
-			z80_lower_IRQ(0);
-			z80_emulate(0);
+//			z80_emulate(0);
+//			z80_lower_IRQ(0);
+//			z80_emulate(0);
 		}
 #else
 		nCurrentCPU = 0;

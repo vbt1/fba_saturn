@@ -2266,6 +2266,65 @@ EndFile
 				EndFile
 			EndDirectory
 
+			Directory ZAXXONB
+				File ZAXXONB1.U29;1
+					Source ZAXXONB\ZAXXONB1.U29
+				EndFile
+ 				File ZAXXONB2.U28;1
+					Source ZAXXONB\ZAXXONB2.U28
+				EndFile
+ 				File ZAXXONB3.U27;1
+					Source ZAXXONB\ZAXXONB3.U27
+				EndFile
+ 				File ZAXXON4.111;1
+					Source ZAXXON\ZAXXON4.111
+				EndFile
+ 				File ZAXXON5.112;1
+					Source ZAXXON\ZAXXON5.112
+				EndFile
+ 				File ZAXXON6.113;1
+					Source ZAXXON\ZAXXON6.113
+				EndFile
+
+ 				File ZAXXON7.U90;1
+					Source ZAXXON\ZAXXON7.U90
+				EndFile
+ 				File ZAXXON8.U91;1
+					Source ZAXXON\ZAXXON8.U91
+				EndFile
+ 				File ZAXXON9.U92;1
+					Source ZAXXON\ZAXXON9.U92
+				EndFile
+
+ 				File ZAXXON10.U93;1
+					Source ZAXXON\ZAXXON10.U93
+				EndFile
+ 				File ZAXXON11.U77;1
+					Source ZAXXON\ZAXXON11.U77
+				EndFile
+ 				File ZAXXON12.U78;1
+					Source ZAXXON\ZAXXON12.U78
+				EndFile
+
+ 				File ZAXXON13.U79;1
+					Source ZAXXON\ZAXXON13.U79
+				EndFile
+ 				File ZAXXON14.U68;1
+					Source ZAXXON\ZAXXON14.U68
+				EndFile
+ 				File ZAXXON15.U69;1
+					Source ZAXXON\ZAXXON15.U69
+				EndFile
+
+ 				File ZAXXON.U72;1
+					Source ZAXXON\ZAXXON.U72
+				EndFile
+ 				File ZAXXON.U98;1
+					Source ZAXXON\ZAXXON.U98
+				EndFile
+			EndDirectory
+
+
 			Directory VIGIL
 				File D01C05.BIN;1
 					Source VIGILANT\D01C05.BIN
