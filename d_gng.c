@@ -3,6 +3,9 @@
 #define RAZE 1
 
 #include "d_gng.h"
+int xScroll,yScroll;
+UINT16 map_offset_lut[2048];
+UINT16 map_offset_lut_fg[1024];
 
 int ovlInit(char *szShortName)
 {
@@ -158,22 +161,51 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 			}
 			
 			case 0x3b08: {
-				DrvBgScrollX[0] = Data;
+				if(DrvBgScrollX[0] != Data)
+				{
+					DrvBgScrollX[0] = Data;
+					xScroll = DrvBgScrollX[0] | (DrvBgScrollX[1] << 8);
+//					xScroll &= 0x1ff;
+					xScroll &= 0x1ff;
+					xScroll <<= 16;
+					ss_reg->n1_move_x =  xScroll;
+				}
 				return;
 			}
 			
 			case 0x3b09: {
-				DrvBgScrollX[1] = Data;
+				if(DrvBgScrollX[1] != Data)
+				{
+					DrvBgScrollX[1] = Data;
+					xScroll = DrvBgScrollX[0] | (DrvBgScrollX[1] << 8);
+					xScroll &= 0x1ff;
+					xScroll <<= 16;
+					ss_reg->n1_move_x =  xScroll;
+				}
 				return;
 			}
 			
 			case 0x3b0a: {
-				DrvBgScrollY[0] = Data;
+				if(DrvBgScrollY[0] != Data)
+				{
+					DrvBgScrollY[0] = Data;
+					yScroll = DrvBgScrollY[0] | (DrvBgScrollY[1] << 8);
+					yScroll &= 0x1ff;
+					yScroll <<= 16;
+					ss_reg->n1_move_y =  yScroll;	
+				}
 				return;
 			}
 			
 			case 0x3b0b: {
-				DrvBgScrollY[1] = Data;
+				if(DrvBgScrollY[1] != Data)
+				{
+					DrvBgScrollY[1] = Data;
+					yScroll = DrvBgScrollY[0] | (DrvBgScrollY[1] << 8);
+					yScroll &= 0x1ff;
+					yScroll <<= 16;
+					ss_reg->n1_move_x =  xScroll;
+				}
 				return;
 			}
 			
@@ -214,8 +246,17 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 			Address-=0x2000;
 			if(DrvFgVideoRam[Address]!=Data)
 			{
-				fg_dirtybuffer[Address] = 1;
-				DrvFgVideoRam[Address] = Data;
+ 				DrvFgVideoRam[Address] = Data;
+	
+				int Attr = DrvFgVideoRam[Address + 0x400];
+				int Code = Data;
+				
+				Code += (Attr & 0xc0) << 2;
+				int Colour = Attr & 0x0f;
+				
+				int Flip = (Attr & 0x30) << 6;
+				unsigned int x = map_offset_lut_fg[Address]; //(mx|(my<<6));
+				ss_map[x] =  Colour << 12 | Flip | Code;	   
 			}
 			return;
 		}
@@ -225,8 +266,18 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 			Address-=0x2000;
 			if(DrvFgVideoRam[Address]!=Data)
 			{
-				fg_dirtybuffer[Address-0x400] = 1;
 				DrvFgVideoRam[Address] = Data;
+   				Address -= 0x400;
+				int Attr = Data;
+				int Code = DrvFgVideoRam[Address];
+				
+				Code += (Attr & 0xc0) << 2;
+				int Colour = Attr & 0x0f;
+				
+				int Flip = (Attr & 0x30) << 6;
+				unsigned int x = map_offset_lut_fg[Address]; //(mx|(my<<6));
+
+				ss_map[x] =  Colour << 12 | Flip | Code;
 			}
 			return;
 		}
@@ -601,6 +652,7 @@ voir plutot p355 vdp2
 //	scfg.datatype      = SCL_CELL;
 
 	scfg.coltype       = SCL_COL_TYPE_16;
+	scfg.platesize     = SCL_PL_SIZE_2X1;
 	scfg.plate_addr[0] = (Uint32)ss_map2;
 //	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
@@ -683,6 +735,25 @@ voir plutot p355 vdp2
 	initPosition();
 	initColors();
 //	make_cram_lut();
+	int j=0;
+	for (int my = 0; my < 64; my++) 
+	{
+		for (int mx = 0; mx < 32; mx++) 
+		{
+			map_offset_lut[j] = my|(mx<<5);
+			j++;
+		}
+	}
+	j=0;
+
+	for (int my = 0; my < 32; my++) 
+	{
+		for (int mx = 0; mx < 32; mx++) 
+		{
+ 			map_offset_lut_fg[j] = (mx|(my<<6));
+			j++;
+		}
+	}
 	drawWindow(0,240,0,0,64);  
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -769,18 +840,19 @@ voir plutot p355 vdp2
 
 }
 
+
+
+
 /*static*/ void DrvRenderBgLayer(int Priority, int Opaque)
 {
-	int mx, my, Code, Attr, Colour, x, y, TileIndex, xScroll, yScroll, Split, Flip;//, xFlip, yFlip;
+	int mx, my, Code, Attr, Colour, x, y, TileIndex, /*xScroll, yScroll,*/ Split, Flip;//, xFlip, yFlip;
 	
-	xScroll = DrvBgScrollX[0] | (DrvBgScrollX[1] << 8);
-	xScroll &= 0x1ff;
-	ss_reg->n1_move_x =  (xScroll<<16) ;
-	yScroll = DrvBgScrollY[0] | (DrvBgScrollY[1] << 8);
-	yScroll &= 0x1ff;
-	ss_reg->n1_move_y =  (yScroll<<16) ;	
-	for (mx = 0; mx < 32; mx++) {
-		for (my = 0; my < 32; my++) {
+//	ss_reg->n1_move_x =  xScroll;
+//	ss_reg->n1_move_y =  yScroll;	
+	for (mx = 0; mx < 16; ++mx) 
+	{
+		for (my = 0; my < 32; ++my) 
+		{
 
 			TileIndex = (my * 32) + mx;
 #ifdef CACHE			
@@ -789,34 +861,20 @@ voir plutot p355 vdp2
 #endif
 				Attr = DrvBgVideoRam[TileIndex + 0x400];
 				Code = DrvBgVideoRam[TileIndex + 0x000];
-				
 				Code += (Attr & 0xc0) << 2;
-				Colour = Attr & 0x07;
-				
-				Split = (Attr & 0x08) >> 3;
-				
-//				if (Split != Priority) continue;
-				
-				Flip = (Attr & 0x30) << 6;
 
-				x = (my|(mx<<5));
-				ss_map2[x] = Colour<<12 | Flip | Code;//0x400;
+				x = map_offset_lut[TileIndex];//(my|(mx<<5));
+				Flip = (Attr & 0x30) << 6;
+				Colour = Attr & 0x07;
+
+				ss_map2[x+1024] = ss_map2[x] = Colour<<12 | Flip | Code;//0x400;
+//				Split = (Attr & 0x08) >> 3;
+//				if (Split != Priority) continue;
 //				if (Split != Priority) ss_map2[x] |= 0x200;
 #ifdef CACHE
 				bg_dirtybuffer[TileIndex]=0;
 			}
 #endif
-/*			
-			y = 16 * mx;
-			x = 16 * my;
-
-			x -= xScroll;
-			if (x < -16) x += 512;
-			y -= yScroll;
-			if (y < -16) y += 512;
-			
-			y -= 16;
-*/
 		}
 	}
 }
@@ -830,7 +888,7 @@ voir plutot p355 vdp2
 		int sy = DrvSpriteRamBuffer[Offs + 2];
 		unsigned int delta	= ((Offs/4)+3);
 
-		if (sx > 16 && sx < 240 && sy > 16 && sy < 208) 
+		if (sx > 16 && sx < 256 && sy > 16 && sy < 208) 
 		{
 			int flip = (Attr & 0x0C)<<2;
 			int Code = DrvSpriteRamBuffer[Offs + 0] + ((Attr << 2) & 0x300);
@@ -873,12 +931,8 @@ voir plutot p355 vdp2
 				Colour = Attr & 0x0f;
 				
 				Flip = (Attr & 0x30) << 6;
-				//Flip = (Attr & 0x30) >> 4;
-				//xFlip = (Flip >> 0) & 0x01;
-				//yFlip = (Flip >> 1) & 0x01;
-
 				x = (mx|(my<<6));
-				ss_map[x] =  Colour << 12 | Flip | Code;
+//				ss_map[x] =  Colour << 12 | Flip | Code;
 #ifdef CACHE
 				fg_dirtybuffer[TileIndex]=0;
 			}
@@ -895,7 +949,7 @@ voir plutot p355 vdp2
 	DrvRenderBgLayer(0, 1);
 	DrvRenderSprites();
 //	DrvRenderBgLayer(1, 0);
-	DrvRenderCharLayer();
+//	DrvRenderCharLayer();
 //	BurnTransferCopy(DrvPalette);
 }
 
