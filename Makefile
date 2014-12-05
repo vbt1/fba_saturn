@@ -81,8 +81,8 @@ OBJOVLMITCH         = $(SRCOVLMITCH:.c=.o)
 OVLGNG                 = root/d_gng.coff
 OVLGNG1               = root/d_gng.bin
 MPOVLGNGFILE    = $(OVLGNG:.coff=.maps)
-LDOVLGNGFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGNGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLGNG         = d_gng.c m6809.c m6809_intf.c
+LDOVLGNGFLAGS = -g -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGNGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLGNG         = m6809_intf.c m6809.c  d_gng.c 
 OBJOVLGNG         = $(SRCOVLGNG:.c=.o)
 
 OVLSYS1                 = root/d_sys1.coff

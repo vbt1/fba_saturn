@@ -3,7 +3,13 @@
 #define RAZE 1
 
 #include "d_gng.h"
+#include "m6809_intf.h"
+#define nInterleave 25
+
 int xScroll,yScroll;
+unsigned int color[16];
+ unsigned int nNext[25];
+
 UINT16 map_offset_lut[2048];
 UINT16 map_offset_lut_fg[1024];
 
@@ -147,6 +153,28 @@ unsigned char DrvGngM6809ReadByte(unsigned short Address)
 	return 0;
 }
 
+static void bg_render(unsigned short Address)
+{
+	unsigned int Code = DrvBgVideoRam[Address];
+	unsigned int Attr = DrvBgVideoRam[Address + 0x400];
+	Code += (Attr & 0xc0) << 2;
+
+	unsigned short x = map_offset_lut[Address];
+	unsigned int Flip = (Attr & 0x30) << 6;
+	ss_map2[x+1024] = ss_map2[x] = color[Attr & 0x07] | Flip | Code;//0x400; //Colour<<12 | Flip | Code;//0x400;
+}
+
+static void fg_render(unsigned short Address)
+{
+	unsigned int Code = DrvFgVideoRam[Address];
+	unsigned int Attr = DrvFgVideoRam[Address + 0x400];
+	Code += (Attr & 0xc0) << 2;
+
+	unsigned short x = map_offset_lut_fg[Address]; //(mx|(my<<6));
+	unsigned int Flip = (Attr & 0x30) << 6;
+
+	ss_map[x] =  color[Attr & 0x0f] | Flip | Code; //Colour << 12 | Flip | Code;
+}
 
 void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 {
@@ -243,63 +271,46 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 	{
 		if(Address>=0x2000 && Address<=0x23FF)
 		{
-			Address-=0x2000;
+			Address&=0x3ff;
 			if(DrvFgVideoRam[Address]!=Data)
 			{
  				DrvFgVideoRam[Address] = Data;
-	
-				int Attr = DrvFgVideoRam[Address + 0x400];
-				int Code = Data;
-				
-				Code += (Attr & 0xc0) << 2;
-				int Colour = Attr & 0x0f;
-				
-				int Flip = (Attr & 0x30) << 6;
-				unsigned int x = map_offset_lut_fg[Address]; //(mx|(my<<6));
-				ss_map[x] =  Colour << 12 | Flip | Code;	   
+				fg_render(Address);
 			}
 			return;
 		}
 
 		if(Address>=0x2400 && Address<=0x27FF)
 		{
-			Address-=0x2000;
+			Address&=0x7ff;
 			if(DrvFgVideoRam[Address]!=Data)
 			{
 				DrvFgVideoRam[Address] = Data;
-   				Address -= 0x400;
-				int Attr = Data;
-				int Code = DrvFgVideoRam[Address];
-				
-				Code += (Attr & 0xc0) << 2;
-				int Colour = Attr & 0x0f;
-				
-				int Flip = (Attr & 0x30) << 6;
-				unsigned int x = map_offset_lut_fg[Address]; //(mx|(my<<6));
-
-				ss_map[x] =  Colour << 12 | Flip | Code;
+				Address&=0x3ff;
+				fg_render(Address);
 			}
 			return;
 		}
 
 		if(Address>=0x2800 && Address<=0x2BFF)
 		{
-			Address-=0x2800;
+			Address&=0x3ff;
 			if(DrvBgVideoRam[Address]!=Data)
 			{
-				bg_dirtybuffer[Address] = 1;
 				DrvBgVideoRam[Address] = Data;
+				bg_render(Address);
 			}
 			return;
 		}
 
 		if(Address>=0x2C00 && Address<=0x2fff)
 		{
-			Address-=0x2800;
+			Address&=0x7ff;
 			if(DrvBgVideoRam[Address]!=Data)
 			{
-				bg_dirtybuffer[Address-0x400] = 1;
 				DrvBgVideoRam[Address] = Data;
+				Address&=0x3ff;
+				bg_render(Address);
 			}
 			return;
 		}
@@ -319,7 +330,6 @@ unsigned char __fastcall DrvGngZ80Read(unsigned short a)
 //			bprintf(PRINT_NORMAL, _T("Z80 Read => %04X\n"), a);
 		}
 	}
-
 	return 0;
 }
 
@@ -565,7 +575,7 @@ inline /*static*/ double DrvGetTime()
 	M6809MapMemory(DrvM6809Rom          , 0x4000, 0x5fff, M6809_ROM);
 	M6809MapMemory(DrvM6809Rom + 0x2000 , 0x6000, 0xffff, M6809_ROM);
 	M6809SetReadByteHandler(DrvGngM6809ReadByte);
-	M6809SetWriteByteHandler(DrvGngM6809WriteByte);
+//	M6809SetWriteByteHandler(DrvGngM6809WriteByte);
 	M6809Close();
 	#ifdef CZ80	
 	// Setup the Z80 emulation
@@ -754,6 +764,20 @@ voir plutot p355 vdp2
 			j++;
 		}
 	}
+	
+	for (j = 0; j < 16; j++) 
+	{
+		color[j] = j << 12;
+	}
+
+	nCyclesTotal[0] = 1500000 / 60;
+	nCyclesTotal[1] = 1000000 / 60;
+
+	for (j = 0; j < 25; j++) 
+	{
+		nNext[j] = (j + 1) * nCyclesTotal[0] / nInterleave;
+	}
+
 	drawWindow(0,240,0,0,64);  
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -840,55 +864,16 @@ voir plutot p355 vdp2
 
 }
 
-
-
-
-/*static*/ void DrvRenderBgLayer(int Priority, int Opaque)
-{
-	int mx, my, Code, Attr, Colour, x, y, TileIndex, /*xScroll, yScroll,*/ Split, Flip;//, xFlip, yFlip;
-	
-//	ss_reg->n1_move_x =  xScroll;
-//	ss_reg->n1_move_y =  yScroll;	
-	for (mx = 0; mx < 16; ++mx) 
-	{
-		for (my = 0; my < 32; ++my) 
-		{
-
-			TileIndex = (my * 32) + mx;
-#ifdef CACHE			
-			if(bg_dirtybuffer[TileIndex]==1)
-			{
-#endif
-				Attr = DrvBgVideoRam[TileIndex + 0x400];
-				Code = DrvBgVideoRam[TileIndex + 0x000];
-				Code += (Attr & 0xc0) << 2;
-
-				x = map_offset_lut[TileIndex];//(my|(mx<<5));
-				Flip = (Attr & 0x30) << 6;
-				Colour = Attr & 0x07;
-
-				ss_map2[x+1024] = ss_map2[x] = Colour<<12 | Flip | Code;//0x400;
-//				Split = (Attr & 0x08) >> 3;
-//				if (Split != Priority) continue;
-//				if (Split != Priority) ss_map2[x] |= 0x200;
-#ifdef CACHE
-				bg_dirtybuffer[TileIndex]=0;
-			}
-#endif
-		}
-	}
-}
-
 /*static*/ void DrvRenderSprites()
 {
-	int Offs;
-	for (Offs = 0x200 - 4; Offs >= 0; Offs -= 4) {
+	for (int Offs = 0x200 - 4; Offs >= 0; Offs -= 4) 
+	{
 		UINT8 Attr = DrvSpriteRamBuffer[Offs + 1];
 		int sx = DrvSpriteRamBuffer[Offs + 3] - (0x100 * (Attr & 0x01));
 		int sy = DrvSpriteRamBuffer[Offs + 2];
-		unsigned int delta	= ((Offs/4)+3);
+		int delta	= ((Offs/4)+3);
 
-		if (sx > 16 && sx < 256 && sy > 16 && sy < 208) 
+		if (sx>= 0 && sy >16 && sx < 256  && sy < 208)
 		{
 			int flip = (Attr & 0x0C)<<2;
 			int Code = DrvSpriteRamBuffer[Offs + 0] + ((Attr << 2) & 0x300);
@@ -913,79 +898,28 @@ voir plutot p355 vdp2
 	}
 }
 
-/*static*/ void DrvRenderCharLayer()
-{
-	int mx, my, Code, Attr, Colour, x, y, TileIndex = 0, Flip;//, xFlip, yFlip;
-
-	for (my = 0; my < 32; my++) {
-		for (mx = 0; mx < 32; mx++) {
-
-#ifdef CACHE
-			if(fg_dirtybuffer[TileIndex]==1)
-			{
-#endif
-				Attr = DrvFgVideoRam[TileIndex + 0x400];
-				Code = DrvFgVideoRam[TileIndex + 0x000];
-				
-				Code += (Attr & 0xc0) << 2;
-				Colour = Attr & 0x0f;
-				
-				Flip = (Attr & 0x30) << 6;
-				x = (mx|(my<<6));
-//				ss_map[x] =  Colour << 12 | Flip | Code;
-#ifdef CACHE
-				fg_dirtybuffer[TileIndex]=0;
-			}
-#endif
-			TileIndex++;
-		}
-	}
-}
-
-/*static*/ void DrvDraw()
-{
-//	BurnTransferClear();
-//	DrvCalcPalette();
-	DrvRenderBgLayer(0, 1);
-	DrvRenderSprites();
-//	DrvRenderBgLayer(1, 0);
-//	DrvRenderCharLayer();
-//	BurnTransferCopy(DrvPalette);
-}
-
 /*static*/ int DrvFrame()
 {
-	int nInterleave = 25;
-	int nSoundBufferPos = 0;
-	int i;
-	
 	if (DrvReset) DrvDoReset();
 
 	DrvMakeInputs();
 
-//	nCyclesTotal[0] = 1500000 / 60;
-	nCyclesTotal[0] = 1500000 / 60;
-	nCyclesTotal[1] = 1000000 / 60;
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	#ifdef CZ80	
 	CZetNewFrame();
 	#endif
-	for (i = 0; i < nInterleave; i++) {
-		int nCurrentCPU, nNext;
-		
+	for (UINT32 i = 0; i < nInterleave; ++i) 
+	{
 		// Run M6809
-		nCurrentCPU = 0;
 		M6809Open(0);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesDone[nCurrentCPU] += M6809Run(nCyclesSegment);
+		nCyclesSegment = nNext[i] - nCyclesDone[0];
+		nCyclesDone[0] += m6809_execute(nCyclesSegment);//M6809Run(nCyclesSegment);
 		if (i == 24) {
 			M6809SetIRQ(0, M6809_IRQSTATUS_AUTO);
 		}
 		M6809Close();
 		
 		// Run Z80
-		nCurrentCPU = 1;
 		#ifdef CZ80	
 //		CZetOpen(0);
 		BurnTimerUpdate(i * (nCyclesTotal[1] / nInterleave));
@@ -1027,7 +961,8 @@ voir plutot p355 vdp2
 //	CZetClose();
 	#endif
 //	if (pBurnDraw) 
-	DrvDraw();
+//	DrvDraw();
+	DrvRenderSprites();
 	
 	memcpyl(DrvSpriteRamBuffer, DrvSpriteRam, 0x200);
 
