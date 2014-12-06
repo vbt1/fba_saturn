@@ -650,7 +650,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 //-------------------------------------------------------------------------------------------------------------------------------------
 void renderSound(unsigned int *nSoundBufferPos)
 {
-	short *	nSoundBuffer = (short *)0x25a20000;
+	signed short *	nSoundBuffer = (signed short *)0x25a20000;
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos[0]], SOUND_LEN);
 	nSoundBufferPos[0]+=SOUND_LEN;
 

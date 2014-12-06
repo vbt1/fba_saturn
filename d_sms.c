@@ -1,6 +1,6 @@
 #include    "machine.h"
 #include "d_sms.h"
-//#define OLD_SOUND 1
+#define OLD_SOUND 1
 #define SAMPLE 7680L
 //GfsDirName dir_name_sms[512];
 
@@ -59,7 +59,7 @@ void	SetVblank2( void ){
 #ifndef OLD_SOUND
 /*static*/ void sh2slave(unsigned int *nSoundBufferPos)
 {
-	volatile short *nSoundBuffer = (short *)0x25a20000;
+	volatile signed short *nSoundBuffer = (signed short *)0x25a20000;
 //	PSG_Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
 	PSG_Update(&nSoundBuffer[nSoundBufferPos[0]],  128);
 //	SN76496Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
@@ -334,7 +334,7 @@ INT32 SMSFrame(void)
 #ifdef OLD_SOUND //
 //		if(sound)
 		{
-			short *nSoundBuffer = (short *)0x25a20000;
+			signed short *nSoundBuffer = (signed short *)0x25a20000;
 //			PSG_Update(0,&nSoundBuffer[nSoundBufferPos],  128);
 			PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
 //			SN76496Update(0,&nSoundBuffer[nSoundBufferPos],  128);

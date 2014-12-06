@@ -2403,6 +2403,7 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 		}
 #endif
 		advance();
+		SPR_WaitEndSlaveSH();
 	}
 }
 

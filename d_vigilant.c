@@ -1068,10 +1068,10 @@ int vspfunc(char *format, ...)
 /*static*/ void sh2slave(unsigned int *nSoundBufferPos)
 {
 //	volatile short *	pBurnSoundOut = (short *)0x00200000; //0x25a20000;
-	volatile short *	pBurnSoundOut = (short *)0x05a20000; //0x25a20000;
+	volatile signed short *	pBurnSoundOut = (signed short *)0x05a20000; //0x25a20000;
 //	INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 //	memset()
-	volatile short* pSoundBuf = pBurnSoundOut + nSoundBufferPos[0];
+	volatile signed short* pSoundBuf = pBurnSoundOut + nSoundBufferPos[0];
 
 //	FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"sh2slave",10,120);
 	CZetOpen(1);
@@ -1157,9 +1157,9 @@ int vspfunc(char *format, ...)
 //			CZetClose();
 //			SPR_WaitEndSlaveSH();
  
-			short *	pBurnSoundOut = (short *)0x25a20000;
+			signed short *	pBurnSoundOut = (signed short *)0x25a20000;
 //			short *	pBurnSoundOut = (short *)0x00200000;
-			short* pSoundBuf = pBurnSoundOut + nSoundBufferPos;
+			signed short* pSoundBuf = pBurnSoundOut + nSoundBufferPos;
 
 			CZetOpen(1);
 			YM2151UpdateOne(0, pSoundBuf, nSegmentLength1);
@@ -1176,14 +1176,16 @@ int vspfunc(char *format, ...)
 		
 		if (nSegmentLength2) 
 		{
-			short *	pBurnSoundOut = (short *)0x25a20000;
+			signed short *	pBurnSoundOut = (short *)0x25a20000;
 //			short* pBurnSoundOut = (short *)0x00200000;
-			short* pSoundBuf = pBurnSoundOut + nSoundBufferPos;
+			signed short* pSoundBuf = pBurnSoundOut + nSoundBufferPos;
 //			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos);
 
 			CZetOpen(1);
 			YM2151UpdateOne(0, pSoundBuf, nSegmentLength2);
-			CZetClose();			
+			CZetClose();
+			
+			nSoundBufferPos += nSegmentLength2;
 		}
 //		DACUpdate(nSoundBuffer, nBurnSoundLen);
 //		BurnSoundCopyClamp_Mono_C(pBuffer, pSoundBuf, nSegmentLength);
@@ -1198,7 +1200,7 @@ int vspfunc(char *format, ...)
 
 		SPR_RunSlaveSH((PARA_RTN*)DrvDrawSprites, NULL);	
 
-		if(nSoundBufferPos>=RING_BUF_SIZE)//0x2400)
+		if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x2400)
 		{
 //			memcpy((short *)0x25a20000,(short *)0x00200000,nSoundBufferPos*sizeof(short));
 			nSoundBufferPos=0;

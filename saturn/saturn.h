@@ -50,6 +50,7 @@ void *memset4_fast(void *, long, size_t);
 
 #define	REGADDR	    0x25F80000
 #define SOUNDRATE   7680L //
+//#define SOUNDRATE   11025L //
 #define CSH_4WAY    ((Uint16)0x0000)
 
 #define	SDDRV_NAME	"SDDRVS.TSK"

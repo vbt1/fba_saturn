@@ -526,7 +526,7 @@ int ovlInit(char *szShortName)
 #endif
 
 	NewsDraw();
-	short *nSoundBuffer = (short *)0x25a20000;
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 	nSoundBufferPos+=SOUND_LEN;
 

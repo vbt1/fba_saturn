@@ -1194,7 +1194,7 @@ void System1DrawSprites()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void renderSound(unsigned int *nSoundBufferPos)
 {
-	short *	nSoundBuffer = (short *)0x25a20000;
+	signed short *	nSoundBuffer = (signed short *)0x25a20000;
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos[0]], nSegmentLength);
 	SN76496Update(1, &nSoundBuffer[nSoundBufferPos[0]], nSegmentLength);
 	nSoundBufferPos[0]+= nSegmentLength;
