@@ -13,7 +13,7 @@ int ovlInit(char *szShortName)
 		"atetris", "tetris",
 		"Tetris (set 1)\0",
 		atetrisRomInfo, atetrisRomName, AtetrisInputInfo, AtetrisDIPInfo,
-		DrvInit, DrvExit, DrvFrame, DrawLayer //, NULL, &DrvRecalc, 0x100,
+		DrvInit, DrvExit, DrvFrame, NULL //, NULL, &DrvRecalc, 0x100,
 	};
 
 	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
@@ -34,17 +34,7 @@ int ovlInit(char *szShortName)
 
 /*static*/ inline void DrvPaletteUpdate(UINT16 offset)
 {
-/*	INT32 r = (DrvPalRAM[offset] >> 5) & 7;
-	INT32 g = (DrvPalRAM[offset] >> 2) & 7;
-	INT32 b = (DrvPalRAM[offset] >> 0) & 3;
-
-	r = (r << 5) | (r << 2) | (r >> 1);
-	g = (g << 5) | (g << 2) | (g >> 1);
-	b = (b << 6) | (b << 4) | (b << 2) | (b << 0);
- */
-
 	colBgAddr[offset] = cram_lut[DrvPalRAM[offset]];//RGB(r>>3,g>>3,b>>3);
-//	DrvPalette[offset] = BurnHighCol(r, g, b, 0);
 }
 
 /*static*/ UINT8 atetris_read(UINT16 address)
@@ -90,8 +80,19 @@ int ovlInit(char *szShortName)
 		address-=0x1000;
 		if(DrvVidRAM[address]!=data)
 		{
-			bg_dirtybuffer[address>>1] = 1;
 			DrvVidRAM[address] = data;
+
+			address&=~1;
+			INT32 code  = DrvVidRAM[address + 0] | ((DrvVidRAM[address + 1] & 0x07) << 8);
+			INT32 color = DrvVidRAM[address + 1] >> 4;
+
+			int x = map_offset_lut[address>>1];
+
+			ss_map[x] = color;
+			ss_map[x+1] = code;
+
+			ss_map2[x] = color;
+			ss_map2[x+1] = code;
 		}
 		return;
 	}
@@ -302,42 +303,6 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/ void DrawLayer()
-{
-	INT32 offs;
-
-	for (offs = 0; offs < 0x800; offs++)
-	{
-/*		INT32 sx = (offs & 0x3f);// * 8;
-		INT32 sy = (offs / 0x40);// * 8;
-
-		if (sx >= 42 || sy >= 30) continue;
-   */
-		if(bg_dirtybuffer[offs]==1)
-		{
-			bg_dirtybuffer[offs]=0;
-
-			INT32 sx = (offs & 0x3f);// * 8;
-			INT32 sy = (offs / 0x40);// * 8;
-
-			if (sx >= 42 || sy >= 30) continue;
-
-
-			INT32 code  = DrvVidRAM[offs * 2 + 0] | ((DrvVidRAM[offs * 2 + 1] & 0x07) << 8);
-			INT32 color = DrvVidRAM[offs * 2 + 1] >> 4;
-
-			int x = map_offset_lut[offs];
-
-			ss_map[x] = color;
-			ss_map[x+1] = code;
-
-			ss_map2[x] = color;
-			ss_map2[x+1] = code;
-		}
-//		Render8x8Tile(pTransDraw, code, sx, sy, color, 4, 0, DrvGfxROM);
-	}
-}
-
 /*static*/ INT32 DrvFrame()
 {
 	if (DrvReset) {
@@ -359,7 +324,7 @@ int ovlInit(char *szShortName)
 	}
 
 //	INT32 nInterleave = 262;
-	INT32 nInterleave = 131;
+	INT32 nInterleave = 65;
 	INT32 nCyclesTotal[1] = { master_clock / 60 };
 	INT32 nCyclesDone[1] = { 0 };
 
@@ -373,13 +338,13 @@ int ovlInit(char *szShortName)
 //		nCyclesDone[0] += M6502Run(nCyclesTotal[0]);
 
 //		if (i == 16 || i == 48 || i == 80 || i == 112 || i == 146 || i == 176 || i == 208 || i == 240)
-		if (i == 8 || i == 24 || i == 40 || i == 66 || i == 73 || i == 88 || i == 104 || i == 120)
+		if (i == 4 || i == 12 || i == 20 || i == 28 || i == 36 || i == 44 || i == 52 || i == 60)
 //			M6502SetIRQLine(0, (i & 0x20) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);
 					M6502SetIRQLine(0, (i & 0x10) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);
 //			M6502SetIRQLine(0, M6502_IRQSTATUS_ACK);
 
 //		if (i == 240) vblank = 0x40;
-		if (i == 120) vblank = 0x40;
+		if (i == 60) vblank = 0x40;
 	}
 
 	M6502Close();
@@ -393,7 +358,6 @@ int ovlInit(char *szShortName)
 		}
 //	}
 
-	DrawLayer();
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -535,7 +499,6 @@ void initLayers()
 //	spriteCache =(UINT16*)malloc(0x20000*sizeof(UINT16));
 //	memset(spriteCache,0xFF,0x20000*sizeof(UINT16));
 //	memset(&ss_vram[0x1100],0x00,0x7EF00);
-	memset(bg_dirtybuffer,1,2048);
 
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(5);
@@ -554,7 +517,7 @@ void initLayers()
 	
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvInitSaturn dummy            ",10,70);
-	drawWindow(0,224,0,0,66);
+	drawWindow(0,224,0,0,44);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 
