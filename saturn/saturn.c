@@ -1763,6 +1763,7 @@ static void run_fba_emulator()
 		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Corrupt/Missing ROM(s)\n- I/O Error\n- Memory error\n\n",1,190);
 //		while(1);
 	}
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                      ",16,40);
 	InpInit();
 	InpDIP();
 	play = 1;
@@ -1837,7 +1838,6 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
 	int x,j;  
 	col[0]=10;
     VRAM = (Uint16 *)SS_FONT;
-	
 // barre horizontale haut
 	for( x = 0; x < l1; x++ ) // 2 lignes
     {
@@ -1855,6 +1855,8 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
     {
 		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
 	}
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",16,40);
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait...",20,40);
 	
 		play=0;
 		SclProcess = 1;
