@@ -182,6 +182,7 @@ void dummy()
 	
 	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	drawWindow(32,192,192,14,52);
+	nBurnFunction = update_input1;
 	drawWindow(0,192,192,2,66);
 	SetVblank2();
 
@@ -653,7 +654,7 @@ int vdp_data_r(void)
 
 void vdp_run(t_vdp *vdp)
 {
-//    if(vdp->line <= 0xC0)
+    if(vdp->line <= 0xC0)
     {
 		if 	(vdp->line < 0x10 && (vdp->reg[0] & 0x40))
 			ss_scl[vdp->line] = 0;
