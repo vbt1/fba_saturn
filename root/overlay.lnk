@@ -16,18 +16,19 @@ SECTIONS {
 		root/sl.coff (".shared")
 		_play = .;
 		_hz = . + 2;
-		_col = . + 4;
-		_pcm = . + 20;
-		_nBurnDrvCount = . + 24;
-		_nBurnDrvSelect = . + 28;
-		_nBurnSoundRate = . + 32;
-		_nBurnSprites = . + 36;
-		_nBurnLinescrollSize = . + 40;
-		_nBurnFunction = . + 44;
-		_nSoundBufferPos = . + 48;
-		_SclProcess = . + 52;
-		_SclColRamAlloc256 = . + 56;
-		_shared = . + 88;
+		_file_max = . + 4;
+		_col = . + 8;
+		_pcm = . + 24;
+		_nBurnDrvCount = . + 28;
+		_nBurnDrvSelect = . + 32;
+		_nBurnSoundRate = . + 36;
+		_nBurnSprites = . + 40;
+		_nBurnLinescrollSize = . + 44;
+		_nBurnFunction = . + 48;
+		_nSoundBufferPos = . + 52;
+		_SclProcess = . + 56;
+		_SclColRamAlloc256 = . + 60;
+		_shared = . + 92;
 	} > ram
 
 	.entry 0x6004000  (NOLOAD):

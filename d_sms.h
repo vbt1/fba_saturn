@@ -76,7 +76,7 @@ t_vdp vdp;
 int running=0;
 unsigned int first = 1;
 unsigned int vsynch = 0;
-unsigned int file_max;
+extern int file_max;
 int scroll_x=0,scroll_y=0;
 unsigned *dummy_write  = NULL; //[0x100];
 /*static*/ UINT8 *SaturnMem = NULL;

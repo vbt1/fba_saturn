@@ -6,11 +6,11 @@
 
 int ovlInit(char *szShortName)
 {
-#define M_TRIM_THRESHOLD    -1
-#define M_TOP_PAD           -2
+//#define M_TRIM_THRESHOLD    -1
+//#define M_TOP_PAD           -2
 
-	mallopt(M_TOP_PAD, 0);
-	mallopt(M_TRIM_THRESHOLD, 8);
+//	mallopt(M_TOP_PAD, 0);
+//	mallopt(M_TRIM_THRESHOLD, 8);
 
 //	struct BurnDriver *fba_drv = NULL;
 	struct BurnDriver nBurnDrvsms_akmw = {
@@ -157,8 +157,8 @@ void dummy()
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
 
-	file_id			= 8; // bubble bobble
-	file_max		= getNbFiles();
+	file_id			= 2; // bubble bobble
+//	file_max		= getNbFiles();
 		//8;//aleste
 
 	SaturnInitMem();
@@ -182,7 +182,7 @@ void dummy()
 	
 	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	drawWindow(32,192,192,14,52);
-	drawWindow(0,192,192,0,66);
+	drawWindow(0,192,192,2,66);
 	SetVblank2();
 
 //	extern int __malloc_trim_threshold;
@@ -217,43 +217,6 @@ void dummy()
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);	   */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void InitCDsms()
-{
-/*	Uint32 lib_work[GFS_WORK_SIZE(8) / sizeof(Uint32)];
-	GfsDirTbl dirtbl; 
-	GfsDirTbl dirtbl2; 
-    Sint32 fid;					  */
-/*
-	CDC_CdInit(0x00,0x00,0x05,0x0f);
-    GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
-    GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name_sms;
-    GFS_DIRTBL_NDIR(&dirtbl) = 8;
-	GFS_Init(8, lib_work, &dirtbl);
-	fid = GFS_NameToId((Sint8 *)"GAMES");
-	GFS_LoadDir(fid, &dirtbl);		*/
-	/*
-	GFS_DIRTBL_TYPE(&dirtbl2) = GFS_DIR_NAME;
-	GFS_DIRTBL_DIRNAME(&dirtbl2) = dir_name_sms;
-	GFS_DIRTBL_NDIR(&dirtbl2) = 8;
-	fid = GFS_NameToId((Sint8 *)"SMS");
-	GFS_LoadDir(fid, &dirtbl2);  */
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-Sint32 getNbFiles()
-{
-	Sint32 fid;
-	GfsDirTbl dirtbl; 
-	fid = GFS_NameToId((Sint8 *)".");
-
-	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
-//	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name_sms;
-
-//	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
-//	GFS_DIRTBL_DIRNAME(&dirtbl) = "SMS";
-//	GFS_DIRTBL_NDIR(&dirtbl) = 384;
-	return GFS_LoadDir(fid, &dirtbl)-2;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 void sms_start()
 {
 //	fba_drv->Frame = NULL;
@@ -261,21 +224,27 @@ void sms_start()
 	nSoundBufferPos=0;
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	
-	for (int i=0;i<256 ; i++ ) colAddr[i]=colBgAddr[i]=RGB( 0, 0, 0 );//palette2[0];
+	for (int i=0;i<256 ; ++i ) colAddr[i]=colBgAddr[i]=RGB( 0, 0, 0 );//palette2[0];
 	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );//palette2[0];
 	
-	memset4_fast(&ss_vram[0x1100],0,0x10000-0x1100);
-	memset4_fast((Uint8 *)cache,0,0x20000);
-	memset4_fast((Uint8 *)ss_map,0,0x20000);
-	memset4_fast((Uint8 *)SCL_VDP2_VRAM_A0,0,0x20000);					
-	memset(vdp.vram,0,sizeof(vdp.vram));
-	
+	memset(&ss_vram[0x1100],0,0x10000-0x1100);
+	memset((Uint8 *)cache,0x0,0x20000);
+	memset((Uint8 *)ss_map,0,0x20000);
+	memset((Uint8 *)SCL_VDP2_VRAM_A0,0,0x20000);
+/*	vdp.ntab = NULL;
+	vdp.satb = NULL;
+	vdp.addr = NULL;
+   	vdp.line = 0;
+	vdp.buffer = 0;
+	vdp.code = 0;
+	memset(vdp.reg,0,10);
+//	memset(&sms,0,0xa008);
+*/
 	scroll_x= scroll_y = 0;
  	SCL_Open();
     for(int i = 0; i < 0xC0; i++) ss_scl[i]= 0;
-   	vdp.line = 0;
-	ss_reg->n0_move_y =  scroll_y;
 
+	ss_reg->n0_move_y =  scroll_y;
 	sms_reset();
 	load_rom();
   	system_init();
@@ -294,27 +263,9 @@ INT32 SMSInit(void)
 INT32 SMSExit(void)
 {
 	z80_stop_emulating();
-
-//	int nLen = MemEnd - (UINT8 *)0;
-//	SaturnMem = (UINT8 *)malloc(nLen); 
-//	Uint8	*dst;
-//	InpExit();   
-//	for (dst = (Uint8 *)SaturnMem; dst < (Uint8 *)(SaturnMem+nLen); dst++)
-//			*dst = 0;	
-//	memset(SaturnMem,0x00,nLen);
-//	free(bp_lut	);
 	bp_lut = NULL;
 	map_lut = dummy_write = MemEnd = name_lut = cram_lut = NULL;
 	free(SaturnMem);
-
-/*
-	free(dummy_write);
-	free(cram_lut);
-	free(bp_lut	);
-	free(name_lut); 
-
-	dummy_write = MemEnd = name_lut = bp_lut = cram_lut = NULL;
-*/
 	SaturnMem = NULL;
 
 //	free(DIPInfo.DIPData);
@@ -326,7 +277,7 @@ INT32 SMSFrame(void)
 {
 	if(running)
 	{
-//		*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
+	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
 //	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );//palette2[0];
 
 		sms_frame();
@@ -377,19 +328,19 @@ void sms_frame(void)
 	vdp.line = 0;
 	vdp.left = vdp.reg[10];
 //    for(vdp.line = 0; vdp.line < 262; vdp.line++)
-    for(; vdp.line <= 0xc0; vdp.line++)
+    for(; vdp.line <= 0xc0; ++vdp.line)
 	{
 		z80_emulate(228);
 		vdp_run(&vdp);
-		vdp.line++;
+		++vdp.line;
 		z80_emulate(228);
 		vdp_run(&vdp);
-		vdp.line++;
+		++vdp.line;
 		z80_emulate(228);
 		vdp_run(&vdp);
 	}
 
-    for(; vdp.line < 0xE0; vdp.line++)
+    for(; vdp.line < 0xE0; ++vdp.line)
 	{
 		z80_emulate(228);
        vdp.left = vdp.reg[10];
@@ -401,11 +352,11 @@ void sms_frame(void)
         }
 	}
 
-    for(; vdp.line < 262; vdp.line++)
+    for(; vdp.line < 262; ++vdp.line)
 	{
 		z80_emulate(228);
        vdp.left = vdp.reg[10];
-		vdp.line++;
+		++vdp.line;
 		z80_emulate(228);
        vdp.left = vdp.reg[10];
 	}
@@ -909,9 +860,11 @@ UINT8 update_input1(void)
 //#endif
 					break;
 
+					 char str[50];
+
 					case PER_DGT_TL:
 					if (file_id>2)	file_id--;
-					else				file_id=file_max+1;
+					else				file_id=file_max;
 //#ifdef FONT
 						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
 						(Uint8 *)"            ",26,200);
