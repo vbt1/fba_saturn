@@ -94,10 +94,15 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvZaxxonb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvSzaxxon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvVigilant = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvsg1k_wboy = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System";
 BurnDrvsms_akmw.szParent=NULL;
+
+BurnDrvsg1k_wboy.szShortName="sms";
+BurnDrvsg1k_wboy.szFullNameA="Sega Master System";
+BurnDrvsg1k_wboy.szParent=NULL;
 
 BurnDrvbankp.szShortName="bankp";
 BurnDrvbankp.szFullNameA="Bank Panic";
@@ -217,10 +222,11 @@ BurnDrvVigilant.szParent=NULL;
 
 int i=0;
 //pDriver[i++] = &BurnDrvZaxxonb;
+pDriver[i++] = &BurnDrvsms_akmw;
+pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvZaxxon;
 pDriver[i++] = &BurnDrvSzaxxon;	  
 pDriver[i++] = &BurnDrvVigilant;
-pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlockgal;
 pDriver[i++] = &BurnDrvChplftb;

@@ -148,6 +148,13 @@ SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c dac.c ym2151.c burn_sound_
 #SRCOVLVIGIL         = d_vigilant.c z80_intf.c z80.c z80daisy.c burn_ym2151.c ym2151.c dac.c burn_sound_c.c saturn/ovl.c
 OBJOVLVIGIL         = $(SRCOVLVIGIL:.c=.o)
 
+OVLSG1000                 = root/d_sg1000.coff
+OVLSG10001               = root/d_sg1000.bin
+MPOVLSG1000FILE    = $(OVLSG1000:.coff=.maps)
+LDOVLSG1000FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSG1000FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c sn76496.c czet.c cz80/cz80.c saturn/ovl.c
+OBJOVLSG1000         = $(SRCOVLSG1000:.c=.o)
+
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
@@ -172,7 +179,8 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
      $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
-     $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1)
+     $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
+     $(OVLSG1000) $(OVLSG10001)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -279,6 +287,12 @@ $(OVLVIGIL) : $(OBJOVLVIGIL) $(MAKEFILE) $(OBJOVLVIGIL) $(LDOVLVIGILFILE)
 
  $(OVLVIGIL1) : $(OBJOVLVIGIL) $(MAKEFILE) $(LDOVLVIGILFILE)
 	$(CONV) -O binary $(OVLVIGIL) $(OVLVIGIL1)
+
+$(OVLSG1000) : $(OBJOVLSG1000) $(MAKEFILE) $(OBJOVLSG1000) $(LDOVLSG1000FILE)
+	$(CC) $(LDOVLSG1000FLAGS) $(OBJOVLSG1000) $(LIBSOVL) -o $@
+
+$(OVLSG10001) : $(OBJOVLSG1000) $(MAKEFILE) $(LDOVLSG1000FILE)
+	$(CONV) -O binary $(OVLSG1000) $(OVLSG10001)
 
 # suffix
 .SUFFIXES: .asm
