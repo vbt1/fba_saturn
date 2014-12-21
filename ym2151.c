@@ -34,7 +34,6 @@
 	#endif
 #endif
 
-
 /* struct describing a single operator */
 typedef struct{
 	UINT32		phase;					/* accumulated operator phase */
@@ -61,6 +60,7 @@ typedef struct{
 	/* end of channel specific data */
 
 	UINT32		AMmask;					/* LFO Amplitude Modulation enable mask */
+//	UINT32		state;					/* Envelope state: 4-attack(AR) 3-decay(D1R) 2-sustain(D2R) 1-release(RR) 0-off */
 	UINT32		state;					/* Envelope state: 4-attack(AR) 3-decay(D1R) 2-sustain(D2R) 1-release(RR) 0-off */
 	UINT8		eg_sh_ar;				/*  (attack state) */
 	UINT8		eg_sel_ar;				/*  (attack state) */
@@ -177,6 +177,12 @@ typedef struct
 
 } YM2151;
 
+static void (*envelope_calc[5])(YM2151Operator *);
+void envelope_attack(YM2151Operator *op);
+void envelope_decay(YM2151Operator *op);
+void envelope_sustain(YM2151Operator *op);
+void envelope_release(YM2151Operator *op);
+void envelope_nothing(YM2151Operator *op);
 
 #define FREQ_SH			16  /* 16.16 fixed point (frequency calculations) */
 #define EG_SH			16  /* 16.16 fixed point (envelope generator timing) */
@@ -714,12 +720,12 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 		/*logerror("noise_tab[%02x]=%08x\n", i, chip->noise_tab[i]);*/
 	}
 }
-
+/*
 #define KEY_ON(op, key_set){									\
 		if (!(op)->key)											\
 		{														\
-			(op)->phase = 0;			/* clear phase */		\
-			(op)->state = EG_ATT;		/* KEY ON = attack */	\
+			(op)->phase = 0;			// clear phase 		\
+			(op)->state = EG_ATT;		// KEY ON = attack 	\
 			(op)->volume += (~(op)->volume *					\
                            (eg_inc[(op)->eg_sel_ar + ((PSG->eg_cnt>>(op)->eg_sh_ar)&7)])	\
                           ) >>4;								\
@@ -731,7 +737,26 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 		}														\
 		(op)->key |= key_set;									\
 }
+*/
+void KEY_ON(YM2151Operator *op, UINT32 key_set)
+{
+		if (!(op)->key)
+		{	
+			(op)->phase = 0;			/* clear phase */		
+			(op)->state = EG_ATT;		/* KEY ON = attack */	
+			(op)->volume += (~(op)->volume *					
+                           (eg_inc[(op)->eg_sel_ar + ((PSG->eg_cnt>>(op)->eg_sh_ar)&7)])	
+                          ) >>4;								
+			if ((op)->volume <= MIN_ATT_INDEX)					
+			{													
+				(op)->volume = MIN_ATT_INDEX;					
+				(op)->state = EG_DEC;							
+			}													
+		}														
+		(op)->key |= key_set;									
+}
 
+/*
 #define KEY_OFF(op, key_clr){									\
 		if ((op)->key)											\
 		{														\
@@ -739,75 +764,47 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 			if (!(op)->key)										\
 			{													\
 				if ((op)->state>EG_REL)							\
-					(op)->state = EG_REL;/* KEY OFF = release */\
+					(op)->state = EG_REL;// KEY OFF = release \
 			}													\
 		}														\
+}
+*/
+
+void KEY_OFF(YM2151Operator *op, UINT32 key_clr)
+{									
+		if ((op)->key)											
+		{														
+			(op)->key &= key_clr;								
+			if (!(op)->key)										
+			{													
+				if ((op)->state>EG_REL)							
+					(op)->state = EG_REL;// KEY OFF = release 
+			}													
+		}														
 }
 
 inline void envelope_KONKOFF(YM2151Operator * op, int v)
 {
 	if (v&0x08)	/* M1 */
-		KEY_ON (op+0, 1)
+		KEY_ON (op+0, 1);
 	else
-		KEY_OFF(op+0,~1)
+		KEY_OFF(op+0,~1);
 
 	if (v&0x20)	/* M2 */
-		KEY_ON (op+1, 1)
+		KEY_ON (op+1, 1);
 	else
-		KEY_OFF(op+1,~1)
+		KEY_OFF(op+1,~1);
 
 	if (v&0x10)	/* C1 */
-		KEY_ON (op+2, 1)
+		KEY_ON (op+2, 1);
 	else
-		KEY_OFF(op+2,~1)
+		KEY_OFF(op+2,~1);
 
 	if (v&0x40)	/* C2 */
-		KEY_ON (op+3, 1)
+		KEY_ON (op+3, 1);
 	else
-		KEY_OFF(op+3,~1)
+		KEY_OFF(op+3,~1);
 }
-
-
-#ifdef USE_MAME_TIMERS
-/*static*/ void timer_callback_a (int n)
-{
-	YM2151 *chip = &YMPSG[n];
-	timer_adjust(chip->timer_A, chip->timer_A_time[ chip->timer_A_index ], n, 0);
-	chip->timer_A_index_old = chip->timer_A_index;
-	if (chip->irq_enable & 0x04)
-	{
-		int oldstate = chip->status & 3;
-		chip->status |= 1;
-		if ((!oldstate) && (chip->irqhandler)) (*chip->irqhandler)(1);
-	}
-	if (chip->irq_enable & 0x80)
-		chip->csm_req = 2;		/* request KEY ON / KEY OFF sequence */
-}
-/*static*/ void timer_callback_b (int n)
-{
-	YM2151 *chip = &YMPSG[n];
-	timer_adjust(chip->timer_B, chip->timer_B_time[ chip->timer_B_index ], n, 0);
-	chip->timer_B_index_old = chip->timer_B_index;
-	if (chip->irq_enable & 0x08)
-	{
-		int oldstate = chip->status & 3;
-		chip->status |= 2;
-		if ((!oldstate) && (chip->irqhandler)) (*chip->irqhandler)(1);
-	}
-}
-#if 0
-/*static*/ void timer_callback_chip_busy (int n)
-{
-	YM2151 *chip = &YMPSG[n];
-	chip->status &= 0x7f;	/* reset busy flag */
-}
-#endif
-#endif
-
-
-
-
-
 
 inline void set_connect( YM2151Operator *om1, int cha, int v)
 {
@@ -1000,22 +997,6 @@ void YM2151WriteReg(int n, int r, int v)
 	/* adjust bus to 8 bits */
 	r &= 0xff;
 	v &= 0xff;
-
-#if 0
-	/* There is no info on what YM2151 really does when busy flag is set */
-	if ( chip->status & 0x80 ) return;
-	timer_set ( 64.0 / (double)chip->clock, n, timer_callback_chip_busy);
-	chip->status |= 0x80;	/* set busy flag for 64 chip clock cycles */
-#endif
-
-#ifdef LOG_CYM_FILE
-	if ((cymfile) && (r!=0) )
-	{
-		fputc( (unsigned char)r, cymfile );
-		fputc( (unsigned char)v, cymfile );
-	}
-#endif
-
 
 	switch(r & 0xe0){
 	case 0x00:
@@ -1373,7 +1354,13 @@ int YM2151Init(int num, int clock, int rate)
 	YMPSG = (YM2151 *)malloc(sizeof(YM2151) * YMNumChips);
 	if (YMPSG == NULL)
 		return 1;
-
+ /*
+    envelope_calc[EG_ATT]=envelope_attack;
+    envelope_calc[EG_DEC]=envelope_decay;
+    envelope_calc[EG_SUS]=envelope_sustain;
+    envelope_calc[EG_REL]=envelope_release;
+    envelope_calc[EG_OFF]=envelope_nothing;
+ */
 	memset(YMPSG, 0, sizeof(YM2151) * YMNumChips);
 
 //	ym2151_state_save_register( YMNumChips );
@@ -1887,6 +1874,124 @@ rate 11 1         |
                                  --
 */
 
+
+#if 0
+// EG_ATT:	/* attack phase */
+void envelope_attack(YM2151Operator *op)
+{
+	if ( !(PSG->eg_cnt & ((1<<op->eg_sh_ar)-1) ) )
+	{
+		op->volume += (~op->volume *
+						   (eg_inc[op->eg_sel_ar + ((PSG->eg_cnt>>op->eg_sh_ar)&7)])
+						  ) /16;
+
+		if (op->volume <= MIN_ATT_INDEX)
+		{
+			op->volume = MIN_ATT_INDEX;
+			op->state = EG_DEC;
+		}
+	}
+}
+
+	if ( (op->attack_volume -= op->delta_AR) < MIN_VOLUME_INDEX )  //is volume index min already ?
+	{
+		op->volume = MIN_VOLUME_INDEX;
+		op->state++;
+	}
+	else
+		op->volume = attack_curve[op->attack_volume>>ENV_SH];
+
+
+
+
+
+
+// EG_DEC:	/* decay phase */
+void envelope_decay(YM2151Operator *op)
+{
+	if ( !(PSG->eg_cnt & ((1<<op->eg_sh_d1r)-1) ) )
+	{
+		op->volume += eg_inc[op->eg_sel_d1r + ((PSG->eg_cnt>>op->eg_sh_d1r)&7)];
+
+		if ( op->volume >= op->d1l )
+			op->state = EG_SUS;
+	}
+}
+// EG_SUS:	/* sustain phase */
+void envelope_sustain(YM2151Operator *op)
+{
+	if ( !(PSG->eg_cnt & ((1<<op->eg_sh_d2r)-1) ) )
+	{
+		op->volume += eg_inc[op->eg_sel_d2r + ((PSG->eg_cnt>>op->eg_sh_d2r)&7)];
+
+		if ( op->volume >= MAX_ATT_INDEX )
+		{
+			op->volume = MAX_ATT_INDEX;
+			op->state = EG_OFF;
+		}
+	}
+}
+// EG_REL:	/* release phase */
+void envelope_release(YM2151Operator *op)
+{
+	if ( !(PSG->eg_cnt & ((1<<op->eg_sh_rr)-1) ) )
+	{
+		op->volume += eg_inc[op->eg_sel_rr + ((PSG->eg_cnt>>op->eg_sh_rr)&7)];
+
+		if ( op->volume >= MAX_ATT_INDEX )
+		{
+			op->volume = MAX_ATT_INDEX;
+			op->state = EG_OFF;
+		}
+	}
+}
+
+void envelope_nothing(YM2151Operator *op)
+{
+}
+/*inline*/ void advance_eg(void)
+{
+	YM2151Operator *op;
+	unsigned int i;
+
+	PSG->eg_timer += PSG->eg_timer_add;
+
+	while (PSG->eg_timer >= PSG->eg_timer_overflow)
+	{
+		PSG->eg_timer -= PSG->eg_timer_overflow;
+
+		++PSG->eg_cnt;
+
+		/* envelope generator */
+		op = &PSG->oper[0];	/* CH 0 M1 */
+		i = 32;
+		do
+		{ 
+//			envelope_calc[op->state](op);
+			switch(op->state)
+			{
+			case EG_ATT:	/* attack phase */
+				envelope_attack(op);
+			break;
+
+			case EG_DEC:	/* decay phase */
+				envelope_decay(op);
+			break;
+
+			case EG_SUS:	/* sustain phase */
+				envelope_sustain(op);
+			break;
+
+			case EG_REL:	/* release phase */
+				envelope_release(op);
+			break;
+			}
+			++op;
+			--i;
+		}while (i);
+	}
+}
+#else
 /*inline*/ void advance_eg(void)
 {
 	YM2151Operator *op;
@@ -1900,21 +2005,22 @@ rate 11 1         |
 	{
 		PSG->eg_timer -= PSG->eg_timer_overflow;
 
-		PSG->eg_cnt++;
+		++PSG->eg_cnt;
 
 		/* envelope generator */
 		op = &PSG->oper[0];	/* CH 0 M1 */
 		i = 32;
 		do
-		{
+		{ 
+#if 1	  
 			switch(op->state)
 			{
 			case EG_ATT:	/* attack phase */
 				if ( !(PSG->eg_cnt & ((1<<op->eg_sh_ar)-1) ) )
 				{
 					op->volume += (~op->volume *
-                                   (eg_inc[op->eg_sel_ar + ((PSG->eg_cnt>>op->eg_sh_ar)&7)])
-                                  ) >>4;
+									   (eg_inc[op->eg_sel_ar + ((PSG->eg_cnt>>op->eg_sh_ar)&7)])
+									  ) /16;
 
 					if (op->volume <= MIN_ATT_INDEX)
 					{
@@ -1933,7 +2039,7 @@ rate 11 1         |
 					if ( op->volume >= op->d1l )
 						op->state = EG_SUS;
 
-				}
+				}	 
 			break;
 
 			case EG_SUS:	/* sustain phase */
@@ -1964,12 +2070,13 @@ rate 11 1         |
 				}
 			break;
 			}
-			op++;
-			i--;
+#endif
+			++op;
+			--i;
 		}while (i);
 	}
 }
-
+#endif
 
 /*inline*/ void advance(void)
 {
@@ -2067,7 +2174,7 @@ rate 11 1         |
 		UINT32 j;
 		j = ( (PSG->noise_rng ^ (PSG->noise_rng>>3) ) & 1) ^ 1;
 		PSG->noise_rng = (j<<16) | (PSG->noise_rng>>1);
-		i--;
+		--i;
 	}
 
 
@@ -2109,7 +2216,7 @@ rate 11 1         |
 		}
 
 		op+=4;
-		i--;
+		--i;
 	}while (i);
 
 
@@ -2131,8 +2238,8 @@ rate 11 1         |
 			do
 			{
 				KEY_ON(op, 2);
-				op++;
-				i--;
+				++op;
+				--i;
 			}while (i);
 			PSG->csm_req = 1;
 		}
@@ -2143,8 +2250,8 @@ rate 11 1         |
 			do
 			{
 				KEY_OFF(op,~2);
-				op++;
-				i--;
+				++op;
+				--i;
 			}while (i);
 			PSG->csm_req = 0;
 		}
@@ -2304,7 +2411,7 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 	}
 #endif
 
-	for (i=0; i<length; i++)
+	for (i=0; i<length; ++i)
 	{
 		advance_eg();
 

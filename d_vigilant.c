@@ -6,13 +6,13 @@
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
-#define nInterleave 128 // dac needs 128 NMIs
+#define nInterleave 32 // dac needs 128 NMIs
 #define nSegmentLength1 nBurnSoundLen / nInterleave
 
-typedef unsigned int						UINT32;
-UINT32 nBurnCurrentYM2151Register;
-
 #include "d_vigilant.h"
+
+UINT32 nBurnCurrentYM2151Register;
+INT16 oldScroll =0;
 
 int ovlInit(char *szShortName)
 {
@@ -61,6 +61,7 @@ int ovlInit(char *szShortName)
 	}
 //	wait_vblank();
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void DrvInitSaturn();
 
 /*static*/int MemIndex()
@@ -95,7 +96,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/void DrvSetVector(INT32 Status)
+/*static*/inline void DrvSetVector(INT32 Status)
 {
 	switch (Status) {
 		case VECTOR_INIT: {
@@ -198,18 +199,18 @@ void __fastcall VigilanteZ80Write1_c020(UINT16 a, UINT8 d)
 
 void __fastcall VigilanteZ80Write1_c800(UINT16 a, UINT8 d)
 {
-	int Offset = a & 0x7ff;
+	unsigned short Offset = a & 0x7ff;
 
 	if (DrvPaletteRam[Offset]!=d)
 	{
-		int Bank = Offset & 0x400;
-		int r, g, b;
+		unsigned short Bank = Offset & 0x400;
+		unsigned char r, g, b;
 		DrvPaletteRam[Offset] = d;
 		Offset &= 0xff;
 
-		r = (DrvPaletteRam[Bank + Offset + 0x000] ) & 0x1f;//0x1c;
-		g = (DrvPaletteRam[Bank + Offset + 0x100] ) & 0x1f;//0x1c;
-		b = (DrvPaletteRam[Bank + Offset + 0x200] ) & 0x1f;//0x1c;
+		r = (DrvPaletteRam[Bank + Offset + 0x000] ); //& 0x1f;//0x1c;
+		g = (DrvPaletteRam[Bank + Offset + 0x100] ); //& 0x1f;//0x1c;
+		b = (DrvPaletteRam[Bank + Offset + 0x200] );// & 0x1f;//0x1c;
 	// 16 palettes	
 		colAddr[(Bank >> 2) + Offset] = RGB(r,g,b);
 	}
@@ -222,9 +223,9 @@ void __fastcall VigilanteZ80Write1_d000(UINT16 a, UINT8 d)
 		{
 			DrvVideoRam[a]=d;
 			a&=~1;
-			int Attr = DrvVideoRam[a + 1];
-			int Colour = Attr & 0x0f;
-			int Tile = DrvVideoRam[a + 0] | ((Attr & 0xf0) << 4);
+			unsigned char Attr = DrvVideoRam[a + 1];
+			unsigned char Colour = Attr & 0x0f;
+			unsigned int Tile = DrvVideoRam[a + 0] | ((Attr & 0xf0) << 4);
 
 			UINT16 *map = &ss_map[a]; 
 
@@ -278,9 +279,9 @@ void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
 		{
 			DrvVideoRam[a]=d;
 			a&=~1;
-			int Attr = DrvVideoRam[a + 1];
-			int Colour = Attr & 0x0f;
-			int Tile = DrvVideoRam[a + 0] | ((Attr & 0xf0) << 4);
+			unsigned char Attr = DrvVideoRam[a + 1];
+			unsigned int Colour = Attr & 0x0f;
+			unsigned int Tile = DrvVideoRam[a + 0] | ((Attr & 0xf0) << 4);
 
 			UINT16 *map = &ss_map[a]; 
 
@@ -400,17 +401,17 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 
 				for (unsigned int i = 0; i < 16; ++i) 
 				{
-					int r, g, b;
+					unsigned char r, g, b;
 
-					r = (4/3*(DrvPaletteRam[0x400 + 16 * DrvRearColour + i])) & 0xff;
-					g = (4/3*(DrvPaletteRam[0x500 + 16 * DrvRearColour + i])) & 0xff;
-					b = (4/3*(DrvPaletteRam[0x600 + 16 * DrvRearColour + i])) & 0xff;
+					r = (4/3*(DrvPaletteRam[0x400 + 16 * DrvRearColour + i]));
+					g = (4/3*(DrvPaletteRam[0x500 + 16 * DrvRearColour + i]));
+					b = (4/3*(DrvPaletteRam[0x600 + 16 * DrvRearColour + i]));
 
 					colBgAddr[i] = RGB(r,g,b);//BurnHighCol(r, g, b, 0);
 
-					r = (4/3*(DrvPaletteRam[0x400 + 16 * DrvRearColour + 32 + i])) & 0xff;
-					g = (4/3*(DrvPaletteRam[0x500 + 16 * DrvRearColour + 32 + i])) & 0xff;
-					b = (4/3*(DrvPaletteRam[0x600 + 16 * DrvRearColour + 32 + i])) & 0xff;
+					r = (4/3*(DrvPaletteRam[0x400 + 16 * DrvRearColour + 32 + i]));
+					g = (4/3*(DrvPaletteRam[0x500 + 16 * DrvRearColour + 32 + i]));
+					b = (4/3*(DrvPaletteRam[0x600 + 16 * DrvRearColour + 32 + i]));
 
 					colBgAddr[16 + i] = RGB(r,g,b);//BurnHighCol(r, g, b, 0);
 				}
@@ -442,9 +443,9 @@ UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
 	switch (a) {
 		case 0x01: {
 #ifdef SOUND
-			return YM2151ReadStatus(0);
+			return BurnYM2151ReadStatus();
 #else
-			return ;
+//			return 0;
 #endif
 		}
 		
@@ -488,7 +489,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 #endif
 			return;
 		}
-		
+
 		case 0x80: {
 //		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"W Samp80",10,120);
 			DrvSampleAddress = (DrvSampleAddress & 0xff00) | ((d << 0) & 0x00ff);
@@ -535,6 +536,11 @@ static INT32 VigilantSyncDAC()
 	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (60 / 100.0000))));
 }
 
+/*static*/int DrvInit()
+{
+	DrvInitSaturn();
+
+	INT32 nRet = 0, nLen;
 /*static*/int CharPlaneOffsets[4]         = { 0x80000, 0x80004, 0, 4 };
 /*static*/int CharXOffsets[8]             = { 0, 1, 2, 3, 64, 65, 66, 67 };
 /*static*/int CharYOffsets[8]             = { 0, 8, 16, 24, 32, 40, 48, 56 };
@@ -544,12 +550,6 @@ static INT32 VigilantSyncDAC()
 /*static*/int BackTilePlaneOffsets[4]     = { 0, 2, 4, 6 };
 /*static*/int BackTileXOffsets[32]        = { 1, 0, 9, 8, 17, 16, 25, 24, 33, 32, 41, 40, 49, 48, 57, 56, 65, 64, 73, 72, 81, 80, 89, 88, 97, 96, 105, 104, 113, 112, 121, 120 };
 /*static*/int BackTileYOffsets[1]         = { 0 };
-
-/*static*/int DrvInit()
-{
-	DrvInitSaturn();
-
-	INT32 nRet = 0, nLen;
 
 	// Allocate and Blank all required memory
 	Mem = NULL;
@@ -909,6 +909,17 @@ void dummy()
 	{
 		vbt[Offset]=128;
 	}
+
+	SprSpCmd *ss_spritePtr;
+	
+	for (int i = 3; i <27; i++) 
+	{
+		ss_spritePtr				= &ss_sprite[i];
+		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+//		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
+	}
+
 	PrecalcBgMap();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 }
@@ -920,7 +931,7 @@ void dummy()
 #ifdef SOUND
 //	BurnYM2151Exit();
 	BurnYM2151SetIrqHandler(NULL);
-	BurnYM2151SetPortHandler(NULL);
+//	BurnYM2151SetPortHandler(NULL);
 	YM2151Shutdown();
 	DACExit();
 #endif
@@ -947,8 +958,8 @@ void dummy()
 
 	return 0;
 }
-
-/*static*/void DrvRenderBackground()
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/inline void DrvRenderBackground()
 {
 	int Scroll = 0x17a - (DrvRearHorizScrollLo + DrvRearHorizScrollHi);
 	if (Scroll > 0) Scroll -= 2048;
@@ -1005,49 +1016,45 @@ void dummy()
 		}
 	*/	
 }
-
-/*static*/inline void DrvDrawForeground()
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ inline void DrvDrawForeground()
 {
-	INT32 Scroll = ((DrvHorizScrollLo + DrvHorizScrollHi)& 0x1ff) +128;
-	INT32 ScrollBg = 0x17a - (DrvRearHorizScrollLo + DrvRearHorizScrollHi);
-	if (ScrollBg > 0) Scroll -= 2048;
-
-	memset4_fast(&ss_scl[32],Scroll | (Scroll<<16),0x300);
-}
-
-/*static*/void DrvDrawSprites()
-{
-//	INT32 DrvSpriteRamSize = 0xc0;
-
-//	for (INT32 i = 0; i < DrvSpriteRamSize; i += 8) 
-	for (INT32 i = 0; i < 0xc0; i += 8) 
+	INT16 Scroll = ((DrvHorizScrollLo + DrvHorizScrollHi)& 0x1ff) +128;
+	if(oldScroll!=Scroll)
 	{
-		int Code, Colour, sx, sy, h,flip;//xFlip, yFlip, h;
+		INT16 ScrollBg = 0x17a - (DrvRearHorizScrollLo + DrvRearHorizScrollHi);
+		if (ScrollBg > 0) Scroll -= 2048;
+
+		memset4_fast(&ss_scl[32],Scroll | (Scroll<<16),0x300);
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/inline void DrvDrawSprites()
+{
+	UINT8 j=3;
+
+	for (UINT8 i = 0; i < 0xc0; i += 8) 
+	{
+		int Code, sx, sy, h;
 
 		Code = DrvSpriteRam[i + 4] | ((DrvSpriteRam[i + 5] & 0x0f) << 8);
-		Colour = DrvSpriteRam[i + 0] & 0x0f;
 		sx = (DrvSpriteRam[i + 6] | ((DrvSpriteRam[i + 7] & 0x01) << 8));
 		sy = 256 + 128 - (DrvSpriteRam[i + 2] | ((DrvSpriteRam[i + 3] & 0x01) << 8));
-		flip = (DrvSpriteRam[i + 5] & 0xC0)>>2;
 		h = 1 << ((DrvSpriteRam[i + 5] & 0x30) >> 4);
-//		sy -= 16 * h;
 		sy -= (h<<4);
 
 		Code &= ~(h - 1);
 
-		int delta=(i>>3)+3;
-		ss_sprite[delta].ax = sx-128;
-		ss_sprite[delta].ay = sy;
-	//	ss_sprite[delta].color      = ((int)colAddr)>>3 | ((Colour<<2));//Colour<<4;
-		ss_sprite[delta].color      = Colour<<4;
-		ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
-		ss_sprite[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-		ss_sprite[delta].charSize   = 0x200|(h<<4);  //0x100 16*16
-		ss_sprite[delta].charAddr   = 0x220+(Code<<4);
+		ss_sprite[j].ax = sx-128;
+		ss_sprite[j].ay = sy;
+		ss_sprite[j].color         = (DrvSpriteRam[i + 0] & 0x0f)<<4;
+		ss_sprite[j].control      = (DrvSpriteRam[i + 5] & 0xC0)>>2;
+		ss_sprite[j].charSize   = 0x200|(h<<4);  //0x100 16*16
+		ss_sprite[j].charAddr  = 0x220+(Code<<4);
+		++j;
 	}
 }
-
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 ///sprintf broken
 
 //char buffer[80];
@@ -1178,7 +1185,7 @@ int vspfunc(char *format, ...)
 
 void DrvRenderDrawSound()
 {
-		SPR_RunSlaveSH((PARA_RTN*)DrvDrawSprites, NULL);	
+//		SPR_RunSlaveSH((PARA_RTN*)DrvDrawSprites, NULL);	
 
 		if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x2400)
 		{
@@ -1188,13 +1195,13 @@ void DrvRenderDrawSound()
 		}
 		
 	DrvDrawForeground();
-//	DrvDrawSprites();
+	DrvDrawSprites();
 	if (!DrvRearDisable) 
 	{
 		DrvRenderBackground();
 	}
 
-	SPR_WaitEndSlaveSH();
+//	SPR_WaitEndSlaveSH();
 }
 
 
