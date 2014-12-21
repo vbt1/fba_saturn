@@ -101,7 +101,7 @@ BurnDrvsms_akmw.szFullNameA="Sega Master System";
 BurnDrvsms_akmw.szParent=NULL;
 
 BurnDrvsg1k_wboy.szShortName="sms";
-BurnDrvsg1k_wboy.szFullNameA="Sega Master System";
+BurnDrvsg1k_wboy.szFullNameA="Sega SG-1000";
 BurnDrvsg1k_wboy.szParent=NULL;
 
 BurnDrvbankp.szShortName="bankp";

@@ -1,33 +1,25 @@
 // burn_ym2151.h
 #include "driver.h"
 //extern "C" {
- #include "ym2151.h"
+// #include "ym2151.h"
+ #include "ym2151_s16.h"
 //}
 
 INT32 BurnYM2151Init(INT32 nClockFrequency);
 void BurnYM2151SetRoute(INT32 nIndex, double nVolume, INT32 nRouteDir);
 void BurnYM2151Reset();
 void BurnYM2151Exit();
-extern void (*BurnYM2151Render)(INT16* pSoundBuf, INT32 nSegmentLength);
-void BurnYM2151Scan(INT32 nAction);
+//extern void (*BurnYM2151Render)(INT16* pSoundBuf, INT32 nSegmentLength);
+//void BurnYM2151Scan(INT32 nAction);
 
 static inline void BurnYM2151SelectRegister(const UINT8 nRegister)
 {
-#if defined FBA_DEBUG
-	if (!DebugSnd_YM2151Initted) bprintf(PRINT_ERROR, _T("BurnYM2151SelectRegister called without init\n"));
-#endif
-
 	extern UINT32 nBurnCurrentYM2151Register;
-
 	nBurnCurrentYM2151Register = nRegister;
 }
 
 static inline void BurnYM2151WriteRegister(const UINT8 nValue)
 {
-#if defined FBA_DEBUG
-	if (!DebugSnd_YM2151Initted) bprintf(PRINT_ERROR, _T("BurnYM2151WriteRegister called without init\n"));
-#endif
-
 	extern UINT32 nBurnCurrentYM2151Register;
 	/*extern UINT8 BurnYM2151Registers[0x0100];
 
