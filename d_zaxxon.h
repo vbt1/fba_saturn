@@ -13,6 +13,18 @@ int DrvExit();
 int DrvFrame();
 int DrvDraw();
 
+/*static*/ UINT8 *SaturnMem = NULL;
+UINT8 * bitmap = NULL;
+UINT8 *ss_map264 = NULL;
+INT16 *sx_lut = NULL;
+INT16 *sy_lut = NULL;
+UINT16 *charaddr_lut = NULL;
+UINT32 *colpromoffs_lut = NULL;
+UINT32 *map_lut = NULL;
+UINT32 srcxmask[240][256];
+UINT32  zaxxon_bg_scroll_x2=0;
+/*static*/ UINT8 sound_state[3];
+
 /*static*/ UINT8 *AllMem;
 /*static*/ UINT8 *MemEnd;
 /*static*/ UINT8 *AllRam;
