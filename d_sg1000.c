@@ -6,6 +6,7 @@
 //#include "z80_intf.h"
 //#include "driver.h"
 #include "d_sg1000.h"
+#define SAMPLE 7680L
 
 int ovlInit(char *szShortName)
 {
@@ -135,6 +136,8 @@ static int MemIndex()
 
 static int DrvInit()
 {
+	DrvInitSaturn();
+
 	AllMem = NULL;
 	MemIndex();
 	int nLen = MemEnd - (UINT8 *)0;
@@ -278,6 +281,179 @@ INT32 SG1KGetZipName(char** pszName, UINT32 i)
 
 	return 0;
 }
+/*
+//-------------------------------------------------------------------------------------------------------------------------------------
+void	SetVblank2( void ){
+	int			imask;
+
+
+    imask = get_imask();
+	 set_imask(2);
+//	INT_ChgMsk(INT_MSK_NULL,INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT);
+	INT_ChgMsk(INT_MSK_NULL, INT_MSK_VBLK_OUT);
+//	INT_SetScuFunc(INT_SCU_VBLK_IN,UsrVblankIn2);
+	INT_SetScuFunc(INT_SCU_VBLK_OUT,update_input1);
+//	INT_ChgMsk(INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT,INT_MSK_NULL);
+	INT_ChgMsk(INT_MSK_VBLK_OUT,INT_MSK_NULL);
+	set_imask(imask);
+	__port = PER_OpenPort();
+	
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+*/
+/*static*/ void initColors()
+{
+	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
+	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
+	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+//	SCL_SetColRam(SCL_NBG1,0,8,palette);
+	SCL_SetColRam(SCL_NBG1,8,8,palette);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void initLayers(void)
+{
+//    SclConfig	config;
+// **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
+
+	Uint16	CycleTb[]={
+		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
+		0xff5e, 0xffff, //A1
+		0xffff, 0xffff,	//A0
+		0x04ee, 0xffff,   //B1
+		0xffff, 0xffff  //B0
+	};
+ 	SclConfig	scfg;
+
+//	SCL_InitConfigTb(&scfg);
+	scfg.dispenbl		= ON;
+	scfg.charsize		= SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
+	scfg.pnamesize	= SCL_PN1WORD;
+	scfg.flip				= SCL_PN_10BIT;
+	scfg.platesize	= SCL_PL_SIZE_1X1;
+	scfg.coltype		= SCL_COL_TYPE_16;
+	scfg.datatype	= SCL_CELL;
+	scfg.patnamecontrl =  0x000c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
+	scfg.plate_addr[0] = ss_map;
+	SCL_SetConfig(SCL_NBG0, &scfg);
+/********************************************/	
+
+//	SCL_InitConfigTb(&scfg);
+//	scfg.dispenbl 	 = ON;
+	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
+//	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
+	scfg.datatype 	 = SCL_BITMAP;
+	scfg.mapover       = SCL_OVER_0;
+	scfg.plate_addr[0] = ss_font;
+	SCL_SetConfig(SCL_NBG1, &scfg);
+	SCL_SetCycleTable(CycleTb);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void initPosition(void)
+{
+	SCL_Open();
+	ss_reg->n1_move_x = 0;
+	ss_reg->n1_move_y = 0;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ /*void SaturnInitMem()
+{
+
+	UINT8 *Next; Next = (UINT8 *)SaturnMem;
+	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
+	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
+	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
+	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
+	dummy_write= Next; Next += 0x100*sizeof(unsigned);
+	MemEnd			= Next;	
+}	*/
+//-------------------------------------------------------------------------------------------------------------------------------------
+void dummy()
+{
+
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void DrvInitSaturn()
+{
+//	InitCDsms();
+	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
+	nBurnSprites  = 19;//131;//27;
+	nBurnLinescrollSize = 0x340;
+	nSoundBufferPos = 0;//sound position à renommer
+
+	SS_CACHE = cache      =(Uint8  *)SCL_VDP2_VRAM_B1;
+	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_A1;
+
+	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
+	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
+
+	ss_sprite		= (SprSpCmd *)SS_SPRIT;
+	ss_scl			= (Fixed32 *)SS_SCL;
+
+	file_id			= 2; // bubble bobble
+//	file_max		= getNbFiles();
+		//8;//aleste
+
+//	SaturnInitMem();
+	int nLen = MemEnd - (UINT8 *)0;
+//	SaturnMem = (UINT8 *)malloc(nLen);
+//	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
+//	SaturnInitMem();
+
+//	make_lut();
+	
+    SS_SET_N0PRIN(5);
+    SS_SET_N1PRIN(7);
+    SS_SET_S0PRIN(6);
+
+	initLayers();
+	initColors();
+	initPosition();
+//	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
+
+	initSprites(256-1,192-1,0,0,0,0);
+	
+	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+//	drawWindow(32,192,192,14,52);
+//	nBurnFunction = update_input1;
+	drawWindow(0,192,192,2,66);
+//	SetVblank2();
+
+//	extern int __malloc_trim_threshold;
+//	extern int __malloc_top_pad;
+//	extern mallinfo  __malloc_current_mallinfo;
+
+//	__malloc_trim_threshold = 1024;
+
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
+//			sauvegarder __malloc_sbrk_base puis restaurer à la fin
+//   Uint32 __malloc_sbrk_base;
+//__malloc_sbrk_base = &_bend;
+/*	Uint8	*dst;
+	for (dst = (Uint8 *)&_bend; dst < (Uint8 *)0x060A5000; dst++)
+		*dst = 0;  */
+ /*   for (dst = (Uint8 *)&__malloc_sbrk_base
+*/
+/*		Uint8	*dst;
+    for (dst = (Uint8 *)&bss_start; dst < (Uint8 *)&bss_end; dst++)
+			 *dst = 0;  
+  */
+/*	char toto[50];
+	extern Uint32 __malloc_sbrk_base, _bend,_bstart,bss_start,bss_end;
+	extern int __malloc_trim_threshold;
+	extern int __malloc_top_pad;
+
+	sprintf (toto,"malloc_top_pad %08x %08x",__malloc_top_pad,__malloc_sbrk_base) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,201);
+
+	sprintf (toto,"malloc_trim_threshold %08x %08x",__malloc_trim_threshold,sbrk(0)) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);	   */
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+
 
 // End of driver, the following driver info. has been synthesized from hash/sg1000.xml of MESS
 

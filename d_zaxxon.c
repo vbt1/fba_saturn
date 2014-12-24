@@ -411,7 +411,10 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 		return; 
 			
 		case 0xe0fa:
-			*zaxxon_bg_color = data << 7;
+//			*zaxxon_bg_color = data << 7;
+			ss_sprite[3].color          = 0x400+data*128;//ou * 256 ?
+
+//			ss_sprite[3].color = data;
 		return;
 
 		case 0xe0fb:
@@ -721,8 +724,6 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 	UINT8 *tmp = (UINT8*)malloc(0xc000);
 	if (tmp == NULL) {
-		while(1);
-
 		return 1;
 	}
 
@@ -891,14 +892,10 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 {
 	DrvInitSaturn();
 
-FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"DrvInitSaturn done      ",10,10);
-
 	AllMem = NULL;
 	MemIndex();
 	int nLen = MemEnd - (UINT8 *)0;
-FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"before malloc      ",10,10);
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
-FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"after malloc          ",10,10);
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
@@ -969,11 +966,7 @@ FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"after malloc          ",10
 //	SN76489Init(0, 4000000 / 1, 0);
 //	SN76489Init(1, 4000000 / 4, 1);
 
-// while(1);
-//	GenericTilesInit();
-FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"before drvreset      ",10,10);
 	DrvDoReset();
-FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"after drvreset      ",10,10);
 	return 0;
 }
 
@@ -1004,82 +997,38 @@ FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"after drvreset      ",10,1
 	return 0;
 }
 
+/*static*/void draw_background_test2_no_color_new()
+{
+//	if (*zaxxon_bg_enable)
+//	{
+		unsigned int yoffset = zaxxon_bg_scroll_x2;
+		/* loop over visible rows */
+for (unsigned int y = 0; y < 256;y++)	  // y
+{
+				int j=0;
+		UINT8 *dst = ((UINT8 *)bitmap+247)+(y*512); // * 0x100;
+
+		for (unsigned int x = 16; x < 240; ) // x
+//unsigned int y = 16;
+		{
+			UINT8 *src = zaxxon_bg_pixmap + ((x + yoffset) & 4095) * 0x100;
+			dst[-x]       = src[srcxmask[x][y]];
+			++x;
+			UINT8 *src2 = zaxxon_bg_pixmap + ((x + yoffset) & 4095) * 0x100;
+			dst[-x]       = src2[srcxmask[x][y]];
+			++x;
+		}
+}
+//	else
+//		memset4_fast (ss_map264, 0, 0x20000-264);
+}
+
+
 /*static*/void draw_background_test2_no_color()
 {
 //	if (*zaxxon_bg_enable)
 //	{
 		unsigned int yoffset = zaxxon_bg_scroll_x2;
-
-		/* loop over visible rows */
-		for (unsigned int y = 16; y < 240; ++y) // x
-		{
-			UINT8 *dst = ((UINT8 *)ss_map264) - y; // * 0x100;
-			UINT8 *src = zaxxon_bg_pixmap + ((y + yoffset) & 4095) * 0x100;
-			UINT32 *srcptr = (UINT32 *)srcxmask[y];
-
-			for (unsigned int x = 0; x < 0x20000;)	  // y
-			{
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;	
-			}
-		}
-//	}
-//	else
-//		memset4_fast (ss_map264, 0, 0x20000-264);
-}
-
-
-/*static*/void draw_background_test2()
-{
-//	if (*zaxxon_bg_enable)
-//	{
-		unsigned int yoffset = zaxxon_bg_scroll_x2;
 		unsigned int colorbase = *zaxxon_bg_color;
 
 		/* loop over visible rows */
@@ -1089,262 +1038,63 @@ FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"after drvreset      ",10,1
 			UINT8 *src = zaxxon_bg_pixmap + ((y + yoffset) & 4095) * 0x100;
 			UINT32 *srcptr = (UINT32 *)srcxmask[y];
 
-			for (unsigned int x = 0; x < 0x20000;)	  // y
+//			for (unsigned int x = 0; x < 0x1B000;)	  // y
+			for (unsigned int x = 0xE80; x < 0xD980;)	  // y
 			{
-				dst[x]             = src[*srcptr] + colorbase;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
+				x+=232;
+				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=512;	
+				x+=232;
 			}
 		}
 //	}
 //	else
 //		memset4_fast (ss_map264, 0, 0x20000-264);
-}
-
-/*static*/void draw_background_best_nocolor()
-{
-	/* only draw if enabled */
-//	if (*zaxxon_bg_enable)
-//	{
-		unsigned int yoffset = zaxxon_bg_scroll_x2;
-		/* loop over visible rows */
-		for (unsigned int y = 16; y < 240; ++y) // x
-		{
-			UINT8 *dst = ((UINT8 *)ss_map264) - y; // * 0x100;
-			UINT8 *src = zaxxon_bg_pixmap + ((y + yoffset) & 4095) * 0x100;
-			UINT32 *srcptr = (UINT32 *)srcxmask[y];
-
-			for (unsigned int x = 0; x < 0x20000;)	  // y
-			{
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr];
-				++srcptr;
-				x+=512;	
-			}
-		}
-//	}
-//	else
-//		memset4_fast (ss_map, 0, 0x20000-264);
-}
-
-
-/*static*/void draw_background_best(int skew)
-{
-	/* only draw if enabled */
-//	if (*zaxxon_bg_enable)
-//	{
-		unsigned int yoffset = zaxxon_bg_scroll_x2;
-		unsigned int colorbase = *zaxxon_bg_color;
-		/* loop over visible rows */
-		for (unsigned int y = 16; y < 240; ++y) // x
-		{
-			UINT8 *dst = ((UINT8 *)ss_map264) - y; // * 0x100;
-			UINT8 *src = zaxxon_bg_pixmap + ((y + yoffset) & 4095) * 0x100;
-			UINT32 *srcptr = (UINT32 *)srcxmask[y];
-
-			for (unsigned int x = 0; x < 0x20000;)	  // y
-			{
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;
-				dst[x]             = src[*srcptr] + colorbase;
-				++srcptr;
-				x+=512;	
-			}
-		}
-//	}
-//	else
-//		memset4_fast (ss_map, 0, 0x20000-264);
-}
-
-/*static*/void draw_background_fast(int skew)
-{
-	/* only draw if enabled */
-	if (*zaxxon_bg_enable)
-	{
-		unsigned int yoffset = zaxxon_bg_scroll_x2;
-
-		/* loop over visible rows */
-		for (unsigned int y = 16; y < 240; y++) // x
-		{
-			UINT8 *dst = ((UINT8 *)ss_map264) - y; // * 0x100;
-			UINT8 *src = zaxxon_bg_pixmap + ((y + yoffset) & 4095) * 0x100;
-			UINT32 *srcptr = (UINT32 *)srcxmask[y];
-
-			for (unsigned int x = 0; x < 0x20000;)	  // y
-			{
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-				dst[x]             = src[*srcptr++];
-				x+=512;
-			}
-		}
-	}
-
-	/* if not enabled, fill the background with black */
-//	else
-// vbt : todo :)
-//		memset (pTransDraw, 0, nScreenWidth * nScreenHeight * 2);
-//		memset4_fast (ss_map, 0, 0x20000);
 }
 
 // martinman : Store u32 instead of u8
@@ -1358,110 +1108,6 @@ vbt> thanks for help & good night =)
 <MartinMan> pixel[a[x]]
 <MartinMan> instead of pixel[x]
 */
-
-/*static*/void draw_background_test(int skew)
-{
-	/* only draw if enabled */
-	if (*zaxxon_bg_enable)
-	{
-		UINT8 *pixmap = zaxxon_bg_pixmap;
-		int colorbase = *zaxxon_bg_color; // + (*congo_color_bank << 8);
-		int ymask = 4095;
-		int yoffset = ((*zaxxon_bg_scroll << 1) ^ 0xfff) + 1;
-		int x, y;
-
-		/* loop over visible rows */
-		for (y = 16; y < 240; y++) // x
-		{
-			UINT8 *dst = ((UINT8 *)ss_map) + (264-y); // * 0x100;
-			UINT16 *dst16 = (UINT16*)dst;
-			int srcy = y + yoffset;
-			UINT8 *src = pixmap + (srcy & ymask) * 0x100;
-
-			unsigned int y2 = y>>1;
-
-			for (x = 0; x < 256; )	  // y
-			{
-				UINT32 x16 = x<<9;
-				dst[x16]            = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x200] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x400] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x600] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x800] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0xA00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0xC00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0xE00] = src[srcxmask[y2][x++]] + colorbase;
-
-				dst[x16+0x1000] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1200] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1400] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1600] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1800] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1A00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1C00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1E00] = src[srcxmask[y2][x++]] + colorbase;
-				
-			}
-		}
-	}
-
-	/* if not enabled, fill the background with black */
-//	else
-//		memset (pTransDraw, 0, nScreenWidth * nScreenHeight * 2);
-//		memset4_fast (ss_map, 0, 0x20000);
-}
-
-/*static*/void draw_background_v1(int skew)
-{
-	/* only draw if enabled */
-	if (*zaxxon_bg_enable)
-	{
-		UINT8 *pixmap = zaxxon_bg_pixmap;
-		int colorbase = *zaxxon_bg_color; // + (*congo_color_bank << 8);
-		int ymask = 4095;
-		int yoffset = ((*zaxxon_bg_scroll << 1) ^ 0xfff) + 1;
-		int x, y;
-
-		/* loop over visible rows */
-		for (y = 16; y < 240; y++) // x
-		{
-			UINT8 *dst = ((UINT8 *)ss_map) + (264-y); // * 0x100;
-			UINT16 *dst16 = (UINT16*)dst;
-			int srcy = y + yoffset;
-			UINT8 *src = pixmap + (srcy & ymask) * 0x100;
-
-			unsigned int y2 = y>>1;
-
-			for (x = 0; x < 256; )	  // y
-			{
-				UINT32 x16 = x<<9;
-				dst[x16]            = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x200] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x400] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x600] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x800] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0xA00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0xC00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0xE00] = src[srcxmask[y2][x++]] + colorbase;
-
-				dst[x16+0x1000] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1200] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1400] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1600] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1800] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1A00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1C00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1E00] = src[srcxmask[y2][x++]] + colorbase;
-				
-			}
-		}
-	}
-
-	/* if not enabled, fill the background with black */
-//	else
-//		memset (pTransDraw, 0, nScreenWidth * nScreenHeight * 2);
-//		memset4_fast (ss_map, 0, 0x20000);
-}
 
 /*static*/void draw_background_not_rotated(int skew)
 {
@@ -1494,33 +1140,11 @@ vbt> thanks for help & good night =)
 				srcx += 0x3f;
 
 				dst[x] = src[srcx & 255] + colorbase;
-
-/*				dst[x16]            = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x200] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x400] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x600] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x800] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0xA00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0xC00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0xE00] = src[srcxmask[y2][x++]] + colorbase;
-
-				dst[x16+0x1000] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1200] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1400] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1600] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1800] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1A00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1C00] = src[srcxmask[y2][x++]] + colorbase;
-				dst[x16+0x1E00] = src[srcxmask[y2][x++]] + colorbase;		*/
 			}
 		}
 	}
-
-	/* if not enabled, fill the background with black */
-//	else
-//		memset (pTransDraw, 0, nScreenWidth * nScreenHeight * 2);
-//		memset4_fast (ss_map, 0, 0x20000);
 }
+
 
 
 int find_minimum_y(UINT8 value)
@@ -1577,79 +1201,41 @@ int find_minimum_x(UINT8 value)
 #define flipymask8 1
 
 /* only the lower half of sprite RAM is read during rendering */
+	unsigned int j=4;
+
 	for (int offs = 0x7c; offs >= 0; offs -= 4)
 	{
 		int sy = find_minimum_y(DrvSprRAM[offs]);
 		int sx = find_minimum_x(DrvSprRAM[offs + 3]);
-//	if (sy == 0 || sy >  240) continue; 
-//		sy -= 16;
 
 		int flipy = (DrvSprRAM[offs + 1] ^ flipmask) & flipymask;
 		int flipx = (DrvSprRAM[offs + 1] ^ flipmask) & flipxmask;
 		int code = (DrvSprRAM[offs + 1] & 0x3f);
 		int color = (DrvSprRAM[offs + 2] & 0x1f);
 
-		int delta=(offs>>2)+3;
-		ss_sprite[delta].ax = 231-sy;//260-sy-13;//-16;
-		ss_sprite[delta].ay = sx-7-7;
+		ss_sprite[j].ax = 232-sy;//260-sy-13;//-16;
+		ss_sprite[j].ay = sx-15;
 
-		ss_sprite[delta].color      = color<<4;
-		ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP); // | DIR_LRTBREV); // | flip);
-		ss_sprite[delta].drawMode   = ( ECD_DISABLE | COMPO_REP);		
-		ss_sprite[delta].charSize   = 0x420;  // 32*32
-		ss_sprite[delta].charAddr   = 0x220+(code<<6);
+		ss_sprite[j].color      = color<<4;
+		ss_sprite[j].charAddr   = 0x220+(code<<6);
+		++j;
 	}
 }
 
-
 /*static*/int DrvDraw()
 {
-	
-//	if (DrvRecalc) 
-/*	{
-		int delta=0;
-		for (int i = 0; i < 0x200; i++) {
-			int rgb = Palette[i];
-//			DrvPalette[i] = BurnHighCol(rgb >> 16, rgb >> 8, rgb, 0);
-
-		colBgAddr[delta] = rgb;//RGB(rgb >> 19, rgb >> 11, rgb>>3);
-		delta++; if ((delta & 3) == 0) delta += 12;
-
-		}
-	}	
-	*/								 
-/*	if (hardware_type == 1) {
-		draw_background(0);
-	} else {
-		draw_background(1);
-	}
-*/
-//	draw_sprites(flipx_mask, 0x180);
-	
 	if (*zaxxon_bg_enable)
 	{
-		if(!*zaxxon_bg_color)
-			draw_background_test2_no_color();
-		else
-			draw_background_test2();
+		ss_sprite[3].charSize   = 0x1DE0;
+		draw_background_test2_no_color();
+//		draw_background_not_rotated(0);
 	}
 	else
-	{
-		memset4_fast (ss_map264, 0x10101010, 0x20000-512);
-	}	
+		ss_sprite[3].charSize   = 0;  // 
+
 	draw_sprites(0x140, 0x180);
-//xxxx
-//	int flipx_mask = 0x140;
-//	if (futspy_sprite) flipx_mask += 0x040;
-//	if (hardware_type == 2) flipx_mask += 0x100;
 
-
-
-//	draw_fg_layer(hardware_type);
-
-//	BurnTransferCopy(DrvPalette);
-
-return 0;
+	return 0;
 }
 
 
@@ -2064,7 +1650,9 @@ FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"BurnLoadRom done      ",10
 void copyBitmap()
 {
 //	memcpyl(ss_map+264,bitmap,0x10000);
-	DMA_CpuMemCopy1(ss_map+264,bitmap,0x1C000);
+//	memcpyl(DrvGfxROM2+0x00010000,bitmap,0x10000);
+//	DMA_CpuMemCopy1(ss_map+264,bitmap,0x1C000);
+	DMA_CpuMemCopy1(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCB00);
 	while(0 != DMA_CpuResult());
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -2153,7 +1741,7 @@ void DrvInitSaturn()
 	ss_scl			= (Fixed32 *)SS_SCL;
 
 //	nBurnLinescrollSize = 0x300;
-	nBurnSprites = 34;
+	nBurnSprites = 35;
 	/*
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
@@ -2173,7 +1761,7 @@ void DrvInitSaturn()
 	initLayers();
 	initPosition();
 	initColors();
-
+//initSprites(240-1,240-1,24,16,16,0);  //les deux derniers => delta
 		/* the starting X value is offset by 1 pixel (normal) or 7 pixels */
 		/* (flipped) due to a delay in the loading */
 	bitmap = (UINT8*)malloc(0x20000);
@@ -2199,6 +1787,23 @@ void DrvInitSaturn()
 //			srcxmask[y>>1][x] = (x + offset) & xmask;
 			srcxmask[y][x] = srcx & xmask;
 		}
+	}
+
+	ss_sprite[3].ax = 16;
+	ss_sprite[3].ay = -15;
+
+	ss_sprite[3].color          = 0x400;
+	ss_sprite[3].charAddr    = 0x2220;// 0x2000 => 0x80 sprites <<6
+	ss_sprite[3].control       = ( JUMP_NEXT | FUNC_NORMALSP); // | DIR_LRTBREV); // | flip);
+	ss_sprite[3].drawMode = ( COLOR_4 | ECD_DISABLE | COMPO_REP); //256 colors
+//	ss_sprite[3].charSize    = 0x1EFF;  // 240x*255y
+	ss_sprite[3].charSize    = 0x1DE0;  // 232x*224y
+
+	for (unsigned int j = 4; j<nBurnSprites; ++j)
+	{
+		ss_sprite[j].control      = ( JUMP_NEXT | FUNC_NORMALSP); // | DIR_LRTBREV); // | flip);
+		ss_sprite[j].drawMode= ( ECD_DISABLE | COMPO_REP);		
+		ss_sprite[j].charSize   = 0x420;  // 32*32
 	}
 
 	nBurnFunction = copyBitmap;

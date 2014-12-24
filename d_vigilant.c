@@ -6,7 +6,7 @@
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
-#define nInterleave 32 // dac needs 128 NMIs
+#define nInterleave 8 // dac needs 128 NMIs
 #define nSegmentLength1 nBurnSoundLen / nInterleave
 
 #include "d_vigilant.h"
@@ -674,8 +674,8 @@ static INT32 VigilantSyncDAC()
 	CZetClose();
 #endif
 
-	nCyclesTotal[0] = 3579645 / 55 / 1.5;
-	nCyclesTotal[1] = 3579645 / 55 / 1.5;
+	nCyclesTotal[0] = 3579645 / 55 / 2;
+	nCyclesTotal[1] = 3579645 / 55 / 4;
 	
 #ifdef SOUND
 //	BurnYM2151Init(3579645);
@@ -1149,9 +1149,9 @@ int vspfunc(char *format, ...)
 			
 #endif
 	}
-//		SPR_WaitEndSlaveSH();
+		SPR_WaitEndSlaveSH();
 	
-#ifdef SOUND2
+#ifdef SOUND
 		INT32 nSegmentLength2 = nBurnSoundLen - nSoundBufferPos;
 		
 		if (nSegmentLength2>0) 

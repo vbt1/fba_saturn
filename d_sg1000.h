@@ -9,6 +9,8 @@
 #include "8255ppi.h"
 #include "sn76496.h"
 
+extern int file_id;
+
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static int DrvInit();
 static int DrvExit();
@@ -70,7 +72,7 @@ static struct BurnDIPInfo Sg1000DIPList[]=
 STDDIPINFO(Sg1000)
 
 static struct BurnRomInfo sg1k_wboyRomDesc[] = {
-	{ "wonder boy [v1].bin",	0x08000, 0xe8f0344d, BRF_PRG | BRF_ESS },
+	{ "WonderB.sg",	0x08000, 0xe8f0344d, BRF_PRG | BRF_ESS },
 };
 
 STD_ROM_PICK(sg1k_wboy)

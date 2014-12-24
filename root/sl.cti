@@ -109,6 +109,10 @@ Track MODE1
 				Source D_VIGIL.BIN
 			EndFile
 
+			File D_SG1000.BIN;1
+				Source D_SG1000.BIN
+			EndFile
+
 			Directory BANKP
 
 				File EPR6165.BIN;1
@@ -2131,6 +2135,12 @@ EndFile
 ;EndFile
 
 
+			EndDirectory
+
+			Directory SG1000
+				File WONDERB.SG;1
+					Source SG1000\WONDERB.SG
+				EndFile
 			EndDirectory
 
 			Directory CONGO
