@@ -2334,6 +2334,59 @@ EndFile
 				EndFile
 			EndDirectory
 
+			Directory SZAXXON
+				File SUZAXXON.1;1
+					Source SZAXXON\SUZAXXON.1
+				EndFile
+				File SUZAXXON.10;1
+					Source SZAXXON\SUZAXXON.10
+				EndFile
+				File SUZAXXON.11;1
+					Source SZAXXON\SUZAXXON.11
+				EndFile
+				File SUZAXXON.12;1
+					Source SZAXXON\SUZAXXON.12
+				EndFile
+				File SUZAXXON.13;1
+					Source SZAXXON\SUZAXXON.13
+				EndFile
+				File SUZAXXON.14;1
+					Source SZAXXON\SUZAXXON.14
+				EndFile
+				File SUZAXXON.15;1
+					Source SZAXXON\SUZAXXON.15
+				EndFile
+				File SUZAXXON.2;1
+					Source SZAXXON\SUZAXXON.2
+				EndFile
+				File SUZAXXON.3;1
+					Source SZAXXON\SUZAXXON.3
+				EndFile
+				File SUZAXXON.4;1
+					Source SZAXXON\SUZAXXON.4
+				EndFile
+				File SUZAXXON.5;1
+					Source SZAXXON\SUZAXXON.5
+				EndFile
+				File SUZAXXON.6;1
+					Source SZAXXON\SUZAXXON.6
+				EndFile
+				File SUZAXXON.7;1
+					Source SZAXXON\SUZAXXON.7
+				EndFile
+				File SUZAXXON.8;1
+					Source SZAXXON\SUZAXXON.8
+				EndFile
+				File SUZAXXON.9;1
+					Source SZAXXON\SUZAXXON.9
+				EndFile
+				File SUZAXXON.U72;1
+					Source SZAXXON\SUZAXXON.U72
+				EndFile
+				File SUZAXXON.U98;1
+					Source SZAXXON\SUZAXXON.U98
+				EndFile
+			EndDirectory
 
 			Directory VIGIL
 				File D01C05.BIN;1

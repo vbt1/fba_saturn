@@ -75,7 +75,7 @@ OVLMITCH                 = root/d_mitch.coff
 OVLMITCH1               = root/d_mitch.bin
 MPOVLMITCHFILE    = $(OVLMITCH:.coff=.maps)
 LDOVLMITCHFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMITCHFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c eeprom.c
+SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c msm6295.c burn_sound_c.c eeprom.c
 OBJOVLMITCH         = $(SRCOVLMITCH:.c=.o)
 
 OVLGNG                 = root/d_gng.coff
@@ -125,8 +125,8 @@ OVLZAXXON                 = root/d_zaxxon.coff
 OVLZAXXON1               = root/d_zaxxon.bin
 MPOVLZAXXONFILE    = $(OVLZAXXON:.coff=.maps)
 LDOVLZAXXONFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLZAXXONFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-#SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c saturn/ovl.c d_zaxxon.s
-SRCOVLZAXXON         = d_ZAXXON.c saturn/ovl.c d_zaxxon.s
+SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c saturn/ovl.c d_zaxxon.s
+#SRCOVLZAXXON         = d_ZAXXON.c saturn/ovl.c d_zaxxon.s
 OBJOVLZAXXON         = $(SRCOVLZAXXON:.c=.o)
 
 OVLTETRIS                 = root/d_tetris.coff
@@ -227,7 +227,7 @@ $(OVLPKUNW1) : $(OBJOVLPKUNW) $(MAKEFILE) $(LDOVLPKUNWFILE)
 	$(CONV) -O binary $(OVLPKUNW) $(OVLPKUNW1)
 
 $(OVLMITCH) : $(OBJOVLMITCH) $(MAKEFILE) $(OBJOVLMITCH) $(LDOVLMITCHFILE)
-	$(CC) $(LDOVLMITCHFLAGS) $(OBJOVLMITCH) $(LIBSOVL) -o $@
+	$(CC) $(LDOVLMITCHFLAGS) $(OBJOVLMITCH) $(LIBSOVL) -lm -o $@
 
 $(OVLMITCH1) : $(OBJOVLMITCH) $(MAKEFILE) $(LDOVLMITCHFILE)
 	$(CONV) -O binary $(OVLMITCH) $(OVLMITCH1)
@@ -275,8 +275,8 @@ $(OVLSMS1) : $(OBJOVLSMS) $(MAKEFILE) $(LDOVLSMSFILE)
 	$(CONV) -O binary $(OVLSMS) $(OVLSMS1)
 
 $(OVLZAXXON) : $(OBJOVLZAXXON) $(MAKEFILE) $(OBJOVLZAXXON) $(LDOVLZAXXONFILE)
-#	$(CC) $(LDOVLZAXXONFLAGS) $(OBJOVLZAXXON) $(LIBSOVL) -o $@
-	$(CC) $(LDOVLZAXXONFLAGS) $(OBJOVLZAXXON) $(LIBSOVL) raze/raze.o -o $@
+	$(CC) $(LDOVLZAXXONFLAGS) $(OBJOVLZAXXON) $(LIBSOVL) -o $@
+#	$(CC) $(LDOVLZAXXONFLAGS) $(OBJOVLZAXXON) $(LIBSOVL) raze/raze.o -o $@
 
 $(OVLZAXXON1) : $(OBJOVLZAXXON) $(MAKEFILE) $(LDOVLZAXXONFILE)
 	$(CONV) -O binary $(OVLZAXXON) $(OVLZAXXON1)

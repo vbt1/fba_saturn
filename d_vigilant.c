@@ -6,7 +6,7 @@
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
-#define nInterleave 8 // dac needs 128 NMIs
+#define nInterleave 128 // dac needs 128 NMIs
 #define nSegmentLength1 nBurnSoundLen / nInterleave
 
 #include "d_vigilant.h"
@@ -132,7 +132,8 @@ int ovlInit(char *szShortName)
 	z80_raise_IRQ(DrvIrqVector);
 		nCyclesDone[1] += z80_emulate(1);
 #else
-		CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+//		CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+		CZetLowerIrq();
 #endif
 
 	} else {
@@ -143,7 +144,8 @@ int ovlInit(char *szShortName)
 		nCyclesDone[1] += z80_emulate(1000);
 #else
 //		ZetSetVector(DrvIrqVector);
-		CZetSetIRQLine(DrvIrqVector, CZET_IRQSTATUS_ACK);
+//		CZetSetIRQLine(DrvIrqVector, CZET_IRQSTATUS_ACK);
+		CZetRaiseIrq(DrvIrqVector);
 		nCyclesDone[1] += CZetRun(1000);
 #endif
 
@@ -1084,7 +1086,7 @@ int vspfunc(char *format, ...)
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	
 	CZetOpen(1);
-//	CZetNewFrame();
+	CZetNewFrame();
 	
 	for (INT32 i = 0; i < nInterleave; ++i) {
 		INT32 nNext;

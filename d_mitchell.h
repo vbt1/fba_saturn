@@ -20,7 +20,8 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 ///*static*/ Uint16 *cram_lut;
 /*static*/ void make_lut(void);
 /*static*/ void DrvCalcPalette();
-/*static*/ unsigned char 	bg_dirtybuffer[4096];
+/*static*/ //unsigned char 	bg_dirtybuffer[4096];
+UINT16 map_lut[256];
 UINT16 map_offset_lut[2048];
 ///*static*/ unsigned char 	*bg_dirtybuffer;
 /*static*/ unsigned char 	color_dirty = 0;
@@ -43,7 +44,7 @@ UINT16 map_offset_lut[2048];
 /*static*/ short         DrvDial1          = 0;
 /*static*/ short         DrvDial2          = 0;
 
-//extern unsigned char* MSM6295ROM;
+extern unsigned char* MSM6295ROM;
 
 /*static*/ unsigned char *Mem                 = NULL;
 /*static*/ unsigned char *MemEnd              = NULL;
@@ -63,8 +64,8 @@ UINT16 map_offset_lut[2048];
 /*static*/ unsigned char *DrvSprites          = NULL;
 ///*static*/ unsigned char *DrvTempRom          = NULL;
 ///*static*/ unsigned int  *DrvPalette          = NULL;
-/*static*/ int nCyclesDone, nCyclesTotal;
-/*static*/ int nCyclesSegment;
+/*static*/ int nCyclesDone; //, nCyclesTotal;
+/*static*/ //int nCyclesSegment;
 
 /*static*/ unsigned char DrvRomBank;
 /*static*/ unsigned char DrvPaletteRamBank;
@@ -133,49 +134,6 @@ STDINPUTINFO(Pang)
 };
 
 STDINPUTINFO(Block)
-
-/*static*/ inline void DrvClearOpposites(unsigned char* nJoystickInputs)
-{
-	if ((*nJoystickInputs & 0x30) == 0x30) {
-		*nJoystickInputs &= ~0x30;
-	}
-	if ((*nJoystickInputs & 0xc0) == 0xc0) {
-		*nJoystickInputs &= ~0xc0;
-	}
-}
-
-/*static*/ void DrvMakeInputs()
-{
-	unsigned int i;
-	for (i = 0; i < 12; i++) DrvInput[i] = 0x00;
-
-	for (i = 0; i < 8; i++) {
-		DrvInput[ 0] |= (DrvInputPort0[ i] & 1) << i;
-		DrvInput[ 1] |= (DrvInputPort1[ i] & 1) << i;
-		DrvInput[ 2] |= (DrvInputPort2[ i] & 1) << i;
-		DrvInput[ 3] |= (DrvInputPort3[ i] & 1) << i;
-		DrvInput[ 4] |= (DrvInputPort4[ i] & 1) << i;
-		DrvInput[ 5] |= (DrvInputPort5[ i] & 1) << i;
-		DrvInput[ 6] |= (DrvInputPort6[ i] & 1) << i;
-		DrvInput[ 7] |= (DrvInputPort7[ i] & 1) << i;
-		DrvInput[ 8] |= (DrvInputPort8[ i] & 1) << i;
-		DrvInput[ 9] |= (DrvInputPort9[ i] & 1) << i;
-		DrvInput[10] |= (DrvInputPort10[i] & 1) << i;
-		DrvInput[11] |= (DrvInputPort11[i] & 1) << i;
-	}
-
-	if (DrvInputType == DRV_INPUT_TYPE_BLOCK) {
-		if (DrvInputPort11[0]) DrvDial1 -= 0x04;
-		if (DrvInputPort11[1]) DrvDial1 += 0x04;
-		if (DrvDial1 >= 0x100) DrvDial1 = 0;
-		if (DrvDial1 < 0) DrvDial1 = 0xfc;
-		
-		if (DrvInputPort11[2]) DrvDial2 -= 0x04;
-		if (DrvInputPort11[3]) DrvDial2 += 0x04;
-		if (DrvDial2 >= 0x100) DrvDial2 = 0;
-		if (DrvDial2 < 0) DrvDial2 = 0xfc;
-	}
-}
 
 /*static*/ struct BurnRomInfo PangRomDesc[] = {
 	{ "pang6.bin",     0x08000, 0x68be52cd, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code

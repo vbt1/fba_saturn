@@ -1,5 +1,5 @@
 #include "d_zaxxon.h"
-#define RAZE 1
+//#define RAZE 1
 #define draw_background(x) draw_background_test2()
 //#define draw_background(x) draw_background_not_rotated(x)
   /*
@@ -37,9 +37,17 @@ int ovlInit(char *szShortName)
 		ZaxxonbInit, DrvExit, DrvFrame, DrvDraw, 
 	};
 
+struct BurnDriver nBurnDrvSzaxxon = {
+		"szaxxon", "zaxxon",
+		"Super Zaxxon\0",
+		szaxxonRomInfo, szaxxonRomName, ZaxxonInputInfo, ZaxxonDIPInfo,
+		sZaxxonInit, DrvExit, DrvFrame, DrvDraw, 
+	};
+
     if (strcmp(nBurnDrvCongo.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvCongo,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvZaxxon.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvZaxxon,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvZaxxonb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvZaxxonb,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvSzaxxon.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvSzaxxon,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -57,6 +65,16 @@ UINT8 __fastcall zaxxon_readA000(UINT16 address)
 
 UINT8 __fastcall zaxxon_read(UINT16 address)
 {
+#ifndef RAZE
+	if (address >= 0x8000 && address <= 0x9fff) {
+		return DrvVidRAM[address & 0x3ff];
+	}
+
+	if (address >= 0xa000 && address <= 0xafff) {
+		return DrvSprRAM[address & 0xff];
+	}
+#endif
+
 	if (address >= (0xc000+0x18fc) && address <= (0xc003+0x18fc)) 
 	{
 		address-= 0x18fc;
@@ -301,19 +319,8 @@ void __fastcall zaxxon_write8000(UINT16 address, UINT8 data)
 		DrvVidRAM[address] = data;
 		UINT32 colpromoffs = colpromoffs_lut[address];
 		UINT32 x = map_lut[address];
-/*		int sx = (address & 0x1f);
-		int sy = (address >> 5);
-
-		int colpromoffs = (sx | ((sy >> 2) << 5));
-
-		sx = sx <<7;
-		sy = (32-sy)<<1;
-
-		int x = sx|sy;
-*/
 		ss_map2[x] = (DrvColPROM[colpromoffs] & 0x0f);
 		ss_map2[x+1] = data;
-
 	}
 }
 
@@ -324,6 +331,28 @@ void __fastcall zaxxon_writeA000(UINT16 address, UINT8 data)
 
 void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 {
+#ifndef RAZE
+	// video ram
+	if (address >= 0x8000 && address <= 0x9fff) 
+	{
+		address &= 0x3ff;
+		if(DrvVidRAM[address] != data)
+		{
+			DrvVidRAM[address] = data;
+			UINT32 colpromoffs = colpromoffs_lut[address];
+			UINT32 x = map_lut[address];
+			ss_map2[x] = (DrvColPROM[colpromoffs] & 0x0f);
+			ss_map2[x+1] = data;
+		}
+		return;
+	}
+
+	if (address >= 0xa000 && address <= 0xafff) {
+		DrvSprRAM[address & 0xff] = data;
+		return;
+	}
+#endif
+
 	if (address >= 0xff3c && address <= 0xff3f) 
 	{
 		address-= 0x1f00;
@@ -370,7 +399,13 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 		case 0xe0f0:
 			*interrupt_enable = data & 1;
 #ifndef RAZE
-			if (~data & 1) CZetLowerIrq();
+			if (~data & 1) 
+			{
+				CZetOpen(0);
+				CZetLowerIrq();
+//				CZetRun(1);
+				CZetClose();
+			}
 #else
 			if (~data & 1) 
 		{
@@ -911,15 +946,16 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 		bg_layer_init();
 	}
 #ifndef RAZE
-	CZetInit(0);
+	CZetInit(1);
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0x5fff, 0, DrvZ80ROM);
 	CZetMapArea(0x0000, 0x5fff, 2, DrvZ80ROM);
 	CZetMapArea(0x6000, 0x6fff, 0, DrvZ80RAM);
 	CZetMapArea(0x6000, 0x6fff, 1, DrvZ80RAM);
-	CZetMapArea(0x6000, 0x6fff, 2, DrvZ80RAM);
+	CZetMapArea(0x6000, 0x6fff, 2, DrvZ80RAM); // read 0 // write 1 // fetch 2
 	CZetMapArea(0x8000, 0x83ff, 0, DrvVidRAM);
-	CZetMapArea(0x8000, 0x83ff, 1, DrvVidRAM);
+//	CZetMapArea(0x8000, 0x83ff, 1, DrvVidRAM);
+	CZetMapArea(0x8000, 0x83ff, 2, DrvVidRAM);
 	CZetMapArea(0xa000, 0xa0ff, 0, DrvSprRAM);
 	CZetMapArea(0xa000, 0xa0ff, 1, DrvSprRAM);
 	CZetSetWriteHandler(zaxxon_write);
@@ -968,7 +1004,9 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 		SN76496Exit();
 	}
 */	
+#ifdef RAZE
 	z80_stop_emulating();
+#endif
 	nBurnFunction = NULL;
 
 	MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = DrvZ80ROM2 = NULL;
@@ -1220,7 +1258,11 @@ int find_minimum_x(UINT8 value)
 #ifndef RAZE
 	CZetOpen(0);
 	CZetRun(50687);//(3041250 / 60);
-	if (*interrupt_enable) CZetRaiseIrq(0);
+	if (*interrupt_enable) 
+	{
+		CZetRaiseIrq(0);
+//		CZetRun(1);
+	}
 	CZetClose();
 #else
 	z80_emulate(3041250 / 60);
@@ -1272,12 +1314,14 @@ int find_minimum_x(UINT8 value)
 	int A;
 	UINT8 *rom = DrvZ80ROM;
 	int size = 0x6000;
+//	UINT8 *decrypt = DrvZ80DecROM;
 	UINT8 *decrypt = DrvZ80DecROM;
-	 /*
+#ifndef RAZE	 
 	CZetOpen(0);
 	CZetMapArea2(0x0000, 0x5fff, 2, DrvZ80DecROM, DrvZ80ROM );
 	CZetClose();
-	 */
+#endif
+
 	for (A = 0x0000; A < size; A++)
 	{
 		int i,j;
@@ -1301,6 +1345,8 @@ int find_minimum_x(UINT8 value)
 		i = ((A >> 0) & 1) + (((A >> 4) & 1) << 1) + (((A >> 8) & 1) << 2);
 		decrypt[A] = src ^ opcode_xortable[i][j];
 	}
+
+	memcpy(DrvZ80ROM,DrvZ80DecROM,size);
 }
 
 /*static*/int ZaxxonbInit()
@@ -1309,9 +1355,9 @@ int find_minimum_x(UINT8 value)
 
 	nRet = DrvInit();
 
-	if (nRet == 0) {
+//	if (nRet == 0) {
 		zaxxonb_decode();
-	}
+//	}
 
 	return nRet;
 }
@@ -1631,10 +1677,10 @@ void initLayers()
 
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
-
-	scfg.coltype       = SCL_COL_TYPE_256;//SCL_COL_TYPE_256;
+	scfg.dispenbl      = OFF;
+//	scfg.coltype       = SCL_COL_TYPE_256;//SCL_COL_TYPE_256;
 //	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	scfg.plate_addr[0] = (Uint32)SS_MAP;
+//	scfg.plate_addr[0] = (Uint32)SS_MAP;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 //	SCL_SetConfig(SCL_NBG2, &scfg);
 	

@@ -1,7 +1,16 @@
 #define CZ80 1
 //#define RAZE 1
 //#define LOOP 1
+#define SWITCH 1
 #include "d_mitchell.h"
+UINT16 charaddr_lut[0x0800];
+//extern cz80_struc* CZetCPUContext;
+#define nInterleave  10
+#define nBurnSoundLen 192
+#define nSegmentLength nBurnSoundLen / nInterleave
+#define 	nCyclesTotal 4500000 / 60
+#define nCyclesSegment nCyclesTotal / nInterleave
+//UINT32 cpu_lut[nInterleave];
 
 int ovlInit(char *szShortName)
 {
@@ -31,6 +40,57 @@ int ovlInit(char *szShortName)
 //	ss_map   = (Uint16 *)SS_MAP;
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+}
+
+/*static*/ inline void DrvClearOpposites(unsigned char* nJoystickInputs)
+{
+	if ((*nJoystickInputs & 0x30) == 0x30) {
+		*nJoystickInputs &= ~0x30;
+	}
+	if ((*nJoystickInputs & 0xc0) == 0xc0) {
+		*nJoystickInputs &= ~0xc0;
+	}
+}
+
+/*static*/ void DrvMakeInputs()
+{
+
+	for (unsigned int i = 0; i < 12; i++) DrvInput[i] = 0x00;
+
+	for (unsigned int  i = 0; i < 8; i++) {
+		DrvInput[ 0] |= (DrvInputPort0[ i] & 1) << i;
+		DrvInput[ 1] |= (DrvInputPort1[ i] & 1) << i;
+		DrvInput[ 2] |= (DrvInputPort2[ i] & 1) << i;
+		DrvInput[ 3] |= (DrvInputPort3[ i] & 1) << i;
+		DrvInput[ 4] |= (DrvInputPort4[ i] & 1) << i;
+		DrvInput[ 5] |= (DrvInputPort5[ i] & 1) << i;
+		DrvInput[ 6] |= (DrvInputPort6[ i] & 1) << i;
+		DrvInput[ 7] |= (DrvInputPort7[ i] & 1) << i;
+		DrvInput[ 8] |= (DrvInputPort8[ i] & 1) << i;
+		DrvInput[ 9] |= (DrvInputPort9[ i] & 1) << i;
+		DrvInput[10] |= (DrvInputPort10[i] & 1) << i;
+		DrvInput[11] |= (DrvInputPort11[i] & 1) << i;
+	}
+/*
+	if (DrvInputType == DRV_INPUT_TYPE_BLOCK) {
+	//while(1);
+		if (DrvInputPort11[0]) DrvDial1 -= 0x04;
+		if (DrvInputPort11[1]) DrvDial1 += 0x04;
+		if (DrvDial1 >= 0x100) DrvDial1 = 0;
+		if (DrvDial1 < 0) DrvDial1 = 0xfc;
+		
+		if (DrvInputPort11[2]) DrvDial2 -= 0x04;
+		if (DrvInputPort11[3]) DrvDial2 += 0x04;
+		if (DrvDial2 >= 0x100) DrvDial2 = 0;
+		if (DrvDial2 < 0) DrvDial2 = 0xfc;
+	} 
+	else*/ 
+//		{
+//		if (DrvInputType != DRV_INPUT_TYPE_MAHJONG)
+		{
+			DrvClearOpposites(&DrvInput[1]);
+			DrvClearOpposites(&DrvInput[2]);
+		}
 }
 
 /*static*/ int PangMemIndex()
@@ -102,7 +162,7 @@ int ovlInit(char *szShortName)
 #endif	
 #endif
 //	BurnYM2413Reset();
-//	MSM6295Reset(0);
+	MSM6295Reset(0);
 	
 	if (DrvHasEEPROM) EEPROMReset();
 	
@@ -134,8 +194,9 @@ int ovlInit(char *szShortName)
 {
 	if (a >= 0xc000 && a <= 0xc7ff) 
 	{
-//		a = (a - 0xc000) + (DrvPaletteRamBank ? 0x800 : 0x000);
-		a = (a & 0x07ff) + (DrvPaletteRamBank ? 0x800 : 0x000);
+// soustraction plus court que masque (voir asm)	dépend des cas à tester plus
+		a = (a - 0xc000) + (DrvPaletteRamBank ? 0x800 : 0x000);
+//		a = (a & 0x07ff) + (DrvPaletteRamBank ? 0x800 : 0x000);
 		if(DrvPaletteRam[a] != d)
 		{
 			DrvPaletteRam[a] = d;
@@ -150,7 +211,7 @@ int ovlInit(char *szShortName)
 		{
 			RamStart[a] = d;
 			int x = map_offset_lut[a&0x7ff];
-			ss_map2[x] = ((d & 0x80)<<7) | d & 0x7f;
+			ss_map2[x] = map_lut[d]; //((d & 0x80)<<7) | d & 0x7f;
 		}
 		return;
 	}
@@ -168,9 +229,7 @@ int ovlInit(char *szShortName)
 				a&=~1;
 				unsigned int Code = RamStart[a + 0] + (RamStart[a + 1] << 8);
 				Code &= DrvTileMask;
-
-				int x = map_offset_lut[(a>>1)&0x7ff];
-				ss_map2[x+1] = Code;
+				ss_map2[map_offset_lut[(a>>1)&0x7ff]+1] = Code;
 #else
 				bg_dirtybuffer[a>>1] = 1;
 #endif
@@ -206,18 +265,21 @@ int ovlInit(char *szShortName)
 		}
 		
 		case 0x05: {
-			int Bit = DrvHasEEPROM ? (EEPROMRead() & 0x01) << 7 : 0x80;
+			INT32 Bit = DrvHasEEPROM ? (EEPROMRead() & 0x01) << 7 : 0x80;
+			Bit |= 0x01;
+			Bit |= 0x08;
 			if (DrvInput5Toggle) {
-				Bit |= 0x01;
+//				Bit |= 0x01;
 			} else {
-				Bit |= 0x08;
+				Bit ^= 0x08;
+				Bit ^= 0x01;
 			}
 			
 			if (DrvPort5Kludge) Bit ^= 0x08;
 			
 			return ((0xff - DrvInput[3]) & 0x76) | Bit;
 		}
-		
+
 		default: {
 //			bprintf(PRINT_NORMAL, _T("Z80 #1 Port Read => %02X\n"), a);
 		}
@@ -235,12 +297,11 @@ int ovlInit(char *szShortName)
 			DrvFlipScreen = d & 0x04;
 			if (DrvOkiBank != (d & 0x10)) {
 				DrvOkiBank = d & 0x10;
-//				if (DrvOkiBank) {
-//					memcpy(MSM6295ROM, DrvSoundRom + 0x40000, 0x40000);
-//					while(1);
-//				} else {
-//					memcpy(MSM6295ROM, DrvSoundRom + 0x00000, 0x40000);
-//				}
+				if (DrvOkiBank) {
+					memcpy(MSM6295ROM, DrvSoundRom + 0x40000, 0x40000);
+				} else {
+					memcpy(MSM6295ROM, DrvSoundRom + 0x00000, 0x40000);
+				}
 			}
 			DrvPaletteRamBank = d & 0x20;
 			return;
@@ -309,7 +370,7 @@ int ovlInit(char *szShortName)
 		}
 		
 		case 0x05: {
-//			MSM6295Command(0, d);
+			MSM6295Command(0, d);
 			return;
 		}
 		
@@ -460,14 +521,19 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 #endif
 //	BurnYM2413Init(4000000, 1.0);
 //	BurnYM2413IncreaseVolume(200);
+	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
+
 //	MSM6295Init(0, 1000000 / 132, 10.0, 1);
-//	MSM6295ROM = DrvSoundRom;
-	
+	MSM6295Init(0, 1000000 / 132, 10.0, 0);
+//	MSM6295Init(0, 8000, 100, 0);
+	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
+
 	EEPROMInit(&MitchellEEPROMIntf);
 	DrvHasEEPROM = 1;
 
 	DrvTileMask = 0x7fff;
 	DrvNumColours = 0x800;
+	DrvInput5Toggle = 0;
 	nBurnFunction = DrvCalcPalette;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -635,8 +701,8 @@ if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 	scfg.plate_addr[0] = (Uint32)ss_map2;
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG0, &scfg);
-/*
-//	scfg.dispenbl 		 = ON;		  // VBT à commenter pour ne pas afficher l'écran de texte
+
+	scfg.dispenbl 		 = OFF;		  // VBT à commenter pour ne pas afficher l'écran de texte
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 //	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
@@ -645,9 +711,8 @@ if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG1, &scfg); 
-*/
+
 	scfg.dispenbl 		 = OFF;
-	SCL_SetConfig(SCL_NBG1, &scfg); 
 	SCL_SetConfig(SCL_NBG2, &scfg); 
 	SCL_SetCycleTable(CycleTb);
 }
@@ -720,7 +785,9 @@ static void dummy(void)
 	ss_reg->linecontrl = (lp.h_enbl << 1) & 0x0002;
 //	SclProcess =1;
 	SS_SET_S0PRIN(7);
-	SS_SET_N1PRIN(4);
+	SS_SET_N1PRIN(7);
+
+//	SS_SET_N1PRIN(4);
 	SS_SET_N2PRIN(5);		
 	SS_SET_N0PRIN(6);
 	}
@@ -799,6 +866,21 @@ static void dummy(void)
 			j++;
 		}
 	}
+
+	for (int i = 0; i<0x800; i++)
+	{
+		charaddr_lut[i] = 0x220+(i<<4);
+	}
+
+	for (int i = 0; i<256; i++)
+	{
+		map_lut[i] = ((i & 0x80)<<7) | i & 0x7f;
+	}
+
+/*	for (int i = 0; i < nInterleave; i++)
+	{
+			cpu_lut[i] = ((i + 1) * nCyclesTotal) / nInterleave;
+	}*/
 }
 
 
@@ -814,6 +896,7 @@ static void dummy(void)
 		}
 		color_dirty = 0;
 	}
+//	DrvMakeInputs();
 }
 #ifdef LOOP
 /*static*/ void DrvRenderBgLayer()
@@ -838,20 +921,23 @@ static void dummy(void)
 #endif
 /*static*/ void DrvRenderSpriteLayer()
 {
-	SprSpCmd *ss_spritePtr;
-	int i = 3;
+//	SprSpCmd *ss_spritePtr = &ss_sprite[3];
+	unsigned int i = 3;
+	UINT16 Code ;
+	UINT8 Attr ;
+
 	for (int Offset = 0x1000 - 0x40; Offset >= 0; Offset -= 0x20) 
 	{
-		int Code = DrvSpriteRam[Offset + 0];
-		int Attr = DrvSpriteRam[Offset + 1];
-		int Colour = Attr & 0x0f;
+		Code = DrvSpriteRam[Offset + 0];
+		Attr = DrvSpriteRam[Offset + 1];
 		Code += (Attr & 0xe0) << 3;
 
-		ss_spritePtr				= &ss_sprite[i++];
-		ss_spritePtr->ax		= DrvSpriteRam[Offset + 3] + ((Attr & 0x10) << 4);
-		ss_spritePtr->ay		= ((DrvSpriteRam[Offset + 2] + 8) & 0xff);// - 8;
-		ss_spritePtr->charAddr  = 0x220+(Code<<4);
-		ss_spritePtr->color     = (Colour<<4);
+		ss_sprite[i].ax		= DrvSpriteRam[Offset + 3] + ((Attr & 0x10) << 4);
+		ss_sprite[i].ay		= ((DrvSpriteRam[Offset + 2] + 8) & 0xff);// - 8;
+		ss_sprite[i].charAddr = charaddr_lut[Code];
+		ss_sprite[i].color     = (Attr & 0x0f)<<4;
+		++i;
+		
 	}
 }
 #ifdef LOOP
@@ -862,35 +948,85 @@ static void dummy(void)
 	SPR_WaitEndSlaveSH();
 }
 #endif
+
 /*static*/ int DrvFrame()
 {
-	int nInterleave = 10;
+#ifndef LOOP
+	SPR_RunSlaveSH((PARA_RTN*)DrvRenderSpriteLayer, NULL);
+#endif
+//	int nInterleave = 10;
 
 	if (DrvReset) DrvDoReset();
 
 	DrvMakeInputs();
 
 //	nCyclesTotal = 8000000 / 60;
-	nCyclesTotal = 4500000 / 60;
+//	nCyclesTotal = 4500000 / 60;
 	nCyclesDone = 0;
-	
+
 	DrvInput5Toggle = 0;
 	
 #ifdef CZ80
-	CZetNewFrame();
+//	CZetNewFrame();
+//	CZetCPUContext[0].nCyclesTotal = 0;
 #endif
-	unsigned int i;
-	for (i = 0; i < nInterleave; i++) 
+	for (unsigned int i = 0; i < nInterleave; i++) 
 	{
-		int nNext;
+//		int nNext;
 
 		// Run Z80 #1
 		//nCurrentCPU = 0;
 #ifdef CZ80
-//		CZetOpen(0);
-		nNext = (i + 1) * nCyclesTotal / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone;
+ if(0)
+		{	
+		CZetOpen(0);
+
 		nCyclesDone += CZetRun(nCyclesSegment);
+		if (i == 0 || i == 237) { // Needs to be ACK'd for one full scanline twice per frame. -dink
+			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			DrvInput5Toggle = (i == 237);
+		}
+		if (i == 1 || i == 238) {
+			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+		}
+		CZetClose();
+		}  
+ if(1)
+		{
+
+//		nCyclesSegment = nCyclesTotal / nInterleave;
+		nCyclesDone += CZetRun(nCyclesSegment);
+#ifdef SWITCH
+
+	switch (i)
+	{
+		case 4:
+			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+//			CZetRaiseIrq(0);
+			/*CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			nCyclesDone += CZetRun(500);
+			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+
+			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			nCyclesDone += CZetRun(500);
+			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);	  */
+			break;
+//		case 1:
+//		case 3:
+//		case 5:
+		case 7:
+			DrvInput5Toggle = 1;
+			break;
+		case 9:
+			CZetRaiseIrq(0);
+			/*
+			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			nCyclesDone += CZetRun(500);
+			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+			*/
+			break;
+	}
+#else
 
 		if (i == 4) 
 		{
@@ -902,17 +1038,17 @@ static void dummy(void)
 			nCyclesDone += CZetRun(500);
 			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 		}
-		if (i == 7) DrvInput5Toggle = 1;
+//		if (i == 7) DrvInput5Toggle = 1;
 		if (i == 9) 
 		{
 			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
 			nCyclesDone += CZetRun(500);
 			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 		}
+#endif
+		}
 //		CZetClose();
 #else
-
-#ifdef RAZE
 		nNext = (i + 1) * nCyclesTotal / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone;
 		nCyclesDone += z80_emulate(nCyclesSegment);
@@ -932,48 +1068,18 @@ static void dummy(void)
 //			z80_lower_IRQ(0);
 //			z80_emulate(0);
 		}
-#else
-		ZetOpen(0);
-		nNext = (i + 1) * nCyclesTotal / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone;
-		nCyclesDone += ZetRun(nCyclesSegment);
-		if (i == 4) 
-		{
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
-			nCyclesDone += ZetRun(500);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
-		}
-		if (i == 7) DrvInput5Toggle = 1;
-		if (i == 9) 
-		{
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
-			nCyclesDone += ZetRun(500);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
-		}
-		ZetClose();
-#endif		
 #endif
 /*		if (pBurnSoundOut) 
 		{*/
-/*
-			int nSegmentLength = nBurnSoundLen / nInterleave;
+//			int nSegmentLength = nBurnSoundLen / nInterleave;
+			signed short *nSoundBuffer = (signed short *)0x25a20000;
+			MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nSegmentLength);
+			nSoundBufferPos+=nSegmentLength;
 
-//			short* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-//			BurnYM2413Render(&g_movie_buf[nSoundBufferPos], nSegmentLength);
-//			MSM6295RenderVBT(0, &g_movie_buf[nSoundBufferPos], nSegmentLength);
-//			nSoundBufferPos += nSegmentLength;
+//			nSoundBufferPos+=nSegmentLength*2;
 
 
-			nSoundBufferPos+=nSegmentLength*2;
 
-			if(nSoundBufferPos>=0x2400) //RING_BUF_SIZE)
-			{
-				nSoundBufferPos=0;
-				PCM_Task(pcm); // bon emplacement
-			}
-				PCM_Task(pcm); // bon emplacement
-		}
-*/	
 //	if (pBurnSoundOut) 
 /*		{
 		int nSegmentLength = nBurnSoundLen - nSoundBufferPos;
@@ -986,8 +1092,20 @@ static void dummy(void)
 
 */
 	}
+		/*	signed short *nSoundBuffer = (signed short *)0x25a20000;
+			MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nBurnSoundLen);
+			nSoundBufferPos+=nBurnSoundLen;
+ 		  */
+			if(nSoundBufferPos>0x1B00)
+			{
+				nSoundBufferPos=0;
+//				PCM_Task(pcm); // bon emplacement
+			}
+			PCM_Task(pcm); 
+
 #ifndef LOOP
-	DrvRenderSpriteLayer();
+//	DrvRenderSpriteLayer();
+	SPR_WaitEndSlaveSH();
 #else
 	DrvDraw();
 #endif

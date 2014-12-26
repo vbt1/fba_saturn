@@ -152,6 +152,7 @@ void MSM6295Render_Linear(int nChip, int* pBuf, int nSegmentLength)
 	MSM6295[nChip].nFractionalPosition = nFractionalPosition;
 }
 
+
 /*
 int MSM6295Render(int nChip, short* pSoundBuf, int nSegmentLength)
 {
@@ -187,6 +188,7 @@ int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength)
 {
 //	if (nChip == 0) {
 		memset(pBuffer, 0, nSegmentLength * sizeof(int));
+//		memset(pBufferVBT, 0, nSegmentLength * sizeof(int));
 //	}
 
 	MSM6295Render_Linear(nChip, pBuffer, nSegmentLength);
@@ -274,7 +276,7 @@ void MSM6295Exit(int nChip)
 	pBuffer = NULL;
 }
 
-int MSM6295Init(int nChip, int nSamplerate, float fMaxVolume, bool bAddSignal)
+int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, bool bAddSignal)
 {
 	if (nBurnSoundRate > 0) {
 		if (pBuffer == NULL) {
@@ -285,7 +287,7 @@ int MSM6295Init(int nChip, int nSamplerate, float fMaxVolume, bool bAddSignal)
 	bAdd = bAddSignal;
 
 	// Convert volume from percentage
-	MSM6295[nChip].nVolume = (int)(fMaxVolume * 256.0 / 100.0 + 0.5);
+	MSM6295[nChip].nVolume = (int)((fMaxVolume * 256) / 100 + 0.5);
 
 	MSM6295[nChip].nSampleRate = nSamplerate;
 	if (nBurnSoundRate > 0) {
@@ -293,7 +295,6 @@ int MSM6295Init(int nChip, int nSamplerate, float fMaxVolume, bool bAddSignal)
 	} else {
 		MSM6295[nChip].nSampleSize = (nSamplerate << 12) / 11025;
 	}
-
 	MSM6295[nChip].nFractionalPosition = 0;
 
 	nMSM6295Status[nChip] = 0;

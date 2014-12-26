@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 30
+#define NB_DRV 31
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -214,17 +214,17 @@ BurnDrvZaxxonb.szParent="zaxxon";
 
 BurnDrvSzaxxon.szShortName="szaxxon";
 BurnDrvSzaxxon.szFullNameA="Super Zaxxon";
-BurnDrvSzaxxon.szParent=NULL;			
+BurnDrvSzaxxon.szParent="zaxxon";			
 
 BurnDrvVigilant.szShortName="vigil";
 BurnDrvVigilant.szFullNameA="Vigilante (World)";
 BurnDrvVigilant.szParent=NULL;	
 
 int i=0;
-//pDriver[i++] = &BurnDrvZaxxonb;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvZaxxon;
+pDriver[i++] = &BurnDrvZaxxonb;
 pDriver[i++] = &BurnDrvSzaxxon;	  
 pDriver[i++] = &BurnDrvVigilant;
 pDriver[i++] = &BurnDrvbankp;
