@@ -9,6 +9,7 @@
 #define MIXLEVEL	(1 << (16 - 4 - 4))
 #define OUTPUT_LEVEL(n)		((n) * MIXLEVEL / chip->num_voices)
 #define WAVEFORM_POSITION(n)	(((n) >> chip->f_fracbits) & 0x1f)
+#define BURN_SND_CLIPVBT(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 
 UINT8* NamcoSoundProm = NULL;
 
@@ -82,34 +83,11 @@ static inline UINT32 namco_update_one(INT16 *buffer, INT32 length, const INT16 *
 	while (length-- > 0)
 	{
 		INT32 nLeftSample = 0, nRightSample = 0;
-		
-		if ((chip->output_dir[BURN_SND_NAMCOSND_ROUTE_1] & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
-			nLeftSample += (INT32)(wave[WAVEFORM_POSITION(counter)] * chip->gain[BURN_SND_NAMCOSND_ROUTE_1]);
-		}
-		if ((chip->output_dir[BURN_SND_NAMCOSND_ROUTE_1] & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
-			nRightSample += (INT32)(wave[WAVEFORM_POSITION(counter)] * chip->gain[BURN_SND_NAMCOSND_ROUTE_1]);
-		}
-		
-		nLeftSample = BURN_SND_CLIP(nLeftSample);
-		nRightSample = BURN_SND_CLIP(nRightSample);
+		nLeftSample = (INT32)(wave[WAVEFORM_POSITION(counter)]);
+		nLeftSample = BURN_SND_CLIPVBT(nLeftSample);
 		
 		*buffer++ += nLeftSample;
-		*buffer++ += nRightSample;
-		
 		counter += freq * chip->update_step;
-	}
-
-	return counter;
-}
-
-static inline UINT32 namco_stereo_update_one(INT16 *buffer, INT32 length, const INT16 *wave, UINT32 counter, UINT32 freq)
-{
-	while (length-- > 0)
-	{
-		// no route support here - no games use this currently
-		*buffer += wave[WAVEFORM_POSITION(counter)];
-		counter += freq * chip->update_step;
-		buffer +=2;
 	}
 
 	return counter;
@@ -193,116 +171,6 @@ void NamcoSoundUpdate(INT16* buffer, INT32 length)
 
 				/* generate sound into buffer and update the counter for this voice */
 				voice->counter = namco_update_one(mix, length, w, voice->counter, voice->frequency);
-			}
-		}
-	}
-}
-
-void NamcoSoundUpdateStereo(INT16* buffer, INT32 length)
-{
-#if defined FBA_DEBUG
-//	if (!DebugSnd_NamcoSndInitted) bprintf(PRINT_ERROR, _T("NamcoSoundUpdateStereo called without init\n"));
-#endif
-
-	sound_channel *voice;
-
-	/* zap the contents of the buffers */
-	memset(buffer, 0, length * 2 * sizeof(*buffer));
-
-	/* if no sound, we're done */
-	if (chip->sound_enable == 0)
-		return;
-
-	/* loop over each voice and add its contribution */
-	for (voice = chip->channel_list; voice < chip->last_channel; voice++)
-	{
-		INT16 *lrmix = buffer;
-		INT32 lv = voice->volume[0];
-		INT32 rv = voice->volume[1];
-
-		if (voice->noise_sw)
-		{
-			INT32 f = voice->frequency & 0xff;
-
-			/* only update if we have non-zero volume and frequency */
-			if ((lv || rv) && f)
-			{
-				INT32 hold_time = 1 << (chip->f_fracbits - 16);
-				INT32 hold = voice->noise_hold;
-				UINT32 delta = f << 4;
-				UINT32 c = voice->noise_counter;
-				INT16 l_noise_data = OUTPUT_LEVEL(0x07 * (lv >> 1));
-				INT16 r_noise_data = OUTPUT_LEVEL(0x07 * (rv >> 1));
-				INT32 i;
-
-				/* add our contribution */
-				for (i = 0; i < length; i++)
-				{
-					INT32 cnt;
-
-					if (voice->noise_state)
-					{
-						*lrmix++ += l_noise_data;
-						*lrmix++ += r_noise_data;
-					}
-					else
-					{
-						*lrmix++ -= l_noise_data;
-						*lrmix++ -= r_noise_data;
-					}
-
-					if (hold)
-					{
-						hold--;
-						continue;
-					}
-
-					hold =	hold_time;
-
-					c += delta;
-					cnt = (c >> 12);
-					c &= (1 << 12) - 1;
-					for( ;cnt > 0; cnt--)
-					{
-						if ((voice->noise_seed + 1) & 2) voice->noise_state ^= 1;
-						if (voice->noise_seed & 1) voice->noise_seed ^= 0x28000;
-						voice->noise_seed >>= 1;
-					}
-				}
-
-				/* update the counter and hold time for this voice */
-				voice->noise_counter = c;
-				voice->noise_hold = hold;
-			}
-		}
-		else
-		{
-			/* only update if we have non-zero frequency */
-			if (voice->frequency)
-			{
-				/* save the counter for this voice */
-				UINT32 c = voice->counter;
-
-				/* only update if we have non-zero left volume */
-				if (lv)
-				{
-					const INT16 *lw = &chip->waveform[lv][voice->waveform_select * 32];
-
-					/* generate sound into the buffer */
-					c = namco_stereo_update_one(lrmix + 0, length, lw, voice->counter, voice->frequency);
-				}
-
-				/* only update if we have non-zero right volume */
-				if (rv)
-				{
-					const INT16 *rw = &chip->waveform[rv][voice->waveform_select * 32];
-
-					/* generate sound into the buffer */
-					c = namco_stereo_update_one(lrmix + 1, length, rw, voice->counter, voice->frequency);
-				}
-
-				/* update the counter for this voice */
-				voice->counter = c;
 			}
 		}
 	}
@@ -411,38 +279,6 @@ static void namcos1_sound_write(INT32 offset, INT32 data)
 	}
 }
 
-void namcos1_custom30_write(INT32 offset, INT32 data)
-{
-#if defined FBA_DEBUG
-//	if (!DebugSnd_NamcoSndInitted) bprintf(PRINT_ERROR, _T("namcos1_custom30_write called without init\n"));
-#endif
-
-	if (offset < 0x100)
-	{
-		if (namco_wavedata[offset] != data)
-		{
-			namco_wavedata[offset] = data;
-
-			/* update the decoded waveform table */
-			update_namco_waveform(offset, data);
-		}
-	}
-	else if (offset < 0x140) {
-		namco_wavedata[offset] = data;
-		namcos1_sound_write(offset - 0x100, data);
-	} else
-		namco_wavedata[offset] = data;
-}
-
-UINT8 namcos1_custom30_read(INT32 offset)
-{
-#if defined FBA_DEBUG
-//	if (!DebugSnd_NamcoSndInitted) bprintf(PRINT_ERROR, _T("namcos1_custom30_read called without init\n"));
-#endif
-
-	return namco_wavedata[offset];
-}
-
 static INT32 build_decoded_waveform()
 {
 	INT16 *p;
@@ -531,22 +367,6 @@ void NamcoSoundInit(INT32 clock, INT32 num_voices)
 	}
 	
 	chip->update_step = INTERNAL_RATE / SOUNDRATE;
-	
-	chip->gain[BURN_SND_NAMCOSND_ROUTE_1] = 1.00;
-	chip->gain[BURN_SND_NAMCOSND_ROUTE_2] = 1.00;
-	chip->output_dir[BURN_SND_NAMCOSND_ROUTE_1] = BURN_SND_ROUTE_BOTH;
-	chip->output_dir[BURN_SND_NAMCOSND_ROUTE_2] = BURN_SND_ROUTE_BOTH;
-}
-
-void NacmoSoundSetRoute(INT32 nIndex, double nVolume, INT32 nRouteDir)
-{
-#if defined FBA_DEBUG
-//	if (!DebugSnd_NamcoSndInitted) bprintf(PRINT_ERROR, _T("NacmoSoundSetRoute called without init\n"));
-	if (nIndex < 0 || nIndex > 1) bprintf(PRINT_ERROR, _T("NacmoSoundSetRoute called with invalid index %i\n"), nIndex);
-#endif
-
-	chip->gain[nIndex] = nVolume;
-	chip->output_dir[nIndex] = nRouteDir;
 }
 
 void NamcoSoundExit()

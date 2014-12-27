@@ -183,7 +183,6 @@ int MSM6295Render(int nChip, short* pSoundBuf, int nSegmentLength)
 }
 */
 
-
 int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength)
 {
 //	if (nChip == 0) {
@@ -193,7 +192,6 @@ int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength)
 
 	MSM6295Render_Linear(nChip, pBuffer, nSegmentLength);
 	BurnSoundCopyClamp_Mono_C(pBuffer, pSoundBuf, nSegmentLength);
-
 	return 0;
 }
 

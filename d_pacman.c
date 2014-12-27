@@ -4,6 +4,8 @@
 // Fix Shoot the Bull inputs
 
 #include "d_pacman.h"
+#define nBurnSoundLen 192
+
 ///*static*/ INT32 nSoundBufferPos1=0;
 #define CACHE 1
 
@@ -69,7 +71,7 @@ void __fastcall pengo_write(UINT16 a, UINT8 d)
 	////	CZetMapArea(0x8400, 0x87ff, 1, DrvColRAM);
 
 	if ((a & 0xffe0) == 0x9000) {
-//		NamcoSoundWrite(a & 0x1f, d);
+		NamcoSoundWrite(a & 0x1f, d);
 		return;
 	}
 
@@ -295,7 +297,7 @@ static INT32 pacman_load()
 	INT32 pOffset = 0;
 	UINT8 *gLoad = DrvGfxROM;
 	UINT8 *cLoad = DrvColPROM;
-//	UINT8 *sLoad = NamcoSoundProm;
+	UINT8 *sLoad = NamcoSoundProm;
 	UINT8 *qLoad = DrvQROM;
 
 	for (INT32 i = 0; !BurnDrvGetRomName(&pRomName, i, 0); i++) {
@@ -304,16 +306,16 @@ static INT32 pacman_load()
 
 		if ((ri.nType & 7) == 1) {
 			if (BurnLoadRom(DrvZ80ROM + pOffset, i, 1)) return 1;
-		  /*
-			if (game_select == MSPACMAN) {
+		  
+		/*	if (game_select == MSPACMAN) {
 				pOffset += 0x1000;
-			} else {		*/
+			} else {	*/
 				pOffset += ri.nLen;
-		//	}
+	/*		}
 
-	/*		if (pOffset == 0x4000 && game_select != PENGO) {
+			if (pOffset == 0x4000 && game_select != PENGO) {
 				pOffset = 0x8000;
-			}			*/
+			}			 */
 
 			continue;
 		}
@@ -331,14 +333,14 @@ static INT32 pacman_load()
 
 			continue;
 		}
-/*		
+		
 		if ((ri.nType & 7) == 4) {
 			if (BurnLoadRom(sLoad, i, 1)) return 1;
 			sLoad += 0x100;
 
 			continue;
 		}
-*/
+
 		if ((ri.nType & 7) == 7) {
 			if (BurnLoadRom(qLoad, i, 1)) return 1;
 			qLoad += ri.nLen;
@@ -359,7 +361,7 @@ static INT32 MemIndex()
 	DrvQROM			= Next;
 	DrvGfxROM		= (UINT8 *)cache;
 	DrvColPROM		= Next; Next += 0x000500;
-//	NamcoSoundProm		= Next; Next += 0x000200;
+	NamcoSoundProm		= Next; Next += 0x000200;
 	//Palette			= (UINT32*)Next; Next += 0x0200 * sizeof(UINT32);
 	AllRam			= Next;
 
@@ -447,7 +449,7 @@ static INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 selec
 //	SN76496SetRoute(0, 0.75, BURN_SND_ROUTE_BOTH);
 //	SN76496SetRoute(1, 0.75, BURN_SND_ROUTE_BOTH);
 
-//	NamcoSoundInit(18432000 / 6 / 32, 3);
+	NamcoSoundInit(18432000 / 6 / 32, 3);
 //	NacmoSoundSetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 
 //	GenericTilesInit();
@@ -572,13 +574,13 @@ void DrvInitSaturn()
 
 static INT32 DrvExit()
 {
-//	NamcoSoundExit();
+	NamcoSoundExit();
 	CZetExit();
 
 	game_select = PACMAN;
 	nPacBank = -1;
 
-	DrvZ80ROM = DrvQROM = DrvGfxROM = DrvColPROM = /*NamcoSoundProm =*/ NULL;
+	DrvZ80ROM = DrvQROM = DrvGfxROM = DrvColPROM = NamcoSoundProm = NULL;
 	/*/DrvTransTable = Palette =*/ AllRam = DrvZ80RAM = DrvSprRAM = DrvSprRAM2 = NULL;
 	DrvColRAM= DrvVidRAM = /*flipscreen =*/ RamEnd = NULL;
 	PengoStart = bg_dirtybuffer = map_offset_lut = ofst_lut = MemEnd = NULL;
@@ -701,11 +703,11 @@ static INT32 DrvFrame()
 //				ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
 				CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 			}
-/*		
+		
 //		if (pBurnSoundOut) 
 //		{
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
-			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos1 << 1);
+//			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos1 << 1);
 //			Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
 			Sint16 *nSoundBuffer = (Sint16 *)0x25a20000;
 
@@ -719,23 +721,23 @@ static INT32 DrvFrame()
 				}
 //			}
 
+			nSoundBufferPos += nSegmentLength;
 			nSoundBufferPos1 += nSegmentLength;
 //		}
- */
 	}
-/*	
+	
 //	if (pBurnSoundOut) {
 //		int nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
-		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos1 << 1);
-		Sint16 *nSoundBuffer = (Sint16 *)0x25a20000;
+//		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos1 << 1);
 
-		if (nSegmentLength) {
+		if (nSegmentLength) 
+		{
+			Sint16 *nSoundBuffer = (Sint16 *)0x25a20000;
 			NamcoSoundUpdate(&nSoundBuffer[nSoundBufferPos], nSegmentLength);
-//			NamcoSoundUpdate(pSoundBuf, nSegmentLength);
+			nSoundBufferPos += nSegmentLength;
 		}
-//	}
-*/	
+	
 	CZetClose();
 
  // 	Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
@@ -756,13 +758,12 @@ static INT32 DrvFrame()
 	}
    */
      DrvDraw();
-/*	if(nSoundBufferPos>=0x4800)//0x4800-nSegmentLength)//
+	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
 	{
 		PCM_Task(pcm);
 		nSoundBufferPos=0;
 	}
-	*/
-//	PCM_Task(pcm);		
+	
 	return 0;
 }
 //------------------------------------------------------------------------------------------------------

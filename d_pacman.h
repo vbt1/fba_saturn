@@ -4,18 +4,17 @@
 #include "burnint.h"
 #include "bitswap.h"
 //#include "sn76496.h"
-//#include "namco_snd.h"
+#include "namco_snd.h"
 //extern "C" {
 //#include "ay8910.h"
 //}
 #include "saturn/ovl.h"
 
-#define nBurnSoundLen 240
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
-/*static*/ //INT32 mspacmanInit();
-/*static*/ //INT32 puckmanInit();
+/*static*/ INT32 mspacmanInit();
+/*static*/ INT32 puckmanInit();
 /*static*/// INT32 pengoInit();
 static INT32 pengouInit();
 /*static*/ //INT32 pengobInit();
