@@ -4,13 +4,11 @@
 #define SWITCH 1
 #include "d_mitchell.h"
 UINT16 charaddr_lut[0x0800];
-//extern cz80_struc* CZetCPUContext;
 #define nInterleave  10
 #define nBurnSoundLen 192
 #define nSegmentLength nBurnSoundLen / nInterleave
 #define 	nCyclesTotal 4500000 / 60
 #define nCyclesSegment nCyclesTotal / nInterleave
-//UINT32 cpu_lut[nInterleave];
 
 int ovlInit(char *szShortName)
 {
@@ -740,6 +738,7 @@ static void dummy(void)
 /*static*/ void DrvInitSaturn()
 {
 	nBurnSprites  = 131;
+	nBurnLinescrollSize = 0x0;
 //	TVOFF;
 	SS_MAP2    = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT    = ss_font     = (Uint16 *)NULL;//(Uint16 *)SCL_VDP2_VRAM_B0;
@@ -754,7 +753,8 @@ static void dummy(void)
 	ss_scl			= (Fixed32 *)SS_SCL;
 
 //	 lp.h_enbl=OFF;	 
-//	TVMD = 0x0011;	
+//	TVMD = 0x0011;
+
 	ss_regs->tvmode = 0x8011;//0x0013;//0x0001; ou 0x0011
 	ss_reg->linecontrl = (lp.h_enbl << 1) & 0x0002;
 //	SclProcess =1;
@@ -804,6 +804,7 @@ static void dummy(void)
 /*static*/ int DrvExit()
 {
 	nBurnFunction = NULL;
+	MSM6295Exit(0);
 #ifdef CZ80
 	CZetExit();
 #else
@@ -821,6 +822,7 @@ static void dummy(void)
 #endif
 //	DrvPaletteRam = NULL;
 	color_dirty = 0;
+	MSM6295ROM = NULL;
 	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam =DrvChars = DrvSprites = NULL;
 	DrvRomBank = 0;
 	DrvPaletteRamBank = 0;
@@ -1072,9 +1074,9 @@ static void dummy(void)
 /*		if (pBurnSoundOut) 
 		{*/
 //			int nSegmentLength = nBurnSoundLen / nInterleave;
-			signed short *nSoundBuffer = (signed short *)0x25a20000;
-			MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nSegmentLength);
-			nSoundBufferPos+=nSegmentLength;
+//			signed short *nSoundBuffer = (signed short *)0x25a20000;
+//			MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nSegmentLength);
+//			nSoundBufferPos+=nSegmentLength;
 
 //			nSoundBufferPos+=nSegmentLength*2;
 
@@ -1092,11 +1094,11 @@ static void dummy(void)
 
 */
 	}
-		/*	signed short *nSoundBuffer = (signed short *)0x25a20000;
+			signed short *nSoundBuffer = (signed short *)0x25a20000;
 			MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nBurnSoundLen);
 			nSoundBufferPos+=nBurnSoundLen;
- 		  */
-			if(nSoundBufferPos>0x1B00)
+ 		  
+			if(nSoundBufferPos>=RING_BUF_SIZE/2)
 			{
 				nSoundBufferPos=0;
 //				PCM_Task(pcm); // bon emplacement

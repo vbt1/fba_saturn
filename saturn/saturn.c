@@ -1257,9 +1257,9 @@ static int __cdecl SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int n
 	BurnDrvGetRomName(&pszFilename, i, 0);
 		BurnDrvGetRomInfo(&ri, i);
 /*		char toto[100];
-		sprintf (toto,"ld%s T%d L%d",pszFilename,ri.nType&7,ri.nLen);
+		sprintf (toto,"ld %s T %d L%d",pszFilename,ri.nType&7,ri.nLen);
 		FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)toto,10,(10*i)+20);
-*/
+ */
 
 	int fid			= GFS_NameToId((Sint8 *)strupr(pszFilename));
 	long fileSize	= GetFileSize(fid);
@@ -1782,8 +1782,8 @@ static void run_fba_emulator()
 		_spr2_transfercommand();
 		frame_x++;
 
-//		 if(frame_x>=frame_y)
-//			wait_vblank();
+		 if(frame_x>=frame_y)
+			wait_vblank();
 	}
 
 	if(drvquit==1)

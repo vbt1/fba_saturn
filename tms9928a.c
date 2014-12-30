@@ -1,6 +1,15 @@
 //#include "tiles_generic.h"
 #include "tms9928a.h"
+#define nScreenWidth 256
+#define nScreenHeight 192
+#define	RGB( r, g, b )		(0x8000U|((b) << 10)|((g) << 5 )|(r))
 
+char pattern_lut[256][8];
+extern unsigned char *pTransDraw;
+extern unsigned short *colAddr;
+extern unsigned short  *ss_map;
+unsigned int pattern6[0x400];
+unsigned int pattern4[0x400];
 static int TMS9928A_palette[16] = {
 	0x000000, 0x000000, 0x21c842, 0x5edc78, 0x5455ed, 0x7d76fc, 0xd4524d, 0x42ebf5,
 	0xfc5554, 0xff7978, 0xd4c154, 0xe6ce80, 0x21b03b, 0xc95bba, 0xcccccc, 0xffffff
@@ -24,7 +33,8 @@ typedef struct {
 
 	unsigned char *vMem;
 	unsigned char *dBackMem;
-	unsigned short *tmpbmp;
+//	unsigned short *tmpbmp;
+	unsigned char *tmpbmp;
 	int vramsize;
 	int model;
 
@@ -42,12 +52,13 @@ typedef struct {
 
 static TMS9928A tms;
 
-static unsigned int Palette[16]; // high color support
+//static unsigned int Palette[16]; // high color support
 
 static void TMS89928aPaletteRecalc()
 {
 	for (int i = 0; i < 16; i++) {
-//		Palette[i] = BurnHighCol(TMS9928A_palette[i] >> 16, TMS9928A_palette[i] >> 8, TMS9928A_palette[i] >> 0 , 0);
+		//Palette[i] = BurnHighCol(TMS9928A_palette[i] >> 16, TMS9928A_palette[i] >> 8, TMS9928A_palette[i] >> 0 , 0);
+		colAddr[i] = RGB(TMS9928A_palette[i] >> 19,TMS9928A_palette[i] >> 11,TMS9928A_palette[i] >> 3);
 	}
 }
 
@@ -56,73 +67,76 @@ static void change_register(int reg, unsigned char val)
 	static const unsigned char Mask[8] = { 0x03, 0xfb, 0x0f, 0xff, 0x07, 0x7f, 0x07, 0xff };
 
 	val &= Mask[reg];
-	tms.Regs[reg] = val;
 
-	switch (reg)
+	if(tms.Regs[reg] != val)
 	{
-		case 0:
+		tms.Regs[reg] = val;
+
+		switch (reg)
 		{
-			if (val & 2) {
-				tms.colour = ((tms.Regs[3] & 0x80) * 64) & (tms.vramsize - 1);
-				tms.colourmask = (tms.Regs[3] & 0x7f) * 8 | 7;
-				tms.pattern = ((tms.Regs[4] & 4) * 2048) & (tms.vramsize - 1);
-				tms.patternmask = (tms.Regs[4] & 3) * 256 |
-					(tms.colourmask & 255);
-			} else {
-				tms.colour = (tms.Regs[3] * 64) & (tms.vramsize - 1);
-				tms.pattern = (tms.Regs[4] * 2048) & (tms.vramsize - 1);
+			case 0:
+			{
+				if (val & 2) {
+					tms.colour = ((tms.Regs[3] & 0x80) * 64) & (tms.vramsize - 1);
+					tms.colourmask = (tms.Regs[3] & 0x7f) * 8 | 7;
+					tms.pattern = ((tms.Regs[4] & 4) * 2048) & (tms.vramsize - 1);
+					tms.patternmask = (tms.Regs[4] & 3) * 256 | (tms.colourmask & 255);
+				} else {
+					tms.colour = (tms.Regs[3] * 64) & (tms.vramsize - 1);
+					tms.pattern = (tms.Regs[4] * 2048) & (tms.vramsize - 1);
+				}
 			}
-		}
-		break;
+			break;
 
-		case 1:
-		{
-		      	int b = (val & 0x20) && (tms.StatusReg & 0x80);
-		        if (b != tms.INT) {
-		            tms.INT = b;
-		            if (tms.INTCallback) tms.INTCallback (tms.INT);
-		        }
-		}
-		break;
-
-		case 2:
-			tms.nametbl = (val * 1024) & (tms.vramsize - 1);
-		break;
-
-		case 3:
-		{
-			if (tms.Regs[0] & 2) {
-				tms.colour = ((val & 0x80) * 64) & (tms.vramsize - 1);
-				tms.colourmask = (val & 0x7f) * 8 | 7;
-			} else {
-				tms.colour = (val * 64) & (tms.vramsize - 1);
+			case 1:
+			{
+					int b = (val & 0x20) && (tms.StatusReg & 0x80);
+					if (b != tms.INT) {
+						tms.INT = b;
+						if (tms.INTCallback) tms.INTCallback (tms.INT);
+					}
 			}
-			tms.patternmask = (tms.Regs[4] & 3) * 256 | (tms.colourmask & 255);
-		}
-		break;
+			break;
 
-		case 4:
-		{
-			if (tms.Regs[0] & 2) {
-				tms.pattern = ((val & 4) * 2048) & (tms.vramsize - 1);
-				tms.patternmask = (val & 3) * 256 | 255;
-			} else {
-				tms.pattern = (val * 2048) & (tms.vramsize - 1);
+			case 2:
+				tms.nametbl = (val * 1024) & (tms.vramsize - 1);
+			break;
+
+			case 3:
+			{
+				if (tms.Regs[0] & 2) {
+					tms.colour = ((val & 0x80) * 64) & (tms.vramsize - 1);
+					tms.colourmask = (val & 0x7f) * 8 | 7;
+				} else {
+					tms.colour = (val * 64) & (tms.vramsize - 1);
+				}
+				tms.patternmask = (tms.Regs[4] & 3) * 256 | (tms.colourmask & 255);
 			}
+			break;
+
+			case 4:
+			{
+				if (tms.Regs[0] & 2) {
+					tms.pattern = ((val & 4) * 2048) & (tms.vramsize - 1);
+					tms.patternmask = (val & 3) * 256 | 255;
+				} else {
+					tms.pattern = (val * 2048) & (tms.vramsize - 1);
+				}
+			}
+			break;
+
+			case 5:
+				tms.spriteattribute = (val * 128) & (tms.vramsize - 1);
+			break;
+
+			case 6:
+				tms.spritepattern = (val * 2048) & (tms.vramsize - 1);
+			break;
+
+			case 7:
+				/* The backdrop is updated at TMS9928A_refresh() */
+			break;
 		}
-		break;
-
-		case 5:
-			tms.spriteattribute = (val * 128) & (tms.vramsize - 1);
-		break;
-
-		case 6:
-			tms.spritepattern = (val * 2048) & (tms.vramsize - 1);
-		break;
-
-		case 7:
-			/* The backdrop is updated at TMS9928A_refresh() */
-		break;
 	}
 }
 
@@ -161,14 +175,57 @@ void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallb
 #undef MIN
 
 	tms.vramsize = vram;
-	tms.vMem = (unsigned char*)malloc(tms.vramsize);
+	tms.vMem = (unsigned char*)0x25e60000;//(unsigned char*)malloc(tms.vramsize);
 
 	tms.dBackMem = (unsigned char*)malloc(256 * 192);
 
-	tms.tmpbmp = (unsigned short*)malloc(256 * 192 * sizeof(short));
-
+//	tms.tmpbmp = (unsigned short*)malloc(256 * 192 * sizeof(short));
+//	tms.tmpbmp = (unsigned char*)malloc(256 * 192 * sizeof(char));
+//	tms.tmpbmp = (unsigned char*)0x00200000;
+extern unsigned int *shared;
+#define SS_SPRAM *(&shared + 5)
+	unsigned char *ss_vram = (unsigned char *)SS_SPRAM;
+	tms.tmpbmp	= (ss_vram+0x1100);
+	memset(tms.tmpbmp, 0, 256 * 192 * sizeof(char));
+	TMS89928aPaletteRecalc();
 	TMS9928AReset ();
 	tms.LimitSprites = 1;
+
+/*
+                pattern = *patternptr++;
+                colour = *colourptr++;
+                fg = colour / 16;
+                bg = colour & 15;
+
+			   unsigned int color1,color2;
+			   char *vbt = &bitmap[(y * 8 + yy) * 128 + (x*4)];
+*/
+				for (int i=0; i<256; i++)
+				{
+					for (int j=0; j<8; j++)
+					{
+						pattern_lut[i][j]=(i*j*2)&0x80;
+					}
+				}
+
+				for (int i=0; i<0x400; i++)
+					pattern6[i]=(i>>6)&3;
+				for (int i=0; i<0x400; i++)
+					pattern4[i]=(i>>4)&3;
+/*
+			    for (xx=0;xx<4;xx++) 
+				{
+					color1=(pattern & 0x80) ? fg : bg;
+					pattern *= 2;
+					color2=(pattern & 0x80) ? fg : bg;
+					pattern *= 2;
+*/
+
+
+
+
+
+
 }
 
 void TMS9928AExit()
@@ -246,7 +303,7 @@ void TMS9928ASetSpriteslimit(int limit)
 static void draw_mode0(unsigned short *bitmap)
 {
 	unsigned char *patternptr;
-
+	 while(1);
 	for (int y = 0, name = 0; y < 24; y++)
 	{
 		for (int x = 0; x < 32; x++, name++)
@@ -277,7 +334,7 @@ static void draw_mode1(unsigned short *bitmap)
 {
 	int pattern,x,y,yy,xx,name,charcode;
 	unsigned char fg,bg,*patternptr;
-
+	while(1);
 	fg = tms.Regs[7] / 16;
 	bg = tms.Regs[7] & 15;
 
@@ -309,7 +366,7 @@ static void draw_mode12(unsigned short *bitmap)
 {
 	int pattern,x,y,yy,xx,name,charcode;
 	unsigned char fg,bg,*patternptr;
-
+	while(1);
 	fg = tms.Regs[7] / 16;
 	bg = tms.Regs[7] & 15;
 
@@ -336,30 +393,50 @@ static void draw_mode12(unsigned short *bitmap)
     }
 }
 
-static void draw_mode2(unsigned short *bitmap)
+static void draw_mode2(unsigned char *bitmap,unsigned char *vmem)
 {
-    int colour,name,x,y,yy,pattern,xx,charcode;
-    unsigned char fg,bg;
-    unsigned char *colourptr,*patternptr;
 
-    name = 0;
-    for (y=0;y<24;y++) {
-        for (x=0;x<32;x++) {
-            charcode = tms.vMem[tms.nametbl+name]+(y/8)*256;
-            name++;
-            colour = (charcode&tms.colourmask);
+    unsigned int colour,x,y,yy,pattern,xx,charcode;
+    unsigned int fg,bg;
+    unsigned char *colourptr,*patternptr;
+	unsigned char tab[4];
+
+//	unsigned char *vmem = (unsigned char *)&tms.vMem[tms.nametbl];
+
+    for (y=0;y<24;y++) 
+	{
+//		unsigned int y8=(y/8)*256;
+        for (x=0;x<32;x++) 
+		{
+            charcode = (*vmem++)+(y/8)*256;
+            colour =  (charcode&tms.colourmask);
             pattern = (charcode&tms.patternmask);
             patternptr = tms.vMem+tms.pattern+colour*8;
             colourptr = tms.vMem+tms.colour+pattern*8;
-            for (yy=0;yy<8;yy++) {
+
+            for (yy=0;yy<8;yy++) 
+			{
                 pattern = *patternptr++;
                 colour = *colourptr++;
-                fg = colour / 16;
-                bg = colour & 15;
-                for (xx=0;xx<8;xx++) {
-			bitmap[(y * 8 + yy) * 256 + (x*8+xx)] = (pattern & 0x80) ? fg : bg;
-                    pattern *= 2;
-                }
+
+				unsigned char *vbt = &bitmap[(y * 8 + yy) * 128 + (x*4)];
+
+				bg = colour & 15;
+				tab[0]=bg|bg<<4;
+
+				if(pattern!=0)
+				{	  
+					fg = colour /16;
+					tab[1]=fg|(*tab&0xf0);
+					tab[2]=colour;
+					tab[3]=fg|(colour&0xf0); 
+					vbt[0] = tab[(pattern>>6)&3]; 
+					vbt[1] = tab[(pattern>>4)&3]; 
+					vbt[2] = tab[(pattern>>2)&3]; 
+					vbt[3] = tab[(pattern>>0)&3];
+				}
+				else
+					vbt[0] = vbt[1] = vbt[2] = vbt[3] = *tab;
             }
         }
     }
@@ -443,7 +520,7 @@ static void draw_modebogus(unsigned short *bitmap)
     }
 }
 
-static void (*const ModeHandlers[])(unsigned short *bitmap) = {
+static void (*const ModeHandlers[])(unsigned char *bitmap,unsigned char *vmem) = {
         draw_mode0, draw_mode1, draw_mode2,  draw_mode12,
         draw_mode3, draw_modebogus, draw_mode23,
         draw_modebogus
@@ -511,7 +588,7 @@ static void draw_sprites()
                             if (c && ! (tms.dBackMem[yy*256+xx] & 0x02))
                             {
                                 tms.dBackMem[yy*256+xx] |= 0x02;
-				//pTransDraw[(tms.top_border+yy) * nScreenWidth + (15 + xx)] = c;
+				pTransDraw[(tms.top_border+yy) * nScreenWidth + (15 + xx)] = c;
                             }
                         }
                     }
@@ -549,7 +626,7 @@ static void draw_sprites()
                                     if (c && ! (tms.dBackMem[yy*256+xx] & 0x02))
                                     {
                                         tms.dBackMem[yy*256+xx] |= 0x02;
-					//pTransDraw[(tms.top_border+yy) * nScreenWidth + (15 + xx)] = c;
+					pTransDraw[(tms.top_border+yy) * nScreenWidth + (15 + xx)] = c;
                                     }
                                 }
                                 if (((xx+1) >=0) && ((xx+1) < 256)) {
@@ -561,7 +638,7 @@ static void draw_sprites()
                                     if (c && ! (tms.dBackMem[yy*256+xx+1] & 0x02))
                                     {
                                         tms.dBackMem[yy*256+xx+1] |= 0x02;
-					//pTransDraw[(tms.top_border+yy) * nScreenWidth + (15 + xx + 1)] = c;
+					pTransDraw[(tms.top_border+yy) * nScreenWidth + (15 + xx + 1)] = c;
                                     }
                                 }
                             }
@@ -587,28 +664,28 @@ int TMS9928ADraw()
 
 	if (!BackColour) BackColour=1;
 
-	TMS89928aPaletteRecalc();
-	Palette[0] = Palette[BackColour];
-
+//	TMS89928aPaletteRecalc();
+	colAddr[0] = colAddr[BackColour];
+  
 	if (!(tms.Regs[1] & 0x40))
 	{
-//		for (int i = 0; i < nScreenWidth * nScreenHeight; i++) 
+	/*	for (int i = 0; i < nScreenWidth * nScreenHeight; i++) 
 		{
-			//pTransDraw[i] = BackColour;
-		}
+			pTransDraw[i] = BackColour;
+		}			*/
 	}
 	else
 	{
 		int mode = ((((tms.model == TMS99x8A) || (tms.model == TMS9929A)) ? (tms.Regs[0] & 2) : 0) | ((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
 
-		(*ModeHandlers[mode])(tms.tmpbmp);
-
+		(*ModeHandlers[mode])(tms.tmpbmp,&tms.vMem[tms.nametbl]);
+	  /*
 		{
 			for (int y = 0; y < 192; y++)
 			{
 				for (int x = 0; x < 256; x++)
 				{
-					//pTransDraw[(y + tms.top_border) * nScreenWidth + x + 15] = tms.tmpbmp[y * 256 + x];
+					pTransDraw[(y + tms.top_border) * nScreenWidth + x + 15] = tms.tmpbmp[y * 256 + x];
 				}
 			}
 		}
@@ -616,32 +693,32 @@ int TMS9928ADraw()
 		{
 			for (int y = 0; y < tms.top_border; y++) { // top
 				for (int x = 0; x < 15 + 256 + 15; x++) {
-					//pTransDraw[y * nScreenWidth + x] = BackColour;
+					pTransDraw[y * nScreenWidth + x] = BackColour;
 				}
 			}
 
 			for (int y = tms.top_border+192; y < tms.top_border+192+tms.bottom_border; y++) { // bottom
 				for (int x = 0; x < 15 + 256 + 15; x++) {
-					//pTransDraw[y * nScreenWidth + x] = BackColour;
+					pTransDraw[y * nScreenWidth + x] = BackColour;
 				}
 			}
 
 
 			for (int y = tms.top_border; y < tms.top_border+192; y++) { // left
 				for (int x = 0; x < 15; x++) {
-					//pTransDraw[y * nScreenWidth + x] = BackColour;
+					pTransDraw[y * nScreenWidth + x] = BackColour;
 				}
 			}
 
 			for (int y = tms.top_border; y < tms.top_border+192; y++) { // right
 				for (int x = 15+256; x < 15 + 256 + 15; x++) {
-					//pTransDraw[y * nScreenWidth + x] = BackColour;
+					pTransDraw[y * nScreenWidth + x] = BackColour;
 				}
 			}
 		}
-
-		if ((tms.Regs[1] & 0x50) == 0x40)
-			draw_sprites();
+	*/
+//		if ((tms.Regs[1] & 0x50) == 0x40)
+//			draw_sprites();
 	}
 
 //	BurnTransferCopy(Palette);

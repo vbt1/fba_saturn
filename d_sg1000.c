@@ -7,12 +7,13 @@
 //#include "driver.h"
 #include "d_sg1000.h"
 #define SAMPLE 7680L
+UINT8 *pTransDraw = NULL;
 
 int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvsg1k_wboy = {
 		"sg1000", NULL, 
-		"Sega SG-1000\0",
+		"Sega SG-1000",
 		sg1k_wboyRomInfo, sg1k_wboyRomName, Sg1000InputInfo, Sg1000DIPInfo,
 		DrvInit, DrvExit, DrvFrame, NULL, 
 	};
@@ -146,12 +147,18 @@ static int DrvInit()
 	MemIndex();
 
 	{
+		long fileSize;
+		file_id = 2;
+		fileSize		 = GetFileSize(file_id);
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)GFS_IdToName(file_id),26,200);	
+//		GFS_Load(file_id, 0, DrvZ80ROM, fileSize);
+
 		if (BurnLoadRom(DrvZ80ROM + 0x0000, 0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM + 0x4000, 1, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM + 0x8000, 2, 1)) return 1;
 	}
 
-	CZetInit(0);
+	CZetInit(1);
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM);
 	CZetMapArea(0x0000, 0xbfff, 2, DrvZ80ROM);
@@ -251,7 +258,7 @@ static int DrvFrame()
 
 	return 0;
 }
-
+ /*
 INT32 SG1KGetZipName(char** pszName, UINT32 i)
 {
 	static char szFilename[MAX_PATH];
@@ -281,6 +288,7 @@ INT32 SG1KGetZipName(char** pszName, UINT32 i)
 
 	return 0;
 }
+*/
 /*
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	SetVblank2( void ){
@@ -304,7 +312,7 @@ void	SetVblank2( void ){
 /*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
+//	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
 	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 //	SCL_SetColRam(SCL_NBG1,0,8,palette);
@@ -326,7 +334,8 @@ void initLayers(void)
  	SclConfig	scfg;
 
 //	SCL_InitConfigTb(&scfg);
-	scfg.dispenbl		= ON;
+	scfg.dispenbl		= OFF;
+	
 	scfg.charsize		= SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
 	scfg.pnamesize	= SCL_PN1WORD;
 	scfg.flip				= SCL_PN_10BIT;
@@ -336,12 +345,13 @@ void initLayers(void)
 	scfg.patnamecontrl =  0x000c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
 	scfg.plate_addr[0] = ss_map;
 	SCL_SetConfig(SCL_NBG0, &scfg);
+	
 /********************************************/	
 
 //	SCL_InitConfigTb(&scfg);
-//	scfg.dispenbl 	 = ON;
+	scfg.dispenbl 	 = ON;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
-//	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
+	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
 	scfg.plate_addr[0] = ss_font;
@@ -378,8 +388,8 @@ void dummy()
 //	InitCDsms();
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
-	nBurnSprites  = 19;//131;//27;
-	nBurnLinescrollSize = 0x340;
+	nBurnSprites  = 4;//131;//27;
+	nBurnLinescrollSize = 0;
 	nSoundBufferPos = 0;//sound position à renommer
 
 	SS_CACHE = cache      =(Uint8  *)SCL_VDP2_VRAM_B1;
@@ -391,7 +401,8 @@ void dummy()
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
-
+	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+//	pTransDraw	= (ss_vram+0x1100);
 	file_id			= 2; // bubble bobble
 //	file_max		= getNbFiles();
 		//8;//aleste
@@ -401,21 +412,33 @@ void dummy()
 //	SaturnMem = (UINT8 *)malloc(nLen);
 //	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
 //	SaturnInitMem();
+	ss_sprite[3].ax = 0;
+	ss_sprite[3].ay = 0;
 
-//	make_lut();
+	ss_sprite[3].color          = 0x0;
+	ss_sprite[3].charAddr    = 0x220;// 0x2000 => 0x80 sprites <<6
+	ss_sprite[3].control       = ( JUMP_NEXT | FUNC_NORMALSP); // | DIR_LRTBREV); // | flip);
+	ss_sprite[3].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP); //256 colors
+	ss_sprite[3].charSize    = 0x20C0;  // 256x*192y
 	
-    SS_SET_N0PRIN(5);
-    SS_SET_N1PRIN(7);
-    SS_SET_S0PRIN(6);
-
+//	make_lut();
 	initLayers();
+	
+    SS_SET_N0PRIN(0);
+    SS_SET_N1PRIN(6);
+    SS_SET_S0PRIN(5);
+
+//	initLayers();
 	initColors();
-	initPosition();
+//	initPosition();
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 
-	initSprites(256-1,192-1,0,0,0,0);
-	
-	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+//	initSprites(256-1,192-1,0,0,0,0);
+
+
+
+
+//	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	drawWindow(32,192,192,14,52);
 //	nBurnFunction = update_input1;
 	drawWindow(0,192,192,2,66);
