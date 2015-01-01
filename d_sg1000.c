@@ -7,6 +7,7 @@
 //#include "driver.h"
 #include "d_sg1000.h"
 #define SAMPLE 7680L
+#define nBurnSoundLen 128
 UINT8 *pTransDraw = NULL;
 
 int ovlInit(char *szShortName)
@@ -187,6 +188,7 @@ static int DrvInit()
 
 static int DrvExit()
 {
+	MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = NULL;
 	TMS9928AExit();
 	CZetExit();
 //	SN76496Exit();
@@ -218,38 +220,47 @@ static int DrvFrame()
 	INT32 nInterleave = 16;
 	INT32 nCyclesTotal[1] = { 3579545 / 60 };
 	INT32 nCyclesDone[1] = { 0 };
-	INT32 nSoundBufferPos = 0;
+	INT32 nSoundBufferPos2 = 0;
 
     CZetOpen(0);
-
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
 		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
 
 		// Render Sound Segment
 	/*	if (pBurnSoundOut) 
-		{
+		{			 */
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
-			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+			INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
 			SN76496Update(0, pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
-		}															   '
-		*/
+			nSoundBufferPos2 += nSegmentLength;
+	//	}
+		//
 	}
 
-	TMS9928AInterrupt();
-	CZetClose();
 
 	// Make sure the buffer is entirely filled.
-	/*
-	if (pBurnSoundOut) {
-		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
-		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+	
+//	if (pBurnSoundOut) {
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos2;
+		INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
 		if (nSegmentLength) {
 			SN76496Update(0, pSoundBuf, nSegmentLength);
+			nSoundBufferPos += nSegmentLength;
 		}	   
 		
-	} */
+//	} 
+
+		if(nSoundBufferPos>=RING_BUF_SIZE/2.5)
+		{
+			nSoundBufferPos=0;
+//				PCM_Task(pcm); // bon emplacement
+		}
+	PCM_Task(pcm); 
+	TMS9928AInterrupt();
+	CZetClose();
 
 	//if (pBurnDraw) 
 	{
@@ -258,37 +269,6 @@ static int DrvFrame()
 
 	return 0;
 }
- /*
-INT32 SG1KGetZipName(char** pszName, UINT32 i)
-{
-	static char szFilename[MAX_PATH];
-	char* pszGameName = NULL;
-
-	if (pszName == NULL) {
-		return 1;
-	}
-
-	if (i == 0) {
-		pszGameName = BurnDrvGetTextA(DRV_NAME);
-	} else {
-		pszGameName = BurnDrvGetTextA(DRV_PARENT);
-	}
-
-	if (pszGameName == NULL) {
-		*pszName = NULL;
-		return 1;
-	}
-
-	// remove the "SG1K_"
-	for (UINT32 j = 0; j < strlen(pszGameName); j++) {
-		szFilename[j] = pszGameName[j + 5];
-	}
-
-	*pszName = szFilename;
-
-	return 0;
-}
-*/
 /*
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	SetVblank2( void ){
@@ -388,7 +368,7 @@ void dummy()
 //	InitCDsms();
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
-	nBurnSprites  = 4;//131;//27;
+	nBurnSprites  = 4+32;//131;//27;
 	nBurnLinescrollSize = 0;
 	nSoundBufferPos = 0;//sound position à renommer
 
@@ -401,11 +381,10 @@ void dummy()
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+//	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 //	pTransDraw	= (ss_vram+0x1100);
 	file_id			= 2; // bubble bobble
 //	file_max		= getNbFiles();
-		//8;//aleste
 
 //	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
@@ -416,7 +395,7 @@ void dummy()
 	ss_sprite[3].ay = 0;
 
 	ss_sprite[3].color          = 0x0;
-	ss_sprite[3].charAddr    = 0x220;// 0x2000 => 0x80 sprites <<6
+	ss_sprite[3].charAddr    = 0x2220;// 0x2000 => 0x80 sprites <<6
 	ss_sprite[3].control       = ( JUMP_NEXT | FUNC_NORMALSP); // | DIR_LRTBREV); // | flip);
 	ss_sprite[3].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP); //256 colors
 	ss_sprite[3].charSize    = 0x20C0;  // 256x*192y
@@ -443,37 +422,6 @@ void dummy()
 //	nBurnFunction = update_input1;
 	drawWindow(0,192,192,2,66);
 //	SetVblank2();
-
-//	extern int __malloc_trim_threshold;
-//	extern int __malloc_top_pad;
-//	extern mallinfo  __malloc_current_mallinfo;
-
-//	__malloc_trim_threshold = 1024;
-
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
-//			sauvegarder __malloc_sbrk_base puis restaurer à la fin
-//   Uint32 __malloc_sbrk_base;
-//__malloc_sbrk_base = &_bend;
-/*	Uint8	*dst;
-	for (dst = (Uint8 *)&_bend; dst < (Uint8 *)0x060A5000; dst++)
-		*dst = 0;  */
- /*   for (dst = (Uint8 *)&__malloc_sbrk_base
-*/
-/*		Uint8	*dst;
-    for (dst = (Uint8 *)&bss_start; dst < (Uint8 *)&bss_end; dst++)
-			 *dst = 0;  
-  */
-/*	char toto[50];
-	extern Uint32 __malloc_sbrk_base, _bend,_bstart,bss_start,bss_end;
-	extern int __malloc_trim_threshold;
-	extern int __malloc_top_pad;
-
-	sprintf (toto,"malloc_top_pad %08x %08x",__malloc_top_pad,__malloc_sbrk_base) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,201);
-
-	sprintf (toto,"malloc_trim_threshold %08x %08x",__malloc_trim_threshold,sbrk(0)) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);	   */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 
