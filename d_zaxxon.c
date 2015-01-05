@@ -747,8 +747,9 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 			64*8, 65*8, 66*8, 67*8, 68*8, 69*8, 70*8, 71*8,
 			96*8, 97*8, 98*8, 99*8, 100*8, 101*8, 102*8, 103*8 };
 
-	UINT8 *tmp = (UINT8*)malloc(0xc000);
+	UINT8 *tmp = 0x00200000;//(UINT8*)malloc(0xc000);
 	if (tmp == NULL) {
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc tmp failed",4,80);
 		return 1;
 	}
 
@@ -769,7 +770,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 	rotate32_tile(0x0080,0,DrvGfxROM2);
 
-	free (tmp);
+//	free (tmp);
 	tmp=NULL;
 
 	return 0;
@@ -870,13 +871,13 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 	DrvZ80ROM2		= Next; Next += 0x010000;
 
-	DrvGfxROM1		= Next; Next += 0x010000;
-
 	DrvGfxROM0		= cache;
 
  	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	DrvGfxROM2		= &ss_vram[0x1100];//Next; Next += 0x020000;
-	DrvGfxROM3		= Next; Next += 0x010000;
+
+//	DrvGfxROM1		= Next; Next += 0x010000;
+//	DrvGfxROM3		= Next; Next += 0x010000;
 
 	DrvColPROM		= Next; Next += 0x000200;
 
@@ -915,15 +916,30 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 /*static*/int DrvInit()
 {
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvInitSaturn before     ",4,80);
+
 	DrvInitSaturn();
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvInitSaturn after     ",4,80);
 
 	AllMem = NULL;
 	MemIndex();
 	int nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
+	AllMem = (UINT8 *)malloc(nLen);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc after     ",4,80);
+
+	if (AllMem == NULL)
+	{
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc AllMem failed",4,80);
+		return 1;
+	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"MemIndex after     ",4,80);
+
 	memset(DrvGfxROM2+0x00010000,0x01,0xF400);
+
+	DrvGfxROM1		= (UINT8 *)malloc(0x010000);
+	DrvGfxROM3		= (UINT8 *)malloc(0x010000);
 
 	{
 		for (int i = 0; i < 3; i++) {
@@ -939,11 +955,20 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 		}
 
 		if (BurnLoadRom(DrvGfxROM3 + 0x6000,  14, 1)) return 1;
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode before     ",4,80);
 
 		DrvGfxDecode();
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode after     ",4,80);
+
 		DrvPaletteInit(0x100);
 //		DrvPaletteInit(0x200);
 		bg_layer_init();
+
+		free(DrvGfxROM3);
+		DrvGfxROM3 = NULL;
+		free(DrvGfxROM1);
+		DrvGfxROM1 = NULL;
+
 	}
 #ifndef RAZE
 	CZetInit(1);
@@ -1004,20 +1029,33 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 		SN76496Exit();
 	}
 */	
-#ifdef RAZE
+#ifndef RAZE
+	CZetExit();
+#else
 	z80_stop_emulating();
 #endif
+//	DMA_CpuAllStop();
+
 	nBurnFunction = NULL;
-
 	MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = DrvZ80ROM2 = NULL;
-	DrvSndROM = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =DrvGfxROM3 = NULL;
+	DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =DrvGfxROM3 = NULL;
 	DrvColPROM = DrvZ80RAM = DrvZ80RAM2 = DrvSprRAM = DrvVidRAM = DrvColRAM = NULL;
+	zaxxon_bg_pixmap = 	interrupt_enable	= zaxxon_fg_color = zaxxon_bg_color= NULL;
+	zaxxon_bg_enable = congo_color_bank= congo_fg_bank = congo_custom = NULL;
+	zaxxon_flipscreen = zaxxon_coin_enable = zaxxon_bg_scroll =soundlatch = NULL;
+	free (AllMem);
+	AllMem = NULL;
 
+	ss_map264 = NULL;
 	bitmap = NULL;
-	colpromoffs_lut = NULL;
+
 	map_lut = NULL;
+	colpromoffs_lut = NULL;
+	sx_lut = NULL;
 	sy_lut = NULL;
 	charaddr_lut = NULL;
+//	free(srcxmask);
+//	srcxmask = NULL;
 	free(SaturnMem);
 	SaturnMem = NULL;
 
@@ -1026,18 +1064,10 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	hardware_type = 0;
 
 //	GenericTilesExit();
-#ifndef RAZE
-	CZetExit();
-#else
-	z80_stop_emulating();
-#endif
-
-	free (AllMem);
-	AllMem = NULL;
-
 	return 0;
 }
 
+#if 0
 /*static*/void draw_background_test2_no_color_new()
 {
 //	if (*zaxxon_bg_enable)
@@ -1062,7 +1092,7 @@ for (unsigned int y = 0; y < 256;y++)	  // y
 }
 
 }
-
+#endif
 
 /*static*/void draw_background_test2_no_color()
 {
@@ -1076,7 +1106,8 @@ for (unsigned int y = 0; y < 256;y++)	  // y
 		{
 			UINT8 *dst = ((UINT8 *)ss_map264) - y; // * 0x100;
 			UINT8 *src = zaxxon_bg_pixmap + ((y + yoffset) & 4095) * 0x100;
-			UINT32 *srcptr = (UINT32 *)srcxmask[y];
+//			UINT32 *srcptr = (UINT32 *)srcxmask[y];
+			UINT32 *srcptr = (UINT32 *)srcxmask[y>>1];
 
 //			for (unsigned int x = 0; x < 0x1B000;)	  // y
 			for (unsigned int x = 0xE80; x < 0xD980;)	  // y
@@ -1224,7 +1255,7 @@ int find_minimum_x(UINT8 value)
 		memset4_fast(bitmap+0xE80,0x10101010,0xCB00);
 	}
 	draw_sprites(0x140, 0x180);
-
+//	copyBitmap();
 	return 0;
 }
 
@@ -1590,7 +1621,7 @@ void nprinces_decode()
 			if (BurnLoadRom(DrvGfxROM3 + i * 0x2000, 15 + i, 1)) return 1;
 		}
 
-		if (BurnLoadRom(DrvSndROM ,  4, 1)) return 1;
+		if (BurnLoadRom(DrvZ80ROM2 ,  4, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM0,  5, 1)) return 1;
 		if (BurnLoadRom(DrvColPROM, 17, 1)) return 1;
 		if (BurnLoadRom(DrvColPROM + 0x100, 17, 1)) return 1;
@@ -1641,8 +1672,9 @@ void copyBitmap()
 //	memcpyl(ss_map+264,bitmap,0x10000);
 //	memcpyl(DrvGfxROM2+0x00010000,bitmap,0x10000);
 //	DMA_CpuMemCopy1(ss_map+264,bitmap,0x1C000);
-	DMA_CpuMemCopy1(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCB00);
-	while(0 != DMA_CpuResult());
+//	DMA_CpuMemCopy1(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCB00);
+memcpyl(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCB00);
+//	while(0 != DMA_CpuResult());
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void initLayers()
@@ -1715,24 +1747,16 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void SaturnInitMem()
 {
-
 	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-	bitmap				= Next; Next += 0x10000;
+//	bitmap				= Next; Next += 0x10000;
+	bitmap				= Next; Next += 0xE000;
 	map_lut	 			= Next; Next += 0x400*sizeof(UINT32);
 	colpromoffs_lut	= Next; Next += 0x400*sizeof(UINT32);
 	sx_lut				= Next; Next += 256*sizeof(INT16);
 	sy_lut				= Next; Next += 256*sizeof(INT16);
 	charaddr_lut		= Next; Next += 256*sizeof(UINT16);
-
-/*	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
-	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
-	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
-	dummy_write= Next; Next += 0x100*sizeof(unsigned);	   */
+//	srcxmask			= Next; Next += 256*240*sizeof(UINT32);
 	MemEnd			= Next;	
-	 
-/*	name_lut	= (UINT16 *)malloc(0x10000*sizeof(UINT16)); 
-	cram_lut	= (UINT16 *)malloc(0x40*sizeof(UINT16));
-	dummy_write = (unsigned *)malloc(0x100*sizeof(unsigned));	 */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
@@ -1754,8 +1778,19 @@ void DrvInitSaturn()
 	
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
-	SaturnMem = (UINT8 *)malloc(nLen); 
+	SaturnMem = (UINT8 *)malloc(nLen);
+	if(SaturnMem==NULL)
+	{
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc SaturnMem failed",4,80);
+		return 1;
+	}
+
 	SaturnInitMem();
+/*
+	srcxmask = malloc(sizeof(UINT32 **) * 120);
+	for(int i = 0;i < 120;i++) 
+		srcxmask[i] = malloc(sizeof(UINT32 *) * 256);
+*/
 	make_lut();
 //3 nbg
 	SS_SET_N0PRIN(7);
@@ -1872,8 +1907,15 @@ void make_lut()
 			srcx += ((vf >> 1) ^ 0xff) + 1;
 			srcx += flipoffs;
 //			srcxmask[y>>1][x] = (x + offset) & xmask;
-			srcxmask[y][x] = srcx & xmask;
+//			srcxmask[y][x] = srcx & xmask;
+			srcxmask[y>>1][x] = srcx & xmask;
+//			srcxmask[y*256+x] = srcx & xmask;
 		}
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*
+<Guillaume> int ** t;
+<Guillaume> t = malloc(sizeof(int **) * size1);
+<Guillaume> for(i = 0;i < size1;i++) t[i] = malloc(sizeof(int *) * size2);
+*/

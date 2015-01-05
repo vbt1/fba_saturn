@@ -188,7 +188,7 @@ static int DrvInit()
 
 static int DrvExit()
 {
-	MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = NULL;
+	pTransDraw = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = NULL;
 	TMS9928AExit();
 	CZetExit();
 //	SN76496Exit();

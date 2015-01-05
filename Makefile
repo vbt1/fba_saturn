@@ -81,7 +81,7 @@ OBJOVLMITCH         = $(SRCOVLMITCH:.c=.o)
 OVLGNG                 = root/d_gng.coff
 OVLGNG1               = root/d_gng.bin
 MPOVLGNGFILE    = $(OVLGNG:.coff=.maps)
-LDOVLGNGFLAGS = -g -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGNGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLGNGFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGNGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVLGNG         = m6809_intf.c m6809.c  d_gng.c 
 OBJOVLGNG         = $(SRCOVLGNG:.c=.o)
 
@@ -125,7 +125,7 @@ OVLZAXXON                 = root/d_zaxxon.coff
 OVLZAXXON1               = root/d_zaxxon.bin
 MPOVLZAXXONFILE    = $(OVLZAXXON:.coff=.maps)
 LDOVLZAXXONFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLZAXXONFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c saturn/ovl.c d_zaxxon.s
+SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c saturn/ovl.c
 #SRCOVLZAXXON         = d_ZAXXON.c saturn/ovl.c d_zaxxon.s
 OBJOVLZAXXON         = $(SRCOVLZAXXON:.c=.o)
 

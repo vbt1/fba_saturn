@@ -7,8 +7,8 @@
 #include "raze/raze.h"
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
-UINT8 update_input1(void);
-void make_lut();
+static UINT8 update_input1(void);
+static void make_lut();
 void memcpyl(void *, void *, int);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
 void *memset4_fast(void *, long, size_t);
@@ -21,8 +21,6 @@ typedef struct
     UINT8 pages;
 //    UINT8 type;
 }t_cart;
-
-t_cart cart;
 
 #define TYPE_DOMESTIC   (1)
 
@@ -43,7 +41,6 @@ typedef struct
 //	UINT8 psg_mask;
 }t_sms;
 
-t_sms sms;
 
 /* Display timing (NTSC) */
 #define MASTER_CLOCK        (3579545)
@@ -72,23 +69,25 @@ typedef struct
 }t_vdp;
 
 /* Global data */
-t_vdp vdp;
-int running=0;
-unsigned int first = 1;
-unsigned int vsynch = 0;
-extern int file_max;
-int scroll_x=0,scroll_y=0;
-unsigned *dummy_write  = NULL; //[0x100];
-/*static*/ UINT8 *SaturnMem = NULL;
+static t_cart cart;
+static t_sms sms;
+static t_vdp vdp;
+static int running=0;
+static unsigned int first = 1;
+static unsigned int vsynch = 0;
+static int scroll_x=0,scroll_y=0;
+static UINT8 *dummy_write  = NULL; //[0x100];
+static UINT8 *SaturnMem = NULL;
 //UINT8	SaturnMem[0x10000*sizeof(UINT16)+0x10000*sizeof(UINT32)+0x40*sizeof(UINT16)+0x100*sizeof(unsigned)];
-/*static*/ UINT8 *MemEnd = NULL;
-UINT16 *name_lut = NULL;
-UINT32 *bp_lut = NULL; //[0x10000];
-UINT16 *cram_lut = NULL;//[0x40];
-UINT16 *map_lut = NULL;
+//UINT8	SaturnMem[0x10000*sizeof(UINT16)+0x40*sizeof(UINT16)+0x100*sizeof(UINT8)];
+static UINT8 *MemEnd = NULL;
+static UINT16 *name_lut = NULL;
+static UINT32 *bp_lut = NULL;//[0x10000];
+static UINT16 *cram_lut = NULL;//[0x40];
+static UINT16 *map_lut = NULL;
 //extern unsigned char play;
 extern int file_id;
-//unsigned char *game=NULL;
+extern int file_max;
 
 typedef UINT16	trigger_t;
 
@@ -97,7 +96,7 @@ PER_DGT_U,PER_DGT_D,PER_DGT_R,PER_DGT_L,PER_DGT_A,PER_DGT_B,
 PER_DGT_C,PER_DGT_S,PER_DGT_X,PER_DGT_Y,PER_DGT_TR,PER_DGT_TL,
 };
 
-trigger_t	pltrigger[2],pltriggerE[2];
+static trigger_t	pltrigger[2],pltriggerE[2];
 
 #define	SZ_PERIPHERAL	20
 typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
@@ -108,7 +107,7 @@ typedef	struct	SysPort	{
 	SysPeripheral	*peripheral;
 } SysPort;
 
-volatile SysPort	*__port;
+static SysPort	*__port;
 
 typedef	struct	SysDevice	{
 	UINT8	type;
@@ -116,31 +115,31 @@ typedef	struct	SysDevice	{
 	UINT8	data[1];
 } SysDevice;
 
-INT32 SMSInit();
-INT32 SMSExit();
-INT32 SMSDraw();
-INT32 SMSFrame();
-void z80_init(void);
-void sms_init(void);
-void sms_reset(void);
-void sms_frame(void);
-void vdp_run(t_vdp *vdp);
-void vdp_reset(void);
-void system_init(void);
-void cpu_writemem8(unsigned int address, unsigned int data);
+static INT32 SMSInit();
+static INT32 SMSExit();
+static INT32 SMSDraw();
+static INT32 SMSFrame();
+static void z80_init(void);
+static void sms_init(void);
+static void sms_reset(void);
+static void sms_frame(void);
+static void vdp_run(t_vdp *vdp);
+static void vdp_reset(void);
+static void system_init(void);
+static void cpu_writemem8(unsigned int address, unsigned int data);
 void PSG_Update(signed short *buffer, unsigned int length);
 void PSG_Init(unsigned int clock, unsigned int rate);
 void PSG_Write(unsigned int data);
 Sint32 getNbFiles();
 Sint32 GetFileSize(int file_id);
-void load_rom(void);
-void initScrolling(Uint8 enabled,void *address);
+static void load_rom(void);
+static void initScrolling(Uint8 enabled,void *address);
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 
 //INT32 SMSScan(INT32 nAction, INT32 *pnMin);
 /* Return values from the V counter */
-UINT8 vcnt[0x200] =
+static UINT8 vcnt[0x200] =
 {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
@@ -162,7 +161,7 @@ UINT8 vcnt[0x200] =
 };
 
 /* Return values from the H counter */
-UINT8 hcnt[0x200] =
+static UINT8 hcnt[0x200] =
 {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
@@ -190,7 +189,7 @@ UINT8 hcnt[0x200] =
 
 
 
- struct BurnDIPInfo SMSDIPList[] = {
+static struct BurnDIPInfo SMSDIPList[] = {
 	{0x3d, 0xff, 0xff, 0x00, NULL				},
 	{0x3e, 0xff, 0xff, 0x00, NULL				},
 	{0x3f, 0xff, 0xff, 0x01, NULL				},
@@ -199,7 +198,7 @@ UINT8 hcnt[0x200] =
 
 STDDIPINFO(SMS)
 
- struct BurnInputInfo SMSInputList[] = {
+static struct BurnInputInfo SMSInputList[] = {
 	{"P1 Start",		BIT_DIGITAL,	SMSJoy1 + 3,	"p1 start"	}, // 0
 /*	{"P1 Select",		BIT_DIGITAL,	SMSJoy1 + 2,	"p1 select"	},
 	{"P1 Up",		BIT_DIGITAL,	SMSJoy1 + 4,	"p1 up"		},
@@ -217,7 +216,7 @@ STDDIPINFO(SMS)
 
 STDINPUTINFO(SMS)
 
- struct BurnRomInfo sms_akmwRomDesc[] = {
+static struct BurnRomInfo sms_akmwRomDesc[] = {
 //	{ "sms_akmw.sms", 0x20000, 0xAED9AAC4, BRF_PRG | BRF_ESS },
 };
 

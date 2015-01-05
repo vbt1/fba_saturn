@@ -77,7 +77,7 @@ SECTIONS {
 		_end = .;
  	}
 	
-	.overlay 0x060A5000:
+	.overlay 0x060AA000:
         {
                 _overlaystart = .;
         }

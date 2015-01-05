@@ -3,7 +3,7 @@
 //#include "sc_saturn.h"
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR  0x060A5000
+#define OVLADDR  0x060AA000
 #define LOWADDR 0x00200000
 volatile SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
