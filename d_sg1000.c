@@ -8,7 +8,7 @@
 #include "d_sg1000.h"
 #define SAMPLE 7680L
 #define nBurnSoundLen 128
-UINT8 *pTransDraw = NULL;
+//UINT8 *pTransDraw = NULL;
 
 int ovlInit(char *szShortName)
 {
@@ -188,15 +188,17 @@ static int DrvInit()
 
 static int DrvExit()
 {
-	pTransDraw = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = NULL;
-	TMS9928AExit();
 	CZetExit();
-//	SN76496Exit();
 	ppi8255_exit();
+	TMS9928AExit();
+
+	//pTransDraw = 
+	MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = NULL;
+//	SN76496Exit();
 
 	free (AllMem);
 	AllMem = NULL;
-
+	DrvReset = 0;
 	return 0;
 }
 

@@ -57,25 +57,25 @@ static UINT8 DrvJoy3[8];
 static UINT8 DrvJoy4[8];
 static UINT8 DrvDips[2];
 static UINT8 DrvInputs[8];
-static UINT8 DrvReset;
+static UINT8 DrvReset = 0;
 
 
-static UINT8 *interrupt_enable;
+static UINT8 *interrupt_enable = NULL;
 
-static UINT8 *zaxxon_fg_color;
-static UINT8 *zaxxon_bg_color;
-static UINT8 *zaxxon_bg_enable;
-static UINT32  *zaxxon_bg_scroll;
-static UINT8 *zaxxon_flipscreen;
-static UINT8 *zaxxon_coin_enable;
+static UINT8 *zaxxon_fg_color = NULL;
+static UINT8 *zaxxon_bg_color = NULL;
+static UINT8 *zaxxon_bg_enable = NULL;
+static UINT32  *zaxxon_bg_scroll = NULL;
+static UINT8 *zaxxon_flipscreen = NULL;
+static UINT8 *zaxxon_coin_enable = NULL;
 
-static UINT8 *congo_color_bank;
-static UINT8 *congo_fg_bank;
-static UINT8 *congo_custom;
+static UINT8 *congo_color_bank = NULL;
+static UINT8 *congo_fg_bank = NULL;
+static UINT8 *congo_custom = NULL;
 
-static UINT8 *zaxxon_bg_pixmap;
+static UINT8 *zaxxon_bg_pixmap = NULL;
 
-static UINT8 *soundlatch;
+static UINT8 *soundlatch = NULL;
 
 static INT32 futspy_sprite = 0;
 static INT32 hardware_type = 0;

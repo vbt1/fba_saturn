@@ -30,7 +30,7 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
     int nLoadLen=0;
 
     // Allocate space for the file
-    Load=(unsigned char *)malloc(nLen);
+    Load=(unsigned char *)0x00200000;//malloc(nLen);
     if (Load==NULL) 
 	  {
 	return 1;
@@ -41,7 +41,12 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
     nRet=BurnExtLoadRom(Load,&nLoadLen,i,nGap,bXor);
 	
    //if (bDoPatch) ApplyPatches(Load, RomName);
-    if (nRet!=0) { 	free(Load); return 1; }
+    if (nRet!=0) 
+	{
+//		free(Load); 
+		Load = NULL; 
+		return 1;
+	}
 
     if (nLoadLen<0) nLoadLen=0;
     if (nLoadLen>nLen) nLoadLen=nLen;
@@ -59,7 +64,9 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
     {
       do { *pd  = *pl++; pd+=nGap; } while (pl<LoadEnd);
     }
-    free(Load);
+	pd=pl=LoadEnd=NULL;
+//	free(Load);
+	Load = NULL;
   }
   else
   {

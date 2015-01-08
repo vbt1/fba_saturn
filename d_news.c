@@ -77,8 +77,9 @@ int ovlInit(char *szShortName)
 /*static*/ void make_lut(void)
 {
     unsigned short j;
-    for(j = 0; j < 8192; j++)
-    {
+//    for(j = 0; j < 8192; j++)
+	for(j = 0; j < 4096; j++)
+	{
 		int r, g, b;
 
 		r = (j >> 8) & 0x0f;
@@ -158,6 +159,7 @@ int ovlInit(char *szShortName)
 		}
 		return;
 	}
+
 #endif
 #ifdef CACHE
 	if (a >= 0x8000 && a <= 0x87ff) 
@@ -400,7 +402,7 @@ int ovlInit(char *szShortName)
 	
 	SS_MAP  = ss_map   = (Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = ss_map2 = (Uint16 *)SCL_VDP2_VRAM_A1;
-	ss_font =  (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_FONT =  ss_font =  NULL; //(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = cache     = (Uint8  *)SCL_VDP2_VRAM_A0;				
 	ss_BgPriNum     = (SclSpPriNumRegister *)SS_N0PRI;
 
@@ -435,8 +437,9 @@ int ovlInit(char *szShortName)
 #else
 //	ZetExit();
 #endif
+
 	MSM6295ROM = NULL;
-	RamStart = NewsRom = NewsRam = NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
+	MemEnd = RamStart = NewsRom = NewsRam = NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
 	free(Mem);
 	Mem = NULL;
 	BgPic = 1;

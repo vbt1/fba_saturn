@@ -71,7 +71,11 @@ static INT32 DrvInit()
 	MemIndex();
 	nLen = MemEnd - (unsigned char *)0;
 
-	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) return 1;
+	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) 
+	{
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
+		return 1;
+	}
 	memset(Mem, 0, nLen);
 //	memset(Gfx0, 0, 0x10000);
 //	memset(Gfx1, 0, 0x20000);
@@ -564,8 +568,9 @@ static void DrvInitSaturn()
 	CZetExit();
 #endif	
 //	SN76496Exit();
-
-	Rom  = 	Gfx0 = Gfx1 = Prom = Palette = NULL;
+ 
+	Rom  = 	Gfx0 = Gfx1 = Prom = NULL;
+	Palette = NULL;
 	MemEnd = map_offset_lut = /*bg_dirtybuffer = fg_dirtybuffer =*/ NULL;
 
 	free(Mem);

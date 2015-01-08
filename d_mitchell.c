@@ -3,7 +3,7 @@
 //#define LOOP 1
 #define SWITCH 1
 #include "d_mitchell.h"
-UINT16 charaddr_lut[0x0800];
+static UINT16 charaddr_lut[0x0800];
 #define nInterleave  10
 #define nBurnSoundLen 192
 #define nSegmentLength nBurnSoundLen / nInterleave
@@ -520,6 +520,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 //	BurnYM2413Init(4000000, 1.0);
 //	BurnYM2413IncreaseVolume(200);
 	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
+	memset(MSM6295ROM,0x00,0x40000);
 
 //	MSM6295Init(0, 1000000 / 132, 10.0, 1);
 	MSM6295Init(0, 1000000 / 132, 10.0, 0);
@@ -582,6 +583,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	nLen = MemEnd - (unsigned char *)0;
 	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) 
 	{
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
 	memset(Mem, 0, nLen);
@@ -812,7 +814,7 @@ static void dummy(void)
 	ZetExit();
 #endif
 #endif
-
+	MSM6295ROM = NULL;
 	if (DrvHasEEPROM) EEPROMExit();
 	if(Mem!=NULL)	free(Mem);
 //	free(Mem);
@@ -822,7 +824,6 @@ static void dummy(void)
 #endif
 //	DrvPaletteRam = NULL;
 	color_dirty = 0;
-	MSM6295ROM = NULL;
 	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam =DrvChars = DrvSprites = NULL;
 	DrvRomBank = 0;
 	DrvPaletteRamBank = 0;

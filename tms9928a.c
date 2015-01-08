@@ -9,7 +9,7 @@
 #define	RGB( r, g, b )		(0x8000U|((b) << 10)|((g) << 5 )|(r))
 
 //char pattern_lut[256][8];
-extern unsigned char *pTransDraw;
+//extern unsigned char *pTransDraw;
 extern unsigned short *colAddr;
 extern unsigned short  *ss_map;
 extern unsigned int *shared;
@@ -17,8 +17,8 @@ extern unsigned int *shared;
 #define SS_FONT	 *(&shared + 3)
 extern SprSpCmd *ss_sprite;
 
-unsigned int colour_dirty	 =0xffff;
-unsigned int pattern_dirty =0xffff;
+//unsigned int colour_dirty	 =0xffff;
+//unsigned int pattern_dirty =0xffff;
 unsigned char dirty[24*32*8*4];
 unsigned char dirtyc[24*32*8*4];
 //unsigned int dirtys[32];
@@ -46,7 +46,8 @@ typedef struct {
 	int colourmask;
 	int patternmask;
 
-	unsigned char *vMem;
+//	unsigned char *vMem;
+	unsigned char vMem[0x4000];
 //	unsigned char *dBackMem;
 //	unsigned short *tmpbmp;
 	unsigned char *tmpbmp;
@@ -194,7 +195,7 @@ void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallb
 
 	tms.vramsize = vram;
 //	tms.vMem = (unsigned char*)0x25e60000;//(unsigned char*)malloc(tms.vramsize);
-	tms.vMem = (unsigned char*)malloc(tms.vramsize);
+//	tms.vMem = (unsigned char*)malloc(tms.vramsize);
 
 //	tms.dBackMem = (unsigned char*)malloc(256 * 192);
 
@@ -253,10 +254,11 @@ void TMS9928AExit()
 	TMS9928AReset();
 
 //	GenericTilesExit();
-
+	tms.INTCallback = NULL;
 //	free (tms.tmpbmp);
-	free (tms.vMem);
-	tms.vMem=NULL;
+	tms.tmpbmp = NULL;
+//	free (tms.vMem);
+//	tms.vMem=NULL;
 //	free (tms.dBackMem);
 }
 

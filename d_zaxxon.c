@@ -747,11 +747,11 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 			64*8, 65*8, 66*8, 67*8, 68*8, 69*8, 70*8, 71*8,
 			96*8, 97*8, 98*8, 99*8, 100*8, 101*8, 102*8, 103*8 };
 
-	UINT8 *tmp = 0x00200000;//(UINT8*)malloc(0xc000);
-	if (tmp == NULL) {
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc tmp failed",4,80);
-		return 1;
-	}
+	UINT8 *tmp = (UINT8*)0x00200000;//(UINT8*)malloc(0xc000);
+//	if (tmp == NULL) {
+//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc tmp failed",4,80);
+//		return 1;
+//	}
 
 	memcpy (tmp, DrvGfxROM0, 0x1000);
 // foreground (text)
@@ -812,6 +812,8 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 /*static*/void bg_layer_init()
 {
+
+	memset(zaxxon_bg_pixmap,0x01,0x100000);
 	int len = (hardware_type == 2) ? 0x2000 : 0x4000;
 	int mask = len-1;
 
@@ -935,8 +937,8 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	memset(AllMem, 0, nLen);
 	MemIndex();
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"MemIndex after     ",4,80);
-
-	memset(DrvGfxROM2+0x00010000,0x01,0xF400);
+	memset(bitmap,	 0x11,0xE000);
+	memset(DrvGfxROM2+0x00010000,0x11,0xF400);
 
 	DrvGfxROM1		= (UINT8 *)malloc(0x010000);
 	DrvGfxROM3		= (UINT8 *)malloc(0x010000);
@@ -1062,7 +1064,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 //	DrvPalette = 	Palette = NULL;
 	futspy_sprite = 0;
 	hardware_type = 0;
-
+	DrvReset = 0;
 //	GenericTilesExit();
 	return 0;
 }
