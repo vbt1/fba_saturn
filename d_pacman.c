@@ -276,6 +276,7 @@ static void convert_gfx()
 	INT32 size = (game_select == PENGO) ? 0x2000 : 0x1000;
 
 	UINT8 *tmp = (UINT8*)0x00200000;
+//	UINT8 *tmp = (UINT8*)malloc(size * 2);
 	memset(tmp,0x00,size * 2);
 
 	memcpy (tmp, DrvGfxROM, size * 2);
@@ -285,13 +286,14 @@ static void convert_gfx()
 	rotate_tile(((size * 4) / 0x040),0,cache);
 	rotate_tile16x16(((size * 4) / 0x100),0,&ss_vram[0x1100]);
 	ss_vram = NULL;
-	
+	memset(tmp,0x00,size * 2);
+//	free(tmp);
 	tmp = NULL;
 }
 
 static INT32 pacman_load()
 {
-	char* pRomName;
+	char* pRomName = "";
 	struct BurnRomInfo ri;
 
 	INT32 pOffset = 0;
@@ -348,7 +350,7 @@ static INT32 pacman_load()
 			continue;
 		}	
 	}
-
+	gLoad = cLoad = sLoad = qLoad = DrvQROM = NULL;
 	return 0;
 }
 
@@ -483,7 +485,7 @@ void initLayers()
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
-	scfg.plate_addr[0] = (Uint32)SS_MAP;
+//	scfg.plate_addr[0] = (Uint32)SS_MAP;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
 	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
@@ -493,7 +495,10 @@ void initLayers()
 
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
-	SCL_SetCycleTable(CycleTb);	
+	SCL_SetCycleTable(CycleTb);
+	
+	scfg.dispenbl      = OFF;
+	SCL_SetConfig(SCL_NBG2, &scfg);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initColors()
@@ -562,7 +567,7 @@ void DrvInitSaturn()
 	SS_SET_N0PRIN(7);
 	SS_SET_S0PRIN(6);
 	SS_SET_N1PRIN(4);
-	SS_SET_N2PRIN(5);
+//	SS_SET_N2PRIN(5);
 
 	initLayers();
 	initColors();
@@ -583,7 +588,8 @@ static INT32 DrvExit()
 	DrvZ80ROM = DrvQROM = DrvGfxROM = DrvColPROM = NamcoSoundProm = NULL;
 	/*/DrvTransTable = Palette =*/ AllRam = DrvZ80RAM = DrvSprRAM = DrvSprRAM2 = NULL;
 	DrvColRAM= DrvVidRAM = /*flipscreen =*/ RamEnd = NULL;
-	PengoStart = bg_dirtybuffer = map_offset_lut = ofst_lut = MemEnd = NULL;
+	PengoStart = bg_dirtybuffer = MemEnd = NULL;
+	map_offset_lut = ofst_lut = NULL;
 	free (AllMem);
 	AllMem = NULL;
 	return 0;

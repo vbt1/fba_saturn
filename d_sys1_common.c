@@ -953,34 +953,22 @@ int System1Exit()
 	CZetExit();
 	nBurnFunction = NULL;
 
-//Mem                 = NULL;
-MemEnd                 = NULL;
+    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
+    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
+
+MemEnd  = NULL;
 RamStart1 = RamStart               = NULL;
-System1Rom1            = NULL;
-System1Rom2            = NULL;
-System1PromRed         = NULL;
-System1PromGreen       = NULL;
-System1PromBlue        = NULL;
-System1Ram1            = NULL;
-System1Ram2            = NULL;
-System1SpriteRam       = NULL;
-System1PaletteRam      = NULL;
-System1BgRam           = NULL;
-System1VideoRam        = NULL;
-System1ScrollXRam      = NULL;
-System1BgCollisionRam  = NULL;
+System1Rom1 = System1Rom2 = NULL;
+System1PromRed = System1PromGreen = System1PromBlue = NULL;
+System1Ram1 = System1Ram2 = NULL;
+System1SpriteRam = System1PaletteRam = NULL;
+System1BgRam = System1VideoRam = NULL;
+System1ScrollXRam = System1BgCollisionRam = NULL;
 System1SprCollisionRam = NULL;
-System1deRam           = NULL;
-System1efRam           = NULL;
-System1f4Ram           = NULL;
-System1fcRam           = NULL;
-System1Tiles           = NULL;
-//System1Sprites         = NULL;
-//SpriteOnScreenMap      = NULL;
-System1Fetch1          = NULL;
-System1MC8123Key       = NULL;
-System1ScrollX = NULL;
-System1ScrollY = NULL;
+System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
+System1Tiles = SpriteOnScreenMap = NULL;
+System1Fetch1 = System1MC8123Key = NULL;
+System1ScrollX = System1ScrollY = NULL;
 
 //SaturnMem = NULL;
 remap8to16_lut = NULL;
@@ -996,11 +984,13 @@ spriteCache = NULL;
 		free(System1Sprites);
 	System1Sprites = NULL;
 //	free(SpriteOnScreenMap);
-	SpriteOnScreenMap = NULL;
-	free(SaturnMem);
-	SaturnMem = NULL;
+//	SpriteOnScreenMap = NULL;
+
 	free(Mem);
 	Mem = NULL;
+
+	free(SaturnMem);
+	SaturnMem = NULL;
 
 	System1SoundLatch = 0;
 	System1BgScrollX = 0;

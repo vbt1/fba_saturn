@@ -3,7 +3,7 @@
 //#define LOOP 1
 #define SWITCH 1
 #include "d_mitchell.h"
-static UINT16 charaddr_lut[0x0800];
+//static UINT16 charaddr_lut[0x0800];
 #define nInterleave  10
 #define nBurnSoundLen 192
 #define nSegmentLength nBurnSoundLen / nInterleave
@@ -617,9 +617,10 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 		if ((DrvSprites[i]& 0xf0)       ==0x00)DrvSprites[i] = 0xf0 | DrvSprites[i] & 0x0f;
 		else if ((DrvSprites[i]& 0xf0)==0xf0) DrvSprites[i] = DrvSprites[i] & 0x0f;
 	}
-	nRet = BurnLoadRom(DrvSoundRom + 0x00000, 8, 1); if (nRet != 0) return 1;
 	pang_decode();
 	MitchellMachineInit();
+	nRet = BurnLoadRom(DrvSoundRom + 0x00000, 8, 1); if (nRet != 0) return 1;
+
 	DrvDoReset();
 
 	return 0;
@@ -816,7 +817,12 @@ static void dummy(void)
 #endif
 	MSM6295ROM = NULL;
 	if (DrvHasEEPROM) EEPROMExit();
-	if(Mem!=NULL)	free(Mem);
+
+MemEnd = DrvZ80Rom = DrvZ80Code = DrvSoundRom = DrvZ80Ram = NULL;
+RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam = NULL;
+DrvChars = DrvSprites = MSM6295ROM = NULL;
+
+	free(Mem);
 //	free(Mem);
 	Mem = NULL;
 #ifdef LOOP
@@ -824,7 +830,6 @@ static void dummy(void)
 #endif
 //	DrvPaletteRam = NULL;
 	color_dirty = 0;
-	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam =DrvChars = DrvSprites = NULL;
 	DrvRomBank = 0;
 	DrvPaletteRamBank = 0;
 	DrvOkiBank = 0;

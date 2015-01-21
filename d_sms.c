@@ -120,8 +120,8 @@ static void initPosition(void)
 static void SaturnInitMem()
 {
 	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-//	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
-//	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
+	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
+	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
 	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
 	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
@@ -163,8 +163,8 @@ static void DrvInitSaturn()
 	file_id			= 2; // bubble bobble
 //	file_max		= getNbFiles();
 		//8;//aleste
-	name_lut	= (UINT16 *)malloc(0x10000*sizeof(UINT16));
-	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
+//	name_lut	= (UINT16 *)malloc(0x10000*sizeof(UINT16));
+//	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
 	
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
@@ -267,26 +267,21 @@ static INT32 SMSExit(void)
 	cart.rom = NULL;
 	__port = NULL;
 	nBurnFunction = NULL;
-//	bp_lut = NULL;
+
+	dummy_write = MemEnd = NULL;
+	cram_lut = map_lut = NULL;
+
+	bp_lut = NULL;
+	name_lut = NULL;
+
+	free(SaturnMem);
+	SaturnMem = NULL;
+
 //	free(bp_lut);
 //	bp_lut = NULL;
 
-	/*name_lut =*/ cram_lut = map_lut = dummy_write = MemEnd = NULL;
-
-   free(SaturnMem);
-
-/*	for (int i=0;i<10000 ; i++)
-	{
-		free(SaturnMem);
-	}
-*/
-	SaturnMem = NULL;
-
-	free(bp_lut);
-	bp_lut = NULL;
-
-	free(name_lut);
-	name_lut = NULL;
+//	free(name_lut);
+//	name_lut = NULL;
 
 	nSoundBufferPos=0;
 	running=0;

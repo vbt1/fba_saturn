@@ -237,7 +237,7 @@ int ovlInit(char *szShortName)
 	if (BurnLoadRom(tmp +  0x0000, 7, 1)) return 1;
 
 	pkunwar_palette_init(tmp);
-
+	memset(tmp,0x00,0x20000);
 	tmp = NULL;
 
 	return 0;
@@ -247,19 +247,17 @@ int ovlInit(char *szShortName)
 {
 	DrvInitSaturn();
 
-	Mem = (unsigned char*)malloc(0x10000 + 0x20000 * 2 + 0x200 * sizeof(int));
-	if (Mem == NULL) {
-		return 1;
-	}
+//	Mem = (unsigned char*)malloc(0x10000 + 0x20000 * 2 + 0x200 * sizeof(int));
+	Mem = (unsigned char*)malloc(0x30000 + SOUND_LEN * 6 * sizeof(short));
 
-	pFMBuffer = (short *)malloc (SOUND_LEN * 6 * sizeof(short));
-	if (pFMBuffer == NULL) {
+	if (Mem == NULL) {
 		return 1;
 	}
 
 	Rom  = Mem + 0x00000;
 	Gfx0 = Mem + 0x10000;
-	Gfx1 = Mem + 0x30000;
+//	Gfx1 = Mem + 0x30000;
+	pFMBuffer = Mem + 0x30000;
 
 	if (LoadRoms()) return 1;
 
@@ -417,7 +415,7 @@ int ovlInit(char *szShortName)
 	AY8910Exit(0);
 	AY8910Exit(1);
 
-	Rom = Gfx0 = Gfx1 = NULL;
+	Rom = Gfx0 = /*Gfx1 =*/ NULL;
 	nBurnSprites=128;
 	cleanSprites();
 
@@ -425,7 +423,7 @@ int ovlInit(char *szShortName)
 		pAY8910Buffer[i] = NULL;
 	}
 
-	free (pFMBuffer);
+//	free (pFMBuffer);
 	pFMBuffer = NULL;
 	free (Mem);
 	Mem = NULL;
@@ -433,6 +431,7 @@ int ovlInit(char *szShortName)
 	vblank /*= flipscreen */= 0;
 
 	return 0;
+
 }
 
 

@@ -53,7 +53,7 @@ SECTIONS {
 		_end = .;
 	} > ram
 
-        .overlay 0x060A5000 :
+        .overlay 0x060B4000 :
         {
 		. = ALIGN(4);
                 _overlaystart = .;

@@ -158,6 +158,7 @@ SclBgColMixRegister  SclBgColMix;
 //SclPriBuffDirtyFlags SclPriBuffDirty;
 //-------------------------------------------------------------------------------------------------------------------------------------
 extern Uint8	*FntAsciiFontData2bpp;
+//extern Uint8	FntAsciiFontData2bpp[1600];
 //Sint8 *g_movie_buf = (Sint8 *)0x25a20000;//0x04000000;
 extern PcmHn 			pcm;
 

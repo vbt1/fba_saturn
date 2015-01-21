@@ -410,12 +410,14 @@ static void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static int DrvExit()
 {
+	SPR_InitSlaveSH();
 	unsigned int i;
 #ifdef RAZE
 	z80_stop_emulating();
 #else
 	CZetExit();
 #endif
+
 	AY8910Exit(0);
 	AY8910Exit(1);
 	MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
@@ -428,6 +430,7 @@ static int DrvExit()
 	Mem = NULL;
 
 	nSoundBufferPos=0;
+
 //	flipscreen = 0;
 //	DrvRecalc = 0;
 	//cleanSprites();
@@ -494,13 +497,13 @@ static int DrvFrame()
 
 #else
 #ifdef RAZE
-			z80_emulate(18333);
+			z80_emulate(23333);
 			z80_raise_IRQ(0xd7);
 //			z80_emulate(0);
 //			z80_lower_IRQ(0xd7);
 //			z80_emulate(0);
 
-			z80_emulate(18334);
+			z80_emulate(23334);
 			z80_raise_IRQ(0xcf);
 	//		z80_emulate(0);
 	//		z80_lower_IRQ(0xcf);

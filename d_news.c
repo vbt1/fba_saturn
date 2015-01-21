@@ -433,12 +433,15 @@ int ovlInit(char *szShortName)
 #endif
 
 #ifdef RAZE
-// vbt à faire
+	z80_stop_emulating();
 #else
 //	ZetExit();
 #endif
-
 	MSM6295ROM = NULL;
+	
+	nSoundBufferPos=0;
+	PCM_Task(pcm);
+
 	MemEnd = RamStart = NewsRom = NewsRam = NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
 	free(Mem);
 	Mem = NULL;

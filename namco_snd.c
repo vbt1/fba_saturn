@@ -12,6 +12,7 @@
 #define BURN_SND_CLIPVBT(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 
 UINT8* NamcoSoundProm = NULL;
+INT16 *p = (INT16*)0x00200000;
 
 typedef struct
 {
@@ -27,7 +28,7 @@ typedef struct
 } sound_channel;
 
 static UINT8 namco_soundregs[0x40];
-static UINT8 *namco_wavedata;
+static UINT8 *namco_wavedata = NULL;
 
 struct namco_sound
 {
@@ -281,7 +282,6 @@ static void namcos1_sound_write(INT32 offset, INT32 data)
 
 static INT32 build_decoded_waveform()
 {
-	INT16 *p;
 	INT32 size;
 	INT32 offset;
 	INT32 v;
@@ -301,7 +301,7 @@ static INT32 build_decoded_waveform()
 		size = 32 * 8;		/* 32 samples, 8 waveforms */
 	}
 
-	p = (INT16*)malloc(size * MAX_VOLUME * sizeof (INT16));
+//	p = (INT16*)malloc(size * MAX_VOLUME * sizeof (INT16));
 
 	for (v = 0; v < MAX_VOLUME; v++)
 	{
@@ -365,7 +365,7 @@ void NamcoSoundInit(INT32 clock, INT32 num_voices)
 		voice->noise_counter = 0;
 		voice->noise_hold = 0;
 	}
-	
+	voice = NULL;
 	chip->update_step = INTERNAL_RATE / SOUNDRATE;
 }
 
@@ -374,9 +374,17 @@ void NamcoSoundExit()
 #if defined FBA_DEBUG
 //	if (!DebugSnd_NamcoSndInitted) bprintf(PRINT_ERROR, _T("NamcoSoundExit called without init\n"));
 #endif
-
 	namco_wavedata = NULL;
 	NamcoSoundProm = NULL;
+	chip->last_channel = NULL;
+
+	for (int v = 0; v < MAX_VOLUME; v++)
+	{
+		chip->waveform[v] = NULL;
+	}
+
+//	free(p);
+	p = NULL;
 
 //	if (namco_soundregs) {
 //		free(namco_soundregs);

@@ -940,8 +940,8 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	memset(bitmap,	 0x11,0xE000);
 	memset(DrvGfxROM2+0x00010000,0x11,0xF400);
 
-	DrvGfxROM1		= (UINT8 *)malloc(0x010000);
-	DrvGfxROM3		= (UINT8 *)malloc(0x010000);
+	DrvGfxROM1		= (UINT8 *)0x25a60000;
+	DrvGfxROM3		= (UINT8 *)DrvGfxROM1+0x010000;
 
 	{
 		for (int i = 0; i < 3; i++) {
@@ -966,9 +966,9 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 //		DrvPaletteInit(0x200);
 		bg_layer_init();
 
-		free(DrvGfxROM3);
+//		free(DrvGfxROM3);
 		DrvGfxROM3 = NULL;
-		free(DrvGfxROM1);
+//		free(DrvGfxROM1);
 		DrvGfxROM1 = NULL;
 
 	}
@@ -1039,12 +1039,17 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 //	DMA_CpuAllStop();
 
 	nBurnFunction = NULL;
+
+    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
+    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
+
 	MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = DrvZ80ROM2 = NULL;
 	DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =DrvGfxROM3 = NULL;
 	DrvColPROM = DrvZ80RAM = DrvZ80RAM2 = DrvSprRAM = DrvVidRAM = DrvColRAM = NULL;
 	zaxxon_bg_pixmap = 	interrupt_enable	= zaxxon_fg_color = zaxxon_bg_color= NULL;
 	zaxxon_bg_enable = congo_color_bank= congo_fg_bank = congo_custom = NULL;
-	zaxxon_flipscreen = zaxxon_coin_enable = zaxxon_bg_scroll =soundlatch = NULL;
+	zaxxon_flipscreen = zaxxon_coin_enable = soundlatch = NULL;
+	zaxxon_bg_scroll = NULL;
 	free (AllMem);
 	AllMem = NULL;
 
@@ -1669,6 +1674,7 @@ void nprinces_decode()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+// el piratero : utilise dma_scu et retester !
 void copyBitmap()
 {
 //	memcpyl(ss_map+264,bitmap,0x10000);

@@ -3,7 +3,7 @@
 //#include "sc_saturn.h"
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR  0x060A5000
+#define OVLADDR  0x060B4000
 #define LOWADDR 0x00200000
 volatile SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
@@ -338,6 +338,7 @@ static void ss_main(void)
 	InitCD();
 #endif
 	hz = get_hz();
+//	nBurnMallocAddr = 0;
 	initSound();
 	CSH_Init(CSH_4WAY);
 //	SPR_InitSlaveSH();
@@ -486,7 +487,10 @@ static void display_menu(void)
 //	set_imask(0);
 	
 	unsigned int l;
-	unsigned char loaded=0;
+	unsigned int newBurnMallocAddr = 0;
+	unsigned char loaded = 0;
+
+
 //	sc_init();
 //	the_loop = 1;
 	/*
@@ -525,6 +529,22 @@ static void display_menu(void)
 			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			load_img(0);	
 			loaded=1;
+
+   char toto[100];
+/*			if(nBurnMallocAddr == 0)
+			{
+				nBurnMallocAddr = sbrk(0);
+			}
+
+			newBurnMallocAddr = sbrk(0);
+
+			if(newBurnMallocAddr-0x60000 > nBurnMallocAddr)
+			{
+				sbrk(nBurnMallocAddr-newBurnMallocAddr-0x10000);
+			}		   */
+//			memset(0,nBurnMallocAddr,newBurnMallocAddr-nBurnMallocAddr);
+			sprintf (toto,"sbrk %08x",sbrk(0)) ;
+			FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
 		}
 		m=0;
 //		char page_header[50];

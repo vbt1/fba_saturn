@@ -50,8 +50,10 @@ static INT32 MemIndex()
 	unsigned char *Next; Next = Mem;
 
 	Rom = Next; Next += 0x10000;
-	Gfx0 = Next; Next += 0x10000;
-	Gfx1 = Next; Next += 0x20000;
+//	Gfx0 = Next; Next += 0x10000;
+	Gfx0 = (UINT8 *)0x00200000;
+	Gfx1 = (UINT8 *)(Gfx0+0x20000);
+//	Gfx1 = Next; Next += 0x20000;
 	Prom = Next; Next += 0x300;
 	Palette = (int *)Next; Next += 0x800;
 	map_offset_lut	= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
@@ -569,9 +571,9 @@ static void DrvInitSaturn()
 #endif	
 //	SN76496Exit();
  
-	Rom  = 	Gfx0 = Gfx1 = Prom = NULL;
+	MemEnd = Rom  = 	Gfx0 = Gfx1 = Prom = NULL;
 	Palette = NULL;
-	MemEnd = map_offset_lut = /*bg_dirtybuffer = fg_dirtybuffer =*/ NULL;
+	 map_offset_lut = /*bg_dirtybuffer = fg_dirtybuffer =*/ NULL;
 
 	free(Mem);
 	Mem = NULL;

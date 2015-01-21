@@ -209,6 +209,7 @@ static Uint8	FntAsciiFontData2bpp[] = {
 #else
 //
 Uint8	*FntAsciiFontData2bpp;
+//Uint8	FntAsciiFontData2bpp[1600];
 #define FONT_ADDR &FntAsciiFontData2bpp[0]
 #endif
 extern unsigned char col[4];

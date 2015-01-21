@@ -61,7 +61,7 @@ OVLHIGEMARU                 = root/d_higemaru.coff
 OVLHIGEMARU1               = root/d_higema.bin
 MPOVLHIGEMARUFILE    = $(OVLHIGEMARU:.coff=.maps)
 LDOVLHIGEMARUFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLHIGEMARUFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLHIGEMARU         = d_higemaru.c ay8910.c  saturn/ovl.c
+SRCOVLHIGEMARU         = d_higemaru.c czet.c cz80/cz80.c ay8910.c  saturn/ovl.c
 OBJOVLHIGEMARU         = $(SRCOVLHIGEMARU:.c=.o)
 
 OVLPKUNW                 = root/d_pkunw.coff
