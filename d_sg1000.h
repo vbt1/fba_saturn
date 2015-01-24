@@ -4,17 +4,49 @@
 #include "burnint.h"
 #include "eeprom.h"
 #include "saturn/ovl.h"
+#include "sega_int.h"
 
 #include "tms9928a.h"
 #include "8255ppi.h"
 #include "sn76496.h"
 
-extern int file_id;
-
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static int DrvInit();
 static int DrvExit();
 static int DrvFrame();
+static int DrvDoReset();
+static UINT8 update_input1(void);
+
+extern int file_id;
+extern int file_max;
+
+typedef UINT16	trigger_t;
+
+static UINT16 pad_asign[]={
+PER_DGT_U,PER_DGT_D,PER_DGT_R,PER_DGT_L,PER_DGT_A,PER_DGT_B,
+PER_DGT_C,PER_DGT_S,PER_DGT_X,PER_DGT_Y,PER_DGT_TR,PER_DGT_TL,
+};
+
+static trigger_t	pltrigger[2],pltriggerE[2];
+
+#define	SZ_PERIPHERAL	20
+typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
+
+typedef	struct	SysPort	{
+	UINT8			id;
+	UINT8			connectable;
+	SysPeripheral	*peripheral;
+} SysPort;
+
+static SysPort	*__port;
+
+typedef	struct	SysDevice	{
+	UINT8	type;
+	UINT8	size;
+	UINT8	data[1];
+} SysDevice;
+
+
 
 static UINT8 *AllMem	= NULL;
 static UINT8 *MemEnd	= NULL;
@@ -38,14 +70,24 @@ static struct BurnInputInfo Sg1000InputList[] = {
 	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"	},
 	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"	},
 
-	{"P2 Up",		BIT_DIGITAL,	DrvJoy1 + 6,	"p2 up"		},
-	{"P2 Down",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 down"	},
-	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 left"	},
-	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 right"	},
-	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 fire 1"	},
-	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 2"	},
+//	{"P2 Up",		BIT_DIGITAL,	DrvJoy1 + 6,	"p2 up"		},
+//	{"P2 Down",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 down"	},
+//	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 left"	},
+//	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 right"	},
+//	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 fire 1"	},
+//	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 2"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+//	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+
+	{"P2 Up",		BIT_DIGITAL,	NULL,	"p2 up"		},
+	{"P2 Down",		BIT_DIGITAL,	NULL,	"p2 down"	},
+
+	{"P2 Left",		BIT_DIGITAL,	NULL,	"p2 left"	},
+	{"P2 Right",		BIT_DIGITAL,	NULL,	"p2 right"	},
+	{"P2 Button 1",		BIT_DIGITAL,	NULL,	"p2 fire 1"	},
+	{"P2 Button 2",		BIT_DIGITAL,	NULL,	"p2 fire 2"	},
+
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 };
 
 STDINPUTINFO(Sg1000)

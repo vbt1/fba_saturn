@@ -2141,6 +2141,15 @@ EndFile
 				File WONDERB.SG;1
 					Source SG1000\WONDERB.SG
 				EndFile
+				File HERO.SG;1
+					Source SG1000\HERO.SG
+				EndFile
+				File BLACKON.SG;1
+					Source SG1000\BLACKON.SG
+				EndFile
+				File CHACKNP.SG;1
+					Source SG1000\CHACKNP.SG
+				EndFile
 			EndDirectory
 
 			Directory CONGO

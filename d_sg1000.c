@@ -2,9 +2,7 @@
 // Based on MAME driver by Tomasz Slanina
 // Code by iq_132, fixups & bring up-to-date by dink Aug 18, 2014
 
-//#include "tiles_generic.h"
-//#include "z80_intf.h"
-//#include "driver.h"
+#include    "machine.h"
 #include "d_sg1000.h"
 #define SAMPLE 7680L
 #define nBurnSoundLen 128
@@ -38,6 +36,92 @@ struct BurnDriver BurnDrvsg1k_wboy = {
 };
 */
 
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void	SetVblank2( void ){
+	int			imask;
+
+
+	imask = get_imask();
+	set_imask(2);
+//	INT_ChgMsk(INT_MSK_NULL,INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT);
+	INT_ChgMsk(INT_MSK_NULL, INT_MSK_VBLK_OUT);
+//	INT_SetScuFunc(INT_SCU_VBLK_IN,UsrVblankIn2);
+	INT_SetScuFunc(INT_SCU_VBLK_OUT,update_input1);
+//	INT_ChgMsk(INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT,INT_MSK_NULL);
+	INT_ChgMsk(INT_MSK_VBLK_OUT,INT_MSK_NULL);
+	set_imask(imask);
+	__port = PER_OpenPort();
+	
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void load_rom()
+{
+//	DrvReset = 1;
+
+	strcpy(sg1k_wboyRomDesc[0].szName,GFS_IdToName(file_id));
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)GFS_IdToName(file_id),26,200);
+	DrvDoReset();
+
+	BurnLoadRom(DrvZ80ROM + 0x0000, 0, 1);
+	BurnLoadRom(DrvZ80ROM + 0x4000, 1, 1);
+	BurnLoadRom(DrvZ80ROM + 0x8000, 2, 1);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static UINT8 update_input1(void)
+{
+	unsigned int i=0,k;
+	UINT8 temp = 0xFF;
+	SysDevice	*device;
+//	__port = PER_OpenPort();
+//	PER_GetPort(__port);
+	if(( device = PER_GetDeviceR( &__port[0], 0 )) != NULL )
+	{
+		pltriggerE[0] = pltrigger[0];
+		pltrigger[0] = PER_GetTrigger( device );
+		pltriggerE[0] = (pltrigger[0]) ^ (pltriggerE[0]);
+		pltriggerE[0] = (pltrigger[0]) & (pltriggerE[0]);
+
+		if((pltriggerE[0] & PER_DGT_S)!=0)
+		{
+			load_rom();
+		}
+
+		for(i=10;i<12;i++)
+		{
+//			if((pltrigger[0] & pad_asign[i])!=0)
+			if((pltriggerE[0] & pad_asign[i])!=0)
+			{
+				switch(pltriggerE[0] & pad_asign[i] )
+				{
+					case PER_DGT_TR:
+					if (file_id<=file_max)	file_id++;
+					else							file_id=2;
+//#ifdef FONT
+						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
+						(Uint8 *)"            ",26,200);
+						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
+						(Uint8 *)GFS_IdToName(file_id),26,200);					
+//#endif
+					break;
+
+					case PER_DGT_TL:
+					if (file_id>2)	file_id--;
+					else				file_id=file_max;
+						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
+						(Uint8 *)"            ",26,200);
+						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
+						(Uint8 *)GFS_IdToName(file_id),26,200);
+
+				    default:
+					break;
+				}
+			}
+		}
+	}
+	else	pltrigger[0] = pltriggerE[0] = 0;
+
+	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
  void __fastcall sg1000_write_port(unsigned short port, UINT8 data)
@@ -88,7 +172,6 @@ static UINT8 __fastcall sg1000_read_port(unsigned short port)
 
 		case 0xde:
 			return 0x80;
-
 	}
 
 	return 0;
@@ -146,18 +229,7 @@ static int DrvInit()
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
-
-	{
-		long fileSize;
-		file_id = 2;
-		fileSize		 = GetFileSize(file_id);
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)GFS_IdToName(file_id),26,200);	
-//		GFS_Load(file_id, 0, DrvZ80ROM, fileSize);
-
-		if (BurnLoadRom(DrvZ80ROM + 0x0000, 0, 1)) return 1;
-		if (BurnLoadRom(DrvZ80ROM + 0x4000, 1, 1)) return 1;
-		if (BurnLoadRom(DrvZ80ROM + 0x8000, 2, 1)) return 1;
-	}
+	load_rom();
 
 	CZetInit(1);
 	CZetOpen(0);
@@ -191,7 +263,7 @@ static int DrvExit()
 	CZetExit();
 	ppi8255_exit();
 	TMS9928AExit();
-
+	nBurnFunction = NULL;
 	//pTransDraw = 
 	MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = NULL;
 //	SN76496Exit();
@@ -268,7 +340,6 @@ static int DrvFrame()
 	{
 		TMS9928ADraw();
 	}
-
 	return 0;
 }
 /*
@@ -416,14 +487,11 @@ void dummy()
 
 //	initSprites(256-1,192-1,0,0,0,0);
 
-
-
-
 //	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	drawWindow(32,192,192,14,52);
-//	nBurnFunction = update_input1;
+	nBurnFunction = update_input1;
 	drawWindow(0,192,192,2,66);
-//	SetVblank2();
+	SetVblank2();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 

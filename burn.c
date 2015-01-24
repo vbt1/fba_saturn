@@ -224,17 +224,12 @@ int i=0;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvZaxxon;
-pDriver[i++] = &BurnDrvZaxxonb;
-pDriver[i++] = &BurnDrvSzaxxon;	  
-pDriver[i++] = &BurnDrvVigilant;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlockgal;
 pDriver[i++] = &BurnDrvChplftb;
 pDriver[i++] = &BurnDrvcombh;
-pDriver[i++] = &BurnDrvCongo;
 pDriver[i++] = &BurnDrvFlickys2;
 pDriver[i++] = &BurnDrvGardia;
-pDriver[i++] = &BurnDrvGnga;
 pDriver[i++] = &BurnDrvGberet;
 pDriver[i++] = &BurnDrvMrgoemon;
 pDriver[i++] = &BurnDrvMyhero;
@@ -249,9 +244,15 @@ pDriver[i++] = &BurnDrvPitfall2u;
 pDriver[i++] = &BurnDrvRaflesia;
 pDriver[i++] = &BurnDrvStarjack;
 pDriver[i++] = &BurnDrvTeddybb;
-pDriver[i++] = &BurnDrvAtetris;
 pDriver[i++] = &BurnDrvWboyu;
 pDriver[i++] = &BurnDrvWbdeluxe;
+pDriver[i++] = &BurnDrvVigilant;
+pDriver[i++] = &BurnDrvGnga;
+pDriver[i++] = &BurnDrvAtetris;
+pDriver[i++] = &BurnDrvSzaxxon;	  
+pDriver[i++] = &BurnDrvZaxxonb;
+pDriver[i++] = &BurnDrvCongo;
+
 }
 
 // Application-defined rom loading function:

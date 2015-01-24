@@ -878,7 +878,7 @@ static UINT8 update_input1(void)
 //#endif
 					break;
 
-					 char str[50];
+//					 char str[50];
 
 					case PER_DGT_TL:
 					if (file_id>2)	file_id--;

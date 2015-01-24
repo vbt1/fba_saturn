@@ -593,11 +593,11 @@ void draw_sprites(unsigned char *attributeptr,unsigned char *spritepatternptr, S
         y = *attributeptr++;
 		if (y == 208) 
 		{
+			for (;p<32;++p) 
+			{
 			ss_spritePtr->charSize   = 0;
-			ss_spritePtr->ax			= 0;
-			ss_spritePtr->ay			= 0;
-			ss_spritePtr->charAddr	= 0;
 			++ss_spritePtr;
+			}
 			break;
 		}
         if (y > 208) 
