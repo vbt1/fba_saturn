@@ -323,33 +323,55 @@ void TMS9928ASetSpriteslimit(int limit)
 	tms.LimitSprites = limit;
 }
 
-static void draw_mode0(unsigned short *bitmap)
+static void draw_mode0(unsigned short *bitmap,unsigned char *vmem)
 {
 	unsigned char *patternptr;
-	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 0 not supported    ",16,40);
-	 return;
+	unsigned char tab[4];
+	unsigned char *vbt,*dirtyptr,*dirtycptr;
+
+	dirtyptr=(unsigned char *)dirty;
+	dirtycptr=(unsigned char *)dirtyc;
 
 	for (int y = 0, name = 0; y < 24; y++)
 	{
 		for (int x = 0; x < 32; x++, name++)
 		{
-			int charcode = tms.vMem[tms.nametbl+name];
-
+			int charcode = *vmem++;
 			patternptr = tms.vMem + tms.pattern + charcode*8;
 
-			int color = tms.vMem[tms.colour+charcode/8];
-
-			int fg = color >> 4;
-			int bg = color & 0x0f;
+			int colour = tms.vMem[tms.colour+charcode/8];
 
 			for (int yy = 0; yy < 8; yy++)
 			{
-				int bits = *patternptr++;
+				int pattern = *patternptr++;
 
-				for (int xx = 0; xx < 8; xx++, bits<<=1)
+				if(*dirtyptr!=pattern || *dirtycptr!=colour)
 				{
-					bitmap[(y * 8 + yy) * 256 + (x * 8 + xx)] = (bits & 0x80) ? fg : bg;
+					*dirtyptr=pattern;
+					*dirtycptr=colour;
+
+					vbt = (unsigned char *)&bitmap[(y * 8 + yy) * 64 + (x*2)];
+
+					int bg = colour & 0x0f;
+					tab[0]=bg|bg<<4;
+
+					if(pattern!=0)
+					{
+						int fg = colour >> 4;
+						tab[1] = fg|(*tab&0xf0);
+						tab[2] = colour;
+						tab[3] = fg|(colour&0xf0); 
+
+						vbt[0] = tab[(pattern>>6)&3]; 
+						vbt[1] = tab[(pattern>>4)&3]; 
+						vbt[2] = tab[(pattern>>2)&3]; 
+						vbt[3] = tab[(pattern>>0)&3];
+					}
+					else
+						vbt[0] = vbt[1] = vbt[2] = vbt[3] = *tab;
 				}
+				++dirtyptr;
+				++dirtycptr;
 			}
 		}
 	}
