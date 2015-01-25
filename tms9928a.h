@@ -1,6 +1,5 @@
 
 #define TMS9928A_PALETTE_SIZE           16
-
 typedef enum
 {
 	TMS_INVALID_MODEL,

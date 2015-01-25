@@ -16,6 +16,7 @@ static int DrvExit();
 static int DrvFrame();
 static int DrvDoReset();
 static UINT8 update_input1(void);
+static void make_lut();
 
 extern int file_id;
 extern int file_max;
@@ -55,6 +56,7 @@ static UINT8 *RamEnd	= NULL;
 static UINT8 *DrvZ80ROM	= NULL;
 static UINT8 *DrvZ80Dec = NULL;
 static UINT8 *DrvZ80RAM	= NULL;
+//UINT32 *color_2bpp_lut	= NULL;
 
 static UINT8 DrvInputs[2];
 static UINT8 DrvJoy1[8];

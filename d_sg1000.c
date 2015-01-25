@@ -62,6 +62,9 @@ static void load_rom()
 	strcpy(sg1k_wboyRomDesc[0].szName,GFS_IdToName(file_id));
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)GFS_IdToName(file_id),26,200);
 	DrvDoReset();
+	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
+	PCM_Task(pcm);
+	nSoundBufferPos=0;
 
 	BurnLoadRom(DrvZ80ROM + 0x0000, 0, 1);
 	BurnLoadRom(DrvZ80ROM + 0x4000, 1, 1);
@@ -212,8 +215,8 @@ static int MemIndex()
 	AllRam			= Next;
 
 	DrvZ80RAM		= Next; Next += 0x000400;
-
 	RamEnd			= Next;
+//	color_2bpp_lut	= Next; Next += 256*4*4;
 	MemEnd			= Next;
 
 	return 0;
@@ -229,6 +232,7 @@ static int DrvInit()
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
+//	make_lut();
 	load_rom();
 
 	CZetInit(1);
@@ -265,7 +269,7 @@ static int DrvExit()
 	TMS9928AExit();
 	nBurnFunction = NULL;
 	//pTransDraw = 
-	MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = NULL;
+	/*color_2bpp_lut =*/ MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = NULL;
 //	SN76496Exit();
 
 	free (AllMem);
@@ -431,16 +435,35 @@ void initPosition(void)
 	MemEnd			= Next;	
 }	*/
 //-------------------------------------------------------------------------------------------------------------------------------------
-void dummy()
+/*void dummy()
 {
 
+} */
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*
+static void make_lut()
+{
+	unsigned char bg,fg;
+
+	for (int bg=0;bg<16;bg++)
+	{
+		for (int fg=0;fg<16;fg++)
+		{
+			unsigned int *position =	 &color_2bpp_lut[(bg|fg<<4)*4];
+			position[0] = bg|bg<<4;
+			position[1] = fg|bg<<4;
+			position[2] = bg|fg<<4;
+			position[3] = fg|fg<<4;
+		}
+	}
 }
+*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
 //	InitCDsms();
-	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
+//	SPR_InitSlaveSH();
+//	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 	nBurnSprites  = 4+32;//131;//27;
 	nBurnLinescrollSize = 0;
 	nSoundBufferPos = 0;//sound position à renommer
@@ -473,7 +496,6 @@ void dummy()
 	ss_sprite[3].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP); //256 colors
 	ss_sprite[3].charSize    = 0x20C0;  // 256x*192y
 	
-//	make_lut();
 	initLayers();
 	
     SS_SET_N0PRIN(0);

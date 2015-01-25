@@ -2219,9 +2219,6 @@ EndFile
 				File LDRUN.SG;1
 					Source SG1000\LDRUN.SG
 				EndFile
-				File MAGTREE.SG;1
-					Source SG1000\MAGTREE.SG
-				EndFile
 				File NINJAPRI.SG;1
 					Source SG1000\NINJAPRI.SG
 				EndFile
@@ -2242,6 +2239,90 @@ EndFile
 				EndFile
 				File SEGAFLIP.SG;1
 					Source SG1000\SEGAFLIP.SG
+				EndFile
+				File SEGAGALA.SG;1
+					Source SG1000\SEGAGALA.SG
+				EndFile
+				File SHINNYUS.SG;1
+					Source SG1000\SHINNYUS.SG
+				EndFile
+				File SINDBADM.SG;1
+					Source SG1000\SINDBADM.SG
+				EndFile
+				File SPACEINV.SG;1
+					Source SG1000\SPACEINV.SG
+				EndFile
+				File SPACESLA.SG;1
+					Source SG1000\SPACESLA.SG
+				EndFile
+				File STARFRCE.SG;1
+					Source SG1000\STARFRCE.SG
+				EndFile
+				File STARJACK.SG;1
+					Source SG1000\STARJACK.SG
+				EndFile
+				File ZOOM909.SG;1
+					Source SG1000\ZOOM909.SG
+				EndFile
+				File YAMATO.SG;1
+					Source SG1000\YAMATO.SG
+				EndFile
+ 				File ZIPPYRAC.SG;1
+					Source SG1000\ZIPPYRAC.SG
+				EndFile
+ 				File CHALDERB.SG;1
+					Source SG1000\CHALDERB.SG
+				EndFile
+ 				File CHAMPBAS.SG;1
+					Source SG1000\CHAMPBAS.SG
+				EndFile
+ 				File URANAI.SC;1
+					Source SG1000\URANAI.SC
+				EndFile
+ 				File TEREBI.SG;1
+					Source SG1000\TEREBI.SG
+				EndFile
+ 				File SUPTANK.SG;1
+					Source SG1000\SUPTANK.SG
+				EndFile
+ 				File SERIZAWA.SG;1
+					Source SG1000\SERIZAWA.SG
+				EndFile
+				File SAFARI.SG;1
+					Source SG1000\SAFARI.SG
+				EndFile
+				File OKAMOTO.SG;1
+					Source SG1000\OKAMOTO.SG
+				EndFile
+				File EXERION.SG;1
+					Source SG1000\EXERION.SG
+				EndFile
+				File CONGO.SG;1
+					Source SG1000\CONGO.SG
+				EndFile
+				File CHAMPT.SG;1
+					Source SG1000\CHAMPT.SG
+				EndFile
+				File CHAMPS.SG;1
+					Source SG1000\CHAMPS.SG
+				EndFile
+				File CHAMPW.SG;1
+					Source SG1000\CHAMPW.SG
+				EndFile
+				File CHAMPK.SG;1
+					Source SG1000\CHAMPK.SG
+				EndFile
+				File CHAMPI.SG;1
+					Source SG1000\CHAMPI.SG
+				EndFile
+				File CHAMPG.SG;1
+					Source SG1000\CHAMPG.SG
+				EndFile
+				File CHAMPBOX.SG;1
+					Source SG1000\CHAMPBOX.SG
+				EndFile
+				File SAFARIRC.SG;1
+					Source SG1000\SAFARIRC.SG
 				EndFile
 
 			EndDirectory
