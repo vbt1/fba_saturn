@@ -2150,6 +2150,100 @@ EndFile
 				File CHACKNP.SG;1
 					Source SG1000\CHACKNP.SG
 				EndFile
+				File BANKPANI.SG;1
+					Source SG1000\BANKPANI.SG
+				EndFile
+				File CHOPLIFT.SG;1
+					Source SG1000\CHOPLIFT.SG
+				EndFile
+				File MONACOGP.SG;1
+					Source SG1000\MONACOGP.SG
+				EndFile
+				File PITFALL2.SG;1
+					Source SG1000\PITFALL2.SG
+				EndFile
+				File SOUKOBAN.SG;1
+					Source SG1000\SOUKOBAN.SG
+				EndFile
+				File ZAXXON.SG;1
+					Source SG1000\ZAXXON.SG
+				EndFile
+				File BOMBJACK.SG;1
+					Source SG1000\BOMBJACK.SG
+				EndFile
+				File BORDERLN.SG;1
+					Source SG1000\BORDERLN.SG
+				EndFile
+				File CABKIDS.SG;1
+					Source SG1000\CABKIDS.SG
+				EndFile
+				File CLODERUN.SG;1
+					Source SG1000\CLODERUN.SG
+				EndFile
+				File CSO.SG;1
+					Source SG1000\CSO.SG
+				EndFile
+				File DOKIDOKI.SG;1
+					Source SG1000\DOKIDOKI.SG
+				EndFile
+				File DRAGONW.SG;1
+					Source SG1000\DRAGONW.SG
+				EndFile
+				File DROL.SG;1
+					Source SG1000\DROL.SG
+				EndFile
+				File ELEVATOR.SG;1
+					Source SG1000\ELEVATOR.SG
+				EndFile
+				File FLICKY.SG;1
+					Source SG1000\FLICKY.SG
+				EndFile
+				File GIRLGARD.SG;1
+					Source SG1000\GIRLGARD.SG
+				EndFile
+				File GOLGO13.SG;1
+					Source SG1000\GOLGO13.SG
+				EndFile
+				File GPWORLD.SG;1
+					Source SG1000\GPWORLD.SG
+				EndFile
+				File GULKAVE.SG;1
+					Source SG1000\GULKAVE.SG
+				EndFile
+				File HANGON2.SG;1
+					Source SG1000\HANGON2.SG
+				EndFile
+				File HUSTLE.SG;1
+					Source SG1000\HUSTLE.SG
+				EndFile
+				File LDRUN.SG;1
+					Source SG1000\LDRUN.SG
+				EndFile
+				File MAGTREE.SG;1
+					Source SG1000\MAGTREE.SG
+				EndFile
+				File NINJAPRI.SG;1
+					Source SG1000\NINJAPRI.SG
+				EndFile
+				File NSUB.SG;1
+					Source SG1000\NSUB.SG
+				EndFile
+				File ORGUSS.SG;1
+					Source SG1000\ORGUSS.SG
+				EndFile
+				File PACAR.SG;1
+					Source SG1000\PACAR.SG
+				EndFile
+				File POPFLAM.SG;1
+					Source SG1000\POPFLAM.SG
+				EndFile
+				File ROCKNBOL.SG;1
+					Source SG1000\ROCKNBOL.SG
+				EndFile
+				File SEGAFLIP.SG;1
+					Source SG1000\SEGAFLIP.SG
+				EndFile
+
 			EndDirectory
 
 			Directory CONGO
