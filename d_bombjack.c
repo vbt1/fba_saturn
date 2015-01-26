@@ -14,6 +14,99 @@ int ovlInit(char *szShortName)
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void initLayers()
+{
+    Uint16	CycleTb[]={
+		0x1f5f, 0xffff, //A0
+		0xffff, 0xffff,	//A1
+		0xffff,0x4eff,   //B0
+		0xffff, 0xffff  //B1
+	};
+
+	SclConfig	scfg;
+// 3 nbg
+	scfg.dispenbl      = ON;
+	scfg.charsize      = SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
+	scfg.pnamesize     = SCL_PN2WORD;
+//	scfg.flip          = SCL_PN_12BIT; 
+	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
+	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
+	scfg.datatype      = SCL_CELL;
+//	scfg.patnamecontrl =  0x000c;// VRAM B1 のオフセット 
+	//for(i=0;i<4;i++)   
+	scfg.plate_addr[0] = (Uint32)ss_map;
+	scfg.plate_addr[1] = 0x00;
+	SCL_SetConfig(SCL_NBG1, &scfg);
+
+//	scfg.dispenbl 	     = ON;
+	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
+//	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
+	scfg.datatype 	     = SCL_BITMAP;
+	scfg.mapover         = SCL_OVER_0;
+	scfg.plate_addr[0]   = (Uint32)ss_font;
+// 3 nbg	
+	SCL_SetConfig(SCL_NBG0, &scfg);
+
+	SCL_SetCycleTable(CycleTb);	
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void initPosition()
+{
+	SCL_Open();
+	ss_reg->n1_move_x =  (-8<<16) ;
+	ss_reg->n1_move_y =  (32<<16) ;
+	SCL_Close();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void initColors()
+{
+	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
+	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
+ 	colAddr    = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	SCL_SetColRam(SCL_NBG0,8,8,palette);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void make_lut(void)
+{
+	unsigned int i,delta=0;
+	int sx, sy, row,col;
+
+	for (i = 0; i < 0x400;i++) 
+	{
+		int sx = (i) & 0x1f;
+		int sy = (((i+0x40) >> 5) & 0x1f)<<6;
+//		map_offset_lut[i] = (sx | sy)<<1;
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void DrvInitSaturn()
+{
+	nBurnSprites  = 51;//27;
+
+	SS_CACHE = cache      =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_MAP     = ss_map     =(Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
+
+	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
+	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
+
+	ss_sprite		= (SprSpCmd *)SS_SPRIT;
+
+//3 nbg
+	SS_SET_S0PRIN(6);
+	SS_SET_N0PRIN(7);
+	SS_SET_N1PRIN(4);
+//	SCL_SET_N2PRIN(3);
+
+	initLayers();
+	initPosition();
+	initColors();
+	make_lut();
+	initSprites(256+8-1,224-1,0,0,8,-16);
+	drawWindow(0,224,0,2,62); 
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 
 static INT32 DrvDoReset()
 {
@@ -286,6 +379,7 @@ static INT32 MemIndex()
 
 static INT32 BjInit()
 {
+	DrvInitSaturn();
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();

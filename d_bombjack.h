@@ -147,28 +147,28 @@ STDDIPINFO(Bj)
 
 // Bomb Jack (set 1)
 static struct BurnRomInfo BombjackRomDesc[] = {
-	{ "09_j01b.bin",    0x2000, 0xc668dc30, BRF_ESS | BRF_PRG },		//  0 Z80 code
-	{ "10_l01b.bin",    0x2000, 0x52a1e5fb, BRF_ESS | BRF_PRG },		//  1
-	{ "11_m01b.bin",    0x2000, 0xb68a062a, BRF_ESS | BRF_PRG },		//  2
-	{ "12_n01b.bin",    0x2000, 0x1d3ecee5, BRF_ESS | BRF_PRG },		//  3
+	{ "09j01b.bin",    0x2000, 0xc668dc30, BRF_ESS | BRF_PRG },		//  0 Z80 code
+	{ "10l01b.bin",    0x2000, 0x52a1e5fb, BRF_ESS | BRF_PRG },		//  1
+	{ "11m01b.bin",    0x2000, 0xb68a062a, BRF_ESS | BRF_PRG },		//  2
+	{ "12n01b.bin",    0x2000, 0x1d3ecee5, BRF_ESS | BRF_PRG },		//  3
 	{ "13.1r",          0x2000, 0x70e0244d, BRF_ESS | BRF_PRG },		//  4
 
 	// graphics 3 bit planes:
-	{ "03_e08t.bin",    0x1000, 0x9f0470d5, BRF_GRA },			 // chars
-	{ "04_h08t.bin",    0x1000, 0x81ec12e6, BRF_GRA },
-	{ "05_k08t.bin",    0x1000, 0xe87ec8b1, BRF_GRA },
+	{ "03e08t.bin",    0x1000, 0x9f0470d5, BRF_GRA },			 // chars
+	{ "04h08t.bin",    0x1000, 0x81ec12e6, BRF_GRA },
+	{ "05k08t.bin",    0x1000, 0xe87ec8b1, BRF_GRA },
 
-	{ "14_j07b.bin",    0x2000, 0x101c858d, BRF_GRA },			 // sprites
-	{ "15_l07b.bin",    0x2000, 0x013f58f2, BRF_GRA },
-	{ "16_m07b.bin",    0x2000, 0x94694097, BRF_GRA },
+	{ "14j07b.bin",    0x2000, 0x101c858d, BRF_GRA },			 // sprites
+	{ "15l07b.bin",    0x2000, 0x013f58f2, BRF_GRA },
+	{ "16m07b.bin",    0x2000, 0x94694097, BRF_GRA },
 
-	{ "06_l08t.bin",    0x2000, 0x51eebd89, BRF_GRA },			 // background tiles
-	{ "07_n08t.bin",    0x2000, 0x9dd98e9d, BRF_GRA },
-	{ "08_r08t.bin",    0x2000, 0x3155ee7d, BRF_GRA },
+	{ "06l08t.bin",    0x2000, 0x51eebd89, BRF_GRA },			 // background tiles
+	{ "07n08t.bin",    0x2000, 0x9dd98e9d, BRF_GRA },
+	{ "08r08t.bin",    0x2000, 0x3155ee7d, BRF_GRA },
 
-	{ "02_p04t.bin",    0x1000, 0x398d4a02, BRF_GRA },			 // background tilemaps
+	{ "02p04t.bin",    0x1000, 0x398d4a02, BRF_GRA },			 // background tilemaps
 
-	{ "01_h03t.bin",    0x2000, 0x8407917d, BRF_ESS | BRF_SND },		// sound CPU
+	{ "01h03t.bin",    0x2000, 0x8407917d, BRF_ESS | BRF_SND },		// sound CPU
 };
 
 STD_ROM_PICK(Bombjack)

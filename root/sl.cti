@@ -113,6 +113,62 @@ Track MODE1
 				Source D_SG1000.BIN
 			EndFile
 
+			File D_BOMBJA.BIN;1
+				Source D_BOMBJA.BIN
+			EndFile
+
+			Directory BOMBJA
+				File 01H03T.BIN;1
+					Source BOMBJA\01H03T.BIN
+				EndFile
+				File 02P04T.BIN;1
+					Source BOMBJA\02P04T.BIN
+				EndFile
+				File 03E08T.BIN;1
+					Source BOMBJA\03E08T.BIN
+				EndFile
+				File 04H08T.BIN;1
+					Source BOMBJA\04H08T.BIN
+				EndFile
+				File 05K08T.BIN;1
+					Source BOMBJA\05K08T.BIN
+				EndFile
+				File 06L08T.BIN;1
+					Source BOMBJA\06L08T.BIN
+				EndFile
+				File 07N08T.BIN;1
+					Source BOMBJA\07N08T.BIN
+				EndFile
+				File 08R08T.BIN;1
+					Source BOMBJA\08R08T.BIN
+				EndFile
+				File 09J01B.BIN;1
+					Source BOMBJA\09J01B.BIN
+				EndFile
+				File 10L01B.BIN;1
+					Source BOMBJA\10L01B.BIN
+				EndFile
+				File 11M01B.BIN;1
+					Source BOMBJA\11M01B.BIN
+				EndFile
+				File 12N01B.BIN;1
+					Source BOMBJA\12N01B.BIN
+				EndFile
+				File 13.1R;1
+					Source BOMBJA\13.1R
+				EndFile
+				File 14J07B.BIN;1
+					Source BOMBJA\14J07B.BIN
+				EndFile
+				File 15L07B.BIN;1
+					Source BOMBJA\15L07B.BIN
+				EndFile
+				File 16M07B.BIN;1
+					Source BOMBJA\16M07B.BIN
+				EndFile
+
+			EndDirectory
+
 			Directory BANKP
 
 				File EPR6165.BIN;1
