@@ -155,6 +155,13 @@ LDOVLSG1000FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(M
 SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c sn76496.c czet.c cz80/cz80.c saturn/ovl.c
 OBJOVLSG1000         = $(SRCOVLSG1000:.c=.o)
 
+OVLBOMBJACK                 = root/d_bombja.coff
+OVLBOMBJACK1               = root/d_bombja.bin
+MPOVLBOMBJACKFILE    = $(OVLBOMBJACK:.coff=.maps)
+LDOVLBOMBJACKFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBOMBJACKFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLBOMBJACK         = d_bombjack.c czet.c cz80/cz80.c ay8910.c  saturn/ovl.c
+OBJOVLBOMBJACK         = $(SRCOVLBOMBJACK:.c=.o)
+
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
@@ -180,7 +187,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
      $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
      $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
-     $(OVLSG1000) $(OVLSG10001)
+     $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -293,6 +300,12 @@ $(OVLSG1000) : $(OBJOVLSG1000) $(MAKEFILE) $(OBJOVLSG1000) $(LDOVLSG1000FILE)
 
 $(OVLSG10001) : $(OBJOVLSG1000) $(MAKEFILE) $(LDOVLSG1000FILE)
 	$(CONV) -O binary $(OVLSG1000) $(OVLSG10001)
+
+$(OVLBOMBJACK) : $(OBJOVLBOMBJACK) $(MAKEFILE) $(OBJOVLBOMBJACK) $(LDOVLBOMBJACKFILE)
+	$(CC) $(LDOVLBOMBJACKFLAGS) $(OBJOVLBOMBJACK) $(LIBSOVL) -o $@
+
+$(OVLBOMBJACK1) : $(OBJOVLBOMBJACK) $(MAKEFILE) $(LDOVLBOMBJACKFILE)
+	$(CONV) -O binary $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
 # suffix
 .SUFFIXES: .asm
