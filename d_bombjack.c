@@ -609,6 +609,96 @@ static void DecodeTiles16(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, I
 	}
 }
 
+/*static*/ void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+{
+	unsigned char tiles4[32*16*4];
+ /*2,0,3,1 */
+	for (int i=0;i<num;i++)
+	{
+		for (int j=0;j<512 ;j++ )
+		{
+			tiles4[j]=TilePointer[(512*(i+0))+j];
+/*			tiles4[j+512]=TilePointer[(512*(i+1))+j];
+			tiles4[j+1024]=TilePointer[(512*(i+2))+j];
+			tiles4[j+1536]=TilePointer[(512*(i+3))+j];		 */
+		}	
+
+		for (int j=0;j<8 ;j++ )
+		{
+			TilePointer[512*(i+0)+j]=tiles4[256+j];
+			TilePointer[512*(i+0)+j+16]=tiles4[256+j+8];
+			TilePointer[512*(i+0)+j+32]=tiles4[256+j+16];
+			TilePointer[512*(i+0)+j+48]=tiles4[256+j+24];
+			TilePointer[512*(i+0)+j+64]=tiles4[256+j+32];
+			TilePointer[512*(i+0)+j+80]=tiles4[256+j+40];
+			TilePointer[512*(i+0)+j+96]=tiles4[256+j+48];
+			TilePointer[512*(i+0)+j+112]=tiles4[256+j+56];
+			TilePointer[512*(i+0)+j+128]=tiles4[256+j+64];
+			TilePointer[512*(i+0)+j+144]=tiles4[256+j+72];
+			TilePointer[512*(i+0)+j+160]=tiles4[256+j+80];
+			TilePointer[512*(i+0)+j+176]=tiles4[256+j+88];
+			TilePointer[512*(i+0)+j+192]=tiles4[256+j+96];
+			TilePointer[512*(i+0)+j+208]=tiles4[256+j+104];
+			TilePointer[512*(i+0)+j+224]=tiles4[256+j+112];
+			TilePointer[512*(i+0)+j+240]=tiles4[256+j+120];
+
+
+
+			TilePointer[512*(i+0)+j+8]=tiles4[0+j];
+			TilePointer[512*(i+0)+j+24]=tiles4[0+j+8];
+			TilePointer[512*(i+0)+j+40]=tiles4[0+j+16];
+			TilePointer[512*(i+0)+j+56]=tiles4[0+j+24];
+			TilePointer[512*(i+0)+j+72]=tiles4[0+j+32];
+			TilePointer[512*(i+0)+j+88]=tiles4[0+j+40];
+			TilePointer[512*(i+0)+j+104]=tiles4[0+j+48];
+			TilePointer[512*(i+0)+j+120]=tiles4[0+j+56];
+			TilePointer[512*(i+0)+j+136]=tiles4[0+j+64];
+			TilePointer[512*(i+0)+j+152]=tiles4[0+j+72];
+			TilePointer[512*(i+0)+j+168]=tiles4[0+j+80];
+			TilePointer[512*(i+0)+j+184]=tiles4[0+j+88];
+			TilePointer[512*(i+0)+j+200]=tiles4[0+j+96];
+			TilePointer[512*(i+0)+j+216]=tiles4[0+j+104];
+			TilePointer[512*(i+0)+j+232]=tiles4[0+j+112];
+			TilePointer[512*(i+0)+j+248]=tiles4[0+j+120];
+
+ 			TilePointer[512*(i+0)+256+j]=tiles4[384+j];
+			TilePointer[512*(i+0)+256+j+16]=tiles4[384+j+8];
+			TilePointer[512*(i+0)+256+j+32]=tiles4[384+j+16];
+			TilePointer[512*(i+0)+256+j+48]=tiles4[384+j+24];
+			TilePointer[512*(i+0)+256+j+64]=tiles4[384+j+32];
+			TilePointer[512*(i+0)+256+j+80]=tiles4[384+j+40];
+			TilePointer[512*(i+0)+256+j+96]=tiles4[384+j+48];
+			TilePointer[512*(i+0)+256+j+112]=tiles4[384+j+56];
+			TilePointer[512*(i+0)+256+j+128]=tiles4[384+j+64];
+			TilePointer[512*(i+0)+256+j+144]=tiles4[384+j+72];
+			TilePointer[512*(i+0)+256+j+160]=tiles4[384+j+80];
+			TilePointer[512*(i+0)+256+j+176]=tiles4[384+j+88];
+			TilePointer[512*(i+0)+256+j+192]=tiles4[384+j+96];
+			TilePointer[512*(i+0)+256+j+208]=tiles4[384+j+104];
+			TilePointer[512*(i+0)+256+j+224]=tiles4[384+j+112];
+			TilePointer[512*(i+0)+256+j+240]=tiles4[384+j+120];
+
+			TilePointer[512*(i+0)+256+j+8]=tiles4[128+j];
+			TilePointer[512*(i+0)+256+j+24]=tiles4[128+j+8];
+			TilePointer[512*(i+0)+256+j+40]=tiles4[128+j+16];
+			TilePointer[512*(i+0)+256+j+56]=tiles4[128+j+24];
+			TilePointer[512*(i+0)+256+j+72]=tiles4[128+j+32];
+			TilePointer[512*(i+0)+256+j+88]=tiles4[128+j+40];
+			TilePointer[512*(i+0)+256+j+104]=tiles4[128+j+48];
+			TilePointer[512*(i+0)+256+j+120]=tiles4[128+j+56];
+			TilePointer[512*(i+0)+256+j+136]=tiles4[128+j+64];
+			TilePointer[512*(i+0)+256+j+152]=tiles4[128+j+72];
+			TilePointer[512*(i+0)+256+j+168]=tiles4[128+j+80];
+			TilePointer[512*(i+0)+256+j+184]=tiles4[128+j+88];
+			TilePointer[512*(i+0)+256+j+200]=tiles4[128+j+96];
+			TilePointer[512*(i+0)+256+j+216]=tiles4[128+j+104];
+			TilePointer[512*(i+0)+256+j+232]=tiles4[128+j+112];
+			TilePointer[512*(i+0)+256+j+248]=tiles4[128+j+120];
+		}
+	}
+}
+
+
 /*static*/ void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	DecodeTiles(TilePointer, num,off1,off2, off3);
@@ -753,7 +843,9 @@ static INT32 BjInit()
 
 	DecodeTiles4Bpp(text,512,0,0x1000,0x2000);
 	DecodeTiles16_4Bpp(sprites,1024,0x7000,0x5000,0x3000);
+	DecodeTiles32_4Bpp(sprites+0x4000,32,0x7000,0x5000,0x3000);
 	DecodeTiles16_4BppTile(tiles,1024,0x9000,0xB000,0xD000);
+	
 
 	DrvDoReset();
 	return 0;
@@ -954,7 +1046,7 @@ int i=0;
 		colour = (BjSprRam[offs+1] & 0x0f);
 		big = (BjSprRam[offs] & 0x80);
 
-
+// big=1;
 /*	   
 		 sx = ((i) % 32) <<6; //% 32;
 		 sy = (((i) / 32));
@@ -1038,7 +1130,26 @@ int i=0;
 			}
 		}
 		else
-		{	
+		{
+//			code=i;
+			code&=31;
+			code*=4;
+//code=10*4;
+			code+=0x80;
+//			code <<= 4;			
+			ss_sprite[delta].control			= ( JUMP_NEXT | FUNC_NORMALSP );
+			ss_sprite[delta].drawMode	= ( COLOR_0 | /*ECDSPD_DISABLE |*/ COMPO_REP);
+
+			ss_sprite[delta].ax			= sx;
+			ss_sprite[delta].ay			= sy;
+			ss_sprite[delta].charSize		= 0x420;
+			ss_sprite[delta].color			    = colour<<3;
+			ss_sprite[delta].charAddr		= 0x220+((code)<<4 );
+
+			 delta++;
+
+
+
 			code&=31;
 			code <<= 4;
 			sx-=1;
