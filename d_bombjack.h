@@ -9,7 +9,11 @@
 
 #define nBurnSoundLen 128
 
+UINT16 *map_offset_lut = NULL;
+UINT16 *mapbg_offset_lut = NULL;
+UINT16 *cram_lut = NULL;
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
+static UINT32 CalcCol(UINT16 nColour);
 static INT32 BjZInit();
 static INT32 BjInit();
 static INT32 BjExit();
@@ -48,9 +52,9 @@ static UINT8 *tiles = NULL;
 
 // pallete
 static UINT8 *BjPalSrc = NULL;
-static UINT32 *BjPalReal = NULL;
+//static UINT32 *BjPalReal = NULL;
 
-static INT16* pFMBuffer;
+static INT16* pFMBuffer = NULL;
 static INT16* pAY8910Buffer[9];
 
 static UINT8 BjIsBombjackt = 0;

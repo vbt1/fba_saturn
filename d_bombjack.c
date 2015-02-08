@@ -1,6 +1,6 @@
 #include "d_bombjack.h"
 
-void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
+static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
 
 int ovlInit(char *szShortName)
 {
@@ -130,32 +130,40 @@ static void initColors()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
 {
-	unsigned int i,delta=0;
-	int sx, sy, row,col;
-
-	for (i = 0; i < 0x400;i++) 
+/*
+		INT32 sx = ((tileCount) % 32) <<6; //% 32;
+		INT32 sy = (32 - ((tileCount) / 32));
+		int offs = (sx| sy);//<<1;
+*/
+	for (UINT32 i = 0; i < 1024;i++) 
 	{
-		int sx = (i) & 0x1f;
-		int sy = (((i+0x40) >> 5) & 0x1f)<<6;
-//		map_offset_lut[i] = (sx | sy)<<1;
+		INT32 sx = ((i) % 32) <<6; //% 32;
+		INT32 sy = (32 - ((i) / 32));
+		map_offset_lut[i] = (sx| sy);//<<1;
+	}
+	
+	for (UINT32 i = 0; i < 256;i++) 
+	{
+		INT32 sy = (i % 16) <<5;//<<6
+		INT32 sx = (15 - (i / 16));//<<1;
+		mapbg_offset_lut[i] = (sx| sy);//<<1;
+	}
+
+	for (UINT32 i = 0; i < 4096; i++) 
+	{
+		cram_lut[i] = CalcCol(i);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
+	SPR_InitSlaveSH();
 	nBurnSprites  = 51;//27;
-/*
-	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_B1+0x4000;
-	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE= cache    =(Uint8  *)SCL_VDP2_VRAM_A0;
-*/
 
 	SS_FONT        = ss_font     =(Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_MAP          = ss_map    =(Uint16 *)SCL_VDP2_VRAM_A1+0x08000;
 	SS_MAP2        = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1+0x0B000;
-//	SS_FONT        = ss_font     =(Uint16 *)NULL;
-	SS_CACHE      = cache       =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_CACHE      = cache      =(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -172,8 +180,8 @@ static void DrvInitSaturn()
 	initLayers();
 	initColors();
 	make_lut();
-	initSprites(256-1,240-1,0,0,8,0);
-	drawWindow(0,240,0,2,62); 
+	initSprites(256-1,240-1,0,0,7,0);
+	drawWindow(0,240,0,6,66); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 
@@ -381,16 +389,16 @@ static INT32 BjZInit()
 	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(2, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910SetAllRoutes(0, 0.13, BURN_SND_ROUTE_BOTH);
-	AY8910SetAllRoutes(1, 0.13, BURN_SND_ROUTE_BOTH);
-	AY8910SetAllRoutes(2, 0.13, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(0, 0.13, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(1, 0.13, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(2, 0.13, BURN_SND_ROUTE_BOTH);
 
 	// remember to do CZetReset() in main driver
 
 	DrvDoReset();
 	return 0;
 }
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void DecodeTiles4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	INT32 c,y,x,dat1,dat2,dat3,col1,col2;
@@ -407,24 +415,10 @@ static void DecodeTiles4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2,
 				if (dat1&1){ col1 |= 4;}
 				if (dat2&1){ col1 |= 2;}
 				if (dat3&1){ col1 |= 1;}
-//				dp = pDest + (c * (xSize/2) * ySize) + (y * (xSize/2));
-				//TilePointer[(c * 64) + ((7-x) * 8) + (7 - y)]=col1;
 				TilePointer[(c * 64) + ((7-x) * 8) + (7 - y)]=col1;
 			   	dat1>>=1;
 				dat2>>=1;
 				dat3>>=1;
-/*				col2=0;
-				if (dat1&1){ col2 |= 4;}
-				if (dat2&1){ col2 |= 2;}
-				if (dat3&1){ col2 |= 1;}
-
-				dat1>>=1;
-				dat2>>=1;
-				dat3>>=1;
-//				dp = pDest + (c * (xSize/2) * ySize) + (y * (xSize/2));
-				//TilePointer[(c * 64) + ((7-x) * 8) + (7 - y)]=col1;
-				TilePointer[(c * 32) + ((3-x) * 4) + (7 - y)]=col1|col2<<4;
- */
 			}
 		}
 	}
@@ -436,7 +430,7 @@ static void DecodeTiles4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2,
 	   TilePointer[c>>1]=c2| (c1<<4)& 0xf0;
 	}	  
 }
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void DecodeTiles(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	INT32 c,y,x,dat1,dat2,dat3,col1,col2;
@@ -453,100 +447,16 @@ static void DecodeTiles(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT
 				if (dat1&1){ col1 |= 4;}
 				if (dat2&1){ col1 |= 2;}
 				if (dat3&1){ col1 |= 1;}
-//				dp = pDest + (c * (xSize/2) * ySize) + (y * (xSize/2));
-				//TilePointer[(c * 64) + ((7-x) * 8) + (7 - y)]=col1;
 				TilePointer[(c * 64) + ((7-x) * 8) + (7 - y)]=col1;
 			   	dat1>>=1;
 				dat2>>=1;
 				dat3>>=1;
-/*				col2=0;
-				if (dat1&1){ col2 |= 4;}
-				if (dat2&1){ col2 |= 2;}
-				if (dat3&1){ col2 |= 1;}
-
-				dat1>>=1;
-				dat2>>=1;
-				dat3>>=1;
-//				dp = pDest + (c * (xSize/2) * ySize) + (y * (xSize/2));
-				//TilePointer[(c * 64) + ((7-x) * 8) + (7 - y)]=col1;
-				TilePointer[(c * 32) + ((3-x) * 4) + (7 - y)]=col1|col2<<4;
- */
 			}
 		}
 	}
- /*
-	for (c=0;c<num*8*8;c+=2)
-	{
-		unsigned char c1 = TilePointer[c]&0x0f;
-		unsigned char c2 = TilePointer[c+1]&0x0f;
-	   TilePointer[c>>1]=c2| c1<<4;
-	}*/		  
-}
-/*
-static void DecodeTiles16(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
-{
-	DecodeTiles(TilePointer, num,off1,off2, off3);
-	unsigned char tiles[8*8*4];
-//	int i=10;
-
-
-
-
-	for (int i=0;i<num;i+=4)
-	{
-//		memset(tiles,2,8*8*4);
-//memset(tiles,4,8*8);
-
-		for (int j=0;j<64 ;j++ )
-		{
-			tiles[j]=TilePointer[(64*(i+0))+j];
-			tiles[j+64]=TilePointer[(64*(i+1))+j];
-			tiles[j+128]=TilePointer[(64*(i+2))+j];
-			tiles[j+192]=TilePointer[(64*(i+3))+j];
-		}
-
-		for (int j=0;j<8 ;j++ )
-		{
-			TilePointer[64*4*(i+0)+j]=tiles[128+j];
-			TilePointer[64*4*(i+0)+j+8]=tiles[j+0];
-			TilePointer[64*4*(i+0)+j+16]=tiles[128+j+8];
-			TilePointer[64*4*(i+0)+j+24]=tiles[j+8+0];
-			TilePointer[64*4*(i+0)+j+32]=tiles[128+j+16];
-			TilePointer[64*4*(i+0)+j+40]=tiles[j+16+0];
-			TilePointer[64*4*(i+0)+j+48]=tiles[128+j+24];
-			TilePointer[64*4*(i+0)+j+56]=tiles[j+24+0];
-
-			TilePointer[64*4*(i+0)+j+64]=tiles[128+j+32];
-			TilePointer[64*4*(i+0)+j+64+8]=tiles[j+32+0];
-			TilePointer[64*4*(i+0)+j+64+16]=tiles[128+j+40];
-			TilePointer[64*4*(i+0)+j+64+24]=tiles[j+40+0];
-			TilePointer[64*4*(i+0)+j+64+32]=tiles[128+j+48];
-			TilePointer[64*4*(i+0)+j+64+40]=tiles[j+48+0];
-			TilePointer[64*4*(i+0)+j+64+48]=tiles[128+j+56];
-			TilePointer[64*4*(i+0)+j+64+56]=tiles[j+56+0];
-
-			TilePointer[64*4*(i+0)+j+128]=tiles[j+192];
-			TilePointer[64*4*(i+0)+j+128+8]=tiles[j+64+0];
-			TilePointer[64*4*(i+0)+j+128+16]=tiles[j+200];
-			TilePointer[64*4*(i+0)+j+128+24]=tiles[j+72+0];
-			TilePointer[64*4*(i+0)+j+128+32]=tiles[j+208];
-			TilePointer[64*4*(i+0)+j+128+40]=tiles[j+80+0];
-			TilePointer[64*4*(i+0)+j+128+48]=tiles[j+216];
-			TilePointer[64*4*(i+0)+j+128+56]=tiles[j+88+0];
-
-			TilePointer[64*4*(i+0)+j+192]=tiles[j+224];
-			TilePointer[64*4*(i+0)+j+192+8]=tiles[j+96+0];
-			TilePointer[64*4*(i+0)+j+192+16]=tiles[j+232];
-			TilePointer[64*4*(i+0)+j+192+24]=tiles[j+104+0];
-			TilePointer[64*4*(i+0)+j+192+32]=tiles[j+240];
-			TilePointer[64*4*(i+0)+j+192+40]=tiles[j+112+0];
-			TilePointer[64*4*(i+0)+j+192+48]=tiles[j+248];
-			TilePointer[64*4*(i+0)+j+192+56]=tiles[j+120+0];
-		}
-	}
-}
-*/
-/*static*/ void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+ }
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	DecodeTiles(TilePointer, num,off1,off2, off3);
 	unsigned char tiles4[8*8*4];
@@ -555,7 +465,7 @@ static void DecodeTiles16(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, I
 	{
 		for (int j=0;j<64 ;j++ )
 		{
-			tiles4[j]=TilePointer[(64*(i+0))+j];
+			tiles4[j]=TilePointer[((64*i))+j];
 			tiles4[j+64]=TilePointer[(64*(i+1))+j];
 			tiles4[j+128]=TilePointer[(64*(i+2))+j];
 			tiles4[j+192]=TilePointer[(64*(i+3))+j];
@@ -563,14 +473,14 @@ static void DecodeTiles16(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, I
 
 		for (int j=0;j<8 ;j++ )
 		{
-			TilePointer[64*(i+0)+j]=tiles4[128+j];
-			TilePointer[64*(i+0)+j+8]=tiles4[128+j+8];
-			TilePointer[64*(i+0)+j+16]=tiles4[128+j+16];
-			TilePointer[64*(i+0)+j+24]=tiles4[128+j+24];
-			TilePointer[64*(i+0)+j+32]=tiles4[128+j+32];
-			TilePointer[64*(i+0)+j+40]=tiles4[128+j+40];
-			TilePointer[64*(i+0)+j+48]=tiles4[128+j+48];
-			TilePointer[64*(i+0)+j+56]=tiles4[128+j+56];
+			TilePointer[(64*i)+j]=tiles4[128+j];
+			TilePointer[(64*i)+j+8]=tiles4[128+j+8];
+			TilePointer[(64*i)+j+16]=tiles4[128+j+16];
+			TilePointer[(64*i)+j+24]=tiles4[128+j+24];
+			TilePointer[(64*i)+j+32]=tiles4[128+j+32];
+			TilePointer[(64*i)+j+40]=tiles4[128+j+40];
+			TilePointer[(64*i)+j+48]=tiles4[128+j+48];
+			TilePointer[(64*i)+j+56]=tiles4[128+j+56];
 
 			TilePointer[64*(i+1)+j]=tiles4[0+j];
 			TilePointer[64*(i+1)+j+8]=tiles4[0+j+8];
@@ -608,8 +518,8 @@ static void DecodeTiles16(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, I
 	   TilePointer[c>>1]=c2| c1<<4;
 	}
 }
-
-/*static*/ void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	unsigned char tiles4[32*16*4];
  /*2,0,3,1 */
@@ -617,89 +527,83 @@ static void DecodeTiles16(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, I
 	{
 		for (int j=0;j<512 ;j++ )
 		{
-			tiles4[j]=TilePointer[(512*(i+0))+j];
-/*			tiles4[j+512]=TilePointer[(512*(i+1))+j];
-			tiles4[j+1024]=TilePointer[(512*(i+2))+j];
-			tiles4[j+1536]=TilePointer[(512*(i+3))+j];		 */
+			tiles4[j]=TilePointer[((512*i))+j];
 		}	
 
 		for (int j=0;j<8 ;j++ )
 		{
-			TilePointer[512*(i+0)+j]=tiles4[256+j];
-			TilePointer[512*(i+0)+j+16]=tiles4[256+j+8];
-			TilePointer[512*(i+0)+j+32]=tiles4[256+j+16];
-			TilePointer[512*(i+0)+j+48]=tiles4[256+j+24];
-			TilePointer[512*(i+0)+j+64]=tiles4[256+j+32];
-			TilePointer[512*(i+0)+j+80]=tiles4[256+j+40];
-			TilePointer[512*(i+0)+j+96]=tiles4[256+j+48];
-			TilePointer[512*(i+0)+j+112]=tiles4[256+j+56];
-			TilePointer[512*(i+0)+j+128]=tiles4[256+j+64];
-			TilePointer[512*(i+0)+j+144]=tiles4[256+j+72];
-			TilePointer[512*(i+0)+j+160]=tiles4[256+j+80];
-			TilePointer[512*(i+0)+j+176]=tiles4[256+j+88];
-			TilePointer[512*(i+0)+j+192]=tiles4[256+j+96];
-			TilePointer[512*(i+0)+j+208]=tiles4[256+j+104];
-			TilePointer[512*(i+0)+j+224]=tiles4[256+j+112];
-			TilePointer[512*(i+0)+j+240]=tiles4[256+j+120];
+			TilePointer[(512*i)+j]=tiles4[256+j];
+			TilePointer[(512*i)+j+16]=tiles4[256+j+8];
+			TilePointer[(512*i)+j+32]=tiles4[256+j+16];
+			TilePointer[(512*i)+j+48]=tiles4[256+j+24];
+			TilePointer[(512*i)+j+64]=tiles4[256+j+32];
+			TilePointer[(512*i)+j+80]=tiles4[256+j+40];
+			TilePointer[(512*i)+j+96]=tiles4[256+j+48];
+			TilePointer[(512*i)+j+112]=tiles4[256+j+56];
+			TilePointer[(512*i)+j+128]=tiles4[256+j+64];
+			TilePointer[(512*i)+j+144]=tiles4[256+j+72];
+			TilePointer[(512*i)+j+160]=tiles4[256+j+80];
+			TilePointer[(512*i)+j+176]=tiles4[256+j+88];
+			TilePointer[(512*i)+j+192]=tiles4[256+j+96];
+			TilePointer[(512*i)+j+208]=tiles4[256+j+104];
+			TilePointer[(512*i)+j+224]=tiles4[256+j+112];
+			TilePointer[(512*i)+j+240]=tiles4[256+j+120];
 
+			TilePointer[(512*i)+j+8]=tiles4[0+j];
+			TilePointer[(512*i)+j+24]=tiles4[0+j+8];
+			TilePointer[(512*i)+j+40]=tiles4[0+j+16];
+			TilePointer[(512*i)+j+56]=tiles4[0+j+24];
+			TilePointer[(512*i)+j+72]=tiles4[0+j+32];
+			TilePointer[(512*i)+j+88]=tiles4[0+j+40];
+			TilePointer[(512*i)+j+104]=tiles4[0+j+48];
+			TilePointer[(512*i)+j+120]=tiles4[0+j+56];
+			TilePointer[(512*i)+j+136]=tiles4[0+j+64];
+			TilePointer[(512*i)+j+152]=tiles4[0+j+72];
+			TilePointer[(512*i)+j+168]=tiles4[0+j+80];
+			TilePointer[(512*i)+j+184]=tiles4[0+j+88];
+			TilePointer[(512*i)+j+200]=tiles4[0+j+96];
+			TilePointer[(512*i)+j+216]=tiles4[0+j+104];
+			TilePointer[(512*i)+j+232]=tiles4[0+j+112];
+			TilePointer[(512*i)+j+248]=tiles4[0+j+120];
 
+ 			TilePointer[(512*i)+256+j]=tiles4[384+j];
+			TilePointer[(512*i)+256+j+16]=tiles4[384+j+8];
+			TilePointer[(512*i)+256+j+32]=tiles4[384+j+16];
+			TilePointer[(512*i)+256+j+48]=tiles4[384+j+24];
+			TilePointer[(512*i)+256+j+64]=tiles4[384+j+32];
+			TilePointer[(512*i)+256+j+80]=tiles4[384+j+40];
+			TilePointer[(512*i)+256+j+96]=tiles4[384+j+48];
+			TilePointer[(512*i)+256+j+112]=tiles4[384+j+56];
+			TilePointer[(512*i)+256+j+128]=tiles4[384+j+64];
+			TilePointer[(512*i)+256+j+144]=tiles4[384+j+72];
+			TilePointer[(512*i)+256+j+160]=tiles4[384+j+80];
+			TilePointer[(512*i)+256+j+176]=tiles4[384+j+88];
+			TilePointer[(512*i)+256+j+192]=tiles4[384+j+96];
+			TilePointer[(512*i)+256+j+208]=tiles4[384+j+104];
+			TilePointer[(512*i)+256+j+224]=tiles4[384+j+112];
+			TilePointer[(512*i)+256+j+240]=tiles4[384+j+120];
 
-			TilePointer[512*(i+0)+j+8]=tiles4[0+j];
-			TilePointer[512*(i+0)+j+24]=tiles4[0+j+8];
-			TilePointer[512*(i+0)+j+40]=tiles4[0+j+16];
-			TilePointer[512*(i+0)+j+56]=tiles4[0+j+24];
-			TilePointer[512*(i+0)+j+72]=tiles4[0+j+32];
-			TilePointer[512*(i+0)+j+88]=tiles4[0+j+40];
-			TilePointer[512*(i+0)+j+104]=tiles4[0+j+48];
-			TilePointer[512*(i+0)+j+120]=tiles4[0+j+56];
-			TilePointer[512*(i+0)+j+136]=tiles4[0+j+64];
-			TilePointer[512*(i+0)+j+152]=tiles4[0+j+72];
-			TilePointer[512*(i+0)+j+168]=tiles4[0+j+80];
-			TilePointer[512*(i+0)+j+184]=tiles4[0+j+88];
-			TilePointer[512*(i+0)+j+200]=tiles4[0+j+96];
-			TilePointer[512*(i+0)+j+216]=tiles4[0+j+104];
-			TilePointer[512*(i+0)+j+232]=tiles4[0+j+112];
-			TilePointer[512*(i+0)+j+248]=tiles4[0+j+120];
-
- 			TilePointer[512*(i+0)+256+j]=tiles4[384+j];
-			TilePointer[512*(i+0)+256+j+16]=tiles4[384+j+8];
-			TilePointer[512*(i+0)+256+j+32]=tiles4[384+j+16];
-			TilePointer[512*(i+0)+256+j+48]=tiles4[384+j+24];
-			TilePointer[512*(i+0)+256+j+64]=tiles4[384+j+32];
-			TilePointer[512*(i+0)+256+j+80]=tiles4[384+j+40];
-			TilePointer[512*(i+0)+256+j+96]=tiles4[384+j+48];
-			TilePointer[512*(i+0)+256+j+112]=tiles4[384+j+56];
-			TilePointer[512*(i+0)+256+j+128]=tiles4[384+j+64];
-			TilePointer[512*(i+0)+256+j+144]=tiles4[384+j+72];
-			TilePointer[512*(i+0)+256+j+160]=tiles4[384+j+80];
-			TilePointer[512*(i+0)+256+j+176]=tiles4[384+j+88];
-			TilePointer[512*(i+0)+256+j+192]=tiles4[384+j+96];
-			TilePointer[512*(i+0)+256+j+208]=tiles4[384+j+104];
-			TilePointer[512*(i+0)+256+j+224]=tiles4[384+j+112];
-			TilePointer[512*(i+0)+256+j+240]=tiles4[384+j+120];
-
-			TilePointer[512*(i+0)+256+j+8]=tiles4[128+j];
-			TilePointer[512*(i+0)+256+j+24]=tiles4[128+j+8];
-			TilePointer[512*(i+0)+256+j+40]=tiles4[128+j+16];
-			TilePointer[512*(i+0)+256+j+56]=tiles4[128+j+24];
-			TilePointer[512*(i+0)+256+j+72]=tiles4[128+j+32];
-			TilePointer[512*(i+0)+256+j+88]=tiles4[128+j+40];
-			TilePointer[512*(i+0)+256+j+104]=tiles4[128+j+48];
-			TilePointer[512*(i+0)+256+j+120]=tiles4[128+j+56];
-			TilePointer[512*(i+0)+256+j+136]=tiles4[128+j+64];
-			TilePointer[512*(i+0)+256+j+152]=tiles4[128+j+72];
-			TilePointer[512*(i+0)+256+j+168]=tiles4[128+j+80];
-			TilePointer[512*(i+0)+256+j+184]=tiles4[128+j+88];
-			TilePointer[512*(i+0)+256+j+200]=tiles4[128+j+96];
-			TilePointer[512*(i+0)+256+j+216]=tiles4[128+j+104];
-			TilePointer[512*(i+0)+256+j+232]=tiles4[128+j+112];
-			TilePointer[512*(i+0)+256+j+248]=tiles4[128+j+120];
+			TilePointer[(512*i)+256+j+8]=tiles4[128+j];
+			TilePointer[(512*i)+256+j+24]=tiles4[128+j+8];
+			TilePointer[(512*i)+256+j+40]=tiles4[128+j+16];
+			TilePointer[(512*i)+256+j+56]=tiles4[128+j+24];
+			TilePointer[(512*i)+256+j+72]=tiles4[128+j+32];
+			TilePointer[(512*i)+256+j+88]=tiles4[128+j+40];
+			TilePointer[(512*i)+256+j+104]=tiles4[128+j+48];
+			TilePointer[(512*i)+256+j+120]=tiles4[128+j+56];
+			TilePointer[(512*i)+256+j+136]=tiles4[128+j+64];
+			TilePointer[(512*i)+256+j+152]=tiles4[128+j+72];
+			TilePointer[(512*i)+256+j+168]=tiles4[128+j+80];
+			TilePointer[(512*i)+256+j+184]=tiles4[128+j+88];
+			TilePointer[(512*i)+256+j+200]=tiles4[128+j+96];
+			TilePointer[(512*i)+256+j+216]=tiles4[128+j+104];
+			TilePointer[(512*i)+256+j+232]=tiles4[128+j+112];
+			TilePointer[(512*i)+256+j+248]=tiles4[128+j+120];
 		}
 	}
 }
-
-
-/*static*/ void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	DecodeTiles(TilePointer, num,off1,off2, off3);
 	unsigned char tiles4[8*8*4];
@@ -708,7 +612,7 @@ static void DecodeTiles16(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, I
 	{
 		for (int j=0;j<64 ;j++ )
 		{
-			tiles4[j]=TilePointer[(64*(i+0))+j];
+			tiles4[j]=TilePointer[((64*i))+j];
 			tiles4[j+64]=TilePointer[(64*(i+1))+j];
 			tiles4[j+128]=TilePointer[(64*(i+2))+j];
 			tiles4[j+192]=TilePointer[(64*(i+3))+j];	  
@@ -716,41 +620,41 @@ static void DecodeTiles16(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, I
 
 		for (int j=0;j<8 ;j++ )
 		{
-			TilePointer[64*(i+0)+j]=tiles4[128+j];
-			TilePointer[64*(i+0)+j+16]=tiles4[128+j+8];
-			TilePointer[64*(i+0)+j+32]=tiles4[128+j+16];
-			TilePointer[64*(i+0)+j+48]=tiles4[128+j+24];
-			TilePointer[64*(i+0)+j+64]=tiles4[128+j+32];
-			TilePointer[64*(i+0)+j+80]=tiles4[128+j+40];
-			TilePointer[64*(i+0)+j+96]=tiles4[128+j+48];
-			TilePointer[64*(i+0)+j+112]=tiles4[128+j+56];
+			TilePointer[(64*i)+j]=tiles4[128+j];
+			TilePointer[(64*i)+j+16]=tiles4[128+j+8];
+			TilePointer[(64*i)+j+32]=tiles4[128+j+16];
+			TilePointer[(64*i)+j+48]=tiles4[128+j+24];
+			TilePointer[(64*i)+j+64]=tiles4[128+j+32];
+			TilePointer[(64*i)+j+80]=tiles4[128+j+40];
+			TilePointer[(64*i)+j+96]=tiles4[128+j+48];
+			TilePointer[(64*i)+j+112]=tiles4[128+j+56];
 
- 			TilePointer[64*(i+0)+j+8]=tiles4[0+j];
-			TilePointer[64*(i+0)+j+24]=tiles4[0+j+8];
-			TilePointer[64*(i+0)+j+40]=tiles4[0+j+16];
-			TilePointer[64*(i+0)+j+56]=tiles4[0+j+24];
-			TilePointer[64*(i+0)+j+72]=tiles4[0+j+32];
-			TilePointer[64*(i+0)+j+88]=tiles4[0+j+40];
-			TilePointer[64*(i+0)+j+104]=tiles4[0+j+48];
-			TilePointer[64*(i+0)+j+120]=tiles4[0+j+56];
+ 			TilePointer[(64*i)+j+8]=tiles4[0+j];
+			TilePointer[(64*i)+j+24]=tiles4[0+j+8];
+			TilePointer[(64*i)+j+40]=tiles4[0+j+16];
+			TilePointer[(64*i)+j+56]=tiles4[0+j+24];
+			TilePointer[(64*i)+j+72]=tiles4[0+j+32];
+			TilePointer[(64*i)+j+88]=tiles4[0+j+40];
+			TilePointer[(64*i)+j+104]=tiles4[0+j+48];
+			TilePointer[(64*i)+j+120]=tiles4[0+j+56];
 
-			TilePointer[64*(i+0)+j+128]=tiles4[192+j];
-			TilePointer[64*(i+0)+j+128+16]=tiles4[192+j+8];
-			TilePointer[64*(i+0)+j+128+32]=tiles4[192+j+16];
-			TilePointer[64*(i+0)+j+128+48]=tiles4[192+j+24];
-			TilePointer[64*(i+0)+j+128+64]=tiles4[192+j+32];
-			TilePointer[64*(i+0)+j+128+80]=tiles4[192+j+40];
-			TilePointer[64*(i+0)+j+128+96]=tiles4[192+j+48];
-			TilePointer[64*(i+0)+j+128+112]=tiles4[192+j+56];
+			TilePointer[(64*i)+j+128]=tiles4[192+j];
+			TilePointer[(64*i)+j+128+16]=tiles4[192+j+8];
+			TilePointer[(64*i)+j+128+32]=tiles4[192+j+16];
+			TilePointer[(64*i)+j+128+48]=tiles4[192+j+24];
+			TilePointer[(64*i)+j+128+64]=tiles4[192+j+32];
+			TilePointer[(64*i)+j+128+80]=tiles4[192+j+40];
+			TilePointer[(64*i)+j+128+96]=tiles4[192+j+48];
+			TilePointer[(64*i)+j+128+112]=tiles4[192+j+56];
 
-			TilePointer[64*(i+0)+j+128+8]=tiles4[64+j];
-			TilePointer[64*(i+0)+j+128+24]=tiles4[64+j+8];
-			TilePointer[64*(i+0)+j+128+40]=tiles4[64+j+16];
-			TilePointer[64*(i+0)+j+128+56]=tiles4[64+j+24];
-			TilePointer[64*(i+0)+j+128+72]=tiles4[64+j+32];
-			TilePointer[64*(i+0)+j+128+88]=tiles4[64+j+40];
-			TilePointer[64*(i+0)+j+128+104]=tiles4[64+j+48];
-			TilePointer[64*(i+0)+j+128+120]=tiles4[64+j+56];
+			TilePointer[(64*i)+j+128+8]=tiles4[64+j];
+			TilePointer[(64*i)+j+128+24]=tiles4[64+j+8];
+			TilePointer[(64*i)+j+128+40]=tiles4[64+j+16];
+			TilePointer[(64*i)+j+128+56]=tiles4[64+j+24];
+			TilePointer[(64*i)+j+128+72]=tiles4[64+j+32];
+			TilePointer[(64*i)+j+128+88]=tiles4[64+j+40];
+			TilePointer[(64*i)+j+128+104]=tiles4[64+j+48];
+			TilePointer[(64*i)+j+128+120]=tiles4[64+j+56];
 		}
 	}
 
@@ -761,9 +665,7 @@ static void DecodeTiles16(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, I
 	   TilePointer[c>>1]=c2| c1<<4;
 	}
 }
-
-
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 MemIndex()
 {
 	UINT8 *Next; Next = Mem;
@@ -786,13 +688,15 @@ static INT32 MemIndex()
 	sprites	  = &ss_vram[0x1100];//Next; Next += 1024 * 8 * 8;
 	tiles		  = (UINT8 *)SCL_VDP2_VRAM_B0;//+0x10000;//Next; Next += 1024 * 8 * 8;
 	pFMBuffer	= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
-	BjPalReal	= (UINT32*)Next; Next += 0x0080 * sizeof(UINT32);
-	MemEnd	  = Next;
+//	BjPalReal	= (UINT32*)Next; Next += 0x0080 * sizeof(UINT32);
+	map_offset_lut = (UINT16*)Next; Next += 1024 * sizeof(UINT16);
+	mapbg_offset_lut = (UINT16*)Next; Next += 256 * sizeof(UINT16);
+	cram_lut = (UINT16*)Next; Next += 4096 * sizeof(UINT16);
+	MemEnd = Next;
 
 	return 0;
 }
-
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 BjInit()
 {
 	DrvInitSaturn();
@@ -804,6 +708,7 @@ static INT32 BjInit()
 	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	MemIndex();
+	make_lut();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc                  ",10,70);
 	
 	INT32 RomOffset = 0;
@@ -845,7 +750,6 @@ static INT32 BjInit()
 	DecodeTiles16_4Bpp(sprites,1024,0x7000,0x5000,0x3000);
 	DecodeTiles32_4Bpp(sprites+0x4000,32,0x7000,0x5000,0x3000);
 	DecodeTiles16_4BppTile(tiles,1024,0x9000,0xB000,0xD000);
-	
 
 	DrvDoReset();
 	return 0;
@@ -865,7 +769,15 @@ static INT32 BjExit()
 	for (INT32 i = 0; i < 3; i++) {
 		AY8910Exit(i);
 	}
+	cram_lut = map_offset_lut = mapbg_offset_lut = NULL;
+MemEnd = RamStart = RamEnd = BjGfx = BjMap = BjRom = BjRam = BjColRam = NULL;
+BjVidRam = BjSprRam = SndRom = SndRam = text = sprites = tiles = BjPalSrc = NULL;
+	for (int i = 0; i < 9; i++) {
+		pAY8910Buffer[i] = NULL;
+	}
 
+//	free (pFMBuffer);
+	pFMBuffer = NULL;
 //	GenericTilesExit();
 	free(Mem);
 	Mem = NULL;
@@ -893,12 +805,11 @@ static UINT32 CalcCol(UINT16 nColour)
 static INT32 CalcAll()
 {
 	int delta=0;
-	for (INT32 i = 0; i < 0x100; i+=2) {
-		colAddr[i / 2] = 
-			colBgAddr[delta] = 
-//			BjPalReal[i / 2] = CalcCol(BjPalSrc[i & ~1] | (BjPalSrc[i | 1] << 8));
-			BjPalReal[i / 2] = CalcCol(BjPalSrc[i] | (BjPalSrc[i+1] << 8));
-				delta++; if ((delta & 7) == 0) delta += 8;
+	for (UINT32 i = 0; i < 0x100; i+=2) 
+	{
+		colAddr[i / 2] = colBgAddr[delta] = cram_lut[BjPalSrc[i] | (BjPalSrc[i+1] << 8)];
+//		CalcCol(BjPalSrc[i] | (BjPalSrc[i+1] << 8));
+		 		delta++; if ((delta & 7) == 0) delta += 8;
 	}
 
 	return 0;
@@ -906,118 +817,40 @@ static INT32 CalcAll()
 
 static void BjRenderFgLayer()
 {
-	for (INT32 tileCount = 0; tileCount < 1024 ;tileCount++) 
+	for (UINT32 tileCount = 0; tileCount < 1024 ;tileCount++) 
 	{
-		INT32 code = BjVidRam[tileCount] + 16 * (BjColRam[tileCount] & 0x10);
-		INT32 color = BjColRam[tileCount] & 0x0f;
+		UINT32 code = BjVidRam[tileCount] + 16 * (BjColRam[tileCount] & 0x10);
+		UINT32 color = BjColRam[tileCount] & 0x0f;
 
-		INT32 sx = ((tileCount) % 32) <<6; //% 32;
-		INT32 sy = (32 - ((tileCount) / 32));
-		int offs = (sx| sy);//<<1;
-
-//		ss_map2[offs] = 0; //color ; //(color << 12 | code) ;
-//		ss_map2[offs+1] = tileCount ; //(color << 12 | code) ;
+		UINT32 offs = map_offset_lut[tileCount];
 		ss_map[offs] = color << 12 | code;
 	}
 }
 
 static void BjRenderBgLayer()
 {
-	for (INT32 tileCount = 0; tileCount < 256;tileCount++) 
+	INT32 BgSel=BjRam[0x9e00];
+
+	for (UINT32 tileCount = 0; tileCount < 256;tileCount++) 
 	{
-		INT32 FlipX;
-		INT32 BgSel=BjRam[0x9e00];
+		UINT32 offs = (BgSel & 0x07) * 0x200 + tileCount;
+		UINT32 Code = (BgSel & 0x10) ? BjMap[offs] : 0;
 
-		INT32 offs = (BgSel & 0x07) * 0x200 + tileCount;
-		INT32 Code = (BgSel & 0x10) ? BjMap[offs] : 0;
+		UINT32 attr = BjMap[offs + 0x100];
+		UINT32 Colour = attr & 0x0f;
 
-		INT32 attr = BjMap[offs + 0x100];
-		INT32 Colour = attr & 0x0f;
-		//INT32 flags = (attr & 0x80) ? TILE_FLIPY : 0;
-
-		INT32 sy = (tileCount % 16) <<5;//<<6
-		INT32 sx = (15 - (tileCount / 16));//<<1;
-		FlipX = attr & 0x80;
-		int x = (sx|sy);
-
-//		ss_map[offs] = Colour ; //(color << 12 | code) ;
-//		ss_map[offs+1] = Code ; //(color << 12 | code) ;
-
-
-//ss_map[x]=2;
-ss_map2[x]=Colour << 12 | Code;
-
-/*
-		ss_map2[x]=0;
-		ss_map2[x+1]=2*4;
-		ss_map[x]=0;
-		ss_map[x+1]=2*4;
-*/
-		/*if (SolomonFlipScreen) {
-		sx = 31 - sx;
-		sy = 31 - sy;
-		FlipX = !FlipX;
-		FlipY = !FlipY;
-		}*/
-
-//		sx <<= 4;
-//		sx -=16;
-//		sy <<= 4;
-//		Code <<= 2;
-
-//		ss_map[x+1]=Code;
-//		if (sx >= 0 && sx < 215 && sy >= 0 && sy < 246) {
- /*
-			if (FlipX&0x80)
-			{
-				Render8x8Tile_Mask(pTransDraw, Code+0,sx+8,sy+0, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask(pTransDraw, Code+1,sx+8,sy+8, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask(pTransDraw, Code+2,sx+0,sy+0, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask(pTransDraw, Code+3,sx+0,sy+8, Colour, 3, 0, 0, tiles);
-
-			}
-			else
-			{
-				Render8x8Tile_Mask(pTransDraw, Code+0,sx+8,sy+0, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask(pTransDraw, Code+1,sx+8,sy+8, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask(pTransDraw, Code+2,sx+0,sy+0, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask(pTransDraw, Code+3,sx+0,sy+8, Colour, 3, 0, 0, tiles);
-			}
-*/
-//		} else {
-/*
-			if (FlipX&0x80)
-			{
-				Render8x8Tile_Mask_Clip(pTransDraw, Code+0,sx+8,sy+0, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask_Clip(pTransDraw, Code+1,sx+8,sy+8, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask_Clip(pTransDraw, Code+2,sx+0,sy+0, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask_Clip(pTransDraw, Code+3,sx+0,sy+8, Colour, 3, 0, 0, tiles);
-
-			}
-			else
-			{
-				Render8x8Tile_Mask_Clip(pTransDraw, Code+0,sx+8,sy+0, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask_Clip(pTransDraw, Code+1,sx+8,sy+8, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask_Clip(pTransDraw, Code+2,sx+0,sy+0, Colour, 3, 0, 0, tiles);
-				Render8x8Tile_Mask_Clip(pTransDraw, Code+3,sx+0,sy+8, Colour, 3, 0, 0, tiles);
-			}
-*/
-		}
-//	}
+		offs = mapbg_offset_lut[tileCount];
+		ss_map2[offs] = Colour << 12 | Code;
+	}
 }
 
 
 static void BjDrawSprites()
 {
 	INT32 offs,delta=3;
-int i=0;
+
 	for (offs = 0x60 - 4; offs >= 0; offs -= 4)
-//	for (int i = 0; i <32; i++)
 	{
-			 
-
-
-
 		/*
 		abbbbbbb cdefgggg hhhhhhhh iiiiiiii
 
@@ -1031,185 +864,41 @@ int i=0;
 		hhhhhhhh x position
 		iiiiiiii y position
 		*/
-		INT32 sx,sy,flipx,flipy, code, colour, big;
+		UINT32 flipx, flipy, code, colour, big;
 
+		flipx = (BjSprRam[offs+1] & 0x80)>>3;
+		flipy = (BjSprRam[offs+1] & 0x40)>>1;
 
-		sy = BjSprRam[offs+3];
-		if (BjSprRam[offs] & 0x80)
-			sx = BjSprRam[offs+2];
-		else
-			sx = BjSprRam[offs+2];
-		flipx = BjSprRam[offs+1] & 0x80;
-		flipy =	BjSprRam[offs+1] & 0x40;
-
-		code = BjSprRam[offs] & 0x7f;
+		code   = BjSprRam[offs] & 0x7f;
 		colour = (BjSprRam[offs+1] & 0x0f);
-		big = (BjSprRam[offs] & 0x80);
+		big      = (BjSprRam[offs] & 0x80);
 
-// big=1;
-/*	   
-		 sx = ((i) % 32) <<6; //% 32;
-		 sy = (((i) / 32));
-		 code = i;
-					 i++;		  
-		//sy -= 32;
- */
-		//sx -=16;
+		ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP | flipx | flipy);
+		ss_sprite[delta].drawMode	= ( COLOR_0 | COMPO_REP);
+		ss_sprite[delta].ax				= BjSprRam[offs+2];
+		ss_sprite[delta].ay				= BjSprRam[offs+3];
+		ss_sprite[delta].color			= colour<<3;
+
 		if (!big)
 		{
-//			code <<= 2;
-
-			ss_sprite[delta].control			= ( JUMP_NEXT | FUNC_NORMALSP );
-			ss_sprite[delta].drawMode	= ( COLOR_0 | /*ECDSPD_DISABLE |*/ COMPO_REP);
-
-			ss_sprite[delta].ax			= sx;
-			ss_sprite[delta].ay			= sy;
-			ss_sprite[delta].charSize		= 0x210;
-			ss_sprite[delta].color			    = colour<<3;
-			ss_sprite[delta].charAddr		= 0x220+((code)<<4 );
-
-			 delta++;
-
-
-
-
-
-			if (sx >= 0 && sx < 215 && sy >= 0 && sy < 246) {
-				if (!flipy) {
-/*					if (!flipx) {
-						Render8x8Tile_Mask(pTransDraw, code + 0, sx + 8, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code + 1, sx + 8, sy + 8, colour, 3, 0, 0, sprites);					
-						Render8x8Tile_Mask(pTransDraw, code + 2, sx + 0, sy + 0, colour, 3, 0, 0, sprites);		
-						Render8x8Tile_Mask(pTransDraw, code + 3, sx + 0, sy + 8, colour, 3, 0, 0, sprites);	
-					} else {
-						Render8x8Tile_Mask_FlipX(pTransDraw, code + 2, sx + 8, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipX(pTransDraw, code + 3, sx + 8, sy + 8, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipX(pTransDraw, code + 0, sx + 0, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipX(pTransDraw, code + 1, sx + 0, sy + 8, colour, 3, 0, 0, sprites);
-					}	*/
-				} else {
-/*					if (!flipx) {
-						Render8x8Tile_Mask_FlipY(pTransDraw, code + 1, sx + 8, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipY(pTransDraw, code + 0, sx + 8, sy + 8, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipY(pTransDraw, code + 3, sx + 0, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipY(pTransDraw, code + 2, sx + 0, sy + 8, colour, 3, 0, 0, sprites);
-					} else {
-						Render8x8Tile_Mask_FlipXY(pTransDraw, code + 3, sx + 8, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipXY(pTransDraw, code + 2, sx + 8, sy + 8, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipXY(pTransDraw, code + 1, sx + 0, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipXY(pTransDraw, code + 0, sx + 0, sy + 8, colour, 3, 0, 0, sprites);
-					}*/
-				}
-			} else {
-/*				if (!flipy) {
-					if (!flipx) {
-						Render8x8Tile_Mask_Clip(pTransDraw, code + 0, sx + 8, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code + 1, sx + 8, sy + 8, colour, 3, 0, 0, sprites);					
-						Render8x8Tile_Mask_Clip(pTransDraw, code + 2, sx + 0, sy + 0, colour, 3, 0, 0, sprites);		
-						Render8x8Tile_Mask_Clip(pTransDraw, code + 3, sx + 0, sy + 8, colour, 3, 0, 0, sprites);	
-					} else {
-						Render8x8Tile_Mask_FlipX_Clip(pTransDraw, code + 2, sx + 8, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipX_Clip(pTransDraw, code + 3, sx + 8, sy + 8, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipX_Clip(pTransDraw, code + 0, sx + 0, sy + 0, colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipX_Clip(pTransDraw, code + 1, sx + 0, sy + 8, colour, 3, 0, 0, sprites);
-					}
-				} else {
-					if (!flipx) {
-						Render8x8Tile_Mask_FlipY_Clip(pTransDraw, code + 1, sx + 0, sy + 0, colour, 4, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipY_Clip(pTransDraw, code + 0, sx + 0, sy + 8, colour, 4, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipY_Clip(pTransDraw, code + 3, sx + 8, sy + 0, colour, 4, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipY_Clip(pTransDraw, code + 2, sx + 8, sy + 8, colour, 4, 0, 0, sprites);
-					} else {
-						Render8x8Tile_Mask_FlipXY_Clip(pTransDraw, code + 3, sx + 8, sy + 0, colour, 4, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipXY_Clip(pTransDraw, code + 2, sx + 8, sy + 8, colour, 4, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipXY_Clip(pTransDraw, code + 1, sx + 0, sy + 0, colour, 4, 0, 0, sprites);
-						Render8x8Tile_Mask_FlipXY_Clip(pTransDraw, code + 0, sx + 0, sy + 8, colour, 4, 0, 0, sprites);
-					}
-				}
-*/
-			}
+			ss_sprite[delta].charSize= 0x210;
 		}
 		else
 		{
-//			code=i;
 			code&=31;
 			code*=4;
-//code=10*4;
 			code+=0x80;
-//			code <<= 4;			
-			ss_sprite[delta].control			= ( JUMP_NEXT | FUNC_NORMALSP );
-			ss_sprite[delta].drawMode	= ( COLOR_0 | /*ECDSPD_DISABLE |*/ COMPO_REP);
-
-			ss_sprite[delta].ax			= sx;
-			ss_sprite[delta].ay			= sy;
-			ss_sprite[delta].charSize		= 0x420;
-			ss_sprite[delta].color			    = colour<<3;
-			ss_sprite[delta].charAddr		= 0x220+((code)<<4 );
-
-			 delta++;
-
-
-
-			code&=31;
-			code <<= 4;
-			sx-=1;
-			if (sx >= 0 && sx < 215 && sy >= 0 && sy < 246) 
-			{
-/*				if (!flipy) 
-				{
-					if (!flipx) {
-						Render8x8Tile_Mask(pTransDraw, code+512,sx+8+16,sy,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+513,sx+8+16,sy+8,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+514,sx+16,sy,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+515,sx+16,sy+8,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+516,sx+8+16,sy+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+517,sx+8+16,sy+8+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+518,sx+16,sy+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+519,sx+16,sy+8+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+520,sx+8,sy,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+521,sx+8,sy+8,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+522,sx,sy,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+523,sx,sy+8,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+524,sx+8,sy+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+525,sx+8,sy+8+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+526,sx,sy+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask(pTransDraw, code+527,sx,sy+8+16,colour, 3, 0, 0, sprites);
-					}
-				}
-*/
-			}
-			else
-			{
-/*				if (!flipy) 
-				{
-					if (!flipx) {
-						Render8x8Tile_Mask_Clip(pTransDraw, code+512,sx+8+16,sy,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+513,sx+8+16,sy+8,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+514,sx+16,sy,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+515,sx+16,sy+8,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+516,sx+8+16,sy+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+517,sx+8+16,sy+8+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+518,sx+16,sy+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+519,sx+16,sy+8+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+520,sx+8,sy,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+521,sx+8,sy+8,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+522,sx,sy,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+523,sx,sy+8,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+524,sx+8,sy+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+525,sx+8,sy+8+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+526,sx,sy+16,colour, 3, 0, 0, sprites);
-						Render8x8Tile_Mask_Clip(pTransDraw, code+527,sx,sy+8+16,colour, 3, 0, 0, sprites);
-					}
-				}
-*/
-			}
+			ss_sprite[delta].charSize= 0x420;
 		}
+		ss_sprite[delta].charAddr	= 0x220+((code)<<4 );
+		delta++;
 	}
 }
 
 static INT32 BjFrame()
 {
-	if (DrvReset) {	// Reset machine
+	if (DrvReset) 
+	{	// Reset machine
 		DrvDoReset();
 	}
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BjFrame                  ",10,70);
@@ -1266,31 +955,64 @@ static INT32 BjFrame()
 		}
 	}
 */
-	/*CZetOpen(0);
-	if (BjRam[0xb000])
-	CZetNmi();
-	CZetClose();*/
-
 	CZetOpen(1);
 	CZetNmi();
 	CZetClose();
 
+	CalcAll();
+	BjRenderBgLayer();
+	BjRenderFgLayer();
+	BjDrawSprites();
 
-//	if (pBurnDraw != NULL)
-	{
-//		BurnTransferClear();
-		CalcAll();
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BjRenderBgLayer                  ",10,70);
-
-		BjRenderBgLayer();
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BjRenderFgLayer                  ",10,70);
-		BjRenderFgLayer();
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BjDrawSprites                  ",10,70);
-
-		BjDrawSprites();
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"                                    ",10,70);
-
-//		BurnTransferCopy(BjPalReal);
-	}
 	return 0;
+}
+//-------------------------------------------------------------------------------------------------
+/*static*/ void updateSound()
+{
+	int nSample;
+	int n;
+	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
+	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+
+//	soundLenSlave = SOUND_LEN);
+	AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
+	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
+	AY8910Update(2, &pAY8910Buffer[6], nBurnSoundLen);
+
+	for (n = 0; n < nBurnSoundLen; n++) 
+	{
+		nSample  = pAY8910Buffer[0][n] >> 2;
+		nSample += pAY8910Buffer[1][n] >> 2;
+		nSample += pAY8910Buffer[2][n] >> 2;
+		nSample += pAY8910Buffer[3][n] >> 2;
+		nSample += pAY8910Buffer[4][n] >> 2;
+		nSample += pAY8910Buffer[5][n] >> 2;
+		nSample += pAY8910Buffer[6][n] >> 2;
+		nSample += pAY8910Buffer[7][n] >> 2;
+		nSample += pAY8910Buffer[8][n] >> 2;
+
+		if (nSample < -32768) 
+		{
+			nSample = -32768;
+		} 
+		else 
+		{
+			if (nSample > 32767) 
+			{
+				nSample = 32767;
+			}
+		}
+		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
+	}
+
+	if(deltaSlave>=RING_BUF_SIZE/2)
+	{
+		deltaSlave=0;
+		PCM_Task(pcm); // bon emplacement
+	}
+
+	deltaSlave+=nBurnSoundLen;
+
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
