@@ -1,6 +1,9 @@
 #include "d_bombjack.h"
+#define RAZE 1
 
 static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
+UINT32 BgSel=0xFFFF;
+UINT32 bg_cache[1024];
 
 int ovlInit(char *szShortName)
 {
@@ -195,6 +198,10 @@ static INT32 DrvDoReset()
 		CZetClose();
 	}
 
+#ifdef RAZE
+	z80_reset();
+#endif
+
 	for (INT32 i = 0; i < 3; i++) {
 		AY8910Reset(i);
 	}
@@ -206,8 +213,6 @@ UINT8 __fastcall BjMemRead(UINT16 addr)
 {
 	UINT8 inputs=0;
 	
-	if (addr >= 0x9820 && addr <= 0x987f) return BjSprRam[addr - 0x9820];
-
 	if (addr==0xb000) {
 		if (DrvJoy1[5])
 			inputs|=0x01;
@@ -251,21 +256,78 @@ UINT8 __fastcall BjMemRead(UINT16 addr)
 	if (addr==0xb005) {
 		return BjDip[1]; // Dip Sw(2)
 	}
+
+	if (addr >= 0x9820 && addr <= 0x987f) return BjSprRam[addr - 0x9820];
+
 	return 0;
 }
-
-void __fastcall BjMemWrite(UINT16 addr,UINT8 val)
+#ifdef RAZE
+void __fastcall BjMemWrite_9000(UINT16 addr,UINT8 val)
 {
-	if (addr >= 0x9820 && addr <= 0x987f) { BjSprRam[addr - 0x9820] = val; return; }
-	
+	addr &=0x3ff;
+
+	if (BjVidRam[addr]!=val)
+	{
+		BjVidRam[addr]=val;
+		UINT32 code = val + 16 * (BjColRam[addr] & 0x10);
+		UINT32 color = BjColRam[addr] & 0x0f;
+
+		UINT32 offs = map_offset_lut[addr];
+		ss_map[offs] = color << 12 | code;
+	}
+}
+
+void __fastcall BjMemWrite_9400(UINT16 addr,UINT8 val)
+{
+	addr &=0x3ff;
+
+	if (BjColRam[addr]!=val)
+	{
+		BjColRam[addr]=val;
+		UINT32 code = BjVidRam[addr] + 16 * (val & 0x10);
+
+		UINT32 offs = map_offset_lut[addr];
+		ss_map[offs] = (val & 0x0f) << 12 | code;
+	}
+}
+
+UINT8 __fastcall BjMemRead_9820(UINT16 addr)
+{
+	return BjSprRam[addr - 0x9820];
+}
+
+void __fastcall BjMemWrite_9820(UINT16 addr,UINT8 val)
+{
+	BjSprRam[addr - 0x9820] = val;
+}
+
+void __fastcall BjMemWrite_b000(UINT16 addr,UINT8 val)
+{
 	if (addr==0xb000)
 	{
 		bombjackIRQ = val;
 	}
+	BjRam[addr]=val;
+}
+
+void __fastcall BjMemWrite_b800(UINT16 addr,UINT8 val)
+{
+	latch=val;
+}
+#endif
+void __fastcall BjMemWrite(UINT16 addr,UINT8 val)
+{
+	if (addr >= 0x9820 && addr <= 0x987f) { BjSprRam[addr - 0x9820] = val; return; }
+
 	if(addr==0xb800)
 	{
 		latch=val;
 		return;
+	}
+	
+	if (addr==0xb000)
+	{
+		bombjackIRQ = val;
 	}
 	BjRam[addr]=val;
 }
@@ -324,6 +386,44 @@ static INT32 BjZInit()
 	// Init the z80
 	CZetInit(2);
 	// Main CPU setup
+#ifdef RAZE
+	z80_init_memmap();
+	z80_map_fetch (0x0000,0x7fff,BjRom+0x0000); 
+	z80_map_read  (0x0000,0x7fff,BjRom+0x0000);  
+	z80_map_fetch (0xc000,0xdfff,BjRom+0x8000); 
+	z80_map_read  (0xc000,0xdfff,BjRom+0x8000);  
+
+//	z80_map_fetch (0x8000,0x8fff,BjRam+0x8000);
+	z80_map_read  (0x8000,0x8fff,BjRam+0x8000);
+	z80_map_write (0x8000,0x8fff,BjRam+0x8000);
+
+//	z80_map_fetch (0x9000,0x93ff,BjVidRam);
+	z80_map_read  (0x9000,0x93ff,BjVidRam);
+//	z80_map_write (0x9000,0x93ff,BjVidRam);
+
+//	z80_map_fetch (0x9400,0x97ff,BjColRam);
+	z80_map_read  (0x9400,0x97ff,BjColRam);
+//	z80_map_write (0x9400,0x97ff,BjColRam);
+
+//	z80_map_fetch (0x9c00,0x9cff,BjPalSrc);
+	z80_map_read  (0x9c00,0x9cff,BjPalSrc);
+	z80_map_write (0x9c00,0x9cff,BjPalSrc);
+
+//	z80_map_fetch (0x9e00,0x9e00,BjRam+0x9e00);
+	z80_map_read  (0x9e00,0x9e00,BjRam+0x9e00);
+	z80_map_write (0x9e00,0x9e00,BjRam+0x9e00);
+	z80_end_memmap();
+
+	z80_add_read(0x9820, 0x987f, 1, (void *)&BjMemRead_9820);
+	z80_add_read(0xb000, 0xb005, 1, (void *)&BjMemRead);
+
+	z80_add_write(0x9000,0x93ff, 1, (void *)&BjMemWrite_9000);
+	z80_add_write(0x9400,0x97ff, 1, (void *)&BjMemWrite_9400);
+
+	z80_add_write(0x9820, 0x987f, 1, (void *)&BjMemWrite_9820);
+	z80_add_write(0xb000, 0xb000, 1, (void *)&BjMemWrite_b000);
+	z80_add_write(0xb800, 0xb800, 1, (void *)&BjMemWrite_b800);
+#else
 	CZetOpen(0);
 
 	CZetMapArea    (0x0000,0x7fff,0,BjRom+0x0000); // Direct Read from ROM
@@ -358,7 +458,7 @@ static INT32 BjZInit()
 	CZetSetReadHandler(BjMemRead);
 	CZetSetWriteHandler(BjMemWrite);
 	CZetClose();
-
+#endif
 //	CZetInit(1);
 	CZetOpen(1);
 	CZetMapArea    (0x0000,0x1fff,0,SndRom); // Direct Read from ROM
@@ -764,6 +864,10 @@ static INT32 BjtInit()
 
 static INT32 BjExit()
 {
+#ifdef RAZE
+	z80_stop_emulating();
+#endif
+
 	CZetExit();
 
 	for (INT32 i = 0; i < 3; i++) {
@@ -827,9 +931,9 @@ static void BjRenderFgLayer()
 	}
 }
 
-static void BjRenderBgLayer()
+static void BjRenderBgLayer(UINT32 BgSel)
 {
-	INT32 BgSel=BjRam[0x9e00];
+//	INT32 BgSel=BjRam[0x9e00];
 
 	for (UINT32 tileCount = 0; tileCount < 256;tileCount++) 
 	{
@@ -913,6 +1017,19 @@ static INT32 BjFrame()
 	for (INT32 i = 0; i < nInterleave; i++) {
 		INT32 nCurrentCPU, nNext;
 
+
+#ifdef RAZE
+		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[0];
+		nCyclesDone[0] += z80_emulate(nCyclesSegment);
+		if (i == 1) 
+		{
+			if(bombjackIRQ)
+			{
+				z80_cause_NMI();
+			}
+		}
+#else
 		// Run Z80 #1
 		nCurrentCPU = 0;
 		CZetOpen(nCurrentCPU);
@@ -927,7 +1044,7 @@ static INT32 BjFrame()
 			}
 		}
 		CZetClose();
-
+#endif
 		// Run Z80 #2
 		nCurrentCPU = 1;
 		CZetOpen(nCurrentCPU);
@@ -960,8 +1077,12 @@ static INT32 BjFrame()
 	CZetClose();
 
 	CalcAll();
-	BjRenderBgLayer();
-	BjRenderFgLayer();
+	if(BgSel!=BjRam[0x9e00])
+	{
+		BgSel=BjRam[0x9e00];
+		BjRenderBgLayer(BgSel);
+	}
+	//BjRenderFgLayer();
 	BjDrawSprites();
 
 	return 0;
