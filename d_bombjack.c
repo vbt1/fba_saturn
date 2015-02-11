@@ -1008,18 +1008,20 @@ static INT32 BjFrame()
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BjFrame                  ",10,70);
 
 	INT32 nInterleave = 10;
-	INT32 nSoundBufferPos = 0;
+	INT32 nSoundBufferPos1 = 0;
 
-	nCyclesTotal[0] = 4000000 / 60;
-	nCyclesTotal[1] = 3000000 / 60;
+	nCyclesTotal[0] = 4000000 / 600;
+	nCyclesTotal[1] = 3000000 / 600;
 	nCyclesDone[0] = nCyclesDone[1] = 0;
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
 
-	for (INT32 i = 0; i < nInterleave; i++) {
+	for (INT32 i = 0; i < nInterleave; i++) 
+	{
 		INT32 nCurrentCPU, nNext;
 
 
 #ifdef RAZE
-		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
+		nNext = (i + 1) * nCyclesTotal[0];// / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[0];
 		nCyclesDone[0] += z80_emulate(nCyclesSegment);
 		if (i == 1) 
@@ -1033,7 +1035,7 @@ static INT32 BjFrame()
 		// Run Z80 #1
 		nCurrentCPU = 0;
 		CZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU];// / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
 		if (i == 1) 
@@ -1048,7 +1050,7 @@ static INT32 BjFrame()
 		// Run Z80 #2
 		nCurrentCPU = 1;
 		CZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU];// / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesSegment = CZetRun(nCyclesSegment);
 		nCyclesDone[nCurrentCPU] += nCyclesSegment;
@@ -1061,7 +1063,20 @@ static INT32 BjFrame()
 			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
 			nSoundBufferPos += nSegmentLength;
 		}		 */
+/*
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
+
+		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
+		nSoundBufferPos1 += nSegmentLength;	*/
 	}
+/*
+	INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
+	if (nSegmentLength) 
+	{
+		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
+	}
+*/
+	SoundUpdate(&nSoundBuffer[nSoundBufferPos],nBurnSoundLen);
 
 	// Make sure the buffer is entirely filled.
 /*	if (pBurnSoundOut) {
@@ -1088,6 +1103,58 @@ static INT32 BjFrame()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------
+void SoundUpdate(INT16* buffer, INT32 length)
+{
+	int nSample;
+	int n;
+//	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
+//	signed short *nSoundBuffer = (signed short *)0x25a20000;
+//	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+
+//	soundLenSlave = SOUND_LEN);
+	AY8910Update(0, &pAY8910Buffer[0], length);
+	AY8910Update(1, &pAY8910Buffer[3], length);
+	AY8910Update(2, &pAY8910Buffer[6], length);
+
+	for (n = 0; n < length; n++) 
+	{
+		nSample  = pAY8910Buffer[0][n] >> 2;
+		nSample += pAY8910Buffer[1][n] >> 2;
+		nSample += pAY8910Buffer[2][n] >> 2;
+		nSample += pAY8910Buffer[3][n] >> 2;
+		nSample += pAY8910Buffer[4][n] >> 2;
+		nSample += pAY8910Buffer[5][n] >> 2;
+		nSample += pAY8910Buffer[6][n] >> 2;
+		nSample += pAY8910Buffer[7][n] >> 2;
+		nSample += pAY8910Buffer[8][n] >> 2;
+
+		if (nSample < -32768) 
+		{
+			nSample = -32768;
+		} 
+		else 
+		{
+			if (nSample > 32767) 
+			{
+				nSample = 32767;
+			}
+		}
+//		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
+		buffer[n] = nSample;//pAY8910Buffer[5][n];//nSample;
+	}
+
+//	if(deltaSlave>=RING_BUF_SIZE/2)
+	if(nSoundBufferPos>=RING_BUF_SIZE/2)
+	{
+//		deltaSlave=0;
+		nSoundBufferPos=0;
+		PCM_Task(pcm); // bon emplacement
+	}
+
+//	deltaSlave+=nBurnSoundLen;
+	nSoundBufferPos+=length;
+}
+
 /*static*/ void updateSound()
 {
 	int nSample;
