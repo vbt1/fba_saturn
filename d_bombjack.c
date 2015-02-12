@@ -1,6 +1,6 @@
 #include "d_bombjack.h"
 #define RAZE 1
-
+void SoundUpdate2(INT32 *length2);
 static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
 UINT32 BgSel=0xFFFF;
 UINT32 bg_cache[1024];
@@ -158,9 +158,16 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void dummy()
+{
+
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+
 	nBurnSprites  = 51;//27;
 
 	SS_FONT        = ss_font     =(Uint16 *)SCL_VDP2_VRAM_A1;
@@ -1001,10 +1008,10 @@ static void BjDrawSprites()
 
 static INT32 BjFrame()
 {
-	if (DrvReset) 
+/*	if (DrvReset) 
 	{	// Reset machine
 		DrvDoReset();
-	}
+	}	  */
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BjFrame                  ",10,70);
 
 	INT32 nInterleave = 10;
@@ -1063,20 +1070,23 @@ static INT32 BjFrame()
 			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
 			nSoundBufferPos += nSegmentLength;
 		}		 */
-/*
-		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
 
-		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
-		nSoundBufferPos1 += nSegmentLength;	*/
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
+		SPR_WaitEndSlaveSH();
+
+//		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
+		SPR_RunSlaveSH((PARA_RTN*)SoundUpdate2, &nSegmentLength);
+
+		nSoundBufferPos1 += nSegmentLength;	
 	}
-/*
+
 	INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
 	if (nSegmentLength) 
 	{
 		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
 	}
-*/
-	SoundUpdate(&nSoundBuffer[nSoundBufferPos],nBurnSoundLen);
+
+//	SoundUpdate(&nSoundBuffer[nSoundBufferPos],nBurnSoundLen);
 
 	// Make sure the buffer is entirely filled.
 /*	if (pBurnSoundOut) {
@@ -1102,31 +1112,39 @@ static INT32 BjFrame()
 
 	return 0;
 }
+
+void AY8910Update1Slave(INT32 *length)
+{
+	AY8910Update(1, &pAY8910Buffer[3], length[0]);
+}
+
 //-------------------------------------------------------------------------------------------------
-void SoundUpdate(INT16* buffer, INT32 length)
+void SoundUpdate2(INT32 *length2)
 {
 	int nSample;
-	int n;
-//	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
-//	signed short *nSoundBuffer = (signed short *)0x25a20000;
-//	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-
+	int	 length = length2[0];
+	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
+	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	INT16* buffer = &nSoundBuffer[deltaSlave];
 //	soundLenSlave = SOUND_LEN);
 	AY8910Update(0, &pAY8910Buffer[0], length);
 	AY8910Update(1, &pAY8910Buffer[3], length);
 	AY8910Update(2, &pAY8910Buffer[6], length);
 
-	for (n = 0; n < length; n++) 
+	for (unsigned int n = 0; n < length; n++) 
 	{
-		nSample  = pAY8910Buffer[0][n] >> 2;
-		nSample += pAY8910Buffer[1][n] >> 2;
-		nSample += pAY8910Buffer[2][n] >> 2;
-		nSample += pAY8910Buffer[3][n] >> 2;
-		nSample += pAY8910Buffer[4][n] >> 2;
-		nSample += pAY8910Buffer[5][n] >> 2;
-		nSample += pAY8910Buffer[6][n] >> 2;
-		nSample += pAY8910Buffer[7][n] >> 2;
-		nSample += pAY8910Buffer[8][n] >> 2;
+		nSample  = pAY8910Buffer[0][n]; // >> 2;
+		nSample += pAY8910Buffer[1][n]; // >> 2;
+		nSample += pAY8910Buffer[2][n]; // >> 2;
+		nSample += pAY8910Buffer[3][n]; // >> 2;
+		nSample += pAY8910Buffer[4][n]; // >> 2;
+		nSample += pAY8910Buffer[5][n]; // >> 2;
+		nSample += pAY8910Buffer[6][n]; // >> 2;
+		nSample += pAY8910Buffer[7][n]; // >> 2;
+		nSample += pAY8910Buffer[8][n]; // >> 2;
+
+		nSample /= 4;
 
 		if (nSample < -32768) 
 		{
@@ -1142,6 +1160,63 @@ void SoundUpdate(INT16* buffer, INT32 length)
 //		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
 		buffer[n] = nSample;//pAY8910Buffer[5][n];//nSample;
 	}
+	deltaSlave+=length;
+
+//	if(deltaSlave>=RING_BUF_SIZE/2)
+	if(deltaSlave>=RING_BUF_SIZE/2)
+	{
+//		deltaSlave=0;
+		deltaSlave=0;
+		PCM_Task(pcm); // bon emplacement
+	}
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+
+//	deltaSlave+=nBurnSoundLen;
+}
+//-------------------------------------------------------------------------------------------------
+void SoundUpdate(INT16* buffer, INT32 length)
+{
+	int nSample;
+//	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
+//	signed short *nSoundBuffer = (signed short *)0x25a20000;
+//	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+
+//	soundLenSlave = SOUND_LEN);
+	AY8910Update(0, &pAY8910Buffer[0], length);
+//	AY8910Update(1, &pAY8910Buffer[3], length);
+	SPR_RunSlaveSH((PARA_RTN*)AY8910Update1Slave, &length);
+	AY8910Update(2, &pAY8910Buffer[6], length);
+	SPR_WaitEndSlaveSH();
+
+	for (unsigned int n = 0; n < length; n++) 
+	{
+		nSample  = pAY8910Buffer[0][n]; // >> 2;
+		nSample += pAY8910Buffer[1][n]; // >> 2;
+		nSample += pAY8910Buffer[2][n]; // >> 2;
+		nSample += pAY8910Buffer[3][n]; // >> 2;
+		nSample += pAY8910Buffer[4][n]; // >> 2;
+		nSample += pAY8910Buffer[5][n]; // >> 2;
+		nSample += pAY8910Buffer[6][n]; // >> 2;
+		nSample += pAY8910Buffer[7][n]; // >> 2;
+		nSample += pAY8910Buffer[8][n]; // >> 2;
+
+		nSample /= 4;
+
+		if (nSample < -32768) 
+		{
+			nSample = -32768;
+		} 
+		else 
+		{
+			if (nSample > 32767) 
+			{
+				nSample = 32767;
+			}
+		}
+//		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
+		buffer[n] = nSample;//pAY8910Buffer[5][n];//nSample;
+	}
+	nSoundBufferPos+=length;
 
 //	if(deltaSlave>=RING_BUF_SIZE/2)
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)
@@ -1152,7 +1227,6 @@ void SoundUpdate(INT16* buffer, INT32 length)
 	}
 
 //	deltaSlave+=nBurnSoundLen;
-	nSoundBufferPos+=length;
 }
 
 /*static*/ void updateSound()

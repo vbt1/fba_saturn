@@ -555,12 +555,14 @@ int ovlInit(char *szShortName)
 
 	for (n = 0; n < SOUND_LEN; n++) 
 	{
-		nSample  = pAY8910Buffer[0][n] >> 2;
-		nSample += pAY8910Buffer[1][n] >> 2;
-		nSample += pAY8910Buffer[2][n] >> 2;
-		nSample += pAY8910Buffer[3][n] >> 2;
-		nSample += pAY8910Buffer[4][n] >> 2;
-		nSample += pAY8910Buffer[5][n] >> 2;
+		nSample  = pAY8910Buffer[0][n]; // >> 2;
+		nSample += pAY8910Buffer[1][n]; // >> 2;
+		nSample += pAY8910Buffer[2][n]; // >> 2;
+		nSample += pAY8910Buffer[3][n]; // >> 2;
+		nSample += pAY8910Buffer[4][n]; // >> 2;
+		nSample += pAY8910Buffer[5][n]; // >> 2;
+
+		nSample /=4;
 
 		if (nSample < -32768) 
 		{
