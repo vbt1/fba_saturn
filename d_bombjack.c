@@ -1,9 +1,10 @@
 #include "d_bombjack.h"
 #define RAZE 1
+#define SOUND 1
 void SoundUpdate2(INT32 *length2);
 static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
 UINT32 BgSel=0xFFFF;
-UINT32 bg_cache[1024];
+//UINT32 bg_cache[1024];
 
 int ovlInit(char *szShortName)
 {
@@ -19,16 +20,25 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initLayers()
 {
+
     Uint16	CycleTb[]={
-		0x1f56, 0xffff, //A0
+		0x4e12, 0x6fff, //A0
 		0xffff, 0xffff,	//A1
-		0xf5f2, 0x4eff,   //B0
+		0xff5f, 0xffff,   //B0
 		0xffff, 0xffff  //B1
 //		0x4eff, 0x1fff, //B1
 	};
+
+/*
+    Uint16	CycleTb[]={
+		0xf2ff, 0xffff, //A0
+		0xfff0, 0x45ef,	//A1
+		0x1fff, 0xffff,   //B0
+		0xffff, 0xffff  //B1
+	};
+*/
 /*
 voir page 58 vdp2
 voir plutot p355 vdp2
@@ -77,42 +87,6 @@ voir plutot p355 vdp2
 
 	SCL_SetCycleTable(CycleTb);	
 }
-
-static void initLayersOld()
-{
-    Uint16	CycleTb[]={
-		0x1f56, 0xffff, //A0
-		0xffff, 0xffff,	//A1
-		0xf5f2,0x4eff,   //B0
-		0xffff, 0xffff  //B1
-//		0x4eff, 0x1fff, //B1
-	};
- 	SclConfig	scfg;
-
-// 3 nbg
-	scfg.dispenbl      = ON;
-	scfg.charsize      = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
-	scfg.pnamesize     = SCL_PN2WORD; //2word
-	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
-	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-	scfg.datatype      = SCL_CELL;
-	scfg.plate_addr[0] = (Uint32)SS_MAP2;
-	scfg.plate_addr[1] = 0x00;
-	SCL_SetConfig(SCL_NBG1, &scfg);
-// 3 nbg
-	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	SCL_SetConfig(SCL_NBG2, &scfg);
-
-	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
-	scfg.datatype 	   = SCL_BITMAP;
-	scfg.mapover	   = SCL_OVER_0;
-	scfg.plate_addr[0] = (Uint32)SS_FONT;
-
-// 3 nbg
-	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-	SCL_SetConfig(SCL_NBG0, &scfg);
-	SCL_SetCycleTable(CycleTb);	
-}
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initColors()
 {
@@ -122,22 +96,10 @@ static void initColors()
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
-/*
-	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
- 	colAddr    = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
-
-	SCL_SetColRam(SCL_NBG0,8,8,palette);
-	*/
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
 {
-/*
-		INT32 sx = ((tileCount) % 32) <<6; //% 32;
-		INT32 sy = (32 - ((tileCount) / 32));
-		int offs = (sx| sy);//<<1;
-*/
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
 		INT32 sx = ((i) % 32) <<6; //% 32;
@@ -190,7 +152,7 @@ static void DrvInitSaturn()
 	initLayers();
 	initColors();
 	make_lut();
-	initSprites(256-1,240-1,0,0,7,0);
+	initSprites(256-1,240-1,0,0,7,0);		   
 	drawWindow(0,240,0,6,66); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -871,6 +833,7 @@ static INT32 BjtInit()
 
 static INT32 BjExit()
 {
+	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
 #endif
@@ -924,18 +887,6 @@ static INT32 CalcAll()
 	}
 
 	return 0;
-}
-
-static void BjRenderFgLayer()
-{
-	for (UINT32 tileCount = 0; tileCount < 1024 ;tileCount++) 
-	{
-		UINT32 code = BjVidRam[tileCount] + 16 * (BjColRam[tileCount] & 0x10);
-		UINT32 color = BjColRam[tileCount] & 0x0f;
-
-		UINT32 offs = map_offset_lut[tileCount];
-		ss_map[offs] = color << 12 | code;
-	}
 }
 
 static void BjRenderBgLayer(UINT32 BgSel)
@@ -1070,22 +1021,23 @@ static INT32 BjFrame()
 			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
 			nSoundBufferPos += nSegmentLength;
 		}		 */
-
+#ifdef SOUND
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
 		SPR_WaitEndSlaveSH();
 
 //		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
 		SPR_RunSlaveSH((PARA_RTN*)SoundUpdate2, &nSegmentLength);
 
-		nSoundBufferPos1 += nSegmentLength;	
+		nSoundBufferPos1 += nSegmentLength;
+#endif
 	}
-
+#ifdef SOUND
 	INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
 	if (nSegmentLength) 
 	{
 		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
 	}
-
+#endif
 //	SoundUpdate(&nSoundBuffer[nSoundBufferPos],nBurnSoundLen);
 
 	// Make sure the buffer is entirely filled.
@@ -1227,54 +1179,4 @@ void SoundUpdate(INT16* buffer, INT32 length)
 	}
 
 //	deltaSlave+=nBurnSoundLen;
-}
-
-/*static*/ void updateSound()
-{
-	int nSample;
-	int n;
-	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
-	signed short *nSoundBuffer = (signed short *)0x25a20000;
-	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-
-//	soundLenSlave = SOUND_LEN);
-	AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
-	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
-	AY8910Update(2, &pAY8910Buffer[6], nBurnSoundLen);
-
-	for (n = 0; n < nBurnSoundLen; n++) 
-	{
-		nSample  = pAY8910Buffer[0][n] >> 2;
-		nSample += pAY8910Buffer[1][n] >> 2;
-		nSample += pAY8910Buffer[2][n] >> 2;
-		nSample += pAY8910Buffer[3][n] >> 2;
-		nSample += pAY8910Buffer[4][n] >> 2;
-		nSample += pAY8910Buffer[5][n] >> 2;
-		nSample += pAY8910Buffer[6][n] >> 2;
-		nSample += pAY8910Buffer[7][n] >> 2;
-		nSample += pAY8910Buffer[8][n] >> 2;
-
-		if (nSample < -32768) 
-		{
-			nSample = -32768;
-		} 
-		else 
-		{
-			if (nSample > 32767) 
-			{
-				nSample = 32767;
-			}
-		}
-		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
-	}
-
-	if(deltaSlave>=RING_BUF_SIZE/2)
-	{
-		deltaSlave=0;
-		PCM_Task(pcm); // bon emplacement
-	}
-
-	deltaSlave+=nBurnSoundLen;
-
-	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }

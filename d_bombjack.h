@@ -24,7 +24,7 @@ UINT8 DrvJoy2[7] = {0, 0, 0, 0, 0, 0, 0};
 UINT8 BjDip[2] = {0, 0};
 static UINT8 DrvReset = 0;
 static INT32 bombjackIRQ = 0;
-static INT32 latch;
+static INT32 latch = 0;
 
 static INT32 nCyclesDone[2], nCyclesTotal[2];
 static INT32 nCyclesSegment;
@@ -178,7 +178,7 @@ static struct BurnRomInfo BombjackRomDesc[] = {
 STD_ROM_PICK(Bombjack)
 STD_ROM_FN(Bombjack)
 
-
+/*
 // Bomb Jack (set 2)
 static struct BurnRomInfo Bombjac2RomDesc[] = {
 	{ "09_j01b.bin",    0x2000, 0xc668dc30, BRF_ESS | BRF_PRG },		//  0 Z80 code
@@ -207,6 +207,7 @@ static struct BurnRomInfo Bombjac2RomDesc[] = {
 
 STD_ROM_PICK(Bombjac2)
 STD_ROM_FN(Bombjac2)
+*/
 /*
 struct BurnDriver BurnDrvBombjack = {
 	"bombjack", NULL, NULL, NULL, "1984",
