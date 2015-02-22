@@ -91,9 +91,11 @@ voir plutot p355 vdp2
 static void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+//	SCL_SetColRamOffset(SCL_NBG2,0,OFF);
+	ss_regs->dispenbl &= 0xfbff;
 
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
@@ -130,7 +132,7 @@ static void DrvInitSaturn()
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
-	nBurnSprites  = 51;//27;
+	nBurnSprites  = 24+3;//27;
 
 	SS_FONT        = ss_font     =(Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_MAP          = ss_map    =(Uint16 *)SCL_VDP2_VRAM_A1+0x08000;
@@ -152,7 +154,7 @@ static void DrvInitSaturn()
 	initLayers();
 	initColors();
 	make_lut();
-	initSprites(256-1,240-1,0,0,7,0);		   
+	initSprites(256-1,240-1,0,0,7,0);
 	drawWindow(0,240,0,6,66); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -740,7 +742,8 @@ static INT32 MemIndex()
 	UINT8 *Next; Next = Mem;
 
 	BjRom		  = Next; Next += 0x10000;
-	BjGfx		  = Next; Next += 0x0F000;
+//	BjGfx		  = Next; Next += 0x0F000;
+	BjGfx		  = (UINT8 *)0x00200000;
 	BjMap		  = Next; Next += 0x02000;
 	SndRom	  = Next; Next += 0x02000;
 	RamStart  = Next;
@@ -840,12 +843,14 @@ static INT32 BjExit()
 
 	CZetExit();
 
-	for (INT32 i = 0; i < 3; i++) {
-		AY8910Exit(i);
-	}
+	AY8910Exit(0);
+	AY8910Exit(1);
+	AY8910Exit(2);
+
 	cram_lut = map_offset_lut = mapbg_offset_lut = NULL;
-MemEnd = RamStart = RamEnd = BjGfx = BjMap = BjRom = BjRam = BjColRam = NULL;
-BjVidRam = BjSprRam = SndRom = SndRam = text = sprites = tiles = BjPalSrc = NULL;
+	MemEnd = RamStart = RamEnd = BjGfx = BjMap = BjRom = BjRam = BjColRam = NULL;
+	BjVidRam = BjSprRam = SndRom = SndRam = text = sprites = tiles = BjPalSrc = NULL;
+
 	for (int i = 0; i < 9; i++) {
 		pAY8910Buffer[i] = NULL;
 	}
@@ -909,7 +914,8 @@ static void BjRenderBgLayer(UINT32 BgSel)
 
 static void BjDrawSprites()
 {
-	INT32 offs,delta=3;
+	INT32 offs;
+	UINT32 delta=3;
 
 	for (offs = 0x60 - 4; offs >= 0; offs -= 4)
 	{
@@ -926,33 +932,37 @@ static void BjDrawSprites()
 		hhhhhhhh x position
 		iiiiiiii y position
 		*/
-		UINT32 flipx, flipy, code, colour, big;
+//		ss_sprite[delta].ax				= BjSprRam[offs+2] & 0xff;
 
-		flipx = (BjSprRam[offs+1] & 0x80)>>3;
-		flipy = (BjSprRam[offs+1] & 0x40)>>1;
-
-		code   = BjSprRam[offs] & 0x7f;
-		colour = (BjSprRam[offs+1] & 0x0f);
-		big      = (BjSprRam[offs] & 0x80);
-
-		ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP | flipx | flipy);
-		ss_sprite[delta].drawMode	= ( COLOR_0 | COMPO_REP);
-		ss_sprite[delta].ax				= BjSprRam[offs+2];
-		ss_sprite[delta].ay				= BjSprRam[offs+3];
-		ss_sprite[delta].color			= colour<<3;
-
-		if (!big)
 		{
-			ss_sprite[delta].charSize= 0x210;
+			UINT32 flipx, flipy, code, colour;//, big;
+
+			flipx = (BjSprRam[offs+1] & 0x80)>>3;
+			flipy = (BjSprRam[offs+1] & 0x40)>>1;
+
+			code   = BjSprRam[offs] & 0x7f;
+			colour = (BjSprRam[offs+1] & 0x0f);
+//			big      = (BjSprRam[offs] & 0x80);
+
+			ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP | flipx | flipy);
+//			ss_sprite[delta].drawMode	= ( COLOR_0 | COMPO_REP);
+			ss_sprite[delta].ax				= BjSprRam[offs+2];
+			ss_sprite[delta].ay				= BjSprRam[offs+3];
+			ss_sprite[delta].color			= colour<<3;
+
+			if (!(BjSprRam[offs] & 0x80))
+			{
+				ss_sprite[delta].charSize= 0x210;
+			}
+			else
+			{
+				code&=31;
+				code*=4;
+				code+=0x80;
+				ss_sprite[delta].charSize= 0x420;
+			}
+			ss_sprite[delta].charAddr	= 0x220+((code)<<4 );
 		}
-		else
-		{
-			code&=31;
-			code*=4;
-			code+=0x80;
-			ss_sprite[delta].charSize= 0x420;
-		}
-		ss_sprite[delta].charAddr	= 0x220+((code)<<4 );
 		delta++;
 	}
 }
@@ -967,16 +977,16 @@ static INT32 BjFrame()
 
 	INT32 nInterleave = 10;
 	INT32 nSoundBufferPos1 = 0;
+	INT32 nCyclesSegment = 0;
 
-	nCyclesTotal[0] = 4000000 / 600;
-	nCyclesTotal[1] = 3000000 / 600;
-	nCyclesDone[0] = nCyclesDone[1] = 0;
+	UINT32 nCyclesDone[2] = {0,0};
+	UINT32 nCyclesTotal[2] = {4000000 / 600,3000000 / 600};
+
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 
 	for (INT32 i = 0; i < nInterleave; i++) 
 	{
-		INT32 nCurrentCPU, nNext;
-
+		UINT32 nNext;
 
 #ifdef RAZE
 		nNext = (i + 1) * nCyclesTotal[0];// / nInterleave;
@@ -991,11 +1001,10 @@ static INT32 BjFrame()
 		}
 #else
 		// Run Z80 #1
-		nCurrentCPU = 0;
-		CZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU];// / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
+		CZetOpen(0);
+		nNext = (i + 1) * nCyclesTotal[0];// / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[0];
+		nCyclesDone[0] += CZetRun(nCyclesSegment);
 		if (i == 1) 
 		{
 			if(bombjackIRQ)
@@ -1006,12 +1015,11 @@ static INT32 BjFrame()
 		CZetClose();
 #endif
 		// Run Z80 #2
-		nCurrentCPU = 1;
-		CZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU];// / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+		CZetOpen(1);
+		nNext = (i + 1) * nCyclesTotal[1];// / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[1];
 		nCyclesSegment = CZetRun(nCyclesSegment);
-		nCyclesDone[nCurrentCPU] += nCyclesSegment;
+		nCyclesDone[1] += nCyclesSegment;
 		CZetClose();
 
 		// Render Sound Segment
@@ -1074,7 +1082,7 @@ void AY8910Update1Slave(INT32 *length)
 void SoundUpdate2(INT32 *length2)
 {
 	int nSample;
-	int	 length = length2[0];
+	unsigned int	 length = length2[0];
 	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);

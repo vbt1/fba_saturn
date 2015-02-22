@@ -26,8 +26,8 @@ static UINT8 DrvReset = 0;
 static INT32 bombjackIRQ = 0;
 static INT32 latch = 0;
 
-static INT32 nCyclesDone[2], nCyclesTotal[2];
-static INT32 nCyclesSegment;
+//static INT32 nCyclesDone[2], nCyclesTotal[2];
+//static INT32 nCyclesSegment = 0;
 
 static UINT8 *Mem = NULL;
 static UINT8 *MemEnd = NULL;
