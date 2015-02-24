@@ -27,7 +27,7 @@ static UINT32 *map_lut = NULL;
 static UINT32 srcxmask[120][256];
 //static UINT32 **srcxmask;//[240][256];
 static UINT32  zaxxon_bg_scroll_x2=0;
-static UINT8 sound_state[3]={0,0,0};
+//static UINT8 sound_state[3]={0,0,0};
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -46,6 +46,7 @@ static UINT8 *DrvZ80RAM2;
 static UINT8 *DrvSprRAM;
 static UINT8 *DrvVidRAM;
 static UINT8 *DrvColRAM;
+
 /*static*/ //UINT32  *DrvPalette;
 /*static*/ //UINT32  *Palette;
 
@@ -68,6 +69,8 @@ static UINT8 *zaxxon_bg_enable = NULL;
 static UINT32  *zaxxon_bg_scroll = NULL;
 static UINT8 *zaxxon_flipscreen = NULL;
 static UINT8 *zaxxon_coin_enable = NULL;
+static UINT8 *zaxxon_coin_status = NULL;
+static UINT8 *zaxxon_coin_last = NULL;
 
 static UINT8 *congo_color_bank = NULL;
 static UINT8 *congo_fg_bank = NULL;
@@ -76,6 +79,8 @@ static UINT8 *congo_custom = NULL;
 static UINT8 *zaxxon_bg_pixmap = NULL;
 
 static UINT8 *soundlatch = NULL;
+
+static UINT8 *sound_state = NULL;
 
 static INT32 futspy_sprite = 0;
 static INT32 hardware_type = 0;

@@ -135,23 +135,18 @@ UINT8 __fastcall zaxxon_read(UINT16 address)
 */
 
 /*
-//			ret |= zaxxon_coin_enable[0] << 5;
-//			ret |= zaxxon_coin_enable[1] << 6;
-//			ret |= zaxxon_coin_enable[2] << 7;
+   Games supported:
+        * Zaxxon		    yes
+        * Super Zaxxon		yes
+        * Future Spy		yes
+        * Razmatazz		    no sound+bad controls sega_universal_sound_board_rom ?
+        * Ixion			    no
+        * Congo Bongo		yes
 
-#define IN2_COIN (1<<7)
-
-			static int coin;
-			UINT8 res = zaxxon_coin_enable[2];
-	bprintf (PRINT_NORMAL, _T("zaxxon_coin_enable %02d\n"), res);
-
-
-			if (res & IN2_COIN)
-			{
-				if (coin) res &= ~IN2_COIN;
-				else coin = 1;
-			}
-			else coin = 0;
+   To do:
+	Need to add Sega USB support.
+	Analog inputs for Raxmatazz and Ixion
+	Clean up video code
 */
 //DrvInputs[2];
 			return DrvInputs[2];// sw100
@@ -329,6 +324,26 @@ void __fastcall zaxxon_writeA000(UINT16 address, UINT8 data)
 	DrvSprRAM[address & 0xff] = data;
 }
 
+static void zaxxon_coin_inserted(UINT8 param)
+{
+	if (zaxxon_coin_last[param] != DrvJoy4[param])
+	{
+		zaxxon_coin_status[param] = zaxxon_coin_enable[param];
+	}
+}
+
+/*static*/ UINT8 zaxxon_coin_r(UINT8 param)
+{
+	return zaxxon_coin_status[param];
+}
+
+/*static*/ void zaxxon_coin_enable_w(UINT8 offset, UINT8 data)
+{
+	zaxxon_coin_enable[offset] = data;
+	if (!zaxxon_coin_enable[offset])
+		zaxxon_coin_status[offset] = 0;
+}
+
 void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 {
 #ifndef RAZE
@@ -359,15 +374,8 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 	}
 	else
 	{
-		if ((address >= 0xc000+0x18f8) && address <= (0xc006+0x18f8)) 
-		{
-			address-= 0x18f8;
-		}
-
-		if ((address >= 0xe0f0+0x1f00) && address <= (0xe0fb+0x1f00)) 
-		{
-			address-= 0x1f00;
-		}
+		if ((address & 0xe700) == 0xc000) address &= ~0x18f8;
+		if ((address & 0xe000) == 0xe000) address &= ~0x1f00;
 	}
 
 	if (address >= 0xe03c && address <= 0xe03f) {
@@ -383,7 +391,7 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 		case 0xc000:
 		case 0xc001:
 		case 0xc002:
-			zaxxon_coin_enable[address & 3] = data & 1;
+			zaxxon_coin_enable_w(address & 3, data & 1);
 		return;
 
 		case 0xc003:
@@ -395,6 +403,12 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 			*zaxxon_flipscreen = ~data & 1;
 		return;
 
+		case 0xe03c:
+		case 0xe03d:
+		case 0xe03e:
+		case 0xe03f:
+//			ppi8255_w(0, address  & 0x03, data);
+		return;
 
 		case 0xe0f0:
 			*interrupt_enable = data & 1;
@@ -416,7 +430,7 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xe0f1:
-			*zaxxon_fg_color = data << 7;
+			*zaxxon_fg_color = (data & 1) << 7;
 		return;
 
 		case 0xe0f8:
@@ -452,27 +466,22 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 
 UINT8 __fastcall congo_read(UINT16 address)
 {
-	// set up mirrors
-	if ((address & 0xe000) == 0xa000) {
-		if (address & 0x400) {
-			return DrvVidRAM[address & 0x3ff];
-		} else {
-			return DrvColRAM[address & 0x3ff];
-		}
-	}
-
-	if ((address & 0xe000) == 0xc000) {
-		address &= 0xe03b;
-	}
+	// address mirroring
+	if ((address & 0xe008) == 0xc000) address &= ~0x1fc4;
+	if ((address & 0xe008) == 0xc008) address &= ~0x1fc7;
 
 	switch (address)
 	{
-		case 0xc000: return DrvInputs[0];        // in0
-		case 0xc001: return DrvInputs[1];        // in1
-		case 0xc002: // dsw02                    // dsw1
-		case 0xc003: // dsw03                    // dsw2
-		case 0xc008: return DrvInputs[2];        // in2
-			return 0;
+		case 0xc000:
+			return DrvInputs[0];        // in0
+		case 0xc001:
+			return DrvInputs[1];        // in1
+		case 0xc002:
+			return DrvDips[0]; // dsw02                    // dsw1
+		case 0xc003:
+			return DrvDips[1]; // dsw03                    // dsw2
+		case 0xc008:
+			return DrvInputs[2];
 	}
 
 	return 0;
@@ -489,7 +498,7 @@ void congo_sprite_custom_w(int offset, UINT8 data)
 	if (offset == 3 && data == 0x01)
 	{
 		UINT16 saddr = congo_custom[0] | (congo_custom[1] << 8);
-		int count = congo_custom[2];
+		INT32 count = congo_custom[2];
 
 		// count cycles (just a guess) 
 		CZetRunAdjust(-(count * 5));
@@ -507,29 +516,17 @@ void congo_sprite_custom_w(int offset, UINT8 data)
 	}
 }
 
-
 void __fastcall congo_write(UINT16 address, UINT8 data)
 {
-	// set up mirroring
-	if ((address & 0xe000) == 0xa000) {
-		if (address & 0x400) {
-			DrvVidRAM[address & 0x3ff] = data;
-		} else {
-			DrvColRAM[address & 0x3ff] = data;
-		}
-		return;
-	}
-
-	if ((address & 0xe000) == 0xc000) {
-		address &= 0xe03f;
-	}
+	// address mirroring
+	if ((address & 0xe000) == 0xc000) address &= ~0x1fc0;
 
 	switch (address)
 	{
 		case 0xc018:
 		case 0xc019:
 		case 0xc01a:
-			// zaxxon_coin_enable_w
+			zaxxon_coin_enable_w(address & 3, data & 1);
 		return;
 
 		case 0xc01b:
@@ -585,7 +582,6 @@ void __fastcall congo_write(UINT16 address, UINT8 data)
 			congo_sprite_custom_w(address & 3, data);
 		return;
 
-                case 0x1fc0:
 		case 0xc038:
 		case 0xc039:
 		case 0xc03a:
@@ -601,82 +597,53 @@ void __fastcall congo_write(UINT16 address, UINT8 data)
 
 void __fastcall congo_sound_write(UINT16 address, UINT8 data)
 {
-	if ((address >= 0x8000+0x1ffc) && address <= (0x8003+0x1ffc)) 
-	{
-		bprintf (PRINT_NORMAL, _T("???? congo_sound_write %4.4x %2.2x\n"), address, data);
-
-		address-= 0x1ffc;
-	}
-
-//	address &= 0xe003;
+	// address mirroring
+	if ((address & 0xe000) == 0x6000) address &= ~0x1fff;
+	if ((address & 0xe000) == 0x8000) address &= ~0x1ffc;
+	if ((address & 0xe000) == 0xa000) address &= ~0x1fff;
 
 	switch (address)
 	{
 		case 0x6000:
-		case 0x6001:
-		case 0x6002:
-		case 0x6003:
-//			SN76496Write(0, data);
+			SN76496Write(0, data);
 		return;
 
 		case 0x8000:
 		case 0x8001:
 		case 0x8002:
 		case 0x8003:
-			// PPI8255
-
-		bprintf (PRINT_NORMAL, _T("2 congo_sound_write %4.4x %2.2x\n"), address, data);
-//		zaxxon_sound_write(address & 0x0c);
-		ppi8255_w(0, address  & 0x03, data);
-		bprintf (PRINT_NORMAL, _T("2 ppi8255_w done\n"));
+			ppi8255_w(0, address  & 0x03, data);
 		return;
 
 		case 0xa000:
-		case 0xa001:
-		case 0xa002:
-		case 0xa003:
-//			SN76496Write(1, data);
+			SN76496Write(1, data);
 		return;
 	}
 }
 
 UINT8 __fastcall congo_sound_read(UINT16 address)
 {
-	// set up mirroring
-        if ((address & 0xc000) == 0x4000) {
-		return DrvZ80RAM2[address & 0x7ff];
-	}
-
-	if ((address >= 0x8000+0x1ffc) && address <= (0x8003+0x1ffc)) 
-	{
-		address-= 0x1ffc;
-	}
-
-//	address &= 0xe003;
+	// address mirroring
+	if ((address & 0xe000) == 0x8000) address &= ~0x1ffc;
 
 	switch (address)
 	{
-		case 0x8000: // PPI8255
+		case 0x8000:
 		case 0x8001:
 		case 0x8002:
 		case 0x8003:
-//			return *soundlatch; // not right, but whatever...
-
-	//  AM_RANGE(0x8000, 0x8003) AM_MIRROR(0x1ffc) AM_DEVREADWRITE("ppi8255", i8255_device, read, write) 
-//	bprintf (PRINT_NORMAL, _T("ppi8255_r %02x\n"),address);
-	return ppi8255_r(0, address  & 0x03);
-
+			return ppi8255_r(0, address & 0x03);
 	}
 
 	return 0;
 }	*/
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*inline*/ static int readbit(const UINT8 *src, int bitnum)
+/*inline static*/ int readbit(const UINT8 *src, int bitnum)
 {
 	return src[bitnum / 8] & (0x80 >> (bitnum % 8));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
+/*static*/ void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
 {
 	int c;
 //	wait_vblank();
@@ -730,7 +697,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 				}
 			}
 		}
-	}	
+	}
 }
 
 /*static*/int DrvGfxDecode()
@@ -776,13 +743,13 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	return 0;
 }
 
-/*static*/void DrvPaletteInit(int len)
+/*static*/void DrvPaletteInit(INT32 len)
 {
-	int delta=0;
+	INT32 delta=0;
 
-	for (int i = 0; i < len; i++)
+	for (INT32 i = 0; i < len; i++)
 	{
-		int bit0, bit1, bit2, r, g, b;
+		INT32 bit0, bit1, bit2, r, g, b;
 
 		bit0 = (DrvColPROM[i] >> 0) & 0x01;
 		bit1 = (DrvColPROM[i] >> 1) & 0x01;
@@ -812,31 +779,27 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 /*static*/void bg_layer_init()
 {
-
 	memset(zaxxon_bg_pixmap,0x01,0x100000);
-	int len = (hardware_type == 2) ? 0x2000 : 0x4000;
-	int mask = len-1;
+	INT32 len = (hardware_type == 2) ? 0x2000 : 0x4000;
+	INT32 mask = len-1;
 
-	for (int offs = 0; offs < 32 * 512; offs++)
+	for (INT32 offs = 0; offs < 32 * 512; offs++)
 	{
-		int sx = (offs & 0x1f) << 3;
-		int sy = (offs >> 5) << 3;
+		INT32 sx = (offs & 0x1f) << 3;
+		INT32 sy = (offs >> 5) << 3;
 
-		int moffs = offs & mask;
+		INT32 moffs = offs & mask;
 
-		int code = (DrvGfxROM3[moffs]) | ((DrvGfxROM3[moffs | len] & 3) << 8);
-		int color = (DrvGfxROM3[moffs | len] & 0xf0) >> 1;
+		INT32 code = (DrvGfxROM3[moffs]) | ((DrvGfxROM3[moffs | len] & 3) << 8);
+		INT32 color = (DrvGfxROM3[moffs | len] & 0xf0) >> 1;
 
-		 UINT8 *src = DrvGfxROM1 + (code << 6);
-		
-		for (int y = 0; y < 8; y++, sy++) {
-			for (int x = 0; x < 8; x++) {
+		UINT8 *src = DrvGfxROM1 + (code << 6);
+
+		for (INT32 y = 0; y < 8; y++, sy++) {
+			for (INT32 x = 0; x < 8; x++) {
 				zaxxon_bg_pixmap[sy * 256 + sx + x] = src[(y << 3) | x] | color;
-			} 
-		}	   
-
-   
-
+			}
+		}
 	}
 }
 
@@ -864,13 +827,12 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	return 0;
 }
 
-/*static*/int MemIndex()
+/*static*/INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
 	DrvZ80ROM		= Next; Next += 0x010000;
 	DrvZ80DecROM		= Next; Next += 0x010000;
-
 	DrvZ80ROM2		= Next; Next += 0x010000;
 
 	DrvGfxROM0		= cache;
@@ -883,7 +845,6 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 	DrvColPROM		= Next; Next += 0x000200;
 
-//	zaxxon_bg_pixmap	= Next; Next += 0x100000;
 	zaxxon_bg_pixmap = (UINT8*)0x00200000;
 
 	AllRam			= Next;
@@ -904,10 +865,14 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	congo_custom		= Next; Next += 0x000004;
 	zaxxon_flipscreen	= Next; Next += 0x000001;
 	zaxxon_coin_enable	= Next; Next += 0x000004;
+	zaxxon_coin_status	= Next; Next += 0x000004;
+	zaxxon_coin_last	= Next; Next += 0x000004;
 
-	zaxxon_bg_scroll	= (UINT32*)Next; Next += 0x000001 * sizeof(int);
+	zaxxon_bg_scroll	= (UINT32*)Next; Next += 0x000001 * sizeof(INT32);
 
 	soundlatch		= Next; Next += 0x000001;
+
+	sound_state		= Next; Next += 0x000003;
 
 	RamEnd		= Next;
 
@@ -916,7 +881,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	return 0;
 }
 
-/*static*/int DrvInit()
+/*static*/INT32 DrvInit()
 {
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvInitSaturn before     ",4,80);
 
@@ -925,7 +890,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 	AllMem = NULL;
 	MemIndex();
-	int nLen = MemEnd - (UINT8 *)0;
+	INT32 nLen = MemEnd - (UINT8 *)0;
 	AllMem = (UINT8 *)malloc(nLen);
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc after     ",4,80);
 
@@ -1024,13 +989,8 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	return 0;
 }
 
-/*static*/int DrvExit()
+/*static*/INT32 DrvExit()
 {
-/*	if (hardware_type == 2) {
-
-		SN76496Exit();
-	}
-*/	
 #ifndef RAZE
 	CZetExit();
 #else
@@ -1049,6 +1009,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	zaxxon_bg_pixmap = 	interrupt_enable	= zaxxon_fg_color = zaxxon_bg_color= NULL;
 	zaxxon_bg_enable = congo_color_bank= congo_fg_bank = congo_custom = NULL;
 	zaxxon_flipscreen = zaxxon_coin_enable = soundlatch = NULL;
+	zaxxon_coin_status = zaxxon_coin_last = sound_state = NULL;
 	zaxxon_bg_scroll = NULL;
 	free (AllMem);
 	AllMem = NULL;
@@ -1073,33 +1034,6 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 //	GenericTilesExit();
 	return 0;
 }
-
-#if 0
-/*static*/void draw_background_test2_no_color_new()
-{
-//	if (*zaxxon_bg_enable)
-//	{
-		unsigned int yoffset = zaxxon_bg_scroll_x2;
-		/* loop over visible rows */
-for (unsigned int y = 0; y < 256;y++)	  // y
-{
-				int j=0;
-		UINT8 *dst = ((UINT8 *)bitmap+247)+(y*512); // * 0x100;
-
-		for (unsigned int x = 16; x < 240; ) // x
-//unsigned int y = 16;
-		{
-			UINT8 *src = zaxxon_bg_pixmap + ((x + yoffset) & 4095) * 0x100;
-			dst[-x]       = src[srcxmask[x][y]];
-			++x;
-			UINT8 *src2 = zaxxon_bg_pixmap + ((x + yoffset) & 4095) * 0x100;
-			dst[-x]       = src2[srcxmask[x][y]];
-			++x;
-		}
-}
-
-}
-#endif
 
 /*static*/void draw_background_test2_no_color()
 {
@@ -1185,19 +1119,16 @@ vbt> thanks for help & good night =)
 <MartinMan> instead of pixel[x]
 */
 
-int find_minimum_y(UINT8 value)
+INT32 find_minimum_y(UINT8 value)
 {
-	int flipmask = *zaxxon_flipscreen ? 0xff : 0x00;
-	int flipconst = *zaxxon_flipscreen ? 0xef : 0xf1;
-	int y;
-
-	/* the sum of the Y position plus a constant based on the flip state */
-	/* is added to the current flipped VF; if the top 3 bits are 1, we hit */
+	INT32 flipmask = *zaxxon_flipscreen ? 0xff : 0x00;
+	INT32 flipconst = *zaxxon_flipscreen ? 0xef : 0xf1;
+	INT32 y;
 
 	/* first find a 16-pixel bucket where we hit */
 	for (y = 0; y < 256; y += 16)
 	{
-		int sum = (value + flipconst + 1) + (y ^ flipmask);
+		INT32 sum = (value + flipconst + 1) + (y ^ flipmask);
 		if ((sum & 0xe0) == 0xe0)
 			break;
 	}
@@ -1205,7 +1136,7 @@ int find_minimum_y(UINT8 value)
 	/* then scan backwards until we no longer match */
 	while (1)
 	{
-		int sum = (value + flipconst + 1) + ((y - 1) ^ flipmask);
+		INT32 sum = (value + flipconst + 1) + ((y - 1) ^ flipmask);
 		if ((sum & 0xe0) != 0xe0)
 			break;
 		y--;
@@ -1218,8 +1149,8 @@ int find_minimum_y(UINT8 value)
 
 int find_minimum_x(UINT8 value)
 {
-	int flipmask = *zaxxon_flipscreen ? 0xff : 0x00;
-	int x;
+	INT32 flipmask = *zaxxon_flipscreen ? 0xff : 0x00;
+	INT32 x;
 
 	/* the sum of the X position plus a constant specifies the address within */
 	/* the line bufer; if we're flipped, we will write backwards */
@@ -1266,38 +1197,49 @@ int find_minimum_x(UINT8 value)
 	return 0;
 }
 
+/*static*/ void zaxxon_coin_lockout()
+{
+	// soft-coin lockout - prevents 30 coins per 1 insert-coin keypress.
+	if (DrvJoy4[0]) // a coin inserted
+		zaxxon_coin_inserted(0);
+	if (DrvJoy4[1]) // b coin inserted
+		zaxxon_coin_inserted(1);
+	if (DrvJoy4[2]) // service pressed
+		zaxxon_coin_inserted(2);
+	DrvInputs[2] += (zaxxon_coin_r(0)) ? 0x20 : 0;
+	DrvInputs[2] += (zaxxon_coin_r(1)) ? 0x40 : 0;
+	DrvInputs[2] += (zaxxon_coin_r(2)) ? 0x80 : 0;
+	zaxxon_coin_last[0] = DrvJoy4[0];
+	zaxxon_coin_last[1] = DrvJoy4[1];
+	zaxxon_coin_last[2] = DrvJoy4[2];
+	// end soft-coin lockout
+}
 
 /*static*/ int DrvFrame()
 {
-   /*
-	if (DrvReset) {
+/*	if (DrvReset) {
 		DrvDoReset();
-	}		*/
-//	{"P1 Coin",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 coin"},
-//	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 2,	"p1 start"},
-//	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 up"},
-	 
-        DrvInputs[0] = 0x00;
-        DrvInputs[1] = 0x00;
-        DrvInputs[2] = 0x00;
-//        for (INT32 i = 0; i < 8; i++) {
-        for (INT32 i = 0; i < 8; ++i) {
-            DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
-            DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
-//            DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
-        }
-	 
+	}
+*/
+	{
+		DrvInputs[0] = 0x00;
+		DrvInputs[1] = 0x00;
+		DrvInputs[2] = 0x00;
+		for (INT32 i = 0; i < 8; i++) {
+			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
+			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
+			// DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
+		}
 		DrvInputs[2] ^= (DrvJoy3[2] & 1) << 2;   //  start 1
 		DrvInputs[2] ^= (DrvJoy3[3] & 1) << 3;   //  start 2
-		DrvInputs[2] ^= (DrvJoy4[0] & 1) << 5;   //  coins 1
-		DrvInputs[2] ^= (DrvJoy4[1] & 1) << 6;	 //  coins 2
-//      DrvInputs[2] ^= (DrvJoy4[0] & 1) << 7;   //  credits
+		zaxxon_coin_lockout();
+	}
 
 #ifndef RAZE
 	CZetOpen(0);
 	CZetRun(50687);//(3041250 / 60);
 	if (*interrupt_enable) 
-	{
+ 	{
 		CZetRaiseIrq(0);
 //		CZetRun(1);
 	}
@@ -1306,26 +1248,12 @@ int find_minimum_x(UINT8 value)
 	z80_emulate(3041250 / 60);
 	if (*interrupt_enable) 
 	{	
-	z80_raise_IRQ(0);
-//	z80_emulate(0);
+		z80_raise_IRQ(0);
+//		z80_emulate(0);
 	}
 #endif
-   /*
-	if (hardware_type == 2) {
-		CZetOpen(1);
-		CZetRun(4000000 / 60);
-		if (*interrupt_enable) CZetRaiseIrq(0);
-		CZetClose();
-	}
-	  */
-//	SN76496Update(0, pBurnSoundOut, nBurnSoundLen);
-//	SN76496Update(1, pBurnSoundOut, nBurnSoundLen);
 
-//	if (pBurnDraw) {
-		DrvDraw();
-//	while(1);
-//	}
-
+	DrvDraw();
 	return 0;
 }
 
@@ -1349,10 +1277,9 @@ int find_minimum_x(UINT8 value)
 		{ 0x02,0x08,0x2a,0x20,0x20,0x2a,0x08,0x02 } 	/* .......1...1...1 */
 	};
 
-	int A;
+	INT32 A;
 	UINT8 *rom = DrvZ80ROM;
-	int size = 0x6000;
-//	UINT8 *decrypt = DrvZ80DecROM;
+	INT32 size = 0x6000;
 	UINT8 *decrypt = DrvZ80DecROM;
 #ifndef RAZE	 
 	CZetOpen(0);
@@ -1362,7 +1289,7 @@ int find_minimum_x(UINT8 value)
 
 	for (A = 0x0000; A < size; A++)
 	{
-		int i,j;
+		INT32 i,j;
 		UINT8 src;
 
 		src = rom[A];
@@ -1383,15 +1310,11 @@ int find_minimum_x(UINT8 value)
 		i = ((A >> 0) & 1) + (((A >> 4) & 1) << 1) + (((A >> 8) & 1) << 2);
 		decrypt[A] = src ^ opcode_xortable[i][j];
 	}
-
-	memcpy(DrvZ80ROM,DrvZ80DecROM,size);
 }
 
 /*static*/int ZaxxonbInit()
 {
-	int nRet;
-
-	nRet = DrvInit();
+	INT32 nRet = DrvInit();
 
 //	if (nRet == 0) {
 		zaxxonb_decode();
@@ -1415,15 +1338,12 @@ int find_minimum_x(UINT8 value)
 #endif	
 	for (A = 0x0000;A < cryptlen;A++)
 	{
-		int xorval = 0;
-
+		INT32 xorval = 0;
 		UINT8 src = rom[A];
-
 		/* pick the translation table from bits 0, 4, 8 and 12 of the address */
-		int row = (A & 1) + (((A >> 4) & 1) << 1) + (((A >> 8) & 1) << 2) + (((A >> 12) & 1) << 3);
-
+		INT32 row = (A & 1) + (((A >> 4) & 1) << 1) + (((A >> 8) & 1) << 2) + (((A >> 12) & 1) << 3);
 		/* pick the offset in the table from bits 3 and 5 of the source data */
-		int col = ((src >> 3) & 1) + (((src >> 5) & 1) << 1);
+		INT32 col = ((src >> 3) & 1) + (((src >> 5) & 1) << 1);
 		/* the bottom half of the translation table is the mirror image of the top */
 		if (src & 0x80)
 		{
@@ -1442,15 +1362,6 @@ int find_minimum_x(UINT8 value)
 		if (convtable[2*row+1][col] == 0xff)	/* table incomplete! (for development) */
 			rom[A] = 0xee;
 	}
-#if 0
-	/* this is a kludge to catch anyone who has code that crosses the encrypted/ */
-	/* decrypted boundary. ssanchan does it */
-	if (length > 0x8000)
-	{
-		int bytes = MIN(length - 0x8000, 0x4000);
-		memcpy(&decrypted[0x8000], &rom[0x8000], bytes);
-	}
-#endif
 }
 
 void szaxxon_decode()
@@ -1477,15 +1388,12 @@ void szaxxon_decode()
 		{ 0x88,0xa8,0x80,0xa0 }, { 0x28,0x20,0xa8,0xa0 }	/* ...1...1...1...1 */
 	};
 
-
 	sega_decode(convtable);
 }
 
 /*static*/int sZaxxonInit()
 {
-	int nRet;
-
-	nRet = DrvInit();
+	INT32 nRet = DrvInit();
 
 	if (nRet == 0) {
 		szaxxon_decode();
@@ -1525,11 +1433,9 @@ void futspy_decode()
 
 /*static*/int futspyInit()
 {
-	int nRet;
-
 	futspy_sprite = 1;
 
-	nRet = DrvInit();
+	INT32 nRet = DrvInit();
 
 	if (nRet == 0) {
 		futspy_decode();
@@ -1568,11 +1474,9 @@ void nprinces_decode()
 
 /*static*/int razmatazInit()
 {
-	int nRet;
-
 	hardware_type = 1;
 
-	nRet = DrvInit();
+	INT32 nRet = DrvInit();
 
 	if (nRet == 0) {
 		nprinces_decode();
@@ -1637,38 +1541,6 @@ void nprinces_decode()
 		DrvPaletteInit(0x100);
 		bg_layer_init();
 	}
-  /*
-	CZetInit(0);
-	CZetOpen(0);
-	CZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM);
-	CZetMapArea(0x0000, 0x7fff, 2, DrvZ80ROM);
-	CZetMapArea(0x8000, 0x8fff, 0, DrvZ80RAM);
-	CZetMapArea(0x8000, 0x8fff, 1, DrvZ80RAM);
-	CZetMapArea(0x8000, 0x8fff, 2, DrvZ80RAM);
-	CZetMapArea(0xa000, 0xa3ff, 0, DrvVidRAM);
-	CZetMapArea(0xa000, 0xa3ff, 1, DrvVidRAM);
-	CZetMapArea(0xa400, 0xa7ff, 0, DrvColRAM);
-	CZetMapArea(0xa400, 0xa7ff, 1, DrvColRAM);
-	CZetSetWriteHandler(congo_write);
-	CZetSetReadHandler(congo_read);
-	//CZetMemEnd();
-	CZetClose();
-
-        CZetInit(1);
-	CZetOpen(1);
-	CZetMapArea(0x0000, 0x1fff, 0, DrvZ80ROM2);
-	CZetMapArea(0x0000, 0x1fff, 2, DrvZ80ROM2);
-	CZetMapArea(0x4000, 0x47ff, 0, DrvZ80RAM2);
-	CZetMapArea(0x4000, 0x47ff, 1, DrvZ80RAM2);
-	CZetMapArea(0x4000, 0x47ff, 2, DrvZ80RAM2);
-	CZetSetWriteHandler(congo_sound_write);
-	CZetSetReadHandler(congo_sound_read);
-        CZetClose();
-//	GenericTilesInit();
-
-//        SN76496Init(0, 4000000, 0);
-//	SN76496Init(1, 4000000 / 4, 1);
-	*/
 	DrvDoReset();
 
 	return 0;
