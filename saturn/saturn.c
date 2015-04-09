@@ -356,7 +356,7 @@ static void ss_main(void)
 
 	while(1)
 	{
-		__port = PER_OpenPort();
+//		__port = PER_OpenPort();
 		display_menu();
 	}
 }
@@ -566,9 +566,12 @@ static void display_menu(void)
 			FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
 			m+=10;
 		}
+		__port = PER_OpenPort();
+
 		update_input(&current_page,&loaded);
 		//sc_check();
 //		scd_logout("display_menu",0);
+
 
 	}while(1);
 	
