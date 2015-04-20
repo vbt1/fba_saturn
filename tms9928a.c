@@ -8,13 +8,16 @@
 #define nScreenHeight 192
 #define	RGB( r, g, b )		(0x8000U|((b) << 10)|((g) << 5 )|(r))
 
+//#define USE_LUT 1
+
 //char pattern_lut[256][8];
 //extern unsigned char *pTransDraw;
 extern unsigned short *colAddr;
 extern unsigned short  *ss_map;
 extern unsigned int *shared;
 #ifdef USE_LUT
-extern unsigned int *color_2bpp_lut;
+//unsigned int *color_2bpp_lut;
+static unsigned int color_2bpp_lut[256*4];
 #endif
 
 #define SS_SPRAM *(&shared + 5)
@@ -23,7 +26,7 @@ extern SprSpCmd *ss_sprite;
 
 //unsigned int colour_dirty	 =0xffff;
 //unsigned int pattern_dirty =0xffff;
-unsigned char dirty[24*32*8*4];
+unsigned int dirty[24*32*8*4];
 unsigned char dirtyc[24*32*8*4];
 //unsigned int dirtys[32];
 
@@ -177,10 +180,31 @@ void TMS9928AReset()
 	tms.latch = 0;
 }
 
+#ifdef USE_LUT
+static void make_lut()
+{
+	unsigned char bg,fg;
+
+	for (int bg=0;bg<16;bg++)
+	{
+		for (int fg=0;fg<16;fg++)
+		{
+			unsigned int *position =	 &color_2bpp_lut[(bg|fg<<4)*4];
+			position[0] = bg|bg<<4;
+			position[1] = fg|bg<<4;
+			position[2] = bg|fg<<4;
+			position[3] = fg|fg<<4;
+		}
+	}
+}
+#endif
+
 void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallback)(int))
 {
 //	GenericTilesInit();
-
+#ifdef USE_LUT
+	make_lut();
+#endif
 	tms.model = model;
 
 	tms.INTCallback = INTCallback;
@@ -331,7 +355,8 @@ static void draw_mode0(unsigned char *bitmap,unsigned char *vmem)
 {
 	unsigned char *patternptr;
 	unsigned int tab[4];
-	unsigned char *vbt,*dirtyptr,*dirtycptr;
+	unsigned char *vbt,*dirtycptr;
+	unsigned int *dirtyptr;
 
 	dirtyptr=(unsigned char *)dirty;
 	dirtycptr=(unsigned char *)dirtyc;
@@ -448,7 +473,7 @@ static void draw_mode12(unsigned char *bitmap,unsigned char *vmem)
     }
 }
 
-//#define USE_LUT 1
+
 
 static void draw_mode2(unsigned char *bitmap,unsigned char *vmem)
 {
@@ -460,9 +485,78 @@ static void draw_mode2(unsigned char *bitmap,unsigned char *vmem)
 #else
 	unsigned int *tab;
 #endif
-	unsigned char *vbt,*dirtyptr,*dirtycptr;
+	unsigned char *vbt,*dirtycptr;
+	unsigned int *dirtyptr;
+	dirtyptr=(unsigned int *)dirty;
+	dirtycptr=(unsigned char *)dirtyc;
 
-	dirtyptr=(unsigned char *)dirty;
+    for (y=0;y<24;y++) 
+	{
+//		unsigned int y8=(y/8)*256;
+        for (x=0;x<128;x+=4) 
+		{
+            charcode = (*vmem++)+(y/8)*256;
+//			if(charcode_dirty[x][y]!=charcode|| tms_dirty)
+			{
+				colour =  (charcode&tms.colourmask);
+				pattern = (charcode&tms.patternmask);
+				patternptr = tms.vMem+tms.pattern+colour*8;
+				colourptr = tms.vMem+tms.colour+pattern*8;
+
+				for (yy=0;yy<8;yy++) 
+				{
+					pattern = *patternptr++;
+					colour = *colourptr++;
+
+					if(*dirtyptr!=pattern || *dirtycptr!=colour)
+					{
+						*dirtyptr=pattern;
+						*dirtycptr=colour;
+
+						vbt = (unsigned char *)&bitmap[(y * 8 + yy) * 128 + x];
+
+						bg = colour & 15;
+						tab[0]=bg|bg<<4;
+
+	 					if(pattern!=0)
+						{
+							fg = colour /16;
+							tab[1] = fg|(*tab&0xf0);
+							tab[2] = colour;
+							tab[3] = fg|(colour&0xf0);
+
+							vbt[0] = tab[(pattern>>6)&3]; 
+							vbt[1] = tab[(pattern>>4)&3]; 
+							vbt[2] = tab[(pattern>>2)&3]; 
+							vbt[3] = tab[(pattern)&3];
+						}
+						else
+						{
+							vbt[0] = vbt[1] = vbt[2] = vbt[3] = *tab;
+						}
+					}
+					++dirtyptr;
+					++dirtycptr;
+				}
+			}
+        }
+    }
+}
+
+static void draw_mode2_v1(unsigned char *bitmap,unsigned char *vmem)
+{
+    unsigned int colour,x,y,yy,pattern,xx,charcode;
+    unsigned char *colourptr,*patternptr;
+#ifndef USE_LUT
+	unsigned int fg,bg;
+	unsigned int tab[4];
+#else
+	unsigned int *tab;
+#endif
+	unsigned char *vbt,*dirtycptr;
+	unsigned int *dirtyptr;
+
+	dirtyptr=(unsigned int *)dirty;
 	dirtycptr=(unsigned char *)dirtyc;
 
     for (y=0;y<24;y++) 
@@ -494,24 +588,29 @@ static void draw_mode2(unsigned char *bitmap,unsigned char *vmem)
 						bg = colour & 15;
 						tab[0]=bg|bg<<4;
 #else
-						tab = &color_2bpp_lut[colour*4];
+						
 #endif
-
-						if(pattern!=0)
+	 					if(pattern!=0)
 						{	  
 #ifndef USE_LUT
 							fg = colour /16;
 							tab[1] = fg|(*tab&0xf0);
 							tab[2] = colour;
 							tab[3] = fg|(colour&0xf0);
+#else
+							tab = &color_2bpp_lut[colour*4];
 #endif
 							vbt[0] = tab[(pattern>>6)&3]; 
 							vbt[1] = tab[(pattern>>4)&3]; 
 							vbt[2] = tab[(pattern>>2)&3]; 
-							vbt[3] = tab[(pattern>>0)&3];
+							vbt[3] = tab[(pattern)&3];
 						}
 						else
+#ifndef USE_LUT
 							vbt[0] = vbt[1] = vbt[2] = vbt[3] = *tab;
+#else
+							vbt[0] = vbt[1] = vbt[2] = vbt[3] = color_2bpp_lut[colour*4];
+#endif
 					}
 					++dirtyptr;
 					++dirtycptr;
@@ -520,6 +619,7 @@ static void draw_mode2(unsigned char *bitmap,unsigned char *vmem)
         }
     }
 }
+
 
 static void draw_mode3(unsigned char *bitmap,unsigned char *vmem)
 {

@@ -520,7 +520,7 @@ int ovlInit(char *szShortName)
 	z80_emulate(3000000 / 60);
 	z80_raise_IRQ(0);
 	z80_emulate(0);
-	z80_lower_IRQ(0);
+	z80_lower_IRQ();
 	z80_emulate(0);
 #else
 	CZetOpen(0);

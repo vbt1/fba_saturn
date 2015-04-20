@@ -423,7 +423,7 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 #else
 			if (~data & 1) 
 		{
-	z80_lower_IRQ(0);
+	z80_lower_IRQ();
 //	z80_emulate(0);
 		}
 #endif

@@ -4,9 +4,11 @@
 
 #include    "machine.h"
 #include "d_sg1000.h"
+#include "raze\raze.h"
 #define SAMPLE 7680L
 #define nBurnSoundLen 128
 //UINT8 *pTransDraw = NULL;
+#define RAZE 1
 
 int ovlInit(char *szShortName)
 {
@@ -22,20 +24,6 @@ int ovlInit(char *szShortName)
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
-/*
-
-
-struct BurnDriver BurnDrvsg1k_wboy = {
-	"sg1k_wboy", NULL, NULL, NULL, "1986",
-	"Wonder Boy (Jpn, v1)\0", NULL, "Sega", "Sega SG-1000",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SG1000, GBF_MISC, 0,
-	SG1KGetZipName, sg1k_wboyRomInfo, sg1k_wboyRomName, NULL, NULL, Sg1000InputInfo, Sg1000DIPInfo,
-	DrvInit, DrvExit, DrvFrame, TMS9928ADraw, DrvScan, NULL, TMS9928A_PALETTE_SIZE,
-	285, 243, 4, 3
-};
-*/
-
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void	SetVblank2( void ){
@@ -55,20 +43,125 @@ static void	SetVblank2( void ){
 	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+static void set_memory_map(int mapper)
+{
+
+#ifdef RAZE
+	z80_init_memmap();
+
+	z80_map_fetch (0x0000, 0xbfff, DrvZ80ROM);
+	if(mapper == MAPPER_RAM_8K_EXT1)
+	{
+		z80_map_fetch (0x2000, 0x3fff, DrvZ80ExtRAM);
+	}
+	else
+	{
+//		z80_map_read (0xc000, 0xffff, DrvZ80RAM  );
+//		z80_map_write(0xc000, 0xffff, DrvZ80RAM  ); 
+		z80_add_read(0xc000, 0xffff, 0, &DrvZ80RAM[0]);
+		z80_add_write(0xc000, 0xffff, 0, &DrvZ80RAM[0]);
+	}
+
+	z80_map_fetch (0xc000, 0xffff,  DrvZ80RAM);
+
+	z80_end_memmap(); 
+
+	z80_set_in((unsigned char (*)(unsigned short))&sg1000_read_port);
+	z80_set_out((void (*)(unsigned short, unsigned char))&sg1000_write_port);
+
+//	z80_add_read(0x0000, 0xbfff, 1, (void *)&sg1000_read_0000);
+	z80_add_write(0x0000, 0xbfff, 1, (void *)&sg1000_write);
+
+	z80_add_read(0x0000, 0xbfff, 0, &DrvZ80ROM[0]);
+//	z80_add_write(0x0000, 0xbfff, 0, (void *)DrvZ80ROM);
+
+	if(mapper == MAPPER_RAM_8K_EXT1)
+	{
+		z80_add_read(0xc000, 0xffff, 1, (void *)&sg1000_read_c000);
+		z80_add_write(0xc000, 0xffff, 1, (void *)&sg1000_write_c000);
+	}
+
+	if(mapper == MAPPER_RAM_8K_EXT1 || mapper == MAPPER_RAM_8K_EXT2)
+	{
+		z80_add_read(0x2000, 0x3fff, 1, (void *)&sg1000_read_2000);
+		z80_add_write(0x2000, 0x3fff, 1, (void *)&sg1000_write_2000);
+	}
+#else
+	CZetInit(1);
+	CZetOpen(0);
+	CZetSetOutHandler(sg1000_write_port);
+	CZetSetInHandler(sg1000_read_port);
+	CZetSetWriteHandler(sg1000_write);
+	CZetSetReadHandler(sg1000_read);
+
+	CZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM);
+//	CZetMapArea(0x0000, 0xbfff, 1, DrvZ80ROM);
+	CZetMapArea(0x0000, 0xbfff, 2, DrvZ80ROM);
+
+	CZetMapArea(0xc000, 0xc3ff, 0, DrvZ80RAM);
+	CZetMapArea(0xc000, 0xc3ff, 1, DrvZ80RAM);
+	CZetMapArea(0xc000, 0xc3ff, 2, DrvZ80RAM);
+
+//	CZetMapArea(0xc000, 0xffff, 0, DrvZ80RAM);	 //read
+//	CZetMapArea(0xc000, 0xffff, 1, DrvZ80RAM);	 //write
+//	CZetMapArea(0xc000, 0xffff, 2, DrvZ80RAM);
+
+
+	CZetMemEnd();
+	CZetClose();
+#endif
+
+
+
+
+
+
+
+
+
+
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void load_rom()
 {
 //	DrvReset = 1;
+	int mapper = MAPPER_NONE;
+	memset(AllMem, 0, MemEnd-AllMem);
+//	ppi8255_exit();
+//	TMS9928AExit();
+	strcpy(sg1k_wboyRomDesc[0].szName,GFS_IdToName(file_id));	
 
-	strcpy(sg1k_wboyRomDesc[0].szName,GFS_IdToName(file_id));
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)GFS_IdToName(file_id),26,200);
-	DrvDoReset();
-	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
-	PCM_Task(pcm);
-	nSoundBufferPos=0;
+	if (strcmp(sg1k_wboyRomDesc[0].szName, "TWINBEE.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "YIEARKUN.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "LEGKAGE.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "KINGVAL.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "KNIGHTM.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "TANKBAT.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "BOMBERM.SG") == 0)
+		mapper = MAPPER_RAM_8K_EXT1;
+
+	if (strcmp(sg1k_wboyRomDesc[0].szName, "BOMBERS.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "MAGKID.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "CASTLE.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "RALLYX.SG") == 0
+	|| strcmp(sg1k_wboyRomDesc[0].szName, "ROADFIGH.SG") == 0)
+		mapper = MAPPER_RAM_8K_EXT2;
 
 	BurnLoadRom(DrvZ80ROM + 0x0000, 0, 1);
-	BurnLoadRom(DrvZ80ROM + 0x4000, 1, 1);
-	BurnLoadRom(DrvZ80ROM + 0x8000, 2, 1);
+	set_memory_map(mapper);
+	
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)GFS_IdToName(file_id),26,200);
+
+	DrvDoReset();	
+	z80_set_reg(Z80_REG_IR,0x00);
+	z80_set_reg(Z80_REG_PC,0x0000);
+	z80_set_reg(Z80_REG_SP,0x00);
+	z80_set_reg(Z80_REG_IRQVector,0xff);
+	
+	PCM_MeStop(pcm);
+	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
+	nSoundBufferPos=0;
+	PCM_MeStart(pcm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static UINT8 update_input1(void)
@@ -88,6 +181,7 @@ static UINT8 update_input1(void)
 		if((pltriggerE[0] & PER_DGT_S)!=0)
 		{
 			load_rom();
+//			DrvDoReset();
 		}
 
 		for(i=10;i<12;i++)
@@ -191,17 +285,31 @@ static void sg1000_ppi8255_portC_write(UINT8 data)
 
 static void vdp_interrupt(int state)
 {
+#ifdef RAZE
+	if(state)
+		z80_raise_IRQ(0);
+	else
+		z80_lower_IRQ();
+#else
 	CZetSetIRQLine(0, state ? CZET_IRQSTATUS_ACK : CZET_IRQSTATUS_NONE);
+#endif
 }
 
 static int DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 
+#ifdef RAZE
+//	z80_stop_emulating();
+	z80_reset();
+#else
 	CZetOpen(0);
 	CZetReset();
+//	CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+//	CZetRaiseIrq(0xff);
 	CZetClose();
-
+#endif
+	TMS9928AReset();
 	return 0;
 }
 
@@ -209,17 +317,52 @@ static int MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
-	DrvZ80ROM		= Next; Next += 0x010000;
-	DrvZ80Dec		= Next; Next += 0x010000;
+	DrvZ80ROM		= Next; Next +=   0x10000;//Next += 0x010000;
+	DrvZ80ExtRAM	= DrvZ80ROM + 0x02000;
 
-	AllRam			= Next;
-
-	DrvZ80RAM		= Next; Next += 0x000400;
+	AllRam				= DrvZ80ROM + 0x0c000;
+	DrvZ80RAM		= DrvZ80ROM + 0x0c000;
 	RamEnd			= Next;
-//	color_2bpp_lut	= Next; Next += 256*4*4;
 	MemEnd			= Next;
 
 	return 0;
+}
+
+static void __fastcall sg1000_write(UINT16 address, UINT8 data)
+{
+
+}
+
+// mapper sg1000 mirror every 0x400
+// $C000-$FFFF mapped to 2k mirrored RAM
+/*static*/ UINT8 /*__fastcall*/ sg1000_read_c000(UINT16 address)
+{
+//	return DrvZ80RAM[(address-0xc000)&0x03ff];
+	return DrvZ80ROM[address&0xc3ff];
+}
+
+/*static*/ UINT8 /*__fastcall*/ sg1000_write_c000(UINT16 address, UINT8 data)
+{
+//	DrvZ80RAM[(address-0xc000)&0x03ff] = data;
+	DrvZ80ROM[address&0xc3ff] = data;
+}
+
+// $2000-$3FFF mapped to 8k external RAM
+/*static*/ UINT8 /*__fastcall*/ sg1000_read_2000(UINT16 address)
+{
+	return DrvZ80ExtRAM[(address-0x2000)&0x1fff];
+}
+
+ // $2000-$3FFF mapped to 8k external RAM
+/*static*/ UINT8 /*__fastcall*/ sg1000_write_2000(UINT16 address, UINT8 data)
+{
+	DrvZ80ExtRAM[(address-0x2000)&0x1fff] = data;
+}
+
+
+/*static*/ UINT8 /*__fastcall*/ sg1000_read(UINT16 address)
+{
+	return 0xff;
 }
 
 static int DrvInit()
@@ -234,20 +377,8 @@ static int DrvInit()
 	MemIndex();
 //	make_lut();
 	load_rom();
-
-	CZetInit(1);
-	CZetOpen(0);
-	CZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM);
-	CZetMapArea(0x0000, 0xbfff, 2, DrvZ80ROM);
-	CZetMapArea(0xc000, 0xc3ff, 0, DrvZ80RAM);
-	CZetMapArea(0xc000, 0xc3ff, 1, DrvZ80RAM);
-	CZetMapArea(0xc000, 0xc3ff, 2, DrvZ80RAM);
-	CZetSetOutHandler(sg1000_write_port);
-	CZetSetInHandler(sg1000_read_port);
-	CZetClose();
-
+// 	set_memory_map(0);
 	SN76489AInit(0, 3579545, 0);
-//	SN76496SetRoute(0, 0.80, BURN_SND_ROUTE_BOTH);
 
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt);
 
@@ -264,12 +395,16 @@ static int DrvInit()
 
 static int DrvExit()
 {
+#ifdef RAZE
+	z80_stop_emulating();
+#else
 	CZetExit();
+#endif
 	ppi8255_exit();
 	TMS9928AExit();
 	nBurnFunction = NULL;
 	//pTransDraw = 
-	/*color_2bpp_lut =*/ MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = NULL;
+	/*color_2bpp_lut =*/ MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = DrvZ80ExtRAM = NULL;
 //	SN76496Exit();
 
 	free (AllMem);
@@ -280,10 +415,11 @@ static int DrvExit()
 
 static int DrvFrame()
 {
-	if (DrvReset) {
+/*	if (DrvReset) {
+//		while(1);
 		DrvDoReset();
 	}
-
+*/
 	{ // Compile Inputs
 		memset (DrvInputs, 0xff, 2);
 		for (int i = 0; i < 8; i++) {
@@ -294,21 +430,27 @@ static int DrvFrame()
 				DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		}
 	}
-
+ 
 	INT32 nInterleave = 16;
 	INT32 nCyclesTotal[1] = { 3579545 / 60 };
 	INT32 nCyclesDone[1] = { 0 };
 	INT32 nSoundBufferPos2 = 0;
 
+#ifndef RAZE
     CZetOpen(0);
+#endif
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
+#ifdef RAZE
+		nCyclesDone[0] += z80_emulate(nCyclesTotal[0] / nInterleave);
+#else
 		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
-
+#endif
 		// Render Sound Segment
 	/*	if (pBurnSoundOut) 
 		{			 */
+
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
 			SN76496Update(0, pSoundBuf, nSegmentLength);
@@ -316,9 +458,13 @@ static int DrvFrame()
 			nSoundBufferPos2 += nSegmentLength;
 	//	}
 		//
+
 	}
 
-
+	TMS9928AInterrupt();
+#ifndef RAZE
+	CZetClose();
+#endif
 	// Make sure the buffer is entirely filled.
 	
 //	if (pBurnSoundOut) {
@@ -337,9 +483,7 @@ static int DrvFrame()
 //				PCM_Task(pcm); // bon emplacement
 		}
 	PCM_Task(pcm); 
-	TMS9928AInterrupt();
-	CZetClose();
-
+ 
 	//if (pBurnDraw) 
 	{
 		TMS9928ADraw();

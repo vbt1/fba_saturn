@@ -17,6 +17,22 @@ static int DrvFrame();
 static int DrvDoReset();
 static UINT8 update_input1(void);
 static void make_lut();
+static UINT8 __fastcall sg1000_read_port(unsigned short port);
+void __fastcall sg1000_write_port(unsigned short port, UINT8 data);
+/*static*/ UINT8 /*__fastcall*/ sg1000_read_0000(UINT16 address);
+static void __fastcall sg1000_write(UINT16 address, UINT8 data);
+/*static*/ UINT8 /*__fastcall*/ sg1000_read(UINT16 address);
+/*static*/ UINT8 /*__fastcall*/ sg1000_read_c000(UINT16 address);
+/*static*/ UINT8 /*__fastcall*/ sg1000_write_c000(UINT16 address, UINT8 data);
+/*static*/ UINT8 /*__fastcall*/ sg1000_read_c000_ext2(UINT16 address);
+/*static*/ UINT8 /*__fastcall*/ sg1000_write_c000_ext2(UINT16 address, UINT8 data);
+/*static*/ UINT8 /*__fastcall*/ sg1000_read_2000(UINT16 address);
+/*static*/ UINT8 /*__fastcall*/ sg1000_write_2000(UINT16 address, UINT8 data);
+static void vdp_interrupt(int state);
+static void sg1000_ppi8255_portC_write(UINT8 data);
+static UINT8 sg1000_ppi8255_portA_read();
+static UINT8 sg1000_ppi8255_portB_read();
+static UINT8 sg1000_ppi8255_portC_read();
 
 extern int file_id;
 extern int file_max;
@@ -47,7 +63,20 @@ typedef	struct	SysDevice	{
 	UINT8	data[1];
 } SysDevice;
 
-
+#define MAPPER_NONE        (0x00)
+#define MAPPER_TEREBI      (0x01)
+#define MAPPER_RAM_8K_EXT1 (0x02)
+#define MAPPER_RAM_8K_EXT2 (0x03)
+#define MAPPER_SEGA        (0x10)
+#define MAPPER_SEGA_X      (0x11)
+#define MAPPER_93C46       (0x12)
+#define MAPPER_CODIES      (0x13)
+#define MAPPER_MULTI       (0x14)
+#define MAPPER_KOREA       (0x15)
+#define MAPPER_KOREA_16K   (0x16)
+#define MAPPER_KOREA_8K    (0x20)
+#define MAPPER_MSX         (0x21)
+#define MAPPER_MSX_NEMESIS (0x22)
 
 static UINT8 *AllMem	= NULL;
 static UINT8 *MemEnd	= NULL;
@@ -56,6 +85,7 @@ static UINT8 *RamEnd	= NULL;
 static UINT8 *DrvZ80ROM	= NULL;
 static UINT8 *DrvZ80Dec = NULL;
 static UINT8 *DrvZ80RAM	= NULL;
+static UINT8 *DrvZ80ExtRAM = NULL;
 //UINT32 *color_2bpp_lut	= NULL;
 
 static UINT8 DrvInputs[2];
@@ -63,7 +93,7 @@ static UINT8 DrvJoy1[8];
 static UINT8 DrvJoy2[8];
 static UINT8 DrvDips[1];
 static UINT8 DrvReset = 0;
-
+/*
 static struct BurnInputInfo Sg1000InputList[] = {
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
 	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"	},
@@ -91,6 +121,26 @@ static struct BurnInputInfo Sg1000InputList[] = {
 
 	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 };
+*/
+static struct BurnInputInfo Sg1000InputList[] = {
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
+	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"	},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"	},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 right"	},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"	},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"	},
+
+	{"P2 Up",		BIT_DIGITAL,	DrvJoy1 + 6,	"p2 up"		},
+	{"P2 Down",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 down"	},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 left"	},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 right"	},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 fire 1"	},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 2"	},
+
+	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+};
+
+
 
 STDINPUTINFO(Sg1000)
 
@@ -116,7 +166,7 @@ static struct BurnDIPInfo Sg1000DIPList[]=
 STDDIPINFO(Sg1000)
 
 static struct BurnRomInfo sg1k_wboyRomDesc[] = {
-	{ "WonderB.sg",	0x08000, 0xe8f0344d, BRF_PRG | BRF_ESS },
+	{ "WonderB.sg",	0x0C000, 0xe8f0344d, BRF_PRG | BRF_ESS },
 };
 
 STD_ROM_PICK(sg1k_wboy)
