@@ -949,7 +949,14 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 //-------------------------------------------------------------------------------------------------------------------------------------
 int System1Exit()
 {
+	nBurnFunction = NULL;
+
 	z80_stop_emulating();
+	z80_add_read(0xe000, 0xe001, 1, (void *)NULL); 
+	z80_add_write(0xa000, 0xa003, 1, (void *)NULL);
+	z80_add_write(0xc000, 0xc003, 1, (void *)NULL);
+	z80_set_in((unsigned char (*)(unsigned short))NULL);
+	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
 	CZetExit();
 	nBurnFunction = NULL;
 
@@ -967,7 +974,7 @@ System1ScrollXRam = System1BgCollisionRam = NULL;
 System1SprCollisionRam = NULL;
 System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
 System1Tiles = SpriteOnScreenMap = NULL;
-System1Fetch1 = System1MC8123Key = NULL;
+System1Fetch1 = /*System1MC8123Key =*/ NULL;
 System1ScrollX = System1ScrollY = NULL;
 
 //SaturnMem = NULL;

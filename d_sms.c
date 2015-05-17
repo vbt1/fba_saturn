@@ -264,6 +264,12 @@ static INT32 SMSInit(void)
 static INT32 SMSExit(void)
 {
 	z80_stop_emulating();
+	z80_add_read(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
+	z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
+	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
+	z80_set_in((unsigned char (*)(short unsigned int))NULL);
+	z80_set_out((void (*)(short unsigned int, unsigned char))NULL);
+
 	cart.rom = NULL;
 	__port = NULL;
 	nBurnFunction = NULL;

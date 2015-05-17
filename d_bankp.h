@@ -22,18 +22,18 @@ static void DrvInitSaturn();
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 static unsigned char __fastcall bankp_in(unsigned short address);
-static void 	 bg_line(INT32 offs,INT32 flipx);
-static void 	 fg_line(INT32 offs,INT32 flipx);
+/*static*/ void 	 bg_line(UINT16 offs,UINT16 flipx);
+/*static*/ void 	 fg_line(UINT16 offs,UINT16 flipx);
 static void __fastcall bankp_out(unsigned short address, unsigned char data);
 static void __fastcall bankp_write(unsigned short address, unsigned char data);
 
-static void __fastcall bankp_write_f000(unsigned short address, unsigned char data);
-static void __fastcall bankp_write_f400(unsigned short address, unsigned char data);
-static void __fastcall bankp_write_f800(unsigned short address, unsigned char data);
-static void __fastcall bankp_write_fc00(unsigned short address, unsigned char data);
+/*static*/ void __fastcall bankp_write_f000(unsigned short address, unsigned char data);
+/*static*/ void __fastcall bankp_write_f400(unsigned short address, unsigned char data);
+/*static*/ void __fastcall bankp_write_f800(unsigned short address, unsigned char data);
+/*static*/ void __fastcall bankp_write_fc00(unsigned short address, unsigned char data);
 
-void 	 bg_line(INT32 offs,INT32 flipx);
-void 	 fg_line(INT32 offs,INT32 flipx);
+//void 	 bg_line(INT32 offs,INT32 flipx);
+//void 	 fg_line(INT32 offs,INT32 flipx);
 
 static int bankp_palette_init();
 static int bankp_gfx_decode();

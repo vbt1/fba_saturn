@@ -41,6 +41,7 @@ OVERLAY1     = root/d_bankp.bin
 MPOVLFILE    = $(OVERLAY:.coff=.maps)
 LDOVLFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVL         = d_bankp.c sn76496.c saturn/ovl.c
+#SRCOVL         = d_bankp.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
 OBJOVL         = $(SRCOVL:.c=.o)
 
 OVLNEWS                 = root/d_news.coff
@@ -152,8 +153,8 @@ OVLSG1000                 = root/d_sg1000.coff
 OVLSG10001               = root/d_sg1000.bin
 MPOVLSG1000FILE    = $(OVLSG1000:.coff=.maps)
 LDOVLSG1000FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSG1000FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-#SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c sn76496.c czet.c cz80/cz80.c saturn/ovl.c
-SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c sn76496.c saturn/ovl.c
+SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c sn76496.c czet.c cz80/cz80.c saturn/ovl.c
+#SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c sn76496.c saturn/ovl.c
 OBJOVLSG1000         = $(SRCOVLSG1000:.c=.o)
 
 OVLBOMBJACK                 = root/d_bombja.coff
@@ -206,6 +207,7 @@ $(OVLIMG1) : $(OBJOVLIMG) $(MAKEFILE) $(LDOVLIMGFILE)
 
 $(OVERLAY) : $(OBJOVL) $(MAKEFILE) $(OBJOVL) $(LDOVLFILE)
 	$(CC) $(LDOVLFLAGS) $(OBJOVL) raze/raze.o -o $@
+#	$(CC) $(LDOVLFLAGS) $(OBJOVL) -o $@
 
 $(OVERLAY1) : $(OBJOVL) $(MAKEFILE) $(LDOVLFILE)
 	$(CONV) -O binary $(OVERLAY) $(OVERLAY1)
@@ -297,7 +299,8 @@ $(OVLVIGIL) : $(OBJOVLVIGIL) $(MAKEFILE) $(OBJOVLVIGIL) $(LDOVLVIGILFILE)
 	$(CONV) -O binary $(OVLVIGIL) $(OVLVIGIL1)
 
 $(OVLSG1000) : $(OBJOVLSG1000) $(MAKEFILE) $(OBJOVLSG1000) $(LDOVLSG1000FILE)
-	$(CC) $(LDOVLSG1000FLAGS) $(OBJOVLSG1000) $(LIBSOVL) raze/raze.o -o $@
+	$(CC) $(LDOVLSG1000FLAGS) $(OBJOVLSG1000) $(LIBSOVL) -o $@
+#	$(CC) $(LDOVLSG1000FLAGS) $(OBJOVLSG1000) $(LIBSOVL) raze/raze.o -o $@
 
 $(OVLSG10001) : $(OBJOVLSG1000) $(MAKEFILE) $(LDOVLSG1000FILE)
 	$(CONV) -O binary $(OVLSG1000) $(OVLSG10001)

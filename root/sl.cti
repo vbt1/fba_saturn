@@ -2390,9 +2390,9 @@ EndFile
 				File MAGKID.SG;1
 					Source SG1000\MAGKID.SG
 				EndFile
-				File LEGKAGE.SG;1
-					Source SG1000\LEGKAGE.SG
-				EndFile
+;				File LEGKAGE.SG;1
+;					Source SG1000\LEGKAGE.SG
+;				EndFile
 
 				File KINGVAL.SG;1
 					Source SG1000\KINGVAL.SG
@@ -2400,12 +2400,12 @@ EndFile
 				File KNIGHTM.SG;1
 					Source SG1000\KNIGHTM.SG
 				EndFile
-				File TANKBAT.SG;1
-					Source SG1000\TANKBAT.SG
-				EndFile
-				File RALLYX.SG;1
-					Source SG1000\RALLYX.SG
-				EndFile
+;				File TANKBAT.SG;1
+;					Source SG1000\TANKBAT.SG
+;				EndFile
+;				File RALLYX.SG;1
+;					Source SG1000\RALLYX.SG
+;				EndFile
 				File ROADFIGH.SG;1
 					Source SG1000\ROADFIGH.SG
 				EndFile
@@ -2413,9 +2413,9 @@ EndFile
 				File BOMBERM.SG;1
 					Source SG1000\BOMBERM.SG
 				EndFile
-				File BOMBERS.SG;1
-					Source SG1000\BOMBERS.SG
-				EndFile
+;				File BOMBERS.SG;1
+;					Source SG1000\BOMBERS.SG
+;				EndFile
 				File CASTLE.SG;1
 					Source SG1000\CASTLE.SG
 				EndFile

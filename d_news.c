@@ -434,6 +434,9 @@ int ovlInit(char *szShortName)
 
 #ifdef RAZE
 	z80_stop_emulating();
+	z80_add_write(0x9000, 0x91ff, 1, (void *)NULL);
+	z80_add_write(0xc002, 0xc003, 1, (void *)NULL);
+	z80_add_read (0xc000, 0xc002, 1, (void *)NULL);
 #else
 //	ZetExit();
 #endif

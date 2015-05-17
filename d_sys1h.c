@@ -11,6 +11,7 @@
 #include "d_sys1h.h"
 #include "d_sys1_common.c"
 
+UINT8 System1MC8123Key[0x2000];
 //revoir WRITE_MEM16 et READ_MEM16
 //modifier CZetSetReadHandler et CZetSetWriteHandler
 
@@ -152,14 +153,14 @@ Driver Inits
 {
 	int nRet;
 	flipscreen = 1;
-	System1MC8123Key = (UINT8*)malloc(0x2000);
+//	System1MC8123Key = (UINT8*)malloc(0x2000);
 	BurnLoadRom(System1MC8123Key, 14, 1);
 
 	DecodeFunction = blockgal_decode;
 	
 	nRet = System1Init(2, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
-	free(System1MC8123Key);
-	System1MC8123Key = NULL;
+//	free(System1MC8123Key);
+//	System1MC8123Key = NULL;
 	
 	CZetOpen(0);
 	CZetSetInHandler(BlockgalZ801PortRead);

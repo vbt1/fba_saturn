@@ -9,6 +9,9 @@
 #include "tms9928a.h"
 #include "8255ppi.h"
 #include "sn76496.h"
+#ifdef RAZE
+#include "raze\raze.h"
+#endif
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static int DrvInit();
@@ -22,12 +25,17 @@ void __fastcall sg1000_write_port(unsigned short port, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_0000(UINT16 address);
 static void __fastcall sg1000_write(UINT16 address, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read(UINT16 address);
+#ifdef RAZE
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_c000(UINT16 address);
 /*static*/ UINT8 /*__fastcall*/ sg1000_write_c000(UINT16 address, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_c000_ext2(UINT16 address);
 /*static*/ UINT8 /*__fastcall*/ sg1000_write_c000_ext2(UINT16 address, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_2000(UINT16 address);
 /*static*/ UINT8 /*__fastcall*/ sg1000_write_2000(UINT16 address, UINT8 data);
+#else
+/*static*/ UINT8 /*__fastcall*/ sg1000_write_ext2(UINT16 address, UINT8 data);
+/*static*/ UINT8 /*__fastcall*/ sg1000_read_ext2(UINT16 address);
+#endif
 static void vdp_interrupt(int state);
 static void sg1000_ppi8255_portC_write(UINT8 data);
 static UINT8 sg1000_ppi8255_portA_read();
@@ -83,7 +91,7 @@ static UINT8 *MemEnd	= NULL;
 static UINT8 *AllRam	= NULL;
 static UINT8 *RamEnd	= NULL;
 static UINT8 *DrvZ80ROM	= NULL;
-static UINT8 *DrvZ80Dec = NULL;
+//static UINT8 *DrvZ80Dec = NULL;
 static UINT8 *DrvZ80RAM	= NULL;
 static UINT8 *DrvZ80ExtRAM = NULL;
 //UINT32 *color_2bpp_lut	= NULL;

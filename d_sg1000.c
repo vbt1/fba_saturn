@@ -1,14 +1,13 @@
 // FB Alpha Sega SG-1000-based arcade driver module
 // Based on MAME driver by Tomasz Slanina
 // Code by iq_132, fixups & bring up-to-date by dink Aug 18, 2014
+//#define RAZE 1
 
 #include    "machine.h"
 #include "d_sg1000.h"
-#include "raze\raze.h"
+
 #define SAMPLE 7680L
 #define nBurnSoundLen 128
-//UINT8 *pTransDraw = NULL;
-#define RAZE 1
 
 int ovlInit(char *szShortName)
 {
@@ -91,42 +90,44 @@ static void set_memory_map(int mapper)
 	CZetOpen(0);
 	CZetSetOutHandler(sg1000_write_port);
 	CZetSetInHandler(sg1000_read_port);
-	CZetSetWriteHandler(sg1000_write);
-	CZetSetReadHandler(sg1000_read);
 
-	CZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM);
-//	CZetMapArea(0x0000, 0xbfff, 1, DrvZ80ROM);
+	if(mapper == MAPPER_RAM_8K_EXT2)
+	{
+		CZetSetWriteHandler(sg1000_write_ext2);
+		CZetSetReadHandler(sg1000_read_ext2);
+
+//		CZetMapArea(0x0000, 0x1fff, 0, DrvZ80ROM);
+//		CZetMapArea(0x0000, 0x1fff, 1, DrvZ80ROM);
+
+//		CZetMapArea(0x4000, 0xbfff, 0, DrvZ80ROM+0x4000);
+//		CZetMapArea(0x4000, 0xbfff, 1, DrvZ80ROM+0x4000);
+	}
+	else
+	{
+		CZetSetWriteHandler(sg1000_write);
+		CZetSetReadHandler(sg1000_read);
+
+		CZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM);
+		CZetMapArea(0x0000, 0xbfff, 1, DrvZ80ROM);
+	}
 	CZetMapArea(0x0000, 0xbfff, 2, DrvZ80ROM);
 
-	CZetMapArea(0xc000, 0xc3ff, 0, DrvZ80RAM);
-	CZetMapArea(0xc000, 0xc3ff, 1, DrvZ80RAM);
-	CZetMapArea(0xc000, 0xc3ff, 2, DrvZ80RAM);
-
-//	CZetMapArea(0xc000, 0xffff, 0, DrvZ80RAM);	 //read
-//	CZetMapArea(0xc000, 0xffff, 1, DrvZ80RAM);	 //write
-//	CZetMapArea(0xc000, 0xffff, 2, DrvZ80RAM);
-
+	CZetMapArea(0xc000, 0xffff, 0, DrvZ80RAM);	 //read
+	CZetMapArea(0xc000, 0xffff, 1, DrvZ80RAM);	 //write
+	CZetMapArea(0xc000, 0xffff, 2, DrvZ80RAM);
 
 	CZetMemEnd();
 	CZetClose();
 #endif
-
-
-
-
-
-
-
-
-
-
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void load_rom()
 {
 //	DrvReset = 1;
 	int mapper = MAPPER_NONE;
-	memset(AllMem, 0, MemEnd-AllMem);
+//	memset(AllMem, 0, MemEnd-AllMem);
+	memset (AllRam, 0, RamEnd - AllRam);
+
 //	ppi8255_exit();
 //	TMS9928AExit();
 	strcpy(sg1k_wboyRomDesc[0].szName,GFS_IdToName(file_id));	
@@ -140,11 +141,15 @@ static void load_rom()
 	|| strcmp(sg1k_wboyRomDesc[0].szName, "BOMBERM.SG") == 0)
 		mapper = MAPPER_RAM_8K_EXT1;
 
+#ifdef RAZE
 	if (strcmp(sg1k_wboyRomDesc[0].szName, "BOMBERS.SG") == 0
 	|| strcmp(sg1k_wboyRomDesc[0].szName, "MAGKID.SG") == 0
 	|| strcmp(sg1k_wboyRomDesc[0].szName, "CASTLE.SG") == 0
 	|| strcmp(sg1k_wboyRomDesc[0].szName, "RALLYX.SG") == 0
 	|| strcmp(sg1k_wboyRomDesc[0].szName, "ROADFIGH.SG") == 0)
+#else
+	if(strcmp(sg1k_wboyRomDesc[0].szName, "MAGKID.SG") == 0)
+#endif
 		mapper = MAPPER_RAM_8K_EXT2;
 
 	BurnLoadRom(DrvZ80ROM + 0x0000, 0, 1);
@@ -152,12 +157,13 @@ static void load_rom()
 	
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)GFS_IdToName(file_id),26,200);
 
-	DrvDoReset();	
+	DrvDoReset();
+#ifdef RAZE	
 	z80_set_reg(Z80_REG_IR,0x00);
 	z80_set_reg(Z80_REG_PC,0x0000);
 	z80_set_reg(Z80_REG_SP,0x00);
 	z80_set_reg(Z80_REG_IRQVector,0xff);
-	
+#endif	
 	PCM_MeStop(pcm);
 	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
 	nSoundBufferPos=0;
@@ -322,6 +328,10 @@ static int MemIndex()
 
 	AllRam				= DrvZ80ROM + 0x0c000;
 	DrvZ80RAM		= DrvZ80ROM + 0x0c000;
+//	AllRam			= Next;
+
+//	DrvZ80RAM		= Next; Next += 0x010400;
+
 	RamEnd			= Next;
 	MemEnd			= Next;
 
@@ -332,7 +342,7 @@ static void __fastcall sg1000_write(UINT16 address, UINT8 data)
 {
 
 }
-
+#ifdef RAZE
 // mapper sg1000 mirror every 0x400
 // $C000-$FFFF mapped to 2k mirrored RAM
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_c000(UINT16 address)
@@ -358,7 +368,29 @@ static void __fastcall sg1000_write(UINT16 address, UINT8 data)
 {
 	DrvZ80ExtRAM[(address-0x2000)&0x1fff] = data;
 }
+#else
+/*static*/ UINT8 /*__fastcall*/ sg1000_read_ext2(UINT16 address)
+{
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"sg1000_read_ext2     ",26,180);
 
+	 if(address>=0x2000 && address <=0x3fff)
+		return DrvZ80ExtRAM[(address-0x2000)&0x1fff];
+	 if(address <=0xbfff)
+		return DrvZ80ROM[address];
+	 return 0xff;
+}
+
+ // $2000-$3FFF mapped to 8k external RAM
+/*static*/ UINT8 /*__fastcall*/ sg1000_write_ext2(UINT16 address, UINT8 data)
+{
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"sg1000_write_ext2     ",26,180);
+
+	 if(address>=0x2000 && address <=0x3fff)
+		DrvZ80ExtRAM[(address-0x2000)&0x1fff] = data;
+//	 else	if(address <=0xbfff)
+//		DrvZ80ROM[address] = data;
+}
+#endif
 
 /*static*/ UINT8 /*__fastcall*/ sg1000_read(UINT16 address)
 {
@@ -395,16 +427,29 @@ static int DrvInit()
 
 static int DrvExit()
 {
+	nBurnFunction = NULL;
+//	nSoundBufferPos=0;
 #ifdef RAZE
 	z80_stop_emulating();
+
+	z80_set_in((unsigned char (*)(unsigned short))NULL);
+	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
+
+	z80_add_write(0x0000, 0xbfff, 1, (void *)NULL);
+
+	z80_add_read(0xc000, 0xffff, 1, (void *)NULL);
+	z80_add_write(0xc000, 0xffff, 1, (void *)NULL);
+
+	z80_add_read(0x2000, 0x3fff, 1, (void *)NULL);
+	z80_add_write(0x2000, 0x3fff, 1, (void *)NULL);
+
 #else
 	CZetExit();
 #endif
 	ppi8255_exit();
 	TMS9928AExit();
-	nBurnFunction = NULL;
 	//pTransDraw = 
-	/*color_2bpp_lut =*/ MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80Dec = DrvZ80RAM = DrvZ80ExtRAM = NULL;
+	/*color_2bpp_lut =*/ MemEnd = AllRam = RamEnd = DrvZ80ROM = /*DrvZ80Dec =*/ DrvZ80RAM = DrvZ80ExtRAM = NULL;
 //	SN76496Exit();
 
 	free (AllMem);
@@ -435,6 +480,7 @@ static int DrvFrame()
 	INT32 nCyclesTotal[1] = { 3579545 / 60 };
 	INT32 nCyclesDone[1] = { 0 };
 	INT32 nSoundBufferPos2 = 0;
+	INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 
 #ifndef RAZE
     CZetOpen(0);
@@ -451,26 +497,27 @@ static int DrvFrame()
 	/*	if (pBurnSoundOut) 
 		{			 */
 
-			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
 			SN76496Update(0, pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 			nSoundBufferPos2 += nSegmentLength;
 	//	}
 		//
-
 	}
 
 	TMS9928AInterrupt();
 #ifndef RAZE
 	CZetClose();
 #endif
-	// Make sure the buffer is entirely filled.
+	TMS9928ADraw();
+
+// Make sure the buffer is entirely filled.
 	
 //	if (pBurnSoundOut) {
-		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos2;
-		INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
-		if (nSegmentLength) {
+		nSegmentLength = nBurnSoundLen - nSoundBufferPos2;
+		if (nSegmentLength) 
+		{
+			INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
 			SN76496Update(0, pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}	   
@@ -483,11 +530,7 @@ static int DrvFrame()
 //				PCM_Task(pcm); // bon emplacement
 		}
 	PCM_Task(pcm); 
- 
-	//if (pBurnDraw) 
-	{
-		TMS9928ADraw();
-	}
+  
 	return 0;
 }
 /*
@@ -536,7 +579,7 @@ void initLayers(void)
 
 //	SCL_InitConfigTb(&scfg);
 	scfg.dispenbl		= OFF;
-	
+/*	
 	scfg.charsize		= SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
 	scfg.pnamesize	= SCL_PN1WORD;
 	scfg.flip				= SCL_PN_10BIT;
@@ -544,8 +587,9 @@ void initLayers(void)
 	scfg.coltype		= SCL_COL_TYPE_16;
 	scfg.datatype	= SCL_CELL;
 	scfg.patnamecontrl =  0x000c;// VRAM B1 のオフセット 
-	scfg.plate_addr[0] = ss_map;
+	scfg.plate_addr[0] = ss_map;		 */
 	SCL_SetConfig(SCL_NBG0, &scfg);
+	SCL_SetConfig(SCL_NBG2, &scfg);
 	
 /********************************************/	
 
@@ -606,7 +650,7 @@ static void make_lut()
 /*static*/ void DrvInitSaturn()
 {
 //	InitCDsms();
-//	SPR_InitSlaveSH();
+	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 	nBurnSprites  = 4+32;//131;//27;
 	nBurnLinescrollSize = 0;
@@ -620,7 +664,7 @@ static void make_lut()
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-	ss_scl			= (Fixed32 *)SS_SCL;
+//	ss_scl			= (Fixed32 *)SS_SCL;
 //	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 //	pTransDraw	= (ss_vram+0x1100);
 	file_id			= 2; // bubble bobble
@@ -640,13 +684,13 @@ static void make_lut()
 	ss_sprite[3].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP); //256 colors
 	ss_sprite[3].charSize    = 0x20C0;  // 256x*192y
 	
-	initLayers();
+//	initLayers();
 	
     SS_SET_N0PRIN(0);
     SS_SET_N1PRIN(6);
     SS_SET_S0PRIN(5);
 
-//	initLayers();
+	initLayers();
 	initColors();
 //	initPosition();
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);

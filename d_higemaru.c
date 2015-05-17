@@ -414,6 +414,9 @@ static int DrvExit()
 	unsigned int i;
 #ifdef RAZE
 	z80_stop_emulating();
+	z80_add_write(0xd000, 0xd7ff, 1, (void *)NULL);
+	z80_add_write(0xc800, 0xc804, 1, (void *)NULL);
+	z80_add_read (0xc000, 0xc004, 1, (void *)NULL);
 #else
 	CZetExit();
 #endif

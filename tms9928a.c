@@ -924,60 +924,14 @@ int TMS9928ADraw()
 
 	if (!BackColour) BackColour=1;
 
-//	TMS89928aPaletteRecalc();
-//	colAddr[0] = colAddr[BackColour];
 	*(unsigned short *)0x25E00000=colAddr[BackColour];
 
-	if (!(tms.Regs[1] & 0x40))
-	{
-	/*	for (int i = 0; i < nScreenWidth * nScreenHeight; i++) 
-		{
-			pTransDraw[i] = BackColour;
-		}			*/
-	}
-	else
+	if ((tms.Regs[1] & 0x40))
 	{
 		int mode = ((((tms.model == TMS99x8A) || (tms.model == TMS9929A)) ? (tms.Regs[0] & 2) : 0) | ((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
 
 		(*ModeHandlers[mode])(tms.tmpbmp,&tms.vMem[tms.nametbl]);
-	  /*
-		{
-			for (int y = 0; y < 192; y++)
-			{
-				for (int x = 0; x < 256; x++)
-				{
-					pTransDraw[(y + tms.top_border) * nScreenWidth + x + 15] = tms.tmpbmp[y * 256 + x];
-				}
-			}
-		}
 
-		{
-			for (int y = 0; y < tms.top_border; y++) { // top
-				for (int x = 0; x < 15 + 256 + 15; x++) {
-					pTransDraw[y * nScreenWidth + x] = BackColour;
-				}
-			}
-
-			for (int y = tms.top_border+192; y < tms.top_border+192+tms.bottom_border; y++) { // bottom
-				for (int x = 0; x < 15 + 256 + 15; x++) {
-					pTransDraw[y * nScreenWidth + x] = BackColour;
-				}
-			}
-
-
-			for (int y = tms.top_border; y < tms.top_border+192; y++) { // left
-				for (int x = 0; x < 15; x++) {
-					pTransDraw[y * nScreenWidth + x] = BackColour;
-				}
-			}
-
-			for (int y = tms.top_border; y < tms.top_border+192; y++) { // right
-				for (int x = 15+256; x < 15 + 256 + 15; x++) {
-					pTransDraw[y * nScreenWidth + x] = BackColour;
-				}
-			}
-		}
-	*/
 		if ((tms.Regs[1] & 0x50) == 0x40)
 		{
 			unsigned int size = (tms.Regs[1] & 2) ? 16 : 8;

@@ -261,6 +261,19 @@ void resetLayers()
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void resetSound()
+{
+	PCM_MeSetVolume(pcm,0);
+	PCM_DrvChangePcmPara(pcm,-1,-1);
+	PCM_Task(pcm);
+
+	PCM_MeStop(pcm);
+//	PCM_MeReset(pcm);
+	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
+	nSoundBufferPos=0;
+	PCM_MeStart(pcm);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initSaturn()
 {
 /*
@@ -278,12 +291,11 @@ void resetLayers()
 //	nBurnSprites = 131;
 //	INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
 	nBurnFunction = NULL;
-	nSoundBufferPos = 0;
-
+//	nSoundBufferPos = 0;
 	play=1;
 //	cleanSprites();
 //	_spr2_transfercommand();
-	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
+//	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
 //	memset(ls_tbl,0,sizeof(ls_tbl));
 	initScrolling(OFF,NULL);
 
@@ -307,11 +319,13 @@ void resetLayers()
 	SCL_SetLineParam2(&lp);
 wait_vblank();
 	play=1;
+
+	resetSound();
 //	SCL_ParametersInit();
 //	SCL_SetLineParam2(&lp);
-	PCM_Task(pcm);
-	PCM_MeSetVolume(pcm,0);
-	PCM_DrvChangePcmPara(pcm,-1,-1);
+//	PCM_Task(pcm);
+//	PCM_MeSetVolume(pcm,0);
+//	PCM_DrvChangePcmPara(pcm,-1,-1);
 	play = 0;
 	wait_vblank();
 
@@ -363,8 +377,9 @@ static void ss_main(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void VDP2_InitVRAM(void)
 {
-	memset4_fast(SCL_VDP2_VRAM_A0,0,0x40000);
-	memset4_fast(SCL_VDP2_VRAM_B0,0,0x40000);
+	memset4_fast(SCL_VDP2_VRAM_A0,0x0000,0x40000);
+	memset4_fast(SCL_VDP2_VRAM_B0,0x0000,0x40000);
+//	memset(SCL_VDP2_VRAM_B1,0x00,0x20000);
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 static void load_img(int id)
@@ -394,6 +409,8 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 {
 	unsigned int i=0;
 	SysDevice	*device;
+//	__port = PER_OpenPort();
+	//PER_GetPort(__port);
 
 	if(play==0 && ( device = PER_GetDeviceR( &__port[0], 0 )) != NULL )
 	{
@@ -566,7 +583,7 @@ static void display_menu(void)
 			FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
 			m+=10;
 		}
-		__port = PER_OpenPort();
+//		__port = PER_OpenPort();
 
 		update_input(&current_page,&loaded);
 		//sc_check();

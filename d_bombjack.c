@@ -839,6 +839,16 @@ static INT32 BjExit()
 	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
+
+	z80_add_read(0x9820, 0x987f, 1, (void *)NULL);
+	z80_add_read(0xb000, 0xb005, 1, (void *)NULL);
+
+	z80_add_write(0x9000,0x93ff, 1, (void *)NULL);
+	z80_add_write(0x9400,0x97ff, 1, (void *)NULL);
+
+	z80_add_write(0x9820, 0x987f, 1, (void *)NULL);
+	z80_add_write(0xb000, 0xb000, 1, (void *)NULL);
+	z80_add_write(0xb800, 0xb800, 1, (void *)NULL);
 #endif
 
 	CZetExit();

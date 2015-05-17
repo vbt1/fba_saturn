@@ -493,6 +493,20 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 {
 #ifdef RAZE
 	z80_stop_emulating();
+
+#ifdef CACHE
+	z80_add_write(0xc000, 0xcfff, 1, (void *)NULL);
+#endif
+
+	z80_add_write(0xe000, 0xe03f, 1, (void *)NULL);
+	z80_add_write(0xe040, 0xe044, 1, (void *)NULL);
+	z80_add_write(0xf000, 0xf000, 1, (void *)NULL);
+	z80_add_write(0xf400, 0xf400, 1, (void *)NULL);
+	z80_add_write(0xf600, 0xf600, 1, (void *)NULL);
+	z80_add_read (0xe000, 0xe03f, 1, (void *)NULL);
+	z80_add_read (0xf200, 0xf200, 1, (void *)NULL);
+	z80_add_read (0xf400, 0xf400, 1, (void *)NULL);
+	z80_add_read (0xf600, 0xf603, 1, (void *)NULL);
 #else
 	CZetExit();
 #endif	
@@ -580,6 +594,9 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	//play=1;
 //	drawWindow(0,240,0,2,66);
 	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+//	memset(&ss_scl[0],16<<16,64);
+	memset(&ss_scl[0],16<<16,128);
+
 	drawWindow(0,240,0,2,66);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }

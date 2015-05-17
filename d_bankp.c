@@ -62,7 +62,6 @@ static INT32 MemIndex()
 	return 0;
 }
 
-
 static INT32 DrvInit()
 {
 //	flipscreen = 0;
@@ -79,26 +78,12 @@ static INT32 DrvInit()
 		return 1;
 	}
 	memset(Mem, 0, nLen);
-//	memset(Gfx0, 0, 0x10000);
-//	memset(Gfx1, 0, 0x20000);
+	memset(Gfx0, 0, 0x20000);
+	memset(Gfx1, 0, 0x20000);
+
 	MemIndex();
 
 	make_lut();
-/*
-	Mem = (unsigned char*)malloc(0x10000 + 0x10000 + 0x20000 + 0x300 + 0x800);
-
-	if (Mem == NULL) {
-		return 1;
-	}
-//	char* pszFilename;
-//	struct BurnRomInfo ri;
-
-	Rom  = Mem + 0x00000;
-	Gfx0 = Mem + 0x10000;
-	Gfx1 = Mem + 0x20000;
-	Prom = Mem + 0x40000;
-	Palette = (int*)(Mem + 0x40200);
-*/
 
 	unsigned int i;
 	for (i = 0; i < 4; i++)
@@ -119,6 +104,10 @@ static INT32 DrvInit()
 	if (BurnLoadRom(Prom + 0x0120, 14, 1)) return 1;
 	if (bankp_gfx_decode()) return 1;
 	bankp_palette_init();
+
+	memset(Gfx0, 0, 0x20000);
+	memset(Gfx1, 0, 0x20000);
+
 #ifdef RAZE
 	z80_init_memmap();
 	z80_map_fetch (0x0000, 0xdfff, Rom + 0x0000); 
@@ -179,39 +168,43 @@ static INT32 DrvInit()
 
 #ifdef CACHE
 #ifdef RAZE
-static void __fastcall bankp_write_f000(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write_f000(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
 		Rom[address] = data;
-		fg_line(address&0x3ff, (0x3<< 14));
+//		fg_line(address&0x3ff, (0x3<< 14));
+		fg_line(address&0x3ff, 0xc000);
 	}
 }
 
-static void __fastcall bankp_write_f400(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write_f400(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
 		Rom[address] = data;
-		fg_line(address&0x3ff, (0x3<< 14));
+//		fg_line(address&0x3ff, (0x3<< 14));
+		fg_line(address&0x3ff, 0xc000);
 	}
 }
 
-static void __fastcall bankp_write_f800(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write_f800(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
 		Rom[address] = data;
 		bg_line(address&0x3ff, (0x3<< 14));
+//		bg_line(address&0x3ff, 0xc00);
 	}
 }
 
-static void __fastcall bankp_write_fc00(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write_fc00(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
 		Rom[address] = data;
 		bg_line(address&0x3ff, (0x3<< 14));
+//		bg_line(address&0x3ff, 0xc00);
 	}
 }
 #else
@@ -311,6 +304,7 @@ static void __fastcall bankp_out(UINT16 address, UINT8 data)
 			ss_reg->n2_move_y = 272-(data);//-24;
 		else
 			ss_reg->n2_move_x = data;//-24;
+		
 		break;
 
 		case 0x07:
@@ -456,11 +450,17 @@ static void initLayers()
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
+	scfg.flip          = SCL_PN_10BIT; // on force à 0
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
+	scfg.platesize     = SCL_PL_SIZE_2X2; // ou 2X2 ?
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
+	scfg.plate_addr[1] = (Uint32)SS_MAP;
+	scfg.plate_addr[2] = (Uint32)SS_MAP;
+	scfg.plate_addr[3] = (Uint32)SS_MAP;
+
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
 	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
@@ -483,11 +483,6 @@ static void initPosition()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initColors()
 {
-	/*unsigned short palette[8]=
-{
-RGB( 164>>3, 181>>3, 197>>3),RGB( 0,0,0 ),RGB( 164>>3, 181>>3, 197>>3),RGB( 214>>3, 230>>3, 247>>3 ),
-RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 148>>3 ),
-};*/
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
@@ -517,16 +512,6 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*
-static void SaturnInitMem()
-{
-//	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-//	bg_dirtybuffer	= Next; Next += 0x400 * sizeof(UINT8);
-//	fg_dirtybuffer		= Next; Next += 0x400 * sizeof(UINT8);
-//	map_offset_lut	= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
-//	MemEnd			= Next;
-}	 */
-//-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
@@ -536,16 +521,12 @@ static void DrvInitSaturn()
 	SS_CACHE= cache    =(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclSpPriNumRegister *)SS_N0PRI;
+	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
+	ss_OtherPri     = (SclOtherPriRegister *)SS_OTHR;
+	ss_BgColMix		= (SclBgColMixRegister *)SS_BGMIX;
 	nBurnLinescrollSize = 0x300;
 	nBurnSprites = 3;
-	/*
-	SaturnInitMem();
-	int nLen = MemEnd - (UINT8 *)0;
-	SaturnMem = (UINT8 *)malloc(nLen); 
-	SaturnInitMem();  */
-	
-//	memset(bg_dirtybuffer,1,1024);
-//	memset(fg_dirtybuffer,1,1024);
+
 //3 nbg
 	SS_SET_N0PRIN(7);
 	SS_SET_N1PRIN(4);
@@ -566,6 +547,13 @@ static void DrvInitSaturn()
 		nSoundBufferPos=0;
 #ifdef RAZE
 	z80_stop_emulating();
+	z80_add_read(0x0000, 0xffff, 1, (void *)NULL);
+	z80_add_write(0xf000, 0xf3ff, 1, (void *)NULL);
+	z80_add_write(0xf400, 0xf7ff, 1, (void *)NULL);
+	z80_add_write(0xf800, 0xfbff, 1, (void *)NULL);
+	z80_add_write(0xfc00, 0xffff, 1, (void *)NULL);
+	z80_set_in((unsigned char (*)(unsigned short))NULL);
+	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
 #else
 	CZetExit();
 #endif	
@@ -586,7 +574,7 @@ static void DrvInitSaturn()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void 	 bg_line(INT32 offs,INT32 flipx)
+/*static*/ void 	 bg_line(UINT16 offs,UINT16 flipx)
 {
 	INT32 code, color, x;
 	code = Rom[0xf800+offs] | ((Rom[0xfc00+offs] & 7) << 8);
@@ -601,7 +589,7 @@ static void 	 bg_line(INT32 offs,INT32 flipx)
 	else									ss_map2[x+1] = ss_map2[x+0x41] = code+0x2800;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void 	 fg_line(INT32 offs,INT32 flipx)
+/*static*/ void 	 fg_line(UINT16 offs,UINT16 flipx)
 {
 	INT32 code, color, x;
 	code = Rom[0xf000+offs] | ((Rom[0xf400+offs] & 3) << 8);
@@ -616,7 +604,7 @@ static void 	 fg_line(INT32 offs,INT32 flipx)
 	else											ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = code+0x1800;//2048  //0x1800
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvFrame()
+/*static*/ INT32 DrvFrame()
 {
 	if (DrvReset) {
 		DrvDoReset();
