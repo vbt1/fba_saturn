@@ -279,15 +279,8 @@ static INT32 SMSExit(void)
 
 	bp_lut = NULL;
 	name_lut = NULL;
-
 	free(SaturnMem);
 	SaturnMem = NULL;
-
-//	free(bp_lut);
-//	bp_lut = NULL;
-
-//	free(name_lut);
-//	name_lut = NULL;
 
 	nSoundBufferPos=0;
 	running=0;
@@ -1203,4 +1196,3 @@ static void make_lut()
 	make_cram_lut();
 	make_map_lut();
 }
-//-------------------------------------------------------------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 #define _D_SG1000_H_
 
 #include "burnint.h"
-#include "eeprom.h"
+//#include "eeprom.h"
 #include "saturn/ovl.h"
 #include "sega_int.h"
 

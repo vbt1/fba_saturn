@@ -164,7 +164,8 @@ LDOVLBOMBJACKFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $
 SRCOVLBOMBJACK         = d_bombjack.c czet.c cz80/cz80.c ay8910.c  saturn/ovl.c
 OBJOVLBOMBJACK         = $(SRCOVLBOMBJACK:.c=.o)
 
-YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
+#YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
+YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
 ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a \

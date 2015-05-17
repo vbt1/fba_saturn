@@ -86,7 +86,6 @@ static void set_memory_map(int mapper)
 		z80_add_write(0x2000, 0x3fff, 1, (void *)&sg1000_write_2000);
 	}
 #else
-	CZetInit(1);
 	CZetOpen(0);
 	CZetSetOutHandler(sg1000_write_port);
 	CZetSetInHandler(sg1000_read_port);
@@ -407,6 +406,11 @@ static int DrvInit()
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
+
+	#ifndef RAZE
+	CZetInit(1);
+	#endif
+
 //	make_lut();
 	load_rom();
 // 	set_memory_map(0);

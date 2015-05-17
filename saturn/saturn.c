@@ -7,23 +7,8 @@
 #define LOWADDR 0x00200000
 volatile SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
-//static unsigned char ServiceRequest = 0;
-//static unsigned char *ServiceDip = 0;
 extern unsigned char play;
 unsigned char drvquit;
-//struct BurnDriver* oDriver;
-/*typedef struct  {
-  int arena;    // total space allocated from system 
-  int ordblks;  // number of non-inuse chunks 
-  int smblks;   //* unused -- always zero 
-  int hblks;    //* number of mmapped regions 
-  int hblkhd;   //* total space in mmapped regions 
-  int usmblks;  //* unused -- always zero 
-  int fsmblks;  //* unused -- always zero 
-  int uordblks; //* total allocated space 
-  int fordblks; //* total non-inuse space 
-  int keepcost; // top-most, releasable (via malloc_trim) space 
-}mallinfo;	*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	UsrVblankIn( void )
 {
@@ -75,9 +60,6 @@ void   UsrVblankOut( void )
 	__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-//void memsetl_fast(UINT32 *ptr, UINT32 value, UINT32 len);
-
-
 int main(void)
 {
 	Uint8	*dst;
@@ -89,7 +71,6 @@ int main(void)
 	
     for (dst = (Uint8 *)SystemWork, loop = 0; loop < SystemSize; loop++)
 		*dst = 0;
-
 
 	memset(&play,0x00,1024);
 
@@ -137,7 +118,6 @@ void initScrolling(Uint8 enabled,void *address)
 		SclAddrLsTbl[1] = NULL;
 		nBurnLinescrollSize = 1;
 	}
-  
 
 	Scl_n_reg.linecontrl = (lp.h_enbl << 1) & 0x0002;
     lp.interval=0;
@@ -276,17 +256,6 @@ void resetLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initSaturn()
 {
-/*
-	Uint8	*dst;
-//	malloc_trim();
-   Uint32 __malloc_sbrk_base;
-   
-	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)_bend; dst++)
-		*dst = 0;	 */
- /*   for (dst = (Uint8 *)&_bend; dst < (Uint8 *)OVLADDR; dst++)
-//		if(	!(dst>=0x6003500 && dst <0x6004000))
-		*dst = 0;
- */ 
 //	nBurnLinescrollSize = 0x400;//0x400
 //	nBurnSprites = 131;
 //	INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
@@ -356,11 +325,8 @@ static void ss_main(void)
 	initSound();
 	CSH_Init(CSH_4WAY);
 //	SPR_InitSlaveSH();
-//	slob_init();
 	initSaturn();
-//	BurnLibInit();
 	BurnDrvAssignList();
-//	testTga();
 
 #ifndef ACTION_REPLAY
 	if(FntAsciiFontData2bpp==NULL)
@@ -379,7 +345,6 @@ static void VDP2_InitVRAM(void)
 {
 	memset4_fast(SCL_VDP2_VRAM_A0,0x0000,0x40000);
 	memset4_fast(SCL_VDP2_VRAM_B0,0x0000,0x40000);
-//	memset(SCL_VDP2_VRAM_B1,0x00,0x20000);
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 static void load_img(int id)
@@ -405,7 +370,7 @@ void wait_key(Uint8 key)
 	}while((pltrigger[0] & PER_DGT_B)==0) ;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static unsigned char update_input(unsigned int *current_page,unsigned char *loaded)
+static unsigned char update_input(unsigned int *current_page,unsigned char *loaded, unsigned char *modified)
 {
 	unsigned int i=0;
 	SysDevice	*device;
@@ -427,64 +392,47 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 				{
 					case PER_DGT_A: 
 					load_img(1);
+					modified[0] = 1;
 					break;
 
 					case PER_DGT_C: 
 					load_img(2);
+					modified[0] = 1;
 					break;
 
 					case PER_DGT_D: 
 					if(nBurnDrvSelect < nBurnDrvCount-1 && nBurnDrvSelect < ((*current_page) * GAME_BY_PAGE)-1) nBurnDrvSelect++;
+					modified[0] = 1;
 //					else								 nBurnDrvSelect=0;
 					break;
 
 					case PER_DGT_U:
 					if(nBurnDrvSelect >  ((*current_page)-1) * GAME_BY_PAGE)	nBurnDrvSelect--;
+					modified[0] = 1;
 //					else						nBurnDrvSelect=nBurnDrvCount-1;
 					break;
 
 					case PER_DGT_L: 
 					if(*current_page > 1) nBurnDrvSelect = (--(*current_page)-1) * GAME_BY_PAGE;
+					modified[0] = 1;
 					break;
 
 					case PER_DGT_R: 
 					if(*current_page * GAME_BY_PAGE  < nBurnDrvCount) nBurnDrvSelect = (++(*current_page)-1) * GAME_BY_PAGE;
+					modified[0] = 1;
 					break;
 
 					case PER_DGT_S:
 					run_fba_emulator();
 					loaded[0] = 0;
-/*
-                0x0000000006019acc                ___malloc_current_mallinfo
-                0x0000000006019af4                ___malloc_max_total_mem
-                0x0000000006019af8                ___malloc_max_sbrked_mem
-                0x0000000006019afc                ___malloc_top_pad
-*/
-/*
-	char toto[50];
-	extern int __malloc_max_total_mem;
-	extern int __malloc_max_sbrked_mem;
-	extern Uint32 __malloc_sbrk_base;
-	extern mallinfo  __malloc_current_mallinfo;
+					modified[0] = 1;
 
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
+//	 heapWalk();
 
-	sprintf (toto,"arena %08x",__malloc_current_mallinfo.arena) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,171);
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
 
-	sprintf (toto,"ordblks %08x",__malloc_current_mallinfo.ordblks) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,181);
-
-	sprintf (toto,"hblks %08x",__malloc_current_mallinfo.hblks) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,191);
-
-	sprintf (toto,"hblkhd %08x",__malloc_current_mallinfo.hblkhd) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,201);
-
-	sprintf (toto,"keepcost %08x",__malloc_current_mallinfo.keepcost) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
-  */
+  
 					break;
 
 					default:
@@ -510,35 +458,11 @@ static void display_menu(void)
 
 //	sc_init();
 //	the_loop = 1;
-	/*
-	char toto[50];
-	extern int __malloc_max_total_mem;
-	extern int __malloc_max_sbrked_mem;
-	extern Uint32 __malloc_sbrk_base;
-	extern int __malloc_trim_threshold;
-	extern mallinfo  __malloc_current_mallinfo;
 
-	__malloc_trim_threshold = 1024;
+//	heapWalk();
 
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
-
-	sprintf (toto,"arena %08x",__malloc_current_mallinfo.arena) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,181);
-
-	sprintf (toto,"malloc_trim_threshold %08x",__malloc_trim_threshold) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,191);
-
-	sprintf (toto,"uordblks %08x",__malloc_current_mallinfo.uordblks) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,201);
-
-	sprintf (toto,"fordblks %08x",__malloc_current_mallinfo.fordblks) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
-
-	sprintf (toto,"keepcost %08x",__malloc_current_mallinfo.keepcost) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,221);
-	  */
 	unsigned int current_page = 1,m;
+	unsigned char modified = 1;
 	do
 	{
 		if(!loaded)
@@ -547,21 +471,9 @@ static void display_menu(void)
 			load_img(0);	
 			loaded=1;
 
-   char toto[100];
-/*			if(nBurnMallocAddr == 0)
-			{
-				nBurnMallocAddr = sbrk(0);
-			}
-
-			newBurnMallocAddr = sbrk(0);
-
-			if(newBurnMallocAddr-0x60000 > nBurnMallocAddr)
-			{
-				sbrk(nBurnMallocAddr-newBurnMallocAddr-0x10000);
-			}		   */
-//			memset(0,nBurnMallocAddr,newBurnMallocAddr-nBurnMallocAddr);
-			sprintf (toto,"sbrk %08x",sbrk(0)) ;
-			FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
+//			char toto[100];
+//			sprintf (toto,"sbrk %08x",sbrk(0)) ;
+//			FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
 		}
 		m=0;
 //		char page_header[50];
@@ -569,23 +481,27 @@ static void display_menu(void)
 //		sprintf(page_header,"Game list:                       %02d/%02d",current_page, (nBurnDrvCount+GAME_BY_PAGE-1)/GAME_BY_PAGE);
 //		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)page_header,12,12);
 
-		for (l=(current_page-1)*GAME_BY_PAGE;l<(current_page)*GAME_BY_PAGE && l<nBurnDrvCount;l++ )
+		if(modified==1)
 		{
-			sprintf(game_name,"%-38s",pDriver[l]->szFullNameA);
-			if(l==nBurnDrvSelect)	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);	  //12+m
-			else					 FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
-			m+=10;
-		}
+			for (l=(current_page-1)*GAME_BY_PAGE;l<(current_page)*GAME_BY_PAGE && l<nBurnDrvCount;l++ )
+			{
+				sprintf(game_name,"%-38s",pDriver[l]->szFullNameA);
+				if(l==nBurnDrvSelect)	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);	  //12+m
+				else					 FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
+				m+=10;
+			}
 
-		for (;l<(current_page)*GAME_BY_PAGE;l++ )
-		{
-			sprintf(game_name,"%-38s"," ");
-			FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
-			m+=10;
+			for (;l<(current_page)*GAME_BY_PAGE;l++ )
+			{
+				sprintf(game_name,"%-38s"," ");
+				FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
+				m+=10;
+			}
+			modified=0;
 		}
 //		__port = PER_OpenPort();
 
-		update_input(&current_page,&loaded);
+		update_input(&current_page,&loaded,&modified);
 		//sc_check();
 //		scd_logout("display_menu",0);
 
@@ -1803,29 +1719,31 @@ static void run_fba_emulator()
 		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Corrupt/Missing ROM(s)\n- I/O Error\n- Memory error\n\n",1,190);
 //		while(1);
 	}
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                      ",16,40);
-	InpInit();
-	InpDIP();
-	play = 1;
-	drvquit = 0;
-//	PCM_Start(pcm);
-	PCM_MeSetVolume(pcm,255);
-	PCM_DrvChangePcmPara(pcm,-1,-1);
-//	PER_SMPC_SND_ON();
-	SetVblank(); // a garder
-
-	while (play)
+	else
 	{
-//		BurnDrvFrame();
-		pDriver[nBurnDrvSelect]->Frame();		// Forward to drivers function
-		SCL_SetLineParam2(&lp);
-		_spr2_transfercommand();
-		frame_x++;
+		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                      ",16,40);
+		InpInit();
+		InpDIP();
+		play = 1;
+		drvquit = 0;
+	//	PCM_Start(pcm);
+		PCM_MeSetVolume(pcm,255);
+		PCM_DrvChangePcmPara(pcm,-1,-1);
+	//	PER_SMPC_SND_ON();
+		SetVblank(); // a garder
 
-//		 if(frame_x>=frame_y)
-//			wait_vblank();
+		while (play)
+		{
+	//		BurnDrvFrame();
+			pDriver[nBurnDrvSelect]->Frame();		// Forward to drivers function
+			SCL_SetLineParam2(&lp);
+			_spr2_transfercommand();
+			frame_x++;
+
+	//		 if(frame_x>=frame_y)
+	//			wait_vblank();
+		}
 	}
-
 	if(drvquit==1)
 	{
 		InpExit();
@@ -1926,3 +1844,64 @@ int vspfunc(char *format, ...)
    return(ret);
 }
 */
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+#if 0
+extern UINT32  end;
+extern UINT32  __malloc_free_list;
+extern UINT32  _sbrk(int size);
+
+void heapWalk(void)
+{
+    UINT32 chunkNumber = 1;
+    // The __end__ linker symbol points to the beginning of the heap.
+    UINT32 chunkCurr = (UINT32)&end;
+    // __malloc_free_list is the head pointer to newlib-nano's link list of free chunks.
+    UINT32 freeCurr = __malloc_free_list;
+    // Calling _sbrk() with 0 reserves no more memory but it returns the current top of heap.
+    UINT32 heapEnd = _sbrk(0);
+    
+//    printf("Heap Size: %lu\n", heapEnd - chunkCurr);
+    char toto[200];
+	sprintf (toto,"Heap Size: %d  e%08x s%08x                     \n", heapEnd - chunkCurr,heapEnd, chunkCurr) ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,121);
+
+    // Walk through the chunks until we hit the end of the heap.
+    while (chunkCurr < heapEnd)
+    {
+        // Assume the chunk is in use.  Will update later.
+        int      isChunkFree = 0;
+        // The first 32-bit word in a chunk is the size of the allocation.  newlib-nano over allocates by 8 bytes.
+        // 4 bytes for this 32-bit chunk size and another 4 bytes to allow for 8 byte-alignment of returned pointer.
+        UINT32 chunkSize = *(UINT32*)chunkCurr;
+        // The start of the next chunk is right after the end of this one.
+        UINT32 chunkNext = chunkCurr + chunkSize;
+        
+        // The free list is sorted by address.
+        // Check to see if we have found the next free chunk in the heap.
+        if (chunkCurr == freeCurr)
+        {
+            // Chunk is free so flag it as such.
+            isChunkFree = 1;
+            // The second 32-bit word in a free chunk is a pointer to the next free chunk (again sorted by address).
+            freeCurr = *(UINT32*)(freeCurr + 4);
+        }
+        
+        // Skip past the 32-bit size field in the chunk header.
+        chunkCurr += 4;
+        // 8-byte align the data pointer.
+        chunkCurr = (chunkCurr + 7) & ~7;
+        // newlib-nano over allocates by 8 bytes, 4 bytes for the 32-bit chunk size and another 4 bytes to allow for 8
+        // byte-alignment of the returned pointer.
+        chunkSize -= 8;
+//        printf("Chunk: %lu  Address: 0xlX  Size: %lu  %s\n", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "");
+        
+	sprintf (toto,"%d A%04x  S%04d %s", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "") ;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,2,121+chunkNumber*10);
+		
+		chunkCurr = chunkNext;
+        chunkNumber++;
+    }
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"done",12,131);
+}
+#endif

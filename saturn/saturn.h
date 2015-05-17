@@ -288,7 +288,7 @@ static int InpMake(unsigned int key[]);
 static void run_fba_emulator(void);
 static void wait_vblank(void);
 static void do_keypad(void);
-static unsigned char update_input(unsigned int *current_page, unsigned char *loaded);
+static unsigned char update_input(unsigned int *current_page, unsigned char *loaded, unsigned char *modified);
 static void display_menu(void);
 static void loadLogo(void);
 static void	SCL_ScrollShow(void);

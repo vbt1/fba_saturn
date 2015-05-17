@@ -1,10 +1,15 @@
+MEMORY 
+  {
+  ram  : ORIGIN = 0x6000000, l = 1M
+  }
+
 SECTIONS {
 
 	.stack 0x6002000 (NOLOAD):
 	{
 	        *(.stack)
          	_stack = .;
-	} 
+	} > ram
 
 	.shared 0x6003500 (NOLOAD):
 	{
@@ -25,12 +30,12 @@ SECTIONS {
 		_SclProcess = . + 56;
 		_SclColRamAlloc256 = . + 60;
 		_shared = . + 92;
-	} 
+	} > ram
 
         .entry 0x06004000 :
         {
 		*(.entry)
-        } 
+        } > ram
 
 	.text ALIGN(4) :
 	{
@@ -54,13 +59,13 @@ SECTIONS {
                 *("SEGA_D")
                 . = ALIGN(4);
 
-	} 
+	} > ram
 
 	.rodata  :			
 	{			
 		*(.rodata)	
 		. = ALIGN(4);
-	} 
+	} > ram
 	
 	.bss  ALIGN(4) (NOLOAD):
 	{
@@ -75,11 +80,10 @@ SECTIONS {
 		_bss_end = . ;
 		__bend = . ;
 		_end = .;
- 	}
+ 	} > ram
 	
 	.overlay 0x060B4000:
         {
                 _overlaystart = .;
-        }
-
+        } > ram
 }

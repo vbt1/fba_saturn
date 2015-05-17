@@ -23,5 +23,3 @@ unsigned char TMS9928AReadRegs();
 
 void TMS9928AWriteVRAM(int data);
 unsigned char TMS9928AReadVRAM();
-
-int TMS9928AScan(int nAction, int *pnMin);

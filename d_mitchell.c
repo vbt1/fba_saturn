@@ -1119,4 +1119,3 @@ DrvChars = DrvSprites = MSM6295ROM = NULL;
 #endif
 	return 0;
 }
-
