@@ -35,7 +35,7 @@ static inline void load_credits()
 	}
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Credits (no order)",20,40);
 
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"FBalpha team (barry,iq,dink,groepaz)",20,60);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"FBalpha team (barry,iq,dink), groepaz",20,60);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"cafe-alpha for satcom, devcard & help",20,70);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"redringrico for new saturn sdk",20,80);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"cgfm2 for his help (SMS Plus)",20,90);
@@ -44,7 +44,7 @@ static inline void load_credits()
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Fox68k for his help on FAZE",20,120);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"All #smspower members for support",20,130);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"segaxtreme for docs, tools and help",20,140);
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"yabause team (guile,piratero,bluecrab)",20,150);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"yabause team (guile,mrkotfw,bluecrab)",20,150);
 
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Screw list",20,170);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"CyberwarriorX",20,190);
