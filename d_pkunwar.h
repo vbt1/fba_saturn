@@ -39,10 +39,13 @@ static INT32 watchdog;
 /*static*/ int DrvFrame();
 /*static*/ int DrvExit();
  /*static*/ int DrvInit();
- static INT32 NovaInit();
- static INT32 NovaFrame();
- static INT32 NovaDraw();
- static void DrvGfxDescramble(UINT8 *gfx);
+static INT32 NovaInit();
+static INT32 NovaFrame();
+static INT32 NovaDraw();
+static void DrvGfxDescramble(UINT8 *gfx);
+static void bg_line(UINT16 offs,UINT8 *ram_base);
+static void fg_line(UINT16 offs,UINT8 *ram_base);
+static void nova_draw_sprites(INT32 color_base);
 //-------------------------------------------------------------------------------------------------
 // Input Handlers
 /*static*/ struct BurnInputInfo DrvInputList[] = {

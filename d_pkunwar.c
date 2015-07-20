@@ -105,6 +105,26 @@ static UINT8 __fastcall nova2001_read(UINT16 address)
 
 static void __fastcall nova2001_write(UINT16 address, UINT8 data)
 {
+	if(address>=0xa800 && address<=0xafff)
+	{
+		if(DrvMainROM[address]!=data)
+		{
+			DrvMainROM[address]=data;
+			bg_line(address &0x3ff,DrvBgRAM);
+		}
+		return;
+	}
+
+	if(address>=0xa000 && address<=0xa7ff)
+	{
+		if(DrvMainROM[address]!=data)
+		{
+			DrvMainROM[address]=data;
+			fg_line(address &0x3ff,DrvFgRAM);
+		}
+		return;
+	}
+
 	switch (address)
 	{
 		case 0xbfff:
@@ -346,7 +366,6 @@ static UINT8 nova2001_port_4(UINT32 data)
 {
 	UINT8 *tmp = (UINT8*)0x00240000;
 	memset(tmp,0x00,0x20000);
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"NovaLoadRoms strt     ",12,201);
 	if (BurnLoadRom(DrvMainROM + 0x0000, 0, 1)) return 1;
 	if (BurnLoadRom(DrvMainROM + 0x2000, 1, 1)) return 1;
 	if (BurnLoadRom(DrvMainROM + 0x4000, 2, 1)) return 1;
@@ -357,10 +376,8 @@ static UINT8 nova2001_port_4(UINT32 data)
 	if (BurnLoadRom(tmp + 0x0001, 5, 2)) return 1;
 	if (BurnLoadRom(tmp + 0x4000, 6, 2)) return 1;
 	if (BurnLoadRom(tmp + 0x4001, 7, 2)) return 1;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"NovaLoadRoms end     ",12,201);
 
 	nova_gfx_decode(tmp);
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"pkunwar_gfx_decode     ",12,211);
 
 	if (BurnLoadRom(DrvColPROM, 8, 1)) return 1;
 
@@ -472,10 +489,10 @@ static INT32 NovaInit()
 	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM);
 
 	CZetMapArea(0xa000, 0xa7ff, 0, DrvFgRAM);
-	CZetMapArea(0xa000, 0xa7ff, 1, DrvFgRAM);
+//	CZetMapArea(0xa000, 0xa7ff, 1, DrvFgRAM);
 
 	CZetMapArea(0xa800, 0xafff, 0, DrvBgRAM);
-	CZetMapArea(0xa800, 0xafff, 1, DrvBgRAM);
+//	CZetMapArea(0xa800, 0xafff, 1, DrvBgRAM); // write
 
 	CZetMapArea(0xb000, 0xb7ff, 0, DrvSprRAM);
 	CZetMapArea(0xb000, 0xb7ff, 1, DrvSprRAM);
@@ -493,10 +510,7 @@ static INT32 NovaInit()
 
     AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, &nova2001_scroll_x_w, &nova2001_scroll_y_w);
     AY8910Init(1, 2000000, nBurnSoundRate, &nova2001_port_3, &nova2001_port_4, NULL, NULL);
-/*
-	AY8910Init(0, 1500000, nBurnSoundRate, &pkunwar_port_0, &pkunwar_port_1, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, &pkunwar_port_2, &pkunwar_port_3, NULL, NULL);
-*/
+
 	DrvDoReset();
 
 	return 0;
@@ -534,7 +548,9 @@ static INT32 NovaInit()
 	scfg.plate_addr[0] = SCL_VDP2_VRAM_A1;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
-	SCL_SetCycleTable(CycleTb);	
+	SCL_SetCycleTable(CycleTb);
+
+	memset(SCL_VDP2_VRAM_B0,0x00,0x2000);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initPosition()
@@ -747,24 +763,28 @@ static INT32 NovaFrame()
 	}
 
 	vblank = 0;
-	INT32 nInterleave = 256;
+//	INT32 nInterleave = 256;
+	INT32 nInterleave = 32;
 	INT32 nCyclesTotal = 3000000 / 60;
 
+ 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
+
 	CZetOpen(0);
-	for (INT32 i = 0; i < nInterleave; i++) {
+	for (INT32 i = 0; i < nInterleave; i++) 
+	{
 		CZetRun(nCyclesTotal / nInterleave);
-		if (i == 240) {
+//		if (i == 240) 
+		if (i == 30) 
+		{
 			CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 			vblank = 0x80;
 		}
 	}
 	CZetClose();
- 
-//	AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDraw      ",12,201);
-	
- 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
-	NovaDraw();
+
+	ss_reg->n2_move_x =   xscroll-8;
+	ss_reg->n2_move_y =  yscroll+32 ;
+	nova_draw_sprites(0x000);
 
 	SPR_WaitEndSlaveSH();
 	return 0;
@@ -838,47 +858,76 @@ static void draw_layer(UINT8 *ram_base, UINT16 *gfx_base, INT32 config, INT32 co
 		break;
 	}
 
+	if (enable_scroll) 
+	{
+		ss_reg->n2_move_x =   xscroll-8;
+		ss_reg->n2_move_y =  yscroll+32 ;
+	}
+
 	for (INT32 offs = 0; offs < 32 * 32; offs++)
 	{
-		INT32 sx = (offs & 0x1f);
-		INT32 sy = (offs / 0x20) <<6;
-
-		if (enable_scroll) 
+//		if(bg_dirty[offs])
 		{
-			ss_reg->n2_move_x =   xscroll-8;
-			ss_reg->n2_move_y =  yscroll+32 ;
+//			bg_dirty[offs]=0;
+			INT32 sx = (offs & 0x1f);
+			INT32 sy = (offs / 0x20) <<6;
+
+			INT32 code = ram_base[offs + 0x000];
+			INT32 attr = ram_base[offs + 0x400];
+
+			INT32 color = (attr & color_mask) >> color_shift;
+
+			INT32 group = 0;
+
+			if (group_select_bit != -1) {
+				group = (attr >> group_select_bit) & 1;
+
+				if (group != priority) continue;
+			}
+
+			if (code_extend != -1) code |= ((attr >> code_extend_shift) & code_extend) << 8;
+			if (config==6) {//dink
+				code = ram_base[offs + 0x000] + ((attr & 0x01) << 8);
+				color = (attr >> 4) & 0x0f;
+			}
+			if(config==0)
+			{
+				code+=0x200;
+				ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = (color) <<12 | code;
+			}
+			ss_map[sx|sy] = color <<12 | code;
 		}
-
-		INT32 code = ram_base[offs + 0x000];
-		INT32 attr = ram_base[offs + 0x400];
-
-		INT32 color = (attr & color_mask) >> color_shift;
-
-		INT32 group = 0;
-
-		if (group_select_bit != -1) {
-			group = (attr >> group_select_bit) & 1;
-
-			if (group != priority) continue;
-		}
-
-		if (code_extend != -1) code |= ((attr >> code_extend_shift) & code_extend) << 8;
-		if (config==6) {//dink
-			code = ram_base[offs + 0x000] + ((attr & 0x01) << 8);
-			color = (attr >> 4) & 0x0f;
-		}
-		if(config==0)
-		{
-			code+=0x200;
-			ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = (color) <<12 | code;
-		}
-//		else
-//		{
-//			UINT8 *tmp = (UINT8*)0x00200000;
-//			tmp[offs]=0xff;
-//		}
-		ss_map[sx|sy] = color <<12 | code;
 	}
+}
+
+static void fg_line(UINT16 offs,UINT8 *ram_base)
+{
+	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_A0;
+	INT32 sx = (offs & 0x1f);
+	INT32 sy = (offs / 0x20) <<6;
+
+	INT32 code = ram_base[offs + 0x000];
+	INT32 attr = ram_base[offs + 0x400];
+
+	INT32 color = (attr & 0x0f);
+	INT32 group = (attr >> 4) & 1;
+
+	if (group != 0) return;
+	ss_map[sx|sy] = color <<12 | code;
+}
+
+static void bg_line(UINT16 offs,UINT8 *ram_base)
+{
+	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_B0;
+	INT32 sx = (offs & 0x1f);
+	INT32 sy = (offs / 0x20) <<6;
+
+	INT32 code = ram_base[offs + 0x000] + 0x200;
+	INT32 attr = ram_base[offs + 0x400];
+	INT32 color = (attr & 0x0f);
+
+	ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = (color) <<12 | code;
+	ss_map[sx|sy] = color <<12 | code;
 }
 
 static void nova_draw_sprites(INT32 color_base)
@@ -911,11 +960,12 @@ static void nova_draw_sprites(INT32 color_base)
 static INT32 NovaDraw()
 {
 
-	draw_layer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 0, 0x100, 0);
+//	draw_bglayer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 0, 0x100, 0);
 
-	nova_draw_sprites(0x000);
+//	nova_draw_sprites(0x000);
 
-	draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 1, 0x000, 0);
+//	draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 1, 0x000, 0);
+//	draw_fglayer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 1, 0x000, 0);
 //	draw_layer(DrvFgRAM, DrvGfxROM0 + 0x0000, 1, 0x000, 1);
 
 	return 0;
