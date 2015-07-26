@@ -23,8 +23,8 @@
 int ay8910_index_ym = 0;
 /*static*/ int num = 0, ym_num = 0;
 
-/*static*/ double AY8910Volumes[3 * 6];
-/*static*/ int AY8910RouteDirs[3 * 6];
+/*static*/ //double AY8910Volumes[3 * 6];
+/*static*/ //int AY8910RouteDirs[3 * 6];
 
 struct AY8910
 {
@@ -379,8 +379,17 @@ void AY8910Update(int chip, signed short **buffer, int length)
 		if (PSG->CountN <= length*STEP) PSG->CountN += length*STEP;
 
 	outn = (PSG->OutputN | PSG->Regs[AY_ENABLE]);
+										 /*
+<MartinMan> if (length != 0) {
+<MartinMan> while (true) { ... ; length--; if (length == 0) break;}
+<MartinMan> one less jump
+<MartinMan> The first if is only done once before the loop
+* Arnjeir has joined #smspower
+<MartinMan> The outn seems to be some channel-enable. You could leave the second case out and instead set a temporary volume to 0, so that at the end 0 is added.
+<MartinMan> That way you optimize it to all-channels-on.
+<MartinMan> There's the "update envelope" code, which does something to the volumes, care must be taken there
 
-
+										*/
 	/* buffering loop */
 	while (length)
 	{
@@ -581,7 +590,12 @@ void AY8910Update(int chip, signed short **buffer, int length)
 		length--;
 	}
 }
-
+/*
+<MartinMan> vola, volb, volc should be unsigned
+<MartinMan> right now at the end of the loop it's going to make unsigned multiplication
+<MartinMan> signed I mean, instead of unsigned
+<MartinMan> unsigned can be faster
+*/
 
 void AY8910_set_clock(int chip, int clock)
 {
@@ -713,6 +727,6 @@ void AY8910SetRoute(int chip, int nIndex, double nVolume, int nRouteDir)
 #endif
 #endif
 	
-	AY8910Volumes[(chip * 3) + nIndex] = nVolume;
-	AY8910RouteDirs[(chip * 3) + nIndex] = nRouteDir;
+//	AY8910Volumes[(chip * 3) + nIndex] = nVolume;
+//	AY8910RouteDirs[(chip * 3) + nIndex] = nRouteDir;
 }

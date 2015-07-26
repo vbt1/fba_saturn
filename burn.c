@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 27
+#define NB_DRV 29
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -97,6 +97,8 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvsg1k_wboy = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvBombjack = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvNova2001u = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvNinjakun = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvRaiders5 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System";
@@ -230,9 +232,19 @@ BurnDrvNova2001u.szShortName="nova2001";
 BurnDrvNova2001u.szFullNameA="Nova 2001 (US)";
 BurnDrvNova2001u.szParent="pkunw";
 
+BurnDrvNinjakun.szShortName="ninjakun";
+BurnDrvNinjakun.szFullNameA="Ninjakun Majou no Bouken";
+BurnDrvNinjakun.szParent="pkunw";
+
+BurnDrvRaiders5.szShortName="raiders5";
+BurnDrvRaiders5.szFullNameA="Raiders5";
+BurnDrvRaiders5.szParent="pkunw";
+
 int i=0;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsg1k_wboy;
+pDriver[i++] = &BurnDrvRaiders5;
+pDriver[i++] = &BurnDrvNinjakun;
 pDriver[i++] = &BurnDrvNova2001u;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlockgal;
