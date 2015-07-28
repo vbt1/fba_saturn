@@ -1,7 +1,7 @@
 // FB Alpha Penguin-Kun Wars Driver Module
 // Based on MAME Driver by David Haywood and Phil Stroffolino
 #define CZ80 1
-#define RAZE 1  // `EMULATE_R_REGISTER obligatoire
+//#define RAZE 1  // `EMULATE_R_REGISTER obligatoire
 
 #include "d_pkunwar.h"
 
@@ -732,19 +732,30 @@ static UINT8 raiders5_port_0(UINT32 data)
 	if (BurnLoadRom(DrvMainROM + 0x0000,  0, 1)) return 1;
 	if (BurnLoadRom(DrvMainROM + 0x4000,  1, 1)) return 1;
 	if (BurnLoadRom(DrvSubROM  + 0x0000,  2, 1)) return 1;
-	if (BurnLoadRom(tmp + 0x0000,  3, 1)) return 1;
-	if (BurnLoadRom(tmp + 0x4000,  4, 1)) return 1;
-	if (BurnLoadRom(tmp + 0x8000,  5, 1)) return 1;
+	if (BurnLoadRom(DrvGfxROM0 + 0x0000,  3, 1)) return 1;
+	if (BurnLoadRom(DrvGfxROM0 + 0x4000,  4, 1)) return 1;
+	if (BurnLoadRom(DrvGfxROM0 + 0x8000,  5, 1)) return 1;
 
-	nova_gfx_decode(tmp);
+	for (INT32 i = 0; i < 8; i++) {
+		int j = ((i & 1) << 2) | ((i >> 1) & 3);
+		memcpy (tmp + j * 0x2000, DrvGfxROM0 + i * 0x2000, 0x2000);
+	}
+
+	pkunwar_gfx_decode(tmp);
 	tmp = NULL;
-/*
+/* raiders5
 	DrvGfxDescramble(DrvGfxROM0);
 	DrvGfxDescramble(DrvGfxROM2);
 	DrvGfxDecode(DrvGfxROM0, DrvGfxROM1, 1);
 	DrvGfxDecode(DrvGfxROM0, DrvGfxROM0, 0);
 
 	DrvGfxDecode(DrvGfxROM2, DrvGfxROM2, 0);
+	pkunw
+		DrvGfxDescramble(DrvGfxROM0);
+
+		DrvGfxDecode(DrvGfxROM0, DrvGfxROM1, 1);
+		DrvGfxDecode(DrvGfxROM0, DrvGfxROM0, 0);
+
 */
 	return 0;
 }
@@ -753,8 +764,8 @@ static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 	DrvMainROM	 = Next; Next += 0x010000;
-	DrvSubROM	= Next; Next += 0x020000;
-	DrvGfxROM0	= Next; Next += 0x030000;
+	DrvSubROM	= Next; Next += 0x010000;
+	DrvGfxROM0	= Next; Next += 0x020000;
 	DrvColPROM= Next; Next += 0x000020;
 	pFMBuffer	= Next; Next += SOUND_LEN * 6 * sizeof(short);
 	MemEnd	= Next;
@@ -908,7 +919,7 @@ static INT32 NinjakunInit()
 	DrvPalRAM = DrvMainROM + 0xd800;
 	DrvMainRAM = DrvMainROM + 0xe000;
 	DrvSubRAM = DrvMainROM += 0xe800;
-	DrvSubROM = DrvMainROM += 0x010000;
+//	DrvSubROM = DrvMainROM += 0x010000;
 
 	NinjakunLoadRoms();
 
@@ -1031,7 +1042,7 @@ static INT32 Raiders5Init()
 	DrvBgRAM = DrvMainROM + 0x9000;
 	DrvPalRAM = DrvMainROM + 0xd000;
 	DrvMainRAM = DrvMainROM + 0xe000;
-	DrvSubROM = DrvMainROM += 0x010000;
+//	DrvSubROM = DrvMainROM += 0x010000;
 
 	if (Raiders5LoadRoms()) return 1;
 
@@ -1061,7 +1072,7 @@ static INT32 Raiders5Init()
 
 	CZetClose();
 
-	CZetInit(1);
+//	CZetInit(1);
 	CZetOpen(1);
 	CZetSetInHandler(raiders5_in); // a verifier
 	CZetSetReadHandler(raiders5_sub_read);
@@ -1085,8 +1096,8 @@ static INT32 Raiders5Init()
 	AY8910Init(0, 1500000, nBurnSoundRate, &raiders5_port_0, &pkunwar_port_1, NULL, NULL);
 	AY8910Init(1, 1500000, nBurnSoundRate, &nova2001_port_3, &nova2001_port_4, NULL, NULL);
 
-	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
-	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
 
 //	GenericTilesInit();
 
@@ -1420,9 +1431,10 @@ nova_draw_sprites(0x200);
 
 static INT32 NinjakunFrame()
 {
-	if (DrvReset) {
+/*	if (DrvReset) {
 		NinjakunDoReset();
 	}
+	*/
 	watchdog++;
 
 	memset (DrvInputs, 0xff, 3);
@@ -1434,26 +1446,29 @@ static INT32 NinjakunFrame()
 
 	vblank = 0;
 	INT32 nInterleave = 256;
-	INT32 nCyclesTotal = 3000000 / 60;
+	INT32 nCyclesTotal = 3000000 / 60 /2;
 	INT32 nCyclesDone = 0, nCyclesTotalZ =0;
 	for (INT32 i = 0; i < nInterleave; i++) {
 		CZetOpen(0);
 		CZetRun(nCyclesTotal / nInterleave);
 		INT32 sync_cycles = CZetTotalCycles();
 		if (i == 250) {
+//			CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
+
 //			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
-			CZetSetIRQLine(0, 1);
+/*			CZetSetIRQLine(0, 1);
 			CZetRun(100);
 			CZetSetIRQLine(0, 0);
-			CZetRun(0);
-
+			CZetRun(1);
+*/
+			CZetRaiseIrq(0);
 			vblank = 1;
 		}
 		CZetClose();
 
 #ifdef RAZE
 //		ZetOpen(1);
-		nCyclesDone = z80_emulate(nCyclesTotal / nInterleave);//sync_cycles - nCyclesTotalZ);
+		nCyclesDone = z80_emulate(nCyclesTotal / nInterleave);
 //		nCyclesTotalZ+= nCyclesDone;
 //		ZetRun(sync_cycles - ZetTotalCycles());
 		if (i == 63 || i == 127 || i == 195 || i == 255) {
@@ -1467,18 +1482,23 @@ static INT32 NinjakunFrame()
 //		ZetClose();
 #else
 		CZetOpen(1);
-		CZetRun(sync_cycles - CZetTotalCycles());
+//		CZetRun(sync_cycles - CZetTotalCycles());
+		CZetRun(nCyclesTotal / nInterleave);
 
 		if (i == 63 || i == 127 || i == 195 || i == 255) {
+//			CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
+
 //			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
-			CZetSetIRQLine(0, 1);
+/*			CZetSetIRQLine(0, 1);
 			CZetRun(100);
 			CZetSetIRQLine(0, 0);
-			CZetRun(0);
-
+			CZetRun(1);
+*/
+			CZetRaiseIrq(0);
 		}
 
 		CZetClose();
+
 #endif
 
 
@@ -1503,10 +1523,10 @@ static INT32 NinjakunFrame()
 
 static INT32 Raiders5Frame()
 {
-	if (DrvReset) 
+/*	if (DrvReset) 
 	{
 		NinjakunDoReset();
-	}
+	}	*/
 	watchdog++;
 
 	memset (DrvInputs, 0xff, 2);
@@ -1519,7 +1539,7 @@ static INT32 Raiders5Frame()
 	vblank = 0;
 	//INT32 Multiplier = 8; // needs high multiplier for inter-processor communication w/shared memory
 	INT32 nInterleave = 2000; //256*Multiplier;
-	INT32 nCyclesTotal = 3000000 / 60;
+	INT32 nCyclesTotal = 3000000 / 60 /2;
 
 	for (INT32 i = 0; i < nInterleave; i++) 
 	{
@@ -1527,12 +1547,7 @@ static INT32 Raiders5Frame()
 		CZetRun(nCyclesTotal / nInterleave);
 		//INT32 sync_cycles = ZetTotalCycles();
 		if (i == 1880) {
-//			CZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
-			CZetSetIRQLine(0, 1);
-			CZetRun(100);
-			CZetSetIRQLine(0, 0);
-			CZetRun(0);
-
+			CZetRaiseIrq(0);
 			vblank = 1;
 		}
 		CZetClose();
@@ -1540,11 +1555,7 @@ static INT32 Raiders5Frame()
 		CZetOpen(1);
 		CZetRun(nCyclesTotal / nInterleave);//sync_cycles - ZetTotalCycles());
 		if (i%(nInterleave/4) == (nInterleave/4)-10) {
-//			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
-			CZetSetIRQLine(0, 1);
-			CZetRun(100);
-			CZetSetIRQLine(0, 0);
-			CZetRun(0);
+			CZetRaiseIrq(0);
 		}
 		CZetClose();
 	}
