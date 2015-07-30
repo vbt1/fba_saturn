@@ -53,6 +53,7 @@ static UINT8 __fastcall raiders5_main_read(UINT16 address)
 	if(address >= 0x9000 && address <= 0x97ff)
 	{
 		return DrvBgRAM[(((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400)];
+//		return DrvBgRAM[address];
 	}
 
 	if(address >= 0xd000 && address <= 0xd1ff)
@@ -86,8 +87,52 @@ static void DrvPalRAMUpdateR5()
         g =  (g >>3);
         b =  (b >>3);
 
-		colAddr[i] = colBgAddr[i] = RGB(r,g,b);
+		colAddr[i] = RGB(r,g,b);
+
+//		(i>=0x200) colBgAddr[i-0x200]= RGB(r,g,b);
 	}
+}
+
+static void fg_raiders5_line(UINT16 offs,UINT8 *ram_base)
+{
+	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_A0;
+	INT32 sx = (offs & 0x1f);
+	INT32 sy = (offs / 0x20) <<6;
+
+	INT32 attr = ram_base[offs + 0x400];
+	INT32 code = ram_base[offs + 0x000];// | (attr & 1) << 8;
+	INT32 color = (attr & 0xf0) >> 4;
+
+	ss_map[sx|sy] = color <<12 | code;
+}
+
+static void bg_raiders5_line(UINT16 offs,UINT8 *ram_base)
+{
+	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_B0;
+	INT32 sx = (offs & 0x1f);
+	INT32 sy = (offs / 0x20) <<6;
+ // DrvMainROM[0x8c00 + offs] & 7
+		INT32 code = ram_base[offs + 0x000];
+		INT32 attr = ram_base[offs + 0x400];
+		code = ram_base[offs + 0x000] + ((attr & 0x01) << 8) + 0x400;
+		INT32 color = 0;//(attr >> 4) & 0x0f;
+
+
+	ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = (color) <<12 | code;
+//	ss_map[sx|sy] = color <<12 | code;
+
+/*
+				code = ram_base[offs + 0x000] + ((attr & 0x01) << 8);
+				color = (attr >> 4) & 0x0f;
+
+
+			code_extend = 1;
+			code_extend_shift = 0;
+			color_shift = 4;
+			enable_scroll = 1;
+			color_mask = 0x0f;
+			xskew = 8;
+*/
 }
 
 static void __fastcall raiders5_main_write(UINT16 address, UINT8 data)
@@ -95,6 +140,29 @@ static void __fastcall raiders5_main_write(UINT16 address, UINT8 data)
 	if(address >= 0x9000 && address <= 0x97ff)
 	{
 		DrvBgRAM[(((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400)] = data;
+		return;
+	}
+
+	if(address>=0x9000 && address<=0x97ff)
+	{
+//		if(DrvMainROM[address]!=data)
+		{
+//			DrvMainROM[address]=data;
+//			DrvBgRAM[(((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400)] = data;
+			UINT32 address2 = (((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400);
+			DrvBgRAM[address2] = data;
+			bg_raiders5_line(address2,DrvBgRAM);
+		}
+		return;
+	}
+
+	if(address>=0x8800 && address<=0x8fff)
+	{
+		if(DrvMainROM[address]!=data)
+		{
+			DrvMainROM[address]=data;
+			fg_raiders5_line(address &0x3ff,DrvFgRAM);
+		}
 		return;
 	}
 
@@ -1028,7 +1096,7 @@ static INT32 NinjakunInit()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 Raiders5Init()
 {
-	DrvInitSaturn(1);
+	DrvInitSaturn(2);
 
 	AllMem = NULL;
 	MemIndex();
@@ -1059,9 +1127,9 @@ static INT32 Raiders5Init()
 	CZetMapArea(0x8000, 0x87ff, 1, DrvSprRAM);
 
 	CZetMapArea(0x8800, 0x8fff, 0, DrvFgRAM);
-	CZetMapArea(0x8800, 0x8fff, 1, DrvFgRAM);
+//	CZetMapArea(0x8800, 0x8fff, 1, DrvFgRAM);
 
-//	CZetMapArea(0x9000, 0x97ff, 0, DrvBgRAM);
+	CZetMapArea(0x9000, 0x97ff, 0, DrvBgRAM);
 //	CZetMapArea(0x9000, 0x97ff, 1, DrvBgRAM);
 
 //	CZetMapArea(0xd000, 0xd1ff, 0, DrvPalRAM);
@@ -1072,6 +1140,21 @@ static INT32 Raiders5Init()
 
 	CZetClose();
 
+#ifdef RAZE
+ 	z80_init_memmap();
+	z80_set_in((unsigned char (*)(unsigned short))&raiders5_in);
+	z80_add_read(0x0000, 0xffff, 1, (void *)&raiders5_sub_read); 
+	z80_add_write(0x0000, 0xfff, 1, (void *)&raiders5_sub_write);
+
+	z80_map_read (0x0000, 0x3fff, DrvSubROM);
+	z80_map_fetch(0x0000, 0x3fff, DrvSubROM);
+
+	z80_map_read  (0xa000, 0xa7ff, DrvMainRAM);
+	z80_map_write (0xa000, 0xa7ff, DrvMainRAM);
+	z80_map_fetch (0xa000, 0xa7ff, DrvMainRAM);
+
+	z80_end_memmap();
+#else
 //	CZetInit(1);
 	CZetOpen(1);
 	CZetSetInHandler(raiders5_in); // a verifier
@@ -1085,6 +1168,7 @@ static INT32 Raiders5Init()
 	CZetMapArea(0xa000, 0xa7ff, 1, DrvMainRAM);
 
 	CZetClose();
+#endif
 
 	pAY8910Buffer[0] = pFMBuffer + SOUND_LEN * 0;
 	pAY8910Buffer[1] = pFMBuffer + SOUND_LEN * 1;
@@ -1152,6 +1236,23 @@ static INT32 Raiders5Init()
 	ss_reg->n2_move_y =  32 ;
 	SCL_Close();
 }
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void initRaiders5Colors()
+{
+//	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
+	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+//	SCL_AllocColRam(SCL_NBG3,OFF);
+//	SCL_AllocColRam(SCL_NBG3,OFF);
+//	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+//	SCL_AllocColRam(SCL_NBG3,OFF);
+//	SclColRamAlloc256[3]=SCL_NBG2;
+// 	SCL_SetColRamOffset(SCL_NBG2,3,OFF);
+//	SCL_AllocColRam(SCL_NBG2,OFF);
+	SCL_SetColRam(SCL_NBG0,8,8,palette);
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initNovaColors()
 {
@@ -1197,8 +1298,10 @@ static INT32 Raiders5Init()
 	SS_SET_N1PRIN(6);
 	if (i == 0)
 		initColors();
-	else
+	if (i == 1)
 		initNovaColors();
+	if(i == 2)
+		initRaiders5Colors();
 	initLayers();
 	initPosition();
 	initSprites(264-1,216-1,0,0,8,-32);
@@ -1538,7 +1641,7 @@ static INT32 Raiders5Frame()
 
 	vblank = 0;
 	//INT32 Multiplier = 8; // needs high multiplier for inter-processor communication w/shared memory
-	INT32 nInterleave = 2000; //256*Multiplier;
+	INT32 nInterleave = 2000/30; //256*Multiplier;
 	INT32 nCyclesTotal = 3000000 / 60 /2;
 
 	for (INT32 i = 0; i < nInterleave; i++) 
@@ -1546,87 +1649,81 @@ static INT32 Raiders5Frame()
 		CZetOpen(0);
 		CZetRun(nCyclesTotal / nInterleave);
 		//INT32 sync_cycles = ZetTotalCycles();
-		if (i == 1880) {
+		if (i == 1880/30) {
 			CZetRaiseIrq(0);
 			vblank = 1;
 		}
 		CZetClose();
-
+#ifdef RAZE
+		z80_emulate(nCyclesTotal / nInterleave);
+		if (i%(nInterleave/4) == (nInterleave/4)-10) 
+		{
+			z80_raise_IRQ(0);
+			z80_emulate(1);
+//			z80_lower_IRQ();
+//			z80_emulate(0);
+		}
+#else
 		CZetOpen(1);
 		CZetRun(nCyclesTotal / nInterleave);//sync_cycles - ZetTotalCycles());
-		if (i%(nInterleave/4) == (nInterleave/4)-10) {
+		if (i%(nInterleave/4) == (nInterleave/4)-10) 
+		{
 			CZetRaiseIrq(0);
 		}
-		CZetClose();
+		CZetClose();	
+#endif
 	}
-
-//	if (pBurnSoundOut) {
-//		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
-//	}
-
-  	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
-//	updateSound();
+	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 	Raiders5Draw();
-
-
-//PCM_Task(pcm);
 	SPR_WaitEndSlaveSH();
 
 	return 0;
 }
 
-static INT32 Raiders5Draw()
+static void pkunwar_draw_sprites()
 {
-	DrvPalRAMUpdateR5();
-//	draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 1, 0x000, 0);
-//	draw_fglayer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 1, 0x000, 0);
-//	draw_layer(DrvFgRAM, DrvGfxROM0 + 0x0000, 1, 0x000, 1);
-//draw_bglayer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 0, 0x100, 0);
- 
-//	draw_layer(DrvBgRAM, DrvGfxROM2 + 0x0000, 6, 0x100, 0);
-	draw_layer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 6, 0x100, 0);
-//	pkunwar_draw_sprites(0x200, 0, 0x0f);
-
-	cleanSprites();
-
-	for (INT32 offs = 0;offs < 0x800;offs += 32)
+	for (INT32 offs = 0; offs < 0x800; offs += 32)
 	{
-		int sx,sy,num,color,flip;
-		unsigned int delta;
+		INT32 attr = DrvSprRAM[offs+3];
+		INT32 flip = (DrvSprRAM[offs+0] & 0x03)<<4;
+		INT32 code = ((DrvSprRAM[offs+0] & 0xfc) >> 2) + ((attr & 0x07) << 6);
+		INT32 delta = (offs>>5)+3;
 
-		sx = DrvBgRAM[1 + offs];
-		sy = DrvBgRAM[2 + offs];
-		delta = (offs>>5)+3;
-
-		if (sy < 16 || sy > 215) 
-		{	
-//			ss_sprite[3+delta].charSize=0;
-			continue;
-		}
-//		sy -= 32;
-		flip  = (DrvBgRAM[offs] & 0x03)<<4;
-		num   = ((DrvBgRAM[offs] & 0xfc) >> 2) + ((DrvBgRAM[offs + 3] & 7) << 6);
-		color = DrvBgRAM[offs + 3] & 0x0f; //0xf0;
-
-		ss_sprite[delta].ax = sx;
-		ss_sprite[delta].ay = sy;
-		ss_sprite[delta].color      = color;
+		ss_sprite[delta].ax = DrvSprRAM[offs+1];
+		ss_sprite[delta].ay = DrvSprRAM[offs+2];
+		ss_sprite[delta].color      = (attr & 0x0f);
 		ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
 		ss_sprite[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);
 		ss_sprite[delta].charSize   = 0x210;  //0x100 16*16
-		ss_sprite[delta].charAddr   = 0x220+(num<<4);
+		ss_sprite[delta].charAddr   = 0x220+(code<<4);
 	}
+}
 
-
-
-
-
-
-
-
-//	draw_layer(DrvFgRAM, DrvGfxROM0 + 0x0000, 7, 0x000, 0);
-	draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 7, 0x000, 0);
+static INT32 Raiders5Draw()
+{
+	DrvPalRAMUpdateR5();
+	pkunwar_draw_sprites();
+// 	ss_reg->n2_move_x =   xscroll-16;
+//	ss_reg->n2_move_y =  yscroll+84 ;
+	draw_layer_r5(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0);
 	return 0;
+}
+
+/*static*/ void draw_layer_r5(UINT8 *ram_base, UINT16 *gfx_base)
+{
+	ss_reg->n2_move_x =   xscroll-16;
+	ss_reg->n2_move_y =  yscroll+32 ;
+
+	for (INT32 offs = 0; offs < 32 * 32; offs++)
+	{
+		INT32 sx = (offs & 0x1f);
+		INT32 sy = (offs / 0x20) <<6;
+
+		INT32 attr = ram_base[offs + 0x400];
+		INT32 code = ram_base[offs + 0x000] + ((attr & 0x01) << 8) + 0x400;
+		INT32 color = (attr >> 4) & 0x0f;
+		gfx_base[sx|sy+0X20] = gfx_base[(sx|sy)+0X800] = gfx_base[(sx|sy)+0X820] = gfx_base[sx|sy] = color <<12 | code;
+	}
 }
 
 /*static*/ void draw_layer(UINT8 *ram_base, UINT16 *gfx_base, INT32 config, INT32 color_base, INT32 priority)
@@ -1699,10 +1796,10 @@ static INT32 Raiders5Draw()
 
 	if (enable_scroll) 
 	{
-		ss_reg->n2_move_x =   xscroll-8;
-		ss_reg->n2_move_y =  yscroll+32 ;
+//		ss_reg->n2_move_x =   xscroll-8;
+//		ss_reg->n2_move_y =  yscroll+32 ;
 	}
-
+	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_B0;
 	for (INT32 offs = 0; offs < 32 * 32; offs++)
 	{
 //		if(bg_dirty[offs])
@@ -1729,11 +1826,12 @@ static INT32 Raiders5Draw()
 				code = ram_base[offs + 0x000] + ((attr & 0x01) << 8);
 				color = (attr >> 4) & 0x0f;
 			}
-			if(config==0)
+/*			if(config==0)
 			{
 				code+=0x200;
 				ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = (color) <<12 | code;
-			}
+			}		*/
+  code+=0x400;
 			ss_map[sx|sy] = color <<12 | code;
 		}
 	}
