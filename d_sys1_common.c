@@ -610,6 +610,7 @@ void initLayers()
 //	for (i = 0; i < System1NumTiles;i++)code_lut[i] = (((i >> 4) & 0x800) | (i & 0x7ff))& (System1NumTiles-1);
 	for (i = 0; i < 10; i++)						cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;
 	for(i=0;i<256;i++)							if(i%8==0)	width_lut[i] = i;else	width_lut[i] = (i + (7)) & ~(7);
+
 //		width_lut[i] = (i + (7)) & ~(7);
 //	for(i=0;i<0x2000;i++)		color_lut[i] = (i>>5) & 0x3f;
 }
@@ -824,13 +825,14 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,System1Tiles);
 
 	spriteCache = (UINT16*)(0x00200000);
-	memset4_fast((void*)spriteCache,0xFFFFFFFF,0x80000);
+//	memset4_fast((void*)spriteCache,0xFFFFFFFF,0x80000);
+	memset((unsigned char *)spriteCache,0xFF,0x80000);
 	if(System1SpriteRomSize!=0x20000)
 		System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
 	else
 		System1Sprites = (UINT8 *)0x02E0000;
 
-	memset(System1Sprites, 0x11, System1SpriteRomSize);
+	memset(System1Sprites, 0x00, System1SpriteRomSize);
 	// Load Sprite roms
 	RomOffset += nTileRomNum;
 	for (i = 0; i < nSpriteRomNum; i++) 
@@ -1092,15 +1094,15 @@ Graphics Rendering
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void renderSpriteCache(int *values)
+void renderSpriteCache(unsigned int *values)
 //(int Src,unsigned int Height,INT16 Skip,unsigned int Width, int Bank)
 {
 //	Src,Height,Skip,Width, Bank,nextSprite
-	int Src = values[0];
+	unsigned int Src = values[0];
 	unsigned int Height = values[1];
-	INT16 Skip = values[2];
+	UINT16 Skip = values[2];
 	unsigned int Width  = values[3];
-	int Bank = values[4];
+	unsigned int Bank = values[4];
 	UINT16 aNextSprite = values[5];
 
 	int Row;
@@ -1133,7 +1135,7 @@ void renderSpriteCache(int *values)
 				spriteVRam[n+x]=Colour2 | (Colour1<<4);
 				++x;
 //					if(x>=abs(Skip)) break;
-			}
+			}		 
 		}
 		else
 		{
@@ -1150,10 +1152,11 @@ void renderSpriteCache(int *values)
 
 				if (Colour2 == 0x0f) 
 				{
-					spriteVRam[n+x]=(Colour1<<4);// | 0x0;
+//					spriteVRam[n+x]=(Colour1<<4);// | 0x0;
+					spriteVRam[n+x]=Data & 0xf0;// | 0x0;
 					break;
 				}
-				spriteVRam[n+x]=Colour2 | (Colour1<<4);
+				spriteVRam[n+x]=Data ;//Colour2 | (Colour1<<4);
 				++x;
 //					if(x>=abs(Skip)) break;
 			}
@@ -1173,16 +1176,24 @@ void System1DrawSprites()
 		SpriteBase = System1SpriteRam + (i << 4);
 		if (SpriteBase[1] && (SpriteBase[1] - SpriteBase[0] > 0))
 		{	
-			int Src = (SpriteBase[7] << 8) | SpriteBase[6];
-			int Bank = (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5)) <<15;
+			unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
+			unsigned int Bank = 
+				(
+				((SpriteBase[3] & 0x80) >> 7) | 
+				((SpriteBase[3] & 0x40) >> 5) | 
+				((SpriteBase[3] & 0x20) >> 3)
+				) <<15;
 			Bank &= (System1SpriteRomSize - 1);
-			INT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
-			int addr = Bank + ((Src + Skip) & 0x7fff);
+			UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
+			unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
+
+//			DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
 
 			if (spriteCache[addr]!=0xFFFF)
-				DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
+ 				DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
 			else
 				 DrawSprite(i,Bank,addr,Skip,SpriteBase);
+
 		}
 		else	
 			ss_sprite[i+3].ax = ss_sprite[i+3].ay = ss_sprite[i+3].charSize = ss_sprite[i+3].charAddr = 0;

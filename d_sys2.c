@@ -53,7 +53,6 @@ int ovlInit(char *szShortName)
 	System1BankSwitch = d;
 }
 
-
 /*static*/ void __fastcall ChplftZ801PortWrite(unsigned short a, UINT8 d)
 {
 	a &= 0xff;
@@ -63,25 +62,10 @@ int ovlInit(char *szShortName)
 		case 0x15:{chplft_bankswitch_w(d);	return;}
 	}
 }
-/*
-void system1_paletteram_w_color_rom(unsigned short a, UINT8 d)
-{
-	a -= 0xd800;
-//	if(System1PaletteRam[a]!=d)
-	{
-		{System1PaletteRam[a] = d;}
-	//	{colAddr[a] = RGB(0,0,31);	System1PaletteRam[a] = d;}
-//		System1CalcPalette();
-		colAddr[a] = cram_lut[d];
-//		colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];	
-		System1PaletteRam[a] = d;
-//		System1CalcSprPalette();
-	}
-}
-*/
+
 /*static*/ void __fastcall ChplftZ801ProgWrite(unsigned short a, UINT8 d)
 {
-	if (a >= 0xe000 && a <= 0xe7ff) { system1_foregroundram_w(a,d); return; }
+	if (a >= 0xe000 && a <= 0xe7bf) { system1_foregroundram_w(a,d); return; }
 	if (a >= 0xe800 && a <= 0xeeff) { system1_backgroundram_w(a,d); return; }
 	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
 	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
@@ -197,17 +181,32 @@ void system1_paletteram_w_color_rom(unsigned short a, UINT8 d)
 	System1DrawSprites();
 //	SPR_WaitEndSlaveSH();
 }
+
+
+
 //-------------------------------------------------------------------------------------------------------------------------------------
-void DrawSprite(int Num,int Bank, int addr, INT16 Skip, UINT8 *SpriteBase)
+#if 1
+void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
 {
-	int Src = (SpriteBase[7] << 8) | SpriteBase[6];
+	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[abs(Skip)];
 
-	int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
-	renderSpriteCache(values);
+	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	spriteCache[addr]=nextSprite;
-	nextSprite = nextSprite+(Width*Height)/8;
+
+/*	if(Height==62) // && (Width==40||Width==80))
+	{ 
+		spriteCache[addr]=values[5] =(0x3E000)/8;
+//		while(1);
+	}
+*/
+	{
+	renderSpriteCache(values);
+	unsigned int  nextaddr = nextSprite + (Height*Width)/8;
+
+//	if(nextaddr%32!=0)	nextaddr = (nextaddr + (31)) & ~(31);
+	nextSprite = nextaddr;
 	
 	unsigned int delta	= (Num+3);
 
@@ -219,14 +218,25 @@ void DrawSprite(int Num,int Bank, int addr, INT16 Skip, UINT8 *SpriteBase)
 
  	int values2[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
 	updateCollisions(values2);
+	}
 }
+
 //-------------------------------------------------------------------------------------------------------------------------------------
-void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
+void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase)
 {
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[abs(Skip)];
 	unsigned int delta	= (Num+3);
 
+ /*
+	if(Height==62) // && (Width==40||Width==80))
+	{ 
+		spriteCache[addr]=(0x3E000)/8;
+//		while(1);
+	} */
+//	if(Height==62 || vbx <2)
+	{
+//		vbx++;
 	ss_sprite[delta].ax			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
 	ss_sprite[delta].ay			= SpriteBase[0] + 1;
 	ss_sprite[delta].charSize		= (Width<<6) + Height;
@@ -235,7 +245,9 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 
  	int values[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
 	updateCollisions(values);
+	}
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors2()
 {

@@ -189,12 +189,12 @@ Driver Inits
 /*==============================================================================================
 Graphics Rendering
 ===============================================================================================*/
-void DrawSprite(int Num,int Bank, int addr, INT16 Skip, UINT8 *SpriteBase)
+void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
 {
-	int Src = (SpriteBase[7] << 8) | SpriteBase[6];
+	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[abs(Skip)];
-	int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
+	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	renderSpriteCache(values);
 	spriteCache[addr]=nextSprite;
 	nextSprite = nextSprite+(Width*Height)/8;
@@ -239,9 +239,9 @@ void DrawSprite(int Num,int Bank, int addr, INT16 Skip, UINT8 *SpriteBase)
 //	SPR_RunSlaveSH((PARA_RTN*)updateCollisions,&values2);
 }
 
-void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
+void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
 {
-	int Src = (SpriteBase[7] << 8) | SpriteBase[6];
+	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[abs(Skip)];
 
