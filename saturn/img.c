@@ -46,8 +46,8 @@ static inline void load_credits()
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"segaxtreme for docs, tools and help",20,140);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"yabause team (guile,mrkotfw,bluecrab)",20,150);
 
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Screw list",20,170);
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"CyberwarriorX",20,190);
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Screw list",20,170);
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"CyberwarriorX",20,190);
 
 	tga_load(main_tga,(Uint8 *)ss_map,(Uint16 *)SCL_COLRAM_ADDR);
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"          B : Return",88,211);

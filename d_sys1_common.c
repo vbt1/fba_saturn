@@ -256,8 +256,9 @@ Allocate Memory
 	System1ScrollY          = System1efRam + 0xbd;
 	System1ScrollX           = System1efRam + 0xfc;
 	System1f4Ram           = Next; Next += 0x000400;
-	System1fcRam           = Next; Next += 0x000400;
+	System1fcRam           = Next; Next += 0x000400; // +3 pour avoir un code aligné pour SpriteOnScreenMap
 	SpriteOnScreenMap      = Next; Next += (256 * 256);
+//	SpriteOnScreenMap      = 0x002F0000;
 //	System1Sprites         = Next; Next += System1SpriteRomSize;
 	System1Tiles           = cache;//Next; Next += (System1NumTiles * 8 * 8);
 	MemEnd = Next;
@@ -369,7 +370,8 @@ void system1_backgroundram_w(unsigned short a, UINT8 d)
 		UINT16 *map = &ss_map[x]; 
 //		ss_map[x]     = ss_map[x+0x40] = ss_map[x+0x1000] = ss_map[x+0x1040] = (Code >> 5) & 0x3f;;//color_lut[Code];
 //		ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = Code & (System1NumTiles-1);
-		map[0] = map[0x40] = map[0x1000] = map[0x1040] = (Code >> 5) & 0x3f;;//color_lut[Code];
+		map[0] = map[0x40] = map[0x1000] = map[0x1040] = ((Code >> 5) & 0x3f)//	+0x3000;
+																						|(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);//color_lut[Code];
 		map[1] = map[0x41] = map[0x1001] = map[0x1041] = Code & (System1NumTiles-1);
 	}
 }
@@ -387,7 +389,7 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		unsigned int x = map_offset_lut[a&0x7ff];
-		ss_map2[x]   = (Code >> 5) & 0x3f;//color_lut[Code];
+		ss_map2[x]   = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
 		ss_map2[x+1] = Code & (System1NumTiles-1);
 	}
 }
@@ -609,7 +611,7 @@ void initLayers()
 
 //	for (i = 0; i < System1NumTiles;i++)code_lut[i] = (((i >> 4) & 0x800) | (i & 0x7ff))& (System1NumTiles-1);
 	for (i = 0; i < 10; i++)						cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;
-	for(i=0;i<256;i++)							if(i%8==0)	width_lut[i] = i;else	width_lut[i] = (i + (7)) & ~(7);
+	for(i=0;i<256;i++)							if((i*2)%8==0)	width_lut[i] = i*2;else	width_lut[i] = ((i*2) + (7)) & ~(7);
 
 //		width_lut[i] = (i + (7)) & ~(7);
 //	for(i=0;i<0x2000;i++)		color_lut[i] = (i>>5) & 0x3f;
@@ -708,10 +710,15 @@ void initLayers()
 		}
 	}
 	memset(&ss_vram[0x1100],0x00,0x7EF00);
+	SS_SET_N2PRIN(4);
 	SS_SET_S0PRIN(4);
-	SS_SET_N1PRIN(5);
+	SS_SET_N1PRIN(6);
 	SS_SET_N0PRIN(7);
 	
+	SS_SET_N2SPRM(2);  // 1 for special priority
+	ss_regs->specialcode=0x000e; // sfcode, upper 8bits, function b, lower 8bits function a
+	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
+
 	initLayers();
 	initColors();
 
@@ -761,7 +768,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	System1NumTiles = (nTileRomNum * nTileRomSize) / 24;
 	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
 	DrvInitSaturn();
-
+ 
 	//System1BgRamSize = 0x800;
 	// Allocate and Blank all required memory
 	Mem = NULL;
@@ -902,17 +909,6 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	CZetMapArea(0xfc00, 0xffff, 2, System1fcRam);	
 	CZetMemEnd();
 	CZetClose();
-//	FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"before raze                   ",10,40);		
-/*
-	INT32 context_size = z80_get_context_size();
-//	UINT8 *context =  (UINT8*)malloc(context_size);
-	UINT8 *context =  NULL;
-	z80_get_context(context);
-	memset(context,0,context_size);
-	z80_set_context(context);
-
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)zz,10,20);
-*/
 
 	z80_init_memmap();
 	z80_add_read(0xe000, 0xe001, 1, (void *)&System1Z802ProgRead); 
@@ -925,8 +921,10 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	z80_map_fetch (0x8000, 0x87ff, System1Ram2);
 	z80_end_memmap();
 	z80_reset();
-	
-	memset4_fast(SpriteOnScreenMap, 255, 256 * 256);
+
+//	memset4_fast(SpriteOnScreenMap, 255, 256 * 256); plante sur saturn
+	memset(SpriteOnScreenMap, 255, 256 * 256);
+
 //	System1SpriteXOffset = 1;
 	
 	nCyclesTotal[0] = 2000000 / hz ;//3500000
@@ -942,6 +940,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	
 	// Reset the driver
 	if (bReset) System1DoReset();
+
 	System1CalcPalette();
 
 	System1efRam[0xfe] = 0x4f;
@@ -1034,6 +1033,8 @@ Graphics Rendering
 ===============================================================================================*/
 /*static*/ void updateCollisions(int *values)
 {
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"before updateCollisions",10,20);
+
 	int x=values[0],y=values[1];
 	int xr,yr,SpriteOnScreen;
 	int xend=x+values[2];
@@ -1045,8 +1046,6 @@ Graphics Rendering
 	{
 		if (y < 0 || y > 255) continue;
 
-//		yr = (((y - System1BgScrollY) & 0xff) / 8)*32;
-//		y256 = y *256;
 		yr = (((y - System1BgScrollY) & 0xff) >>3)<<5;
 		y256 = y<<8;
 
@@ -1062,15 +1061,14 @@ Graphics Rendering
 			SpriteOnScreenMap[y256 + x] = Num;
 
 			xr = ((x - System1BgScrollX) & 0xff) / 8;
-//			yr = ((y - System1BgScrollY) & 0xff) / 8;
-	
-//			if (System1BgRam[2 * (32 * yr + xr) + 1] & 0x10) 
+
 			if (System1BgRam[2 * ( yr + xr) + 1] & 0x10) 
 			{
 				System1BgCollisionRam[0x20 + Num] = 0xff;
 			}
 		}
 	}
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"after updateCollisions  ",10,20);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int System1CalcPalette()
@@ -1094,16 +1092,16 @@ Graphics Rendering
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void renderSpriteCache(unsigned int *values)
+void renderSpriteCache(int *values)
 //(int Src,unsigned int Height,INT16 Skip,unsigned int Width, int Bank)
 {
 //	Src,Height,Skip,Width, Bank,nextSprite
-	unsigned int Src = values[0];
-	unsigned int Height = values[1];
-	UINT16 Skip = values[2];
-	unsigned int Width  = values[3];
-	unsigned int Bank = values[4];
-	UINT16 aNextSprite = values[5];
+	int Src = values[0];
+	int Height = values[1];
+	INT16 Skip = values[2];
+	int Width  = values[3];
+	int Bank = values[4];
+	INT16 aNextSprite = values[5];
 
 	int Row;
 	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(aNextSprite<<3)];
@@ -1166,11 +1164,15 @@ void renderSpriteCache(unsigned int *values)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void System1DrawSprites()
 {
-	int i;//, SpriteBottomY, SpriteTopY;
+	unsigned int i;//, SpriteBottomY, SpriteTopY;
 	UINT8 *SpriteBase;
-
-	memset4_fast(SpriteOnScreenMap, 255, 0x10000);
-
+	memset(SpriteOnScreenMap, 255, 256 * 256);
+#if 0
+	for (i = 0; i < 32; ++i) 
+	{
+		reset_sprite_colli(i);
+	}
+#endif
 	for (i = 0; i < 32; ++i) 
 	{
 		SpriteBase = System1SpriteRam + (i << 4);
@@ -1193,10 +1195,14 @@ void System1DrawSprites()
  				DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
 			else
 				 DrawSprite(i,Bank,addr,Skip,SpriteBase);
-
 		}
-		else	
+		else
+		{
 			ss_sprite[i+3].ax = ss_sprite[i+3].ay = ss_sprite[i+3].charSize = ss_sprite[i+3].charAddr = 0;
+#if 0
+			sprites_collision[i].width=0;
+#endif
+		}
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1259,7 +1265,9 @@ int System1Frame()
 //		if(SlaveInWork())
 //			SPR_WaitEndSlaveSH();
 //			if(!SlaveInWork())
+
 		SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
+
 //			else
 //				renderSound(&nSoundBufferPos);
 	}
@@ -1270,7 +1278,8 @@ int System1Frame()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
-	SPR_WaitEndSlaveSH(); 
+
+//	SPR_WaitEndSlaveSH();
 //	sc_check();
 	return 0;
 }
@@ -1328,3 +1337,55 @@ int System1Frame()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#if 0
+#define INT_DIGITS 19
+char *itoa(i)
+     int i;
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void reset_sprite_colli(unsigned int Num)
+{
+ 	if(sprites_collision[Num].width>0 && sprites_collision[Num].y>=0)// && colli[Num][3]>0)
+ 	{
+/*		char toto[200];
+				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"                          ",110,1+Num*9);
+				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"                          ",0,10);
+
+				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(sprites_collision[Num].x),110,1+Num*9);
+				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(sprites_collision[Num].y),126,1+Num*9);
+				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(sprites_collision[Num].width),142,1+Num*9);
+				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(sprites_collision[Num].yend),158,1+Num*9);
+
+		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(Num),1,10);
+ */
+ 		for (int i=sprites_collision[Num].y; i<=sprites_collision[Num].yend; i++)
+ 		{
+/*			FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"    ",16,10);
+			FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(i),16,10);
+*/
+			memset(SpriteOnScreenMap[(i<<8)+sprites_collision[Num].x],0xff,sprites_collision[Num].width);
+		}		 
+ 	}
+//	else
+//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"                          ",110,1+Num*9);
+}
+#endif

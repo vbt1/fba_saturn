@@ -7,7 +7,8 @@
    .global  _memcpyl
    .global  _memsetl
 !   .global  _memsetl_fast
-    .globl  _memset4_fast
+    .global  _memset4_fast
+    .global  _memset4_fast2
 
 ! dst 	   = r4
 ! src 	   = r5
@@ -98,22 +99,16 @@ lendl:
 ! (although, it will throw an exception if the ptr isn't aligned, since the CPU
 ! won't do that access).
 
-!_memset4_fast:
-!    add     r4, r6
-!    add     #4, r4
-!.loop:
-!    cmp/eq  r4, r6
-!    bf/s    .loop
-!    mov.l   r5, @-r6
-!
-!    rts
-!
-!    nop
+_memset4_fast2:
+nop
+    rts
+
+    nop
 
 _memset4_fast:
     add     r4, r6
-    add     #68, r4
-.loop:
+    add     #4, r4
+.loop2:
     mov.l   r5, @-r6
     mov.l   r5, @-r6
     mov.l   r5, @-r6
@@ -130,7 +125,7 @@ _memset4_fast:
     mov.l   r5, @-r6
     mov.l   r5, @-r6
     cmp/eq  r4, r6
-    bf/s    .loop
+    bf/s    .loop2
     mov.l   r5, @-r6
 
     rts
@@ -138,3 +133,4 @@ _memset4_fast:
     nop
 
     .end
+

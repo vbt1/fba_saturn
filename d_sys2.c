@@ -127,8 +127,11 @@ int ovlInit(char *szShortName)
 //	System1CalcSprPalette();
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(7);
-	SS_SET_N2PRIN(5);
-	SS_SET_N0PRIN(3);
+	SS_SET_N2PRIN(4);
+	SS_SET_N0PRIN(5);
+
+	SS_SET_N0SPRM(1);  // 1 for special priority
+
 	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 	drawWindow(0,224,0,0,64);
 
@@ -192,7 +195,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[abs(Skip)];
 
-	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
+	unsigned int values[] ={Src,Height,Skip,Width>>1, Bank,nextSprite};
 	spriteCache[addr]=nextSprite;
 
 /*	if(Height==62) // && (Width==40||Width==80))
@@ -212,7 +215,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 
 	ss_sprite[delta].ax				= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
 	ss_sprite[delta].ay				= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize	= (Width<<6) + Height;
+	ss_sprite[delta].charSize	= (Width<<5) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
 
@@ -239,7 +242,7 @@ void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr,UINT1
 //		vbx++;
 	ss_sprite[delta].ax			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
 	ss_sprite[delta].ay			= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize		= (Width<<6) + Height;
+	ss_sprite[delta].charSize		= (Width<<5) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr		= 0x220+spriteCache[addr];
 

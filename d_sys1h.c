@@ -205,7 +205,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	if(flipscreen==2)
 	{
 		int toto = 216-ss_sprite[delta].ay;
-		ss_sprite[delta].ay			= toto+Width*2;
+		ss_sprite[delta].ay			= toto+Width;
 		ss_sprite[delta].by			= toto;
 		ss_sprite[delta].cy			= toto;
 //		ss_sprite[delta].dy			= ss_sprite[delta].ay;
@@ -217,7 +217,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	else
 	{
 		ss_sprite[delta].ax		= 256-SpriteBase[0]+8;
-		ss_sprite[delta].by		= ss_sprite[delta].ay+Width*2;
+		ss_sprite[delta].by		= ss_sprite[delta].ay+Width;
 		ss_sprite[delta].cy		= ss_sprite[delta].by;
 //		ss_sprite[delta].dy		= ss_sprite[delta].ay;
 
@@ -229,7 +229,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	ss_sprite[delta].bx			= ss_sprite[delta].ax;
 	ss_sprite[delta].dx			= ss_sprite[delta].cx;
 
-	ss_sprite[delta].charSize	= (Width<<6) + Height;
+	ss_sprite[delta].charSize	= (Width<<5) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
 
@@ -252,7 +252,7 @@ void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr, UINT
 	{
 		int toto = 216-ss_sprite[delta].ay;
 		ss_sprite[delta].ax			= SpriteBase[0] + 41;
-		ss_sprite[delta].ay			= toto+Width*2;
+		ss_sprite[delta].ay			= toto+Width;
 		ss_sprite[delta].by			= toto;
 		ss_sprite[delta].cy			= toto;
 //		ss_sprite[delta].dy			= ss_sprite[delta].ay;
@@ -264,7 +264,7 @@ void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr, UINT
 	else
 	{
 		ss_sprite[delta].ax		= 256-SpriteBase[0]+8;
-		ss_sprite[delta].by		= ss_sprite[delta].ay+Width*2;
+		ss_sprite[delta].by		= ss_sprite[delta].ay+Width;
 		ss_sprite[delta].cy		= ss_sprite[delta].by;
 //		ss_sprite[delta].dy		= ss_sprite[delta].ay;
 
@@ -276,7 +276,7 @@ void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr, UINT
 	ss_sprite[delta].bx			= ss_sprite[delta].ax;
 	ss_sprite[delta].dx			= ss_sprite[delta].cx;
 
-	ss_sprite[delta].charSize	= (Width<<6) + Height;
+	ss_sprite[delta].charSize	= (Width<<5) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
 

@@ -73,7 +73,6 @@ int main(void)
 		*dst = 0;
 
 	memset(&play,0x00,1024);
-
 	SYS_CHGSYSCK(1);             //28mhz
 	set_imask(0); 
 	
@@ -316,6 +315,8 @@ wait_vblank();
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void ss_main(void)
 {
+//		DMA_ScuInit();
+
 #ifndef ACTION_REPLAY
 //	CdUnlock();
 	InitCD();
@@ -343,13 +344,13 @@ static void ss_main(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void VDP2_InitVRAM(void)
 {
-	memset4_fast(SCL_VDP2_VRAM_A0,0x0000,0x40000);
-	memset4_fast(SCL_VDP2_VRAM_B0,0x0000,0x40000);
+	memset4_fast(SCL_VDP2_VRAM_A0,0x00000000,0x40000);
+	memset4_fast(SCL_VDP2_VRAM_B0,0x00000000,0x40000);
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 static void load_img(int id)
 {
-	void (*fp)(unsigned int);
+/* vbt à remettre	void (*fp)(unsigned int);
 	fp = (void *)LOWADDR;
 	(*fp)(id);
 
@@ -357,7 +358,7 @@ static void load_img(int id)
 	{
 	 	wait_key(PER_DGT_B);
 		load_img(0);
-	}
+	}	  */
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 void wait_key(Uint8 key)
@@ -467,7 +468,7 @@ static void display_menu(void)
 	{
 		if(!loaded)
 		{
-			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
+// vbt à remette			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			load_img(0);	
 			loaded=1;
 
@@ -1615,7 +1616,7 @@ static int nDrvInit(int nDrvNum)
 
 
 
-    GFS_Load(GFS_NameToId(strupr(drv_file)), 0, (void *)OVLADDR, GFS_BUFSIZ_INF);
+// vbt à remettre    		GFS_Load(GFS_NameToId(strupr(drv_file)), 0, (void *)OVLADDR, GFS_BUFSIZ_INF);
 	ChangeDir(BurnDrvGetTextA(DRV_NAME));
 
 	fp = (void *)OVLADDR;
@@ -1740,8 +1741,8 @@ static void run_fba_emulator()
 			_spr2_transfercommand();
 			frame_x++;
 
-	//		 if(frame_x>=frame_y)
-	//			wait_vblank();
+			 if(frame_x>=frame_y)
+				wait_vblank();
 		}
 	}
 	if(drvquit==1)

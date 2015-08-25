@@ -8,6 +8,7 @@
 #define USE_RAZE1 1
 #define CPU2_ENABLED 1
 
+
 #include "d_sys1.h"
 #include "d_sys1_common.c"
 
@@ -174,11 +175,11 @@ Graphics Rendering
 ===============================================================================================*/
 void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
 {
-	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
-	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[abs(Skip)];
+	int Src = (SpriteBase[7] << 8) | SpriteBase[6];
+	int Height = SpriteBase[1] - SpriteBase[0];
+	int Width = width_lut[abs(Skip)];
 
-	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
+	int values[] ={Src,Height,Skip,Width>>1, Bank,nextSprite};
 	renderSpriteCache(values);
 	spriteCache[addr]=nextSprite;
 	nextSprite = nextSprite+(Width*Height)/8;
@@ -187,28 +188,30 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 
 	ss_sprite[delta].ax				= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
 	ss_sprite[delta].ay				= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize	= (Width<<6) + Height;
+	ss_sprite[delta].charSize	= (Width<<5) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
 
  	int values2[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
-	updateCollisions(values2);
+//	fillSpriteCollision(Num,values2);
+//	updateCollisions(values2);
 }
 
 void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase)
 {
-	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[abs(Skip)];
-	unsigned int delta	= (Num+3);
+	int Height = SpriteBase[1] - SpriteBase[0];
+	int Width = width_lut[abs(Skip)];
+	int delta	= (Num+3);
 
 	ss_sprite[delta].ax			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
 	ss_sprite[delta].ay			= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize		= (Width<<6) + Height;
+	ss_sprite[delta].charSize		= (Width<<5) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr		= 0x220+spriteCache[addr];
 
- 	int values[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
-	updateCollisions(values);
+	int values[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
+//	fillSpriteCollision(Num,values);
+//	updateCollisions(values);
 }
 
 inline void System1Render()
@@ -218,3 +221,31 @@ inline void System1Render()
 	ss_reg->n2_move_y = System1ScrollY[0];
 	System1DrawSprites();
 }
+#if 0
+void fillSpriteCollision(unsigned int Num, int *values)
+{
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"before fillSpriteCollision",10,10);
+
+	sprites_collision[Num].x=sprites_collision[Num].y=sprites_collision[Num].width=sprites_collision[Num].yend=0;
+	int skip = values[2]*2;
+	if(values[0]>0){sprites_collision[Num].x=values[0] & 0xff;};	  //x max 255
+	if(values[1]>0){sprites_collision[Num].y=values[1] & 0xff;};	  //y max 255
+	if(skip<0)	    // width<0
+	{
+		if(values[0]>abs(skip))		// x > abs(width)	
+		{
+			sprites_collision[Num].width=abs(skip)  & 0xff;// width>0
+			sprites_collision[Num].x=(values[0]+skip) & 0xff; // x=x+width
+		}
+	}
+	else
+	{
+			if(sprites_collision[Num].width+sprites_collision[Num].x>255)sprites_collision[Num].width=(255-sprites_collision[Num].x) & 0xff; //width+x max 255
+			else sprites_collision[Num].width=skip  & 0xff;// max 255
+	}
+	if(values[1]+values[3]>0)
+		sprites_collision[Num].yend=(values[1]+values[3]) & 0xff; // height max 255
+
+	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"after fillSpriteCollision   ",10,10);
+}
+#endif

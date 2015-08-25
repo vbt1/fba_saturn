@@ -85,3 +85,18 @@ static unsigned char *cache = NULL;
 #define SS_SET_CCRTMD(/* 1 bit */ ccrtmd) \
   (ss_OtherPri->ColorMixControl \
    = (ss_OtherPri->ColorMixControl & 0xFDFF) | ((Uint32)(ccrtmd) << 9))
+#define SS_SET_N2SPRM(/* 2bits */ n2sprm) \
+  (ss_OtherPri->SpecialPriorityMode \
+   = (ss_OtherPri->SpecialPriorityMode & 0xFFCF) | ((n2sprm) << 4))
+#define SS_SET_N2CCEN(/* 1 bit */ n2ccen) \
+  (ss_OtherPri->ColorMixControl \
+   = (ss_OtherPri->ColorMixControl & 0xFFFB) | ((n2ccen) << 2))
+#define SS_SET_N2SCCM(/* 2 bits */ n2sccm) \
+  (ss_OtherPri->SpecialColorMixMode \
+   = (ss_OtherPri->SpecialColorMixMode & 0xFFCF) | ((n2sccm) << 4))
+#define SS_SET_N2CCRT(/* 5 bits */ n2ccrt) \
+  (ss_BgColMix->ColMixRateNBG23 \
+   = (ss_BgColMix->ColMixRateNBG23 & 0xFF00) | ((n2ccrt)))
+#define SS_SET_N1SPRM(/* 2bits */ n1sprm) \
+  (ss_OtherPri->SpecialPriorityMode \
+   = (ss_OtherPri->SpecialPriorityMode & 0xFFF3) | ((n1sprm) << 2))

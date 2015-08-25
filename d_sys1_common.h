@@ -23,7 +23,6 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int System1CalcPalette();
 /*static*/ int System1Exit();
 /*static*/ int System1Frame();
-
 /*static*/ UINT8 *SaturnMem = NULL;
 /*static*/ UINT16 *remap8to16_lut = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
@@ -35,6 +34,8 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ UINT16 *spriteCache = NULL;
 typedef int bool;
 
+//typedef struct { UINT8 x, y, width, yend } sprite_collision; 
+//sprite_collision sprites_collision[32];
 /*static*/ UINT16 nextSprite=0;
 /*static*/ UINT8 flipscreen=0;
 /*static*/ void make_cram_lut(void);

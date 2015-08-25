@@ -25,7 +25,7 @@ LDFILE	 = ./$(TARGET:.coff=.lnk)
 MPFILE     = $(TARGET:.coff=.maps)
 LDFLAGS = -m2 -O2 -Xlinker -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
 #SRCS       = saturn/iapetus/cd/cd.c  burn.c load.c saturn/font.c saturn/file.c saturn/saturn.c saturn/low.s saturn/sc_saturn_vbt.c
-SRCS       = saturn/low.s load.c burn.c saturn/font.c saturn/file.c saturn/saturn.c 
+SRCS       = saturn/iapetus/cd/cd.c  saturn/low.s load.c burn.c saturn/font.c saturn/file.c saturn/saturn.c 
 OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 
 OVLIMG                 = root/img.coff
