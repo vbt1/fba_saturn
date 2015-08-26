@@ -256,7 +256,7 @@ Allocate Memory
 	System1ScrollY          = System1efRam + 0xbd;
 	System1ScrollX           = System1efRam + 0xfc;
 	System1f4Ram           = Next; Next += 0x000400;
-	System1fcRam           = Next; Next += 0x000400; // +3 pour avoir un code aligné pour SpriteOnScreenMap
+	System1fcRam           = Next; Next += 0x000403; // +3 pour avoir un code aligné pour SpriteOnScreenMap
 	SpriteOnScreenMap      = Next; Next += (256 * 256);
 //	SpriteOnScreenMap      = 0x002F0000;
 //	System1Sprites         = Next; Next += System1SpriteRomSize;
@@ -611,8 +611,7 @@ void initLayers()
 
 //	for (i = 0; i < System1NumTiles;i++)code_lut[i] = (((i >> 4) & 0x800) | (i & 0x7ff))& (System1NumTiles-1);
 	for (i = 0; i < 10; i++)						cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;
-	for(i=0;i<256;i++)							if((i*2)%8==0)	width_lut[i] = i*2;else	width_lut[i] = ((i*2) + (7)) & ~(7);
-
+	for(i=0;i<256;i++)							if(i%8==0)	width_lut[i] = i;else	width_lut[i] = (i + (7)) & ~(7);
 //		width_lut[i] = (i + (7)) & ~(7);
 //	for(i=0;i<0x2000;i++)		color_lut[i] = (i>>5) & 0x3f;
 }
@@ -668,7 +667,9 @@ void initLayers()
 
 //	p[23] = system1_ef_w;
 }
-
+void dummy()
+{
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
@@ -721,10 +722,9 @@ void initLayers()
 
 	initLayers();
 	initColors();
-
 	initSpritesS1();
 	SPR_InitSlaveSH();
-	
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	if(flipscreen)
 		drawWindow(0,240,0,8,64);
 	else
@@ -768,7 +768,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	System1NumTiles = (nTileRomNum * nTileRomSize) / 24;
 	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
 	DrvInitSaturn();
- 
+	CollisionFunction = updateCollisions;
 	//System1BgRamSize = 0x800;
 	// Allocate and Blank all required memory
 	Mem = NULL;
@@ -839,7 +839,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	else
 		System1Sprites = (UINT8 *)0x02E0000;
 
-	memset(System1Sprites, 0x00, System1SpriteRomSize);
+	memset(System1Sprites, 0x11, System1SpriteRomSize);
 	// Load Sprite roms
 	RomOffset += nTileRomNum;
 	for (i = 0; i < nSpriteRomNum; i++) 
@@ -1025,7 +1025,7 @@ spriteCache = NULL;
 
 	DecodeFunction = NULL;
 	MakeInputsFunction = NULL;
-
+	CollisionFunction = NULL;
 	return 0;
 }
 /*==============================================================================================
@@ -1033,8 +1033,6 @@ Graphics Rendering
 ===============================================================================================*/
 /*static*/ void updateCollisions(int *values)
 {
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"before updateCollisions",10,20);
-
 	int x=values[0],y=values[1];
 	int xr,yr,SpriteOnScreen;
 	int xend=x+values[2];
@@ -1042,14 +1040,14 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"before updateCollisions",1
 	int Num=values[4];
 	int y256;
 
-	for (;y<yend ; ++y)
+	for (;y<yend ; y++)
 	{
 		if (y < 0 || y > 255) continue;
 
 		yr = (((y - System1BgScrollY) & 0xff) >>3)<<5;
 		y256 = y<<8;
 
-		for(x=values[0];x<xend;++x)
+		for(x=values[0];x<xend;x++)
 		{
 			if (x < 0 || x > 255) continue;
 
@@ -1068,7 +1066,6 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"before updateCollisions",1
 			}
 		}
 	}
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"after updateCollisions  ",10,20);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int System1CalcPalette()
@@ -1097,16 +1094,16 @@ void renderSpriteCache(int *values)
 {
 //	Src,Height,Skip,Width, Bank,nextSprite
 	int Src = values[0];
-	int Height = values[1];
+	unsigned int Height = values[1];
 	INT16 Skip = values[2];
-	int Width  = values[3];
+	unsigned int Width  = values[3];
 	int Bank = values[4];
-	INT16 aNextSprite = values[5];
+	UINT16 aNextSprite = values[5];
 
 	int Row;
 	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(aNextSprite<<3)];
 
-	for (Row = 0; Row < Height; ++Row) 
+	for (Row = 0; Row < Height; Row++) 
 	{
 		int x=0, /*y,*/ Src2;
 		Src = Src2 = Src + Skip;
@@ -1120,7 +1117,7 @@ void renderSpriteCache(int *values)
 				UINT8 Colour1, Colour2, Data;
 				Data = System1Sprites[Bank + (Src2 & 0x7fff)];
 
-				--Src2;
+				Src2--;
 				Colour1 = Data & 0x0f;
 
 				if (Colour1 == 0x0f) break;
@@ -1131,9 +1128,9 @@ void renderSpriteCache(int *values)
 				}
 				Colour2 = Data >> 4;
 				spriteVRam[n+x]=Colour2 | (Colour1<<4);
-				++x;
+				x++;
 //					if(x>=abs(Skip)) break;
-			}		 
+			}
 		}
 		else
 		{
@@ -1142,7 +1139,7 @@ void renderSpriteCache(int *values)
 				UINT8 Colour1, Colour2, Data;
 				Data = System1Sprites[Bank + (Src2 & 0x7fff)];
 
-				++Src2;
+				Src2++;
 				Colour1 = Data >> 4;
 
 				if (Colour1 == 0x0f) break;
@@ -1155,24 +1152,39 @@ void renderSpriteCache(int *values)
 					break;
 				}
 				spriteVRam[n+x]=Data ;//Colour2 | (Colour1<<4);
-				++x;
+				x++;
 //					if(x>=abs(Skip)) break;
 			}
 		}
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void reset_sprite_colli(unsigned int Num)
+{
+ 	if(sprites_collision[Num].width>0)// && colli[Num][3]>0)
+ 	{
+ 		for (unsigned int i=sprites_collision[Num].y; i<=sprites_collision[Num].yend; i++)
+ 		{
+			memset(SpriteOnScreenMap[(i<<8)+sprites_collision[Num].x],0xff,sprites_collision[Num].width);
+		}		 
+ 	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 void System1DrawSprites()
 {
 	unsigned int i;//, SpriteBottomY, SpriteTopY;
 	UINT8 *SpriteBase;
-	memset(SpriteOnScreenMap, 255, 256 * 256);
-#if 0
-	for (i = 0; i < 32; ++i) 
+//	memset(SpriteOnScreenMap, 255, 256 * 256);
+	if(CollisionFunction)
 	{
-		reset_sprite_colli(i);
+		memset4_fast(SpriteOnScreenMap, 255, 256 * 256);
+/*		for (i = 0; i < 32; ++i) 
+		{
+			reset_sprite_colli(i);
+		}
+*/
 	}
-#endif
+
 	for (i = 0; i < 32; ++i) 
 	{
 		SpriteBase = System1SpriteRam + (i << 4);
@@ -1192,26 +1204,29 @@ void System1DrawSprites()
 //			DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
 
 			if (spriteCache[addr]!=0xFFFF)
- 				DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
+				DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
 			else
 				 DrawSprite(i,Bank,addr,Skip,SpriteBase);
 		}
 		else
 		{
 			ss_sprite[i+3].ax = ss_sprite[i+3].ay = ss_sprite[i+3].charSize = ss_sprite[i+3].charAddr = 0;
-#if 0
+#if 1
 			sprites_collision[i].width=0;
 #endif
 		}
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void renderSound(unsigned int *nSoundBufferPos)
+/*static*/ void renderSound()
 {
 	signed short *	nSoundBuffer = (signed short *)0x25a20000;
-	SN76496Update(0, &nSoundBuffer[nSoundBufferPos[0]], nSegmentLength);
-	SN76496Update(1, &nSoundBuffer[nSoundBufferPos[0]], nSegmentLength);
-	nSoundBufferPos[0]+= nSegmentLength;
+	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	SN76496Update(0, &nSoundBuffer[deltaSlave], nSegmentLength);
+	SN76496Update(1, &nSoundBuffer[deltaSlave], nSegmentLength);
+	deltaSlave+=nSegmentLength;
+	//	nSoundBufferPos[0]+= nSegmentLength;
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
 
 /*==============================================================================================
@@ -1226,7 +1241,7 @@ int System1Frame()
 	MakeInputsFunction();
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	
-	for (i = 0; i < nInterleave; ++i) {
+	for (i = 0; i < nInterleave; i++) {
 		
 		// Run Z80 #1
 #ifdef CZ80
@@ -1244,7 +1259,7 @@ int System1Frame()
 		if (i == 9) CZetRaiseIrq(0);
 		CZetClose();
 #endif
-
+		SPR_RunSlaveSH((PARA_RTN*)renderSound,NULL);
 //vbt à précalculer !!!
 //		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 //		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
@@ -1261,15 +1276,7 @@ int System1Frame()
 			z80_emulate(1);
 		}
 #endif
-
-//		if(SlaveInWork())
-//			SPR_WaitEndSlaveSH();
-//			if(!SlaveInWork())
-
-		SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
-
-//			else
-//				renderSound(&nSoundBufferPos);
+		SPR_WaitEndSlaveSH();
 	}
 	System1Render();
 
@@ -1360,32 +1367,5 @@ char *itoa(i)
     *--p = '-';
   }
   return p;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void reset_sprite_colli(unsigned int Num)
-{
- 	if(sprites_collision[Num].width>0 && sprites_collision[Num].y>=0)// && colli[Num][3]>0)
- 	{
-/*		char toto[200];
-				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"                          ",110,1+Num*9);
-				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"                          ",0,10);
-
-				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(sprites_collision[Num].x),110,1+Num*9);
-				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(sprites_collision[Num].y),126,1+Num*9);
-				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(sprites_collision[Num].width),142,1+Num*9);
-				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(sprites_collision[Num].yend),158,1+Num*9);
-
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(Num),1,10);
- */
- 		for (int i=sprites_collision[Num].y; i<=sprites_collision[Num].yend; i++)
- 		{
-/*			FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"    ",16,10);
-			FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)itoa(i),16,10);
-*/
-			memset(SpriteOnScreenMap[(i<<8)+sprites_collision[Num].x],0xff,sprites_collision[Num].width);
-		}		 
- 	}
-//	else
-//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"                          ",110,1+Num*9);
 }
 #endif

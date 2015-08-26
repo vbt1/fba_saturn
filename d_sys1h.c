@@ -239,7 +239,8 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 //	SPR_RunSlaveSH((PARA_RTN*)updateCollisions,&values2);
 }
 
-void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
+//void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
+void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];

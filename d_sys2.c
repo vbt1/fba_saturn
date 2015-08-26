@@ -225,7 +225,8 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase)
+//void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase)
+void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 {
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[abs(Skip)];

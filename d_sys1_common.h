@@ -34,8 +34,8 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ UINT16 *spriteCache = NULL;
 typedef int bool;
 
-//typedef struct { UINT8 x, y, width, yend } sprite_collision; 
-//sprite_collision sprites_collision[32];
+typedef struct { UINT8 x, y, width, yend } sprite_collision; 
+sprite_collision sprites_collision[32];
 /*static*/ UINT16 nextSprite=0;
 /*static*/ UINT8 flipscreen=0;
 /*static*/ void make_cram_lut(void);
@@ -45,7 +45,7 @@ void initScrolling(Uint8 enabled,void *address);
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase);
-void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase);
+void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 void *memset4_fast(void *, long, size_t);
 void DrvInitSaturn();
@@ -109,7 +109,8 @@ void DrvInitSaturn();
 typedef void (*Decode)();
 /*static*/ Decode DecodeFunction;
 /*static*/ void System1Render();
-
+typedef void (*Collision)(int *);
+Collision CollisionFunction;
 typedef void (*MakeInputs)();
 /*static*/ MakeInputs MakeInputsFunction;
 
