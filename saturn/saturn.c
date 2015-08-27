@@ -1616,7 +1616,8 @@ static int nDrvInit(int nDrvNum)
 
 
 
-// vbt à remettre    		GFS_Load(GFS_NameToId(strupr(drv_file)), 0, (void *)OVLADDR, GFS_BUFSIZ_INF);
+// vbt à remettre    
+	GFS_Load(GFS_NameToId(strupr(drv_file)), 0, (void *)OVLADDR, GFS_BUFSIZ_INF);
 	ChangeDir(BurnDrvGetTextA(DRV_NAME));
 
 	fp = (void *)OVLADDR;

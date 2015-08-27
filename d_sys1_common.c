@@ -230,7 +230,7 @@ Allocate Memory
 {
 	UINT8 *Next; Next = Mem;
 
-	System1Rom1            = Next; Next += 0x020000;
+	System1Rom1            = Next; Next += 0x030000;
 	System1Fetch1          = Next; Next += 0x010000;
 	System1Rom2            = Next; Next += 0x008000;
 	System1PromRed         = Next; Next += 0x000100;
@@ -245,7 +245,7 @@ Allocate Memory
 	System1PaletteRam      = Next; Next += 0x000600;
 	System1BgRam           = Next; Next += 0x000800;
 //	System1VideoRam        = Next; Next += 0x000700;
-	System1VideoRam        = Next; Next += 0x000800;
+	System1VideoRam        = Next; Next += 0x004000;
 	RamStart1 = RamStart	= System1VideoRam-0xe800;
 //	RamStart16					= (UINT16 *)RamStart;
 	System1ScrollXRam	   = System1VideoRam + 0x7C0;
@@ -300,7 +300,8 @@ void System1BankRom()
 {
 	int BankAddress = (System1RomBank << 14) + 0x10000;
 	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
-	CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + BankAddress, System1Rom1 + BankAddress);
+//	CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + BankAddress, System1Rom1 + BankAddress);
+	CZetMapArea2(0x8000, 0xbfff, 2, System1Rom1 + BankAddress + 0x20000, System1Rom1 + BankAddress);
 }
 
 void System1BankRomNoDecode()
@@ -353,6 +354,7 @@ void __fastcall System1Z801PortWrite(unsigned short a, UINT8 d)
 			System1FlipScreen = d & 0x80;
 			return;
 		}
+		case 0x1c: return; // NOP
 	}
 }
 
@@ -541,7 +543,7 @@ void initLayers()
 //	scfg.dispenbl      = ON;
 //	scfg.charsize      = SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
 //	scfg.pnamesize     = SCL_PN2WORD;
-//	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
+	scfg.platesize     = SCL_PL_SIZE_2X2; // ou 2X2 ?
 //	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 //	scfg.datatype      = SCL_CELL;
 	scfg.plate_addr[0] = (Uint32)ss_map;
@@ -782,7 +784,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	MemIndex();
 
 	UINT8 *	System1TempRom = (UINT8*)0x00200000;
-	memset(System1TempRom, 0, 0x18000);
+	memset(System1TempRom, 0, 0x40000);
 	// Load Z80 #1 Program roms
 
 	RomOffset = 0;
@@ -794,8 +796,17 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		memset(System1Rom1, 0, 0x18000);
 		memcpyl(System1Rom1 + 0x00000, System1TempRom + 0x00000, 0x8000);
 		memcpyl(System1Rom1 + 0x10000, System1TempRom + 0x08000, 0x8000);
-		memcpyl(System1Rom1 + 0x08000, System1TempRom + 0x08000, 0x8000);
 		memcpyl(System1Rom1 + 0x18000, System1TempRom + 0x10000, 0x8000);
+
+		if (System1BankedRom==2) 
+		{ // here!
+			memcpyl (System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
+			memcpyl (System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
+			memcpyl (System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
+			memcpyl (System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
+			memcpyl (System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
+			memcpyl (System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
+		}
 	}
 	if (DecodeFunction) DecodeFunction();
 	
@@ -806,7 +817,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	}
 	
 	// Load and decode tiles
-	memset(System1TempRom, 0, 0x18000);
+	memset(System1TempRom, 0, 0x20000);
 	RomOffset += nZ80Rom2Num;
 	for (i = 0; i < nTileRomNum; i++) {
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
@@ -839,7 +850,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	else
 		System1Sprites = (UINT8 *)0x02E0000;
 
-	memset(System1Sprites, 0x11, System1SpriteRomSize);
+	memset(System1Sprites, 0x00, System1SpriteRomSize);
 	// Load Sprite roms
 	RomOffset += nTileRomNum;
 	for (i = 0; i < nSpriteRomNum; i++) 
@@ -864,9 +875,10 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	CZetMapArea(0x0000, 0x7fff, 0, System1Rom1);
 	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + 0x8000);
 
-	if (DecodeFunction) {
+	if (DecodeFunction) 
+	{
 		CZetMapArea2(0x0000, 0x7fff, 2, System1Fetch1, System1Rom1);
-		CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + 0x8000, System1Rom1 + 0x8000);
+		CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + 0x10000, System1Rom1 + 0x10000);
 	} else {
 		CZetMapArea(0x0000, 0x7fff, 2, System1Rom1);
 		CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + 0x8000);
@@ -919,6 +931,11 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	z80_map_read  (0x8000, 0x87ff, System1Ram2);
 	z80_map_write (0x8000, 0x87ff, System1Ram2); //ajout
 	z80_map_fetch (0x8000, 0x87ff, System1Ram2);
+// derek fix for wbml sound :)
+	z80_map_read  (0x8800, 0x8fff, System1Ram2);
+	z80_map_write (0x8800, 0x8fff, System1Ram2); //ajout
+	z80_map_fetch (0x8800, 0x8fff, System1Ram2);
+
 	z80_end_memmap();
 	z80_reset();
 
@@ -1059,7 +1076,7 @@ Graphics Rendering
 			SpriteOnScreenMap[y256 + x] = Num;
 
 			xr = ((x - System1BgScrollX) & 0xff) / 8;
-
+ // vbt à remettre !!!!
 			if (System1BgRam[2 * ( yr + xr) + 1] & 0x10) 
 			{
 				System1BgCollisionRam[0x20 + Num] = 0xff;
@@ -1121,12 +1138,13 @@ void renderSpriteCache(int *values)
 				Colour1 = Data & 0x0f;
 
 				if (Colour1 == 0x0f) break;
+				Colour2 = Data >> 4;
+
 				if (Colour2 == 0x0f) 
 				{
 					spriteVRam[n+x]=(Colour1<<4);// | 0x0;
 					break;
 				}
-				Colour2 = Data >> 4;
 				spriteVRam[n+x]=Colour2 | (Colour1<<4);
 				x++;
 //					if(x>=abs(Skip)) break;

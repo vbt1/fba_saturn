@@ -301,7 +301,7 @@
 void mc8123_decrypt_rom(int banknum, int numbanks, unsigned char *pRom, unsigned char *pFetch, unsigned char *pKey)
 {
 	UINT8 *decrypted1 = pFetch;
-//	UINT8 *decrypted2 = numbanks > 1 ? auto_malloc(0x4000 * numbanks) : decrypted1 + 0x8000;
+	UINT8 *decrypted2 = numbanks > 1 ? decrypted1 + 0x10000 : decrypted1 + 0x8000;
 	UINT8 *rom = pRom;
 	UINT8 *key = pKey;
 	int A, bank;
@@ -324,7 +324,8 @@ void mc8123_decrypt_rom(int banknum, int numbanks, unsigned char *pRom, unsigned
 			UINT8 src = rom[0x8000 + 0x4000*bank + A];
 
 			/* decode the opcodes */
-//			decrypted2[0x4000 * bank + (A-0x8000)] = mc8123_decrypt(A,src,key,1);
+			if(numbanks >1)
+				decrypted2[0x4000 * bank + (A-0x8000)] = mc8123_decrypt(A,src,key,1);
 
 			/* decode the data */
 			rom[0x8000 + 0x4000*bank + A] = mc8123_decrypt(A,src,key,0);

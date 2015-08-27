@@ -1,3 +1,4 @@
+
 // 43-44 fps with CZ80 main & RAZE slave
 // 17-18 fps with RAZE main & CZ80 slave
 // FB Alpha Penguin-Kun Wars Driver Module
@@ -12,6 +13,8 @@
 #include "d_sys2.h"
 #include "d_sys1_common.c"
 
+UINT8 System1MC8123Key[0x2000];
+
 int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvChplftb = {
@@ -21,8 +24,16 @@ int ovlInit(char *szShortName)
 		ChplftbInit, System1Exit, System1Frame, NULL//, NULL//,
 	};
 
+	 struct BurnDriver nBurnDrvWbml = {
+		"wbml", "sys2",
+		"Wonder Boy in Monster Land (Jp New)\0",
+		wbmlRomInfo, wbmlRomName, MyheroInputInfo, WbmlDIPInfo,
+		WbmlInit, System1Exit, System1Frame, NULL,
+	};
+
 //	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
-	memcpy(shared,&nBurnDrvChplftb,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvChplftb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvChplftb,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvWbml.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvWbml,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -39,11 +50,136 @@ int ovlInit(char *szShortName)
 		case 0x0c: return System1Dip[0];
 		case 0x0d: return System1Dip[1];
 		case 0x10: return System1Dip[1];
-		case 0x15: return System1BankSwitch;
-		case 0x16: return System1BgBankLatch;
+		case 0x14:
+		case 0x15:
+		case 0x16:
+		case 0x17: return ppi8255_r(0, a & 3);
 		case 0x19: return System1BankSwitch;
 	}
 	return 0;
+}
+
+inline void wbml_videoram_bank_latch_w (UINT8 d)
+{
+	if(System1BgBankLatch != d)
+	{
+		System1BgBankLatch = d;
+		System1BgBank = (d >> 1) & 0x03;	/* Select 4 banks of 4k, bit 2,1 */
+		UINT8 *CurrentBank = (UINT8 *)(System1VideoRam + System1BgBank * 0x1000);
+		RamStart1 = CurrentBank - 0xe000;
+		// iq_132
+		CZetMapArea(0xe000, 0xefff, 0, CurrentBank);
+		CZetMapArea(0xe800, 0xefff, 1, CurrentBank+0x800);
+		CZetMapArea(0xe000, 0xefff, 2, CurrentBank);
+	}
+}
+
+void system2_foregroundram_w(unsigned short a, UINT8 d) 
+{
+	if(RamStart1[a]!=d)
+	{
+		RamStart1[a] = d;
+		a&=~1;
+
+		unsigned int Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
+		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
+
+		unsigned int x = map_offset_lut[a&0x7ff];
+		ss_map2[x]   = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
+		ss_map2[x+1] = Code & (System1NumTiles-1);
+	}
+}
+
+void system2_backgroundram_w(unsigned short a, UINT8 d, unsigned char start)
+{
+//		UINT8 *source = System1VideoRam + (System1VideoRam[0x0740 + page*2] & 0x07)*0x800;
+//	if(RamStart[a]!=d)
+	{
+		RamStart[a] = d;
+		a&=~1;
+		int Code;//, Colour;
+		Code = (RamStart[a + 1] << 8) | RamStart[a + 0];
+		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
+
+		unsigned int x = map_offset_lut[a&0x7ff];
+		UINT16 *map = &ss_map[x]; 
+		map[start]     = ((Code >> 5) & 0x3f)|(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);//color_lut[Code];
+		map[start+1] = Code & (System1NumTiles-1);
+	}
+}
+
+
+
+void __fastcall WbmlZ801PortWrite(unsigned short a, UINT8 d)
+{
+	a &= 0x1f;
+	switch (a) 
+	{
+		case 0x14:
+		case 0x15:
+		case 0x16:
+		case 0x17:
+			ppi8255_w(0, a & 3, d);
+		return;
+	}
+}
+
+void __fastcall WbmlZ801ProgWrite(UINT16 a, UINT8 d)
+{
+	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
+	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
+
+	if (a >= 0xe000 && a <= 0xe7ff) 
+	{
+//		const int v[] = { 0, 0x40, 0x1000, 0x1040 };
+		if(!System1BgBank)
+		{
+			system2_foregroundram_w(a, d);
+			return;
+		}
+		RamStart1[a] = d;
+		return;
+	}
+	if (a >= 0xe800 && a <= 0xefff) 
+	{
+		RamStart1[a] = d;
+		return;
+	}
+
+	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w(a,d); return; }
+	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
+	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
+}
+
+UINT8 __fastcall WbmlZ801ProgRead(unsigned short a)
+{
+	if (a >= 0xe000 && a <= 0xefff) 
+	{ 
+		return System1VideoRam[(0x1000*System1BgBank) + (a & 0xfff)];
+	}
+	return 0;
+}
+
+static void WbmlPPI0WriteA(UINT8 data)
+{
+	system1_soundport_w(data);
+}
+
+static void WbmlPPI0WriteB(UINT8 data)
+{
+	chplft_bankswitch_w(data);
+}
+
+static void WbmlPPI0WriteC(UINT8 data)
+{
+// refaire avec raze
+	CZetClose();
+	CZetOpen(1);
+	CZetSetIRQLine(0x20, (data & 0x80) ? CZET_IRQSTATUS_NONE : CZET_IRQSTATUS_ACK);
+	CZetClose();
+	CZetOpen(0);
+
+	wbml_videoram_bank_latch_w(data);
 }
 
 /*static*/ inline void chplft_bankswitch_w (UINT8 d)
@@ -53,53 +189,18 @@ int ovlInit(char *szShortName)
 	System1BankSwitch = d;
 }
 
-/*static*/ void __fastcall ChplftZ801PortWrite(unsigned short a, UINT8 d)
-{
-	a &= 0xff;
-	switch (a) 
-	{
-		case 0x14:{system1_soundport_w(d);	return;}
-		case 0x15:{chplft_bankswitch_w(d);	return;}
-	}
-}
-
 /*static*/ void __fastcall ChplftZ801ProgWrite(unsigned short a, UINT8 d)
 {
 	if (a >= 0xe000 && a <= 0xe7bf) { system1_foregroundram_w(a,d); return; }
 	if (a >= 0xe800 && a <= 0xeeff) { system1_backgroundram_w(a,d); return; }
 	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
 	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
-//	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w_color_rom(a,d); return; }
+//	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w(a,d); return; }
 	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
 	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
-
-	switch (a) {
-		case 0xefbd: {
-//			System1ScrollY = d;
-//			if(flipscreen)d+=8;
-//				ss_reg->n0_move_y = (d+16)<<16;
-				ss_reg->n0_move_y = d<<16;
-			break;
-		}
-			/*
-		case 0xe7c0: {
-			System1ScrollX[0] = d;
-			break;
-		}
-		
-		case 0xe7c1: {
-			System1ScrollX[1] = d;
-			break;
-		}	 */
-	}
-	 /*
-	if (a >= 0xef00 && a <= 0xefff) {
-		System1efRam[a - 0xef00] = d;
-		return;
-	}		   */
-	
-//	bprintf(PRINT_NORMAL, _T("Prog Write %x, %x\n"), a, d);
+   if (a == 0xefbd) { ss_reg->n0_move_y = d<<16; return; }
 }
+
 /*static*/ int System1CalcSprPalette()
 {
 	for (int i = 511; i > 0; i--) 
@@ -107,6 +208,11 @@ int ovlInit(char *szShortName)
 		colAddr[i] = cram_lut[System1PaletteRam[i]];
 	}
 	return 0;
+}
+
+static void wbml_decode()
+{
+	mc8123_decrypt_rom(1, 4, System1Rom1, System1Rom1 + 0x20000, System1MC8123Key);
 }
 
 /*static*/ int ChplftbInit()
@@ -142,7 +248,7 @@ int ovlInit(char *szShortName)
 
 	CZetMapArea(0xd800, 0xddff, 0, System1PaletteRam);
 //	CZetMapArea(0xd800, 0xddff, 1, System1PaletteRam);
-	CZetMapArea(0xd800, 0xd9ff, 1, System1PaletteRam);
+	CZetMapArea(0xd800, 0xddff, 1, System1PaletteRam);
 //	CZetMapArea(0xd800, 0xddff, 2, System1PaletteRam);
 
 	CZetMapArea(0xe7c0, 0xe7ff, 0, System1ScrollXRam);
@@ -158,35 +264,139 @@ int ovlInit(char *szShortName)
 	CZetMapArea(0xe800, 0xeeff, 2, System1BgRam);
 
 	CZetSetWriteHandler(ChplftZ801ProgWrite);
+
 	CZetSetInHandler   (WbmlZ801PortRead);
-	CZetSetOutHandler(ChplftZ801PortWrite);
+	CZetSetOutHandler(WbmlZ801PortWrite);
 	CZetClose();
+
+	ppi8255_init(1);
+	PPI0PortWriteA = WbmlPPI0WriteA;
+	PPI0PortWriteB = WbmlPPI0WriteB;
+	PPI0PortWriteC = NULL;
+
 #endif
 //	nBurnFunction = System1CalcPalette;
 //	System1DoReset();
 	return nRet;
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ int WbmlInit()
+{
+	int nRet;
+	System1ColourProms = 1;
+	System1BankedRom = 1;
 
+	DecodeFunction = wbml_decode;
+
+	BurnLoadRom(System1MC8123Key, 15, 1);
+
+	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
+
+	System1SpriteRam = &System1Ram1[0x1000];
+	System1PaletteRam = &System1Ram1[0x1800];	 // à garder
+
+	make_cram_lut();
+	System1CalcPalette();
+
+//   nBurnFunction = System1CalcPalette;
+//	nBurnFunction = System1CalcSprPalette;//System1CalcPalette;
+	ss_reg->n1_move_x = 4<<16;
+	RamStart						= System1VideoRam-0xe000; // bg
+	RamStart1						= System1VideoRam-0xe000;	 // fg
+	drawWindow(0,224,0,0,65);
+
+	CZetOpen(0);
+	CZetMapArea2(0x0000, 0x7fff, 2, System1Rom1 + 0x20000, System1Rom1);
+	CZetMapArea2(0x8000, 0xbfff, 2, System1Rom1 + 0x30000, System1Rom1 + 0x10000);  // 30 fetch et 10 pour code ?
+	
+	CZetMapArea(0xd800, 0xddff, 0, System1PaletteRam);
+	CZetMemCallback(0xd800, 0xddff, 1);
+
+	CZetMapArea(0xd000, 0xd1ff, 1, System1SpriteRam);
+
+	CZetMemCallback(0xe000, 0xefff, 0);
+	CZetMemCallback(0xe000, 0xefff, 1);
+	CZetMemCallback(0xe000, 0xefff, 2);
+
+	CZetMapArea(0xe000, 0xefff, 0, System1VideoRam); //read
+//	CZetMapArea(0xe000, 0xefff, 1, System1VideoRam);	 //write
+	CZetMapArea(0xe000, 0xefff, 2, System1VideoRam); //fetch
+
+	CZetMemCallback(0xf000, 0xf3ff, 1);
+	CZetMemCallback(0xf800, 0xfbff, 1);
+
+	CZetSetReadHandler(WbmlZ801ProgRead);
+	CZetSetWriteHandler(WbmlZ801ProgWrite);
+
+	CZetSetInHandler   (WbmlZ801PortRead);
+	CZetSetOutHandler(WbmlZ801PortWrite);
+	CZetClose();
+
+	ppi8255_init(1);
+	PPI0PortWriteA = WbmlPPI0WriteA;
+	PPI0PortWriteB = WbmlPPI0WriteB;
+	PPI0PortWriteC = WbmlPPI0WriteC;
+
+//	System1Draw = WbmlRender;
+	memset(System1VideoRam,0x00,0x4000);
+
+	return nRet;
+}
+
+unsigned int map_cache[4][0x800];
+
+static void wbml_draw_bg( int trasp)
+{
+	ss_reg->n2_move_x = (260-(((System1VideoRam[0x7c0] >> 1) + ((System1VideoRam[0x7c1] & 1) << 7) - 256+5))) & 0xff;
+	ss_reg->n2_move_y = System1VideoRam[0x7ba] & 0xff;
+
+	const unsigned int v[] = { 0, 0x40, 0x1000, 0x1040 };
+
+	for (unsigned int page=0; page < 4; page++)
+	{
+		unsigned int current_map=v[page];
+		UINT8 *source = System1VideoRam + (System1VideoRam[0x0740 + page*2] & 0x07)*0x800;
+
+		for(UINT32 offs = 0; offs <0x800; offs+=2 )
+		{
+			UINT32 code = source[offs + 0] + (source[offs + 1] << 8);
+			if(map_cache[page][offs]!=code)
+			{
+
+				map_cache[page][offs]=code;
+				UINT32 color = (code >> 5) & 0x3f;
+//				UINT32 priority = code & 0x800;
+				code = ((code >> 4) & 0x800) | (code & 0x7ff);
+
+				unsigned int x = map_offset_lut[offs];
+				UINT16 *map = &ss_map[x]; 
+				map[current_map] = ((code >> 5) & 0x3f); //|((code & 0x800)?0x3000:0x1000);//color_lut[Code];
+				map[current_map+1] = code & (System1NumTiles-1);
+			}
+			offs+=2;
+			code = source[offs + 0] + (source[offs + 1] << 8);
+			if(map_cache[page][offs]!=code)
+			{
+
+				map_cache[page][offs]=code;
+				UINT32 color = (code >> 5) & 0x3f;
+//				UINT32 priority = code & 0x800;
+				code = ((code >> 4) & 0x800) | (code & 0x7ff);
+
+				unsigned int x = map_offset_lut[offs];
+				UINT16 *map = &ss_map[x]; 
+				map[current_map] = ((code >> 5) & 0x3f); //|((code & 0x800)?0x3000:0x1000);//color_lut[Code];
+				map[current_map+1] = code & (System1NumTiles-1);
+			}
+		}
+	}
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void System1Render()
 {
-	System1BgScrollX = 256-(((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 6) & 0xff);
-	INT32 Offs, sx, sy;
-
-	UINT16 *vbt = ((UINT16*)ss_scl);
-	for (Offs = 0; Offs < 64; Offs +=2) 
-	{
-		sy = (Offs <<3);
-		vbt[sy]     = vbt[sy+2]   = vbt[sy+4]   = vbt[sy+6]  = 
-		vbt[sy+8] = vbt[sy+10] = vbt[sy+12] = vbt[sy+14] = 
-		256-((System1ScrollXRam[(Offs) & ~1] >> 1) + ((System1ScrollXRam[Offs | 1] & 1) << 7) &0xff);
-	} 
 	System1DrawSprites();
-//	SPR_WaitEndSlaveSH();
+	wbml_draw_bg(0);
 }
-
-
-
 //-------------------------------------------------------------------------------------------------------------------------------------
 #if 1
 void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
@@ -195,35 +405,27 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[abs(Skip)];
 
-	unsigned int values[] ={Src,Height,Skip,Width>>1, Bank,nextSprite};
+	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	spriteCache[addr]=nextSprite;
 
-/*	if(Height==62) // && (Width==40||Width==80))
-	{ 
-		spriteCache[addr]=values[5] =(0x3E000)/8;
-//		while(1);
-	}
-*/
 	{
 	renderSpriteCache(values);
 	unsigned int  nextaddr = nextSprite + (Height*Width)/8;
 
-//	if(nextaddr%32!=0)	nextaddr = (nextaddr + (31)) & ~(31);
 	nextSprite = nextaddr;
 	
 	unsigned int delta	= (Num+3);
 
-	ss_sprite[delta].ax				= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
+	ss_sprite[delta].ax				= 11 + ((((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2);
 	ss_sprite[delta].ay				= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize	= (Width<<5) + Height;
+	ss_sprite[delta].charSize	= (Width<<6) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
 
- 	int values2[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
-	updateCollisions(values2);
+ //	int values2[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
+//	updateCollisions(values2);
 	}
 }
-
 //-------------------------------------------------------------------------------------------------------------------------------------
 //void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase)
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
@@ -232,23 +434,16 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 	unsigned int Width = width_lut[abs(Skip)];
 	unsigned int delta	= (Num+3);
 
- /*
-	if(Height==62) // && (Width==40||Width==80))
-	{ 
-		spriteCache[addr]=(0x3E000)/8;
-//		while(1);
-	} */
-//	if(Height==62 || vbx <2)
 	{
 //		vbx++;
-	ss_sprite[delta].ax			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
+	ss_sprite[delta].ax			= 11+ ((((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2);
 	ss_sprite[delta].ay			= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize		= (Width<<5) + Height;
+	ss_sprite[delta].charSize		= (Width<<6) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr		= 0x220+spriteCache[addr];
 
- 	int values[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
-	updateCollisions(values);
+// 	int values[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
+//	updateCollisions(values);
 	}
 }
 #endif
@@ -298,3 +493,4 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+// <gamezfan> bootleg set 1 is the best outside of the virtual console version

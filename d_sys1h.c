@@ -205,7 +205,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	if(flipscreen==2)
 	{
 		int toto = 216-ss_sprite[delta].ay;
-		ss_sprite[delta].ay			= toto+Width;
+		ss_sprite[delta].ay			= toto+Width*2;
 		ss_sprite[delta].by			= toto;
 		ss_sprite[delta].cy			= toto;
 //		ss_sprite[delta].dy			= ss_sprite[delta].ay;
@@ -217,7 +217,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	else
 	{
 		ss_sprite[delta].ax		= 256-SpriteBase[0]+8;
-		ss_sprite[delta].by		= ss_sprite[delta].ay+Width;
+		ss_sprite[delta].by		= ss_sprite[delta].ay+Width*2;
 		ss_sprite[delta].cy		= ss_sprite[delta].by;
 //		ss_sprite[delta].dy		= ss_sprite[delta].ay;
 
@@ -229,7 +229,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	ss_sprite[delta].bx			= ss_sprite[delta].ax;
 	ss_sprite[delta].dx			= ss_sprite[delta].cx;
 
-	ss_sprite[delta].charSize	= (Width<<5) + Height;
+	ss_sprite[delta].charSize	= (Width<<6) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
 
@@ -239,7 +239,6 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 //	SPR_RunSlaveSH((PARA_RTN*)updateCollisions,&values2);
 }
 
-//void DrawSpriteCache(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
@@ -253,7 +252,7 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 	{
 		int toto = 216-ss_sprite[delta].ay;
 		ss_sprite[delta].ax			= SpriteBase[0] + 41;
-		ss_sprite[delta].ay			= toto+Width;
+		ss_sprite[delta].ay			= toto+Width*2;
 		ss_sprite[delta].by			= toto;
 		ss_sprite[delta].cy			= toto;
 //		ss_sprite[delta].dy			= ss_sprite[delta].ay;
@@ -265,7 +264,7 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 	else
 	{
 		ss_sprite[delta].ax		= 256-SpriteBase[0]+8;
-		ss_sprite[delta].by		= ss_sprite[delta].ay+Width;
+		ss_sprite[delta].by		= ss_sprite[delta].ay+Width*2;
 		ss_sprite[delta].cy		= ss_sprite[delta].by;
 //		ss_sprite[delta].dy		= ss_sprite[delta].ay;
 
@@ -277,7 +276,7 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 	ss_sprite[delta].bx			= ss_sprite[delta].ax;
 	ss_sprite[delta].dx			= ss_sprite[delta].cx;
 
-	ss_sprite[delta].charSize	= (Width<<5) + Height;
+	ss_sprite[delta].charSize	= (Width<<6) + Height;
 	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
 	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
 
@@ -302,3 +301,4 @@ inline void System1Render()
 	System1BgScrollY = (-System1ScrollY[0] & 0xff);
 	System1DrawSprites();
 }
+

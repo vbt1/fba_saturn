@@ -104,7 +104,7 @@ OVLSYS2                 = root/d_sys2.coff
 OVLSYS21               = root/d_sys2.bin
 MPOVLSYS2FILE    = $(OVLSYS2:.coff=.maps)
 LDOVLSYS2FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS2FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSYS2         = d_sys2.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+SRCOVLSYS2         = d_sys2.c czet.c cz80/cz80.c sn76496.c 8255ppi.c mc8123.c saturn/ovl.c
 OBJOVLSYS2         = $(SRCOVLSYS2:.c=.o)
 
 OVLPACM                 = root/d_pacm.coff
