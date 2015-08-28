@@ -24,16 +24,23 @@ int ovlInit(char *szShortName)
 		ChplftbInit, System1Exit, System1Frame, NULL//, NULL//,
 	};
 
-	 struct BurnDriver nBurnDrvWbml = {
+	struct BurnDriver nBurnDrvWbml = {
 		"wbml", "sys2",
 		"Wonder Boy in Monster Land (Jp New)\0",
 		wbmlRomInfo, wbmlRomName, MyheroInputInfo, WbmlDIPInfo,
-		WbmlInit, System1Exit, System1Frame, NULL,
+		WbmlInit, System1Exit, System1Frame, NULL
 	};
 
-//	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
+	struct BurnDriver nBurnDrvWbmlb = {
+		"wbmlb", "sys2",
+		"Wonder Boy in Monster Land (English bootleg set 1)\0",
+		wbmlbRomInfo, wbmlbRomName, MyheroInputInfo, WbmlDIPInfo,
+		WbmljbInit, System1Exit, System1Frame, NULL
+	};
+
 	if (strcmp(nBurnDrvChplftb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvChplftb,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvWbml.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvWbml,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvWbmlb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvWbmlb,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -61,7 +68,7 @@ int ovlInit(char *szShortName)
 
 inline void wbml_videoram_bank_latch_w (UINT8 d)
 {
-	if(System1BgBankLatch != d)
+//	if(System1BgBankLatch != d)
 	{
 		System1BgBankLatch = d;
 		System1BgBank = (d >> 1) & 0x03;	/* Select 4 banks of 4k, bit 2,1 */
@@ -210,6 +217,11 @@ static void WbmlPPI0WriteC(UINT8 data)
 	return 0;
 }
 
+static void wbmljb_decode()
+{
+	return; // fake decode function
+}
+
 static void wbml_decode()
 {
 	mc8123_decrypt_rom(1, 4, System1Rom1, System1Rom1 + 0x20000, System1MC8123Key);
@@ -280,18 +292,8 @@ static void wbml_decode()
 	return nRet;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ int WbmlInit()
+void CommonWbmlInit()
 {
-	int nRet;
-	System1ColourProms = 1;
-	System1BankedRom = 1;
-
-	DecodeFunction = wbml_decode;
-
-	BurnLoadRom(System1MC8123Key, 15, 1);
-
-	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
-
 	System1SpriteRam = &System1Ram1[0x1000];
 	System1PaletteRam = &System1Ram1[0x1800];	 // à garder
 
@@ -339,8 +341,45 @@ static void wbml_decode()
 
 //	System1Draw = WbmlRender;
 	memset(System1VideoRam,0x00,0x4000);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ int WbmljbInit()
+{
+	int nRet;
 
+	System1ColourProms = 1;
+	System1BankedRom = 2; // 2
+
+	DecodeFunction = wbmljb_decode;
+	nRet = System1Init(3, 0x10000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
+	CommonWbmlInit();
 	return nRet;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ int WbmlInit()
+{
+	int nRet;
+	System1ColourProms = 1;
+	System1BankedRom = 1;
+
+	DecodeFunction = wbml_decode;
+
+	BurnLoadRom(System1MC8123Key, 15, 1);
+	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
+	CommonWbmlInit();
+	return nRet;
+}
+
+void renderTile(UINT32 offs,UINT32 code,UINT32 current_map)
+{
+	UINT32 color = (code >> 5) & 0x3f;
+//				UINT32 priority = code & 0x800;
+	code = ((code >> 4) & 0x800) | (code & 0x7ff);
+
+	unsigned int x = map_offset_lut[offs];
+	UINT16 *map = &ss_map[x]; 
+	map[current_map] = ((code >> 5) & 0x3f); //|((code & 0x800)?0x3000:0x1000);//color_lut[Code];
+	map[current_map+1] = code & (System1NumTiles-1);
 }
 
 unsigned int map_cache[4][0x800];
@@ -357,37 +396,65 @@ static void wbml_draw_bg( int trasp)
 		unsigned int current_map=v[page];
 		UINT8 *source = System1VideoRam + (System1VideoRam[0x0740 + page*2] & 0x07)*0x800;
 
-		for(UINT32 offs = 0; offs <0x800; offs+=2 )
+		for(UINT32 offs = 0; offs <0x800;)
 		{
 			UINT32 code = source[offs + 0] + (source[offs + 1] << 8);
 			if(map_cache[page][offs]!=code)
 			{
-
-				map_cache[page][offs]=code;
-				UINT32 color = (code >> 5) & 0x3f;
-//				UINT32 priority = code & 0x800;
-				code = ((code >> 4) & 0x800) | (code & 0x7ff);
-
-				unsigned int x = map_offset_lut[offs];
-				UINT16 *map = &ss_map[x]; 
-				map[current_map] = ((code >> 5) & 0x3f); //|((code & 0x800)?0x3000:0x1000);//color_lut[Code];
-				map[current_map+1] = code & (System1NumTiles-1);
+ 				map_cache[page][offs]=code;
+				renderTile(offs,code,current_map);
 			}
 			offs+=2;
 			code = source[offs + 0] + (source[offs + 1] << 8);
 			if(map_cache[page][offs]!=code)
 			{
-
-				map_cache[page][offs]=code;
-				UINT32 color = (code >> 5) & 0x3f;
-//				UINT32 priority = code & 0x800;
-				code = ((code >> 4) & 0x800) | (code & 0x7ff);
-
-				unsigned int x = map_offset_lut[offs];
-				UINT16 *map = &ss_map[x]; 
-				map[current_map] = ((code >> 5) & 0x3f); //|((code & 0x800)?0x3000:0x1000);//color_lut[Code];
-				map[current_map+1] = code & (System1NumTiles-1);
+ 				map_cache[page][offs]=code;
+				renderTile(offs,code,current_map);
 			}
+			offs+=2;
+			code = source[offs + 0] + (source[offs + 1] << 8);
+			if(map_cache[page][offs]!=code)
+			{
+ 				map_cache[page][offs]=code;
+				renderTile(offs,code,current_map);
+			}
+			offs+=2;
+			code = source[offs + 0] + (source[offs + 1] << 8);
+			if(map_cache[page][offs]!=code)
+			{
+ 				map_cache[page][offs]=code;
+				renderTile(offs,code,current_map);
+			}
+			offs+=2;
+
+			code = source[offs + 0] + (source[offs + 1] << 8);
+			if(map_cache[page][offs]!=code)
+			{
+ 				map_cache[page][offs]=code;
+				renderTile(offs,code,current_map);
+			}
+			offs+=2;
+			code = source[offs + 0] + (source[offs + 1] << 8);
+			if(map_cache[page][offs]!=code)
+			{
+ 				map_cache[page][offs]=code;
+				renderTile(offs,code,current_map);
+			}
+			offs+=2;
+			code = source[offs + 0] + (source[offs + 1] << 8);
+			if(map_cache[page][offs]!=code)
+			{
+ 				map_cache[page][offs]=code;
+				renderTile(offs,code,current_map);
+			}
+			offs+=2;
+			code = source[offs + 0] + (source[offs + 1] << 8);
+			if(map_cache[page][offs]!=code)
+			{
+ 				map_cache[page][offs]=code;
+				renderTile(offs,code,current_map);
+			}
+			offs+=2;
 		}
 	}
 }

@@ -792,20 +792,21 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1); if (nRet != 0) return 1;
 	}
 	if (System1BankedRom) {
-		memcpyl(System1TempRom, System1Rom1, 0x18000);
-		memset(System1Rom1, 0, 0x18000);
+		memcpyl(System1TempRom, System1Rom1, 0x20000);
+		memset(System1Rom1, 0, 0x20000);
 		memcpyl(System1Rom1 + 0x00000, System1TempRom + 0x00000, 0x8000);
 		memcpyl(System1Rom1 + 0x10000, System1TempRom + 0x08000, 0x8000);
 		memcpyl(System1Rom1 + 0x18000, System1TempRom + 0x10000, 0x8000);
 
 		if (System1BankedRom==2) 
 		{ // here!
-			memcpyl (System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
-			memcpyl (System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
-			memcpyl (System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
-			memcpyl (System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
-			memcpyl (System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
-			memcpyl (System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
+			memset(System1Rom1, 0, 0x40000);
+			memcpy (System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
+			memcpy (System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
+			memcpy (System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
+			memcpy (System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
+			memcpy (System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
+			memcpy (System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
 		}
 	}
 	if (DecodeFunction) DecodeFunction();

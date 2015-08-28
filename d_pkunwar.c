@@ -4,6 +4,7 @@
 //#define RAZE 1  // `EMULATE_R_REGISTER obligatoire
 #include "d_pkunwar.h"
 static UINT16 cram_lut[256];
+//static UINT32 map_cache[0x400];
 
 int ovlInit(char *szShortName)
 {
@@ -79,6 +80,33 @@ static void DrvPalRAMUpdateR5()
 	{
 		UINT8 color = DrvPalRAM[i];
 		colAddr[i] = cram_lut[color];
+	}
+}
+
+
+static void DrvPalRAMUpdateNinjaKun()
+{
+	for (INT32 i = 0; i < 16; i++) 
+	{
+		if (i != 1) 
+		{ // ??
+			for (INT32 j = 0; j < 16; j++) 
+			{
+				DrvPalRAM[0x200 + i + j * 16 + 0] = DrvPalRAM[i];
+			}
+		}
+		DrvPalRAM[0x200 + i * 16 + 1] = DrvPalRAM[i];
+	}
+
+	for (INT32 i = 0; i < 0x300; i++) 
+	{
+		UINT8 color = DrvPalRAM[i];
+		if(i<0x100)
+		colAddr[i] = cram_lut[color];
+		if(i<0x200)
+		colBgAddr[i] = cram_lut[color];
+		if(i<0x300)
+		colBgAddr2[i] = cram_lut[color];
 	}
 }
 
@@ -809,7 +837,7 @@ static UINT8 raiders5_port_0(UINT32 data)
 static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
-	DrvMainROM	 = Next; Next += 0x010000;
+	DrvMainROM	 = Next; Next += 0x020000;
 	DrvSubROM	= Next; Next += 0x010000;
 	DrvGfxROM0	= Next; Next += 0x020000;
 	DrvColPROM= Next; Next += 0x000020;
@@ -963,8 +991,8 @@ static INT32 NinjakunInit()
 	DrvBgRAM = DrvMainROM + 0xc800;
 	DrvSprRAM = DrvMainROM + 0xd000;
 	DrvPalRAM = DrvMainROM + 0xd800;
-	DrvMainRAM = DrvMainROM + 0xe000;
-	DrvSubRAM = DrvMainROM += 0xe800;
+	DrvMainRAM = DrvMainROM + 0x10000;
+//	DrvSubRAM = DrvMainROM += 0xe800;
 //	DrvSubROM = DrvMainROM += 0x010000;
 
 	NinjakunLoadRoms();
@@ -1217,6 +1245,16 @@ static INT32 Raiders5Init()
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void initNinjaKunColors()
+{
+	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
+	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
+	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	SCL_SetColRam(SCL_NBG0,8,8,palette);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initRaiders5Colors()
 {
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
@@ -1319,6 +1357,7 @@ static INT32 Raiders5Init()
 
 //-------------------------------------------------------------------------------------------------
 // Drawing Routines
+
 /*static*/ int DrawChars(int priority)
 {
 	int offs;
@@ -1449,7 +1488,7 @@ static INT32 NovaFrame()
 	SPR_WaitEndSlaveSH();
 	return 0;
 }
-
+/*
 static void DrvPalRAMUpdate()
 {
 	for (INT32 i = 0; i < 16; i++) {
@@ -1476,10 +1515,10 @@ static void DrvPalRAMUpdate()
 		colAddr[i] = colBgAddr[i] = RGB(r,g,b);
 	}
 }
-
+*/
 static INT32 NinjakunDraw()
 {
-	DrvPalRAMUpdate();
+	DrvPalRAMUpdateR5();
 
 //	BurnTransferClear();
 
@@ -1492,6 +1531,7 @@ static INT32 NinjakunDraw()
 //	if (nBurnLayer & 8) draw_layer(DrvFgRAM, DrvGfxROM0 + 0x0000, 3, 0x000, 0);
 
 //	BurnTransferCopy(DrvPalette);
+//draw_layer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 2, 0x100, 0);
 
 draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 3, 0x000, 0);
 nova_draw_sprites(0x200);

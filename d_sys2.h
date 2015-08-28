@@ -24,6 +24,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int System1Exit();
 /*static*/ int System1Frame();
 /*static*/ int WbmlInit();
+/*static*/ int WbmljbInit();
 
 /*==============================================================================================
 Input Definitions
@@ -267,7 +268,7 @@ STD_ROM_FN(wbmljb)
 // Wonder Boy in Monster Land (English bootleg set 1)
 
 static struct BurnRomInfo wbmlbRomDesc[] = {
-	{ "wbml.01",		0x10000, 0x66482638, 1 }, //  0 maincpu
+/*	{ "wbml.01",		0x10000, 0x66482638, 1 }, //  0 maincpu
 	{ "wbml.02",		0x10000, 0x48746bb6, 1 }, //  1
 	{ "wbml.03",		0x10000, 0xd57ba8aa, 1 }, //  2
 
@@ -276,6 +277,16 @@ static struct BurnRomInfo wbmlbRomDesc[] = {
 	{ "wbml.08",		0x08000, 0xbbea6afe, 3 }, //  4 tiles
 	{ "wbml.09",		0x08000, 0x77567d41, 3 }, //  5
 	{ "wbml.10",		0x08000, 0xa52ffbdd, 3 }, //  6
+*/
+	{ "galaxy.ic0",	0x10000, 0x66482638, 1 }, //  0 maincpu
+	{ "galaxy.ic1",	0x10000, 0x89a8ab93, 1 }, //  1
+	{ "galaxy.ic2",	0x08000, 0x39e07286, 1 }, //  2
+
+	{ "epr11037.126",	0x08000, 0x7a4ee585, 2 }, //  3 soundcpu
+
+	{ "galaxy.ic4",		0x08000, 0xab75d056, 3 }, //  4 tiles
+	{ "galaxy.ic6",		0x08000, 0x6bb5e601, 3 }, //  5
+	{ "galaxy.ic5",		0x08000, 0x3c11d151, 3 }, //  6
 
 	{ "epr11028.87",	0x08000, 0xaf0b3972, 4 }, //  7 sprites
 	{ "epr11027.86",	0x08000, 0x277d8f1d, 4 }, //  8

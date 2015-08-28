@@ -2867,6 +2867,74 @@ EndFile
 				EndFile
  			EndDirectory
 
+			Directory WBMLB
+
+				File PR5317.37;1
+					Source WBMLB\PR5317.37
+				EndFile
+				File EPR11027.86;1
+					Source WBMLB\EPR11027.86
+				EndFile
+				File EPR11028.87;1
+					Source WBMLB\EPR11028.87
+				EndFile
+				File EPR11029.88;1
+					Source WBMLB\EPR11029.88
+				EndFile
+				File EPR11030.89;1
+					Source WBMLB\EPR11030.89
+				EndFile
+				File EPR11037.126;1
+					Source WBMLB\EPR11037.126
+				EndFile
+				File PR11024.8;1
+					Source WBMLB\PR11024.8
+				EndFile
+				File PR11025.14;1
+					Source WBMLB\PR11025.14
+				EndFile
+				File PR11026.20;1
+					Source WBMLB\PR11026.20
+				EndFile
+				File WBML.01;1
+					Source WBMLB\WBML.01
+				EndFile
+				File WBML.02;1
+					Source WBMLB\WBML.02
+				EndFile
+				File WBML.03;1
+					Source WBMLB\WBML.03
+				EndFile
+				File WBML.08;1
+					Source WBMLB\WBML.08
+				EndFile
+				File WBML.09;1
+					Source WBMLB\WBML.09
+				EndFile
+				File WBML.10;1
+					Source WBMLB\WBML.10
+				EndFile
+
+				File GALAXY.IC0;1
+					Source WBMLB\GALAXY.IC0
+				EndFile
+				File GALAXY.IC1;1
+					Source WBMLB\GALAXY.IC1
+				EndFile
+				File GALAXY.IC2;1
+					Source WBMLB\GALAXY.IC2
+				EndFile
+				File GALAXY.IC4;1
+					Source WBMLB\GALAXY.IC4
+				EndFile
+				File GALAXY.IC5;1
+					Source WBMLB\GALAXY.IC5
+				EndFile
+				File GALAXY.IC6;1
+					Source WBMLB\GALAXY.IC6
+				EndFile
+
+ 			EndDirectory
 		EndDirectory
 	EndHierarchy
 EndPrimaryVolume
