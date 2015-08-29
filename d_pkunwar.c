@@ -5,6 +5,7 @@
 #include "d_pkunwar.h"
 static UINT16 cram_lut[256];
 //static UINT32 map_cache[0x400];
+static UINT32 map_cache[0x800];
 
 int ovlInit(char *szShortName)
 {
@@ -181,7 +182,8 @@ static void __fastcall raiders5_main_write(UINT16 address, UINT8 data)
 				colAddr[0x200 + offset * 16 + 1] = cram_lut[data];
 
 				if (offset != 1) {
-					for (INT32 i = 0; i < 16; i++) {
+					for (INT32 i = 0; i < 16; i++) 
+					{
 	//					DrvPalRAM[0x200 + offset + i * 16] = data;
 						colAddr[0x200 + offset + i * 16] = cram_lut[data];
 					}
@@ -979,7 +981,7 @@ static INT32 NinjakunDoReset()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 NinjakunInit()
 {
-	DrvInitSaturn(1);
+	DrvInitSaturn(3);
 
 	AllMem = NULL;
 	MemIndex();
@@ -1009,6 +1011,7 @@ static INT32 NinjakunInit()
 
 	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
 	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
+	CZetMapArea(0xc800, 0xcfff, 2, DrvBgRAM); // fetch
 
 	CZetMapArea(0xd000, 0xd7ff, 0, DrvSprRAM);
 	CZetMapArea(0xd000, 0xd7ff, 1, DrvSprRAM);
@@ -1247,11 +1250,12 @@ static INT32 Raiders5Init()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initNinjaKunColors()
 {
-	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
+	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	 // nbg2 bg
+	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);	 // correct
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
-	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
-	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1307,6 +1311,8 @@ static INT32 Raiders5Init()
 		initNovaColors();
 	if(i == 2)
 		initRaiders5Colors();
+	if(i == 3)
+		initNinjaKunColors(),
 	initLayers();
 	initPosition();
 	initSprites(264-1,216-1,0,0,8,-32);
@@ -1488,7 +1494,7 @@ static INT32 NovaFrame()
 	SPR_WaitEndSlaveSH();
 	return 0;
 }
-/*
+
 static void DrvPalRAMUpdate()
 {
 	for (INT32 i = 0; i < 16; i++) {
@@ -1515,11 +1521,11 @@ static void DrvPalRAMUpdate()
 		colAddr[i] = colBgAddr[i] = RGB(r,g,b);
 	}
 }
-*/
+
 static INT32 NinjakunDraw()
 {
-	DrvPalRAMUpdateR5();
-
+//	DrvPalRAMUpdateR5();
+	DrvPalRAMUpdate();
 //	BurnTransferClear();
 
 //	if (nBurnLayer & 1) draw_layer(DrvBgRAM, DrvGfxROM2 + 0x0000, 2, 0x100, 0);
@@ -1531,13 +1537,17 @@ static INT32 NinjakunDraw()
 //	if (nBurnLayer & 8) draw_layer(DrvFgRAM, DrvGfxROM0 + 0x0000, 3, 0x000, 0);
 
 //	BurnTransferCopy(DrvPalette);
-//draw_layer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 2, 0x100, 0);
+draw_layer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 2, 0x400, 0); //0x100 pour couleur
 
 draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 3, 0x000, 0);
 nova_draw_sprites(0x200);
 
 	return 0;
 }
+
+//0x100
+//0x400
+//0x400
 
 static INT32 NinjakunFrame()
 {
@@ -1727,14 +1737,15 @@ static INT32 Raiders5Draw()
 
 		INT32 attr = ram_base[offs + 0x400];
 		INT32 code = ram_base[offs + 0x000] + ((attr & 0x01) << 8) + 0x400;
-		INT32 color = (attr >> 4) & 0x0f;
+//		INT32 color = (attr >> 4) & 0x0f;
+		INT32 color = attr & 0xf0;
 
 		gfx_base[sx|sy+0X20] = gfx_base[(sx|sy)+0X800] = gfx_base[(sx|sy)+0X820] = 
-		gfx_base[sx|sy] = color <<12 | code;
+		gfx_base[sx|sy] = color <<8 | code;
 	}
 }
 
-/*static*/ void draw_layer(UINT8 *ram_base, UINT16 *gfx_base, INT32 config, INT32 color_base, INT32 priority)
+/*static*/ void draw_layer(UINT8 *ram_base, UINT16 *gfx_base, INT32 config, INT32 tile_base, INT32 priority)
 {
 	INT32 color_shift = 0;
 	INT32 code_extend = -1;
@@ -1747,17 +1758,6 @@ static INT32 Raiders5Draw()
  	ss_map = (Uint16 *)gfx_base;
 	switch (config)
 	{
-		case 0: // nova2001 background
-//			ss_map =(Uint16 *)SCL_VDP2_VRAM_B0;
-			enable_scroll = 1;
-		break;
-
-		case 1: // nova2001 foreground
-//			ss_map =(Uint16 *)SCL_VDP2_VRAM_A0;
-			group_select_bit = 4;
-			transparent = 0;
-		break;
-
 		case 2: // ninjakun background
 			code_extend = 3;
 			code_extend_shift = 6;
@@ -1769,78 +1769,37 @@ static INT32 Raiders5Draw()
 			code_extend_shift = 5;
 			transparent = 0;
 		break;
-
-		case 4: // pkunwar background
-			code_extend = 7;
-			code_extend_shift = 0;
-			color_shift = 4;
-			color_mask = 0xf0;
-		break;
-
-		case 5: // pkunwar foreground (background + transparency + group)
-			code_extend = 7;
-			code_extend_shift = 0;
-			color_shift = 4;
-			group_select_bit = 3;
-			transparent = 0;
-			color_mask = 0xf0;
-		break;
-
-		case 6: // raiders5 background   <--- something is wrong here(?) -dink
-			code_extend = 1;
-			code_extend_shift = 0;
-			color_shift = 4;
-			enable_scroll = 1;
-			color_mask = 0x0f;
-			xskew = 8;
-		break;
-
-		case 7: // raiders5 foreground
-			color_shift = 4;
-			transparent = 0;
-			color_mask = 0xf0;
-		break;
 	}
 
 	if (enable_scroll) 
 	{
-//		ss_reg->n2_move_x =   xscroll-8;
-//		ss_reg->n2_move_y =  yscroll+32 ;
+		ss_reg->n2_move_x =   xscroll-8;
+//		ss_reg->n2_move_y =  yscroll ;
+//		ss_reg->n2_move_y = -32;
 	}
-	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_B0;
+	Uint16 *ss_map = (Uint16 *)gfx_base;
 	for (INT32 offs = 0; offs < 32 * 32; offs++)
 	{
 //		if(bg_dirty[offs])
 		{
 //			bg_dirty[offs]=0;
 			INT32 sx = (offs & 0x1f);
-			INT32 sy = (offs / 0x20) <<6;
+//			INT32 sy = (offs<<1) & (~0x3f);//(offs %20) <<6;
+			INT32 sy = (offs / 0x20) *8;//(offs %20) <<6;
 
+			if(tile_base)
+			{
+//			sy -= yscroll;
+//			if (sy < -7) sy += 256;
+			}
+			sy	 <<=3;
 			INT32 code = ram_base[offs + 0x000];
 			INT32 attr = ram_base[offs + 0x400];
 
 			INT32 color = (attr & color_mask) >> color_shift;
 
-			INT32 group = 0;
-
-			if (group_select_bit != -1) {
-				group = (attr >> group_select_bit) & 1;
-
-				if (group != priority) continue;
-			}
-
 			if (code_extend != -1) code |= ((attr >> code_extend_shift) & code_extend) << 8;
-			if (config==6) {//dink
-				code = ram_base[offs + 0x000] + ((attr & 0x01) << 8);
-				color = (attr >> 4) & 0x0f;
-			}
-/*			if(config==0)
-			{
-				code+=0x200;
-				ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = (color) <<12 | code;
-			}		*/
-//  code+=0x400;
-			ss_map[sx|sy] = color <<12 | code;
+			ss_map[sx|sy] = ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = color <<12 | code+tile_base;
 		}
 	}
 }
