@@ -13,7 +13,7 @@
 #include "d_sys2.h"
 #include "d_sys1_common.c"
 
-UINT8 System1MC8123Key[0x2000];
+UINT8 *System1MC8123Key=NULL;
 
 int ovlInit(char *szShortName)
 {
@@ -364,8 +364,11 @@ void CommonWbmlInit()
 
 	DecodeFunction = wbml_decode;
 
+	System1MC8123Key = (UINT8*)0x00200000;
+	memset(System1MC8123Key,0x00,0x2000);
 	BurnLoadRom(System1MC8123Key, 15, 1);
 	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
+	System1MC8123Key = NULL;
 	CommonWbmlInit();
 	return nRet;
 }

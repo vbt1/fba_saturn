@@ -27,7 +27,7 @@ int ovlInit(char *szShortName)
 		"ninjakun", "pkunw",
 		"Ninjakun Majou no Bouken\0",
 		ninjakunRomInfo, ninjakunRomName, NinjakunInputInfo, NinjakunDIPInfo,
-		NinjakunInit, DrvExit, NinjakunFrame, NinjakunDraw
+		NinjakunInit, DrvExit, NinjakunFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvRaiders5 = {
@@ -1009,9 +1009,8 @@ static INT32 NinjakunInit()
 	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
 	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
 
-	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
-	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
-	CZetMapArea(0xc800, 0xcfff, 2, DrvBgRAM); // fetch
+//	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
+//	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
 
 	CZetMapArea(0xd000, 0xd7ff, 0, DrvSprRAM);
 	CZetMapArea(0xd000, 0xd7ff, 1, DrvSprRAM);
@@ -1026,37 +1025,36 @@ static INT32 NinjakunInit()
 
 #ifdef RAZE
  	z80_init_memmap();
-	z80_add_read(0xe000, 0xe001, 1, (void *)&ninjakun_sub_read); 
-	z80_add_write(0xa000, 0xa003, 1, (void *)&ninjakun_sub_write);
+
+	z80_add_read(0x0000, 0xffff, 1, (void *)&ninjakun_sub_read); 
+	z80_add_write(0x0000, 0xffff, 1, (void *)&ninjakun_sub_write);
+
 	z80_map_read  (0x0000, 0x1fff, DrvSubROM);
 	z80_map_fetch (0x0000, 0x1fff, DrvSubROM);
 
 	z80_map_read (0x2000, 0x7fff, DrvMainROM + 0x2000);
 	z80_map_fetch(0x2000, 0x7fff, DrvMainROM + 0x2000);
 
+ 	z80_map_read(0xc000, 0xc7ff, DrvFgRAM);
+	z80_map_write(0xc000, 0xc7ff, DrvFgRAM);
+
 	z80_map_read  (0xc800, 0xcfff, DrvBgRAM);
 	z80_map_write (0xc800, 0xcfff, DrvBgRAM); //ajout
-	z80_map_fetch (0xc800, 0xcfff, DrvBgRAM);
 
 	z80_map_read  (0xd000, 0xd7ff, DrvSprRAM);
 	z80_map_write (0xd000, 0xd7ff, DrvSprRAM); //ajout
-	z80_map_fetch (0xd000, 0xd7ff, DrvSprRAM);
 
 	z80_map_read  (0xd800, 0xd9ff, DrvPalRAM);
 	z80_map_write (0xd800, 0xd9ff, DrvPalRAM); //ajout
-	z80_map_fetch (0xd800, 0xd9ff, DrvPalRAM);
 
 	z80_map_read  (0xe000, 0xe3ff, DrvMainRAM + 0x0400);
 	z80_map_write (0xe000, 0xe3ff, DrvMainRAM + 0x0400); //ajout
-	z80_map_fetch (0xe000, 0xe3ff, DrvMainRAM + 0x0400);
 
 	z80_map_read  (0xe400, 0xe7ff, DrvMainRAM + 0x0000);
 	z80_map_write (0xe400, 0xe7ff, DrvMainRAM + 0x0000); //ajout
-	z80_map_fetch (0xe400, 0xe7ff, DrvMainRAM + 0x0000);
 
 	z80_end_memmap();
 #else
-	
 //	ZetInit(1);
 	CZetOpen(1);
 	CZetSetReadHandler(ninjakun_sub_read);
@@ -1071,8 +1069,8 @@ static INT32 NinjakunInit()
 	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
 	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
 
-	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
-	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
+//	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
+//	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
 
 	CZetMapArea(0xd000, 0xd7ff, 0, DrvSprRAM);
 	CZetMapArea(0xd000, 0xd7ff, 1, DrvSprRAM);
@@ -1342,6 +1340,9 @@ static INT32 Raiders5Init()
 	AY8910Exit(1);
 
 	DrvMainROM = DrvGfxROM0 = DrvColPROM = DrvBgRAM = DrvMainRAM = NULL;
+	AllMem = DrvSubROM = MemEnd	= DrvFgRAM = DrvSprRAM = DrvPalRAM = NULL;
+	DrvSubRAM = NULL;
+	
 	nBurnSprites=128;
 	cleanSprites();
 
@@ -1522,21 +1523,44 @@ static void DrvPalRAMUpdate()
 	}
 }
 
+#define INT_DIGITS 19
+char *itoa(i)
+     int i;
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
+
 static INT32 NinjakunDraw()
 {
-//	DrvPalRAMUpdateR5();
 	DrvPalRAMUpdate();
-//	BurnTransferClear();
 
-//	if (nBurnLayer & 1) draw_layer(DrvBgRAM, DrvGfxROM2 + 0x0000, 2, 0x100, 0);
+	ss_reg->n2_move_x =   xscroll - 8;
+//	ss_reg->n2_move_y =  yscroll - 64;
+	ss_reg->n2_move_y =  yscroll+32;//-64;
+					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"    ",136,40);
+					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"    ",136,50);
 
-//	if (nBurnLayer & 2) draw_layer(DrvFgRAM, DrvGfxROM0 + 0x0000, 3, 0x000, 1);
 
-//	if (nBurnLayer & 4) nova_draw_sprites(0x200);
+					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)atoi(xscroll),136,40);
+					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)atoi(yscroll),136,50);
 
-//	if (nBurnLayer & 8) draw_layer(DrvFgRAM, DrvGfxROM0 + 0x0000, 3, 0x000, 0);
-
-//	BurnTransferCopy(DrvPalette);
 draw_layer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 2, 0x400, 0); //0x100 pour couleur
 
 draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 3, 0x000, 0);
@@ -1566,7 +1590,7 @@ static INT32 NinjakunFrame()
 
 	vblank = 0;
 	INT32 nInterleave = 256;
-	INT32 nCyclesTotal = 3000000 / 60;
+	INT32 nCyclesTotal = 1500000 / 60;
 	INT32 nCyclesDone = 0;
 	for (INT32 i = 0; i < nInterleave; i++) {
 		CZetOpen(0);
@@ -1582,7 +1606,7 @@ static INT32 NinjakunFrame()
 
 #ifdef RAZE
 //		ZetOpen(1);
-		nCyclesDone = z80_emulate(nCyclesTotal / nInterleave);
+		nCyclesDone = z80_emulate(sync_cycles-z80_get_cycles_elapsed());
 //		nCyclesTotalZ+= nCyclesDone;
 //		ZetRun(sync_cycles - ZetTotalCycles());
 		if (i == 63 || i == 127 || i == 195 || i == 255) {
@@ -1597,17 +1621,9 @@ static INT32 NinjakunFrame()
 #else
 		CZetOpen(1);
 		CZetRun(sync_cycles - CZetTotalCycles());
-//		CZetRun(nCyclesTotal / nInterleave);
 
 		if (i == 63 || i == 127 || i == 195 || i == 255) {
-//			CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 
-//			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
-/*			CZetSetIRQLine(0, 1);
-			CZetRun(100);
-			CZetSetIRQLine(0, 0);
-			CZetRun(1);
-*/
 			CZetRaiseIrq(0);
 			CZetRun(100);
 			CZetLowerIrq();
@@ -1747,59 +1763,41 @@ static INT32 Raiders5Draw()
 
 /*static*/ void draw_layer(UINT8 *ram_base, UINT16 *gfx_base, INT32 config, INT32 tile_base, INT32 priority)
 {
-	INT32 color_shift = 0;
 	INT32 code_extend = -1;
 	INT32 code_extend_shift = 0;
-	INT32 group_select_bit = -1;
-	INT32 transparent = 0xff; // opaque
-	INT32 enable_scroll = 0;
-	INT32 color_mask = 0x0f;
-	INT32 xskew = 0;
- 	ss_map = (Uint16 *)gfx_base;
+
 	switch (config)
 	{
 		case 2: // ninjakun background
 			code_extend = 3;
 			code_extend_shift = 6;
-			enable_scroll = 1;
 		break;
 
 		case 3: // ninjakun foreground
 			code_extend = 1;
 			code_extend_shift = 5;
-			transparent = 0;
 		break;
 	}
 
-	if (enable_scroll) 
-	{
-		ss_reg->n2_move_x =   xscroll-8;
-//		ss_reg->n2_move_y =  yscroll ;
-//		ss_reg->n2_move_y = -32;
-	}
 	Uint16 *ss_map = (Uint16 *)gfx_base;
+	int y=0;
 	for (INT32 offs = 0; offs < 32 * 32; offs++)
 	{
 //		if(bg_dirty[offs])
 		{
 //			bg_dirty[offs]=0;
-			INT32 sx = (offs & 0x1f);
-//			INT32 sy = (offs<<1) & (~0x3f);//(offs %20) <<6;
-			INT32 sy = (offs / 0x20) *8;//(offs %20) <<6;
+			UINT32 sx = (offs & 0x1f);
+			UINT32 sy = (offs / 0x20);
 
-			if(tile_base)
-			{
-//			sy -= yscroll;
-//			if (sy < -7) sy += 256;
-			}
-			sy	 <<=3;
-			INT32 code = ram_base[offs + 0x000];
-			INT32 attr = ram_base[offs + 0x400];
+			sy <<=6;
 
-			INT32 color = (attr & color_mask) >> color_shift;
+			UINT32 code = ram_base[offs + 0x000];
+			UINT32 attr = ram_base[offs + 0x400];
+
+			UINT32 color = (attr & 0x0f);
 
 			if (code_extend != -1) code |= ((attr >> code_extend_shift) & code_extend) << 8;
-			ss_map[sx|sy] = ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = color <<12 | code+tile_base;
+			ss_map[sx|sy] = ss_map[sx|sy+0x20] = ss_map[(sx|sy)+0X820] = ss_map[sx|sy] = ss_map[(sx|sy)+0X800] = color <<12 | (code+tile_base) & 0xfff;
 		}
 	}
 }

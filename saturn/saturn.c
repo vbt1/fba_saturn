@@ -428,7 +428,7 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 					loaded[0] = 0;
 					modified[0] = 1;
 
-//	 heapWalk();
+	 heapWalk();
 
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
@@ -460,7 +460,7 @@ static void display_menu(void)
 //	sc_init();
 //	the_loop = 1;
 
-//	heapWalk();
+	heapWalk();
 
 	unsigned int current_page = 1,m;
 	unsigned char modified = 1;
@@ -1848,7 +1848,7 @@ int vspfunc(char *format, ...)
 */
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-#if 0
+#if 1
 extern UINT32  end;
 extern UINT32  __malloc_free_list;
 extern UINT32  _sbrk(int size);
@@ -1866,7 +1866,7 @@ void heapWalk(void)
 //    printf("Heap Size: %lu\n", heapEnd - chunkCurr);
     char toto[200];
 	sprintf (toto,"Heap Size: %d  e%08x s%08x                     \n", heapEnd - chunkCurr,heapEnd, chunkCurr) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,121);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,216);
 
     // Walk through the chunks until we hit the end of the heap.
     while (chunkCurr < heapEnd)
@@ -1899,7 +1899,7 @@ void heapWalk(void)
 //        printf("Chunk: %lu  Address: 0xlX  Size: %lu  %s\n", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "");
         
 	sprintf (toto,"%d A%04x  S%04d %s", chunkNumber, chunkCurr, chunkSize, isChunkFree ? "CHUNK FREE" : "") ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,2,121+chunkNumber*10);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,2,190+chunkNumber*9);
 		
 		chunkCurr = chunkNext;
         chunkNumber++;
