@@ -5,7 +5,7 @@
 #include "d_pkunwar.h"
 static UINT16 cram_lut[256];
 //static UINT32 map_cache[0x400];
-static UINT32 map_cache[0x800];
+//static UINT32 map_cache[0x800];
 
 int ovlInit(char *szShortName)
 {
@@ -34,7 +34,7 @@ int ovlInit(char *szShortName)
 		"raiders5", "pkunw",
 		"Raiders5\0",
 		raiders5RomInfo, raiders5RomName, Raiders5InputInfo, Raiders5DIPInfo,
-		Raiders5Init, DrvExit, Raiders5Frame, Raiders5Draw
+		Raiders5Init, DrvExit, Raiders5Frame, NULL
 	};
 
 	if (strcmp(nBurnDrvpkunwar.szShortName, szShortName) == 0)
@@ -58,11 +58,6 @@ static UINT8 __fastcall raiders5_main_read(UINT16 address)
 //		return DrvBgRAM[address];
 	}
 
-	if(address >= 0xd000 && address <= 0xd1ff)
-	{
-		return DrvPalRAM[address - 0xd000];
-	}
-
 	switch (address)
 	{
 		case 0xc001:
@@ -73,42 +68,6 @@ static UINT8 __fastcall raiders5_main_read(UINT16 address)
 	}
 
 	return 0;
-}
-
-static void DrvPalRAMUpdateR5()
-{
-	for (INT32 i = 0; i < 0x300; i++) 
-	{
-		UINT8 color = DrvPalRAM[i];
-		colAddr[i] = cram_lut[color];
-	}
-}
-
-
-static void DrvPalRAMUpdateNinjaKun()
-{
-	for (INT32 i = 0; i < 16; i++) 
-	{
-		if (i != 1) 
-		{ // ??
-			for (INT32 j = 0; j < 16; j++) 
-			{
-				DrvPalRAM[0x200 + i + j * 16 + 0] = DrvPalRAM[i];
-			}
-		}
-		DrvPalRAM[0x200 + i * 16 + 1] = DrvPalRAM[i];
-	}
-
-	for (INT32 i = 0; i < 0x300; i++) 
-	{
-		UINT8 color = DrvPalRAM[i];
-		if(i<0x100)
-		colAddr[i] = cram_lut[color];
-		if(i<0x200)
-		colBgAddr[i] = cram_lut[color];
-		if(i<0x300)
-		colBgAddr2[i] = cram_lut[color];
-	}
 }
 
 static void fg_raiders5_line(UINT16 offs,UINT8 *ram_base)
@@ -178,13 +137,11 @@ static void __fastcall raiders5_main_write(UINT16 address, UINT8 data)
 			colAddr[offset] = cram_lut[data];
 
 			if (offset < 16) {
-	//			DrvPalRAM[0x200 + offset * 16 + 1] = data;
 				colAddr[0x200 + offset * 16 + 1] = cram_lut[data];
 
 				if (offset != 1) {
 					for (INT32 i = 0; i < 16; i++) 
 					{
-	//					DrvPalRAM[0x200 + offset + i * 16] = data;
 						colAddr[0x200 + offset + i * 16] = cram_lut[data];
 					}
 				}
@@ -436,6 +393,31 @@ static void __fastcall ninjakun_main_write(UINT16 address, UINT8 data)
 		return;
 	}
 
+	if(address >= 0xd800 && address <= 0xd9ff)
+	{
+		INT32 offset = address - 0xd800;
+
+		if(DrvPalRAM[offset] != data)
+		{
+			DrvPalRAM[offset] = data;
+			colBgAddr[offset] = colAddr[offset] = cram_lut[data];
+
+			if (offset < 16) {
+				unsigned int delta = 0x200 + offset * 16 + 1;
+				colBgAddr[delta] = colAddr[delta] = cram_lut[data];
+
+				if (offset != 1) {
+					for (INT32 i = 0; i < 16; i++) 
+					{
+						unsigned int delta = 0x200 + offset + i * 16;
+						colBgAddr[delta] = colAddr[delta] = cram_lut[data];
+					}
+				}
+			}
+		}
+		return;
+	}
+
 	switch (address)
 	{
 		case 0x8000:
@@ -496,6 +478,31 @@ static void __fastcall ninjakun_sub_write(UINT16 address, UINT8 data)
 {
 	if ((address & 0xf800) == 0xc800) {
 		DrvBgRAM[(((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400)] = data;
+		return;
+	}
+
+	if(address >= 0xd800 && address <= 0xd9ff)
+	{
+		INT32 offset = address - 0xd800;
+
+		if(DrvPalRAM[offset] != data)
+		{
+			DrvPalRAM[offset] = data;
+			colBgAddr[offset] = colAddr[offset] = cram_lut[data];
+
+			if (offset < 16) {
+				unsigned int delta = 0x200 + offset * 16 + 1;
+				colBgAddr[delta] = colAddr[delta] = cram_lut[data];
+
+				if (offset != 1) {
+					for (INT32 i = 0; i < 16; i++) 
+					{
+						unsigned int delta = 0x200 + offset + i * 16;
+						colBgAddr[delta] = colAddr[delta] = cram_lut[data];
+					}
+				}
+			}
+		}
 		return;
 	}
 
@@ -982,6 +989,7 @@ static INT32 NinjakunDoReset()
 static INT32 NinjakunInit()
 {
 	DrvInitSaturn(3);
+	make_lut();
 
 	AllMem = NULL;
 	MemIndex();
@@ -1016,7 +1024,7 @@ static INT32 NinjakunInit()
 	CZetMapArea(0xd000, 0xd7ff, 1, DrvSprRAM);
 
 	CZetMapArea(0xd800, 0xd9ff, 0, DrvPalRAM);
-	CZetMapArea(0xd800, 0xd9ff, 1, DrvPalRAM);
+//	CZetMapArea(0xd800, 0xd9ff, 1, DrvPalRAM);
 
  	CZetMapArea(0xe000, 0xe7ff, 0, DrvMainRAM);
 	CZetMapArea(0xe000, 0xe7ff, 1, DrvMainRAM);
@@ -1076,7 +1084,7 @@ static INT32 NinjakunInit()
 	CZetMapArea(0xd000, 0xd7ff, 1, DrvSprRAM);
 
 	CZetMapArea(0xd800, 0xd9ff, 0, DrvPalRAM);
-	CZetMapArea(0xd800, 0xd9ff, 1, DrvPalRAM);
+//	CZetMapArea(0xd800, 0xd9ff, 1, DrvPalRAM);
 
  	CZetMapArea(0xe000, 0xe3ff, 0, DrvMainRAM+ 0x0400);
 	CZetMapArea(0xe000, 0xe3ff, 1, DrvMainRAM+ 0x0400);
@@ -1104,7 +1112,7 @@ static INT32 NinjakunInit()
 static INT32 Raiders5Init()
 {
 	DrvInitSaturn(2);
-	make_raiders5_lut();
+	make_lut();
 
 	AllMem = NULL;
 	MemIndex();
@@ -1140,7 +1148,7 @@ static INT32 Raiders5Init()
 	CZetMapArea(0x9000, 0x97ff, 0, DrvBgRAM);
 //	CZetMapArea(0x9000, 0x97ff, 1, DrvBgRAM);
 
-//	CZetMapArea(0xd000, 0xd1ff, 0, DrvPalRAM);
+	CZetMapArea(0xd000, 0xd1ff, 0, DrvPalRAM);
 //	CZetMapArea(0xd000, 0xd1ff, 1, DrvPalRAM);
 
 	CZetMapArea(0xe000, 0xe7ff, 0, DrvMainRAM);
@@ -1262,6 +1270,7 @@ static INT32 Raiders5Init()
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1310,7 +1319,7 @@ static INT32 Raiders5Init()
 	if(i == 2)
 		initRaiders5Colors();
 	if(i == 3)
-		initNinjaKunColors(),
+		initNinjaKunColors();
 	initLayers();
 	initPosition();
 	initSprites(264-1,216-1,0,0,8,-32);
@@ -1507,19 +1516,10 @@ static void DrvPalRAMUpdate()
 		DrvPalRAM[0x200 + i * 16 + 1] = DrvPalRAM[i];
 	}
 
-	for (INT32 i = 0; i < 0x300; i++) {
-		INT32 intensity = DrvPalRAM[i] & 0x03;
-
-		INT32 r = (((DrvPalRAM[i] >> 0) & 0x0c) | intensity) * 0x11;
-		INT32 g = (((DrvPalRAM[i] >> 2) & 0x0c) | intensity) * 0x11;
-		INT32 b = (((DrvPalRAM[i] >> 4) & 0x0c) | intensity) * 0x11;
-
-//		DrvPalette[i] = BurnHighCol(r, g, b, 0);
-        r =  (r >>3);
-        g =  (g >>3);
-        b =  (b >>3);
-
-		colAddr[i] = colBgAddr[i] = RGB(r,g,b);
+	for (INT32 i = 0; i < 0x300; i++) 
+	{
+		UINT8 color = DrvPalRAM[i];
+		colAddr[i] = colBgAddr[i] = cram_lut[color];
 	}
 }
 
@@ -1549,18 +1549,18 @@ char *itoa(i)
 
 static INT32 NinjakunDraw()
 {
-	DrvPalRAMUpdate();
+//	DrvPalRAMUpdate();
 
 	ss_reg->n2_move_x =   xscroll - 8;
 //	ss_reg->n2_move_y =  yscroll - 64;
 	ss_reg->n2_move_y =  yscroll+32;//-64;
-					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"    ",136,40);
+/*					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"    ",136,40);
 					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"    ",136,50);
 
 
 					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)atoi(xscroll),136,40);
 					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)atoi(yscroll),136,50);
-
+*/
 draw_layer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 2, 0x400, 0); //0x100 pour couleur
 
 draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 3, 0x000, 0);
@@ -1670,7 +1670,7 @@ static INT32 Raiders5Frame()
 
 	vblank = 0;
 	//INT32 Multiplier = 8; // needs high multiplier for inter-processor communication w/shared memory
-	INT32 nInterleave = 2000/30;//2000/20; //256*Multiplier;
+	INT32 nInterleave = 2000;//2000/20; //256*Multiplier;
 	INT32 nCyclesTotal = 3000000 / 60 /2;
 
 	for (INT32 i = 0; i < nInterleave; i++) 
@@ -1678,12 +1678,12 @@ static INT32 Raiders5Frame()
 		CZetOpen(0);
 		CZetRun(nCyclesTotal / nInterleave);
 //		INT32 sync_cycles = CZetTotalCycles();
-	if (i == 1880/30) 
-//	if (i==1880/4) 
+//	if (i == 1880/30) 
+	if (i==1880) 
 		{
 			CZetRaiseIrq(0);
-//			CZetRun(100);
-//			CZetLowerIrq();
+			CZetRun(100);
+			CZetLowerIrq();
 			vblank = 1;
 		}
 		CZetClose();
@@ -1692,8 +1692,8 @@ static INT32 Raiders5Frame()
 		if (i%(nInterleave/4) == (nInterleave/4)-10) 
 		{
 			z80_raise_IRQ(0);
-			z80_emulate(100);
-			z80_lower_IRQ();
+//			z80_emulate(100);
+//			z80_lower_IRQ();
 			z80_emulate(1);
 		}
 #else
@@ -1703,8 +1703,8 @@ static INT32 Raiders5Frame()
 		if (i%(nInterleave/4) == (nInterleave/4)-10) 
 		{
 			CZetRaiseIrq(0);
-//			CZetRun(100);
-//			CZetLowerIrq();
+			CZetRun(100);
+			CZetLowerIrq();
 		}
 		CZetClose();
 #endif
@@ -1951,7 +1951,7 @@ static INT32 NovaDraw()
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
 
-void make_raiders5_lut()
+void make_lut()
 {
 	for (INT32 i = 0; i < 256; i++) 
 	{
