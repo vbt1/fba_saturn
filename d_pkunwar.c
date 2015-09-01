@@ -1258,7 +1258,7 @@ static INT32 Raiders5Init()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	 // nbg2 bg
-	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);	 // correct
+	(Uint16*)SCL_AllocColRam(SCL_NBG2,ON);	 // correct
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
