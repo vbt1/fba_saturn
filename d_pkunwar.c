@@ -20,7 +20,7 @@ int ovlInit(char *szShortName)
 		"nova2001", "pkunw",
 		"Nova 2001 (US)\0",
 		nova2001uRomInfo, nova2001uRomName, Nova2001InputInfo, Nova2001DIPInfo,
-		NovaInit, DrvExit, NovaFrame, NovaDraw
+		NovaInit, DrvExit, NovaFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvNinjakun = {
@@ -49,7 +49,69 @@ int ovlInit(char *szShortName)
 }
 
 // Memory Handlers
+//---------------------------------------------------------------------------------------------------------
+static void fg_nova2001_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+{
+	UINT32 attr = ram_base[offs + 0x400];
+	UINT32 group = (attr >> 4) & 1;
 
+	if (group != 0) return;
+	UINT32 code = ram_base[offs + 0x000];
+
+	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+	ss_map[offs] = (attr & 0x0f) <<12 | code;
+}
+//---------------------------------------------------------------------------------------------------------
+static void bg_nova2001_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+{
+	UINT32 code = ram_base[offs + 0x000] + 0x200;
+	UINT32 attr = ram_base[offs + 0x400];
+	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+
+	ss_map[offs+0X20] = ss_map[offs+0X800] = ss_map[offs+0X820] = 
+	ss_map[offs] = (attr & 0x0f) <<12 | code;
+}
+//---------------------------------------------------------------------------------------------------------
+static void fg_raiders5_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+{
+	UINT32 attr = ram_base[offs + 0x400];
+	UINT32 code = ram_base[offs + 0x000];
+	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+
+	ss_map[offs] = (attr & 0xf0) <<8 | code;
+}
+//---------------------------------------------------------------------------------------------------------
+static void bg_raiders5_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+{
+	UINT32 attr = ram_base[offs + 0x400];
+	UINT32 code = ram_base[offs + 0x000] + ((attr & 0x01) << 8) + 0x400;
+	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+
+	ss_map[offs+0X20] = ss_map[offs+0X800] = ss_map[offs+0X820] =
+	ss_map[offs] = (attr & 0xf0) <<8 | code;
+}
+//---------------------------------------------------------------------------------------------------------
+static void fg_ninjakun_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+{
+	UINT32 attr = ram_base[offs + 0x400];
+	UINT32 code = ram_base[offs + 0x000];
+	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+
+	code |= (attr & 0x20) << 3;
+	ss_map[offs] = (attr & 0x0f) <<12 | code & 0xfff;
+}
+//---------------------------------------------------------------------------------------------------------
+static void bg_ninjakun_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+{
+	UINT32 attr = ram_base[offs + 0x400];
+	UINT32 code = ram_base[offs + 0x000] + 0x400;
+	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+
+	code |= (attr & 0xC0) << 2;
+	ss_map[offs+0X20] = ss_map[offs+0X800] = ss_map[offs+0X820] = 
+	ss_map[offs] = (attr & 0x0f) <<12 | code & 0xfff;
+}
+//---------------------------------------------------------------------------------------------------------
 static UINT8 __fastcall raiders5_main_read(UINT16 address)
 {
 	if(address >= 0x9000 && address <= 0x97ff)
@@ -69,60 +131,26 @@ static UINT8 __fastcall raiders5_main_read(UINT16 address)
 
 	return 0;
 }
-
-static void fg_raiders5_line(UINT16 offs,UINT8 *ram_base)
-{
-	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_A0;
-	INT32 sx = (offs & 0x1f);
-	INT32 sy = (offs / 0x20) <<6;
-
-	INT32 attr = ram_base[offs + 0x400];
-	INT32 code = ram_base[offs + 0x000];// | (attr & 1) << 8;
-	INT32 color = (attr & 0xf0) >> 4;
-
-	ss_map[sx|sy] = color <<12 | code;
-}
-
-static void bg_raiders5_line(UINT16 offs,UINT8 *ram_base)
-{
-	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_B0;
-	INT32 sx = (offs & 0x1f);
-	INT32 sy = (offs / 0x20) <<6;
-
-	INT32 attr = ram_base[offs + 0x400];
-	INT32 code = ram_base[offs + 0x000] + ((attr & 0x01) << 8) + 0x400;
-	INT32 color = (attr >> 4) & 0x0f;
-
-	ss_map[sx|sy] = ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = (color) <<12 | code;
-}
-
+//---------------------------------------------------------------------------------------------------------
 static void __fastcall raiders5_main_write(UINT16 address, UINT8 data)
 {
-	if(address >= 0x9000 && address <= 0x97ff)
-	{
-		DrvBgRAM[(((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400)] = data;
-		return;
-	}
-/*
 	if(address>=0x9000 && address<=0x97ff)
 	{
-//		if(DrvMainROM[address]!=data)
+		address = (((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400);
+		if(DrvBgRAM[address]!=data)
 		{
-//			DrvMainROM[address]=data;
-//			DrvBgRAM[(((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400)] = data;
-			UINT32 address2 = (((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400);
-			DrvBgRAM[address2] = data;
-			bg_raiders5_line(address2,DrvBgRAM);
+			DrvBgRAM[address]=data;
+			bg_raiders5_line(address & 0x3ff,DrvBgRAM,SCL_VDP2_VRAM_B0);
 		}
 		return;
 	}
-*/
+
 	if(address>=0x8800 && address<=0x8fff)
 	{
 		if(DrvMainROM[address]!=data)
 		{
 			DrvMainROM[address]=data;
-			fg_raiders5_line(address &0x3ff,DrvFgRAM);
+			fg_raiders5_line(address &0x3ff,DrvFgRAM,SCL_VDP2_VRAM_A0);
 		}
 		return;
 	}
@@ -181,7 +209,7 @@ static void __fastcall raiders5_main_write(UINT16 address, UINT8 data)
 			break;
 	}
 }
-
+//---------------------------------------------------------------------------------------------------------
 static UINT8 __fastcall raiders5_sub_read(UINT16 address)
 {
 	switch (address)
@@ -206,7 +234,7 @@ UINT8 __fastcall raiders5_in(UINT16 address)
 {
 	return 0; // NOP
 }
-
+//---------------------------------------------------------------------------------------------------------
 static void __fastcall raiders5_sub_write(UINT16 address, UINT8 data)
 {
 	switch (address)
@@ -256,7 +284,7 @@ static void __fastcall raiders5_sub_write(UINT16 address, UINT8 data)
 
 	return 0;
 }
-
+//---------------------------------------------------------------------------------------------------------
 /*static*/ void __fastcall pkunwar_write(unsigned short address, unsigned char data)
 {
 	switch (address)
@@ -278,14 +306,14 @@ static void __fastcall raiders5_sub_write(UINT16 address, UINT8 data)
 		break;
 	}
 }
-
+//---------------------------------------------------------------------------------------------------------
 /*static*/ void __fastcall pkunwar_out(unsigned short address, unsigned char data)
 {
 	address &= 0xff;
 
 //	if (address == 0) flipscreen = data & 1;
 }
-
+//---------------------------------------------------------------------------------------------------------
 static UINT8 __fastcall nova2001_read(UINT16 address)
 {
 	switch (address)
@@ -312,7 +340,7 @@ static UINT8 __fastcall nova2001_read(UINT16 address)
 
 	return 0;
 }
-
+//---------------------------------------------------------------------------------------------------------
 static void __fastcall nova2001_write(UINT16 address, UINT8 data)
 {
 	if(address>=0xa800 && address<=0xafff)
@@ -320,7 +348,7 @@ static void __fastcall nova2001_write(UINT16 address, UINT8 data)
 		if(DrvMainROM[address]!=data)
 		{
 			DrvMainROM[address]=data;
-			bg_line(address &0x3ff,DrvBgRAM);
+			bg_nova2001_line(address &0x3ff,DrvBgRAM,SCL_VDP2_VRAM_B0);
 		}
 		return;
 	}
@@ -330,7 +358,7 @@ static void __fastcall nova2001_write(UINT16 address, UINT8 data)
 		if(DrvMainROM[address]!=data)
 		{
 			DrvMainROM[address]=data;
-			fg_line(address &0x3ff,DrvFgRAM);
+			fg_nova2001_line(address &0x3ff,DrvFgRAM,SCL_VDP2_VRAM_A0);
 		}
 		return;
 	}
@@ -358,7 +386,7 @@ static void __fastcall nova2001_write(UINT16 address, UINT8 data)
 			break;
 	}
 }
-
+//---------------------------------------------------------------------------------------------------------
 static UINT8 __fastcall ninjakun_main_read(UINT16 address)
 {
 	if ((address & 0xf800) == 0xc800) {
@@ -385,17 +413,33 @@ static UINT8 __fastcall ninjakun_main_read(UINT16 address)
 
 	return 0;
 }
-
+//---------------------------------------------------------------------------------------------------------------
 static void __fastcall ninjakun_main_write(UINT16 address, UINT8 data)
 {
-	if ((address & 0xf800) == 0xc800) {
-		DrvBgRAM[(((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400)] = data;
+	if ((address & 0xf800) == 0xc800) 
+	{
+		address = 0x7ff & (((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400);
+
+		if(DrvBgRAM[address]!=data)
+		{
+			DrvBgRAM[address]=data;
+			bg_ninjakun_line(address  & 0x3ff, DrvBgRAM, SCL_VDP2_VRAM_B0);
+		}
 		return;
+	}
+
+	if(address >= 0xc000 && address <= 0xc7ff)
+	{
+		if(DrvMainROM[address]!=data)
+		{
+			DrvMainROM[address]=data;
+			fg_ninjakun_line(address  & 0x3ff, DrvFgRAM, SCL_VDP2_VRAM_A0);
+		}
 	}
 
 	if(address >= 0xd800 && address <= 0xd9ff)
 	{
-		INT32 offset = address - 0xd800;
+		UINT32 offset = address - 0xd800;
 
 		if(DrvPalRAM[offset] != data)
 		{
@@ -407,7 +451,7 @@ static void __fastcall ninjakun_main_write(UINT16 address, UINT8 data)
 				colBgAddr[delta] = colAddr[delta] = cram_lut[data];
 
 				if (offset != 1) {
-					for (INT32 i = 0; i < 16; i++) 
+					for (UINT32 i = 0; i < 16; i++) 
 					{
 						unsigned int delta = 0x200 + offset + i * 16;
 						colBgAddr[delta] = colAddr[delta] = cram_lut[data];
@@ -446,9 +490,10 @@ static void __fastcall ninjakun_main_write(UINT16 address, UINT8 data)
 			break;
 	}
 }
-
+//---------------------------------------------------------------------------------------------------------------
 static UINT8 __fastcall ninjakun_sub_read(UINT16 address)
 {
+
 	if ((address & 0xf800) == 0xc800) {
 		return DrvBgRAM[(((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400)];
 	}
@@ -473,12 +518,28 @@ static UINT8 __fastcall ninjakun_sub_read(UINT16 address)
 
 	return 0;
 }
-
+//---------------------------------------------------------------------------------------------------------------
 static void __fastcall ninjakun_sub_write(UINT16 address, UINT8 data)
 {
-	if ((address & 0xf800) == 0xc800) {
-		DrvBgRAM[(((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400)] = data;
+	if ((address & 0xf800) == 0xc800) 
+	{
+		address = 0x7ff & (((address & 0x3ff) + (xscroll >> 3) + ((yscroll >> 3) << 5)) & 0x3ff) + (address & 0x400);
+
+		if(DrvBgRAM[address]!=data)
+		{
+			DrvBgRAM[address]=data;
+			bg_ninjakun_line(address & 0x3ff, DrvBgRAM, SCL_VDP2_VRAM_B0);
+		}
 		return;
+	}
+
+	if(address >= 0xc000 && address <= 0xc7ff)
+	{
+		if(DrvMainROM[address]!=data)
+		{
+			DrvMainROM[address]=data;
+			fg_ninjakun_line(address  & 0x3ff, DrvFgRAM, SCL_VDP2_VRAM_A0);
+		}
 	}
 
 	if(address >= 0xd800 && address <= 0xd9ff)
@@ -534,7 +595,6 @@ static void __fastcall ninjakun_sub_write(UINT16 address, UINT8 data)
 			break;
 	}
 }
-
 //-------------------------------------------------------------------------------------------------
 // AY8910 Ports
 
@@ -1015,7 +1075,7 @@ static INT32 NinjakunInit()
 	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM);
 
 	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
-	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
+//	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
 
 //	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
 //	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
@@ -1075,7 +1135,7 @@ static INT32 NinjakunInit()
 	CZetMapArea(0x2000, 0x7fff, 2, DrvMainROM + 0x2000);
 
 	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
-	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
+//	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
 
 //	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
 //	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
@@ -1549,23 +1609,9 @@ char *itoa(i)
 
 static INT32 NinjakunDraw()
 {
-//	DrvPalRAMUpdate();
-
 	ss_reg->n2_move_x =   xscroll - 8;
-//	ss_reg->n2_move_y =  yscroll - 64;
 	ss_reg->n2_move_y =  yscroll+32;//-64;
-/*					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"    ",136,40);
-					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"    ",136,50);
-
-
-					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)atoi(xscroll),136,40);
-					FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)atoi(yscroll),136,50);
-*/
-draw_layer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 2, 0x400, 0); //0x100 pour couleur
-
-draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 3, 0x000, 0);
-nova_draw_sprites(0x200);
-
+	nova_draw_sprites(0x200);
 	return 0;
 }
 
@@ -1740,96 +1786,7 @@ static INT32 Raiders5Draw()
 	pkunwar_draw_sprites();
 	ss_reg->n2_move_x =   xscroll-16;
 	ss_reg->n2_move_y =  yscroll+32 ;
-	draw_layer_r5(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0);
 	return 0;
-}
-
-/*static*/ void draw_layer_r5(UINT8 *ram_base, UINT16 *gfx_base)
-{
-	for (INT32 offs = 0; offs < 32 * 32; offs++)
-	{
-		INT32 sx = (offs & 0x1f);
-		INT32 sy = (offs / 0x20) <<6;
-
-		INT32 attr = ram_base[offs + 0x400];
-		INT32 code = ram_base[offs + 0x000] + ((attr & 0x01) << 8) + 0x400;
-//		INT32 color = (attr >> 4) & 0x0f;
-		INT32 color = attr & 0xf0;
-
-		gfx_base[sx|sy+0X20] = gfx_base[(sx|sy)+0X800] = gfx_base[(sx|sy)+0X820] = 
-		gfx_base[sx|sy] = color <<8 | code;
-	}
-}
-
-/*static*/ void draw_layer(UINT8 *ram_base, UINT16 *gfx_base, INT32 config, INT32 tile_base, INT32 priority)
-{
-	INT32 code_extend = -1;
-	INT32 code_extend_shift = 0;
-
-	switch (config)
-	{
-		case 2: // ninjakun background
-			code_extend = 3;
-			code_extend_shift = 6;
-		break;
-
-		case 3: // ninjakun foreground
-			code_extend = 1;
-			code_extend_shift = 5;
-		break;
-	}
-
-	Uint16 *ss_map = (Uint16 *)gfx_base;
-	int y=0;
-	for (INT32 offs = 0; offs < 32 * 32; offs++)
-	{
-//		if(bg_dirty[offs])
-		{
-//			bg_dirty[offs]=0;
-			UINT32 sx = (offs & 0x1f);
-			UINT32 sy = (offs / 0x20);
-
-			sy <<=6;
-
-			UINT32 code = ram_base[offs + 0x000];
-			UINT32 attr = ram_base[offs + 0x400];
-
-			UINT32 color = (attr & 0x0f);
-
-			if (code_extend != -1) code |= ((attr >> code_extend_shift) & code_extend) << 8;
-			ss_map[sx|sy] = ss_map[sx|sy+0x20] = ss_map[(sx|sy)+0X820] = ss_map[sx|sy] = ss_map[(sx|sy)+0X800] = color <<12 | (code+tile_base) & 0xfff;
-		}
-	}
-}
-
-static void fg_line(UINT16 offs,UINT8 *ram_base)
-{
-	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_A0;
-	INT32 sx = (offs & 0x1f);
-	INT32 sy = (offs / 0x20) <<6;
-
-	INT32 code = ram_base[offs + 0x000];
-	INT32 attr = ram_base[offs + 0x400];
-
-	INT32 color = (attr & 0x0f);
-	INT32 group = (attr >> 4) & 1;
-
-	if (group != 0) return;
-	ss_map[sx|sy] = color <<12 | code;
-}
-
-static void bg_line(UINT16 offs,UINT8 *ram_base)
-{
-	Uint16 *ss_map = (Uint16 *)SCL_VDP2_VRAM_B0;
-	INT32 sx = (offs & 0x1f);
-	INT32 sy = (offs / 0x20) <<6;
-
-	INT32 code = ram_base[offs + 0x000] + 0x200;
-	INT32 attr = ram_base[offs + 0x400];
-	INT32 color = (attr & 0x0f);
-
-	ss_map[sx|sy+0X20] = ss_map[(sx|sy)+0X800] = ss_map[(sx|sy)+0X820] = (color) <<12 | code;
-	ss_map[sx|sy] = color <<12 | code;
 }
 
 static void nova_draw_sprites(INT32 color_base)
@@ -1857,20 +1814,6 @@ static void nova_draw_sprites(INT32 color_base)
 		ss_sprite[delta].charSize   = 0x210;  //0x100 16*16
 		ss_sprite[delta].charAddr   = 0x220+(code<<4);
 	}
-}
-
-static INT32 NovaDraw()
-{
-
-//	draw_bglayer(DrvBgRAM, (Uint16 *)SCL_VDP2_VRAM_B0, 0, 0x100, 0);
-
-//	nova_draw_sprites(0x000);
-
-//	draw_layer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 1, 0x000, 0);
-//	draw_fglayer(DrvFgRAM, (Uint16 *)SCL_VDP2_VRAM_A0, 1, 0x000, 0);
-//	draw_layer(DrvFgRAM, DrvGfxROM0 + 0x0000, 1, 0x000, 1);
-
-	return 0;
 }
 
 /*static*/ int DrvFrame()
