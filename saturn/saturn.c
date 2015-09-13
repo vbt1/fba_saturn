@@ -27,7 +27,7 @@ void	UsrVblankIn( void )
 #endif
 #ifdef FONT
 		frame_y++;
-					 /*
+					 
 		if(frame_y==hz)
 		{
 				if(frame_displayed!=frame_x)
@@ -37,7 +37,7 @@ void	UsrVblankIn( void )
 					frame_displayed = frame_x;
 				}
 				frame_y=frame_x=0;
-		}		   */
+		}		   
 #endif
 #ifndef ACTION_REPLAY
 	}

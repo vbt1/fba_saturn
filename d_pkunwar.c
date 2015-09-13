@@ -1599,7 +1599,7 @@ char *itoa(i)
   return p;
 }
 
-static INT32 NinjakunDraw()
+static inline INT32 NinjakunDraw()
 {
 	ss_reg->n2_move_x =   xscroll - 8;
 	ss_reg->n2_move_y =  yscroll+32;//-64;
@@ -1642,6 +1642,8 @@ static INT32 NinjakunFrame()
 		}
 		CZetClose();
 
+		SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
+
 #ifdef RAZE
 //		ZetOpen(1);
 		nCyclesDone = z80_emulate(sync_cycles-z80_get_cycles_elapsed());
@@ -1680,6 +1682,7 @@ static INT32 NinjakunFrame()
 //  	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 //	updateSound();
 	NinjakunDraw();
+	SPR_WaitEndSlaveSH();
 
 
 //PCM_Task(pcm);
