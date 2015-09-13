@@ -27,7 +27,7 @@ void	UsrVblankIn( void )
 #endif
 #ifdef FONT
 		frame_y++;
-
+					 /*
 		if(frame_y==hz)
 		{
 				if(frame_displayed!=frame_x)
@@ -37,7 +37,7 @@ void	UsrVblankIn( void )
 					frame_displayed = frame_x;
 				}
 				frame_y=frame_x=0;
-		}
+		}		   */
 #endif
 #ifndef ACTION_REPLAY
 	}
@@ -334,6 +334,10 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
+	unsigned char *Mem = malloc((unsigned char *)0x84000);
+	memset(Mem,0x00,0x84000);
+	free(Mem);
+	Mem=NULL;
 
 	while(1)
 	{
@@ -1387,7 +1391,11 @@ void InpExit()
 //  bInputOk = false;
 //  nGameInpCount = 0;
   if (DIPInfo.nDIP)
+	{
+	memset(DIPInfo.DIPData,0,DIPInfo.nDIP * sizeof(struct GameInp));
 	free (DIPInfo.DIPData);
+	}
+	nGameInpCount = 0;
   DIPInfo.DIPData=NULL;
 //  return 0;
 }

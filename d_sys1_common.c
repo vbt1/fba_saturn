@@ -261,6 +261,15 @@ Allocate Memory
 //	SpriteOnScreenMap      = 0x002F0000;
 //	System1Sprites         = Next; Next += System1SpriteRomSize;
 	System1Tiles           = cache;//Next; Next += (System1NumTiles * 8 * 8);
+
+	width_lut			= Next; Next += 256 * sizeof(UINT8);
+	cram_lut			= Next; Next += 256 * sizeof(UINT16);
+	remap8to16_lut	= Next; Next += 512 * sizeof(UINT16);
+	map_offset_lut	= Next; Next += 0x800 * sizeof(UINT16);
+//	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
+	cpu_lut				= Next; Next += 10*sizeof(int);
+//	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
+	CZ80Context		= Next; Next += (0x1080*2);
 	MemEnd = Next;
 
 	return 0;
@@ -399,40 +408,6 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 {
 	(*p[(a>>8)-0xd8])(a, d);
-/*
-	if (a >= 0xe000 && a <= 0xe7ff) { system1_backgroundram_w(a-0xe000,d); return; }
-	if (a >= 0xe800 && a <= 0xeeff) { system1_foregroundram_w(a-0xe800,d); return; }
-	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
-	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
-	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w(a,d); return; }
-	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
-	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
-	
-	switch (a) {
-		case 0xefbd: {
-			//System1ScrollY = d;
-//			if(flipscreen)d+=8;
-				ss_reg->n0_move_y = d<<16;
-			break;
-		}
-		
-		case 0xeffc: {
-			System1ScrollX[0] = d;
-//			ss_reg->n2_move_x = 1-d;
-			break;
-		}
-		
-		case 0xeffd: {
-			System1ScrollX[1] = d;
-			break;
-		}
-	}
-	
-	if (a >= 0xef00 && a <= 0xefff) {
-		System1efRam[a - 0xef00] = d;
-		return;
-	}
-	*/
 }
 
 void system1_bgcollisionram_w(unsigned short a, UINT8 d)
@@ -467,10 +442,6 @@ void system1_paletteram3_w(unsigned short a, UINT8 d)
 
 UINT8 __fastcall System1Z802ProgRead(unsigned int a)
 {
-/*	char toto[50];
-	sprintf(toto,"e%04x",a);
-	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)toto,136,70);
-*/
 	switch (a) {
 		case 0xe000: {
 			return System1SoundLatch;
@@ -620,17 +591,6 @@ void initLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void SaturnInitMem()
 {
-	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-
-	width_lut			= Next; Next += 256 * sizeof(UINT8);
-	cram_lut			= Next; Next += 256 * sizeof(UINT16);
-	remap8to16_lut	= Next; Next += 512 * sizeof(UINT16);
-	map_offset_lut	= Next; Next += 0x800 * sizeof(UINT16);
-//	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
-	cpu_lut				= Next; Next += 10*sizeof(int);
-//	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
-	MemEnd			= Next;
-
 	p[8] = system1_backgroundram_w;
 	p[9] = system1_backgroundram_w;
 	p[10] = system1_backgroundram_w;
@@ -687,16 +647,7 @@ void dummy()
 	ss_vram   = (UINT8 *)SS_SPRAM;
 	ss_scl      = (Fixed32 *)SS_SCL;
 
-//FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"DrvInitSaturn    ",10,40);
 	SaturnInitMem();
-	int nLen = MemEnd - (UINT8 *)0;
-	if((SaturnMem = (UINT8 *)malloc(nLen))==NULL)
-	{
-//		FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"Malloc SaturnMem failed    ",10,50);	
-		return;
-	}
-	SaturnInitMem();
-//	FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)"Malloc SaturnMem done    ",10,40);	
 
 	if(flipscreen)
 	{
@@ -770,6 +721,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	System1NumTiles = (nTileRomNum * nTileRomSize) / 24;
 	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
 	DrvInitSaturn();
+
 	CollisionFunction = updateCollisions;
 	//System1BgRamSize = 0x800;
 	// Allocate and Blank all required memory
@@ -777,20 +729,23 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	MemIndex();
 	nLen = MemEnd - (UINT8 *)0;
 
-	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) {	return 1;}
+	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) 
+	{	
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
+		return 1;
+	}
 //	if ((SpriteOnScreenMap = (UINT8 *)malloc(256 * 256)) == NULL) {return 1;}
-
 	memset(Mem, 0, nLen);
 	MemIndex();
 
 	UINT8 *	System1TempRom = (UINT8*)0x00200000;
 	memset(System1TempRom, 0, 0x40000);
 	// Load Z80 #1 Program roms
-
 	RomOffset = 0;
 	for (i = 0; i < nZ80Rom1Num; i++) {
 		nRet = BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1); if (nRet != 0) return 1;
 	}
+
 	if (System1BankedRom) {
 		memcpyl(System1TempRom, System1Rom1, 0x20000);
 		memset(System1Rom1, 0, 0x20000);
@@ -865,9 +820,10 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1PromGreen, 1 + RomOffset, 1);
 		nRet = BurnLoadRom(System1PromBlue, 2 + RomOffset, 1);
 	}
+
 	// Setup the Z80 emulation
 // remettre 1 plus tard quand choplifter sera corrigé
-	CZetInit(2);
+	CZetInit2(2,CZ80Context);
 
 	CZetOpen(0);
 	CZetSetWriteHandler(System1Z801ProgWrite);
@@ -968,7 +924,11 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 //-------------------------------------------------------------------------------------------------------------------------------------
 int System1Exit()
 {
+	SS_SET_N0SPRM(0);
+	SS_SET_N2SPRM(0);
+	ss_regs->specialcode=0x0000;
 	nBurnFunction = NULL;
+	CZetExit2();
 
 	z80_stop_emulating();
 	z80_add_read(0xe000, 0xe001, 1, (void *)NULL); 
@@ -976,13 +936,12 @@ int System1Exit()
 	z80_add_write(0xc000, 0xc003, 1, (void *)NULL);
 	z80_set_in((unsigned char (*)(unsigned short))NULL);
 	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
-	CZetExit();
 	nBurnFunction = NULL;
 
     while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
     while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
 
-MemEnd  = NULL;
+MemEnd  = CZ80Context = NULL;
 RamStart1 = RamStart               = NULL;
 System1Rom1 = System1Rom2 = NULL;
 System1PromRed = System1PromGreen = System1PromBlue = NULL;
@@ -996,7 +955,6 @@ System1Tiles = SpriteOnScreenMap = NULL;
 System1Fetch1 = /*System1MC8123Key =*/ NULL;
 System1ScrollX = System1ScrollY = NULL;
 
-//SaturnMem = NULL;
 remap8to16_lut = NULL;
 map_offset_lut = NULL;
 //code_lut = NULL;
@@ -1014,9 +972,6 @@ spriteCache = NULL;
 
 	free(Mem);
 	Mem = NULL;
-
-	free(SaturnMem);
-	SaturnMem = NULL;
 
 	System1SoundLatch = 0;
 	System1BgScrollX = 0;

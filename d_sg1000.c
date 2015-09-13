@@ -332,6 +332,7 @@ static int MemIndex()
 //	DrvZ80RAM		= Next; Next += 0x010400;
 
 	RamEnd			= Next;
+	CZ80Context		= Next; Next += 0x1080;
 	MemEnd			= Next;
 
 	return 0;
@@ -408,7 +409,7 @@ static int DrvInit()
 	MemIndex();
 
 	#ifndef RAZE
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	#endif
 
 //	make_lut();
@@ -448,14 +449,11 @@ static int DrvExit()
 	z80_add_write(0x2000, 0x3fff, 1, (void *)NULL);
 
 #else
-	CZetExit();
+	CZetExit2();
 #endif
 	ppi8255_exit();
 	TMS9928AExit();
-	//pTransDraw = 
-	/*color_2bpp_lut =*/ MemEnd = AllRam = RamEnd = DrvZ80ROM = /*DrvZ80Dec =*/ DrvZ80RAM = DrvZ80ExtRAM = NULL;
-//	SN76496Exit();
-
+	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
 	free (AllMem);
 	AllMem = NULL;
 	DrvReset = 0;
@@ -469,6 +467,7 @@ static int DrvFrame()
 		DrvDoReset();
 	}
 */
+
 	{ // Compile Inputs
 		memset (DrvInputs, 0xff, 2);
 		for (int i = 0; i < 8; i++) {
@@ -534,29 +533,9 @@ static int DrvFrame()
 //				PCM_Task(pcm); // bon emplacement
 		}
 	PCM_Task(pcm); 
-  
 	return 0;
 }
-/*
 //-------------------------------------------------------------------------------------------------------------------------------------
-void	SetVblank2( void ){
-	int			imask;
-
-
-    imask = get_imask();
-	 set_imask(2);
-//	INT_ChgMsk(INT_MSK_NULL,INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT);
-	INT_ChgMsk(INT_MSK_NULL, INT_MSK_VBLK_OUT);
-//	INT_SetScuFunc(INT_SCU_VBLK_IN,UsrVblankIn2);
-	INT_SetScuFunc(INT_SCU_VBLK_OUT,update_input1);
-//	INT_ChgMsk(INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT,INT_MSK_NULL);
-	INT_ChgMsk(INT_MSK_VBLK_OUT,INT_MSK_NULL);
-	set_imask(imask);
-	__port = PER_OpenPort();
-	
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-*/
 /*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
@@ -615,41 +594,10 @@ void initPosition(void)
 	ss_reg->n1_move_y = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ /*void SaturnInitMem()
-{
-
-	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
-	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
-	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
-	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
-	dummy_write= Next; Next += 0x100*sizeof(unsigned);
-	MemEnd			= Next;	
-}	*/
-//-------------------------------------------------------------------------------------------------------------------------------------
 /*void dummy()
 {
 
 } */
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*
-static void make_lut()
-{
-	unsigned char bg,fg;
-
-	for (int bg=0;bg<16;bg++)
-	{
-		for (int fg=0;fg<16;fg++)
-		{
-			unsigned int *position =	 &color_2bpp_lut[(bg|fg<<4)*4];
-			position[0] = bg|bg<<4;
-			position[1] = fg|bg<<4;
-			position[2] = bg|fg<<4;
-			position[3] = fg|fg<<4;
-		}
-	}
-}
-*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {

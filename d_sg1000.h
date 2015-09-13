@@ -91,10 +91,9 @@ static UINT8 *MemEnd	= NULL;
 static UINT8 *AllRam	= NULL;
 static UINT8 *RamEnd	= NULL;
 static UINT8 *DrvZ80ROM	= NULL;
-//static UINT8 *DrvZ80Dec = NULL;
 static UINT8 *DrvZ80RAM	= NULL;
 static UINT8 *DrvZ80ExtRAM = NULL;
-//UINT32 *color_2bpp_lut	= NULL;
+static UINT8 *CZ80Context = NULL;
 
 static UINT8 DrvInputs[2];
 static UINT8 DrvJoy1[8];

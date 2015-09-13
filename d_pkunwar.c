@@ -886,20 +886,6 @@ static UINT8 raiders5_port_0(UINT32 data)
 
 	pkunwar_gfx_decode(tmp);
 	tmp = NULL;
-/* raiders5
-	DrvGfxDescramble(DrvGfxROM0);
-	DrvGfxDescramble(DrvGfxROM2);
-	DrvGfxDecode(DrvGfxROM0, DrvGfxROM1, 1);
-	DrvGfxDecode(DrvGfxROM0, DrvGfxROM0, 0);
-
-	DrvGfxDecode(DrvGfxROM2, DrvGfxROM2, 0);
-	pkunw
-		DrvGfxDescramble(DrvGfxROM0);
-
-		DrvGfxDecode(DrvGfxROM0, DrvGfxROM1, 1);
-		DrvGfxDecode(DrvGfxROM0, DrvGfxROM0, 0);
-
-*/
 	return 0;
 }
 
@@ -911,6 +897,7 @@ static INT32 MemIndex()
 	DrvGfxROM0	= Next; Next += 0x020000;
 	DrvColPROM= Next; Next += 0x000020;
 	pFMBuffer	= Next; Next += SOUND_LEN * 6 * sizeof(short);
+//	CZ80Context	= Next; Next += (0x1080*2);
 	MemEnd	= Next;
 }
 
@@ -920,12 +907,19 @@ static INT32 MemIndex()
 
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
+	INT32 nLen = MemEnd - (unsigned char *)0;
+	if ((AllMem = (unsigned char *)malloc(nLen)) == NULL) 
+	{	
+		return 1;
+	}
+
 	memset(AllMem, 0, nLen);
 	MemIndex();
+
 	DrvBgRAM = DrvMainROM + 0x8000;
 	DrvMainRAM = DrvMainROM + 0xc000;
+//	CZetInit2(1,CZ80Context);
+	CZetInit(1);
 
 	if (LoadRoms()) return 1;
 
@@ -948,7 +942,7 @@ static INT32 MemIndex()
 	z80_end_memmap();   
 	z80_set_out((void (*)(unsigned short int, unsigned char))&pkunwar_out);
 #else
-	CZetInit(1);
+//	CZetInit(1);
 	CZetOpen(0);
 	CZetSetOutHandler(pkunwar_out);
 	CZetSetReadHandler(pkunwar_read);
@@ -1402,34 +1396,32 @@ static INT32 Raiders5Init()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int DrvExit()
 {
+	nBurnSprites=128;
+	cleanSprites();
+//	if(((*(unsigned char *)0xfffffe11 & 0x80) == 0))
+//		SPR_WaitEndSlaveSH();
+	AY8910Exit(1);
+	AY8910Exit(0);
 #ifndef RAZE
 	CZetExit();
 #endif
-	AY8910Exit(0);
-	AY8910Exit(1);
 
-	DrvMainROM = DrvGfxROM0 = DrvColPROM = DrvBgRAM = DrvMainRAM = NULL;
-	AllMem = DrvSubROM = MemEnd	= DrvFgRAM = DrvSprRAM = DrvPalRAM = NULL;
-	DrvSubRAM = NULL;
+	DrvMainROM = DrvGfxROM0 = DrvGfxROM1 = DrvColPROM = DrvMainRAM = NULL;
+	MemEnd	= DrvBgRAM = DrvFgRAM = DrvSprRAM = DrvPalRAM = NULL;
+	DrvSubRAM = DrvSubROM /*= CZ80Context*/ = NULL;
 	
-	nBurnSprites=128;
-	cleanSprites();
+
 
 	for (int i = 0; i < 6; i++) {
 		pAY8910Buffer[i] = NULL;
 	}
 
-//	free (pFMBuffer);
 	pFMBuffer = NULL;
-	free (Mem);
-	Mem = NULL;
-
+	free (AllMem);
+	AllMem = NULL;
 	vblank /*= flipscreen */= 0;
-
 	return 0;
-
 }
-
 
 //-------------------------------------------------------------------------------------------------
 // Drawing Routines
@@ -1843,6 +1835,7 @@ static void nova_draw_sprites(INT32 color_base)
 
 //PCM_Task(pcm);
 	SPR_WaitEndSlaveSH();
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------

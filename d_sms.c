@@ -263,6 +263,8 @@ static INT32 SMSInit(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 SMSExit(void)
 {
+	SPR_InitSlaveSH();
+
 	z80_stop_emulating();
 	z80_add_read(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
 	z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);

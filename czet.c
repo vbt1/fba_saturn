@@ -72,6 +72,29 @@ int CZetInit(int nCount)
 	return 0;
 }
 
+int CZetInit2(int nCount,UINT8 *addr)
+{
+	CZetCPUContext = (cz80_struc*)addr;
+	Cz80_InitFlags();
+
+	unsigned int i;
+
+	for (i = 0; i < nCount; i++) {
+		Cz80_Init( &CZetCPUContext[i] );
+		CZetCPUContext[i].nInterruptLatch = -1;
+
+		CZetCPUContext[i].Read_Byte = CZetDummyReadHandler;
+		CZetCPUContext[i].Write_Byte = CZetDummyWriteHandler;
+		CZetCPUContext[i].Read_Word = CZetDummyReadHandler;
+		CZetCPUContext[i].Write_Word = CZetDummyWriteHandler;
+		CZetCPUContext[i].IN_Port = CZetDummyInHandler;
+		CZetCPUContext[i].OUT_Port = CZetDummyOutHandler;
+	}
+	CZetOpen(0);
+	nCPUCount = nCount;
+	return 0;
+}
+
 unsigned char CZetReadByte(unsigned short address)
 {
 	if (nOpenedCPU < 0) return 0;
@@ -171,17 +194,39 @@ int CZetMemEnd()
 	return 0;
 }
 
-void CZetExit()
+void CZetExit2()
 {
-	CZetRunEnd();
-//	CZetClose(0);
-//	CZetClose(1);
-//	CZetReset();
-//	Cz80_InitFlags();
- 
 	unsigned int i;
 
 	for (i = 0; i < nCPUCount; i++) {
+		CZetOpen(i);
+		CZetRunEnd();
+		CZetClose();
+		Cz80_Init( &CZetCPUContext[i] );
+		CZetCPUContext[i].nInterruptLatch = -1;
+
+		CZetCPUContext[i].Read_Byte = NULL;
+		CZetCPUContext[i].Write_Byte = NULL;
+		CZetCPUContext[i].Read_Word = NULL;
+		CZetCPUContext[i].Write_Word = NULL;
+		CZetCPUContext[i].IN_Port = NULL;
+		CZetCPUContext[i].OUT_Port = NULL;
+	}	
+	CZetCPUContext = NULL;
+
+	lastCZetCPUContext = NULL;
+	nOpenedCPU = -1;
+	nCPUCount = 0;
+}
+
+void CZetExit()
+{
+	unsigned int i;
+
+	for (i = 0; i < nCPUCount; i++) {
+		CZetOpen(i);
+		CZetRunEnd();
+		CZetClose();
 		Cz80_Init( &CZetCPUContext[i] );
 		CZetCPUContext[i].nInterruptLatch = -1;
 
@@ -205,7 +250,6 @@ void CZetExit()
 	nOpenedCPU = -1;
 	nCPUCount = 0;
 }
-
 
 int CZetMapArea(int nStart, int nEnd, int nMode, unsigned char *Mem)
 {

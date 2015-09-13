@@ -9,7 +9,8 @@
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
 /*static*/ void updateSound();
-/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvDips[2], DrvReset;
+/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8];
+static unsigned char DrvDips[2]={0,0},DrvReset=0;
 static UINT8 DrvInputs[8];
 /*static*/ short *pAY8910Buffer[6], *pFMBuffer = NULL;
 /*static*/ unsigned char *Mem = NULL;
@@ -26,6 +27,7 @@ static UINT8 *DrvFgRAM = NULL;
 static UINT8 *DrvSprRAM = NULL;
 static UINT8 *DrvPalRAM = NULL;
 static UINT8 *DrvSubRAM = NULL;
+//static UINT8 *CZ80Context = NULL;
 
 static INT32 DrvCoinHold = 0;
 static INT32 DrvCoinHoldframecnt = 0;

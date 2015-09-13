@@ -875,7 +875,6 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	sound_state		= Next; Next += 0x000003;
 
 	RamEnd		= Next;
-
 	MemEnd		= Next;
 
 	return 0;
@@ -883,25 +882,11 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 /*static*/INT32 DrvInit()
 {
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvInitSaturn before     ",4,80);
-
 	DrvInitSaturn();
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvInitSaturn after     ",4,80);
-
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	AllMem = (UINT8 *)malloc(nLen);
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc after     ",4,80);
-
-	if (AllMem == NULL)
-	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc AllMem failed",4,80);
-		return 1;
-	}
+	INT32 nLen = MemEnd - AllRam;
 	memset(AllMem, 0, nLen);
 	MemIndex();
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"MemIndex after     ",4,80);
+
 	memset(bitmap,	 0x11,0xE000);
 	memset(DrvGfxROM2+0x00010000,0x11,0xF400);
 
@@ -922,23 +907,19 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 		}
 
 		if (BurnLoadRom(DrvGfxROM3 + 0x6000,  14, 1)) return 1;
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode before     ",4,80);
 
 		DrvGfxDecode();
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode after     ",4,80);
 
 		DrvPaletteInit(0x100);
 //		DrvPaletteInit(0x200);
 		bg_layer_init();
 
-//		free(DrvGfxROM3);
 		DrvGfxROM3 = NULL;
-//		free(DrvGfxROM1);
 		DrvGfxROM1 = NULL;
 
 	}
 #ifndef RAZE
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0x5fff, 0, DrvZ80ROM);
 	CZetMapArea(0x0000, 0x5fff, 2, DrvZ80ROM);
@@ -992,7 +973,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 /*static*/INT32 DrvExit()
 {
 #ifndef RAZE
-	CZetExit();
+	CZetExit2();
 #else
 	z80_stop_emulating();
 #endif
@@ -1003,7 +984,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
     while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
     while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
 
-	MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = DrvZ80ROM2 = NULL;
+	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = DrvZ80ROM2 = NULL;
 	DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =DrvGfxROM3 = NULL;
 	DrvColPROM = DrvZ80RAM = DrvZ80RAM2 = DrvSprRAM = DrvVidRAM = DrvColRAM = NULL;
 	zaxxon_bg_pixmap = 	interrupt_enable	= zaxxon_fg_color = zaxxon_bg_color= NULL;
@@ -1011,7 +992,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	zaxxon_flipscreen = zaxxon_coin_enable = soundlatch = NULL;
 	zaxxon_coin_status = zaxxon_coin_last = sound_state = NULL;
 	zaxxon_bg_scroll = NULL;
-	free (AllMem);
+//	free (AllMem);
 	AllMem = NULL;
 
 	ss_map264 = NULL;
@@ -1635,7 +1616,56 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	sx_lut				= Next; Next += 256*sizeof(INT16);
 	sy_lut				= Next; Next += 256*sizeof(INT16);
 	charaddr_lut		= Next; Next += 256*sizeof(UINT16);
-//	srcxmask			= Next; Next += 256*240*sizeof(UINT32);
+	CZ80Context		= Next; Next += 0x1080;
+
+
+//--------------
+	AllMem						= Next;
+	DrvZ80ROM				= Next; Next += 0x010000;
+	DrvZ80DecROM		= Next; Next += 0x010000;
+	DrvZ80ROM2		= Next; Next += 0x010000;
+
+	DrvGfxROM0		= cache;
+
+ 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	DrvGfxROM2		= &ss_vram[0x1100];//Next; Next += 0x020000;
+
+//	DrvGfxROM1		= Next; Next += 0x010000;
+//	DrvGfxROM3		= Next; Next += 0x010000;
+
+	DrvColPROM		= Next; Next += 0x000200;
+
+	zaxxon_bg_pixmap = (UINT8*)0x00200000;
+
+	AllRam			= Next;
+
+	DrvZ80RAM		= Next; Next += 0x001000;
+	DrvZ80RAM2		= Next; Next += 0x001000;
+	DrvSprRAM		= Next; Next += 0x000100;
+	DrvVidRAM		= Next; Next += 0x000400;
+	DrvColRAM		= Next; Next += 0x000400;
+
+	interrupt_enable	= Next; Next += 0x000001;
+
+	zaxxon_fg_color		= Next; Next += 0x000001;
+	zaxxon_bg_color		= Next; Next += 0x000001;
+	zaxxon_bg_enable	= Next; Next += 0x000001;
+	congo_color_bank	= Next; Next += 0x000001;
+	congo_fg_bank		= Next; Next += 0x000001;
+	congo_custom		= Next; Next += 0x000004;
+	zaxxon_flipscreen	= Next; Next += 0x000001;
+	zaxxon_coin_enable	= Next; Next += 0x000004;
+	zaxxon_coin_status	= Next; Next += 0x000004;
+	zaxxon_coin_last	= Next; Next += 0x000004;
+
+	zaxxon_bg_scroll	= (UINT32*)Next; Next += 0x000001 * sizeof(INT32);
+
+	soundlatch		= Next; Next += 0x000001;
+
+	sound_state		= Next; Next += 0x000003;
+
+	RamEnd		= Next;
+//--------------
 	MemEnd			= Next;	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

@@ -23,7 +23,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int System1CalcPalette();
 /*static*/ int System1Exit();
 /*static*/ int System1Frame();
-/*static*/ UINT8 *SaturnMem = NULL;
+/*static*/ //UINT8 *SaturnMem = NULL;
 /*static*/ UINT16 *remap8to16_lut = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
 ///*static*/ Uint16 *code_lut = NULL;
@@ -32,6 +32,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ Uint8 *width_lut = NULL;
 /*static*/ UINT8 *ss_vram = NULL;
 /*static*/ UINT16 *spriteCache = NULL;
+static UINT8 *CZ80Context = NULL;
 typedef int bool;
 
 typedef struct { UINT8 x, y, width, yend } sprite_collision; 

@@ -69,7 +69,7 @@ OVLPKUNW                 = root/d_pkunw.coff
 OVLPKUNW1               = root/d_pkunw.bin
 MPOVLPKUNWFILE    = $(OVLPKUNW:.coff=.maps)
 LDOVLPKUNWFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPKUNWFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLPKUNW         = d_pkunwar.c czet.c cz80/cz80.c ay8910.c 
+SRCOVLPKUNW         = d_pkunwar.c czet.c cz80/cz80.c ay8910.c
 OBJOVLPKUNW         = $(SRCOVLPKUNW:.c=.o)
 
 OVLMITCH                 = root/d_mitch.coff
