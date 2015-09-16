@@ -305,25 +305,25 @@ STD_ROM_FN(zaxxonb)
 // Super Zaxxon
 
 static struct BurnRomInfo szaxxonRomDesc[] = {
-	{ "suzaxxon3.u27",	0x2000, 0xaf7221da, 1 }, //  0 main
-	{ "suzaxxon2.u28",	0x2000, 0x1b90fb2a, 1 }, //  1
-	{ "suzaxxon1.u29",	0x1000, 0x07258b4a, 1 }, //  2
+	{ "suzaxxon.3",	0x2000, 0xaf7221da, 1 }, //  0 main
+	{ "suzaxxon.2",	0x2000, 0x1b90fb2a, 1 }, //  1
+	{ "suzaxxon.1",	0x1000, 0x07258b4a, 1 }, //  2
 
-	{ "suzaxxon14.u68",	0x0800, 0xbccf560c, 2 }, //  3 gfx1
-	{ "suzaxxon15.u69",	0x0800, 0xd28c628b, 2 }, //  4
+	{ "suzaxxon.14",	0x0800, 0xbccf560c, 2 }, //  3 gfx1
+	{ "suzaxxon.15",	0x0800, 0xd28c628b, 2 }, //  4
 
-	{ "suzaxxon6.u113",	0x2000, 0xf51af375, 3 }, //  5 gfx2
-	{ "suzaxxon5.u112",	0x2000, 0xa7de021d, 3 }, //  6
-	{ "suzaxxon4.u111",	0x2000, 0x5bfb3b04, 3 }, //  7
+	{ "suzaxxon.6",	0x2000, 0xf51af375, 3 }, //  5 gfx2
+	{ "suzaxxon.5",	0x2000, 0xa7de021d, 3 }, //  6
+	{ "suzaxxon.4",	0x2000, 0x5bfb3b04, 3 }, //  7
 
-	{ "suzaxxon11.u77",	0x2000, 0x1503ae41, 4 }, //  8 gfx3
-	{ "suzaxxon12.u78",	0x2000, 0x3b53d83f, 4 }, //  9
-	{ "suzaxxon13.u79",	0x2000, 0x581e8793, 4 }, // 10
+	{ "suzaxxon.11",	0x2000, 0x1503ae41, 4 }, //  8 gfx3
+	{ "suzaxxon.12",	0x2000, 0x3b53d83f, 4 }, //  9
+	{ "suzaxxon.13",	0x2000, 0x581e8793, 4 }, // 10
 
-	{ "suzaxxon8.u91",	0x2000, 0xdd1b52df, 5 }, // 11 gfx4
-	{ "suzaxxon7.u90",	0x2000, 0xb5bc07f0, 5 }, // 12
-	{ "suzaxxon10.u93",	0x2000, 0x68e84174, 5 }, // 13
-	{ "suzaxxon9.u92",	0x2000, 0xa509994b, 5 }, // 14
+	{ "suzaxxon.8",	0x2000, 0xdd1b52df, 5 }, // 11 gfx4
+	{ "suzaxxon.7",	0x2000, 0xb5bc07f0, 5 }, // 12
+	{ "suzaxxon.10",	0x2000, 0x68e84174, 5 }, // 13
+	{ "suzaxxon.9",	0x2000, 0xa509994b, 5 }, // 14
 
 	{ "suzaxxon.u98",	0x0100, 0x15727a9f, 6 }, // 15 proms
 	{ "suzaxxon.u72",	0x0100, 0xdeaa21f7, 6 }, // 16
