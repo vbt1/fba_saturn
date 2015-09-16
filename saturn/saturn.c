@@ -354,7 +354,8 @@ static void VDP2_InitVRAM(void)
 //--------------------------------------------------------------------------------------------------------------------------------------
 static void load_img(int id)
 {
-/* vbt à remettre	void (*fp)(unsigned int);
+// vbt à remettre	
+	void (*fp)(unsigned int);
 	fp = (void *)LOWADDR;
 	(*fp)(id);
 
@@ -362,7 +363,7 @@ static void load_img(int id)
 	{
 	 	wait_key(PER_DGT_B);
 		load_img(0);
-	}	  */
+	}
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 void wait_key(Uint8 key)
@@ -432,7 +433,7 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 					loaded[0] = 0;
 					modified[0] = 1;
 
-	 heapWalk();
+	 //heapWalk();
 
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
@@ -464,7 +465,7 @@ static void display_menu(void)
 //	sc_init();
 //	the_loop = 1;
 
-	heapWalk();
+	//heapWalk();
 
 	unsigned int current_page = 1,m;
 	unsigned char modified = 1;
@@ -472,7 +473,8 @@ static void display_menu(void)
 	{
 		if(!loaded)
 		{
-// vbt à remette			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
+// vbt à remette			
+			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			load_img(0);	
 			loaded=1;
 
@@ -1742,10 +1744,14 @@ static void run_fba_emulator()
 	//	PER_SMPC_SND_ON();
 		SetVblank(); // a garder
 
+		int (*Frame)();
+		Frame = (int *)pDriver[nBurnDrvSelect]->Frame;
+
 		while (play)
 		{
 	//		BurnDrvFrame();
-			pDriver[nBurnDrvSelect]->Frame();		// Forward to drivers function
+//			pDriver[nBurnDrvSelect]->Frame();		// Forward to drivers function
+			Frame();
 			SCL_SetLineParam2(&lp);
 			_spr2_transfercommand();
 			frame_x++;
@@ -1856,7 +1862,7 @@ int vspfunc(char *format, ...)
 */
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-#if 1
+#if 0
 extern UINT32  end;
 extern UINT32  __malloc_free_list;
 extern UINT32  _sbrk(int size);
@@ -1915,4 +1921,3 @@ void heapWalk(void)
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"done",12,131);
 }
 #endif
-

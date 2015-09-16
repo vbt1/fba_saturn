@@ -5,7 +5,7 @@
 int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, char bAddSignal);
 void MSM6295Reset(int nChip);
 void MSM6295Exit(int nChip);
-
+int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength);
 int MSM6295Render(int nChip, short* pSoundBuf, int nSegmenLength);
 void MSM6295Command(int nChip, unsigned char nCommand);
 //int MSM6295Scan(int nChip, int nAction);

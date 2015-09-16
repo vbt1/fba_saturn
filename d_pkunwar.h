@@ -27,6 +27,7 @@ static UINT8 *DrvFgRAM = NULL;
 static UINT8 *DrvSprRAM = NULL;
 static UINT8 *DrvPalRAM = NULL;
 static UINT8 *DrvSubRAM = NULL;
+static UINT32 *offs_lut = NULL;
 //static UINT8 *CZ80Context = NULL;
 
 static INT32 DrvCoinHold = 0;

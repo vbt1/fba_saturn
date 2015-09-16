@@ -455,7 +455,7 @@ int ovlInit(char *szShortName)
 // Graphics Emulation
 /*static*/ void NewsRenderBgLayer()
 {
-	int Code, Colour, x, TileIndex = 0;
+	unsigned int Code, Colour, x, TileIndex = 0;
 	
 	 for (TileIndex=0;TileIndex<0x400 ; TileIndex++)
 	 {
@@ -481,7 +481,7 @@ int ovlInit(char *szShortName)
 
 /*static*/ void NewsRenderFgLayer()
 {
-	int Code, Colour, x, TileIndex = 0;
+	unsigned int Code, Colour, x, TileIndex = 0;
 
 	for (TileIndex=0;TileIndex<0x400 ; TileIndex++)
 	{
@@ -495,7 +495,7 @@ int ovlInit(char *szShortName)
 			Colour = Code >> 12;
 			Code &= 0x0fff;
 
-			int x = map_offset_lut[TileIndex];
+			unsigned int x = map_offset_lut[TileIndex];
 			ss_map[x] = Colour;
 			ss_map[x+1] =  Code;
 #ifdef CACHE
@@ -503,12 +503,6 @@ int ovlInit(char *szShortName)
 #endif
 	}
 
-}
-
-/*static*/ void NewsDraw()
-{
-	SPR_RunSlaveSH((PARA_RTN*)NewsRenderFgLayer, NULL);
-	NewsRenderBgLayer();
 }
 
 // Frame Function
@@ -534,7 +528,8 @@ int ovlInit(char *szShortName)
 //	z80_emulate(0);
 #endif
 
-	NewsDraw();
+	SPR_RunSlaveSH((PARA_RTN*)NewsRenderFgLayer, NULL);
+	NewsRenderBgLayer();
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 	nSoundBufferPos+=SOUND_LEN;

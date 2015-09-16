@@ -2935,6 +2935,117 @@ EndFile
 				EndFile
 
  			EndDirectory
+
+			Directory HANGONJR
+
+				File ROM1.IC2;1
+					Source HANGONJR\ROM1.IC2
+				EndFile
+				File ROM2.IC3;1
+					Source HANGONJR\ROM2.IC3
+				EndFile
+				File ROM3.IC4;1
+					Source HANGONJR\ROM3.IC4
+				EndFile
+				File ROM4.IC5;1
+					Source HANGONJR\ROM4.IC5
+				EndFile
+				File ROM5.IC7;1
+					Source HANGONJR\ROM5.IC7
+				EndFile
+
+			EndDirectory
+
+			Directory FANTZN2
+				File 3170057.KEY;1
+					Source FANTZN2\3170057.KEY
+				EndFile
+				File EPR11412.IC2;1
+					Source FANTZN2\EPR11412.IC2
+				EndFile
+				File EPR11413.IC3;1
+					Source FANTZN2\EPR11413.IC3
+				EndFile
+				File EPR11414.IC4;1
+					Source FANTZN2\EPR11414.IC4
+				EndFile
+				File EPR11415.IC5;1
+					Source FANTZN2\EPR11415.IC5
+				EndFile
+				File EPR11416.IC7;1
+					Source FANTZN2\EPR11416.IC7
+				EndFile
+			EndDirectory
+
+			Directory TETRISSE
+				File EPR12211.4;1
+					Source TETRISSE\EPR12211.4
+				EndFile
+				File EPR12212.5;1
+					Source TETRISSE\EPR12212.5
+				EndFile
+				File EPR12213.7;1
+					Source TETRISSE\EPR12213.7
+				EndFile
+			EndDirectory
+
+			Directory CUBYBOP
+				File CB06.6;1
+					Source CUBYBOP\CB06.6
+				EndFile
+				File CB10.10;1
+					Source CUBYBOP\CB10.10
+				EndFile
+				File CB09.9;1
+					Source CUBYBOP\CB09.9
+				EndFile
+				File CB08.8;1
+					Source CUBYBOP\CB08.8
+				EndFile
+				File CB07.7;1
+					Source CUBYBOP\CB07.7
+				EndFile
+
+			EndDirectory
+
+			Directory XXMISSIO
+				File XX1.4L;1
+					Source XXMISSIO\XX1.4L
+				EndFile
+				File XX10.4C;1
+					Source XXMISSIO\XX10.4C
+				EndFile
+				File XX11.4B;1
+					Source XXMISSIO\XX11.4B
+				EndFile
+				File XX2.4B;1
+					Source XXMISSIO\XX2.4B
+				EndFile
+				File XX3.6A;1
+					Source XXMISSIO\XX3.6A
+				EndFile
+				File XX4.6B;1
+					Source XXMISSIO\XX4.6B
+				EndFile
+				File XX5.6D;1
+					Source XXMISSIO\XX5.6D
+				EndFile
+				File XX6.8J;1
+					Source XXMISSIO\XX6.8J
+				EndFile
+				File XX7.8H;1
+					Source XXMISSIO\XX7.8H
+				EndFile
+				File XX8.8F;1
+					Source XXMISSIO\XX8.8F
+				EndFile
+				File XX9.8E;1
+					Source XXMISSIO\XX9.8E
+				EndFile
+			EndDirectory
+
+
+
 		EndDirectory
 	EndHierarchy
 EndPrimaryVolume

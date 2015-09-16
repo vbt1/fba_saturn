@@ -61,51 +61,58 @@ static void fg_nova2001_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
 	offs = (offs & 0x1f) | (offs / 0x20) <<6;
 	ss_map[offs] = (attr & 0x0f) <<12 | code;
 }
+
+//UINT32 offs_calc[512];
 //---------------------------------------------------------------------------------------------------------
-static void bg_nova2001_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+static void bg_nova2001_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
 {
 	UINT32 code = ram_base[offs + 0x000] + 0x200;
 	UINT32 attr = ram_base[offs + 0x400];
-	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+//	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+	offs = offs_lut[offs];
 
 	ss_map[offs+0X20] = ss_map[offs+0X800] = ss_map[offs+0X820] = 
 	ss_map[offs] = (attr & 0x0f) <<12 | code;
 }
 //---------------------------------------------------------------------------------------------------------
-static void fg_raiders5_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+static void fg_raiders5_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
 {
 	UINT32 attr = ram_base[offs + 0x400];
 	UINT32 code = ram_base[offs + 0x000];
-	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+//	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+	offs = offs_lut[offs];
 
 	ss_map[offs] = (attr & 0xf0) <<8 | code;
 }
 //---------------------------------------------------------------------------------------------------------
-static void bg_raiders5_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+static void bg_raiders5_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
 {
 	UINT32 attr = ram_base[offs + 0x400];
 	UINT32 code = ram_base[offs + 0x000] + ((attr & 0x01) << 8) + 0x400;
-	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+//	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+	offs = offs_lut[offs];
 
 	ss_map[offs+0X20] = ss_map[offs+0X800] = ss_map[offs+0X820] =
 	ss_map[offs] = (attr & 0xf0) <<8 | code;
 }
 //---------------------------------------------------------------------------------------------------------
-static void fg_ninjakun_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+static void fg_ninjakun_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
 {
 	UINT32 attr = ram_base[offs + 0x400];
 	UINT32 code = ram_base[offs + 0x000];
-	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+//	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+	offs = offs_lut[offs];
 
 	code |= (attr & 0x20) << 3;
 	ss_map[offs] = (attr & 0x0f) <<12 | code & 0xfff;
 }
 //---------------------------------------------------------------------------------------------------------
-static void bg_ninjakun_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
+static void bg_ninjakun_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
 {
 	UINT32 attr = ram_base[offs + 0x400];
 	UINT32 code = ram_base[offs + 0x000] + 0x400;
-	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+//	offs = (offs & 0x1f) | (offs / 0x20) <<6;
+	offs = offs_lut[offs];
 
 	code |= (attr & 0xC0) << 2;
 	ss_map[offs+0X20] = ss_map[offs+0X800] = ss_map[offs+0X820] = 
@@ -897,6 +904,7 @@ static INT32 MemIndex()
 	DrvGfxROM0	= Next; Next += 0x020000;
 	DrvColPROM= Next; Next += 0x000020;
 	pFMBuffer	= Next; Next += SOUND_LEN * 6 * sizeof(short);
+	offs_lut = Next; Next += 0x400 * (sizeof(UINT32));
 //	CZ80Context	= Next; Next += (0x1080*2);
 	MemEnd	= Next;
 }
@@ -982,11 +990,13 @@ static INT32 NovaInit()
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
+	
 	DrvFgRAM = DrvMainROM + 0xa000;
 	DrvBgRAM = DrvMainROM + 0xa800;
 	DrvSprRAM = DrvMainROM + 0xb000;
 	DrvMainRAM = DrvMainROM + 0xe000;
 
+	make_nova_lut();
 	if (NovaLoadRoms()) return 1;
 
 	CZetInit(1);
@@ -1058,7 +1068,8 @@ static INT32 NinjakunInit()
 	DrvMainRAM = DrvMainROM + 0x10000;
 //	DrvSubRAM = DrvMainROM += 0xe800;
 //	DrvSubROM = DrvMainROM += 0x010000;
-
+	
+	make_nova_lut();
 	NinjakunLoadRoms();
 
 	CZetInit(2);
@@ -1182,6 +1193,7 @@ static INT32 Raiders5Init()
 	DrvMainRAM = DrvMainROM + 0xe000;
 //	DrvSubROM = DrvMainROM += 0x010000;
 
+	make_nova_lut();
 	if (Raiders5LoadRoms()) return 1;
 
 	CZetInit(2);
@@ -1409,7 +1421,7 @@ static INT32 Raiders5Init()
 	DrvMainROM = DrvGfxROM0 = DrvGfxROM1 = DrvColPROM = DrvMainRAM = NULL;
 	MemEnd	= DrvBgRAM = DrvFgRAM = DrvSprRAM = DrvPalRAM = NULL;
 	DrvSubRAM = DrvSubROM /*= CZ80Context*/ = NULL;
-	
+	offs_lut = NULL;
 
 
 	for (int i = 0; i < 6; i++) {
@@ -1889,7 +1901,7 @@ static void nova_draw_sprites(INT32 color_base)
 
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
-
+//-------------------------------------------------------------------------------------------------
 void make_lut()
 {
 	for (INT32 i = 0; i < 256; i++) 
@@ -1908,3 +1920,12 @@ void make_lut()
 		cram_lut[i] = RGB(r,g,b);
 	}
 }
+//-------------------------------------------------------------------------------------------------
+void make_nova_lut()
+{
+	for (INT32 i = 0; i < 0x400; i++) 
+	{
+		offs_lut[i]=(i & 0x1f) | (i / 0x20) <<6;;
+	}
+}
+//-------------------------------------------------------------------------------------------------

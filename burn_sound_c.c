@@ -3,7 +3,7 @@
 
 #define CLIP(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 //#define CLIP(A) ((A) < -0x5000 ? -0x5000 : (A) > 0x4fff ? 0x4fff : (A))
-
+/*
 void BurnSoundCopyClamp_C(int *Src, short *Dest, int Len)
 {
 	Len *= 2;
@@ -13,7 +13,7 @@ void BurnSoundCopyClamp_C(int *Src, short *Dest, int Len)
 		Dest++;
 	}
 }
-
+*/
 void BurnSoundCopyClamp_Add_C(int *Src, short *Dest, int Len)
 {
 	Len *= 2;

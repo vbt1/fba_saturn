@@ -1775,12 +1775,14 @@ void make_lut()
 {
 	for (int i = 0; i<256; i++)
 	{
-		sx_lut[256-i] = find_minimum_x(i)-15;
+//		sx_lut[256-i] = find_minimum_x(i)-15;
+		sx_lut[256-i] = 209-find_minimum_x(i);
 	}
 
 	for (int i = 0; i<256; i++)
 	{
-		sy_lut[256-i] = 234-find_minimum_y(i);
+//		sy_lut[256-i] = 234-find_minimum_y(i);
+		sy_lut[256-i] = find_minimum_y(i)+10;	// bouge x !!!
 	}
 
 	for (int i = 0; i<256; i++)

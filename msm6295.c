@@ -4,7 +4,7 @@
 
 #define	true	1
 #define	false	0
-
+#define CLIP(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 typedef char bool;
 
 unsigned char* MSM6295ROM;
@@ -67,7 +67,8 @@ void MSM6295Reset(int nChip)
 		MSM6295[nChip].ChannelInfo[nChannel].nBufPos = 4;
 	}
 }
-void MSM6295Render_Linear(int nChip, int* pBuf, int nSegmentLength)
+//void MSM6295Render_Linear(int nChip, int* pBuf, int nSegmentLength)
+void MSM6295Render_Linear(int nChip, short* pBuf, int nSegmentLength)
 {
 	static int nPreviousSample[MAX_MSM6295], nCurrentSample[MAX_MSM6295];
 	int nVolume = MSM6295[nChip].nVolume;
@@ -145,7 +146,8 @@ void MSM6295Render_Linear(int nChip, int* pBuf, int nSegmentLength)
 
 		// Scale all 4 channels
 		nSample *= nVolume;
-		*pBuf++ += nSample;
+//		*pBuf++ += nSample;
+		*pBuf++ += CLIP((nSample >> 8));
 		nFractionalPosition += MSM6295[nChip].nSampleSize;
 	}
 
@@ -186,12 +188,13 @@ int MSM6295Render(int nChip, short* pSoundBuf, int nSegmentLength)
 int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength)
 {
 //	if (nChip == 0) {
-		memset(pBuffer, 0, nSegmentLength * sizeof(int));
+//		memset(pBuffer, 0, nSegmentLength * sizeof(int));
+		memset(pSoundBuf, 0, nSegmentLength * sizeof(short));
 //		memset(pBufferVBT, 0, nSegmentLength * sizeof(int));
 //	}
-
-	MSM6295Render_Linear(nChip, pBuffer, nSegmentLength);
-	BurnSoundCopyClamp_Mono_C(pBuffer, pSoundBuf, nSegmentLength);
+//	MSM6295Render_Linear(nChip, pBuffer, nSegmentLength);
+	MSM6295Render_Linear(nChip, pSoundBuf, nSegmentLength);
+//	BurnSoundCopyClamp_Mono_C(pBuffer, pSoundBuf, nSegmentLength);
 	return 0;
 }
 
