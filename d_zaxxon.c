@@ -1015,24 +1015,39 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 //	GenericTilesExit();
 	return 0;
 }
-
-/*static*/void draw_background_test2_no_color()
+// ajouter srcxmask en param
+/*static*/void draw_background_test2_no_color(UINT32 *srcmask, UINT8 *ss_map264,UINT8 *zaxxon_bg_pixmap,unsigned int yoffset)
 {
 //	if (*zaxxon_bg_enable)
 //	{
-		unsigned int yoffset = zaxxon_bg_scroll_x2;
-		unsigned int colorbase = *zaxxon_bg_color;
+//		unsigned int yoffset = zaxxon_bg_scroll_x2;
+//		unsigned int colorbase = *zaxxon_bg_color;
 
 		/* loop over visible rows */
 		for (unsigned int y = 16; y < 240; ++y) // x
 		{
 			UINT8 *dst = ((UINT8 *)ss_map264) - y; // * 0x100;
-			UINT8 *src = zaxxon_bg_pixmap + ((y + yoffset) & 4095) * 0x100;
+//			dst+= (0xE80-y);
+			UINT8 *dstend = ((UINT8 *)(dst+0xD980));
+			UINT8 *src = zaxxon_bg_pixmap + (((y + yoffset) & 4095) * 0x100);
 //			UINT32 *srcptr = (UINT32 *)srcxmask[y];
 			UINT32 *srcptr = (UINT32 *)srcxmask[y>>1];
+//			*srcptr=(UINT32 *)srcptr[y>>1];;
+/*			while(dst<dstend)
+			{
+				*dst = src[*srcptr];
+				dst+= 232;
+				++srcptr;
+			}
+			int xx=0;
+			for (unsigned int x = 0; x < 224;x++)	  // y	  est x
+			{
+				dst[x] = src[srcxmask[y>>1][x]];
+			}
+*/
 
-//			for (unsigned int x = 0; x < 0x1B000;)	  // y
-			for (unsigned int x = 0xE80; x < 0xD980;)	  // y
+
+			for (unsigned int x = 0; x < 0xCB00;)	  // y
 			{
 				dst[x]             = src[*srcptr];
 				++srcptr;
@@ -1082,9 +1097,10 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 				x+=232;
 				dst[x]             = src[*srcptr];
 				++srcptr;
-				x+=232;
+				x+=232;  
 			}
 		}
+
 //	}
 }
 
@@ -1167,14 +1183,14 @@ int find_minimum_x(UINT8 value)
 {
 	if (*zaxxon_bg_enable)
 	{
-		draw_background_test2_no_color();
+		draw_background_test2_no_color((UINT32 *)srcxmask,ss_map264+0xE80,zaxxon_bg_pixmap,zaxxon_bg_scroll_x2);
 	}
 	else
 	{
 		memset4_fast(bitmap+0xE80,0x10101010,0xCB00);
 	}
 	draw_sprites(0x140, 0x180);
-//	copyBitmap();
+	copyBitmap();
 	return 0;
 }
 
@@ -1533,9 +1549,9 @@ void copyBitmap()
 //	memcpyl(ss_map+264,bitmap,0x10000);
 //	memcpyl(DrvGfxROM2+0x00010000,bitmap,0x10000);
 //	DMA_CpuMemCopy1(ss_map+264,bitmap,0x1C000);
-//	DMA_CpuMemCopy1(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCB00);
-memcpyl(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCB00);
-//	while(0 != DMA_CpuResult());
+	DMA_ScuMemCopy(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCB00);
+//memcpyl(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCB00);
+	while(DMA_ScuResult()==2);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void initLayers()
@@ -1671,6 +1687,7 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
+	DMA_ScuInit();
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
 	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
@@ -1733,7 +1750,7 @@ void DrvInitSaturn()
 		ss_sprite[j].drawMode= ( ECD_DISABLE | COMPO_REP);		
 		ss_sprite[j].charSize   = 0x420;  // 32*32
 	}
-	nBurnFunction = copyBitmap;
+//	nBurnFunction = copyBitmap;
 	drawWindow(0,240,0,6,66);
 }
 
