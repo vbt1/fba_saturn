@@ -16,7 +16,7 @@ int DrvDraw();
 void make_lut();
 
 static UINT8 *SaturnMem = NULL;
-static UINT8 *bitmap = NULL;
+UINT8 *bitmap = NULL;
 static UINT8 *ss_map264 = NULL;
 static INT16 *sx_lut = NULL;
 static INT16 *sy_lut = NULL;
@@ -24,7 +24,9 @@ static UINT16 *charaddr_lut = NULL;
 static UINT32 *colpromoffs_lut = NULL;
 static UINT32 *map_lut = NULL;
 //static UINT32 srcxmask[240][256];
-static UINT32 srcxmask[120][256];
+static UINT32 srcxmask[240][256];
+//static UINT32 srcymask[256][240];
+
 //static UINT32 **srcxmask;//[240][256];
 static UINT32  zaxxon_bg_scroll_x2=0;
 //static UINT8 sound_state[3]={0,0,0};
@@ -66,7 +68,7 @@ static UINT8 *interrupt_enable = NULL;
 static UINT8 *zaxxon_fg_color = NULL;
 static UINT8 *zaxxon_bg_color = NULL;
 static UINT8 *zaxxon_bg_enable = NULL;
-static UINT32  *zaxxon_bg_scroll = NULL;
+static UINT32  zaxxon_bg_scroll = 0;
 static UINT8 *zaxxon_flipscreen = NULL;
 static UINT8 *zaxxon_coin_enable = NULL;
 static UINT8 *zaxxon_coin_status = NULL;
