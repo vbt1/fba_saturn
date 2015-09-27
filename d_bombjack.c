@@ -3,6 +3,7 @@
 #define SOUND 1
 void SoundUpdate2(INT32 *length2);
 static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
+static INT32 CalcAll();
 UINT32 BgSel=0xFFFF;
 //UINT32 bg_cache[1024];
 
@@ -75,7 +76,7 @@ voir plutot p355 vdp2
 //	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
-	scfg.dispenbl 		 = ON;
+//	scfg.dispenbl 		 = OFF;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
@@ -122,15 +123,16 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void dummy()
+void dummy(INT32 *length2)
 {
-
+	asm("nop\n");
+	return;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites  = 24+3;//27;
 
@@ -144,6 +146,8 @@ static void DrvInitSaturn()
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_reg->n1_move_x = -8<<16;
+	ss_reg->n2_move_x = 8;
+
 //3 nbg
 	SS_SET_S0PRIN(6);
 	SS_SET_N0PRIN(7);
@@ -155,6 +159,7 @@ static void DrvInitSaturn()
 	initColors();
 	make_lut();
 	initSprites(256-1,240-1,0,0,7,0);
+	nBurnFunction = CalcAll;
 	drawWindow(0,240,0,6,66); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -835,7 +840,8 @@ static INT32 BjtInit()
 }
 
 static INT32 BjExit()
-{
+{	 
+	nBurnFunction = NULL;
 	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
@@ -986,11 +992,13 @@ static INT32 BjFrame()
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BjFrame                  ",10,70);
 
 	INT32 nInterleave = 10;
+//	INT32 nInterleave = 5;
 	INT32 nSoundBufferPos1 = 0;
 	INT32 nCyclesSegment = 0;
 
 	UINT32 nCyclesDone[2] = {0,0};
-	UINT32 nCyclesTotal[2] = {4000000 / 600,3000000 / 600};
+//	UINT32 nCyclesTotal[2] = {4000000 / 600,3000000 / 600};
+	UINT32 nCyclesTotal[2] = {3000000 / 600,2250000 / 600};
 
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 
@@ -1024,6 +1032,7 @@ static INT32 BjFrame()
 		}
 		CZetClose();
 #endif
+
 		// Run Z80 #2
 		CZetOpen(1);
 		nNext = (i + 1) * nCyclesTotal[1];// / nInterleave;
@@ -1039,9 +1048,10 @@ static INT32 BjFrame()
 			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
 			nSoundBufferPos += nSegmentLength;
 		}		 */
-#ifdef SOUND
+#ifdef SOUND2
+//		SPR_WaitEndSlaveSH();
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
-		SPR_WaitEndSlaveSH();
+
 
 //		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
 		SPR_RunSlaveSH((PARA_RTN*)SoundUpdate2, &nSegmentLength);
@@ -1056,22 +1066,12 @@ static INT32 BjFrame()
 		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
 	}
 #endif
-//	SoundUpdate(&nSoundBuffer[nSoundBufferPos],nBurnSoundLen);
-
-	// Make sure the buffer is entirely filled.
-/*	if (pBurnSoundOut) {
-		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
-		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
-		}
-	}
-*/
+//	SPR_RunSlaveSH((PARA_RTN*)BjDrawSprites, NULL);
 	CZetOpen(1);
 	CZetNmi();
 	CZetClose();
 
-	CalcAll();
+//	CalcAll();
 	if(BgSel!=BjRam[0x9e00])
 	{
 		BgSel=BjRam[0x9e00];
@@ -1079,7 +1079,7 @@ static INT32 BjFrame()
 	}
 	//BjRenderFgLayer();
 	BjDrawSprites();
-
+//	 SPR_WaitEndSlaveSH();
 	return 0;
 }
 
@@ -1152,9 +1152,10 @@ void SoundUpdate(INT16* buffer, INT32 length)
 //	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 
 //	soundLenSlave = SOUND_LEN);
+	SPR_RunSlaveSH((PARA_RTN*)AY8910Update1Slave, &length);
 	AY8910Update(0, &pAY8910Buffer[0], length);
 //	AY8910Update(1, &pAY8910Buffer[3], length);
-	SPR_RunSlaveSH((PARA_RTN*)AY8910Update1Slave, &length);
+//	SPR_RunSlaveSH((PARA_RTN*)AY8910Update1Slave, &length);
 	AY8910Update(2, &pAY8910Buffer[6], length);
 	SPR_WaitEndSlaveSH();
 
