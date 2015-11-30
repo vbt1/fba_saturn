@@ -322,10 +322,8 @@ static void ss_main(void)
 	InitCD();
 #endif
 	hz = get_hz();
-//	nBurnMallocAddr = 0;
 	initSound();
 	CSH_Init(CSH_4WAY);
-//	SPR_InitSlaveSH();
 	initSaturn();
 	BurnDrvAssignList();
 
@@ -1756,8 +1754,8 @@ static void run_fba_emulator()
 			_spr2_transfercommand();
 			frame_x++;
 
-//			 if(frame_x>=frame_y)
-//				wait_vblank();
+			 if(frame_x>=frame_y)
+				wait_vblank();
 		}
 	}
 	if(drvquit==1)
@@ -1775,14 +1773,11 @@ static void run_fba_emulator()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 {
-	//SPR_InitSlaveSH();
 	_spr2_initialize();
 
 	SPR_WRITE_REG(SPR_W_TVMR, 0x0007 & SPR_TV_NORMAL);//SPR_TV_ROT8);//SPR_TV_NORMAL);
 	SPR_SetEraseData( 0x0000, 0, 0, sx, sy );
-//	SPR_SetEraseData( RGB(31,0,0), 0, 0, sx, sy );
-// 	CSH_Init(CSH_4WAY);
-//	SPR_InitSlaveSH();
+
 	memset(smsSprite,0,sizeof(SprSpCmd)*131);
     smsSprite[0].control    = (JUMP_NEXT | FUNC_SCLIP);
 

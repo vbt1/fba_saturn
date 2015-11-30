@@ -18,7 +18,17 @@ int ovlInit(char *szShortName)
 		pengouInit, DrvExit, DrvFrame, DrvDraw //, NULL, &DrvRecalc, 0x200,
 	};
 
-//	if (strcmp(nBurnDrvpengo2u.szShortName, szShortName) == 0) 
+	struct BurnDriver nBurnDrvpuckman = {
+		"puckman", "pacm",
+		"Puck Man (Japan set 1)\0",
+		puckmanRomInfo, puckmanRomName, DrvInputInfo, DrvDIPInfo,
+		puckmanInit, DrvExit, DrvFrame, DrvDrawPacMan
+	};
+
+
+	if (strcmp(nBurnDrvpuckman.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvpuckman,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvpengo2u.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvpengo2u,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
@@ -54,6 +64,48 @@ void __fastcall pacman_out_port(UINT16 a, UINT8 d)
 		CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 	}
 }
+
+UINT8 __fastcall pacman_in_port(UINT16 a)
+{
+	return 0;
+}
+
+void __fastcall pacman_write(UINT16 a, UINT8 d)
+{
+	if ((a & 0xffe0) == 0x5040) {
+		NamcoSoundWrite(a & 0x1f, d);
+		return;
+	}
+
+	if ((a & 0xfff0) == 0x5060) {
+		DrvSprRAM2[a & 0x0f] = d;
+		return;
+	}
+
+	switch (a)
+	{
+		case 0x5000:
+			interrupt_mask = d & 1;
+		break;
+
+		case 0x5001:
+			// pacman_sound_enable_w
+		break;
+
+		case 0x5003:
+//			*flipscreen = d & 1;
+		break;
+
+		case 0x5002:// nop
+		case 0x5007:// coin counter
+		break;
+
+		case 0x50c0:
+			watchdog = 0;
+		break;
+	}
+}
+
 
 void __fastcall pengo_write(UINT16 a, UINT8 d)
 {
@@ -413,6 +465,33 @@ static void PengoMap()
 	CZetSetReadHandler(pengo_read);
 }
 
+static void StandardMap()
+{
+	for (INT32 i = 0; i <= 0x8000; i += 0x8000)// mirror
+	{
+		CZetMapArea(0x0000 + i, 0x3fff + i, 0, DrvZ80ROM);
+		CZetMapArea(0x0000 + i, 0x3fff + i, 2, DrvZ80ROM);
+
+		for (INT32 j = 0; j <= 0x2000; j+= 0x2000) // mirrors
+		{
+			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 0, DrvVidRAM);
+			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 1, DrvVidRAM);
+			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 2, DrvVidRAM);
+			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 0, DrvColRAM);
+			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 1, DrvColRAM);
+			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 2, DrvColRAM);
+			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 0, DrvZ80RAM + 0x0400);
+			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 1, DrvZ80RAM + 0x0400);
+			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 2, DrvZ80RAM + 0x0400);
+		}
+	}
+
+	CZetSetWriteHandler(pacman_write);
+	CZetSetReadHandler(pacman_read);
+	CZetSetOutHandler(pacman_out_port);
+	CZetSetInHandler(pacman_in_port);
+}
+
 static INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 select)
 {
 	DrvInitSaturn();
@@ -421,7 +500,10 @@ static INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 selec
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
+	{
+		return 1;
+	}
 
 	memset(AllMem, 0, nLen);
 	MemIndex();
@@ -429,7 +511,10 @@ static INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 selec
 	make_lut();
 	memset(bg_dirtybuffer,1,0x400);
 
-	if (pacman_load()) return 1;
+	if (pacman_load())
+	{
+		return 1;
+	}
 
 	if (pInitCallback) {
 		pInitCallback();
@@ -581,6 +666,8 @@ static INT32 DrvExit()
 {
 	NamcoSoundExit();
 	CZetExit();
+	PCM_Task(pcm);
+	nSoundBufferPos=0;
 
 	game_select = PACMAN;
 	nPacBank = -1;
@@ -592,6 +679,17 @@ static INT32 DrvExit()
 	map_offset_lut = ofst_lut = NULL;
 	free (AllMem);
 	AllMem = NULL;
+
+	game_select = 0;
+	interrupt_mode = 0;
+	interrupt_mask = 0;
+	colortablebank = 0;
+	palettebank = 0;
+	spritebank = 0;
+	charbank = 0;
+	nPacBank = 0;
+	watchdog = 0;
+	DrvReset = 0;
 	return 0;
 }
 
@@ -616,6 +714,22 @@ static void DrawBackground()
 #endif
 	}
 }
+
+static void DrawPacManBackground()
+{
+	for (UINT16 offs = 0; offs < 36 * 28; offs++)
+	{
+		INT16 ofst = ofst_lut[offs];
+
+		INT32 code  = (charbank << 8) | DrvVidRAM[ofst];
+		INT32 color = (DrvColRAM[ofst] & 0x1f) | (colortablebank << 5) | (palettebank << 6);
+		int x = map_offset_lut[offs];
+
+		ss_map2[x]=color;
+		ss_map2[x+1]=code;
+	}
+}
+
 
 static void DrawSprites()
 {
@@ -645,6 +759,14 @@ static void DrawSprites()
 static INT32 DrvDraw()
 {
 	DrawBackground();
+	DrawSprites();
+
+	return 0;
+}
+
+static INT32 DrvDrawPacMan()
+{
+	DrawPacManBackground();
 	DrawSprites();
 
 	return 0;
@@ -688,26 +810,31 @@ static INT32 DrvFrame()
 
 	CZetOpen(0);
 	
-	INT32 nInterleave = nBurnSoundLen;
+	INT32 nInterleave = 264;
 	INT32 nSoundBufferPos1 = 0;
 	
 	INT32 nCyclesTotal = (18432000 / 6) / 60;
-	INT32 nCyclesDone = 0;
-	INT32 nCyclesSegment;
 	
 	for (INT32 i = 0; i < nInterleave; i++) 
 	{
-		INT32 nNext;
+		CZetRun(nCyclesTotal / nInterleave);
 		
-		nNext = (i + 1) * nCyclesTotal / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone;
-		nCyclesDone += CZetRun(nCyclesSegment);
-		
-			if (i == (nInterleave - 1) && interrupt_mask) {
+			if (i == 223 && interrupt_mask) 
+			{
 //				CZetSetVector(interrupt_mode);
-				CZetRaiseIrq(interrupt_mode);
+		/*		if (DrvIrqVector == 0xff) {
+			//		ZetSetVector(DrvIrqVector);
+					CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+				} else {
+			//		CZetSetVector(DrvIrqVector);
+					CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+				};	 */
+//				CZetRaiseIrq(interrupt_mode);
 //				ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
-				CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
+//				CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
+				CZetRaiseIrq(interrupt_mode);
+				CZetRun(100);
+				CZetLowerIrq();
 			}
 		
 //		if (pBurnSoundOut) 
@@ -763,7 +890,7 @@ static INT32 DrvFrame()
 		DrvDraw();
 	}
    */
-     DrvDraw();
+     DrvDrawPacMan();
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
 	{
 		PCM_Task(pcm);
@@ -793,6 +920,11 @@ static void PengouCallback()
 static INT32 pengouInit()
 {
 	return DrvInit(PengoMap, PengouCallback, PENGO);
+}
+
+static INT32 puckmanInit()
+{
+	return DrvInit(StandardMap, NULL, PACMAN);
 }
 /*static void MspacmanDecode()
 {

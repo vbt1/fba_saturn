@@ -16,7 +16,7 @@ int DrvDraw();
 void make_lut();
 
 static UINT8 *SaturnMem = NULL;
-UINT8 *bitmap = NULL;
+static UINT8 *bitmap = NULL;
 static UINT8 *ss_map264 = NULL;
 static INT16 *sx_lut = NULL;
 static INT16 *sy_lut = NULL;

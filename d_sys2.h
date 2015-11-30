@@ -302,6 +302,28 @@ static struct BurnRomInfo wbmlbRomDesc[] = {
 
 STD_ROM_PICK(wbmlb)
 STD_ROM_FN(wbmlb)
+
+// Wonder Boy in Monster Land (English, Virtual Console)
+static struct BurnRomInfo wbmlvcRomDesc[] = {
+
+    { "vc.90",        0x10000, 0x093c4852, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
+    { "vc.91",        0x10000, 0x7e973ece, BRF_ESS | BRF_PRG }, //  1
+    { "vc.92",        0x08000, 0x32661e7e, BRF_ESS | BRF_PRG }, //  2
+    { "epr11037.126",    0x08000, 0x7a4ee585, BRF_ESS | BRF_PRG }, //  3 Z80 #2 Program Code
+    { "vc.ic4",            0x08000, 0x820bee59, BRF_GRA }, //  4 Tiles
+    { "vc.ic6",            0x08000, 0xa9a1447e, BRF_GRA }, //  5
+    { "vc.ic5",            0x08000, 0x359026a0, BRF_GRA }, //  6
+    { "epr11028.87",    0x08000, 0xaf0b3972, BRF_GRA }, //  7 Sprites
+    { "epr11027.86",    0x08000, 0x277d8f1d, BRF_GRA }, //  8
+    { "epr11030.89",    0x08000, 0xf05ffc76, BRF_GRA }, //  9
+    { "epr11029.88",    0x08000, 0xcedc9c61, BRF_GRA }, // 10
+    { "pr11026.20",        0x00100, 0x27057298, BRF_GRA }, // 11 Red PROM
+    { "pr11025.14",        0x00100, 0x41e4d86b, BRF_GRA }, // 12 Blue
+    { "pr11024.8",        0x00100, 0x08d71954, BRF_GRA }, // 13 Green
+    { "pr5317.37",        0x00100, 0x648350b8, BRF_GRA }, // 14 Timing PROM
+};
+STD_ROM_PICK(wbmlvc)
+STD_ROM_FN(wbmlvc)
 /*==============================================================================================
 Driver defs
 ===============================================================================================*/

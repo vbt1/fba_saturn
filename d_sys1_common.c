@@ -307,7 +307,7 @@ Memory Handlers
 
 void System1BankRom()
 {
-	int BankAddress = (System1RomBank << 14) + 0x10000;
+	INT32 BankAddress = (System1RomBank * 0x4000) + 0x10000;
 	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
 //	CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + BankAddress, System1Rom1 + BankAddress);
 	CZetMapArea2(0x8000, 0xbfff, 2, System1Rom1 + BankAddress + 0x20000, System1Rom1 + BankAddress);
@@ -718,8 +718,11 @@ void dummy()
 int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2Size, int nTileRomNum, int nTileRomSize, int nSpriteRomNum, int nSpriteRomSize, bool bReset)
 {
 	int nRet = 0, nLen, i, RomOffset;
-	System1NumTiles = (nTileRomNum * nTileRomSize) / 24;
+	struct BurnRomInfo ri;
+
+	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
 	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
+
 	DrvInitSaturn();
 
 	CollisionFunction = updateCollisions;
@@ -744,6 +747,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	RomOffset = 0;
 	for (i = 0; i < nZ80Rom1Num; i++) {
 		nRet = BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1); if (nRet != 0) return 1;
+		BurnDrvGetRomInfo(&ri, i);
 	}
 
 	if (System1BankedRom) {
@@ -762,6 +766,11 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 			memcpy (System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
 			memcpy (System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
 			memcpy (System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
+
+			if (nZ80Rom1Size == (ri.nLen * 2))
+			{ // last rom half the size, reload it into the last slot
+				memcpy (System1Rom1 + 0x18000, System1TempRom + 0x20000, 0x8000);
+			}
 		}
 	}
 	if (DecodeFunction) DecodeFunction();
@@ -779,7 +788,8 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
 	}
 
-	int TilePlaneOffsets[3]  = { 0, 0x20000, 0x40000 };
+	int TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
+
 	int TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
 	int TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
 
@@ -799,7 +809,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,System1Tiles);
 
 	spriteCache = (UINT16*)(0x00200000);
-//	memset4_fast((void*)spriteCache,0xFFFFFFFF,0x80000);
+
 	memset((unsigned char *)spriteCache,0xFF,0x80000);
 	if(System1SpriteRomSize!=0x20000)
 		System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
@@ -813,6 +823,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	{
 		nRet = BurnLoadRom(System1Sprites + (i * nSpriteRomSize), i + RomOffset, 1);
 	}
+
 	// Load Colour proms
 	if (System1ColourProms) {
 		RomOffset += nSpriteRomNum;
@@ -836,7 +847,9 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	{
 		CZetMapArea2(0x0000, 0x7fff, 2, System1Fetch1, System1Rom1);
 		CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + 0x10000, System1Rom1 + 0x10000);
-	} else {
+	}
+	else
+	{
 		CZetMapArea(0x0000, 0x7fff, 2, System1Rom1);
 		CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + 0x8000);
 	}
@@ -903,10 +916,9 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	
 	nCyclesTotal[0] = 2000000 / hz ;//3500000
 	nCyclesTotal[1] = 2000000 / hz ;//3500000
+
 	SN76489AInit(0, 2000000, 0);	  //2000000
-//	PSG_Init(0, 2000000, nBurnSoundRate);
 	SN76489AInit(1, 4000000, 1);//4000000
-//	PSG_Init(1, 4000000, nBurnSoundRate);
 	
 	make_lut();
 	make_cram_lut();

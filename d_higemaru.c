@@ -1,7 +1,7 @@
 // FB Alpha Pirate Ship Higemaru Module
 // Based on MAME driver by Mirko Buffoni
-//#define CZ80 1
-#define RAZE 1
+#define CZ80 1
+//#define RAZE 1
  
  #include "d_higemaru.h"
 
@@ -36,6 +36,18 @@ static void __fastcall higemaru_write(unsigned short address, unsigned char data
 			AY8910Write(1, (address - 1) & 1, data);
 		break;
 	}
+//#ifndef RAZE
+#if 0
+	if(address>= 0xd000 && address <=0xd9ff)
+	{
+				Rom[address] = data;
+/*		if(Rom[address]!=data)
+		{
+			bg_dirtybuffer[address&0x3ff] = 1;
+			Rom[address] = data;
+		}*/
+	}
+#endif
 }
 
 #ifdef RAZE
@@ -469,12 +481,16 @@ static void DrvDrawBackground()
  // back ground
 	for (int offs = 0x40; offs < 0x3c0; offs++)
 	{
+#ifdef RAZE
 		if(bg_dirtybuffer[offs])
+#endif
 		{
+#ifdef RAZE
 			bg_dirtybuffer[offs]=0;
-			int code = Rom[0xd000 + offs] | ((Rom[0xd400 + offs] & 0x80) << 1);
-			int color = Rom[0xd400 + offs] & 0x1f;
-			int x = map_offset_lut[offs];
+#endif
+			unsigned int code = Rom[0xd000 + offs] | ((Rom[0xd400 + offs] & 0x80) << 1);
+			unsigned int color = Rom[0xd400 + offs] & 0x1f;
+			unsigned int x = map_offset_lut[offs];
 			ss_map[x] = color;
 			ss_map[x+1] =  code;
 		}

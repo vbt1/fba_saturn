@@ -2936,6 +2936,55 @@ EndFile
 
  			EndDirectory
 
+			Directory WBMLVC
+
+				File VC.90;1
+					Source WBMLVC\VC.90
+				EndFile
+				File VC.91;1
+					Source WBMLVC\VC.91
+				EndFile
+				File VC.92;1
+					Source WBMLVC\VC.92
+				EndFile
+				File EPR11037.126;1
+					Source WBMLVC\EPR11037.126
+				EndFile
+				File VC.IC4;1
+					Source WBMLVC\VC.IC4
+				EndFile
+				File VC.IC6;1
+					Source WBMLVC\VC.IC6
+				EndFile
+				File VC.IC5;1
+					Source WBMLVC\VC.IC5
+				EndFile
+				File EPR11028.87;1
+					Source WBMLVC\EPR11028.87
+				EndFile
+				File EPR11027.86;1
+					Source WBMLVC\EPR11027.86
+				EndFile
+				File EPR11030.89;1
+					Source WBMLVC\EPR11030.89
+				EndFile
+				File EPR11029.88;1
+					Source WBMLVC\EPR11029.88
+				EndFile
+				File PR11026.20;1
+					Source WBMLVC\PR11026.20
+				EndFile
+				File PR11025.14;1
+					Source WBMLVC\PR11025.14
+				EndFile
+				File PR11024.8;1
+					Source WBMLVC\PR11024.8
+				EndFile
+				File PR5317.37;1
+					Source WBMLVC\PR5317.37
+				EndFile
+ 			EndDirectory
+
 			Directory HANGONJR
 
 				File ROM1.IC2;1

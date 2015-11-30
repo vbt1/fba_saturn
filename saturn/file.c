@@ -36,7 +36,7 @@ static GfsDirName dir_name[MAX_DIR];
 static Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
 #endif
 
-#define VBT
+//#define VBT
 
 #ifdef VBT
 #define SYS_CDINIT1(i) \

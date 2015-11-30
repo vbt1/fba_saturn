@@ -2,7 +2,7 @@
 //#define RAZE 1
 #define draw_background(x) draw_background_test2()
 //#define draw_background(x) draw_background_not_rotated(x)
-
+/*
 unsigned char buffer[100];
 
 int vspfunc(char *format, ...)
@@ -16,29 +16,29 @@ int vspfunc(char *format, ...)
 
    return(ret);
 }
-
+*/
 int ovlInit(char *szShortName)
 {
-	struct BurnDriver nBurnDrvCongo = {
+/*	struct BurnDriver nBurnDrvCongo = {
 		"congo", "zaxxon",
 		"Congo Bongo\0",
 		congoRomInfo, congoRomName, CongoBongoInputInfo, ZaxxonDIPInfo,
 		CongoInit, DrvExit, DrvFrame, NULL, 
 	};
-
+*/
 	struct BurnDriver nBurnDrvZaxxon = {
 		"zaxxon", NULL,
 		"Zaxxon (set 1)\0",
 		zaxxonRomInfo, zaxxonRomName, ZaxxonInputInfo, ZaxxonDIPInfo,
 		DrvInit, DrvExit, DrvFrame, NULL, 
 	};
-	struct BurnDriver nBurnDrvZaxxonb = {
+/*	struct BurnDriver nBurnDrvZaxxonb = {
 		"zaxxonb", "zaxxon",
 		"Jackson\0",
 		zaxxonRomInfo, zaxxonRomName, ZaxxonInputInfo, ZaxxonDIPInfo,
 		ZaxxonbInit, DrvExit, DrvFrame, NULL, 
 	};
-
+*/
 struct BurnDriver nBurnDrvSzaxxon = {
 		"szaxxon", "zaxxon",
 		"Super Zaxxon\0",
@@ -46,9 +46,9 @@ struct BurnDriver nBurnDrvSzaxxon = {
 		sZaxxonInit, DrvExit, DrvFrame, NULL, 
 	};
 
-    if (strcmp(nBurnDrvCongo.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvCongo,sizeof(struct BurnDriver));
+//    if (strcmp(nBurnDrvCongo.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvCongo,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvZaxxon.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvZaxxon,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvZaxxonb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvZaxxonb,sizeof(struct BurnDriver));
+//    if (strcmp(nBurnDrvZaxxonb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvZaxxonb,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvSzaxxon.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvSzaxxon,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
@@ -1010,7 +1010,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	zaxxon_flipscreen = zaxxon_coin_enable = soundlatch = NULL;
 	zaxxon_coin_status = zaxxon_coin_last = sound_state = NULL;
 	zaxxon_bg_scroll = 0;
-//	free (AllMem);
+	free (AllMem);
 	AllMem = NULL;
 
 	ss_map264 = NULL;
@@ -1029,6 +1029,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 //	DrvPalette = 	Palette = NULL;
 	futspy_sprite = 0;
 	hardware_type = 0;
+	zaxxon_bg_scroll_x2=0;
 	DrvReset = 0;
 //	GenericTilesExit();
 	return 0;

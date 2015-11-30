@@ -41,6 +41,11 @@ extern unsigned int nBurnDrvSelect;	// Which game driver is selected
 //extern unsigned int nBurnMallocAddr; // address before loading first game
 
 // ---------------------------------------------------------------------------
+// Tile decoding macros
+
+#define RGN_FRAC(length, numerator, denominator) ((((length) * 8) * (numerator)) / (denominator))
+
+// ---------------------------------------------------------------------------
 // Sound clipping macro
 #define BURN_SND_CLIP(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 
