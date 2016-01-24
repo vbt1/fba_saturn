@@ -13,15 +13,34 @@ int ovlInit(char *szShortName)
 //	mallopt(M_TRIM_THRESHOLD, 8);
 
 //	struct BurnDriver *fba_drv = NULL;
+#ifdef RAZE
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"sms", NULL,
-		"Sega Master System\0",
+		"Sega Master System (Faze)\0",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
 		SMSInit, SMSExit, SMSFrame, NULL
 	};
-
-	/*struct BurnDriver * */ //fba_drv = 	(struct BurnDriver *)FBA_DRV;
+#else
+#ifdef CZ80
+	struct BurnDriver nBurnDrvsms_akmw = {
+		"sms", NULL,
+		"Sega Master System (CZ80)\0",
+		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
+//		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
+		SMSInit, SMSExit, SMSFrame, NULL
+	};
+#else
+	struct BurnDriver nBurnDrvsms_akmw = {
+		"sms", NULL,
+		"Game Gear\0",
+		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
+//		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
+		SMSInit, SMSExit, SMSFrame, NULL
+	};
+#endif
+#endif
+/*struct BurnDriver * */ //fba_drv = 	(struct BurnDriver *)FBA_DRV;
 	memcpy(shared,&nBurnDrvsms_akmw,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
@@ -264,13 +283,16 @@ static INT32 SMSInit(void)
 static INT32 SMSExit(void)
 {
 	SPR_InitSlaveSH();
-
+#ifdef RAZE
 	z80_stop_emulating();
 	z80_add_read(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
 	z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
 	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
 	z80_set_in((unsigned char (*)(short unsigned int))NULL);
 	z80_set_out((void (*)(short unsigned int, unsigned char))NULL);
+#else
+	CZetExit();
+#endif
 
 	cart.rom = NULL;
 	__port = NULL;
@@ -341,7 +363,11 @@ static void sms_frame(void)
 
 	if(sms.paused && first==2)
 	{
-			z80_cause_NMI();
+#ifdef RAZE
+	z80_cause_NMI();
+#else
+	CZetNmi();
+#endif
 			first = 0;
 	}
 	vdp.line = 0;
@@ -349,34 +375,62 @@ static void sms_frame(void)
 //    for(vdp.line = 0; vdp.line < 262; vdp.line++)
     for(; vdp.line <= 0xc0; ++vdp.line)
 	{
+#ifdef RAZE
 		z80_emulate(228);
+#else
+		CZetRun(228);
+#endif
 		vdp_run(&vdp);
 		++vdp.line;
+#ifdef RAZE
 		z80_emulate(228);
+#else
+		CZetRun(228);
+#endif
 		vdp_run(&vdp);
 		++vdp.line;
+#ifdef RAZE
 		z80_emulate(228);
+#else
+		CZetRun(228);
+#endif
 		vdp_run(&vdp);
 	}
 
     for(; vdp.line < 0xE0; ++vdp.line)
 	{
+#ifdef RAZE
 		z80_emulate(228);
+#else
+		CZetRun(228);
+#endif
        vdp.left = vdp.reg[10];
 
         if((vdp.status & 0x80) && (vdp.reg[1] & 0x20))
         {
             sms.irq = 1;
-            z80_raise_IRQ(0);
+#ifdef RAZE
+			z80_raise_IRQ(0);
+#else
+			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+#endif
         }
 	}
 
     for(; vdp.line < 262; ++vdp.line)
 	{
+#ifdef RAZE
 		z80_emulate(228);
+#else
+		CZetRun(228);
+#endif
        vdp.left = vdp.reg[10];
 		++vdp.line;
+#ifdef RAZE
 		z80_emulate(228);
+#else
+		CZetRun(228);
+#endif
        vdp.left = vdp.reg[10];
 	}
 }
@@ -500,7 +554,11 @@ static int vdp_ctrl_r(void)
     /* Clear pending flag */
     vdp.pending = 0;
 	vdp.status = 0;
+#ifdef RAZE
 	z80_lower_IRQ();
+#else
+	CZetLowerIrq();
+#endif
     /* Return the old status flags */
     return (temp);
 }
@@ -704,7 +762,11 @@ static void vdp_run(t_vdp *vdp)
         if((vdp->status & 0x40) && (vdp->reg[0] & 0x10))
         {
             sms.irq = 1;
-            z80_raise_IRQ(0);
+#ifdef RAZE
+			z80_raise_IRQ(0);
+#else
+			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+#endif
         }
     }
 /*    else
@@ -729,10 +791,17 @@ static UINT8 vdp_hcounter_r(void)
 //    int pixel = (((z80_ICount % CYCLES_PER_LINE) / 4) * 3) * 2;
 //  int pixel = (((Cz80_struc.CycleIO % CYCLES_PER_LINE) / 4) * 3) * 2;
   int pixel;
+#ifdef RAZE
   if (hz==60)
 	pixel = (((z80_get_cycles_elapsed() % CYCLES_PER_LINE_60) >>2) * 3) <<1;
   else
 	pixel = (((z80_get_cycles_elapsed() % CYCLES_PER_LINE_50) >>2) * 3) <<1;
+#else
+  if (hz==60)
+	pixel = (((CZetTotalCycles() % CYCLES_PER_LINE_60) >>2) * 3) <<1;
+  else
+	pixel = (((CZetTotalCycles() % CYCLES_PER_LINE_50) >>2) * 3) <<1;
+#endif
 //	printf("Cz80_struc.CycleIO %d\n pixel %d\n",Cz80_struc.CycleIO,pixel);
     return (hcnt[((pixel >> 1) & 0x1FF)]);
 }
@@ -946,7 +1015,11 @@ static UINT8 update_input2(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void sms_reset(void)
 {
+#ifdef RAZE
 	z80_reset();
+#else
+	ZetReset();
+#endif
     /* Clear SMS context */
     memset4_fast(dummy_write, 0, 0x100);
     memset4_fast(sms.ram, 0, 0x2000);
@@ -956,6 +1029,7 @@ static void sms_reset(void)
 
 
     /* Load memory maps with default values */
+#ifdef RAZE
 	z80_map_read (0x0000, 0x3FFF, &cart.rom[0]); 
 
 	z80_map_read (0x4000, 0x7FFF, &cart.rom[0x4000]); 
@@ -972,6 +1046,28 @@ static void sms_reset(void)
 //	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 //	z80_add_read(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_readmem8);
 	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
+#else
+	CZetInit(1);
+	CZetOpen(0);
+	CZetMapArea(0x0000, 0x3FFF, 0, &cart.rom[0]); 
+	CZetMapArea(0x0000, 0x3FFF, 2, &cart.rom[0]); 
+
+	CZetMapArea (0x4000, 0x7FFF, 0, &cart.rom[0x4000]); 
+	CZetMapArea (0x4000, 0x7FFF, 2, &cart.rom[0x4000]); 
+
+	CZetMapArea (0x8000, 0xBFFF, 0, &cart.rom[0x8000]); 
+	CZetMapArea (0x8000, 0xBFFF, 2, &cart.rom[0x8000]); 
+
+	CZetMapArea (0x0000, 0xBFFF , 1, (unsigned char*)dummy_write);
+	CZetMapArea (0xC000, 0xDFFF, 1, (unsigned char *)(&sms.ram[0])); 
+	CZetMapArea (0xC000, 0xDFFF, 1, (unsigned char *)(&sms.ram[0])); 
+
+	CZetMapArea (0xE000, 0xFFFF, 0, (unsigned char *)(&sms.ram[0])); 
+	CZetMapArea (0xE000, 0xFFFF, 1, (unsigned char *)(&sms.ram[0])); 
+	CZetMapArea (0xE000, 0xFFFF, 2, (unsigned char *)(&sms.ram[0])); 
+
+	CZetSetWriteHandler(cpu_writemem8);
+#endif
 
 	sms.fcr[0] = 0x00;
     sms.fcr[1] = 0x00;
@@ -981,7 +1077,12 @@ static void sms_reset(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void cpu_writemem8(unsigned int address, unsigned int data)
 {
-		sms.ram[address & 0x1FFF] = data;
+	sms.ram[address & 0x1FFF] = data;
+
+#ifdef CZ80
+	if(address >= 0xFFFC)
+	{
+#endif
 // data & cart.pages, and set cart.pages to one less than you are
         UINT32 offset = (data % cart.pages) << 14; // VBT à corriger
 // vbt 15/05/2008 : exophase :	 data & cart.pages, and set cart.pages to one less than you are
@@ -994,41 +1095,78 @@ static void cpu_writemem8(unsigned int address, unsigned int data)
                 if(data & 8)
                 {
 					offset = (data & 0x4) ? 0x4000 : 0x0000;
-
+#ifdef RAZE
 					z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
 					z80_map_read(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
 					z80_map_write(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
+#else
+					CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(sms.sram + offset));
+					CZetMapArea(0x8000, 0xBFFF, 1, (unsigned char *)(sms.sram + offset));
+					CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(sms.sram + offset));
+#endif
                 }
                 else
                 {
 					offset = ((sms.fcr[3] % cart.pages) << 14);
 // vbt 15/05/2008 : exophase :	 data & cart.pages, and set cart.pages to one less than you are
+#ifdef RAZE
 					z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
 					z80_map_read(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
 					z80_map_write(0x8000, 0xBFFF, (unsigned char *)(dummy_write));
+#else
+					CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(cart.rom + offset));
+					CZetMapArea(0x8000, 0xBFFF, 1, (unsigned char *)(dummy_write));
+					CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(cart.rom + offset));
+#endif
                 }
 				break;
             case 1:
+#ifdef RAZE
 				z80_map_fetch(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
 				z80_map_read(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
+#else
+				CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)(cart.rom + offset));
+				CZetMapArea(0x0000, 0x3FFF, 2, (unsigned char *)(cart.rom + offset));
+#endif
 			break;
 
             case 2:
+#ifdef RAZE
 				z80_map_fetch(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
 				z80_map_read(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
+#else
+				CZetMapArea(0x4000, 0x7FFF, 0, (unsigned char *)(cart.rom + offset));
+				CZetMapArea(0x4000, 0x7FFF, 2, (unsigned char *)(cart.rom + offset));
+#endif
             break;
 
             case 3:
 
 			if(!(sms.fcr[0] & 0x08))
             {
+#ifdef RAZE
 					z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
 					z80_map_read(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
+#else
+				CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(cart.rom + offset));
+				CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(cart.rom + offset));
+#endif
             }
             break;
         }
+#ifdef CZ80
+	}
+#endif
     return;
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*#ifdef CZ80
+static void cpu_writemem16(unsigned int address, unsigned int data)
+{
+	cpu_writemem8(address, data & 0xFF);
+	cpu_writemem8(address + 1, data >> 8);
+}
+#endif	   */
 //-------------------------------------------------------------------------------------------------------------------------------------
 static unsigned char cz80_z80_readport16(unsigned short PortNo)
 {
@@ -1079,6 +1217,7 @@ static unsigned char cz80_z80_readport16(unsigned short PortNo)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void z80_init(void)
 {
+#ifdef RAZE
 	z80_init_memmap();
 //	z80_map_fetch(0x0000, 0xBFFF, (unsigned char *)&cart.rom);
 //	z80_map_fetch(0xC000, 0xFFFF, (unsigned char *)&sms.ram);
@@ -1119,6 +1258,9 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 //	z80_set_fetch_callback(&debug);
 
 	z80_reset();
+#else
+	ZetReset();
+#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_map_lut()

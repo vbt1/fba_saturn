@@ -118,9 +118,23 @@ OBJOVLPACM         = $(SRCOVLPACM:.c=.o)
 OVLSMS                 = root/d_sms.coff
 OVLSMS1               = root/d_sms.bin
 MPOVLSMSFILE    = $(OVLSMS:.coff=.maps)
-LDOVLSMSFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSMSFLAGS = -DRAZE=1 -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVLSMS         = d_sms.c psg_sms.c 
 OBJOVLSMS         = $(SRCOVLSMS:.c=.o)
+
+OVLSMSCZ80                 = root/d_smscz80.coff
+OVLSMSCZ801               = root/d_smscz80.bin
+MPOVLSMSCZ80FILE    = $(OVLSMSCZ80:.coff=.maps)
+LDOVLSMSCZ80FLAGS = -DCZ80=1 -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSCZ80FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c 
+OBJOVLSMSCZ80         = $(SRCOVLSMSCZ80:.c=.o)
+
+OVLGG                 = root/d_gg.coff
+OVLGG1               = root/d_gg.bin
+MPOVLGGFILE    = $(OVLGG:.coff=.maps)
+LDOVLGGFLAGS = -DGG=1 -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLGG         = d_sms.c psg_sms.c 
+OBJOVLGG         = $(SRCOVLGG:.c=.o)
 
 OVLZAXXON                 = root/d_zaxxon.coff
 OVLZAXXON1               = root/d_zaxxon.bin
@@ -189,6 +203,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
      $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
+     $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) \
      $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
@@ -284,6 +299,18 @@ $(OVLSMS) : $(OBJOVLSMS) $(MAKEFILE) $(OBJOVLSMS) $(LDOVLSMSFILE)
 
 $(OVLSMS1) : $(OBJOVLSMS) $(MAKEFILE) $(LDOVLSMSFILE)
 	$(CONV) -O binary $(OVLSMS) $(OVLSMS1)
+
+$(OVLGG) : $(OBJOVLGG) $(MAKEFILE) $(OBJOVLGG) $(LDOVLGGFILE)
+	$(CC) $(LDOVLGGFLAGS) $(OBJOVLGG) $(LIBSOVL) raze_sms/raze.o -o $@
+
+$(OVLGG1) : $(OBJOVLGG) $(MAKEFILE) $(LDOVLGGFILE)
+	$(CONV) -O binary $(OVLGG) $(OVLGG1)
+
+$(OVLSMSCZ80) : $(OBJOVLSMSCZ80) $(MAKEFILE) $(OBJOVLSMSCZ80) $(LDOVLSMSCZ80FILE)
+	$(CC) $(LDOVLSMSCZ80FLAGS) $(OBJOVLSMSCZ80) $(LIBSOVL) -o $@
+
+$(OVLSMSCZ801) : $(OBJOVLSMSCZ80) $(MAKEFILE) $(LDOVLSMSCZ80FILE)
+	$(CONV) -O binary $(OVLSMSCZ80) $(OVLSMSCZ801)
 
 $(OVLZAXXON) : $(OBJOVLZAXXON) $(MAKEFILE) $(OBJOVLZAXXON) $(LDOVLZAXXONFILE)
 	$(CC) $(LDOVLZAXXONFLAGS) $(OBJOVLZAXXON) $(LIBSOVL) -o $@
