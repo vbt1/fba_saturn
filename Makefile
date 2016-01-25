@@ -118,18 +118,16 @@ OBJOVLPACM         = $(SRCOVLPACM:.c=.o)
 OVLSMS                 = root/d_sms.coff 
 OVLSMS1               = root/d_sms.bin
 MPOVLSMSFILE    = $(OVLSMS:.coff=.maps)
-LDOVLSMSFLAGS = -DRAZE=1 -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSMSFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVLSMS         = d_sms.c psg_sms.c
 OBJOVLSMS         = $(SRCOVLSMS:d_sms.c=sms/d_sms.o)
-EXTRA_FLAGS      = -DRAZE=1
 
-OVLSMSCZ80                 = root/d_smscz80.coff
-OVLSMSCZ801               = root/d_smscz80.bin
+OVLSMSCZ80                 = root/d_smscz.coff
+OVLSMSCZ801               = root/d_smscz.bin
 MPOVLSMSCZ80FILE    = $(OVLSMSCZ80:.coff=.maps)
 LDOVLSMSCZ80FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSCZ80FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c cz80/cz80.c
 OBJOVLSMSCZ80         = $(SRCOVLSMSCZ80:.c=.o)
-EXTRA_FLAGS              = -DCZ80=1
 
 OVLGG                 = root/d_gg.coff
 OVLGG1               = root/d_gg.bin
@@ -137,14 +135,13 @@ MPOVLGGFILE    = $(OVLGG:.coff=.maps)
 LDOVLGGFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVLGG         = d_sms.c psg_sms.c 
 OBJOVLGG         = $(SRCOVLSMS:d_sms.c=gg/d_sms.o)
-EXTRA_FLAGS    = -DGG=1 -DRAZE=1
 
 OVLZAXXON                 = root/d_zaxxon.coff
 OVLZAXXON1               = root/d_zaxxon.bin
 MPOVLZAXXONFILE    = $(OVLZAXXON:.coff=.maps)
 LDOVLZAXXONFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLZAXXONFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c saturn/ovl.c
-#SRCOVLZAXXON         = d_ZAXXON.c saturn/ovl.c d_zaxxon.s
+#SRCOVLZAXXON       = d_ZAXXON.c saturn/ovl.c d_zaxxon.s
 OBJOVLZAXXON         = $(SRCOVLZAXXON:.c=.o)
 
 OVLTETRIS                 = root/d_tetris.coff
@@ -362,8 +359,8 @@ saturn/font.o: saturn/font.c
 .c.o:
 	$(CC) $< $(DFLAGS) $(EXTRA_FLAGS) $(CCOVLFLAGS) -o $@
 sms/%.o : %.c
-	$(CC) $< $(DFLAGS) $(EXTRA_FLAGS) $(CCOVLFLAGS) -o $@
+	$(CC) $< $(DFLAGS) -DRAZE=1 $(CCOVLFLAGS) -o $@
 gg/%.o : %.c
-	$(CC) $< $(DFLAGS) $(EXTRA_FLAGS) $(CCOVLFLAGS) -o $@
+	$(CC) $< $(DFLAGS) -DRAZE=1 -DGG=1 $(CCOVLFLAGS) -o $@
 clean:
 	$(RM) $(OBJS) $(TARGET:.coff=.*)

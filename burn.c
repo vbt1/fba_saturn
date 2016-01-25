@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 31
+#define NB_DRV 33
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -89,6 +89,8 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvRaflesia = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvAtetris = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvsms_cz80 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvsms_gg = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvCongo = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvZaxxon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvZaxxonb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
@@ -105,8 +107,16 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvpuckman = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
-BurnDrvsms_akmw.szFullNameA="Sega Master System";
+BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
 BurnDrvsms_akmw.szParent=NULL;
+
+BurnDrvsms_cz80.szShortName="smscz";
+BurnDrvsms_cz80.szFullNameA="Sega Master System (CZ80)";
+BurnDrvsms_cz80.szParent="sms";
+
+BurnDrvsms_gg.szShortName="gg";
+BurnDrvsms_gg.szFullNameA="Game Gear";
+BurnDrvsms_gg.szParent=NULL;
 
 BurnDrvsg1k_wboy.szShortName="sg1000";
 BurnDrvsg1k_wboy.szFullNameA="Sega SG-1000";
@@ -262,6 +272,8 @@ BurnDrvpuckman.szParent="pacm";
 
 unsigned int i=0;
 pDriver[i++] = &BurnDrvsms_akmw;
+pDriver[i++] = &BurnDrvsms_cz80;
+pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 //pDriver[i++] = &BurnDrvWbmlb;
 pDriver[i++] = &BurnDrvbankp;

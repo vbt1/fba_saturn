@@ -24,7 +24,7 @@ int ovlInit(char *szShortName)
 #else
 #ifdef CZ80
 	struct BurnDriver nBurnDrvsms_akmw = {
-		"sms", NULL,
+		"smscz", "sms",
 		"Sega Master System (CZ80)\0",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
@@ -32,7 +32,7 @@ int ovlInit(char *szShortName)
 	};
 #else
 	struct BurnDriver nBurnDrvsms_akmw = {
-		"sms", NULL,
+		"gg", NULL,
 		"Game Gear\0",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
@@ -1259,6 +1259,32 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 
 	z80_reset();
 #else
+/* Bank #0 */ 
+	CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)(&cart.rom[0]));
+	CZetMapArea(0x0000, 0x3FFF, 2, (unsigned char *)(&cart.rom[0]));
+
+/* Bank #1 */ 
+	CZetMapArea(0x4000, 0x7FFF, 0, (unsigned char *)(&cart.rom[0x4000]));
+	CZetMapArea(0x4000, 0x7FFF, 2, (unsigned char *)(&cart.rom[0x4000]));
+
+/* Bank #2 */ 
+	CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(&cart.rom[0x8000]));
+	CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(&cart.rom[0x8000]));
+
+/* RAM */
+	CZetMapArea(0xC000, 0xDFFF, 0, (unsigned char *)(&cart.rom[0]));
+	CZetMapArea(0xC000, 0xDFFF, 1, (unsigned char *)(&cart.rom[0]));
+	CZetMapArea(0xC000, 0xDFFF, 2, (unsigned char *)(&cart.rom[0]));
+
+/* RAM (mirror) */ 
+	CZetMapArea(0xE000, 0xFFFF, 0, (unsigned char *)(&cart.rom[0]));
+	CZetMapArea(0xE000, 0xFFFF, 1, (unsigned char *)(&cart.rom[0]));
+	CZetMapArea(0xE000, 0xFFFF, 2, (unsigned char *)(&cart.rom[0]));
+
+	CZetSetWriteHandler(cpu_writemem8);
+	CZetSetInHandler(cz80_z80_readport16);
+	CZetSetOutHandler(cz80_z80_writeport16);
+
 	CZetReset();
 #endif
 }

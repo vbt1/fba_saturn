@@ -77,8 +77,16 @@ Track MODE1
 				Source D_GNG.BIN
 			EndFile
 
- 			File D_SMS.BIN;1
+			File D_SMS.BIN;1
 				Source D_SMS.BIN
+			EndFile
+
+			File D_SMSCZ.BIN;1
+				Source D_SMSCZ.BIN
+			EndFile
+
+			File D_GG.BIN;1
+				Source D_GG.BIN
 			EndFile
 
 			File D_SYS1.BIN;1
