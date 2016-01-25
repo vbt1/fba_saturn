@@ -127,6 +127,7 @@ static void vdp_run(t_vdp *vdp);
 static void vdp_reset(void);
 static void system_init(void);
 static void cpu_writemem8(unsigned int address, unsigned int data);
+static unsigned int cpu_readmem8(unsigned int address);
 void PSG_Update(signed short *buffer, unsigned int length);
 void PSG_Init(unsigned int clock, unsigned int rate);
 void PSG_Write(unsigned int data);

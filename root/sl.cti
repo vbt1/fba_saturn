@@ -3046,59 +3046,96 @@ EndFile
 				EndFile
 			EndDirectory
 
-			Directory CUBYBOP
-				File CB06.6;1
-					Source CUBYBOP\CB06.6
-				EndFile
-				File CB10.10;1
-					Source CUBYBOP\CB10.10
-				EndFile
-				File CB09.9;1
-					Source CUBYBOP\CB09.9
-				EndFile
-				File CB08.8;1
-					Source CUBYBOP\CB08.8
-				EndFile
-				File CB07.7;1
-					Source CUBYBOP\CB07.7
-				EndFile
+;			Directory CUBYBOP
+;				File CB06.6;1
+;					Source CUBYBOP\CB06.6
+;				EndFile
+;				File CB10.10;1
+;					Source CUBYBOP\CB10.10
+;				EndFile
+;				File CB09.9;1
+;					Source CUBYBOP\CB09.9
+;				EndFile
+;				File CB08.8;1
+;					Source CUBYBOP\CB08.8
+;				EndFile
+;				File CB07.7;1
+;					Source CUBYBOP\CB07.7
+;				EndFile
+ ;
+;			EndDirectory
 
-			EndDirectory
+;			Directory XXMISSIO
+;				File XX1.4L;1
+;					Source XXMISSIO\XX1.4L
+;				EndFile
+;				File XX10.4C;1
+;					Source XXMISSIO\XX10.4C
+;				EndFile
+;				File XX11.4B;1
+;					Source XXMISSIO\XX11.4B
+;				EndFile
+;				File XX2.4B;1
+;					Source XXMISSIO\XX2.4B
+;				EndFile
+;				File XX3.6A;1
+;					Source XXMISSIO\XX3.6A
+;				EndFile
+;				File XX4.6B;1
+;					Source XXMISSIO\XX4.6B
+;				EndFile
+;				File XX5.6D;1
+;					Source XXMISSIO\XX5.6D
+;				EndFile
+;				File XX6.8J;1
+;					Source XXMISSIO\XX6.8J
+;				EndFile
+;				File XX7.8H;1
+;					Source XXMISSIO\XX7.8H
+;				EndFile
+;				File XX8.8F;1
+;					Source XXMISSIO\XX8.8F
+;				EndFile
+;				File XX9.8E;1
+;					Source XXMISSIO\XX9.8E
+;				EndFile
+;			EndDirectory
 
-			Directory XXMISSIO
-				File XX1.4L;1
-					Source XXMISSIO\XX1.4L
-				EndFile
-				File XX10.4C;1
-					Source XXMISSIO\XX10.4C
-				EndFile
-				File XX11.4B;1
-					Source XXMISSIO\XX11.4B
-				EndFile
-				File XX2.4B;1
-					Source XXMISSIO\XX2.4B
-				EndFile
-				File XX3.6A;1
-					Source XXMISSIO\XX3.6A
-				EndFile
-				File XX4.6B;1
-					Source XXMISSIO\XX4.6B
-				EndFile
-				File XX5.6D;1
-					Source XXMISSIO\XX5.6D
-				EndFile
-				File XX6.8J;1
-					Source XXMISSIO\XX6.8J
-				EndFile
-				File XX7.8H;1
-					Source XXMISSIO\XX7.8H
-				EndFile
-				File XX8.8F;1
-					Source XXMISSIO\XX8.8F
-				EndFile
-				File XX9.8E;1
-					Source XXMISSIO\XX9.8E
-				EndFile
+			Directory SMSCZ
+
+File ADDAMS_1.SMS;1
+	Source L:\PC\MASTER~2\OUTRUN.SMS
+EndFile
+File AERIAL_1.SMS;1
+	Source L:\PC\MASTER~2\SONIC_~4.SMS
+EndFile
+File AFTER__1.SMS;1
+	Source L:\PC\MASTER~2\POWER_~2.SMS
+EndFile
+File AIR_RE_1.SMS;1
+	Source L:\PC\MASTER~2\PSYCHO~1.SMS
+EndFile
+File ALADDIN.SMS;1
+	Source L:\PC\MASTER~2\ALADDIN.SMS
+EndFile
+File ALESTE.SMS;1
+	Source L:\PC\MASTER~2\ALESTE.SMS
+EndFile
+File ALEX_K_1.SMS;1
+	Source L:\PC\MASTER~2\ALEX_K~1.SMS
+EndFile
+File ALEX_K_2.SMS;1
+	Source L:\PC\MASTER~2\ALEX_K~2.SMS
+EndFile
+File ALEX_K_3.SMS;1
+	Source L:\PC\MASTER~2\ALEX_K~3.SMS
+EndFile
+File ALEX_K_4.SMS;1
+	Source L:\PC\MASTER~2\ALEX_K~4.SMS
+EndFile
+File AL0C77_1.SMS;1
+	Source L:\PC\MASTER~2\AL0C77~1.SMS
+EndFile
 			EndDirectory
 
 

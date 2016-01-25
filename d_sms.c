@@ -412,7 +412,8 @@ static void sms_frame(void)
 #ifdef RAZE
 			z80_raise_IRQ(0);
 #else
-			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+//			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			CZetRaiseIrq(0);
 #endif
         }
 	}
@@ -765,7 +766,8 @@ static void vdp_run(t_vdp *vdp)
 #ifdef RAZE
 			z80_raise_IRQ(0);
 #else
-			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+//			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			CZetRaiseIrq(0);
 #endif
         }
     }
@@ -1059,13 +1061,17 @@ static void sms_reset(void)
 	CZetMapArea (0x8000, 0xBFFF, 2, &cart.rom[0x8000]); 
 
 	CZetMapArea (0x0000, 0xBFFF , 1, (unsigned char*)dummy_write);
+	CZetMapArea (0x0000, 0xBFFF , 2, (unsigned char*)dummy_write);
+
+	CZetMapArea (0xC000, 0xDFFF, 0, (unsigned char *)(&sms.ram[0])); 
 	CZetMapArea (0xC000, 0xDFFF, 1, (unsigned char *)(&sms.ram[0])); 
-	CZetMapArea (0xC000, 0xDFFF, 1, (unsigned char *)(&sms.ram[0])); 
+	CZetMapArea (0xC000, 0xDFFF, 2, (unsigned char *)(&sms.ram[0])); 
 
 	CZetMapArea (0xE000, 0xFFFF, 0, (unsigned char *)(&sms.ram[0])); 
 	CZetMapArea (0xE000, 0xFFFF, 1, (unsigned char *)(&sms.ram[0])); 
 	CZetMapArea (0xE000, 0xFFFF, 2, (unsigned char *)(&sms.ram[0])); 
 
+	CZetSetReadHandler(cpu_readmem8);
 	CZetSetWriteHandler(cpu_writemem8);
 #endif
 
@@ -1073,6 +1079,14 @@ static void sms_reset(void)
     sms.fcr[1] = 0x00;
     sms.fcr[2] = 0x01;
     sms.fcr[3] = 0x00;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static unsigned int cpu_readmem8(unsigned int address)
+{
+	if(address >= 0xc000) return sms.ram[address & 0x1fff];
+
+	unsigned int i=((address >> 14) & 3) +1;
+	return (cart.rom[(((sms.fcr[i] % cart.pages) << 14))+(address&0x3fff)]);//8000
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void cpu_writemem8(unsigned int address, unsigned int data)
