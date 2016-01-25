@@ -1018,7 +1018,7 @@ static void sms_reset(void)
 #ifdef RAZE
 	z80_reset();
 #else
-	ZetReset();
+	CZetReset();
 #endif
     /* Clear SMS context */
     memset4_fast(dummy_write, 0, 0x100);
@@ -1259,7 +1259,7 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 
 	z80_reset();
 #else
-	ZetReset();
+	CZetReset();
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

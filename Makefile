@@ -115,26 +115,29 @@ SRCOVLPACM         = d_pacman.c czet.c namco_snd.c cz80/cz80.c saturn/ovl.c
 #SRCOVLPACM         = d_pacman_zet.c zet.c z80.c z80daisy.c namco_snd.c 
 OBJOVLPACM         = $(SRCOVLPACM:.c=.o)
 
-OVLSMS                 = root/d_sms.coff
+OVLSMS                 = root/d_sms.coff 
 OVLSMS1               = root/d_sms.bin
 MPOVLSMSFILE    = $(OVLSMS:.coff=.maps)
 LDOVLSMSFLAGS = -DRAZE=1 -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSMS         = d_sms.c psg_sms.c 
-OBJOVLSMS         = $(SRCOVLSMS:.c=.o)
+SRCOVLSMS         = d_sms.c psg_sms.c
+OBJOVLSMS         = $(SRCOVLSMS:d_sms.c=sms/d_sms.o)
+EXTRA_FLAGS      = -DRAZE=1
 
 OVLSMSCZ80                 = root/d_smscz80.coff
 OVLSMSCZ801               = root/d_smscz80.bin
 MPOVLSMSCZ80FILE    = $(OVLSMSCZ80:.coff=.maps)
-LDOVLSMSCZ80FLAGS = -DCZ80=1 -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSCZ80FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c 
+LDOVLSMSCZ80FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSCZ80FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c cz80/cz80.c
 OBJOVLSMSCZ80         = $(SRCOVLSMSCZ80:.c=.o)
+EXTRA_FLAGS              = -DCZ80=1
 
 OVLGG                 = root/d_gg.coff
 OVLGG1               = root/d_gg.bin
 MPOVLGGFILE    = $(OVLGG:.coff=.maps)
-LDOVLGGFLAGS = -DGG=1 -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLGGFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVLGG         = d_sms.c psg_sms.c 
-OBJOVLGG         = $(SRCOVLGG:.c=.o)
+OBJOVLGG         = $(SRCOVLSMS:d_sms.c=gg/d_sms.o)
+EXTRA_FLAGS    = -DGG=1 -DRAZE=1
 
 OVLZAXXON                 = root/d_zaxxon.coff
 OVLZAXXON1               = root/d_zaxxon.bin
@@ -358,6 +361,9 @@ saturn/font.o: saturn/font.c
 	$(CC) $< $(DFLAGS) $(CCFLAGS2) -o $@
 .c.o:
 	$(CC) $< $(DFLAGS) $(EXTRA_FLAGS) $(CCOVLFLAGS) -o $@
-
+sms/%.o : %.c
+	$(CC) $< $(DFLAGS) $(EXTRA_FLAGS) $(CCOVLFLAGS) -o $@
+gg/%.o : %.c
+	$(CC) $< $(DFLAGS) $(EXTRA_FLAGS) $(CCOVLFLAGS) -o $@
 clean:
 	$(RM) $(OBJS) $(TARGET:.coff=.*)
