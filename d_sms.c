@@ -160,6 +160,7 @@ void dummy()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
+
 //	InitCDsms();
 #ifndef OLD_SOUND
 	SPR_InitSlaveSH();
@@ -187,14 +188,15 @@ static void DrvInitSaturn()
 	
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc 1 bef       ",12,201);
+		FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"malloc 1 bef       ",12,21);
 	SaturnMem = (UINT8 *)malloc(nLen);
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc 1 aft    ",12,201);
+		FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"malloc 1 aft    ",12,21);
 
 	SaturnInitMem();
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc 3 aft       ",12,201);
+		FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"malloc 3 aft       ",12,21);
 
 	make_lut();
+		FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"make_lut aft       ",12,21);
 	
     SS_SET_N0PRIN(5);
     SS_SET_N1PRIN(7);
@@ -212,6 +214,7 @@ static void DrvInitSaturn()
 	nBurnFunction = update_input1;
 	drawWindow(0,192,192,2,66);
 	SetVblank2();
+
 
 //	extern int __malloc_trim_threshold;
 //	extern int __malloc_top_pad;
@@ -266,8 +269,14 @@ static void sms_start()
 
 	ss_reg->n0_move_y =  scroll_y;
 	sms_reset();
+		FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"sms_reset aft       ",12,21);
+
 	load_rom();
-  	system_init();
+		FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"load_rom aft       ",12,21);
+
+	system_init();
+		FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"system_init aft       ",12,21);
+
 	running = 1;
 //	fba_drv->Frame = SMSFrame;
 }
@@ -1028,8 +1037,9 @@ static void sms_reset(void)
     memset4_fast(sms.sram, 0, 0x8000);
     sms.port_3F = sms.port_F2 = sms.irq = 0x00;
 //    sms.psg_mask = 0xFF;
-
-
+#ifndef GG
+	sms.ram[0] = 0xA8;
+#endif
     /* Load memory maps with default values */
 #ifdef RAZE
 	z80_map_read (0x0000, 0x3FFF, &cart.rom[0]); 
@@ -1049,36 +1059,31 @@ static void sms_reset(void)
 //	z80_add_read(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_readmem8);
 	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 #else
-	CZetInit(1);
-	CZetOpen(0);
 	CZetMapArea(0x0000, 0x3FFF, 0, &cart.rom[0]); 
-	CZetMapArea(0x0000, 0x3FFF, 2, &cart.rom[0]); 
-
+//	CZetMapArea(0x0000, 0x3FFF, 2, &cart.rom[0]); 
 	CZetMapArea (0x4000, 0x7FFF, 0, &cart.rom[0x4000]); 
-	CZetMapArea (0x4000, 0x7FFF, 2, &cart.rom[0x4000]); 
-
+//	CZetMapArea (0x4000, 0x7FFF, 2, &cart.rom[0x4000]); 
 	CZetMapArea (0x8000, 0xBFFF, 0, &cart.rom[0x8000]); 
-	CZetMapArea (0x8000, 0xBFFF, 2, &cart.rom[0x8000]); 
-
+//	CZetMapArea (0x8000, 0xBFFF, 2, &cart.rom[0x8000]); 
 	CZetMapArea (0x0000, 0xBFFF , 1, (unsigned char*)dummy_write);
-	CZetMapArea (0x0000, 0xBFFF , 2, (unsigned char*)dummy_write);
+//	CZetMapArea (0x0000, 0xBFFF , 2, (unsigned char*)dummy_write);
 
 	CZetMapArea (0xC000, 0xDFFF, 0, (unsigned char *)(&sms.ram[0])); 
 	CZetMapArea (0xC000, 0xDFFF, 1, (unsigned char *)(&sms.ram[0])); 
 	CZetMapArea (0xC000, 0xDFFF, 2, (unsigned char *)(&sms.ram[0])); 
 
 	CZetMapArea (0xE000, 0xFFFF, 0, (unsigned char *)(&sms.ram[0])); 
-	CZetMapArea (0xE000, 0xFFFF, 1, (unsigned char *)(&sms.ram[0])); 
-	CZetMapArea (0xE000, 0xFFFF, 2, (unsigned char *)(&sms.ram[0])); 
+//	CZetMapArea (0xE000, 0xFFFF, 1, (unsigned char *)(&sms.ram[0])); 
+//	CZetMapArea (0xE000, 0xFFFF, 2, (unsigned char *)(&sms.ram[0])); 
 
-	CZetSetReadHandler(cpu_readmem8);
+//	CZetSetReadHandler(cpu_readmem8);
 	CZetSetWriteHandler(cpu_writemem8);
 #endif
 
 	sms.fcr[0] = 0x00;
     sms.fcr[1] = 0x00;
     sms.fcr[2] = 0x01;
-    sms.fcr[3] = 0x00;
+    sms.fcr[3] = 0x02;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static unsigned int cpu_readmem8(unsigned int address)
@@ -1091,9 +1096,9 @@ static unsigned int cpu_readmem8(unsigned int address)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void cpu_writemem8(unsigned int address, unsigned int data)
 {
+#ifdef CZ80
 	sms.ram[address & 0x1FFF] = data;
 
-#ifdef CZ80
 	if(address >= 0xFFFC)
 	{
 #endif
@@ -1273,6 +1278,8 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 
 	z80_reset();
 #else
+	CZetInit(1);
+	CZetOpen(0);
 /* Bank #0 */ 
 	CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)(&cart.rom[0]));
 	CZetMapArea(0x0000, 0x3FFF, 2, (unsigned char *)(&cart.rom[0]));
@@ -1292,9 +1299,10 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 
 /* RAM (mirror) */ 
 	CZetMapArea(0xE000, 0xFFFF, 0, (unsigned char *)(&cart.rom[0]));
-	CZetMapArea(0xE000, 0xFFFF, 1, (unsigned char *)(&cart.rom[0]));
+//	CZetMapArea(0xE000, 0xFFFF, 1, (unsigned char *)(&cart.rom[0]));
 	CZetMapArea(0xE000, 0xFFFF, 2, (unsigned char *)(&cart.rom[0]));
 
+//	CZetSetReadHandler(cpu_readmem8);
 	CZetSetWriteHandler(cpu_writemem8);
 	CZetSetInHandler(cz80_z80_readport16);
 	CZetSetOutHandler(cz80_z80_writeport16);

@@ -3103,8 +3103,11 @@ EndFile
 
 			Directory SMSCZ
 
-File ADDAMS_1.SMS;1
-	Source L:\PC\MASTER~2\OUTRUN.SMS
+File HANG_ON.SMS;1
+	Source L:\PC\MASTER~2\HANG_ON.SMS
+EndFile
+File BANK_P_1.SMS;1
+	Source L:\PC\MASTER~2\BANK_P~1.SMS
 EndFile
 File AERIAL_1.SMS;1
 	Source L:\PC\MASTER~2\SONIC_~4.SMS
