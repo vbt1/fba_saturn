@@ -1343,13 +1343,13 @@ File ADDAMS_1.SMS;1
 	Source L:\PC\MASTER~2\OUTRUN.SMS
 EndFile
 File AERIAL_1.SMS;1
-	Source L:\PC\MASTER~2\SONIC_~4.SMS
+	Source L:\PC\MASTER~2\AERIAL~1.SMS
 EndFile
 File AFTER__1.SMS;1
-	Source L:\PC\MASTER~2\POWER_~2.SMS
+	Source L:\PC\MASTER~2\AFTER_~1.SMS
 EndFile
 File AIR_RE_1.SMS;1
-	Source L:\PC\MASTER~2\PSYCHO~1.SMS
+	Source L:\PC\MASTER~2\AIR_RE~1.SMS
 EndFile
 File ALADDIN.SMS;1
 	Source L:\PC\MASTER~2\ALADDIN.SMS
@@ -1939,9 +1939,9 @@ EndFile
 File SENSIB_1.SMS;1
 	Source L:\PC\MASTER~2\SENSIB~1.SMS
 EndFile
-;File SHADOW_1.SMS;1
-;	Source L:\PC\MASTER~2\SHADOW~1.SMS
-;EndFile
+File SHADOW_1.SMS;1
+	Source L:\PC\MASTER~2\SHADOW~1.SMS
+EndFile
 File SHADOW_2.SMS;1
 	Source L:\PC\MASTER~2\SHADOW~2.SMS
 EndFile
@@ -3101,13 +3101,10 @@ EndFile
 ;				EndFile
 ;			EndDirectory
 
-			Directory SMSCZ
+			Directory SMSCZ2
 
-File HANG_ON.SMS;1
-	Source L:\PC\MASTER~2\HANG_ON.SMS
-EndFile
-File BANK_P_1.SMS;1
-	Source L:\PC\MASTER~2\BANK_P~1.SMS
+File ADDAMS_1.SMS;1
+	Source L:\PC\MASTER~2\OUTRUN.SMS
 EndFile
 File AERIAL_1.SMS;1
 	Source L:\PC\MASTER~2\SONIC_~4.SMS
@@ -3138,6 +3135,90 @@ File ALEX_K_4.SMS;1
 EndFile
 File AL0C77_1.SMS;1
 	Source L:\PC\MASTER~2\AL0C77~1.SMS
+EndFile
+File ALF.SMS;1
+	Source L:\PC\MASTER~2\ALF.SMS
+EndFile
+;File ALIEN_3.SMS;1
+;	Source L:\PC\MASTER~2\ALIEN_3.SMS
+;EndFile
+File ALIEN__1.SMS;1
+	Source L:\PC\MASTER~2\ALIEN_~1.SMS
+EndFile
+File ALIEN__2.SMS;1
+	Source L:\PC\MASTER~2\ALIEN_~2.SMS
+EndFile
+File ALTERE_1.SMS;1
+	Source L:\PC\MASTER~2\ALTERE~1.SMS
+EndFile
+File AMERIC_1.SMS;1
+	Source L:\PC\MASTER~2\AMERIC~1.SMS
+EndFile
+File AMERIC_2.SMS;1
+	Source L:\PC\MASTER~2\AMERIC~2.SMS
+EndFile
+File ANDRE__1.SMS;1
+	Source L:\PC\MASTER~2\ANDRE_~1.SMS
+EndFile
+File ARCADE_1.SMS;1
+	Source L:\PC\MASTER~2\ARCADE~1.SMS
+EndFile
+File ASTERIX.SMS;1
+	Source L:\PC\MASTER~2\ASTERIX.SMS
+EndFile
+File ASTERI_1.SMS;1
+	Source L:\PC\MASTER~2\ASTERI~1.SMS
+EndFile
+File ASTERI_2.SMS;1
+	Source L:\PC\MASTER~2\ASTERI~2.SMS
+EndFile
+File ASTRO__1.SMS;1
+	Source L:\PC\MASTER~2\ASTRO_~1.SMS
+EndFile
+File ASTRO__2.SMS;1
+	Source L:\PC\MASTER~2\ASTRO_~2.SMS
+EndFile
+File AZTEC__1.SMS;1
+	Source L:\PC\MASTER~2\AZTEC_~1.SMS
+EndFile
+File BACK_T_1.SMS;1
+	Source L:\PC\MASTER~2\BACK_T~1.SMS
+EndFile
+File BACK_T_2.SMS;1
+	Source L:\PC\MASTER~2\BACK_T~2.SMS
+EndFile
+File BAKU_B_1.SMS;1
+	Source L:\PC\MASTER~2\BAKU_B~1.SMS
+EndFile
+File BANK_P_1.SMS;1
+	Source L:\PC\MASTER~2\BANK_P~1.SMS
+EndFile
+File BART_V_1.SMS;1
+	Source L:\PC\MASTER~2\BART_V~1.SMS
+EndFile
+;File BART_V_2.SMS;1
+;	Source L:\PC\MASTER~2\BART_V~2.SMS
+;EndFile
+File BASKET_1.SMS;1
+	Source L:\PC\MASTER~2\BASKET~1.SMS
+EndFile
+File BATMAN_1.SMS;1
+	Source L:\PC\MASTER~2\BATMAN~1.SMS
+EndFile
+File BATTLE_1.SMS;1
+	Source L:\PC\MASTER~2\BATTLE~1.SMS
+EndFile
+File BLACK__1.SMS;1
+	Source L:\PC\MASTER~2\BLACK_~1.SMS
+EndFile
+File BLADE__1.SMS;1
+	Source L:\PC\MASTER~2\BLADE_~1.SMS
+EndFile
+File BOMBER_1.SMS;1
+	Source L:\PC\MASTER~2\BOMBER~1.SMS
+EndFile
+File SHADOW_1.SMS;1
+	Source L:\PC\MASTER~2\SHADOW~1.SMS
 EndFile
 			EndDirectory
 

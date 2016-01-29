@@ -15,6 +15,11 @@ void __fastcall CZetDummyWriteHandler(unsigned short a, unsigned char b) { }
 unsigned char __fastcall CZetDummyInHandler(unsigned short a) { return 0; }
 void __fastcall CZetDummyOutHandler(unsigned short a, unsigned char b) { }
 
+void CZetSetSP(unsigned short data)
+{
+	lastCZetCPUContext->SP.W = data;
+}
+
 void CZetSetReadHandler(unsigned char (__fastcall *pHandler)(unsigned short))
 {
 	lastCZetCPUContext->Read_Byte = pHandler;
