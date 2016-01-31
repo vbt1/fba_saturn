@@ -1093,10 +1093,6 @@ Track MODE1
 				File PM1PRG7.6J;1
 					Source PUCKMAN\PM1PRG7.6J
 				EndFile
-
-				File PM1PRG7.6J;1
-					Source PUCKMAN\PM1PRG7.6J
-				EndFile
 				File PM1PRG6.6N;1
 					Source PUCKMAN\PM1PRG6.6N
 				EndFile
@@ -2199,6 +2195,594 @@ EndFile
 ;EndFile
 
 
+			EndDirectory
+
+			Directory GG
+File 5_IN_1_1.GG;1
+	Source L:\PC\GAME_G~2\5_IN_1~1.GG
+EndFile
+File ADVENT_1.GG;1
+	Source L:\PC\GAME_G~2\ADVENT~1.GG
+EndFile
+File AERIAL_1.GG;1
+	Source L:\PC\GAME_G~2\AERIAL~1.GG
+EndFile
+File ALADDIN.GG;1
+	Source L:\PC\GAME_G~2\ALADDIN.GG
+EndFile
+File ALIEN_3.GG;1
+	Source L:\PC\GAME_G~2\ALIEN_3.GG
+EndFile
+File ALIEN__1.GG;1
+	Source L:\PC\GAME_G~2\ALIEN_~1.GG
+EndFile
+File ANDRE__1.GG;1
+	Source L:\PC\GAME_G~2\ANDRE_~1.GG
+EndFile
+File ARCADE_1.GG;1
+	Source L:\PC\GAME_G~2\ARCADE~1.GG
+EndFile
+File ARCH_R_1.GG;1
+	Source L:\PC\GAME_G~2\ARCH_R~1.GG
+EndFile
+File ARENA__1.GG;1
+	Source L:\PC\GAME_G~2\ARENA_~1.GG
+EndFile
+File ASTERI_1.GG;1
+	Source L:\PC\GAME_G~2\ASTERI~1.GG
+EndFile
+File AX_BAT_1.GG;1
+	Source L:\PC\GAME_G~2\AX_BAT~1.GG
+EndFile
+File BAKU_B_1.GG;1
+	Source L:\PC\GAME_G~2\BAKU_B~1.GG
+EndFile
+File BARTMA_1.GG;1
+	Source L:\PC\GAME_G~2\BARTMA~1.GG
+EndFile
+File BART_V_1.GG;1
+	Source L:\PC\GAME_G~2\BART_V~1.GG
+EndFile
+File BART_V_2.GG;1
+	Source L:\PC\GAME_G~2\BART_V~2.GG
+EndFile
+File BATMAN_1.GG;1
+	Source L:\PC\GAME_G~2\BATMAN~1.GG
+EndFile
+File BATMAN_2.GG;1
+	Source L:\PC\GAME_G~2\BATMAN~2.GG
+EndFile
+File BATTER_1.GG;1
+	Source L:\PC\GAME_G~2\BATTER~1.GG
+EndFile
+File BATTLE_1.GG;1
+	Source L:\PC\GAME_G~2\BATTLE~1.GG
+EndFile
+File BATTLE_2.GG;1
+	Source L:\PC\GAME_G~2\BATTLE~2.GG
+EndFile
+File BEAVIS_1.GG;1
+	Source L:\PC\GAME_G~2\BEAVIS~1.GG
+EndFile
+File BONKER_1.GG;1
+	Source L:\PC\GAME_G~2\BONKER~1.GG
+EndFile
+File BRAM_S_1.GG;1
+	Source L:\PC\GAME_G~2\BRAM_S~1.GG
+EndFile
+File BUBBLE_1.GG;1
+	Source L:\PC\GAME_G~2\BUBBLE~1.GG
+EndFile
+File BUGS_B_1.GG;1
+	Source L:\PC\GAME_G~2\BUGS_B~1.GG
+EndFile
+File BUST_A_1.GG;1
+	Source L:\PC\GAME_G~2\BUST_A~1.GG
+EndFile
+File CAPT_A_1.GG;1
+	Source L:\PC\GAME_G~2\CAPT_A~1.GG
+EndFile
+File CHAKAN.GG;1
+	Source L:\PC\GAME_G~2\CHAKAN.GG
+EndFile
+File CHESSM_1.GG;1
+	Source L:\PC\GAME_G~2\CHESSM~1.GG
+EndFile
+File CHICAG_1.GG;1
+	Source L:\PC\GAME_G~2\CHICAG~1.GG
+EndFile
+File CHUCK__1.GG;1
+	Source L:\PC\GAME_G~2\CHUCK_~1.GG
+EndFile
+File CLUTCH_1.GG;1
+	Source L:\PC\GAME_G~2\CLUTCH~1.GG
+EndFile
+File COOL_S_1.GG;1
+	Source L:\PC\GAME_G~2\COOL_S~1.GG
+EndFile
+File CRYSTA_1.GG;1
+	Source L:\PC\GAME_G~2\CRYSTA~1.GG
+EndFile
+File CUTTHR_1.GG;1
+	Source L:\PC\GAME_G~2\CUTTHR~1.GG
+EndFile
+File DAFFY__1.GG;1
+	Source L:\PC\GAME_G~2\DAFFY_~1.GG
+EndFile
+File DEFEND_1.GG;1
+	Source L:\PC\GAME_G~2\DEFEND~1.GG
+EndFile
+File DESERT_1.GG;1
+	Source L:\PC\GAME_G~2\DESERT~1.GG
+EndFile
+File DESERT_2.GG;1
+	Source L:\PC\GAME_G~2\DESERT~2.GG
+EndFile
+File DOUBLE_1.GG;1
+	Source L:\PC\GAME_G~2\DOUBLE~1.GG
+EndFile
+File DRAGON_1.GG;1
+	Source L:\PC\GAME_G~2\DRAGON~1.GG
+EndFile
+File DRAGON_2.GG;1
+	Source L:\PC\GAME_G~2\DRAGON~2.GG
+EndFile
+File DR__RO_1.GG;1
+	Source L:\PC\GAME_G~2\DR__RO~1.GG
+EndFile
+File DYNAMI_1.GG;1
+	Source L:\PC\GAME_G~2\DYNAMI~1.GG
+EndFile
+File EARTHW_1.GG;1
+	Source L:\PC\GAME_G~2\EARTHW~1.GG
+EndFile
+File ECCO_T_1.GG;1
+	Source L:\PC\GAME_G~2\ECCO_T~1.GG
+EndFile
+File ECCO_T_2.GG;1
+	Source L:\PC\GAME_G~2\ECCO_T~2.GG
+EndFile
+File ENDURO_1.GG;1
+	Source L:\PC\GAME_G~2\ENDURO~1.GG
+EndFile
+File EVANDE_1.GG;1
+	Source L:\PC\GAME_G~2\EVANDE~1.GG
+EndFile
+File FACEBA_1.GG;1
+	Source L:\PC\GAME_G~2\FACEBA~1.GG
+EndFile
+File FACTOR_1.GG;1
+	Source L:\PC\GAME_G~2\FACTOR~1.GG
+EndFile
+File FANTAS_1.GG;1
+	Source L:\PC\GAME_G~2\FANTAS~1.GG
+EndFile
+File FATAL__1.GG;1
+	Source L:\PC\GAME_G~2\FATAL_~1.GG
+EndFile
+File FIFA_I_1.GG;1
+	Source L:\PC\GAME_G~2\FIFA_I~1.GG
+EndFile
+File FIFA_S_1.GG;1
+	Source L:\PC\GAME_G~2\FIFA_S~1.GG
+EndFile
+File FOREMA_1.GG;1
+	Source L:\PC\GAME_G~2\FOREMA~1.GG
+EndFile
+File FORMUL_1.GG;1
+	Source L:\PC\GAME_G~2\FORMUL~1.GG
+EndFile
+File FRED_C_1.GG;1
+	Source L:\PC\GAME_G~2\FRED_C~1.GG
+EndFile
+File F_15_S_1.GG;1
+	Source L:\PC\GAME_G~2\F_15_S~1.GG
+EndFile
+File GEAR_W_1.GG;1
+	Source L:\PC\GAME_G~2\GEAR_W~1.GG
+EndFile
+File GEORGE_1.GG;1
+	Source L:\PC\GAME_G~2\GEORGE~1.GG
+EndFile
+File GG_SHI_1.GG;1
+	Source L:\PC\GAME_G~2\GG_SHI~1.GG
+EndFile
+File GG_SHI_2.GG;1
+	Source L:\PC\GAME_G~2\GG_SHI~2.GG
+EndFile
+File GP_RIDER.GG;1
+	Source L:\PC\GAME_G~2\GP_RIDER.GG
+EndFile
+File GREENDOG.GG;1
+	Source L:\PC\GAME_G~2\GREENDOG.GG
+EndFile
+File G_LOC__1.GG;1
+	Source L:\PC\GAME_G~2\G_LOC_~1.GG
+EndFile
+File HOME_A_1.GG;1
+	Source L:\PC\GAME_G~2\HOME_A~1.GG
+EndFile
+File HOOK.GG;1
+	Source L:\PC\GAME_G~2\HOOK.GG
+EndFile
+File INCRED_1.GG;1
+	Source L:\PC\GAME_G~2\INCRED~1.GG
+EndFile
+File INCRED_2.GG;1
+	Source L:\PC\GAME_G~2\INCRED~2.GG
+EndFile
+File INDIAN_1.GG;1
+	Source L:\PC\GAME_G~2\INDIAN~1.GG
+EndFile
+File IRON_M_1.GG;1
+	Source L:\PC\GAME_G~2\IRON_M~1.GG
+EndFile
+File ITCHY__1.GG;1
+	Source L:\PC\GAME_G~2\ITCHY_~1.GG
+EndFile
+File JEOPAR_1.GG;1
+	Source L:\PC\GAME_G~2\JEOPAR~1.GG
+EndFile
+File JEOPAR_2.GG;1
+	Source L:\PC\GAME_G~2\JEOPAR~2.GG
+EndFile
+File JOE_MO_1.GG;1
+	Source L:\PC\GAME_G~2\JOE_MO~1.GG
+EndFile
+File JUDGE__1.GG;1
+	Source L:\PC\GAME_G~2\JUDGE_~1.GG
+EndFile
+File JUNCTION.GG;1
+	Source L:\PC\GAME_G~2\JUNCTION.GG
+EndFile
+File JUNGLE_1.GG;1
+	Source L:\PC\GAME_G~2\JUNGLE~1.GG
+EndFile
+File JURASS_1.GG;1
+	Source L:\PC\GAME_G~2\JURASS~1.GG
+EndFile
+File KLAX.GG;1
+	Source L:\PC\GAME_G~2\KLAX.GG
+EndFile
+File KRUSTY_1.GG;1
+	Source L:\PC\GAME_G~2\KRUSTY~1.GG
+EndFile
+File LEMMINGS.GG;1
+	Source L:\PC\GAME_G~2\LEMMINGS.GG
+EndFile
+File LION_K_1.GG;1
+	Source L:\PC\GAME_G~2\LION_K~1.GG
+EndFile
+File LITTLE_1.GG;1
+	Source L:\PC\GAME_G~2\LITTLE~1.GG
+EndFile
+File LUCKY__1.GG;1
+	Source L:\PC\GAME_G~2\LUCKY_~1.GG
+EndFile
+File LUNAR.GG;1
+	Source L:\PC\GAME_G~2\LUNAR.GG
+EndFile
+File MADDEN_1.GG;1
+	Source L:\PC\GAME_G~2\MADDEN~1.GG
+EndFile
+File MADDEN_2.GG;1
+	Source L:\PC\GAME_G~2\MADDEN~2.GG
+EndFile
+File MARBLE_1.GG;1
+	Source L:\PC\GAME_G~2\MARBLE~1.GG
+EndFile
+File MARKO__1.GG;1
+	Source L:\PC\GAME_G~2\MARKO_~1.GG
+EndFile
+File MEGAMAN.GG;1
+	Source L:\PC\GAME_G~2\MEGAMAN.GG
+EndFile
+File MICKEY_1.GG;1
+	Source L:\PC\GAME_G~2\MICKEY~1.GG
+EndFile
+File MICKEY_2.GG;1
+	Source L:\PC\GAME_G~2\MICKEY~2.GG
+EndFile
+File MICK___1.GG;1
+	Source L:\PC\GAME_G~2\MICK__~1.GG
+EndFile
+File MONSTE_1.GG;1
+	Source L:\PC\GAME_G~2\MONSTE~1.GG
+EndFile
+File MORTAL_1.GG;1
+	Source L:\PC\GAME_G~2\MORTAL~1.GG
+EndFile
+File MORTAL_2.GG;1
+	Source L:\PC\GAME_G~2\MORTAL~2.GG
+EndFile
+File MORTAL_3.GG;1
+	Source L:\PC\GAME_G~2\MORTAL~3.GG
+EndFile
+File NBA_AC_1.GG;1
+	Source L:\PC\GAME_G~2\NBA_AC~1.GG
+EndFile
+File NBA_JA_1.GG;1
+	Source L:\PC\GAME_G~2\NBA_JA~1.GG
+EndFile
+File NFL_95.GG;1
+	Source L:\PC\GAME_G~2\NFL_95.GG
+EndFile
+File NFL_QU_1.GG;1
+	Source L:\PC\GAME_G~2\NFL_QU~1.GG
+EndFile
+File NHL_AL_1.GG;1
+	Source L:\PC\GAME_G~2\NHL_AL~1.GG
+EndFile
+File NHL_HO_1.GG;1
+	Source L:\PC\GAME_G~2\NHL_HO~1.GG
+EndFile
+File NINJA__1.GG;1
+	Source L:\PC\GAME_G~2\NINJA_~1.GG
+EndFile
+File OTTIFA_1.GG;1
+	Source L:\PC\GAME_G~2\OTTIFA~1.GG
+EndFile
+File OUTRUN.GG;1
+	Source L:\PC\GAME_G~2\OUTRUN.GG
+EndFile
+File OUTRUN_1.GG;1
+	Source L:\PC\GAME_G~2\OUTRUN~1.GG
+EndFile
+File PAC_AT_1.GG;1
+	Source L:\PC\GAME_G~2\PAC_AT~1.GG
+EndFile
+File PAPERBOY.GG;1
+	Source L:\PC\GAME_G~2\PAPERBOY.GG
+EndFile
+File PGA_TO_1.GG;1
+	Source L:\PC\GAME_G~2\PGA_TO~1.GG
+EndFile
+File PGA_TO_2.GG;1
+	Source L:\PC\GAME_G~2\PGA_TO~2.GG
+EndFile
+File PGA_TO_3.GG;1
+	Source L:\PC\GAME_G~2\PGA_TO~3.GG
+EndFile
+File PHANTA_1.GG;1
+	Source L:\PC\GAME_G~2\PHANTA~1.GG
+EndFile
+File PHANTA_2.GG;1
+	Source L:\PC\GAME_G~2\PHANTA~2.GG
+EndFile
+File PHANTO_1.GG;1
+	Source L:\PC\GAME_G~2\PHANTO~1.GG
+EndFile
+File POKER__1.GG;1
+	Source L:\PC\GAME_G~2\POKER_~1.GG
+EndFile
+File POKER__2.GG;1
+	Source L:\PC\GAME_G~2\POKER_~2.GG
+EndFile
+File POKER__3.GG;1
+	Source L:\PC\GAME_G~2\POKER_~3.GG
+EndFile
+File POWER__1.GG;1
+	Source L:\PC\GAME_G~2\POWER_~1.GG
+EndFile
+File POWER__2.GG;1
+	Source L:\PC\GAME_G~2\POWER_~2.GG
+EndFile
+File POWER__3.GG;1
+	Source L:\PC\GAME_G~2\POWER_~3.GG
+EndFile
+File PRIMAL_1.GG;1
+	Source L:\PC\GAME_G~2\PRIMAL~1.GG
+EndFile
+File PSYCHI_1.GG;1
+	Source L:\PC\GAME_G~2\PSYCHI~1.GG
+EndFile
+File PUTT_A_1.GG;1
+	Source L:\PC\GAME_G~2\PUTT_A~1.GG
+EndFile
+File REVENG_1.GG;1
+	Source L:\PC\GAME_G~2\REVENG~1.GG
+EndFile
+File RISE_O_1.GG;1
+	Source L:\PC\GAME_G~2\RISE_O~1.GG
+EndFile
+File RISTAR_1.GG;1
+	Source L:\PC\GAME_G~2\RISTAR~1.GG
+EndFile
+File ROAD_R_1.GG;1
+	Source L:\PC\GAME_G~2\ROAD_R~1.GG
+EndFile
+File ROBOCO_1.GG;1
+	Source L:\PC\GAME_G~2\ROBOCO~1.GG
+EndFile
+File ROBOCO_2.GG;1
+	Source L:\PC\GAME_G~2\ROBOCO~2.GG
+EndFile
+File RONALD_1.GG;1
+	Source L:\PC\GAME_G~2\RONALD~1.GG
+EndFile
+File SAMURA_1.GG;1
+	Source L:\PC\GAME_G~2\SAMURA~1.GG
+EndFile
+File SCRATC_1.GG;1
+	Source L:\PC\GAME_G~2\SCRATC~1.GG
+EndFile
+File SEGA_4_1.GG;1
+	Source L:\PC\GAME_G~2\SEGA_4~1.GG
+EndFile
+File SHAQ_FU.GG;1
+	Source L:\PC\GAME_G~2\SHAQ_FU.GG
+EndFile
+File SHININ_1.GG;1
+	Source L:\PC\GAME_G~2\SHININ~1.GG
+EndFile
+File SHININ_2.GG;1
+	Source L:\PC\GAME_G~2\SHININ~2.GG
+EndFile
+File SKWEEK.GG;1
+	Source L:\PC\GAME_G~2\SKWEEK.GG
+EndFile
+File SLAM_D_1.GG;1
+	Source L:\PC\GAME_G~2\SLAM_D~1.GG
+EndFile
+File SLIDER.GG;1
+	Source L:\PC\GAME_G~2\SLIDER.GG
+EndFile
+File SMASH_TV.GG;1
+	Source L:\PC\GAME_G~2\SMASH_TV.GG
+EndFile
+File SMURFS_1.GG;1
+	Source L:\PC\GAME_G~2\SMURFS~1.GG
+EndFile
+File SOLITA_1.GG;1
+	Source L:\PC\GAME_G~2\SOLITA~1.GG
+EndFile
+File SONIC__1.GG;1
+	Source L:\PC\GAME_G~2\SONIC_~1.GG
+EndFile
+File SONIC__2.GG;1
+	Source L:\PC\GAME_G~2\SONIC_~2.GG
+EndFile
+File SONIC__3.GG;1
+	Source L:\PC\GAME_G~2\SONIC_~3.GG
+EndFile
+File SONIC__4.GG;1
+	Source L:\PC\GAME_G~2\SONIC_~4.GG
+EndFile
+File SOF2DB_1.GG;1
+	Source L:\PC\GAME_G~2\SOF2DB~1.GG
+EndFile
+File SO4F6C_1.GG;1
+	Source L:\PC\GAME_G~2\SO4F6C~1.GG
+EndFile
+File SPACE__1.GG;1
+	Source L:\PC\GAME_G~2\SPACE_~1.GG
+EndFile
+File SPACE__2.GG;1
+	Source L:\PC\GAME_G~2\SPACE_~2.GG
+EndFile
+File SPIDER_1.GG;1
+	Source L:\PC\GAME_G~2\SPIDER~1.GG
+EndFile
+File SPIDER_2.GG;1
+	Source L:\PC\GAME_G~2\SPIDER~2.GG
+EndFile
+File SPORTS_1.GG;1
+	Source L:\PC\GAME_G~2\SPORTS~1.GG
+EndFile
+File SPORTS_2.GG;1
+	Source L:\PC\GAME_G~2\SPORTS~2.GG
+EndFile
+File STARGATE.GG;1
+	Source L:\PC\GAME_G~2\STARGATE.GG
+EndFile
+File STAR_W_1.GG;1
+	Source L:\PC\GAME_G~2\STAR_W~1.GG
+EndFile
+File STREET_1.GG;1
+	Source L:\PC\GAME_G~2\STREET~1.GG
+EndFile
+File STREET_2.GG;1
+	Source L:\PC\GAME_G~2\STREET~2.GG
+EndFile
+File STRIDE_1.GG;1
+	Source L:\PC\GAME_G~2\STRIDE~1.GG
+EndFile
+File SUPER__1.GG;1
+	Source L:\PC\GAME_G~2\SUPER_~1.GG
+EndFile
+File SUPER__2.GG;1
+	Source L:\PC\GAME_G~2\SUPER_~2.GG
+EndFile
+File SUPER__3.GG;1
+	Source L:\PC\GAME_G~2\SUPER_~3.GG
+EndFile
+File SUPER__4.GG;1
+	Source L:\PC\GAME_G~2\SUPER_~4.GG
+EndFile
+File SURF_N_1.GG;1
+	Source L:\PC\GAME_G~2\SURF_N~1.GG
+EndFile
+File TAILS__1.GG;1
+	Source L:\PC\GAME_G~2\TAILS_~1.GG
+EndFile
+File TAILS__2.GG;1
+	Source L:\PC\GAME_G~2\TAILS_~2.GG
+EndFile
+File TALE_S_1.GG;1
+	Source L:\PC\GAME_G~2\TALE_S~1.GG
+EndFile
+File TAZ_IN_1.GG;1
+	Source L:\PC\GAME_G~2\TAZ_IN~1.GG
+EndFile
+File TAZ_MA_1.GG;1
+	Source L:\PC\GAME_G~2\TAZ_MA~1.GG
+EndFile
+File TEMPO_JR.GG;1
+	Source L:\PC\GAME_G~2\TEMPO_JR.GG
+EndFile
+File TERMIN_1.GG;1
+	Source L:\PC\GAME_G~2\TERMIN~1.GG
+EndFile
+File TERMIN_2.GG;1
+	Source L:\PC\GAME_G~2\TERMIN~2.GG
+EndFile
+File TERMIN_3.GG;1
+	Source L:\PC\GAME_G~2\TERMIN~3.GG
+EndFile
+File TESSERAE.GG;1
+	Source L:\PC\GAME_G~2\TESSERAE.GG
+EndFile
+File TINTIN_1.GG;1
+	Source L:\PC\GAME_G~2\TINTIN~1.GG
+EndFile
+File TOM_AN_1.GG;1
+	Source L:\PC\GAME_G~2\TOM_AN~1.GG
+EndFile
+File TRUE_L_1.GG;1
+	Source L:\PC\GAME_G~2\TRUE_L~1.GG
+EndFile
+File ULTIMA_1.GG;1
+	Source L:\PC\GAME_G~2\ULTIMA~1.GG
+EndFile
+File VAMPIR_1.GG;1
+	Source L:\PC\GAME_G~2\VAMPIR~1.GG
+EndFile
+File VR_TRO_1.GG;1
+	Source L:\PC\GAME_G~2\VR_TRO~1.GG
+EndFile
+File WONDER_1.GG;1
+	Source L:\PC\GAME_G~2\WONDER~1.GG
+EndFile
+File WOODY__1.GG;1
+	Source L:\PC\GAME_G~2\WOODY_~1.GG
+EndFile
+File WORLD__1.GG;1
+	Source L:\PC\GAME_G~2\WORLD_~1.GG
+EndFile
+File WORLD__2.GG;1
+	Source L:\PC\GAME_G~2\WORLD_~2.GG
+EndFile
+File WORLD__3.GG;1
+	Source L:\PC\GAME_G~2\WORLD_~3.GG
+EndFile
+File WWF_RAW.GG;1
+	Source L:\PC\GAME_G~2\WWF_RAW.GG
+EndFile
+File X_MEN.GG;1
+	Source L:\PC\GAME_G~2\X_MEN.GG
+EndFile
+File X_MEN__1.GG;1
+	Source L:\PC\GAME_G~2\X_MEN_~1.GG
+EndFile
+File X_MEN__2.GG;1
+	Source L:\PC\GAME_G~2\X_MEN_~2.GG
+EndFile
+File YOGI_B_1.GG;1
+	Source L:\PC\GAME_G~2\YOGI_B~1.GG
+EndFile
+File ZOOP.GG;1
+	Source L:\PC\GAME_G~2\ZOOP.GG
+EndFile
 			EndDirectory
 
 			Directory SG1000

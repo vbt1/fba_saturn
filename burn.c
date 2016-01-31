@@ -115,7 +115,7 @@ BurnDrvsms_cz80.szFullNameA="Sega Master System (CZ80)";
 BurnDrvsms_cz80.szParent=NULL;
 
 BurnDrvsms_gg.szShortName="gg";
-BurnDrvsms_gg.szFullNameA="Game Gear";
+BurnDrvsms_gg.szFullNameA="Sega Game Gear";
 BurnDrvsms_gg.szParent=NULL;
 
 BurnDrvsg1k_wboy.szShortName="sg1000";

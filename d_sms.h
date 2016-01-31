@@ -8,6 +8,7 @@
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static UINT8 update_input1(void);
+static UINT8 update_input2(void);
 static void make_lut();
 void memcpyl(void *, void *, int);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
@@ -38,7 +39,9 @@ typedef struct
 	UINT8 port_F2;
 //	UINT8 use_fm;
 	UINT8 irq;
-//	UINT8 psg_mask;
+#ifdef GG
+	UINT8 psg_mask;
+#endif
 }t_sms;
 
 

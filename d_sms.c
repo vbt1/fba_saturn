@@ -33,7 +33,7 @@ int ovlInit(char *szShortName)
 #else
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"gg", NULL,
-		"Game Gear\0",
+		"Sega Game Gear\0",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
 		SMSInit, SMSExit, SMSFrame, NULL
@@ -98,10 +98,17 @@ static void initLayers(void)
 
 	Uint16	CycleTb[]={
 		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
+#ifdef GG1
+		0xffff, 0xff5e, //A1
+		0xffff, 0xffff,	//A0
+		0x0044, 0xeeff,   //B1
+		0xffff, 0xffff  //B0
+#else
 		0xff5e, 0xffff, //A1
 		0xffff, 0xffff,	//A0
 		0x04ee, 0xffff,   //B1
 		0xffff, 0xffff  //B0
+#endif
 	};
  	SclConfig	scfg;
 
@@ -111,7 +118,11 @@ static void initLayers(void)
 	scfg.pnamesize	= SCL_PN1WORD;
 	scfg.flip				= SCL_PN_10BIT;
 	scfg.platesize	= SCL_PL_SIZE_1X1;
+#ifdef GG1
+	scfg.coltype		= SCL_COL_TYPE_256;
+#else
 	scfg.coltype		= SCL_COL_TYPE_16;
+#endif
 	scfg.datatype	= SCL_CELL;
 	scfg.patnamecontrl =  0x000c;// VRAM B1 のオフセット 
 	scfg.plate_addr[0] = ss_map;
@@ -121,7 +132,9 @@ static void initLayers(void)
 //	SCL_InitConfigTb(&scfg);
 //	scfg.dispenbl 	 = ON;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
-//	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
+#ifdef GG
+	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
+#endif
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
 	scfg.plate_addr[0] = ss_font;
@@ -141,7 +154,11 @@ static void SaturnInitMem()
 	UINT8 *Next; Next = (UINT8 *)SaturnMem;
 	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
 	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
+#ifdef GG
+	cram_lut		= Next; Next += 0x1000*sizeof(UINT16);
+#else
 	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
+#endif
 	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
 	MemEnd			= Next;	
@@ -206,7 +223,11 @@ static void DrvInitSaturn()
 	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	drawWindow(32,192,192,14,52);
 	nBurnFunction = update_input1;
+#ifdef GG
+	drawWindow(40,160,160,12,76);
+#else
 	drawWindow(0,192,192,2,66);
+#endif
 	SetVblank2();
 
 
@@ -565,6 +586,32 @@ static int vdp_ctrl_r(void)
     return (temp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef GG1
+static void update_gg_bg(t_vdp *vdp, int index)
+{
+
+//				if(index>=vdp.ntab && index<vdp.ntab+0x700)
+// VBT 04/02/2007 : modif compilo
+		if(index>=vdp->ntab)
+			if( index<vdp->ntab+0x700)
+		{
+			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
+			int delta = map_lut[index - vdp->ntab];
+			UINT16 *map = &ss_map[delta]; 
+			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
+		}
+		/* Mark patterns as dirty */
+		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+		UINT32 bp = *(UINT32 *)&vdp->vram[index & ~3];
+		UINT32 *pg = (UINT32 *) &cache[0x00000 | (index*2)];
+		UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index*2)];
+		UINT32 temp1 = bp_lut[bp & 0xFFFF];
+		UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
+		*sg= *pg = (temp1<<3 | temp2 );
+//        *pg = (temp1<<2 | temp2 );
+}
+#else
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void update_bg(t_vdp *vdp, int index)
 {
 //				if(index>=vdp.ntab && index<vdp.ntab+0x700)
@@ -587,6 +634,7 @@ static void update_bg(t_vdp *vdp, int index)
 		*sg= *pg = (temp1<<2 | temp2 );
 //        *pg = (temp1<<2 | temp2 );
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Write data to the VDP's data port */
 static void vdp_data_w(int data)
@@ -611,7 +659,11 @@ static void vdp_data_w(int data)
             {
 				/* Store VRAM byte */
                 vdp.vram[index] = data;
+#ifdef GG1
+				update_gg_bg(&vdp,index);
+#else
 				update_bg(&vdp,index);
+#endif
             }
 
 //VBT : A REMETTRE A LA PLACE  de rederSprite des que le probleme sur yp=208 est r駸olu
@@ -690,15 +742,26 @@ static void vdp_data_w(int data)
             break;
 
         case 3: /* CRAM write */
-            index = (vdp.addr & 0x1F);
-            if(data != vdp.cram[index])
-            {
-                vdp.cram[index] = data;
+#ifdef GG
+			index = (vdp.addr & 0x3F);
+			if(data != vdp.cram[index])
+			{
+				vdp.cram[index] = data;
+				index = (vdp.addr >> 1) & 0x1F;
+				colBgAddr[index] = cram_lut[data & 0x0FFF];
+				colAddr[index] =  colBgAddr[index];
+			}
+#else
+			index = (vdp.addr & 0x1F);
+			if(data != vdp.cram[index])
+			{
+				vdp.cram[index] = data;
 				colBgAddr[index] = cram_lut[data & 0x3F];
 
 				  if (index>0x0f)
 					colAddr[index&0x0f] =  colBgAddr[index];
             }
+#endif
             break;
     }
 
@@ -809,16 +872,76 @@ static UINT8 vdp_hcounter_r(void)
     return (hcnt[((pixel >> 1) & 0x1FF)]);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void cz80_z80_writeport16(unsigned short PortNo, unsigned char data)
+static unsigned char cz80_z80_readport16(unsigned short PortNo)
 {
     switch(PortNo & 0xFF)
     {
+#ifdef GG
         case 0x01: /* GG SIO */
         case 0x02:
         case 0x03:
         case 0x04:
         case 0x05:
+            return (0x00);
+#endif
+        case 0x7E: /* V COUNTER */
+            return (vdp_vcounter_r());
+            break;
+    
+        case 0x7F: /* H COUNTER */
+		//	printf("vdp_hcounter_r\n");
+            return (vdp_hcounter_r());
+            break;
+    
+        case 0x00: /* INPUT #2 */
+			return 0xff;
+//            temp = 0xFF;
+//			return (update_system());
+//            if(input.system & INPUT_START) temp &= ~0x80;
+//            if(sms.country == TYPE_DOMESTIC) temp &= ~0x40;
+//            return (temp);
+    
+		case 0xC0: /* INPUT #0 */  
+		case 0xDC:
+			return (update_input1());
+//			return 0xff;
+		case 0xC1: /* INPUT #1 */
+		case 0xDD:
+//			return 0xff;
+			return update_input2();
+
+        case 0xBE: /* VDP DATA */
+//			printf ("read port vdp_data_r\n");
+            return (vdp_data_r());
+    
+        case 0xBD:
+        case 0xBF: /* VDP CTRL */
+//			printf ("read port vdp_ctrl_r\n");
+            return (vdp_ctrl_r());
+
+        case 0xF2: /* YM2413 DETECT */
+//            return (sms.port_F2);
+            break;
+    }
+//    return (0xFF);      
+    return (0);      
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void cz80_z80_writeport16(unsigned short PortNo, unsigned char data)
+{
+    switch(PortNo & 0xFF)
+    {
+#ifdef GG
+        case 0x01: /* GG SIO */
+        case 0x02:
+        case 0x03:
+        case 0x04:
+        case 0x05:
+             break;
         case 0x06: /* GG STEREO */
+            sms.psg_mask = (data & 0xFF);
+            break;
+#endif
         case 0x7E: /* SN76489 PSG */
         case 0x7F:
 //#ifdef SOUND
@@ -1171,53 +1294,6 @@ static void cpu_writemem16(unsigned int address, unsigned int data)
 }
 #endif	   */
 //-------------------------------------------------------------------------------------------------------------------------------------
-static unsigned char cz80_z80_readport16(unsigned short PortNo)
-{
-    switch(PortNo & 0xFF)
-    {
-        case 0x7E: /* V COUNTER */
-            return (vdp_vcounter_r());
-            break;
-    
-        case 0x7F: /* H COUNTER */
-		//	printf("vdp_hcounter_r\n");
-            return (vdp_hcounter_r());
-            break;
-    
-        case 0x00: /* INPUT #2 */
-			return 0xff;
-//            temp = 0xFF;
-//			return (update_system());
-//            if(input.system & INPUT_START) temp &= ~0x80;
-//            if(sms.country == TYPE_DOMESTIC) temp &= ~0x40;
-//            return (temp);
-    
-		case 0xC0: /* INPUT #0 */  
-		case 0xDC:
-			return (update_input1());
-//			return 0xff;
-		case 0xC1: /* INPUT #1 */
-		case 0xDD:
-//			return 0xff;
-			return update_input2();
-
-        case 0xBE: /* VDP DATA */
-//			printf ("read port vdp_data_r\n");
-            return (vdp_data_r());
-    
-        case 0xBD:
-        case 0xBF: /* VDP CTRL */
-//			printf ("read port vdp_ctrl_r\n");
-            return (vdp_ctrl_r());
-
-        case 0xF2: /* YM2413 DETECT */
-//            return (sms.port_F2);
-            break;
-    }
-//    return (0xFF);      
-    return (0);      
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 static void z80_init(void)
 {
 #ifdef RAZE
@@ -1350,7 +1426,19 @@ static void make_bp_lut(void)
 static void make_cram_lut(void)
 {
 //	cram_lut = (UINT16 *)malloc(0x40*sizeof(UINT16));
+#ifdef GG
+    for(unsigned int j = 0; j < 0x1000; j++)
+    {
+		int r = (((j << 1) | 0) >> 1) & 7;
+		int g = (((j << 1) | 0) >> 5) & 7;
+		int b = (((j << 1) | 1) >> 1) & 7;
 
+        r  = ((r << 3) | (r << 1) | (r >> 1))>>2;
+        g = ((g << 3) | (g << 1) | (g >> 1))>>2;
+        b = ((b << 3) | (b << 1) | (b >> 1))>>2;
+        cram_lut[j] =RGB(r,g,b);
+    }
+#else
     for(unsigned int j = 0; j < 0x40; j++)
     {
         int r = (j >> 0) & 3;
@@ -1361,6 +1449,7 @@ static void make_cram_lut(void)
         b = (b << 3) | (b << 1) | (b >> 1);
         cram_lut[j] =RGB(r,g,b);
     }
+#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut()
