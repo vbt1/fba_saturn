@@ -68,6 +68,9 @@ typedef struct
     INT32 satb;
     INT32 line;
     INT32 left;
+#ifdef GG
+    UINT16 cram_latch;
+#endif
 //    UINT8 limit;
 }t_vdp;
 

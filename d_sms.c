@@ -3,6 +3,8 @@
 #define OLD_SOUND 1
 #define SAMPLE 7680L
 //GfsDirName dir_name_sms[512];
+unsigned  char vram_dirty[0x200];
+unsigned  char is_vram_dirty;
 
 int ovlInit(char *szShortName)
 {
@@ -98,7 +100,7 @@ static void initLayers(void)
 
 	Uint16	CycleTb[]={
 		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
-#ifdef GG1
+#ifdef GG
 		0xffff, 0xff5e, //A1
 		0xffff, 0xffff,	//A0
 		0x0044, 0xeeff,   //B1
@@ -118,7 +120,7 @@ static void initLayers(void)
 	scfg.pnamesize	= SCL_PN1WORD;
 	scfg.flip				= SCL_PN_10BIT;
 	scfg.platesize	= SCL_PL_SIZE_1X1;
-#ifdef GG1
+#ifdef GG
 	scfg.coltype		= SCL_COL_TYPE_256;
 #else
 	scfg.coltype		= SCL_COL_TYPE_16;
@@ -342,7 +344,9 @@ static INT32 SMSFrame(void)
 	{
 	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
 //	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );//palette2[0];
-
+#ifdef GG
+		update_cache();
+#endif
 		sms_frame();
 		
 #ifdef OLD_SOUND //
@@ -586,7 +590,49 @@ static int vdp_ctrl_r(void)
     return (temp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-#ifdef GG1
+#ifdef GG
+/* Update pattern cache with modified tiles */
+void update_cache(void)
+{
+    int i, x, y, c;
+    int b0, b1, b2, b3;
+    int i0, i1, i2, i3;
+
+    if(!is_vram_dirty) return;
+    is_vram_dirty = 0;
+
+    for(i = 0; i < 0x200; i += 1)
+    {
+        if(vram_dirty[i])
+        {
+            vram_dirty[i] = 0;
+
+            for(y = 0; y < 8; y += 1)
+            {
+                b0 = vdp.vram[(i << 5) | (y << 2) | (0)];
+                b1 = vdp.vram[(i << 5) | (y << 2) | (1)];
+                b2 = vdp.vram[(i << 5) | (y << 2) | (2)];
+                b3 = vdp.vram[(i << 5) | (y << 2) | (3)];
+
+                for(x = 0; x < 8; x += 1)
+                {
+                    i0 = (b0 >> (x ^ 7)) & 1;
+                    i1 = (b1 >> (x ^ 7)) & 1;
+                    i2 = (b2 >> (x ^ 7)) & 1;
+                    i3 = (b3 >> (x ^ 7)) & 1;
+
+                    c = (i3 << 3 | i2 << 2 | i1 << 1 | i0);
+
+                    cache[0x00000 | (i << 6) | ((y  ) << 3) | (x)] = c;
+                    cache[0x08000 | (i << 6) | ((y  ) << 3) | (x ^ 7)] = c;
+                    cache[0x10000 | (i << 6) | ((y ^ 7) << 3) | (x)] = c;
+                    cache[0x18000 | (i << 6) | ((y ^ 7) << 3) | (x ^ 7)] = c;
+                }
+            }
+        }
+    }
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void update_gg_bg(t_vdp *vdp, int index)
 {
 
@@ -598,17 +644,107 @@ static void update_gg_bg(t_vdp *vdp, int index)
 			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
 			int delta = map_lut[index - vdp->ntab];
 			UINT16 *map = &ss_map[delta]; 
-			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
+			map[0] =map[32] =map[0x700] =map[0x720] = name_lut[temp];
 		}
 		/* Mark patterns as dirty */
-		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-		UINT32 bp = *(UINT32 *)&vdp->vram[index & ~3];
-		UINT32 *pg = (UINT32 *) &cache[0x00000 | (index*2)];
-		UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index*2)];
-		UINT32 temp1 = bp_lut[bp & 0xFFFF];
-		UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
-		*sg= *pg = (temp1<<3 | temp2 );
-//        *pg = (temp1<<2 | temp2 );
+//		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+//		UINT32 bp = *(UINT32 *)&vdp->vram[(index & ~3)];
+//		UINT32 *pg = (UINT32 *) &cache[0x00000 | (index & ~3)];
+//		UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index & ~7)];
+//		UINT32 temp1 = bp_lut[bp & 0xFFFF];
+//		UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
+//		*sg= *pg = (temp1<<4 | temp2 );
+//		*pg = bp_lut[(bp>>16) & 0xFFFF];
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void vdp_data_w(INT32 offset, UINT8 data)
+{
+    INT32 index;
+
+    switch(offset & 1)
+    {
+        case 0: /* Data port */
+            vdp.pending = 0;
+            switch(vdp.code)
+            {
+                case 0: /* VRAM write */
+                case 1: /* VRAM write */
+                case 2: /* VRAM write */
+                    index = (vdp.addr & 0x3FFF);
+                    if(data != vdp.vram[index])
+                    {
+                        vdp.vram[index] = data;
+						/* Mark patterns as dirty */
+						vram_dirty[(index >> 5)] = is_vram_dirty = 1;
+						update_gg_bg(&vdp,index);
+                    }
+                    break;
+
+                case 3: /* CRAM write */
+                    if(vdp.addr & 1)
+                    {
+                        vdp.cram_latch = (vdp.cram_latch & 0x00FF) | ((data & 0xFF) << 8);
+	                    vdp.cram[(vdp.addr & 0x3E) | (0)] = (vdp.cram_latch >> 0) & 0xFF;
+                        vdp.cram[(vdp.addr & 0x3E) | (1)] = (vdp.cram_latch >> 8) & 0xFF;
+						colBgAddr[(vdp.addr >> 1) & 0x1F] = cram_lut[ vdp.cram_latch & 0xfff];
+                    }
+                    else
+                    {
+                        vdp.cram_latch = (vdp.cram_latch & 0xFF00) | ((data & 0xFF) << 0);
+                    }
+                    break;
+            }
+            vdp.addr = (vdp.addr + 1) & 0x3FFF;
+            return;
+
+        case 1: /* Control port */
+            if(vdp.pending == 0)
+            {
+                vdp.addr = (vdp.addr & 0x3F00) | (data & 0xFF);
+                vdp.latch = data;
+                vdp.pending = 1;
+            }
+            else
+            {
+                vdp.pending = 0;
+                vdp.code = (data >> 6) & 3;
+                vdp.addr = (data << 8 | vdp.latch) & 0x3FFF;
+
+                if(vdp.code == 0)
+                {
+                    vdp.buffer = vdp.vram[vdp.addr & 0x3FFF];
+                    vdp.addr = (vdp.addr + 1) & 0x3FFF;
+                }
+
+                if(vdp.code == 2)
+                {
+                    INT32 r = (data & 0x0F);
+					/* Store register data */
+					vdp.reg[r] = vdp.latch;
+					switch(r)
+					{
+						case 8 :
+		//					x =  ((vdp.reg[r]) ^ 0xff) & 0xff;
+							scroll_x =  ((vdp.reg[r]) ^ 0xff) ;
+							scroll_x<<=16;
+							break;
+
+						case 9 :
+							scroll_y = (vdp.reg[r]&0xff)<<16;
+							break;
+						/* Update table addresses */
+						case 2 :
+							vdp.ntab = (vdp.reg[2] << 10) & 0x3800;
+							break;
+
+						case 5 :
+							vdp.satb = (vdp.reg[5] << 7) & 0x3F00;
+							break;
+					}
+                }
+            }
+            return;
+    }
 }
 #else
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -634,10 +770,9 @@ static void update_bg(t_vdp *vdp, int index)
 		*sg= *pg = (temp1<<2 | temp2 );
 //        *pg = (temp1<<2 | temp2 );
 }
-#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Write data to the VDP's data port */
-static void vdp_data_w(int data)
+static void vdp_data_w(INT32 offset, UINT8 data)
 {
     int index;
     int delta;
@@ -659,17 +794,12 @@ static void vdp_data_w(int data)
             {
 				/* Store VRAM byte */
                 vdp.vram[index] = data;
-#ifdef GG1
-				update_gg_bg(&vdp,index);
-#else
 				update_bg(&vdp,index);
-#endif
             }
 
 //VBT : A REMETTRE A LA PLACE  de rederSprite des que le probleme sur yp=208 est résolu
 // VBT04/02/2007 modif compilo
-
-			if(index>=vdp.satb )
+ 			if(index>=vdp.satb )
 				if( index < vdp.satb+0x40)
 			{
 				SprSpCmd *ss_spritePtr;
@@ -742,16 +872,6 @@ static void vdp_data_w(int data)
             break;
 
         case 3: /* CRAM write */
-#ifdef GG
-			index = (vdp.addr & 0x3F);
-			if(data != vdp.cram[index])
-			{
-				vdp.cram[index] = data;
-				index = (vdp.addr >> 1) & 0x1F;
-				colBgAddr[index] = cram_lut[data & 0x0FFF];
-				colAddr[index] =  colBgAddr[index];
-			}
-#else
 			index = (vdp.addr & 0x1F);
 			if(data != vdp.cram[index])
 			{
@@ -761,14 +881,10 @@ static void vdp_data_w(int data)
 				  if (index>0x0f)
 					colAddr[index&0x0f] =  colBgAddr[index];
             }
-#endif
             break;
     }
-
-    /* Bump the VRAM address */
-//     vdp.addr ++;
-		vdp.addr =(vdp.addr + 1) & 0x3FFF;
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Read data from the VDP's data port */
 static int vdp_data_r(void)
@@ -953,7 +1069,7 @@ static void cz80_z80_writeport16(unsigned short PortNo, unsigned char data)
            break;
 
         case 0xBE: /* VDP DATA */
-            vdp_data_w(data);
+            vdp_data_w(PortNo, data);
             break;
 
         case 0xBD: /* VDP CTRL */ 
@@ -1153,6 +1269,8 @@ static void sms_reset(void)
     sms.port_3F = sms.port_F2 = sms.irq = 0x00;
 //    sms.psg_mask = 0xFF;
 #ifndef GG
+    is_vram_dirty = 1;
+    memset(vram_dirty, 1, 0x200);
 	sms.ram[0] = 0xA8;
 #endif
     /* Load memory maps with default values */
@@ -1390,7 +1508,11 @@ static void make_name_lut()
 		unsigned int name = (i & 0x1FF);
 		unsigned int flip = (i >> 9) & 3;
 		unsigned int pal = (i >> 11) & 1;
+#ifdef GG
+		name_lut[j] = (flip << 10 | name*2);
+#else
 		name_lut[j] = (pal << 12 | flip << 10 | name);
+#endif
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1429,13 +1551,18 @@ static void make_cram_lut(void)
 #ifdef GG
     for(unsigned int j = 0; j < 0x1000; j++)
     {
-		int r = (((j << 1) | 0) >> 1) & 7;
-		int g = (((j << 1) | 0) >> 5) & 7;
-		int b = (((j << 1) | 1) >> 1) & 7;
+/*		int r = (((j << 1) | 0) >> 0) & 0x0F;
+		int g = (((j << 1) | 0) >> 4) & 0x0F;
+		int b = (((j << 1) | 1) >> 0) & 0x0F;
+*/
 
-        r  = ((r << 3) | (r << 1) | (r >> 1))>>2;
-        g = ((g << 3) | (g << 1) | (g >> 1))>>2;
-        b = ((b << 3) | (b << 1) | (b >> 1))>>2;
+        int r = (((j << 1) | 0)>> 1) & 7;
+        int g = (((j << 1) | 0) >> 5) & 7;
+        int b = (((j << 1) | 1) >> 1) & 7;
+
+        r  = (r << 3) | (r << 1) | (r >> 1);
+        g = (g << 3) | (g << 1) | (g >> 1);
+        b = (b << 3) | (b << 1) | (b >> 1);
         cram_lut[j] =RGB(r,g,b);
     }
 #else
