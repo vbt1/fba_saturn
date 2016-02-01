@@ -44,6 +44,10 @@ typedef struct
 #endif
 }t_sms;
 
+#ifdef GG
+unsigned  char vram_dirty[0x200];
+unsigned  char is_vram_dirty;
+#endif
 
 /* Display timing (NTSC) */
 #define MASTER_CLOCK        (3579545)

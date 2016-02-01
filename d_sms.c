@@ -3,8 +3,6 @@
 #define OLD_SOUND 1
 #define SAMPLE 7680L
 //GfsDirName dir_name_sms[512];
-unsigned  char vram_dirty[0x200];
-unsigned  char is_vram_dirty;
 
 int ovlInit(char *szShortName)
 {
@@ -889,6 +887,9 @@ static void vdp_data_w(INT32 offset, UINT8 data)
             }
             break;
     }
+    /* Bump the VRAM address */
+//     vdp.addr ++;
+		vdp.addr =(vdp.addr + 1) & 0x3FFF;
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1274,7 +1275,7 @@ static void sms_reset(void)
     memset4_fast(sms.sram, 0, 0x8000);
     sms.port_3F = sms.port_F2 = sms.irq = 0x00;
 //    sms.psg_mask = 0xFF;
-#ifndef GG
+#ifdef GG
     is_vram_dirty = 1;
     memset(vram_dirty, 1, 0x200);
 	sms.ram[0] = 0xA8;
