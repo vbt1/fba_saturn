@@ -1731,7 +1731,7 @@ static void run_fba_emulator()
 	}
 	else
 	{
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                      ",16,40);
+		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
 		InpInit();
 		InpDIP();
 		play = 1;
@@ -1824,7 +1824,7 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
     {
 		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
 	}
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",16,40);
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait...",20,40);
 	
 		play=0;
