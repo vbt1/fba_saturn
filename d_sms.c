@@ -997,6 +997,11 @@ static UINT8 vdp_hcounter_r(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static unsigned char cz80_z80_readport16(unsigned short PortNo)
 {
+#ifdef GG
+	UINT8 temp = 0xFF;
+	SysDevice	*device;
+#endif
+
     switch(PortNo & 0xFF)
     {
 #ifdef GG
@@ -1017,7 +1022,22 @@ static unsigned char cz80_z80_readport16(unsigned short PortNo)
             break;
     
         case 0x00: /* INPUT #2 */
-			return 0xff;
+//
+#ifdef GG
+			if(( device = PER_GetDeviceR( &__port[0], 0 )) != NULL )
+			{
+		//		pltriggerE[0] = pltrigger[1];
+				pltrigger[0]  = PER_GetTrigger( device );
+		//		pltriggerE[0] = (pltrigger[1]) ^ (pltriggerE[1]);
+		//		pltriggerE[0] = (pltrigger[1]) & (pltriggerE[1]);
+
+//				if((pltrigger[0] & PER_DGT_U)!=0)  temp &= ~0x40;
+				if((pltrigger[0] & PER_DGT_C)!=0)  temp &= ~0x80;	
+			}
+			return temp;
+#else
+ 			return 0xff;
+#endif
 //            temp = 0xFF;
 //			return (update_system());
 //            if(input.system & INPUT_START) temp &= ~0x80;
@@ -1130,10 +1150,14 @@ static UINT8 update_input1(void)
 					case PER_DGT_R: temp &= ~0x08; break;
 					case PER_DGT_A: temp &= ~0x10; break;
 					case PER_DGT_B: temp &= ~0x20; break;
+#ifdef GG
+					case PER_DGT_C: temp &= ~0x80; break;
+#endif
 					default: 	break;
 				}
 			}
 		}
+
 		for(;i<12;i++)
 		{
 //			if((pltrigger[0] & pad_asign[i])!=0)
@@ -1141,11 +1165,13 @@ static UINT8 update_input1(void)
 			{
 				switch(pltriggerE[0] & pad_asign[i] )
 				{
+#ifndef GG
 					case PER_DGT_C:
 						if (!sms.paused)	{ sms.paused = 1; first = 2;}
 						else{ sms.paused = 0;}
 						temp = 0xFF;
 					break;
+#endif
 					case PER_DGT_X:
 
 
@@ -1156,26 +1182,6 @@ static UINT8 update_input1(void)
 		sprintf(toto2,"%08d", bcount2[k]);
 		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)toto2,0,k*10);
 	}
-
-#else
-  /*
-#ifdef SOUND
-						if(sound==1)
-						{
-							sound=0;
-//							SYS_Exit(0);
-							PCM_MeStop(pcm);
-//							pcm_PauseOn(pcm);
-						}
-						else
-						{
-							sound=1;
-//							pcm_PauseOn(pcm);
-							PCM_MeSetLoop(pcm, SAMPLE);
-							PCM_MeStart(pcm);
-						}
-#endif
-*/
 #endif
 					break;
 
