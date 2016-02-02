@@ -599,6 +599,8 @@ void update_cache(void)
     if(!is_vram_dirty) return;
     is_vram_dirty = 0;
 
+	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+
     for(i = 0; i < 0x200; i += 1)
     {
         if(vram_dirty[i])
@@ -625,6 +627,8 @@ void update_cache(void)
                     cache[0x08000 | (i << 6) | ((y  ) << 3) | (x ^ 7)] = c;
                     cache[0x10000 | (i << 6) | ((y ^ 7) << 3) | (x)] = c;
                     cache[0x18000 | (i << 6) | ((y ^ 7) << 3) | (x ^ 7)] = c;
+                    ss_vram[0x001100 |  (i << 6) | ((y  ) << 3) | (x)] = c;
+
                 }
             }
         }
@@ -676,6 +680,83 @@ void vdp_data_w(INT32 offset, UINT8 data)
 						vram_dirty[(index >> 5)] = is_vram_dirty = 1;
 						update_gg_bg(&vdp,index);
                     }
+
+//VBT : A REMETTRE A LA PLACE  de rederSprite des que le probleme sur yp=208 est résolu
+// VBT04/02/2007 modif compilo
+ 			if(index>=vdp.satb )
+				if( index < vdp.satb+0x40)
+			{
+				SprSpCmd *ss_spritePtr;
+				ss_spritePtr = &ss_sprite[3];
+
+				// Sprite dimensions 
+				int height = (vdp.reg[1] & 0x02) ? 16 : 8;
+
+				int delta=(index-vdp.satb);
+			// Pointer to sprite attribute table 
+				UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
+				// Sprite Y position 
+				int yp = st[delta];
+
+				if(yp == 208) 
+				{
+					
+					ss_spritePtr[delta].control = CTRL_END;
+					ss_spritePtr[delta].drawMode = 0;
+					ss_spritePtr[delta].charAddr	= 0;
+					ss_spritePtr[delta].charSize		= 0;
+					ss_spritePtr[delta].ax	= 0;
+					ss_spritePtr[delta].ay	= 0;
+//					nbSprites = delta+5;
+//ajouter un flag
+					break;
+				}
+				//Actual Y position is +1 
+				yp ++;
+				//Wrap Y coordinate for sprites > 240 
+				if(yp > 240) yp -= 256;
+				ss_spritePtr[delta].ay = yp;
+
+				// Clip sprites on left edge 
+				ss_spritePtr[delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
+				ss_spritePtr[delta].drawMode   = ( COLOR_2 | ECD_DISABLE | COMPO_REP);		
+				ss_spritePtr[delta].charSize   = 0x100+ height;  //0x100
+			}
+
+// VBT 04/02/2007 : modif compilo
+
+			if(index>=vdp.satb+0x80)
+				if(index < vdp.satb+0x100)
+			{
+				UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
+				int delta=((index-(vdp.satb+0x80)))>>1;
+
+				if((index-vdp.satb) &1)
+				{
+					int n = st[0x81 + (delta << 1)];
+					//Add MSB of pattern name 
+					if(vdp.reg[6] & 0x04) n |= 0x0100;
+					//Mask LSB for 8x16 sprites 
+					if(vdp.reg[1] & 0x02) n &= 0x01FE;
+
+//					ss_sprite[delta+3].charAddr   =  0x110+(n<<2);
+					ss_sprite[delta+3].charAddr   =  0x220+(n<<3);
+				}
+				else
+				{
+						//Sprite X position 
+					int xp = st[0x80 + (delta << 1)];
+					//X position shift 
+					if(vdp.reg[0] & 0x08) xp -= 8;
+					ss_sprite[delta+3].ax = xp;
+				}
+
+			}
+
+
+
+
+
                     break;
 
                 case 3: /* CRAM write */
@@ -689,8 +770,11 @@ void vdp_data_w(INT32 offset, UINT8 data)
         int g = (vdp.cram[(((vdp.addr >> 1) & 0x1F) << 1) | (0)] >> 4) & 0x0F;
         int b = (vdp.cram[(((vdp.addr >> 1) & 0x1F) << 1) | (1)] >> 0) & 0x0F;
 
-
-						colBgAddr[(vdp.addr >> 1) & 0x1F] = RGB(r*2,g*2,b*2);
+						index = (vdp.addr >> 1) & 0x1F;
+						colBgAddr[index] = RGB(r*2,g*2,b*2);
+						if(index >0x0f)
+							colAddr[index-0x0f] =  colBgAddr[index];
+						
                     }
                     else
                     {
