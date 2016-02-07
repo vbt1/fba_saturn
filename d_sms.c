@@ -3,6 +3,7 @@
 #define OLD_SOUND 1
 #define SAMPLE 7680L
 //GfsDirName dir_name_sms[512];
+unsigned char disp_spr[64];
 
 int ovlInit(char *szShortName)
 {
@@ -98,7 +99,8 @@ static void initLayers(void)
 
 	Uint16	CycleTb[]={
 		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
-#ifdef GG
+//#ifdef GG
+#if 0
 		0xffff, 0xff5e, //A1
 		0xffff, 0xffff,	//A0
 		0x0044, 0xeeff,   //B1
@@ -118,7 +120,8 @@ static void initLayers(void)
 	scfg.pnamesize	= SCL_PN1WORD;
 	scfg.flip				= SCL_PN_10BIT;
 	scfg.platesize	= SCL_PL_SIZE_1X1;
-#ifdef GG
+//#ifdef GG
+#if 0
 	scfg.coltype		= SCL_COL_TYPE_256;
 #else
 	scfg.coltype		= SCL_COL_TYPE_16;
@@ -338,11 +341,15 @@ static INT32 SMSExit(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 SMSFrame(void)
 {
+#ifdef GG
+//	cleanSprites();
+#endif
 	if(running)
 	{
 	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
 //	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );//palette2[0];
-#ifdef GG
+//#ifdef GG
+#if 0
 		update_cache();
 #endif
 		sms_frame();
@@ -396,6 +403,7 @@ static void sms_frame(void)
 	}
 	vdp.line = 0;
 	vdp.left = vdp.reg[10];
+	memset(disp_spr,0,64);
 //    for(vdp.line = 0; vdp.line < 262; vdp.line++)
     for(; vdp.line <= 0xc0; ++vdp.line)
 	{
@@ -405,6 +413,9 @@ static void sms_frame(void)
 		CZetRun(228);
 #endif
 		vdp_run(&vdp);
+#ifdef GG
+	render_obj(vdp.line);
+#endif
 		++vdp.line;
 #ifdef RAZE
 		z80_emulate(228);
@@ -412,6 +423,9 @@ static void sms_frame(void)
 		CZetRun(228);
 #endif
 		vdp_run(&vdp);
+#ifdef GG
+	render_obj(vdp.line);
+#endif
 		++vdp.line;
 #ifdef RAZE
 		z80_emulate(228);
@@ -419,6 +433,9 @@ static void sms_frame(void)
 		CZetRun(228);
 #endif
 		vdp_run(&vdp);
+#ifdef GG
+	render_obj(vdp.line);
+#endif
 	}
 
     for(; vdp.line < 0xE0; ++vdp.line)
@@ -588,8 +605,117 @@ static int vdp_ctrl_r(void)
     return (temp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+static void update_bg(t_vdp *vdp, int index)
+{
+//				if(index>=vdp.ntab && index<vdp.ntab+0x700)
+// VBT 04/02/2007 : modif compilo
+		if(index>=vdp->ntab)
+			if( index<vdp->ntab+0x700)
+		{
+			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
+			int delta = map_lut[index - vdp->ntab];
+			UINT16 *map = &ss_map[delta]; 
+			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
+		}
+		/* Mark patterns as dirty */
+		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+		UINT32 bp = *(UINT32 *)&vdp->vram[index & ~3];
+		UINT32 *pg = (UINT32 *) &cache[0x00000 | (index & ~3)];
+		UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index & ~3)];
+		UINT32 temp1 = bp_lut[bp & 0xFFFF];
+		UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
+		*sg= *pg = (temp1<<2 | temp2 );
+//        *pg = (temp1<<2 | temp2 );
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 #ifdef GG
+/*static*/ void cleanSprites()
+{
+	unsigned int delta;	
+	for (delta=3; delta<nBurnSprites; delta++)
+	{
+		ss_sprite[delta].charSize   = 0;
+		ss_sprite[delta].charAddr   = 0;
+		ss_sprite[delta].ax   = 0;
+		ss_sprite[delta].ay   = 0;
+	} 
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/* Draw sprites */
+void render_obj(INT32 line)
+{
+    /* Sprite count for current line (8 max.) */
+    int count = 0;
+
+    /* Sprite dimensions */
+    int width = 8;
+    int height = (vdp.reg[1] & 0x02) ? 16 : 8;
+
+    /* Pointer to sprite attribute table */
+    UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
+
+    /* Adjust dimensions for double size sprites */
+    if(vdp.reg[1] & 0x01)
+    {
+        width   = 16;
+        height *= 2;
+    }
+
+    /* Draw sprites in front-to-back order */
+    for(UINT8 i = 0; i < 64; i += 1)
+    {
+        /* Sprite Y position */
+        int yp = st[i];
+
+        /* End of sprite list marker? */
+        if(yp == 208) return;
+
+        /* Actual Y position is +1 */
+        yp += 1;
+
+        /* Wrap Y coordinate for sprites > 240 */
+        if(yp > 240) yp -= 256;
+
+        /* Pattern name */
+        int n = st[0x81 + (i << 1)];
+
+        /* Check if sprite falls on current line */
+        if((line >= yp) && (line < (yp + height)) && disp_spr[n]==0)
+		{
+			SprSpCmd *ss_spritePtr;
+			ss_spritePtr = &ss_sprite[3];
+			disp_spr[n]=1;
+            /* Sprite X position */
+            int xp = st[0x80 + (i << 1)];
+
+			/* Bump sprite count */
+            count += 1;
+
+            /* Too many sprites on this line ? */
+            if(count == 9) return;
+
+            /* X position shift */
+            if(vdp.reg[0] & 0x08) xp -= 8;
+
+            /* Add MSB of pattern name */
+            if(vdp.reg[6] & 0x04) n |= 0x0100;
+
+            /* Mask LSB for 8x16 sprites */
+            if(vdp.reg[1] & 0x02) n &= 0x01FE;
+
+            /* Draw sprite */
+			ss_spritePtr[n].control	   = ( JUMP_NEXT | FUNC_NORMALSP);
+			ss_spritePtr[n].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+			ss_spritePtr[n].charSize    = (width<<5) + height;  //0x100
+			ss_spritePtr[n].charAddr   =  0x220+(n<<2);//0x100 + (height<<1)*(i+2);
+			ss_spritePtr[n].ax			   = xp;
+			ss_spritePtr[n].ay			   = yp;
+        }
+    }
+}
+
 /* Update pattern cache with modified tiles */
+#if 0
 void update_cache(void)
 {
     int i, x, y, c;
@@ -624,40 +750,16 @@ void update_cache(void)
                     c = (i3 << 3 | i2 << 2 | i1 << 1 | i0);
 
                     cache[0x00000 | (i << 6) | ((y  ) << 3) | (x)] = c;
-                    cache[0x08000 | (i << 6) | ((y  ) << 3) | (x ^ 7)] = c;
-                    cache[0x10000 | (i << 6) | ((y ^ 7) << 3) | (x)] = c;
-                    cache[0x18000 | (i << 6) | ((y ^ 7) << 3) | (x ^ 7)] = c;
-                    ss_vram[0x001100 |  (i << 6) | ((y  ) << 3) | (x)] = c;
-
+//                    cache[0x08000 | (i << 6) | ((y  ) << 3) | (x ^ 7)] = c;
+//                    cache[0x10000 | (i << 6) | ((y ^ 7) << 3) | (x)] = c;
+//                    cache[0x18000 | (i << 6) | ((y ^ 7) << 3) | (x ^ 7)] = c;
+                    ss_vram[0x01100 | (i << 6) | ((y  ) << 3) | (x)] = c;
                 }
             }
         }
     }
 }
-//-------------------------------------------------------------------------------------------------------------------------------------
-static void update_gg_bg(t_vdp *vdp, int index)
-{
-
-//				if(index>=vdp.ntab && index<vdp.ntab+0x700)
-// VBT 04/02/2007 : modif compilo
-		if(index>=vdp->ntab)
-			if( index<vdp->ntab+0x700)
-		{
-			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
-			int delta = map_lut[index - vdp->ntab];
-			UINT16 *map = &ss_map[delta]; 
-			map[0] =map[32] =map[0x700] =map[0x720] = name_lut[temp];
-		}
-		/* Mark patterns as dirty */
-//		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-//		UINT32 bp = *(UINT32 *)&vdp->vram[(index & ~3)];
-//		UINT32 *pg = (UINT32 *) &cache[0x00000 | (index & ~3)];
-//		UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index & ~7)];
-//		UINT32 temp1 = bp_lut[bp & 0xFFFF];
-//		UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
-//		*sg= *pg = (temp1<<4 | temp2 );
-//		*pg = bp_lut[(bp>>16) & 0xFFFF];
-}
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 void vdp_data_w(INT32 offset, UINT8 data)
 {
@@ -676,11 +778,9 @@ void vdp_data_w(INT32 offset, UINT8 data)
                     if(data != vdp.vram[index])
                     {
                         vdp.vram[index] = data;
-						/* Mark patterns as dirty */
-						vram_dirty[(index >> 5)] = is_vram_dirty = 1;
-						update_gg_bg(&vdp,index);
+						update_bg(&vdp,index);
                     }
-
+#if 0
 //VBT : A REMETTRE A LA PLACE  de rederSprite des que le probleme sur yp=208 est résolu
 // VBT04/02/2007 modif compilo
  			if(index>=vdp.satb )
@@ -691,10 +791,19 @@ void vdp_data_w(INT32 offset, UINT8 data)
 
 				// Sprite dimensions 
 				int height = (vdp.reg[1] & 0x02) ? 16 : 8;
+				int width = 8;
 
 				int delta=(index-vdp.satb);
 			// Pointer to sprite attribute table 
 				UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
+
+    /* Adjust dimensions for double size sprites */
+				if(vdp.reg[1] & 0x01)
+				{
+					width *= 2;
+					height *= 2;
+				}
+
 				// Sprite Y position 
 				int yp = st[delta];
 
@@ -720,7 +829,7 @@ void vdp_data_w(INT32 offset, UINT8 data)
 				// Clip sprites on left edge 
 				ss_spritePtr[delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
 				ss_spritePtr[delta].drawMode   = ( COLOR_2 | ECD_DISABLE | COMPO_REP);		
-				ss_spritePtr[delta].charSize   = 0x100+ height;  //0x100
+				ss_spritePtr[delta].charSize   = (width<<5)+ height;  //0x100
 			}
 
 // VBT 04/02/2007 : modif compilo
@@ -740,7 +849,7 @@ void vdp_data_w(INT32 offset, UINT8 data)
 					if(vdp.reg[1] & 0x02) n &= 0x01FE;
 
 //					ss_sprite[delta+3].charAddr   =  0x110+(n<<2);
-					ss_sprite[delta+3].charAddr   =  0x220+(n<<3);
+					ss_sprite[delta+3].charAddr   =  0x220+(n<<3);//0x100 + (height<<1)*(i+2);
 				}
 				else
 				{
@@ -752,11 +861,7 @@ void vdp_data_w(INT32 offset, UINT8 data)
 				}
 
 			}
-
-
-
-
-
+#endif
                     break;
 
                 case 3: /* CRAM write */
@@ -766,15 +871,18 @@ void vdp_data_w(INT32 offset, UINT8 data)
 	                    vdp.cram[(vdp.addr & 0x3E) | (0)] = (vdp.cram_latch >> 0) & 0xFF;
                         vdp.cram[(vdp.addr & 0x3E) | (1)] = (vdp.cram_latch >> 8) & 0xFF;
 
-        int r = (vdp.cram[(((vdp.addr >> 1) & 0x1F) << 1) | (0)] >> 0) & 0x0F;
-        int g = (vdp.cram[(((vdp.addr >> 1) & 0x1F) << 1) | (0)] >> 4) & 0x0F;
-        int b = (vdp.cram[(((vdp.addr >> 1) & 0x1F) << 1) | (1)] >> 0) & 0x0F;
+						index = ((vdp.addr >> 1) & 0x1F) << 1;
+						int r  = (vdp.cram[index | (0)] >> 0) & 0x0F;
+						int g = (vdp.cram[index | (0)] >> 4) & 0x0F;
+						int b = (vdp.cram[index | (1)] >> 0) & 0x0F;
 
 						index = (vdp.addr >> 1) & 0x1F;
-						colBgAddr[index] = RGB(r*2,g*2,b*2);
+						colBgAddr[index] = RGB(r<<1,g<<1,b<<1);
 						if(index >0x0f)
 							colAddr[index-0x0f] =  colBgAddr[index];
-						
+
+//						index = (vdp.addr >> 1) & 0x1F;
+//						colBgAddr[index] = cram_lut[vdp.cram_latch];
                     }
                     else
                     {
@@ -835,29 +943,6 @@ void vdp_data_w(INT32 offset, UINT8 data)
     }
 }
 #else
-//-------------------------------------------------------------------------------------------------------------------------------------
-static void update_bg(t_vdp *vdp, int index)
-{
-//				if(index>=vdp.ntab && index<vdp.ntab+0x700)
-// VBT 04/02/2007 : modif compilo
-		if(index>=vdp->ntab)
-			if( index<vdp->ntab+0x700)
-		{
-			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
-			int delta = map_lut[index - vdp->ntab];
-			UINT16 *map = &ss_map[delta]; 
-			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
-		}
-		/* Mark patterns as dirty */
-		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-		UINT32 bp = *(UINT32 *)&vdp->vram[index & ~3];
-		UINT32 *pg = (UINT32 *) &cache[0x00000 | (index & ~3)];
-		UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index & ~3)];
-		UINT32 temp1 = bp_lut[bp & 0xFFFF];
-		UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
-		*sg= *pg = (temp1<<2 | temp2 );
-//        *pg = (temp1<<2 | temp2 );
-}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Write data to the VDP's data port */
 static void vdp_data_w(INT32 offset, UINT8 data)
@@ -1363,9 +1448,10 @@ static void sms_reset(void)
     memset4_fast(dummy_write, 0, 0x100);
     memset4_fast(sms.ram, 0, 0x2000);
     memset4_fast(sms.sram, 0, 0x8000);
+	memset(disp_spr,0,64);
     sms.port_3F = sms.port_F2 = sms.irq = 0x00;
 //    sms.psg_mask = 0xFF;
-#ifdef GG
+#if 0
     is_vram_dirty = 1;
     memset(vram_dirty, 1, 0x200);
 	sms.ram[0] = 0xA8;
@@ -1605,7 +1691,8 @@ static void make_name_lut()
 		unsigned int name = (i & 0x1FF);
 		unsigned int flip = (i >> 9) & 3;
 		unsigned int pal = (i >> 11) & 1;
-#ifdef GG
+//#ifdef GG
+#if 0
 		name_lut[j] = (flip << 10 | name*2);
 #else
 		name_lut[j] = (pal << 12 | flip << 10 | name);
@@ -1645,17 +1732,48 @@ static void make_bp_lut(void)
 static void make_cram_lut(void)
 {
 //	cram_lut = (UINT16 *)malloc(0x40*sizeof(UINT16));
-#ifdef GG
+//#ifdef GG
+#if 0
 	int cram_latch=0;
 	UINT8 gg_cram_expand_table[16];
+	UINT8 cram[0x40];
+	unsigned int color[2];
+
     for(int i = 0; i < 16; i++)
     {
         UINT8 c2 = i << 4 | i;
         gg_cram_expand_table[i] = c2 >> 3;
     }
 
-    for(unsigned int j = 0; j < 0x2000; j++)
+    for(unsigned int j = 0; j < 0x10000; j++)
     {
+		    for(unsigned int data = 0; data < 256; data++)
+			{
+                    if(j & 1)
+                    {
+                        cram_latch = (cram_latch & 0x00FF) | ((data & 0xFF) << 8);
+	                    cram[(j & 0x3E) | (0)] = (cram_latch >> 0) & 0xFF;
+                        cram[(j & 0x3E) | (1)] = (cram_latch >> 8) & 0xFF;
+
+						int r  = (cram[(((j>> 1) & 0x1F) << 1)  | (0)] >> 0) & 0x0F;
+						int g = (cram[(((j>> 1) & 0x1F) << 1)  | (0)] >> 4) & 0x0F;
+						int b = (cram[(((j>> 1) & 0x1F) << 1)  | (1)] >> 0) & 0x0F;
+//xxxx
+//         int r = (vdp.cram[(((vdp.addr >> 1) & 0x1F) << 1) | (0)] >> 0) & 0x0F;
+//						UINT8 index = (j >> 1) & 0x1F;
+//						colBgAddr[index] = RGB(r*2,g*2,b*2);
+//						if(cram_latch<0x1000)
+						cram_lut[cram_latch&0x1ff]= RGB(r*2,g*2,b*2); 
+                    }
+                    else
+                    {
+                        cram_latch = (cram_latch & 0xFF00) | ((data & 0xFF) << 0);
+                    }
+			}
+
+
+
+
 /*		if(j & 1)
 		{
 			cram_latch = (cram_latch & 0x00FF) | ((j & 0xFF) << 8);
@@ -1687,7 +1805,7 @@ static void make_cram_lut(void)
         b = gg_cram_expand_table[b];  
         cram_lut[j>>1] =RGB(r,g,b);
 		*/
-        cram_lut[j>>1] =RGB(r*2,g*2,b*2);
+///        cram_lut[j>>1] =RGB(r*2,g*2,b*2);
     }
 #else
     for(unsigned int j = 0; j < 0x40; j++)
