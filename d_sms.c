@@ -227,7 +227,7 @@ static void DrvInitSaturn()
 //	drawWindow(32,192,192,14,52);
 	nBurnFunction = update_input1;
 #ifdef GG
-	drawWindow(40,160,160,12,76);
+	drawWindow(48,144,144,12,76);
 #else
 	drawWindow(0,192,192,2,66);
 #endif
@@ -283,9 +283,16 @@ static void sms_start()
 
 	scroll_x= scroll_y = 0;
  	SCL_Open();
+#ifdef GG
+     for(int i = 0; i < 0xC0; i++) ss_scl[i]= 10;
+#else
     for(int i = 0; i < 0xC0; i++) ss_scl[i]= 0;
+#endif
 
 	ss_reg->n0_move_y =  scroll_y;
+#ifdef GG   
+	 ss_reg->n0_move_x = 1<<16;
+#endif
 	sms_reset();
 	load_rom();
 	system_init();
@@ -342,7 +349,7 @@ static INT32 SMSExit(void)
 static INT32 SMSFrame(void)
 {
 #ifdef GG
-//	cleanSprites();
+	cleanSprites();
 #endif
 	if(running)
 	{
@@ -382,6 +389,7 @@ static INT32 SMSFrame(void)
 	{
 		sms_start();
 	}
+
 //__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -414,7 +422,7 @@ static void sms_frame(void)
 #endif
 		vdp_run(&vdp);
 #ifdef GG
-	render_obj(vdp.line);
+//	render_obj(vdp.line);
 #endif
 		++vdp.line;
 #ifdef RAZE
@@ -877,7 +885,7 @@ void vdp_data_w(INT32 offset, UINT8 data)
 						int b = (vdp.cram[index | (1)] >> 0) & 0x0F;
 
 						index = (vdp.addr >> 1) & 0x1F;
-						colBgAddr[index] = RGB(r<<1,g<<1,b<<1);
+						colBgAddr[index] = cram_lut[vdp.cram_latch & 0xfff];//RGB(r<<1,g<<1,b<<1);
 						if(index >0x0f)
 							colAddr[index-0x0f] =  colBgAddr[index];
 
@@ -1089,11 +1097,17 @@ static void vdp_run(t_vdp *vdp)
 {
     if(vdp->line <= 0xC0)
     {
+#ifdef GG
+		if 	(vdp->line < 0x10 && (vdp->reg[0] & 0x40))
+			ss_scl[vdp->line] = 10;
+		else
+			ss_scl[vdp->line] = scroll_x+10;
+#else
 		if 	(vdp->line < 0x10 && (vdp->reg[0] & 0x40))
 			ss_scl[vdp->line] = 0;
 		else
 			ss_scl[vdp->line] = scroll_x;
-
+#endif
         if(vdp->line == 0xC0)
         {
            memcpyl(SS_SPRAM,ss_sprite,(nBurnSprites<<5) ) ;
@@ -1731,81 +1745,16 @@ static void make_bp_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_cram_lut(void)
 {
-//	cram_lut = (UINT16 *)malloc(0x40*sizeof(UINT16));
-//#ifdef GG
-#if 0
-	int cram_latch=0;
-	UINT8 gg_cram_expand_table[16];
-	UINT8 cram[0x40];
-	unsigned int color[2];
-
-    for(int i = 0; i < 16; i++)
+#ifdef GG
+    for(unsigned int j = 0; j < 0x1000; j++)
     {
-        UINT8 c2 = i << 4 | i;
-        gg_cram_expand_table[i] = c2 >> 3;
-    }
-
-    for(unsigned int j = 0; j < 0x10000; j++)
-    {
-		    for(unsigned int data = 0; data < 256; data++)
-			{
-                    if(j & 1)
-                    {
-                        cram_latch = (cram_latch & 0x00FF) | ((data & 0xFF) << 8);
-	                    cram[(j & 0x3E) | (0)] = (cram_latch >> 0) & 0xFF;
-                        cram[(j & 0x3E) | (1)] = (cram_latch >> 8) & 0xFF;
-
-						int r  = (cram[(((j>> 1) & 0x1F) << 1)  | (0)] >> 0) & 0x0F;
-						int g = (cram[(((j>> 1) & 0x1F) << 1)  | (0)] >> 4) & 0x0F;
-						int b = (cram[(((j>> 1) & 0x1F) << 1)  | (1)] >> 0) & 0x0F;
-//xxxx
-//         int r = (vdp.cram[(((vdp.addr >> 1) & 0x1F) << 1) | (0)] >> 0) & 0x0F;
-//						UINT8 index = (j >> 1) & 0x1F;
-//						colBgAddr[index] = RGB(r*2,g*2,b*2);
-//						if(cram_latch<0x1000)
-						cram_lut[cram_latch&0x1ff]= RGB(r*2,g*2,b*2); 
-                    }
-                    else
-                    {
-                        cram_latch = (cram_latch & 0xFF00) | ((data & 0xFF) << 0);
-                    }
-			}
-
-
-
-
-/*		if(j & 1)
-		{
-			cram_latch = (cram_latch & 0x00FF) | ((j & 0xFF) << 8);
-//			vdp.cram[(j & 0x3E) | (0)] = (cram_latch >> 0) & 0xFF;
-//			vdp.cram[(j & 0x3E) | (1)] = (cram_latch >> 8) & 0xFF;
-//			colBgAddr[(j >> 1) & 0x1F] = cram_lut[ vdp.cram_latch & 0xfff];
-        int r = (((cram_latch << 1) | (0)) >> 0) & 0x0F;
-        int g = (((cram_latch << 1) | (0)) >> 4) & 0x0F;
-        int b = (((cram_latch << 1) | (1)) >> 0) & 0x0F;
-        
-			cram_lut[j>>1] =RGB(r,g,b);
-		}
-		else
-		{
-			cram_latch = (cram_latch & 0xFF00) | ((j & 0xFF) << 0);
-		} 	 
- */
-		 int i = ((j) & 0x00FF) | ((j  & 0xFF) <<8);
-		int r = (((i << 1) | 0) >> 0) & 0x0F;
-		int g = (((i << 1) | 0) >> 2) & 0x0F;
-		int b = (((i << 1) | 1) >> 4) & 0x0F;
-
-/*        int r = (((j << 1) | (0)) >> 0) & 0x0F;
-        int g = (((j << 1) | (0)) >> 4) & 0x0F;
-        int b = (((j << 1) | (1)) >> 0) & 0x0F;
-*/        
-/*		r  = gg_cram_expand_table[r];
-        g = gg_cram_expand_table[g];
-        b = gg_cram_expand_table[b];  
-        cram_lut[j>>1] =RGB(r,g,b);
-		*/
-///        cram_lut[j>>1] =RGB(r*2,g*2,b*2);
+       int r = (j >> 0) & 0x0F;
+        int g = (j >> 4) & 0x0F;
+        int b = (j >> 8) & 0x0F;
+		r = (r << 1) | (r >> 3);
+		g = (g << 1) | (g >> 3);
+		b = (b << 1) | (b >> 3);
+		cram_lut[j] =RGB(r,g,b);
     }
 #else
     for(unsigned int j = 0; j < 0x40; j++)
