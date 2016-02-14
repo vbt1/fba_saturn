@@ -129,12 +129,19 @@ LDOVLSMSCZ80FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(
 SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c cz80/cz80.c
 OBJOVLSMSCZ80         = $(SRCOVLSMSCZ80:.c=.o)
 
-OVLGG                 = root/d_gg.coff
-OVLGG1               = root/d_gg.bin
+OVLGG                = root/d_gg.coff
+OVLGG1              = root/d_gg.bin
 MPOVLGGFILE    = $(OVLGG:.coff=.maps)
 LDOVLGGFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVLGG         = d_sms.c psg_sms.c 
 OBJOVLGG         = $(SRCOVLSMS:d_sms.c=gg/d_sms.o)
+
+OVLGGCZ                = root/d_ggcz.coff
+OVLGGCZ1              = root/d_ggcz.bin
+MPOVLGGCZFILE    = $(OVLGGCZ:.coff=.maps)
+LDOVLGGCZFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGCZFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLGGCZ         = d_sms.c psg_sms.c czet.c cz80/cz80.c
+OBJOVLGGCZ         = $(SRCOVLSMS:d_sms.c=ggcz/d_sms.o)
 
 OVLZAXXON                 = root/d_zaxxon.coff
 OVLZAXXON1               = root/d_zaxxon.bin
@@ -204,6 +211,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
      $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) \
+     $(OVLGGCZ) $(OVLGGCZ1) \
      $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
@@ -306,6 +314,12 @@ $(OVLGG) : $(OBJOVLGG) $(MAKEFILE) $(OBJOVLGG) $(LDOVLGGFILE)
 $(OVLGG1) : $(OBJOVLGG) $(MAKEFILE) $(LDOVLGGFILE)
 	$(CONV) -O binary $(OVLGG) $(OVLGG1)
 
+$(OVLGGCZ) : $(OBJOVLGGCZ) $(MAKEFILE) $(OBJOVLGGCZ) $(LDOVLGGCZFILE)
+	$(CC) $(LDOVLGGCZFLAGS) $(OBJOVLGGCZ) $(LIBSOVL) czet.o cz80/cz80.o -o $@
+
+$(OVLGGCZ1) : $(OBJOVLGGCZ) $(MAKEFILE) $(LDOVLGGCZFILE)
+	$(CONV) -O binary $(OVLGGCZ) $(OVLGGCZ1)
+
 $(OVLSMSCZ80) : $(OBJOVLSMSCZ80) $(MAKEFILE) $(OBJOVLSMSCZ80) $(LDOVLSMSCZ80FILE)
 	$(CC) $(LDOVLSMSCZ80FLAGS) $(OBJOVLSMSCZ80) $(LIBSOVL) -o $@
 
@@ -362,5 +376,8 @@ sms/%.o : %.c
 	$(CC) $< $(DFLAGS) -DRAZE=1 $(CCOVLFLAGS) -o $@
 gg/%.o : %.c
 	$(CC) $< $(DFLAGS) -DRAZE=1 -DGG=1 $(CCOVLFLAGS) -o $@
+ggcz/%.o : %.c
+	$(CC) $< $(DFLAGS) -DGG=1 $(CCOVLFLAGS) -o $@
+
 clean:
 	$(RM) $(OBJS) $(TARGET:.coff=.*)

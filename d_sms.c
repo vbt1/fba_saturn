@@ -2,8 +2,10 @@
 #include "d_sms.h"
 #define OLD_SOUND 1
 #define SAMPLE 7680L
+#define TWO_WORDS 1
 //GfsDirName dir_name_sms[512];
 unsigned char disp_spr[64];
+/* Attribute expansion table */
 
 int ovlInit(char *szShortName)
 {
@@ -32,13 +34,23 @@ int ovlInit(char *szShortName)
 		SMSInit, SMSExit, SMSFrame, NULL
 	};
 #else
+#ifdef CZ80
 	struct BurnDriver nBurnDrvsms_akmw = {
-		"gg", NULL,
-		"Sega Game Gear\0",
+		"ggcz", "gg",
+		"Sega Game Gear (CZ80)\0",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
 		SMSInit, SMSExit, SMSFrame, NULL
 	};
+#else
+	struct BurnDriver nBurnDrvsms_akmw = {
+		"gg", NULL,
+		"Sega Game Gear (Faze)\0",
+		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
+//		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
+		SMSInit, SMSExit, SMSFrame, NULL
+	};
+#endif
 #endif
 #endif
 /*struct BurnDriver * */ //fba_drv = 	(struct BurnDriver *)FBA_DRV;
@@ -63,7 +75,6 @@ static void	SetVblank2( void ){
 	INT_ChgMsk(INT_MSK_VBLK_OUT,INT_MSK_NULL);
 	set_imask(imask);
 	__port = PER_OpenPort();
-	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initColors()
@@ -117,8 +128,12 @@ static void initLayers(void)
 //	SCL_InitConfigTb(&scfg);
 	scfg.dispenbl		= ON;
 	scfg.charsize		= SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
+#ifdef TWO_WORDS
+	scfg.pnamesize	= SCL_PN2WORD;
+#else
 	scfg.pnamesize	= SCL_PN1WORD;
 	scfg.flip				= SCL_PN_10BIT;
+#endif
 	scfg.platesize	= SCL_PL_SIZE_1X1;
 //#ifdef GG
 #if 0
@@ -127,6 +142,8 @@ static void initLayers(void)
 	scfg.coltype		= SCL_COL_TYPE_16;
 #endif
 	scfg.datatype	= SCL_CELL;
+// vbt : active le prioritybit en mode 1word
+//	scfg.patnamecontrl =  0x020c;// VRAM B1 のオフセット 
 	scfg.patnamecontrl =  0x000c;// VRAM B1 のオフセット 
 	scfg.plate_addr[0] = ss_map;
 	SCL_SetConfig(SCL_NBG0, &scfg);
@@ -196,7 +213,9 @@ static void DrvInitSaturn()
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
-
+#ifdef TWO_WORDS
+	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
+#endif
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
 
@@ -211,10 +230,20 @@ static void DrvInitSaturn()
 	SaturnMem = (UINT8 *)malloc(nLen);
 	SaturnInitMem();
 	make_lut();
-	
+
+#ifdef TWO_WORDS
+    SS_SET_N0PRIN(4);
+    SS_SET_S0PRIN(4);	
+	SS_SET_N0SPRM(1);  // 1 for special priority	  // mode 2 pixel, mode 1 pattern, mode 0 by screen
+	ss_regs->specialcode=0x000e; // sfcode, upper 8bits, function b, lower 8bits function a
+	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
+	SclProcess = 2; 
+#else
     SS_SET_N0PRIN(5);
-    SS_SET_N1PRIN(7);
     SS_SET_S0PRIN(6);
+#endif
+	SS_SET_N1PRIN(7);
+
 
 	initLayers();
 	initColors();
@@ -224,6 +253,7 @@ static void DrvInitSaturn()
 	initSprites(256-1,192-1,0,0,0,0);
 	
 	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+
 //	drawWindow(32,192,192,14,52);
 	nBurnFunction = update_input1;
 #ifdef GG
@@ -279,12 +309,15 @@ static void sms_start()
 	memset(&ss_vram[0x1100],0,0x10000-0x1100);
 	memset((Uint8 *)cache,0x0,0x20000);
 	memset((Uint8 *)ss_map,0,0x20000);
+#ifdef TWO_WORDS
+	for (int i=1;i<0x1000 ; i+=2 ) ss_map[i]=0x3000;//palette2[0];
+#endif
 	memset((Uint8 *)SCL_VDP2_VRAM_A0,0,0x20000);
 
 	scroll_x= scroll_y = 0;
  	SCL_Open();
 #ifdef GG
-     for(int i = 0; i < 0xC0; i++) ss_scl[i]= 10;
+     for(int i = 0; i < 0xC0; i++) ss_scl[i]= -1<<16;
 #else
     for(int i = 0; i < 0xC0; i++) ss_scl[i]= 0;
 #endif
@@ -304,7 +337,11 @@ static void sms_start()
 static INT32 SMSInit(void)
 {
 #ifndef RAZE
+#ifdef GG
+	ChangeDir("GG");
+#else
 	ChangeDir("SMS");
+#endif
 #endif
 	DrvInitSaturn();
 	sms_start();
@@ -314,6 +351,8 @@ static INT32 SMSInit(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 SMSExit(void)
 {
+	SS_SET_N0SPRM(0);
+	ss_regs->specialcode=0x0000;
 	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
@@ -575,7 +614,11 @@ static void vdp_ctrl_w(int data)
 			{
 				case 8 :
 //					x =  ((vdp.reg[r]) ^ 0xff) & 0xff;
+#ifdef GG
+					scroll_x =  ((vdp.reg[r]) ^ 0xff);
+#else
 					scroll_x =  ((vdp.reg[r]) ^ 0xff) ;
+#endif
 					scroll_x<<=16;
 					break;
 
@@ -621,9 +664,15 @@ static void update_bg(t_vdp *vdp, int index)
 			if( index<vdp->ntab+0x700)
 		{
 			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
-			int delta = map_lut[index - vdp->ntab];
+			unsigned int delta = map_lut[index - vdp->ntab];
 			UINT16 *map = &ss_map[delta]; 
+//xxxx
+#ifdef TWO_WORDS
+			map[0] =map[64] =map[0xE00] =map[0xE40] = name_lut[temp];//color + flip + prio
+			map[1] =map[65] =map[0xE01] =map[0xE41] = ((temp >> 8) & 0xFF) | ((temp  & 0x01) <<8) + 0x3000; //tilenum c00 1800
+#else
 			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
+#endif
 		}
 		/* Mark patterns as dirty */
 		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
@@ -642,8 +691,8 @@ static void update_bg(t_vdp *vdp, int index)
 	unsigned int delta;	
 	for (delta=3; delta<nBurnSprites; delta++)
 	{
-		ss_sprite[delta].charSize   = 0;
-		ss_sprite[delta].charAddr   = 0;
+//		ss_sprite[delta].charSize   = 0;
+//		ss_sprite[delta].charAddr   = 0;
 		ss_sprite[delta].ax   = 0;
 		ss_sprite[delta].ay   = 0;
 	} 
@@ -788,88 +837,6 @@ void vdp_data_w(INT32 offset, UINT8 data)
                         vdp.vram[index] = data;
 						update_bg(&vdp,index);
                     }
-#if 0
-//VBT : A REMETTRE A LA PLACE  de rederSprite des que le probleme sur yp=208 est r駸olu
-// VBT04/02/2007 modif compilo
- 			if(index>=vdp.satb )
-				if( index < vdp.satb+0x40)
-			{
-				SprSpCmd *ss_spritePtr;
-				ss_spritePtr = &ss_sprite[3];
-
-				// Sprite dimensions 
-				int height = (vdp.reg[1] & 0x02) ? 16 : 8;
-				int width = 8;
-
-				int delta=(index-vdp.satb);
-			// Pointer to sprite attribute table 
-				UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
-
-    /* Adjust dimensions for double size sprites */
-				if(vdp.reg[1] & 0x01)
-				{
-					width *= 2;
-					height *= 2;
-				}
-
-				// Sprite Y position 
-				int yp = st[delta];
-
-				if(yp == 208) 
-				{
-					
-					ss_spritePtr[delta].control = CTRL_END;
-					ss_spritePtr[delta].drawMode = 0;
-					ss_spritePtr[delta].charAddr	= 0;
-					ss_spritePtr[delta].charSize		= 0;
-					ss_spritePtr[delta].ax	= 0;
-					ss_spritePtr[delta].ay	= 0;
-//					nbSprites = delta+5;
-//ajouter un flag
-					break;
-				}
-				//Actual Y position is +1 
-				yp ++;
-				//Wrap Y coordinate for sprites > 240 
-				if(yp > 240) yp -= 256;
-				ss_spritePtr[delta].ay = yp;
-
-				// Clip sprites on left edge 
-				ss_spritePtr[delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
-				ss_spritePtr[delta].drawMode   = ( COLOR_2 | ECD_DISABLE | COMPO_REP);		
-				ss_spritePtr[delta].charSize   = (width<<5)+ height;  //0x100
-			}
-
-// VBT 04/02/2007 : modif compilo
-
-			if(index>=vdp.satb+0x80)
-				if(index < vdp.satb+0x100)
-			{
-				UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
-				int delta=((index-(vdp.satb+0x80)))>>1;
-
-				if((index-vdp.satb) &1)
-				{
-					int n = st[0x81 + (delta << 1)];
-					//Add MSB of pattern name 
-					if(vdp.reg[6] & 0x04) n |= 0x0100;
-					//Mask LSB for 8x16 sprites 
-					if(vdp.reg[1] & 0x02) n &= 0x01FE;
-
-//					ss_sprite[delta+3].charAddr   =  0x110+(n<<2);
-					ss_sprite[delta+3].charAddr   =  0x220+(n<<3);//0x100 + (height<<1)*(i+2);
-				}
-				else
-				{
-						//Sprite X position 
-					int xp = st[0x80 + (delta << 1)];
-					//X position shift 
-					if(vdp.reg[0] & 0x08) xp -= 8;
-					ss_sprite[delta+3].ax = xp;
-				}
-
-			}
-#endif
                     break;
 
                 case 3: /* CRAM write */
@@ -879,18 +846,10 @@ void vdp_data_w(INT32 offset, UINT8 data)
 	                    vdp.cram[(vdp.addr & 0x3E) | (0)] = (vdp.cram_latch >> 0) & 0xFF;
                         vdp.cram[(vdp.addr & 0x3E) | (1)] = (vdp.cram_latch >> 8) & 0xFF;
 
-						index = ((vdp.addr >> 1) & 0x1F) << 1;
-						int r  = (vdp.cram[index | (0)] >> 0) & 0x0F;
-						int g = (vdp.cram[index | (0)] >> 4) & 0x0F;
-						int b = (vdp.cram[index | (1)] >> 0) & 0x0F;
-
 						index = (vdp.addr >> 1) & 0x1F;
 						colBgAddr[index] = cram_lut[vdp.cram_latch & 0xfff];//RGB(r<<1,g<<1,b<<1);
 						if(index >0x0f)
 							colAddr[index-0x0f] =  colBgAddr[index];
-
-//						index = (vdp.addr >> 1) & 0x1F;
-//						colBgAddr[index] = cram_lut[vdp.cram_latch];
                     }
                     else
                     {
@@ -1095,31 +1054,22 @@ static int vdp_data_r(void)
 
 static void vdp_run(t_vdp *vdp)
 {
+#ifdef GG
     if(vdp->line <= 0xC0)
     {
-#ifdef GG
-		if 	(vdp->line < 0x10 && (vdp->reg[0] & 0x40))
-			ss_scl[vdp->line] = 10;
-		else
-			ss_scl[vdp->line] = scroll_x+10;
-#else
-		if 	(vdp->line < 0x10 && (vdp->reg[0] & 0x40))
-			ss_scl[vdp->line] = 0;
-		else
-			ss_scl[vdp->line] = scroll_x;
-#endif
         if(vdp->line == 0xC0)
         {
-           memcpyl(SS_SPRAM,ss_sprite,(nBurnSprites<<5) ) ;
             vdp->status |= 0x80;
         }
-	/*	else
+
+        if(vdp->line == 0)
+        {
+            vdp->left = vdp->reg[10];
+        }
+		else
 		{
-			if(vdp->line == 0)
-			{
-				vdp->left = vdp->reg[10];
-			} 
-		}	  */
+			ss_scl[vdp->line-1] = scroll_x;
+		}
 
         if(vdp->left == 0)
         {
@@ -1139,18 +1089,59 @@ static void vdp_run(t_vdp *vdp)
 //			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
 			CZetRaiseIrq(0);
 #endif
-        }
+		}
     }
-/*    else
+    else
     {
         vdp->left = vdp->reg[10];
 
         if((vdp->line < 0xE0) && (vdp->status & 0x80) && (vdp->reg[1] & 0x20))
         {
             sms.irq = 1;
-            z80_raise_IRQ(0);
+#ifdef RAZE
+			z80_raise_IRQ(0);
+#else
+//			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			CZetRaiseIrq(0);
+#endif
+		}
+    }
+#else
+    if(vdp->line <= 0xC0)
+    {
+		if 	(vdp->line < 0x10 && (vdp->reg[0] & 0x40))
+			ss_scl[vdp->line] = 0;
+		else
+			ss_scl[vdp->line] = scroll_x;
+
+        if(vdp->line == 0xC0)
+        {
+           memcpyl(SS_SPRAM,ss_sprite,(nBurnSprites<<5) ) ;
+            vdp->status |= 0x80;
         }
-    }	*/
+
+		if(vdp->left == 0)
+        {
+            vdp->left = vdp->reg[10];
+            vdp->status |= 0x40;
+        }
+        else
+        {
+            vdp->left -= 1;
+        }
+
+        if((vdp->status & 0x40) && (vdp->reg[0] & 0x10))
+        {
+            sms.irq = 1;
+#ifdef RAZE
+			z80_raise_IRQ(0);
+#else
+//			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			CZetRaiseIrq(0);
+#endif
+        }
+    }
+#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static UINT8 vdp_vcounter_r(void)
@@ -1692,7 +1683,11 @@ static void make_map_lut()
 	{
 		row = i & 0x7C0;
 		column = (i>>1) & 0x1F;
+#ifdef TWO_WORDS
+		map_lut[i] = (row+column)<<1;
+#else
 		map_lut[i] = row+column;
+#endif
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1701,15 +1696,28 @@ static void make_name_lut()
 	unsigned int i, j;
 	for(j = 0; j < 0x10000; j++)
 	{
-		i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
-		unsigned int name = (i & 0x1FF);
-		unsigned int flip = (i >> 9) & 3;
-		unsigned int pal = (i >> 11) & 1;
 //#ifdef GG
 #if 0
-		name_lut[j] = (flip << 10 | name*2);
+		name_lut[j] = (flip << 10 | name);
 #else
+		i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
+		unsigned int flip = (i >> 9) & 3;
+		unsigned int pal = (i >> 11) & 1;
+#ifdef TWO_WORDS
+/*
+Bit 15 - 13: Unused
+Bit 12: Priority flag
+Bit 11: Which palette to use
+Bit 10: Vertical Flip Flag
+Bit 09: Horizontal Flip Flag
+Bit 08 - 00 : Pattern Index 
+*/
+		unsigned int priority = (i >> 12) & 1;
+		name_lut[j] = (flip << 14 | priority << 13 | pal);
+#else
+		unsigned int name = (i & 0x1FF);
 		name_lut[j] = (pal << 12 | flip << 10 | name);
+#endif
 #endif
 	}
 }

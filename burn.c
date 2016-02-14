@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 33
+#define NB_DRV 34
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -91,6 +91,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_cz80 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_gg = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvsms_ggcz = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvCongo = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvZaxxon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvZaxxonb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
@@ -115,8 +116,12 @@ BurnDrvsms_cz80.szFullNameA="Sega Master System (CZ80)";
 BurnDrvsms_cz80.szParent=NULL;
 
 BurnDrvsms_gg.szShortName="gg";
-BurnDrvsms_gg.szFullNameA="Sega Game Gear";
+BurnDrvsms_gg.szFullNameA="Sega Game Gear (Faze)";
 BurnDrvsms_gg.szParent=NULL;
+
+BurnDrvsms_ggcz.szShortName="ggcz";
+BurnDrvsms_ggcz.szFullNameA="Sega Game Gear (CZ80)";
+BurnDrvsms_ggcz.szParent=NULL;
 
 BurnDrvsg1k_wboy.szShortName="sg1000";
 BurnDrvsg1k_wboy.szFullNameA="Sega SG-1000";
@@ -274,6 +279,7 @@ unsigned int i=0;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsms_cz80;
 pDriver[i++] = &BurnDrvsms_gg;
+pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 //pDriver[i++] = &BurnDrvWbmlb;
 pDriver[i++] = &BurnDrvbankp;

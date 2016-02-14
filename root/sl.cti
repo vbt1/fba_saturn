@@ -89,6 +89,10 @@ Track MODE1
 				Source D_GG.BIN
 			EndFile
 
+			File D_GGCZ.BIN;1
+				Source D_GGCZ.BIN
+			EndFile
+
 			File D_SYS1.BIN;1
 				Source D_SYS1.BIN
 			EndFile
