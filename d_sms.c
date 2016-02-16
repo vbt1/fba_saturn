@@ -459,17 +459,7 @@ static void sms_frame(void)
 #else
 		CZetRun(228);
 #endif
-		vdp_run(&vdp);
-#ifdef GG
-//	render_obj(vdp.line);
-#endif
-		++vdp.line;
-#ifdef RAZE
-		z80_emulate(228);
-#else
-		CZetRun(228);
-#endif
-		vdp_run(&vdp);
+		vdp_run(&vdp);	
 #ifdef GG
 	render_obj(vdp.line);
 #endif
@@ -483,6 +473,17 @@ static void sms_frame(void)
 #ifdef GG
 	render_obj(vdp.line);
 #endif
+		++vdp.line;
+#ifdef RAZE
+		z80_emulate(228);
+#else
+		CZetRun(228);
+#endif
+		vdp_run(&vdp);
+#ifdef GG
+	render_obj(vdp.line);
+#endif
+//		++vdp.line;
 	}
 
     for(; vdp.line < 0xE0; ++vdp.line)
@@ -714,18 +715,31 @@ void render_obj(INT32 line)
     /* Adjust dimensions for double size sprites */
     if(vdp.reg[1] & 0x01)
     {
-        width   = 16;
+        width   *= 2;
         height *= 2;
     }
+
+	SprSpCmd *ss_spritePtr;
+	ss_spritePtr = &ss_sprite[3];
 
     /* Draw sprites in front-to-back order */
     for(UINT8 i = 0; i < 64; i += 1)
     {
         /* Sprite Y position */
         int yp = st[i];
-
+//		int	delta=(index-vdp.satb);
         /* End of sprite list marker? */
-        if(yp == 208) return;
+        if(yp == 208)
+		{
+			ss_spritePtr[i].control = CTRL_END;
+			ss_spritePtr[i].drawMode = 0;
+			ss_spritePtr[i].charAddr	= 0;
+			ss_spritePtr[i].charSize		= 0;
+			ss_spritePtr[i].ax	= 0;
+			ss_spritePtr[i].ay	= 0;
+			return;			
+		}
+
 
         /* Actual Y position is +1 */
         yp += 1;
@@ -733,15 +747,13 @@ void render_obj(INT32 line)
         /* Wrap Y coordinate for sprites > 240 */
         if(yp > 240) yp -= 256;
 
-        /* Pattern name */
-        int n = st[0x81 + (i << 1)];
-
         /* Check if sprite falls on current line */
-        if((line >= yp) && (line < (yp + height)) && disp_spr[n]==0)
+        if((line >= yp) && (line < (yp + height)) && disp_spr[i]==0)
 		{
-			SprSpCmd *ss_spritePtr;
-			ss_spritePtr = &ss_sprite[3];
-			disp_spr[n]=1;
+			/* Pattern name */
+			int n = st[0x81 + (i << 1)];
+
+			disp_spr[i]=1;
             /* Sprite X position */
             int xp = st[0x80 + (i << 1)];
 
@@ -761,12 +773,13 @@ void render_obj(INT32 line)
             if(vdp.reg[1] & 0x02) n &= 0x01FE;
 
             /* Draw sprite */
-			ss_spritePtr[n].control	   = ( JUMP_NEXT | FUNC_NORMALSP);
-			ss_spritePtr[n].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-			ss_spritePtr[n].charSize    = (width<<5) + height;  //0x100
-			ss_spritePtr[n].charAddr   =  0x220+(n<<2);//0x100 + (height<<1)*(i+2);
-			ss_spritePtr[n].ax			   = xp;
-			ss_spritePtr[n].ay			   = yp;
+			ss_spritePtr[i].control	   = ( JUMP_NEXT | FUNC_NORMALSP);
+			ss_spritePtr[i].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+			ss_spritePtr[i].charSize    = (width<<5) + height;  //0x100
+			ss_spritePtr[i].charAddr   =  0x220+(n<<2);//0x100 + (height<<1)*(i+2);
+			ss_spritePtr[i].ax			   = xp;
+			ss_spritePtr[i].ay			   = yp;
+
         }
     }
 }
@@ -1696,10 +1709,6 @@ static void make_name_lut()
 	unsigned int i, j;
 	for(j = 0; j < 0x10000; j++)
 	{
-//#ifdef GG
-#if 0
-		name_lut[j] = (flip << 10 | name);
-#else
 		i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
 		unsigned int flip = (i >> 9) & 3;
 		unsigned int pal = (i >> 11) & 1;
@@ -1717,7 +1726,6 @@ Bit 08 - 00 : Pattern Index
 #else
 		unsigned int name = (i & 0x1FF);
 		name_lut[j] = (pal << 12 | flip << 10 | name);
-#endif
 #endif
 	}
 }
