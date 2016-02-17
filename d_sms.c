@@ -860,9 +860,9 @@ void vdp_data_w(INT32 offset, UINT8 data)
                         vdp.cram[(vdp.addr & 0x3E) | (1)] = (vdp.cram_latch >> 8) & 0xFF;
 
 						index = (vdp.addr >> 1) & 0x1F;
-						colBgAddr[index] = cram_lut[vdp.cram_latch & 0xfff];//RGB(r<<1,g<<1,b<<1);
+						colBgAddr[index] = cram_lut[vdp.cram_latch & 0x0fff];//RGB(r<<1,g<<1,b<<1);
 						if(index >0x0f)
-							colAddr[index-0x0f] =  colBgAddr[index];
+							colAddr[index&0x0f] =  colBgAddr[index];
                     }
                     else
                     {
