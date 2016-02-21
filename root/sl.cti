@@ -2346,9 +2346,9 @@ EndFile
 File ECCO_T_2.GG;1
 	Source L:\PC\GAME_G~2\ECCO_T~2.GG
 EndFile
-File ENDURO_1.GG;1
-	Source L:\PC\GAME_G~2\ENDURO~1.GG
-EndFile
+#File ENDURO_1.GG;1
+#	Source L:\PC\GAME_G~2\ENDURO~1.GG
+#EndFile
 File EVANDE_1.GG;1
 	Source L:\PC\GAME_G~2\EVANDE~1.GG
 EndFile
@@ -2439,9 +2439,9 @@ EndFile
 File JUNCTION.GG;1
 	Source L:\PC\GAME_G~2\JUNCTION.GG
 EndFile
-File JUNGLE_1.GG;1
-	Source L:\PC\GAME_G~2\JUNGLE~1.GG
-EndFile
+#File JUNGLE_1.GG;1
+#	Source L:\PC\GAME_G~2\JUNGLE~1.GG
+#EndFile
 File JURASS_1.GG;1
 	Source L:\PC\GAME_G~2\JURASS~1.GG
 EndFile
@@ -2484,9 +2484,9 @@ EndFile
 File MICKEY_1.GG;1
 	Source L:\PC\GAME_G~2\MICKEY~1.GG
 EndFile
-File MICKEY_2.GG;1
-	Source L:\PC\GAME_G~2\MICKEY~2.GG
-EndFile
+#File MICKEY_2.GG;1
+#	Source L:\PC\GAME_G~2\MICKEY~2.GG
+#EndFile
 File MICK___1.GG;1
 	Source L:\PC\GAME_G~2\MICK__~1.GG
 EndFile
@@ -2496,12 +2496,12 @@ EndFile
 File MORTAL_1.GG;1
 	Source L:\PC\GAME_G~2\MORTAL~1.GG
 EndFile
-File MORTAL_2.GG;1
-	Source L:\PC\GAME_G~2\MORTAL~2.GG
-EndFile
-File MORTAL_3.GG;1
-	Source L:\PC\GAME_G~2\MORTAL~3.GG
-EndFile
+#File MORTAL_2.GG;1
+#	Source L:\PC\GAME_G~2\MORTAL~2.GG
+#EndFile
+#File MORTAL_3.GG;1
+#	Source L:\PC\GAME_G~2\MORTAL~3.GG
+#EndFile
 File NBA_AC_1.GG;1
 	Source L:\PC\GAME_G~2\NBA_AC~1.GG
 EndFile
@@ -2529,15 +2529,15 @@ EndFile
 File OUTRUN.GG;1
 	Source L:\PC\GAME_G~2\OUTRUN.GG
 EndFile
-File OUTRUN_1.GG;1
-	Source L:\PC\GAME_G~2\OUTRUN~1.GG
-EndFile
-File PAC_AT_1.GG;1
-	Source L:\PC\GAME_G~2\PAC_AT~1.GG
-EndFile
-File PAPERBOY.GG;1
-	Source L:\PC\GAME_G~2\PAPERBOY.GG
-EndFile
+#File OUTRUN_1.GG;1
+#	Source L:\PC\GAME_G~2\OUTRUN~1.GG
+#EndFile
+#File PAC_AT_1.GG;1
+#	Source L:\PC\GAME_G~2\PAC_AT~1.GG
+#EndFile
+#File PAPERBOY.GG;1
+#	Source L:\PC\GAME_G~2\PAPERBOY.GG
+#EndFile
 File PGA_TO_1.GG;1
 	Source L:\PC\GAME_G~2\PGA_TO~1.GG
 EndFile
@@ -2595,9 +2595,9 @@ EndFile
 File ROAD_R_1.GG;1
 	Source L:\PC\GAME_G~2\ROAD_R~1.GG
 EndFile
-File ROBOCO_1.GG;1
-	Source L:\PC\GAME_G~2\ROBOCO~1.GG
-EndFile
+#File ROBOCO_1.GG;1
+#	Source L:\PC\GAME_G~2\ROBOCO~1.GG
+#EndFile
 File ROBOCO_2.GG;1
 	Source L:\PC\GAME_G~2\ROBOCO~2.GG
 EndFile
@@ -2667,18 +2667,18 @@ EndFile
 File SPIDER_1.GG;1
 	Source L:\PC\GAME_G~2\SPIDER~1.GG
 EndFile
-File SPIDER_2.GG;1
-	Source L:\PC\GAME_G~2\SPIDER~2.GG
-EndFile
+#File SPIDER_2.GG;1
+#	Source L:\PC\GAME_G~2\SPIDER~2.GG
+#EndFile
 File SPORTS_1.GG;1
 	Source L:\PC\GAME_G~2\SPORTS~1.GG
 EndFile
 File SPORTS_2.GG;1
 	Source L:\PC\GAME_G~2\SPORTS~2.GG
 EndFile
-File STARGATE.GG;1
-	Source L:\PC\GAME_G~2\STARGATE.GG
-EndFile
+#File STARGATE.GG;1
+#	Source L:\PC\GAME_G~2\STARGATE.GG
+#EndFile
 File STAR_W_1.GG;1
 	Source L:\PC\GAME_G~2\STAR_W~1.GG
 EndFile
@@ -2703,9 +2703,9 @@ EndFile
 File SUPER__4.GG;1
 	Source L:\PC\GAME_G~2\SUPER_~4.GG
 EndFile
-File SURF_N_1.GG;1
-	Source L:\PC\GAME_G~2\SURF_N~1.GG
-EndFile
+#File SURF_N_1.GG;1
+#	Source L:\PC\GAME_G~2\SURF_N~1.GG
+#EndFile
 File TAILS__1.GG;1
 	Source L:\PC\GAME_G~2\TAILS_~1.GG
 EndFile
@@ -2766,9 +2766,9 @@ EndFile
 File WORLD__2.GG;1
 	Source L:\PC\GAME_G~2\WORLD_~2.GG
 EndFile
-File WORLD__3.GG;1
-	Source L:\PC\GAME_G~2\WORLD_~3.GG
-EndFile
+#File WORLD__3.GG;1
+#	Source L:\PC\GAME_G~2\WORLD_~3.GG
+#EndFile
 File WWF_RAW.GG;1
 	Source L:\PC\GAME_G~2\WWF_RAW.GG
 EndFile

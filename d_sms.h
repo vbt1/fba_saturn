@@ -68,9 +68,9 @@ typedef struct
     UINT8 buffer;
     UINT8 code;
     UINT16 addr;
-    INT32 ntab;
-    INT32 satb;
-    INT32 line;
+    UINT32 ntab;
+    UINT32 satb;
+    UINT32 line;
     INT32 left;
 #ifdef GG
     UINT16 cram_latch;

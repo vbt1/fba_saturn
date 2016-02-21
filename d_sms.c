@@ -4,7 +4,11 @@
 #define SAMPLE 7680L
 #define TWO_WORDS 1
 //GfsDirName dir_name_sms[512];
+#ifdef GG0
+//unsigned char spr_table[256];
 unsigned char disp_spr[64];
+unsigned char curr_sprite=0;
+#endif
 /* Attribute expansion table */
 
 int ovlInit(char *szShortName)
@@ -310,7 +314,7 @@ static void sms_start()
 	memset((Uint8 *)cache,0x0,0x20000);
 	memset((Uint8 *)ss_map,0,0x20000);
 #ifdef TWO_WORDS
-	for (int i=1;i<0x1000 ; i+=2 ) ss_map[i]=0x3000;//palette2[0];
+	for (int i=1;i<0x2000 ; i+=2 ) ss_map[i]=0x3000;//palette2[0];
 #endif
 	memset((Uint8 *)SCL_VDP2_VRAM_A0,0,0x20000);
 
@@ -387,7 +391,7 @@ static INT32 SMSExit(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 SMSFrame(void)
 {
-#ifdef GG
+#ifdef GG0
 	cleanSprites();
 #endif
 	if(running)
@@ -450,7 +454,7 @@ static void sms_frame(void)
 	}
 	vdp.line = 0;
 	vdp.left = vdp.reg[10];
-	memset(disp_spr,0,64);
+
 //    for(vdp.line = 0; vdp.line < 262; vdp.line++)
     for(; vdp.line <= 0xc0; ++vdp.line)
 	{
@@ -460,7 +464,7 @@ static void sms_frame(void)
 		CZetRun(228);
 #endif
 		vdp_run(&vdp);	
-#ifdef GG
+#ifdef GG0
 	render_obj(vdp.line);
 #endif
 		++vdp.line;
@@ -470,7 +474,7 @@ static void sms_frame(void)
 		CZetRun(228);
 #endif
 		vdp_run(&vdp);
-#ifdef GG
+#ifdef GG0
 	render_obj(vdp.line);
 #endif
 		++vdp.line;
@@ -480,7 +484,7 @@ static void sms_frame(void)
 		CZetRun(228);
 #endif
 		vdp_run(&vdp);
-#ifdef GG
+#ifdef GG0
 	render_obj(vdp.line);
 #endif
 //		++vdp.line;
@@ -661,8 +665,9 @@ static void update_bg(t_vdp *vdp, int index)
 {
 //				if(index>=vdp.ntab && index<vdp.ntab+0x700)
 // VBT 04/02/2007 : modif compilo
-		if(index>=vdp->ntab)
-			if( index<vdp->ntab+0x700)
+	if(index>=vdp->ntab)
+	{
+		if( index<vdp->ntab+0x700)
 		{
 			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
 			unsigned int delta = map_lut[index - vdp->ntab];
@@ -675,6 +680,23 @@ static void update_bg(t_vdp *vdp, int index)
 			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
 #endif
 		}
+	}
+#ifdef GG0
+	else if(index>=vdp->satb)
+	{
+		if(index < vdp->satb+64)
+		{
+			disp_spr[index-vdp->satb]=0;
+		}
+		else if(index>=vdp->satb+128 && index < vdp->satb+256)
+		{
+			unsigned char pos = ((index-vdp->satb)>>1) & 0x3f;
+			disp_spr[pos]=0;
+		}
+	}
+	else
+	{
+#endif
 		/* Mark patterns as dirty */
 		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 		UINT32 bp = *(UINT32 *)&vdp->vram[index & ~3];
@@ -683,17 +705,24 @@ static void update_bg(t_vdp *vdp, int index)
 		UINT32 temp1 = bp_lut[bp & 0xFFFF];
 		UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
 		*sg= *pg = (temp1<<2 | temp2 );
+#ifdef GG0
+	}
+#endif
 //        *pg = (temp1<<2 | temp2 );
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifdef GG
+#ifdef GG0
 /*static*/ void cleanSprites()
 {
-	unsigned int delta;	
-	for (delta=3; delta<nBurnSprites; delta++)
+
+	memset4_fast(disp_spr,0,64);
+	curr_sprite = 0;
+	
+	for (unsigned int delta=3; delta<nBurnSprites; delta++)
 	{
-//		ss_sprite[delta].charSize   = 0;
-//		ss_sprite[delta].charAddr   = 0;
+		ss_sprite[delta].charSize   = 0;
+		ss_sprite[delta].charAddr   = 0;
 		ss_sprite[delta].ax   = 0;
 		ss_sprite[delta].ay   = 0;
 	} 
@@ -715,7 +744,7 @@ void render_obj(INT32 line)
     /* Adjust dimensions for double size sprites */
     if(vdp.reg[1] & 0x01)
     {
-        width   *= 2;
+        width  *= 2;
         height *= 2;
     }
 
@@ -725,65 +754,69 @@ void render_obj(INT32 line)
     /* Draw sprites in front-to-back order */
     for(UINT8 i = 0; i < 64; i += 1)
     {
-        /* Sprite Y position */
-        int yp = st[i];
-//		int	delta=(index-vdp.satb);
-        /* End of sprite list marker? */
-        if(yp == 208)
+		/* Sprite Y position */
+		int yp = st[i];
+
+		/* Actual Y position is +1 */
+		yp += 1;
+
+		/* Wrap Y coordinate for sprites > 240 */
+		if(yp > 240) yp -= 256;
+ 
+		/* Check if sprite falls on current line */
+		if((line >= yp) && (line < (yp + height)))
 		{
-			ss_spritePtr[i].control = CTRL_END;
-			ss_spritePtr[i].drawMode = 0;
-			ss_spritePtr[i].charAddr	= 0;
-			ss_spritePtr[i].charSize		= 0;
-			ss_spritePtr[i].ax	= 0;
-			ss_spritePtr[i].ay	= 0;
-			return;			
+			if(disp_spr[i]==0)
+			{
+				disp_spr[i]=1;
+
+		//		int	delta=(index-vdp.satb);
+				/* End of sprite list marker? */
+				if(yp == 208)
+				{
+					ss_spritePtr[curr_sprite].control = CTRL_END;
+					ss_spritePtr[curr_sprite].drawMode = 0;
+					ss_spritePtr[curr_sprite].charAddr	= 0;
+					ss_spritePtr[curr_sprite].charSize		= 0;
+					ss_spritePtr[curr_sprite].ax	= 0;
+					ss_spritePtr[curr_sprite].ay	= 0;
+					return;			
+				}
+
+				/* Bump sprite count */
+				count += 1;
+
+				/* Too many sprites on this line ? */
+				if(count == 9) return;
+
+				/* Pattern name */
+				int n = st[0x81 + (i << 1)];
+
+				/* Sprite X position */
+				int xp = st[0x80 + (i << 1)];
+
+				/* X position shift */
+				if(vdp.reg[0] & 0x08) xp -= 8;
+
+				/* Add MSB of pattern name */
+				if(vdp.reg[6] & 0x04) n |= 0x0100;
+
+				/* Mask LSB for 8x16 sprites */
+				if(vdp.reg[1] & 0x02) n &= 0x01FE;
+
+				/* Draw sprite */
+				ss_spritePtr[curr_sprite].control	      = ( JUMP_NEXT | FUNC_NORMALSP);
+				ss_spritePtr[curr_sprite].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+				ss_spritePtr[curr_sprite].charSize    = (width<<5) + height;  //0x100
+				ss_spritePtr[curr_sprite].charAddr   =  0x220+(n<<2);//0x100 + (height<<1)*(i+2);
+				ss_spritePtr[curr_sprite].ax			  = xp;
+				ss_spritePtr[curr_sprite].ay			  = yp;
+				curr_sprite++;
+			}
 		}
-
-
-        /* Actual Y position is +1 */
-        yp += 1;
-
-        /* Wrap Y coordinate for sprites > 240 */
-        if(yp > 240) yp -= 256;
-
-        /* Check if sprite falls on current line */
-        if((line >= yp) && (line < (yp + height)) && disp_spr[i]==0)
-		{
-			/* Pattern name */
-			int n = st[0x81 + (i << 1)];
-
-			disp_spr[i]=1;
-            /* Sprite X position */
-            int xp = st[0x80 + (i << 1)];
-
-			/* Bump sprite count */
-            count += 1;
-
-            /* Too many sprites on this line ? */
-            if(count == 9) return;
-
-            /* X position shift */
-            if(vdp.reg[0] & 0x08) xp -= 8;
-
-            /* Add MSB of pattern name */
-            if(vdp.reg[6] & 0x04) n |= 0x0100;
-
-            /* Mask LSB for 8x16 sprites */
-            if(vdp.reg[1] & 0x02) n &= 0x01FE;
-
-            /* Draw sprite */
-			ss_spritePtr[i].control	   = ( JUMP_NEXT | FUNC_NORMALSP);
-			ss_spritePtr[i].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-			ss_spritePtr[i].charSize    = (width<<5) + height;  //0x100
-			ss_spritePtr[i].charAddr   =  0x220+(n<<2);//0x100 + (height<<1)*(i+2);
-			ss_spritePtr[i].ax			   = xp;
-			ss_spritePtr[i].ay			   = yp;
-
-        }
     }
 }
-
+#endif
 /* Update pattern cache with modified tiles */
 #if 0
 void update_cache(void)
@@ -850,6 +883,84 @@ void vdp_data_w(INT32 offset, UINT8 data)
                         vdp.vram[index] = data;
 						update_bg(&vdp,index);
                     }
+
+ 			if(index>=vdp.satb )
+				if( index < vdp.satb+0x40)
+			{
+				SprSpCmd *ss_spritePtr;
+				ss_spritePtr = &ss_sprite[3];
+
+				// Sprite dimensions 
+				unsigned int height = (vdp.reg[1] & 0x02) ? 16 : 8;
+				unsigned int width  = 8;
+				unsigned int delta=(index-vdp.satb);
+			// Pointer to sprite attribute table 
+				UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
+				// Sprite Y position 
+				int yp = st[delta];
+
+				if(yp == 208) 
+				{
+					
+					ss_spritePtr[delta].control = CTRL_END;
+					ss_spritePtr[delta].drawMode = 0;
+					ss_spritePtr[delta].charAddr	= 0;
+					ss_spritePtr[delta].charSize		= 0;
+					ss_spritePtr[delta].ax	= 0;
+					ss_spritePtr[delta].ay	= 0;
+//					nbSprites = delta+5;
+//ajouter un flag
+					break;
+				}
+				//Actual Y position is +1 
+				yp ++;
+				//Wrap Y coordinate for sprites > 240 
+				if(yp > 240) yp -= 256;
+				ss_spritePtr[delta].ay = yp;
+
+				/* Adjust dimensions for double size sprites */
+				if(vdp.reg[1] & 0x01)
+				{
+					width  = 16;
+					height *= 2;
+				}
+
+				// Clip sprites on left edge 
+				ss_spritePtr[delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
+				ss_spritePtr[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+				ss_spritePtr[delta].charSize    = (width<<5) + height;  //0x100
+			}
+
+// VBT 04/02/2007 : modif compilo
+//-----------------------------------------------------------------------------------------------
+			if(index>=vdp.satb+0x80)
+				if(index < vdp.satb+0x100)
+			{
+				UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
+				unsigned int delta=((index-(vdp.satb+0x80)))>>1;
+
+				if((index-vdp.satb) &1)
+				{
+					int n = st[0x81 + (delta << 1)];
+					//Add MSB of pattern name 
+					if(vdp.reg[6] & 0x04) n |= 0x0100;
+					//Mask LSB for 8x16 sprites 
+					if(vdp.reg[1] & 0x02) n &= 0x01FE;
+
+//					ss_sprite[delta+3].charAddr   =  0x110+(n<<2);
+					ss_sprite[delta+3].charAddr   =  0x220+(n<<2);
+				}
+				else
+				{
+						//Sprite X position 
+					int xp = st[0x80 + (delta << 1)];
+					//X position shift 
+					if(vdp.reg[0] & 0x08) xp -= 8;
+					ss_sprite[delta+3].ax = xp;
+				}
+	
+			}
+//-----------------------------------------------------------------------------------------------
                     break;
 
                 case 3: /* CRAM write */
@@ -959,7 +1070,7 @@ static void vdp_data_w(INT32 offset, UINT8 data)
 				ss_spritePtr = &ss_sprite[3];
 
 				// Sprite dimensions 
-				int height = (vdp.reg[1] & 0x02) ? 16 : 8;
+				unsigned int height = (vdp.reg[1] & 0x02) ? 16 : 8;
 
 				delta=(index-vdp.satb);
 			// Pointer to sprite attribute table 
@@ -1466,7 +1577,10 @@ static void sms_reset(void)
     memset4_fast(dummy_write, 0, 0x100);
     memset4_fast(sms.ram, 0, 0x2000);
     memset4_fast(sms.sram, 0, 0x8000);
+	memset4_fast(vdp.vram,0, 0x4000);
+#ifdef GG0
 	memset(disp_spr,0,64);
+#endif
     sms.port_3F = sms.port_F2 = sms.irq = 0x00;
 //    sms.psg_mask = 0xFF;
 #if 0
