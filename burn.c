@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 34
+#define NB_DRV 35
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -106,6 +106,7 @@ void BurnDrvAssignList()
 //	static struct BurnDriver BurnDrvWbmlb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvWbmlvc = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvpuckman = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvAppoooh = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -271,9 +272,9 @@ BurnDrvpuckman.szShortName="puckman";
 BurnDrvpuckman.szFullNameA="Puck Man (Japan set 1)";
 BurnDrvpuckman.szParent="pacm";
 
-//BurnDrvWbmlb.szShortName="wbmlb";
-//BurnDrvWbmlb.szFullNameA="Wonder Boy in Monster Land (ENG set 1)";
-//BurnDrvWbmlb.szParent="sys2";
+BurnDrvAppoooh.szShortName="appoooh";
+BurnDrvAppoooh.szFullNameA="Appoooh";
+BurnDrvAppoooh.szParent="appooo";
 
 unsigned int i=0;
 pDriver[i++] = &BurnDrvsms_akmw;
@@ -281,7 +282,7 @@ pDriver[i++] = &BurnDrvsms_cz80;
 pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
-//pDriver[i++] = &BurnDrvWbmlb;
+pDriver[i++] = &BurnDrvAppoooh;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlockgal;
 pDriver[i++] = &BurnDrvBombjack;

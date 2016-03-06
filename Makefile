@@ -185,6 +185,13 @@ LDOVLBOMBJACKFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $
 SRCOVLBOMBJACK         = d_bombjack.c czet.c cz80/cz80.c ay8910.c  saturn/ovl.c
 OBJOVLBOMBJACK         = $(SRCOVLBOMBJACK:.c=.o)
 
+OVLAPPOOO                 = root/d_appooo.coff
+OVLAPPOOO1               = root/d_appooo.bin
+MPOVLAPPOOOFILE    = $(OVLAPPOOO:.coff=.maps)
+LDOVLAPPOOOFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLAPPOOOFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLAPPOOO         = d_appoooh.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+OBJOVLAPPOOO         = $(SRCOVLAPPOOO:.c=.o)
+
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
@@ -211,7 +218,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
      $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) \
-     $(OVLGGCZ) $(OVLGGCZ1) \
+     $(OVLGGCZ) $(OVLGGCZ1) $(OVLAPPOOO) $(OVLAPPOOO1) \
      $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
@@ -352,6 +359,12 @@ $(OVLBOMBJACK) : $(OBJOVLBOMBJACK) $(MAKEFILE) $(OBJOVLBOMBJACK) $(LDOVLBOMBJACK
 
 $(OVLBOMBJACK1) : $(OBJOVLBOMBJACK) $(MAKEFILE) $(LDOVLBOMBJACKFILE)
 	$(CONV) -O binary $(OVLBOMBJACK) $(OVLBOMBJACK1)
+
+$(OVLAPPOOO) : $(OBJOVLAPPOOO) $(MAKEFILE) $(OBJOVLAPPOOO) $(LDOVLAPPOOOFILE)
+	$(CC) $(LDOVLAPPOOOFLAGS) $(OBJOVLAPPOOO) $(LIBSOVL) -o $@
+
+$(OVLAPPOOO1) : $(OBJOVLAPPOOO) $(MAKEFILE) $(LDOVLAPPOOOFILE)
+	$(CONV) -O binary $(OVLAPPOOO) $(OVLAPPOOO1)
 
 # suffix
 .SUFFIXES: .asm
