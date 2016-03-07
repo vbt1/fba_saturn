@@ -3639,6 +3639,12 @@ EndFile
 			EndDirectory
 
 			Directory APPOOOH
+				File EPR5895.BIN;1
+					Source APPOOOH\EPR5895.BIN
+				EndFile
+				File EPR5896.BIN;1
+					Source APPOOOH\EPR5896.BIN
+				EndFile
 				File EPR5897.BIN;1
 					Source APPOOOH\EPR5897.BIN
 				EndFile
@@ -3662,7 +3668,46 @@ EndFile
 				EndFile
 				File EPR5904.BIN;1
 					Source APPOOOH\EPR5904.BIN
-				EndFile				
+				EndFile
+				File EPR5905.BIN;1
+					Source APPOOOH\EPR5905.BIN
+				EndFile
+				File EPR5906.BIN;1
+					Source APPOOOH\EPR5906.BIN
+				EndFile
+				File EPR5907.BIN;1
+					Source APPOOOH\EPR5907.BIN
+				EndFile
+				File EPR5908.BIN;1
+					Source APPOOOH\EPR5908.BIN
+				EndFile
+				File EPR5909.BIN;1
+					Source APPOOOH\EPR5909.BIN
+				EndFile
+				File EPR5910.BIN;1
+					Source APPOOOH\EPR5910.BIN
+				EndFile
+				File EPR5911.BIN;1
+					Source APPOOOH\EPR5911.BIN
+				EndFile
+				File EPR5912.BIN;1
+					Source APPOOOH\EPR5912.BIN
+				EndFile
+				File EPR5913.BIN;1
+					Source APPOOOH\EPR5913.BIN
+				EndFile
+				File EPR5914.BIN;1
+					Source APPOOOH\EPR5914.BIN
+				EndFile
+				File PR5921.PRM;1
+					Source APPOOOH\PR5921.PRM
+				EndFile
+				File PR5922.PRM;1
+					Source APPOOOH\PR5922.PRM
+				EndFile
+				File PR5923.PRM;1
+					Source APPOOOH\PR5923.PRM
+				EndFile
 			EndDirectory
 
 ;			Directory CUBYBOP

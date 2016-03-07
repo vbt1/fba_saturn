@@ -4,7 +4,7 @@
 #include "burnint.h"
 #include "saturn/ovl.h"
 #include "sn76496.h"
-
+#define SOUND_LEN 256
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvInit();
 static INT32 DrvExit();
@@ -49,7 +49,7 @@ static UINT8 *DrvSoundROM;
 //static UINT32 *DrvPalette;
 static UINT16 *DrvPalette;
 static UINT16 *map_offset_lut = NULL;
-
+static UINT16 *charaddr_lut = NULL;
 static UINT8 scroll_x;
 static UINT8 flipscreen;
 static UINT8 priority;

@@ -10,14 +10,14 @@ int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvAppoooh = {
 		"appoooh", "appooo",
-		"Appoooh\0", 
+		"Appoooh", 
 		appooohRomInfo, appooohRomName, AppooohInputInfo, AppooohDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL//,DrvDraw, DrvScan, &DrvRecalc, 512,
+		DrvInit, DrvExit, DrvFrame, DrvDraw //, DrvScan, &DrvRecalc, 512,
 	};
 
 	struct BurnDriver nBurnDrvRobowres = {
 		"robowres", NULL,
-		"Robo Wres 2001\0",
+		"Robo Wres 2001",
 		robowresRomInfo, robowresRomName, AppooohInputInfo, RobowresDIPInfo,
 		DrvInit, DrvExit, DrvFrame, NULL//,DrvDraw, DrvScan, &DrvRecalc, 512,
 	};
@@ -33,6 +33,7 @@ int ovlInit(char *szShortName)
 
 static void DrvPaletteInit()
 {
+	UINT16 delta = 0, delta2 = 0;
 	for (INT32 i = 0; i < 0x220; i++)
 	{
 		INT32 bit0,bit1,bit2,r,g,b;
@@ -62,8 +63,22 @@ static void DrvPaletteInit()
 		bit1 = (DrvColPROM[pen] >> 6) & 0x01;
 		bit2 = (DrvColPROM[pen] >> 7) & 0x01;
 		b = 0x21 * bit0 + 0x47 * bit1 + 0x97 * bit2;
-
-		DrvPalette[i] = RGB(r,g,b);
+		if (i>=0x20 && i < 0x120)
+		{
+			DrvPalette[delta] = RGB(r,g,b);
+//			colBgAddr2[delta] = RGB(r,g,b);
+			delta++; if ((delta & 7) == 0) delta += 8;
+		}
+		else 		if (i>=0x120 && i<0x220)
+		{
+//			DrvPalette[delta2] = RGB(r,g,b);
+			colBgAddr2[delta2] = RGB(r,g,b);
+			delta2++; if ((delta2 & 7) == 0) delta2 += 8;
+		}
+//		else
+		{
+			colAddr[i] = RGB(r,g,b);
+		}
 	}
 }
 
@@ -112,25 +127,26 @@ static INT32 MemIndex()
 	DrvRAM0			= DrvMainROM + 0xe000;
 	DrvRAM1			= DrvMainROM + 0xe800;
 	DrvSprRAM0	 	= DrvMainROM + 0xf000;
-	DrvFgVidRAM	    = DrvMainROM + 0xf020;
-	DrvFgColRAM	    = DrvMainROM + 0xf420;
+	DrvFgVidRAM	= DrvMainROM + 0xf020;
+	DrvFgColRAM	= DrvMainROM + 0xf420;
 	DrvSprRAM1	 	= DrvMainROM + 0xf800;
-	DrvBgVidRAM	    = DrvMainROM + 0xf820;
-	DrvBgColRAM	    = DrvMainROM + 0xfc20;
+	DrvBgVidRAM	= DrvMainROM + 0xf820;
+	DrvBgColRAM	= DrvMainROM + 0xfc20;
 	RamEnd			= DrvMainROM + 0x10000;
 
 	DrvColPROM		= Next; Next += 0x00220;
-	DrvSoundROM	    = Next; Next += 0x0a000;
-//	DrvPalette      = (UINT32*)Next; Next += 0x00220 * sizeof(UINT32);
-	DrvPalette      = (UINT16*)colBgAddr;
-//	DrvGfxTMP0		= Next; Next += 0x0c000;
-//	DrvGfxTMP1		= Next; Next += 0x0c000;
+	DrvSoundROM	= Next; Next += 0x0a000;
+//	DrvPalette        = (UINT32*)Next; Next += 0x00220 * sizeof(UINT32);
+	DrvPalette        = (UINT16*)colBgAddr;
+	DrvGfxTMP0		= Next; Next += 0x0c000;
+	DrvGfxTMP1		= Next; Next += 0x0c000;
+//	charaddr_lut		= Next; Next += 0x00400 * sizeof(UINT16);
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	DrvGfxROM0		= cache;//Next; Next += 0x0c000*8;
-	DrvGfxROM1		= DrvGfxROM0 + 0x0c000; //*4;
+	DrvGfxROM0		= SS_CACHE;//Next; Next += 0x0c000*8;
+	DrvGfxROM1		= SS_CACHE + 0x0c000*2; //*4;
 	DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);//Next; Next += 0x0c000*8;
-	DrvGfxROM3		= DrvGfxROM2 + 0x0c000; //*4;
+	DrvGfxROM3		= DrvGfxROM2 + 0x0c000*2; //*4;
 
 	MemEnd			= Next;
 
@@ -174,40 +190,39 @@ static void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int plan
 
 static void DrvGfxDecode()
 {
-	UINT8 *tmp = (UINT8*)0x00200000;//(UINT8*)malloc(0xC000*2);
+//	UINT8 *tmp = (UINT8*)0x00200000;//(UINT8*)malloc(0xC000*2);
 /*	if (tmp == NULL)
 	{
 		return;
 	} */
-	memcpy (tmp, DrvGfxTMP0, 0xC000*2);
+//	memcpy (tmp, DrvGfxTMP0, 0xC000*2);
 	
 	INT32 Planes0[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
 	INT32 XOffs0[8] = {7, 6, 5, 4, 3, 2, 1, 0};
 	INT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
 
-	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, tmp, DrvGfxROM0); // modulo 0x040 to verify !!!
-	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, tmp+0xc000, DrvGfxROM1); // modulo 0x040 to verify !!!
-
-	SS_SET_N1PRIN(4);
-	SS_SET_N2PRIN(5);
+	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP0, DrvGfxROM0); // modulo 0x040 to verify !!!
+	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP1, DrvGfxROM1); // modulo 0x040 to verify !!!
 
 	INT32 Planes1[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
 	INT32 XOffs1[16] = {7, 6, 5, 4, 3, 2, 1, 0 , 8*8+7,8*8+6,8*8+5,8*8+4,8*8+3,8*8+2,8*8+1,8*8+0};
 	INT32 YOffs1[16] = {0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8};
 
-	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, tmp, DrvGfxROM2);
-	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, tmp+0xc000, DrvGfxROM3);
+	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP0, DrvGfxROM2);
+	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM3);
 
 //         GFXDECODE_ENTRY( "gfx1", 0, charlayout,        0, 32 )
 //        GFXDECODE_ENTRY( "gfx2", 0, charlayout,     32*8, 32 )	   ignored
 //        GFXDECODE_ENTRY( "gfx1", 0, spritelayout,      0, 32 )
 //        GFXDECODE_ENTRY( "gfx2", 0, spritelayout,   32*8, 32 )	  ignored
 
-	free (tmp);
+//	free (tmp);
 }
 
 static void bankswitch(INT32 data)
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bankswitch             ",4,80);
+
 	DrvZ80Bank0 = (data & 0x40);
 // cpu_setbank(1,&RAM[data&0x40 ? 0x10000 : 0x0a000]);
 // 1 bank de 16k																  
@@ -226,6 +241,8 @@ static void bankswitch(INT32 data)
 
 static void __fastcall appoooh_write(unsigned short address, unsigned char data)
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_write             ",4,80);
+
 //	
 //	bprintf (0, _T("appoooh_write %04x %02d\n"), address,data);
 	
@@ -257,6 +274,8 @@ static void __fastcall appoooh_write(unsigned short address, unsigned char data)
 
 static unsigned char __fastcall appoooh_read(unsigned short address)
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_read             ",4,80);
+
 //	bprintf (0, _T("appoooh_read %04x\n"), address);
   
 	 if(address>=0xf020 && address <=0xf3ff)
@@ -300,6 +319,8 @@ inline static INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate)
 
 static void appoooh_adpcm_w( UINT8 data )
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_adpcm_w             ",4,80);
+
 //		bprintf (0, _T("appoooh_adpcm_w %02d\n"), data);
 
 //        appoooh_state *state = space->machine->driver_data<appoooh_state>();
@@ -315,6 +336,8 @@ static void appoooh_adpcm_w( UINT8 data )
 
 static void appoooh_out_w( UINT8 data )
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_out_w             ",4,80);
+
 //		bprintf (0, _T("appoooh_out_w %02d\n"), data);
 
 	/* bit 0 controls NMI */
@@ -377,6 +400,8 @@ static void appoooh_out_w( UINT8 data )
 
 UINT8 __fastcall appoooh_in(UINT16 address)
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_in             ",4,80);
+
 //	bprintf (0, _T("appoooh_in %02d\n"), address & 0xff);
 	UINT8 ret = 0;
 
@@ -410,6 +435,7 @@ UINT8 __fastcall appoooh_in(UINT16 address)
 
 void __fastcall appoooh_out(UINT16 address, UINT8 data)
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_out             ",4,80);
 //	bprintf (0, _T("appoooh_out %02d %02d\n"), address & 0xff,data);
 	switch (address & 0xff)
 	{
@@ -439,19 +465,24 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	}
 }
 
-static void DrawSprites(UINT8 *sprite, UINT8 *gfx, UINT32 offset)
+static void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrawSprites             ",4,60);
+
 	INT32 offs;
 	INT32 flipy = 0; //flip_screen_get(gfx->machine);
-	UINT32 i = 3;
+	UINT32 i = 3 + spriteoffset;
 
 	for (offs = 0x20 - 4; offs >= 0; offs -= 4)
 	{
 		INT32 sy    = 240 - sprite[offs + 0];
-		INT32 code  = (sprite[offs + 1] >> 2) + ((sprite[offs + 2] >> 5) & 0x07) * 0x40;
-		INT32 color = sprite[offs + 2] & 0x0f;    /* TODO: bit 4 toggles continuously, what is it? */
+		UINT32 code  = (sprite[offs + 1] >> 2) + ((sprite[offs + 2] >> 5) & 0x07) * 0x40;
+		UINT32 color = sprite[offs + 2] & 0x0f;    /* TODO: bit 4 toggles continuously, what is it? */
 		INT32 sx    = sprite[offs + 3];
-		INT32 flipx = sprite[offs + 1] & 0x01;
+		UINT32 flipx = (sprite[offs + 1] & 0x01) << 4;
+		code		  &= 0x1ff;
+//		code       += (offset<<5);
+		code		 += tileoffset;
 
 		if(sx >= 248)
 			sx -= 256;
@@ -465,8 +496,9 @@ static void DrawSprites(UINT8 *sprite, UINT8 *gfx, UINT32 offset)
 
 		ss_sprite[i].ax		= sx;
 		ss_sprite[i].ay		= sy;
-		ss_sprite[i].charAddr = code; //charaddr_lut[Code];
-		ss_sprite[i].color     = 0; //(Attr & 0x0f)<<4;
+		ss_sprite[i].control    = ( JUMP_NEXT | FUNC_NORMALSP | flipx);
+		ss_sprite[i].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
+		ss_sprite[i].color     = color<<3;
 		++i;
 /*
 		if(flipx)
@@ -475,34 +507,43 @@ static void DrawSprites(UINT8 *sprite, UINT8 *gfx, UINT32 offset)
 			Render16x16Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 3, 0, offset, gfx);
 */
 	}
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrawSprites end            ",4,60);
 }
 
 static INT32 DrawBgTiles()
 {
-	INT32 offs;
-	INT32 scroll;
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrawBgTiles             ",4,80);
 
+	INT32 offs;
+//	INT32 scroll;
+	int i=0;
 	for (offs = 0x3e0 - 1;offs >= 0;offs--)
 	{
 		/* char set #2 */
 		{
 			INT32 sx,sy,code,color,flipx;
 
-			sx = offs % 32;
-			sy = offs / 32;
+//			sx = offs % 32;
+//			sy = offs / 32;
 			code = DrvBgVidRAM[offs] + 256 * ((DrvBgColRAM[offs]>>5) & 0x07);
+			code &= 0x7ff;
 			color = DrvBgColRAM[offs] & 0x0f;
-			flipx = DrvBgColRAM[offs] & 0x10;
-			if (flipscreen)
+			flipx = (DrvBgColRAM[offs] & 0x10) <<8;
+/*			if (flipscreen)
 			{
 				sx = 31 - sx;
 				sy = 31 - sy;
 				flipx = !flipx;
-			}
-			UINT32 x = map_offset_lut[offs];
-			ss_map2[x] = ss_map2[x+0x40] = color;
+			}*/
+			sx = offs & 0x1f;
+			sy = (offs<<1) & (~0x3f);
+//		map_offset_lut[i] = (sx| sy)<<1;
 
-			ss_map2[x+1] = ss_map2[x+0x41] = code;
+			UINT32 x = (sx| sy)<<1; //map_offset_lut[offs];
+			ss_map2[x] = /*ss_map2[x+0x40] =*/ flipx | color;
+
+			ss_map2[x+1] =/* ss_map2[x+0x41] =*/ code+0x800;
+
  /*
 			if(flipx)
 				Render8x8Tile_FlipX_Clip(pTransDraw, code, sx*8, sy*8, color, 3, 0x100, DrvGfxROM1);
@@ -512,17 +553,18 @@ static INT32 DrawBgTiles()
 		}
 	}
 
-	scroll = -scroll_x;
-	scroll = 0;
+//	scroll = -scroll_x;
+//	scroll = 0;
 
 	return 0;
 }
 
 static INT32 DrawFgTiles()
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrawFgTiles             ",4,80);
+
 	INT32 offs;
-	INT32 scroll;
-	UINT32 i = 3;
+//	INT32 scroll;
 
 	for (offs = 0x3e0 - 1;offs >= 0;offs--)
 	{
@@ -530,20 +572,24 @@ static INT32 DrawFgTiles()
 		{
 			INT32 sx,sy,code,color,flipx;
 
-			sx = offs % 32;
-			sy = offs / 32;
+//			sx = offs % 32;
+//			sy = offs / 32;
 			code = DrvFgVidRAM[offs] + 256 * ((DrvFgColRAM[offs]>>5) & 7);
 			code &= 0x7ff;
 			color = DrvFgColRAM[offs] & 0x0f;
-			flipx = DrvFgColRAM[offs] & 0x10;
-			if (flipscreen)
+			flipx = (DrvFgColRAM[offs] & 0x10) <<8;
+/*			if (flipscreen)
 			{
 				sx = 31 - sx;
 				sy = 31 - sy;
 				flipx = !flipx;
-			}
-			UINT32 x = map_offset_lut[offs];
-			ss_map[x] = ss_map[x+0x40] = color;
+			} */
+			sx = offs & 0x1f;
+			sy = (offs<<1) & (~0x3f);
+//		map_offset_lut[i] = (sx| sy)<<1;
+
+			UINT32 x = (sx| sy)<<1; //map_offset_lut[offs];
+			ss_map[x] = ss_map[x+0x40] = flipx | color;
 
 			ss_map[x+1] = ss_map[x+0x41] = code;
 /*			if(flipx)
@@ -554,37 +600,39 @@ static INT32 DrawFgTiles()
 		}
 	}
 
-	scroll = -scroll_x;
-	scroll = 0;
+//	scroll = -scroll_x;
+//	scroll = 0;
 
 	return 0;
 }
 
 static INT32 DrvDraw()
 {
-	if (DrvRecalc) {
-		DrvPaletteInit();
-		DrvRecalc = 0;
-	}
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDraw             ",4,80);
+
+//	if (DrvRecalc) {
+//		DrvPaletteInit();
+//		DrvRecalc = 0;
+//	}
 
 	DrawBgTiles();
 
-	if(priority == 0)
-		DrawFgTiles();
+//	if(priority == 0)
+//		DrawFgTiles();
 
 	/* draw sprites */
 	if(priority) {
 		/* sprite set #1 */
-		DrawSprites(DrvSprRAM0,DrvGfxROM2, 0);
+		DrawSprites(DrvSprRAM0,0, 0);
 		/* sprite set #2 */
-		DrawSprites(DrvSprRAM1,DrvGfxROM3, 0x100);
+		DrawSprites(DrvSprRAM1, 0x200, 8); //0x100);
 	}
 	else
 	{
 		/* sprite set #2 */
-		DrawSprites(DrvSprRAM1,DrvGfxROM3, 0x100);
+		DrawSprites(DrvSprRAM1, 0x200, 8); //0x100);
 		/* sprite set #1 */
-		DrawSprites(DrvSprRAM0,DrvGfxROM2, 0);
+		DrawSprites(DrvSprRAM0,0, 0);
 	}
 
 	if(priority != 0)
@@ -597,6 +645,8 @@ static INT32 DrvDraw()
 
 static INT32 DrvDoReset()
 {
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDoReset             ",4,80);
+
 	memset (AllRam, 0, RamEnd - AllRam);
 	DrvZ80Bank0 = 0;
 	scroll_x = 0;
@@ -635,35 +685,68 @@ static INT32 DrvRobowresLoadRoms()
 
 static INT32 DrvLoadRoms()
 {
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 1      ",4,90);
+
 	for (INT32 i = 0; i < 5; i++)
 		if (BurnLoadRom(DrvMainROM + i * 0x2000, i +  0, 1)) return 1;
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 2      ",4,90);
 
  	if (BurnLoadRom(DrvMainROM + 0x0a000,  5, 1)) return 1;	// epr-5911.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 3      ",4,90);
+
 	if (BurnLoadRom(DrvMainROM + 0x0c000,  6, 1)) return 1;	// epr-5913.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 4      ",4,90);
 
 	if (BurnLoadRom(DrvMainROM + 0x10000,  7, 1)) return 1;	// epr-5912.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 5      ",4,90);
+
 	if (BurnLoadRom(DrvMainROM + 0x12000,  8, 1)) return 1;	// epr-5914.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 6      ",4,90);
 
 	if (BurnLoadRom(DrvGfxTMP0 + 0x00000,  9, 1)) return 1;	// epr-5895.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 7      ",4,90);
+
 	if (BurnLoadRom(DrvGfxTMP0 + 0x04000, 10, 1)) return 1;	// epr-5896.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 8      ",4,90);
+
 	if (BurnLoadRom(DrvGfxTMP0 + 0x08000, 11, 1)) return 1;	// epr-5897.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 9      ",4,90);
 
 	if (BurnLoadRom(DrvGfxTMP1 + 0x00000, 12, 1)) return 1;	// epr-5898.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 10      ",4,90);
+
 	if (BurnLoadRom(DrvGfxTMP1 + 0x04000, 13, 1)) return 1;	// epr-5899.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 11      ",4,90);
+
 	if (BurnLoadRom(DrvGfxTMP1 + 0x08000, 14, 1)) return 1;	// epr-5900.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 12      ",4,90);
 
 	if (BurnLoadRom(DrvColPROM + 0x0000, 15, 1)) return 1;	// pr5921.prm
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 13      ",4,90);
+
 	if (BurnLoadRom(DrvColPROM + 0x0020, 16, 1)) return 1;	// pr5922.prm
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 14      ",4,90);
+
 	if (BurnLoadRom(DrvColPROM + 0x0120, 17, 1)) return 1;	// pr5923.prm
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 15      ",4,90);
 
 	if (BurnLoadRom(DrvSoundROM + 0x0000, 18, 1)) return 1;	// epr-5901.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 16      ",4,90);
+
 	if (BurnLoadRom(DrvSoundROM + 0x2000, 19, 1)) return 1;	// epr-5902.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 17      ",4,90);
+
 	if (BurnLoadRom(DrvSoundROM + 0x4000, 20, 1)) return 1;	// epr-5903.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 18      ",4,90);
+
 	if (BurnLoadRom(DrvSoundROM + 0x6000, 21, 1)) return 1;	// epr-5904.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 19      ",4,90);
+
 	if (BurnLoadRom(DrvSoundROM + 0x8000, 22, 1)) return 1;	// epr-5905.bin
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms 20      ",4,90);
 
 	return 0;
-}
+}  
 static INT32 DrvRobowresInit()
 {
 	AllMem = NULL;
@@ -694,15 +777,15 @@ static INT32 DrvInit()
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms      ",4,80);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms      ",4,80);
 	memset(AllMem, 0, nLen);
 	MemIndex();
 	if(DrvLoadRoms()) return 1;
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvPaletteInit      ",4,80);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvPaletteInit      ",4,80);
 	DrvPaletteInit();
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode      ",4,80);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode      ",4,80);
 	DrvGfxDecode();
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"CZetInit              ",4,80);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"CZetInit              ",4,80);
 
 	nCyclesTotal = 3072000 / 60;
 
@@ -733,7 +816,7 @@ static INT32 DrvInit()
 	CZetSetReadHandler(appoooh_read);
 //	ZetMapMemory(DrvRAM2, 0xf000, 0xffff, MAP_RAM);	//AM_RANGE(0xf000, 0xffff) AM_RAM
 
-//	CZetClose();
+	CZetClose();
 	
 	SN76489Init(0, 18432000 / 6, 0);
 	SN76489Init(1, 18432000 / 6, 1);
@@ -774,11 +857,11 @@ static void initLayers()
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
-	scfg.platesize     = SCL_PL_SIZE_2X2; // ou 2X2 ?
+//	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	scfg.plate_addr[1] = (Uint32)SS_MAP;
-	scfg.plate_addr[2] = (Uint32)SS_MAP;
-	scfg.plate_addr[3] = (Uint32)SS_MAP;
+//	scfg.plate_addr[1] = (Uint32)SS_MAP;
+//	scfg.plate_addr[2] = (Uint32)SS_MAP;
+//	scfg.plate_addr[3] = (Uint32)SS_MAP;
 
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
@@ -797,35 +880,54 @@ static void initPosition()
 	SCL_Open();
 	ss_reg->n1_move_y =  16 <<16;
 	ss_reg->n2_move_y =  16;//(0<<16) ;
-	SCL_Close();
+	SCL_Close();	   
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initColors()
 {
-	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
+	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
+	colAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);	  //ON
+	SCL_AllocColRam(SCL_NBG0,OFF);//OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+	colBgAddr2  = (Uint16*)SCL_AllocColRam(SCL_NBG2,ON);	  //ON
+//	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
+
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
 {
+/*	for (UINT32 i = 0; i<0x400; i++)
+	{
+		charaddr_lut[i] = 0x220+(i<<4);
+	}					   */
+
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
-		INT32 sx = ((i) % 32) <<6; //% 32;
-		INT32 sy = (i) / 32;
-		map_offset_lut[i] = (sx| sy);//<<1;
+/*
+//			sx = offs % 32;
+//			sy = offs / 32;
+	*/
+
+//		INT32 sx = ((i) % 32) <<6; //% 32;
+//		INT32 sy = (i) / 32;
+		UINT32	sx = i & 0x1f;
+		UINT32	sy = (i<<1) & (~0x3f);
+		map_offset_lut[i] = (sx| sy)<<1;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
-	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE= cache    =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum	 = (SclSpPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum	 = (SclSpPriNumRegister *)SS_SPPRI;
@@ -835,20 +937,35 @@ static void DrvInitSaturn()
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
 
-	nBurnLinescrollSize = 0x300;
-	nBurnSprites = 67;
+	nBurnLinescrollSize = 0;
+	nBurnSprites = 16+3;
 
 //3 nbg
 	SS_SET_N0PRIN(7);
 	SS_SET_N1PRIN(4);
 	SS_SET_N2PRIN(5);
+	SS_SET_S0PRIN(6);
 //	SCL_SET_N1PRIN(6);
 
 	initLayers();
-	initPosition();
+//	initPosition();
 	initColors();
 	make_lut();
-	drawWindow(0,224,240,6,66);
+
+	memset((Uint8 *)ss_map  ,0,0x2000);
+	memset((Uint8 *)ss_map2,0,0x2000);
+
+	SprSpCmd *ss_spritePtr;
+	unsigned int i = 3;
+	
+	for (i = 3; i <nBurnSprites; i++) 
+	{
+		ss_spritePtr				= &ss_sprite[i];
+		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
+		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
+	}
+	drawWindow(0,224,240,0,64);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
@@ -866,7 +983,11 @@ static INT32 DrvExit()
 
 static INT32 DrvFrame()
 {
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame              ",4,80);
+
 	if (DrvReset) {
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDoReset              ",4,80);
+
 		DrvDoReset();
 	}
 
@@ -896,10 +1017,29 @@ static INT32 DrvFrame()
 		MSM5205Render(0, pBurnSoundOut, nBurnSoundLen);
 	} */
 	CZetClose();
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDraw              ",4,70);
 
 //	if (pBurnDraw) {
 		DrvDraw();
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDraw  end            ",4,70);
+
+
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
+	SN76496Update(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
+	SN76496Update(1, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
+	SN76496Update(2, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
+
+	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
+
+	if(nSoundBufferPos>=0x3C00)//RING_BUF_SIZE)
+//	if(nSoundBufferPos>=(2048L*10))
+	{
+		PCM_Task(pcm); // bon emplacement
+		nSoundBufferPos=0;
+	}
+
 //	}
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame END              ",4,80);
 
 	return 0;
 }
