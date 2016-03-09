@@ -65,20 +65,20 @@ static void DrvPaletteInit()
 		b = 0x21 * bit0 + 0x47 * bit1 + 0x97 * bit2;
 		if (i>=0x00 && i < 0x100)
 		{
-//			colAddr[i+0x20] = RGB(r,g,b);
-			colBgAddr2[delta] = RGB(r,g,b);
+			colAddr[i+0x20] = RGB(r,g,b);
+			colBgAddr2[delta] = RGB(r,g,b); // fg
 			delta++; if ((delta & 7) == 0) delta += 8;
 		}
 		else 		if (i>=0x100 && i<0x200)
 		{
-//			colAddr[i+0x20] = RGB(r,g,b);
-//			colAddr[i-0x100+0x20] = RGB(r,g,b);
-			DrvPalette[delta2] = RGB(r,g,b);
+			colAddr[i] = RGB(r,g,b);
+			colAddr[i-0x100] = RGB(r,g,b);
+			DrvPalette[delta2] = RGB(r,g,b);			   // bg !!!!	correct
 			delta2++; if ((delta2 & 7) == 0) delta2 += 8;
 		}
-//		else
+		else
 		{
-			colAddr[i] = RGB(r,g,b);
+			colAddr[i-0x100] = RGB(r,g,b);
 		}
 	}
 }
@@ -147,7 +147,7 @@ static INT32 MemIndex()
 	DrvGfxROM0		= SS_CACHE;//Next; Next += 0x0c000*8;
 	DrvGfxROM1		= SS_CACHE + 0x0c000*4; //*4;
 	DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);//Next; Next += 0x0c000*8;
-	DrvGfxROM3		= DrvGfxROM2 + 0x0c000*4; //*4;
+	DrvGfxROM3		= DrvGfxROM2 + 0x0c000*2; //*4;
 
 	MemEnd			= Next;
 
@@ -478,12 +478,11 @@ static void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 	{
 		INT32 sy    = 240 - sprite[offs + 0];
 		UINT32 code  = (sprite[offs + 1] >> 2) + ((sprite[offs + 2] >> 5) & 0x07) * 0x40;
-		UINT32 color = sprite[offs + 2] & 0x0f;    /* TODO: bit 4 toggles continuously, what is it? */
+		UINT32 color = (sprite[offs + 2] & 0x0f);//+(spriteoffset*2);    /* TODO: bit 4 toggles continuously, what is it? */
 		INT32 sx    = sprite[offs + 3];
 		UINT32 flipx = (sprite[offs + 1] & 0x01) << 4;
-//		code		  &= 0x1ff;
-//		code       += (offset<<5);
-//		code		 += tileoffset;
+		code		  &= 0x1ff;
+		code		 += tileoffset;
 
 		if(sx >= 248)
 			sx -= 256;
@@ -499,7 +498,9 @@ static void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 		ss_sprite[i].ay		= sy;
 		ss_sprite[i].control    = ( JUMP_NEXT | FUNC_NORMALSP | flipx);
 		ss_sprite[i].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
-		ss_sprite[i].color     = color<<3;
+		ss_sprite[i].color     = (color<<3);
+//		if(!spriteoffset)
+//			ss_sprite[i].color+=0x100;
 		++i;
 /*
 		if(flipx)
@@ -628,14 +629,14 @@ static INT32 DrvDraw()
 		/* sprite set #1 */
 		DrawSprites(DrvSprRAM0,0, 0);
 		/* sprite set #2 */
-		DrawSprites(DrvSprRAM1, 0x200, 8); //0x100);
+		DrawSprites(DrvSprRAM1, 0x300, 8); //0x100);
 	}
 	else
 	{
 		SS_SET_N2PRIN(5);
 		SS_SET_S0PRIN(6);
 		/* sprite set #2 */
-		DrawSprites(DrvSprRAM1, 0x200, 8); //0x100);
+		DrawSprites(DrvSprRAM1, 0x300, 8); //0x100);
 		/* sprite set #1 */
 		DrawSprites(DrvSprRAM0,0, 0);
 	}
@@ -881,25 +882,28 @@ static void initLayers()
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initPosition()
+/*static void initPosition()
 {
 	SCL_Open();
 	ss_reg->n1_move_y =  16 <<16;
 	ss_reg->n2_move_y =  16;//(0<<16) ;
 	SCL_Close();	   
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);	  //ON
 	SCL_AllocColRam(SCL_NBG0,OFF);//OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	colBgAddr2  = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);	  //ON
 //	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
 
@@ -955,13 +959,14 @@ static void DrvInitSaturn()
 //3 nbg
 	SS_SET_N0PRIN(7);
 	SS_SET_N1PRIN(4);
-	SS_SET_N2PRIN(5);
-	SS_SET_S0PRIN(6);
+	SS_SET_N2PRIN(6);
+	SS_SET_S0PRIN(5);
 //	SCL_SET_N1PRIN(6);
 
 	initLayers();
 //	initPosition();
 	initColors();
+	initSprites(256-1,224-1,8,0,0,-8);
 	make_lut();
 
 	memset((Uint8 *)ss_map  ,0,0x2000);
