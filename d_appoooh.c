@@ -63,22 +63,16 @@ static void DrvPaletteInit()
 		bit1 = (DrvColPROM[pen] >> 6) & 0x01;
 		bit2 = (DrvColPROM[pen] >> 7) & 0x01;
 		b = 0x21 * bit0 + 0x47 * bit1 + 0x97 * bit2;
+
 		if (i>=0x00 && i < 0x100)
 		{
-			colAddr[i+0x20] = RGB(r,g,b);
 			colBgAddr2[delta] = RGB(r,g,b); // fg
 			delta++; if ((delta & 7) == 0) delta += 8;
 		}
-		else 		if (i>=0x100 && i<0x200)
-		{
-			colAddr[i] = RGB(r,g,b);
-			colAddr[i-0x100] = RGB(r,g,b);
-			DrvPalette[delta2] = RGB(r,g,b);			   // bg !!!!	correct
-			delta2++; if ((delta2 & 7) == 0) delta2 += 8;
-		}
 		else
 		{
-			colAddr[i-0x100] = RGB(r,g,b);
+			DrvPalette[delta2] = RGB(r,g,b);			   // bg !!!!	correct
+			delta2++; if ((delta2 & 7) == 0) delta2 += 8;
 		}
 	}
 }
@@ -191,13 +185,6 @@ static void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int plan
 
 static void DrvGfxDecode()
 {
-//	UINT8 *tmp = (UINT8*)0x00200000;//(UINT8*)malloc(0xC000*2);
-/*	if (tmp == NULL)
-	{
-		return;
-	} */
-//	memcpy (tmp, DrvGfxTMP0, 0xC000*2);
-	
 	INT32 Planes0[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
 	INT32 XOffs0[8] = {7, 6, 5, 4, 3, 2, 1, 0};
 	INT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
@@ -211,13 +198,6 @@ static void DrvGfxDecode()
 
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP0, DrvGfxROM2);
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM3);
-
-//         GFXDECODE_ENTRY( "gfx1", 0, charlayout,        0, 32 )
-//        GFXDECODE_ENTRY( "gfx2", 0, charlayout,     32*8, 32 )	   ignored
-//        GFXDECODE_ENTRY( "gfx1", 0, spritelayout,      0, 32 )
-//        GFXDECODE_ENTRY( "gfx2", 0, spritelayout,   32*8, 32 )	  ignored
-
-//	free (tmp);
 }
 
 static void bankswitch(INT32 data)
@@ -360,7 +340,24 @@ static void appoooh_out_w( UINT8 data )
 	/* the front layer behind sprites when priority == 0, and invert the sprite */
 	/* order when priority == 1 */
 	priority = (data & 0x30) >> 4;
-
+/*
+	if(priority) 
+	{
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"priority true             ",4,80);
+		SS_SET_N2PRIN(6);
+		SS_SET_S0PRIN(5);
+		memcpyl((SclSpPriNumRegister *)0x25F800F0, &ss_SpPriNum, sizeof(ss_SpPriNum));
+		memcpyl((SclBgPriNumRegister *)0x25F800F8, &ss_BgPriNum, sizeof(ss_BgPriNum));
+	}
+	else
+	{
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"priority false            ",4,80);
+		SS_SET_N2PRIN(5);
+		SS_SET_S0PRIN(6);
+		memcpyl((SclSpPriNumRegister *)0x25F800F0, &ss_SpPriNum, sizeof(ss_SpPriNum));
+		memcpyl((SclBgPriNumRegister *)0x25F800F8, &ss_BgPriNum, sizeof(ss_BgPriNum));
+	}
+*/
 	/* bit 6 ROM bank select */
 	{
 //		unsigned char *RAM = memory_region(REGION_CPU1);
@@ -498,130 +495,46 @@ static void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 		ss_sprite[i].ay		= sy;
 		ss_sprite[i].control    = ( JUMP_NEXT | FUNC_NORMALSP | flipx);
 		ss_sprite[i].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
-		ss_sprite[i].color     = (color<<3);
+		ss_sprite[i].color     = (color<<4);
 //		if(!spriteoffset)
 //			ss_sprite[i].color+=0x100;
 		++i;
-/*
-		if(flipx)
-			Render16x16Tile_Mask_FlipX_Clip(pTransDraw, code, sx, sy, color, 3, 0, offset, gfx);
-		else
-			Render16x16Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 3, 0, offset, gfx);
-*/
 	}
 //			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrawSprites end            ",4,60);
 }
 
-static INT32 DrawBgTiles()
+static INT32 DrawTiles()
 {
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrawBgTiles             ",4,80);
-
 	INT32 offs;
-//	INT32 scroll;
-	int i=0;
-	for (offs = 0x3e0 - 1;offs >= 0;offs--)
-	{
-		/* char set #2 */
-		{
-			INT32 sx,sy,code,color,flipx;
-
-//			sx = offs % 32;
-//			sy = offs / 32;
-			code = DrvBgVidRAM[offs] + 256 * ((DrvBgColRAM[offs]>>5) & 0x07);
-			code &= 0x7ff;
-			color = DrvBgColRAM[offs] & 0x0f;
-			flipx = (DrvBgColRAM[offs] & 0x10) <<10;
-/*			if (flipscreen)
-			{
-				sx = 31 - sx;
-				sy = 31 - sy;
-				flipx = !flipx;
-			}*/
-			sx = offs & 0x1f;
-			sy = (offs<<1) & (~0x3f);
-//		map_offset_lut[i] = (sx| sy)<<1;
-
-			UINT32 x = (sx| sy)<<1; //map_offset_lut[offs];
-			ss_map2[x] = /*ss_map2[x+0x40] =*/ flipx | color;
-
-			ss_map2[x+1] =/* ss_map2[x+0x41] =*/ code+0x2000;//+0x2800;
-
- /*
-			if(flipx)
-				Render8x8Tile_FlipX_Clip(pTransDraw, code, sx*8, sy*8, color, 3, 0x100, DrvGfxROM1);
-			else
-				Render8x8Tile_Clip(pTransDraw, code, sx*8, sy*8, color, 3, 0x100, DrvGfxROM1);
-*/
-		}
-	}
-
-//	scroll = -scroll_x;
-//	scroll = 0;
-
-	return 0;
-}
-
-static INT32 DrawFgTiles()
-{
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrawFgTiles             ",4,80);
-
-	INT32 offs;
-//	INT32 scroll;
 
 	for (offs = 0x3e0 - 1;offs >= 0;offs--)
 	{
-		/* char set #1 */
-		{
-			INT32 sx,sy,code,color,flipx;
+		INT32 sx,sy,code,color,flipx;
+		sx = offs & 0x1f;
+		sy = (offs<<1) & (~0x3f);
 
-//			sx = offs % 32;
-//			sy = offs / 32;
-			code = DrvFgVidRAM[offs] + 256 * ((DrvFgColRAM[offs]>>5) & 7);
-			code &= 0x7ff;
-			color = DrvFgColRAM[offs] & 0x0f;
-			flipx = (DrvFgColRAM[offs] & 0x10) <<10;
-/*			if (flipscreen)
-			{
-				sx = 31 - sx;
-				sy = 31 - sy;
-				flipx = !flipx;
-			} */
-			sx = offs & 0x1f;
-			sy = (offs<<1) & (~0x3f);
-//		map_offset_lut[i] = (sx| sy)<<1;
+		UINT32 x = (sx| sy)<<1;
+	/* char set #2 */
+		code = DrvBgVidRAM[offs] + 256 * ((DrvBgColRAM[offs]>>5) & 0x07);
+		color = DrvBgColRAM[offs] & 0x0f;
+		flipx = (DrvBgColRAM[offs] & 0x10) <<10;
 
-			UINT32 x = (sx| sy)<<1; //map_offset_lut[offs];
-			ss_map[x] = ss_map[x+0x40] = flipx | color;
+		ss_map2[x] = flipx | color;
+		ss_map2[x+1] =code+0x2000;
+	/* char set #1 */
+		code = DrvFgVidRAM[offs] + 256 * ((DrvFgColRAM[offs]>>5) & 7);
+		color = DrvFgColRAM[offs] & 0x0f;
+		flipx = (DrvFgColRAM[offs] & 0x10) <<10;
 
-			ss_map[x+1] = ss_map[x+0x41] = code;//+0x800;
-/*			if(flipx)
-				Render8x8Tile_Mask_FlipX_Clip(pTransDraw, code, sx*8, sy*8, color, 3, 0, 0, DrvGfxROM0);
-			else
-				Render8x8Tile_Mask_Clip(pTransDraw, code, sx*8, sy*8, color, 3, 0, 0, DrvGfxROM0);
-*/
-		}
+		ss_map[x] = flipx | color;
+		ss_map[x+1] = code;
 	}
-
-//	scroll = -scroll_x;
-//	scroll = 0;
-
 	return 0;
 }
 
 static INT32 DrvDraw()
 {
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDraw             ",4,80);
-
-//	if (DrvRecalc) {
-//		DrvPaletteInit();
-//		DrvRecalc = 0;
-//	}
-
-	DrawBgTiles();
-	DrawFgTiles();
-//	if(priority == 0)
-//		DrawFgTiles();
-
+	DrawTiles();
 	/* draw sprites */
 	if(priority) {
 		SS_SET_N2PRIN(6);
@@ -629,22 +542,19 @@ static INT32 DrvDraw()
 		/* sprite set #1 */
 		DrawSprites(DrvSprRAM0,0, 0);
 		/* sprite set #2 */
-		DrawSprites(DrvSprRAM1, 0x300, 8); //0x100);
+		DrawSprites(DrvSprRAM1, 0x300, 8);
 	}
 	else
 	{
 		SS_SET_N2PRIN(5);
 		SS_SET_S0PRIN(6);
 		/* sprite set #2 */
-		DrawSprites(DrvSprRAM1, 0x300, 8); //0x100);
+		DrawSprites(DrvSprRAM1, 0x300, 8);
 		/* sprite set #1 */
 		DrawSprites(DrvSprRAM0,0, 0);
 	}
-
-//	if(priority != 0)
-//		DrawFgTiles();
-
-//	BurnTransferCopy(DrvPalette);
+	memcpyl((SclSpPriNumRegister *)0x25F800F0, ss_SpPriNum, sizeof(ss_SpPriNum));
+	memcpyl((SclBgPriNumRegister *)0x25F800F8, ss_BgPriNum, sizeof(ss_BgPriNum));
 
 	return 0;
 }
@@ -652,7 +562,6 @@ static INT32 DrvDraw()
 static INT32 DrvDoReset()
 {
 //			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDoReset             ",4,80);
-
 	memset (AllRam, 0, RamEnd - AllRam);
 	DrvZ80Bank0 = 0;
 	scroll_x = 0;
@@ -843,9 +752,9 @@ static INT32 DrvInit()
 static void initLayers()
 {
     Uint16	CycleTb[]={
-		0x1f56, 0xffff, //A0
+		0xff56, 0xffff, //A0
 		0xffff, 0xffff,	//A1
-		0xf5f2,0x4eff,   //B0
+		0x15f2,0x4eff,   //B0
 		0xffff, 0xffff  //B1
 //		0x4eff, 0x1fff, //B1
 	};
@@ -882,31 +791,14 @@ static void initLayers()
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static void initPosition()
-{
-	SCL_Open();
-	ss_reg->n1_move_y =  16 <<16;
-	ss_reg->n2_move_y =  16;//(0<<16) ;
-	SCL_Close();	   
-}*/
-//-------------------------------------------------------------------------------------------------------------------------------------
 static void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);	  //ON
-	SCL_AllocColRam(SCL_NBG0,OFF);//OFF);
+	colBgAddr2  = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
+	SCL_AllocColRam(SCL_NBG0,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	colBgAddr2  = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);	  //ON
-//	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
-
+	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -934,12 +826,6 @@ static void make_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
-//	nBurnSoundLen = 256;//192;//320; // ou 128 ?
-/*	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
- */
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
 	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
@@ -961,10 +847,8 @@ static void DrvInitSaturn()
 	SS_SET_N1PRIN(4);
 	SS_SET_N2PRIN(6);
 	SS_SET_S0PRIN(5);
-//	SCL_SET_N1PRIN(6);
 
 	initLayers();
-//	initPosition();
 	initColors();
 	initSprites(256-1,224-1,8,0,0,-8);
 	make_lut();
