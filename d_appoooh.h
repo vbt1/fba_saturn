@@ -4,6 +4,7 @@
 #include "burnint.h"
 #include "saturn/ovl.h"
 #include "sn76496.h"
+#include "msm5205.h"
 #define SOUND_LEN 256
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvInit();
@@ -54,6 +55,8 @@ static UINT8 scroll_x;
 static UINT8 flipscreen;
 static UINT8 priority;
 static UINT8 interrupt_enable;
+static UINT32 adpcm_data;
+static UINT32 adpcm_address;
 static INT32 nCyclesTotal;
 
 static struct BurnInputInfo AppooohInputList[] = {

@@ -107,7 +107,7 @@ static void DrvRobowresPaletteInit()
 		bit2 = (DrvColPROM[pen] >> 7) & 0x01;
 		b = 0x21 * bit0 + 0x47 * bit1 + 0x97 * bit2;
 
-		DrvPalette[i] = BurnHighCol(r,g,b,0);
+		DrvPalette[i] = RGB(r,g,b);
 	}
 }
 
@@ -295,137 +295,79 @@ static unsigned char __fastcall appoooh_read(unsigned short address)
 
 inline static INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate)
 {
-	return (INT32)((double)ZetTotalCycles() * nSoundRate / (nCyclesTotal * 130));
+	return (INT32)((double)CZetTotalCycles() * nSoundRate / (nCyclesTotal * 130));
 }
 
 static void appoooh_adpcm_w( UINT8 data )
 {
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_adpcm_w             ",4,80);
+	adpcm_address = data << 8;
 
-//		bprintf (0, _T("appoooh_adpcm_w %02d\n"), data);
-
-//        appoooh_state *state = space->machine->driver_data<appoooh_state>();
-
-//  		MSM5205ResetWrite(0, (data >> 7) & 1);
-//		MSM5205DataWrite(0, data);
-//		MSM5205VCLKWrite(0, 1);
-//		MSM5205VCLKWrite(0, 0);
-//        state->adpcm_address = data << 8;
-//        msm5205_reset_w(state->adpcm, 0);
-//        state->adpcm_data = 0xffffffff;
+	MSM5205ResetWrite(0, 0);
+	adpcm_data = 0xffffffff;
 }
 
 static void appoooh_out_w( UINT8 data )
 {
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_out_w             ",4,80);
-
-//		bprintf (0, _T("appoooh_out_w %02d\n"), data);
-
-	/* bit 0 controls NMI */
-//	if (data & 0x01) interrupt_enable_w(0,1);
-//	else interrupt_enable_w(0,0);
-//	if (data & 0x01)	ZetNmi();
 	interrupt_enable = (data & 0x01);
 
-	/* bit 1 flip screen */
-	if ((data & 0x02) != flipscreen)
-	{
+	if ((data & 0x02) != flipscreen) {
 		flipscreen = data & 0x02;
 	}
 
-	/* bits 2-3 unknown */
-
-	/* bits 4-5 are playfield/sprite priority */
-	/* TODO: understand how this works, currently the only thing I do is draw */
-	/* the front layer behind sprites when priority == 0, and invert the sprite */
-	/* order when priority == 1 */
 	priority = (data & 0x30) >> 4;
-/*
-	if(priority) 
-	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"priority true             ",4,80);
-		SS_SET_N2PRIN(6);
-		SS_SET_S0PRIN(5);
-		memcpyl((SclSpPriNumRegister *)0x25F800F0, &ss_SpPriNum, sizeof(ss_SpPriNum));
-		memcpyl((SclBgPriNumRegister *)0x25F800F8, &ss_BgPriNum, sizeof(ss_BgPriNum));
+
+	bankswitch(data);
+}
+
+static void DrvMSM5205Int()
+{
+	if (adpcm_address != 0xffffffff) {
+		if (adpcm_data == 0xffffffff) {
+			adpcm_data = DrvSoundROM[adpcm_address++];
+
+			MSM5205DataWrite(0, adpcm_data >> 4);
+			MSM5205VCLKWrite(0, 1);
+			MSM5205VCLKWrite(0, 0);
+
+			if (adpcm_data == 0x70) {
+				adpcm_address = 0xffffffff;
+				MSM5205ResetWrite(0, 1);
+			}
+		} else {
+			MSM5205DataWrite(0, adpcm_data & 0x0f);
+			MSM5205VCLKWrite(0, 1);
+			MSM5205VCLKWrite(0, 0);
+			adpcm_data = -1;
+		}
 	}
-	else
-	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"priority false            ",4,80);
-		SS_SET_N2PRIN(5);
-		SS_SET_S0PRIN(6);
-		memcpyl((SclSpPriNumRegister *)0x25F800F0, &ss_SpPriNum, sizeof(ss_SpPriNum));
-		memcpyl((SclBgPriNumRegister *)0x25F800F8, &ss_BgPriNum, sizeof(ss_BgPriNum));
-	}
-*/
-	/* bit 6 ROM bank select */
-	{
-//		unsigned char *RAM = memory_region(REGION_CPU1);
-		bankswitch(data);
-//		cpu_setbank(1,&RAM[data&0x40 ? 0x10000 : 0x0a000]);
-	}
-
-
-	/*
-        appoooh_state *state = device->machine->driver_data<appoooh_state>();
-
-
-        if (state->adpcm_address != 0xffffffff)
-        {
-                if (state->adpcm_data == 0xffffffff)
-                {
-                        UINT8 *RAM = memory_region(device->machine, "adpcm");
-
-
-                        state->adpcm_data = RAM[state->adpcm_address++];
-                        msm5205_data_w(device, state->adpcm_data >> 4);
-
-
-                        if (state->adpcm_data == 0x70)
-                        {
-                                state->adpcm_address = 0xffffffff;
-                                msm5205_reset_w(device, 1);
-                        }
-                }
-                else
-                {
-                        msm5205_data_w(device, state->adpcm_data & 0x0f );
-                        state->adpcm_data = -1;
-                }
-        }
-		*/
 }
 
 UINT8 __fastcall appoooh_in(UINT16 address)
 {
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_in             ",4,80);
-
-//	bprintf (0, _T("appoooh_in %02d\n"), address & 0xff);
 	UINT8 ret = 0;
 
 	switch (address & 0xff)
 	{
 		case 0x00:
 		{
-			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy1[i] << i;	 //AM_READ_PORT("P1")
+			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy1[i] << i;
 			return ret;
 		}
 
 		case 0x01:
 		{
-			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy2[i] << i;//AM_READ_PORT("P2")
+			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy2[i] << i;
 			return ret;
 		}
 
 		case 0x03:
 		{
-			return DrvDip[0]; // AM_READ_PORT("DSW1") 
+			return DrvDip[0];
 		}
 
 		case 0x04:
-			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy3[i] << i; // AM_READ_PORT("BUTTON3")
+			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy3[i] << i;
 			return ret;
-//			return DrvDip[1]; // AM_READ_PORT("BUTTON3")
 	}
 
 	return 0;
@@ -433,32 +375,30 @@ UINT8 __fastcall appoooh_in(UINT16 address)
 
 void __fastcall appoooh_out(UINT16 address, UINT8 data)
 {
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"appoooh_out             ",4,80);
-//	bprintf (0, _T("appoooh_out %02d %02d\n"), address & 0xff,data);
 	switch (address & 0xff)
 	{
 		case 0x00:
-			SN76496Write(0, data);//AM_DEVWRITE("sn1", sn76496_w)
+			SN76496Write(0, data);
 		break;
 		
 		case 0x01:
-			SN76496Write(1, data);//AM_DEVWRITE("sn2", sn76496_w)
+			SN76496Write(1, data);
 		break;
 		
 		case 0x02:
-			SN76496Write(2, data);//AM_DEVWRITE("sn3", sn76496_w)
+			SN76496Write(2, data);
 		break;
 
 		case 0x03:
-			appoooh_adpcm_w(data); // AM_WRITE(appoooh_adpcm_w)
+			appoooh_adpcm_w(data);
 		break;
 
 		case 0x04:
-			appoooh_out_w(data); // AM_WRITE(appoooh_out_w)
+			appoooh_out_w(data);
 		break;
 
 		case 0x05:
-			scroll_x = data; // AM_WRITE(appoooh_scroll_w) /* unknown */
+			scroll_x = data; // not used.
 		break;
 	}
 }
@@ -561,11 +501,13 @@ static INT32 DrvDraw()
 
 static INT32 DrvDoReset()
 {
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDoReset             ",4,80);
 	memset (AllRam, 0, RamEnd - AllRam);
 	DrvZ80Bank0 = 0;
 	scroll_x = 0;
 	flipscreen = 0;
+	adpcm_address = 0xffffffff;
+	adpcm_data = 0;
+	MSM5205Reset();
 
 	CZetOpen(0);
 	CZetReset();
@@ -740,7 +682,8 @@ static INT32 DrvInit()
 //	SN76496SetRoute(1, 0.30, BURN_SND_ROUTE_BOTH);
 //	SN76496SetRoute(2, 0.30, BURN_SND_ROUTE_BOTH);
 
-//	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, NULL, MSM5205_S64_4B, 1);
+//	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1);
+	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0);
 //	MSM5205SetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
 
 //	GenericTilesInit();
@@ -875,7 +818,7 @@ static INT32 DrvExit()
 	CZetExit();
 
 //	SN76496Exit();
-//	MSM5205Exit();
+	MSM5205Exit();
 
 	free (AllMem);
 
@@ -893,7 +836,6 @@ static INT32 DrvFrame()
 	}
 
 	memset (DrvInputs, 0x00, 3); // DrvJoy1 = active low, 2, 3 = active high
-	memset (DrvInputs, 0xff, 1); // DrvJoy1 = active low, 2, 3 = active high
 
 	for (INT32 i = 0; i < 8; i++) {
 		DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
@@ -901,6 +843,7 @@ static INT32 DrvFrame()
 		DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 
 	}
+	INT32 nInterleave = MSM5205CalcInterleave(0, nCyclesTotal);
 
 	CZetOpen(0);
 
@@ -908,7 +851,7 @@ static INT32 DrvFrame()
 
 	if (interrupt_enable) CZetNmi();
 
-//	MSM5205Update();
+	MSM5205Update();
 	
 /*	if (pBurnSoundOut) 
 	{
@@ -918,22 +861,16 @@ static INT32 DrvFrame()
 		MSM5205Render(0, pBurnSoundOut, nBurnSoundLen);
 	} */
 	CZetClose();
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDraw              ",4,70);
-
-//	if (pBurnDraw) {
-		DrvDraw();
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDraw  end            ",4,70);
-
+	DrvDraw();
 
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
-	SN76496Update(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
-	SN76496Update(1, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
-	SN76496Update(2, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
+//	SN76496Update(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
+//	SN76496Update(1, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
+//	SN76496Update(2, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
+	MSM5205Render(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 
 	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
-
 	if(nSoundBufferPos>=0x3C00)//RING_BUF_SIZE)
-//	if(nSoundBufferPos>=(2048L*10))
 	{
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;

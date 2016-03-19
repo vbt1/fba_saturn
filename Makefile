@@ -189,7 +189,7 @@ OVLAPPOOO                 = root/d_appooo.coff
 OVLAPPOOO1               = root/d_appooo.bin
 MPOVLAPPOOOFILE    = $(OVLAPPOOO:.coff=.maps)
 LDOVLAPPOOOFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLAPPOOOFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLAPPOOO         = d_appoooh.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+SRCOVLAPPOOO         = d_appoooh.c czet.c cz80/cz80.c sn76496.c msm5205.c saturn/ovl.c
 OBJOVLAPPOOO         = $(SRCOVLAPPOOO:.c=.o)
 
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
@@ -361,7 +361,7 @@ $(OVLBOMBJACK1) : $(OBJOVLBOMBJACK) $(MAKEFILE) $(LDOVLBOMBJACKFILE)
 	$(CONV) -O binary $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
 $(OVLAPPOOO) : $(OBJOVLAPPOOO) $(MAKEFILE) $(OBJOVLAPPOOO) $(LDOVLAPPOOOFILE)
-	$(CC) $(LDOVLAPPOOOFLAGS) $(OBJOVLAPPOOO) $(LIBSOVL) -o $@
+	$(CC) $(LDOVLAPPOOOFLAGS) $(OBJOVLAPPOOO) $(LIBSOVL) -lm -o $@
 
 $(OVLAPPOOO1) : $(OBJOVLAPPOOO) $(MAKEFILE) $(LDOVLAPPOOOFILE)
 	$(CONV) -O binary $(OVLAPPOOO) $(OVLAPPOOO1)
