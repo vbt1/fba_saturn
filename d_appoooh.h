@@ -8,6 +8,7 @@
 #define SOUND_LEN 256
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvInit();
+static INT32 DrvRobowresInit();
 static INT32 DrvExit();
 static INT32 DrvFrame();
 static INT32 DrvDraw();
@@ -32,6 +33,7 @@ static UINT8 *AllRam;
 static UINT8 *RamEnd;
 static UINT8 *DrvRAM0;
 static UINT8 *DrvRAM1;
+static UINT8 *DrvRAM2;
 static UINT8 *DrvFgVidRAM;
 static UINT8 *DrvBgVidRAM;
 static UINT8 *DrvSprRAM0;
@@ -47,6 +49,7 @@ static UINT8 *DrvGfxTMP1;
 static UINT8 *DrvColPROM;
 static UINT8 *DrvMainROM;
 static UINT8 *DrvSoundROM;
+static UINT8 *DrvFetch;
 //static UINT32 *DrvPalette;
 static UINT16 *DrvPalette;
 static UINT16 *map_offset_lut = NULL;
@@ -58,6 +61,7 @@ static UINT8 interrupt_enable;
 static UINT32 adpcm_data;
 static UINT32 adpcm_address;
 static INT32 nCyclesTotal;
+static INT32 game_select; // 1 = robowres
 
 static struct BurnInputInfo AppooohInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 coin"},

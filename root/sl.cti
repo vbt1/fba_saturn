@@ -3710,6 +3710,48 @@ EndFile
 				EndFile
 			EndDirectory
 
+			Directory ROBOWRES
+				File PR7573.7G;1
+					Source ROBOWRES\PR7573.7G
+				EndFile
+				File PR7572.7F;1
+					Source ROBOWRES\PR7572.7F
+				EndFile
+				File PR7571.10A;1
+					Source ROBOWRES\PR7571.10A
+				EndFile
+				File EPR7549.5D;1
+					Source ROBOWRES\EPR7549.5D
+				EndFile
+				File EPR7548.6D;1
+					Source ROBOWRES\EPR7548.6D
+				EndFile
+				File EPR7547.7D;1
+					Source ROBOWRES\EPR7547.7D
+				EndFile
+				File EPR7546.5H;1
+					Source ROBOWRES\EPR7546.5H
+				EndFile
+				File EPR7545.6H;1
+					Source ROBOWRES\EPR7545.6H
+				EndFile
+				File EPR7544.7H;1
+					Source ROBOWRES\EPR7544.7H
+				EndFile
+				File EPR7543.12B;1
+					Source ROBOWRES\EPR7543.12B
+				EndFile
+				File EPR7542.15D;1
+					Source ROBOWRES\EPR7542.15D
+				EndFile
+				File EPR7541.14D;1
+					Source ROBOWRES\EPR7541.14D
+				EndFile
+				File EPR7540.13D;1
+					Source ROBOWRES\EPR7540.13D
+				EndFile
+			EndDirectory
+
 ;			Directory CUBYBOP
 ;				File CB06.6;1
 ;					Source CUBYBOP\CB06.6

@@ -55,6 +55,29 @@ extern unsigned int nBurnDrvSelect;	// Which game driver is selected
 #define BURN_SND_ROUTE_BOTH			(BURN_SND_ROUTE_LEFT | BURN_SND_ROUTE_RIGHT)
 
 // ---------------------------------------------------------------------------
+// Tile decoding macros
+#define RGN_FRAC(length, numerator, denominator) ((((length) * 8) * (numerator)) / (denominator))
+
+#define STEP2(start, step)	((start) + ((step)*0)), ((start) + ((step)*1))
+#define STEP4(start, step)	STEP2(start, step),  STEP2((start)+((step)*2), step)
+#define STEP8(start, step)	STEP4(start, step),  STEP4((start)+((step)*4), step)
+#define STEP16(start, step)	STEP8(start, step),  STEP8((start)+((step)*8), step)
+#define STEP32(start, step)	STEP16(start, step), STEP16((start)+((step)*16), step)
+#define STEP64(start, step)	STEP32(start, step), STEP32((start)+((step)*32), step)
+// ---------------------------------------------------------------------------
+// bits swapping macros
+#define BITSWAP08(n, 														\
+				  bit07, bit06, bit05, bit04, bit03, bit02, bit01, bit00)	\
+		(((((n) >> (bit07)) & 1) <<  7) | 									\
+		 ((((n) >> (bit06)) & 1) <<  6) | 									\
+		 ((((n) >> (bit05)) & 1) <<  5) | 									\
+		 ((((n) >> (bit04)) & 1) <<  4) | 									\
+		 ((((n) >> (bit03)) & 1) <<  3) | 									\
+		 ((((n) >> (bit02)) & 1) <<  2) | 									\
+		 ((((n) >> (bit01)) & 1) <<  1) | 									\
+		 ((((n) >> (bit00)) & 1) <<  0))
+// ---------------------------------------------------------------------------
+
 // CPU emulation interfaces
 #include "czet.h"
 typedef union {

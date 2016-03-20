@@ -5,6 +5,30 @@
 #define MAX_MSM5205	2
 static INT32 nNumChips = 0;
 
+#define INT_DIGITS 19
+char *itoa(i)
+     int i;
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
+
 typedef struct 
 {
 	INT32 data;               /* next adpcm data              */
@@ -70,6 +94,13 @@ static void ComputeTables(INT32 chip)
 				 stepval/2 * nbl2bit[nib][2] +
 				 stepval/4 * nbl2bit[nib][3] +
 				 stepval/8);
+
+//	char toto[100];
+//	char *titi = &toto[0];
+//	titi=itoa(voice->diff_lookup[step*16 + nib]);
+
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,10,nib*10);
+
 		}
 	}
 }
@@ -107,7 +138,8 @@ static void MSM5205StreamUpdate(INT32 chip)
 {
 	voice = &chips[chip];
 
-	UINT32 len = voice->stream_sync((SOUND_LEN * hz) / 100);
+//	UINT32 len = voice->stream_sync((SOUND_LEN * hz) / 100);
+	UINT32 len = voice->stream_sync((SOUND_LEN * hz));
 	if (len > SOUND_LEN) len = SOUND_LEN;
 	UINT32 pos = voice->streampos;
 
@@ -174,12 +206,6 @@ static void MSM5205_vclk_callback(INT32 chip)
 
 void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 {
-/*
-#if defined FBA_DEBUG
-//	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205Render called without init\n"));
-	if (chip > nNumChips) bprintf(PRINT_ERROR, _T("MSM5205Render called with invalid chip %x\n"), chip);
-#endif
-*/
 	voice = &chips[chip];
 	INT16 *source = stream[chip];
 
@@ -187,40 +213,24 @@ void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 
 	voice->streampos = 0;
 	
-	for (INT32 i = 0; i < len; i++) {
-		INT32 nLeftSample = 0; //nRightSample = 0;
-/*		
-		if (voice->use_seperate_vols) {
-			nLeftSample += (INT32)(source[i] * voice->left_volume);
-			nRightSample += (INT32)(source[i] * voice->right_volume);
-		} else {
-			if ((voice->output_dir & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
-				nLeftSample += source[i];
-			}
-			if ((voice->output_dir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
-				nRightSample += source[i];
-			}
-		}
-*/
-		nLeftSample += source[i];
+	for (INT32 i = 0; i < len; i++) 
+	{
+		INT32 nLeftSample = 0;
 
-//		nLeftSample = BURN_SND_CLIP(nLeftSample);
-//		nRightSample = BURN_SND_CLIP(nRightSample);
-//		*pBuf++ += CLIP((nSample >> 8));
-		nLeftSample = BURN_SND_CLIP((nLeftSample >> 0));
-		if (voice->bAdd) {
+//		nLeftSample += (source[i] >> 8);
+		nLeftSample += (source[i] >> 8);
+		nLeftSample = BURN_SND_CLIP(nLeftSample);
+
+		if (voice->bAdd) 
+		{
 			buffer[0] += nLeftSample;
-			//buffer[1] += nRightSample;
-//			buffer[0] = BURN_SND_CLIP(buffer[0] + nLeftSample);
-	//		buffer[1] = BURN_SND_CLIP(buffer[1] + nRightSample);
-			buffer[0] = BURN_SND_CLIP(buffer[0] + (nLeftSample>> 0));
-			buffer++;
-		} else {
-			*buffer++ = (nLeftSample >> 0);
-//			buffer[1] = nRightSample;
+			buffer[0] = BURN_SND_CLIP(buffer[0] + nLeftSample);
+		} 
+		else 
+		{
+			buffer[0] = nLeftSample;
 		}
-//		buffer += 2;
-//		buffer++;
+		buffer++;
 	}
 }
 
@@ -267,10 +277,14 @@ void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vc
 	voice->right_volume = 1.00;
 	voice->use_seperate_vols = 0;
 	
-	float FPSRatio = (float)(6000 - hz) / 6000;
+//	float FPSRatio = (float)(6000 - hz*100) / 6000;
+	float FPSRatio = (float)(60 - hz) / 60;
 	INT32 nSoundLen = SOUND_LEN + (INT32)((float)SOUND_LEN * FPSRatio) + 1;
-	stream[chip]		= (INT16*)malloc(nSoundLen * sizeof(INT16));
-	
+	if((stream[chip]		= (INT16*)malloc(nSoundLen * sizeof(INT16))) == NULL)
+	{
+		while(1);
+	}
+
 	ComputeTables (chip);
 	
 	nNumChips = chip;
@@ -439,15 +453,38 @@ INT32 MSM5205CalcInterleave(INT32 chip, INT32 cpu_speed)
 */
 	static const INT32 table[2][4] = { {96, 48, 64, 0}, {160, 40, 80, 20} };
 
+	char toto[100];
+	char *titi = &toto[0];
+	titi=itoa(cpu_speed);
+
+	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"speed ",4,20);
+
+	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,80,20);
+
 	voice = &chips[chip];
+
+	titi=itoa(voice->select);
+	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"select ",4,30);
+
+	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,80,30);
 
 	if ((voice->select & 3) == 3) {
 		return 133;  // (usually...)
 	}
 
+	titi=itoa(hz);
+	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"hz ",4,40);
+
+	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,80,40);
+
 	INT32 ret = cpu_speed / (cpu_speed / (voice->clock / table[(voice->select >> 3) & 1][voice->select & 3]));
-	
-	return ret / (hz / 100);
+
+	titi=itoa(ret / hz );
+	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"ret ",4,50);
+
+	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,80,50);
+
+	return ret / hz;
 }
 /*
 void MSM5205Scan(INT32 nAction, INT32 *pnMin)
