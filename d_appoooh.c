@@ -144,6 +144,7 @@ static INT32 MemIndex()
 
 	DrvColPROM		= Next; Next += 0x00220;
 	DrvSoundROM	    = Next; Next += 0x0a000;
+//	DrvSoundROM	= (UINT8*)0x2F6000;
 	DrvPalette        = (UINT16*)colBgAddr;
 
 	if(!game_select)
@@ -337,6 +338,7 @@ static unsigned char __fastcall appoooh_read(unsigned short address)
 
 inline static INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate)
 {
+
 	return (INT32)((double)CZetTotalCycles() * nSoundRate / (nCyclesTotal));
 }
 
@@ -365,6 +367,7 @@ static void DrvMSM5205Int()
 {
 	if (adpcm_address != 0xffffffff) {
 		if (adpcm_data == 0xffffffff) {
+
 			adpcm_data = DrvSoundROM[adpcm_address++];
 
 			MSM5205DataWrite(0, adpcm_data >> 4);
@@ -932,7 +935,8 @@ static INT32 DrvFrame()
 		DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 
 	}
-	INT32 nInterleave = 128;//128; //MSM5205CalcInterleave(0, nCyclesTotal);
+	INT32 nInterleave = (hz==50)?128:100; //100 for 60hz MSM5205CalcInterleave(0, nCyclesTotal);//128
+	CZetNewFrame();
 
 	CZetOpen(0);
 
@@ -957,14 +961,15 @@ static INT32 DrvFrame()
 	CZetClose();
 	DrvDraw();
 
+//	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 	SN76496Update(1, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
-	SN76496Update(2, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
+	SN76496Update(2, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);	
 	MSM5205Render(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 
 	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
-	if(nSoundBufferPos>=0x3C00)//RING_BUF_SIZE)
+	if(nSoundBufferPos>=0x1000)//RING_BUF_SIZE)
 	{
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
