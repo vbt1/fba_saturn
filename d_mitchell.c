@@ -974,7 +974,7 @@ DrvChars = DrvSprites = MSM6295ROM = NULL;
 	DrvInput5Toggle = 0;
 	
 #ifdef CZ80
-//	CZetNewFrame();
+	CZetNewFrame();
 //	CZetCPUContext[0].nCyclesTotal = 0;
 #endif
 	for (unsigned int i = 0; i < nInterleave; i++) 

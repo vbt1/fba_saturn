@@ -5,7 +5,7 @@
 #include "saturn/ovl.h"
 #include "sn76496.h"
 #include "msm5205.h"
-#define SOUND_LEN 384
+#define SOUND_LEN 256
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvInit();
 static INT32 DrvRobowresInit();

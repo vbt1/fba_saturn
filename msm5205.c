@@ -1,7 +1,7 @@
 #include "burnint.h"
 #include "msm5205.h"
 #include "math.h"
-#define SOUND_LEN 384
+#define SOUND_LEN 256
 #define MAX_MSM5205	2
 static INT32 nNumChips = 0;
 #define HZ 60
@@ -116,8 +116,8 @@ static void MSM5205_playmode(INT32 chip, INT32 select)
 	{
 		voice->prescaler = prescaler;
 
-		if( prescaler )
-		{
+//		if( prescaler )
+//		{
 // clock * prescaler
 // 384000 / 48 -> 8000
 
@@ -126,7 +126,7 @@ static void MSM5205_playmode(INT32 chip, INT32 select)
 
 //			attotime period = attotime_mul(ATTOTIME_IN_HZ(voice->clock), prescaler);
 //			timer_adjust_periodic(voice->timer, period, 0, period);
-		}
+//		}
 	}
 
 	if( voice->bitwidth != bitwidth )
@@ -204,8 +204,8 @@ static void MSM5205_vclk_callback(INT32 chip)
 		voice->signal = new_signal;
 	}
 }
-#define CLIP(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
-//#define CLIP(A) ((A) < -0x5000 ? -0x5000 : (A) > 0x4fff ? 0x4fff : (A))
+//#define CLIP(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
+#define CLIP(A) ((A) < -0x5000 ? -0x5000 : (A) > 0x4fff ? 0x4fff : (A))
 
 void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 {
@@ -218,8 +218,8 @@ void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 	
 	for (INT32 i = 0; i < len; i++) 
 	{
-//		INT32 nLeftSample = 0;
-		INT16 nLeftSample = 0;
+		INT32 nLeftSample = 0;
+//		INT16 nLeftSample = 0;
 
 		nLeftSample += source[i]; // | (source[i]<<8); // (source[i]>>8) | (source[i]<<8);//(source[i]); //  >> 8);
 		nLeftSample = BURN_SND_CLIP(nLeftSample);

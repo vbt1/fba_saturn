@@ -5,6 +5,8 @@
 //   finish msm5205/adpcm implementation
 //   cleanup(s)
 //   Robo Wres init ok?
+static UINT8 is_fg_dirty[0x400];
+//static UINT8 is_bg_dirty[0x400];
 
 int ovlInit(char *szShortName)
 {
@@ -146,6 +148,7 @@ static INT32 MemIndex()
 	DrvSoundROM	    = Next; Next += 0x0a000;
 //	DrvSoundROM	= (UINT8*)0x2F6000;
 	DrvPalette        = (UINT16*)colBgAddr;
+	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 
 	if(!game_select)
 	{
@@ -273,13 +276,32 @@ static void __fastcall appoooh_write(unsigned short address, unsigned char data)
 
 	if(address >= 0xf020 && address <= 0xf41f/*0xf3ff*/)
 	{
-		DrvFgVidRAM[address-0xf020] = data;
+		address-=0xf020;
+		if(DrvFgVidRAM[address] != data)
+		{
+			DrvFgVidRAM[address] = data;
+			is_fg_dirty[address] = 1;
+		}
 		return;
 	}
 
 	if(address >= 0xf420 && address <= 0xf7ff)
 	{
-		DrvFgColRAM[address-0xf420] = data;
+		address-=0xf420;
+
+		if(DrvFgColRAM[address]!=data || is_fg_dirty[address]==1)
+		{
+			is_fg_dirty[address] = 0;
+			DrvFgColRAM[address]=data;
+			UINT32 color,flipx;
+			UINT32 x = map_offset_lut[address]; //(sx| sy)<<1;
+		// char set #1
+			color = data & 0x0f;
+			flipx = (data & 0x10) <<10;		
+			ss_map[x] = flipx | color;
+			INT32 code = DrvFgVidRAM[address] + 256 * ((data>>5) & 0x07);
+			ss_map[x+1] =code; 
+		}
 		return;
 	}
 
@@ -291,13 +313,33 @@ static void __fastcall appoooh_write(unsigned short address, unsigned char data)
 
 	if(address >= 0xf820 && address <= 0xfc1f/*0xfbff*/)
 	{
-		DrvBgVidRAM[address-0xf820] = data;
+		address-=0xf820;
+
+//		if(DrvBgVidRAM[address] != data)
+//		{
+			DrvBgVidRAM[address] = data;
+//			is_bg_dirty[address] = 1;
+//		}
 		return;
 	}
 
 	if(address >= 0xfc20 && address <= 0xffff)
 	{
-		DrvBgColRAM[address-0xfc20] = data;
+		address-=0xfc20;
+
+//		if(DrvBgColRAM[address]!=data)
+		{
+//			is_bg_dirty[address] = 0;
+			DrvBgColRAM[address]=data;
+			UINT32 color,flipx;
+			UINT32 x = map_offset_lut[address]; //(sx| sy)<<1;
+		// char set #2 
+			color = data & 0x0f;
+			flipx = (data & 0x10) <<10;
+			ss_map2[x] = flipx | color;
+			UINT32 code = DrvBgVidRAM[address] + 256 * ((data>>5) & 0x07);
+			ss_map2[x+1] =code+0x2000; 
+		}
 		return;
 	}
 }
@@ -485,38 +527,8 @@ static void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 	}
 }
 
-static INT32 DrawTiles()
-{
-	INT32 offs;
-
-	for (offs = 0x3e0 - 1;offs >= 0;offs--)
-	{
-		INT32 sx,sy,code,color,flipx;
-		sx = offs & 0x1f;
-		sy = (offs<<1) & (~0x3f);
-
-		UINT32 x = (sx| sy)<<1;
-	/* char set #2 */
-		code = DrvBgVidRAM[offs] + 256 * ((DrvBgColRAM[offs]>>5) & 0x07);
-		color = DrvBgColRAM[offs] & 0x0f;
-		flipx = (DrvBgColRAM[offs] & 0x10) <<10;
-
-		ss_map2[x] = flipx | color;
-		ss_map2[x+1] =code+0x2000;
-	/* char set #1 */
-		code = DrvFgVidRAM[offs] + 256 * ((DrvFgColRAM[offs]>>5) & 7);
-		color = DrvFgColRAM[offs] & 0x0f;
-		flipx = (DrvFgColRAM[offs] & 0x10) <<10;
-
-		ss_map[x] = flipx | color;
-		ss_map[x+1] = code;
-	}
-	return 0;
-}
-
 static INT32 DrvDraw()
 {
-	DrawTiles();
 	/* draw sprites */
 	if(priority) {
 		SS_SET_N2PRIN(6);
@@ -659,6 +671,7 @@ static INT32 DrvCommonInit()
 //	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1);
 	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1);
 
+	make_lut();
 	DrvDoReset();
 	return 0;
 }
@@ -890,10 +903,11 @@ static void DrvInitSaturn()
 	initLayers();
 	initColors();
 	initSprites(256-1,224-1,8,0,0,-8);
-	make_lut();
 
 	memset((Uint8 *)ss_map  ,0,0x2000);
 	memset((Uint8 *)ss_map2,0,0x2000);
+//	memset(is_bg_dirty,1,0x400);
+	memset(is_fg_dirty,1,0x400);
 
 	SprSpCmd *ss_spritePtr;
 	unsigned int i = 3;
@@ -969,7 +983,7 @@ static INT32 DrvFrame()
 	MSM5205Render(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 
 	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
-	if(nSoundBufferPos>=0x1000)//RING_BUF_SIZE)
+	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
 	{
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
