@@ -1,7 +1,7 @@
 #include "burnint.h"
 #include "msm5205.h"
 #include "math.h"
-#define SOUND_LEN 256
+#define SOUND_LEN 192
 #define MAX_MSM5205	2
 static INT32 nNumChips = 0;
 #define HZ 60
@@ -39,12 +39,12 @@ typedef struct
 	INT32 bitwidth;           /* bit width selector -3B/4B    */
 	INT32 signal;             /* current ADPCM signal         */
 	INT32 step;               /* current ADPCM step           */
-	double volume;
-	INT32 output_dir;
+	float volume;
+//	INT32 output_dir;
 
-	INT32 use_seperate_vols;  /* support custom Taito panning hardware */
-	double left_volume;
-	double right_volume;
+//	INT32 use_seperate_vols;  /* support custom Taito panning hardware */
+//	double left_volume;
+//	double right_volume;
 
 	INT32 clock;		  /* clock rate */
 
@@ -57,7 +57,7 @@ typedef struct
 	INT32 diff_lookup[49*16];
 } _MSM5205_state;
 
-static INT16 *stream[MAX_MSM5205];
+INT16 *stream[MAX_MSM5205];
 static _MSM5205_state chips[MAX_MSM5205];
 static _MSM5205_state *voice;
 
@@ -115,18 +115,6 @@ static void MSM5205_playmode(INT32 chip, INT32 select)
 	if( voice->prescaler != prescaler )
 	{
 		voice->prescaler = prescaler;
-
-//		if( prescaler )
-//		{
-// clock * prescaler
-// 384000 / 48 -> 8000
-
-// if cpu is 4000000 (4mhz)
-// check MSM5205 every 4000000 / 8000 -> 500 cycles
-
-//			attotime period = attotime_mul(ATTOTIME_IN_HZ(voice->clock), prescaler);
-//			timer_adjust_periodic(voice->timer, period, 0, period);
-//		}
 	}
 
 	if( voice->bitwidth != bitwidth )
@@ -135,7 +123,7 @@ static void MSM5205_playmode(INT32 chip, INT32 select)
 	}
 }
 
-static void MSM5205StreamUpdate(INT32 chip)
+/*static*/ void MSM5205StreamUpdate(INT32 chip)
 {
 	voice = &chips[chip];
 
@@ -153,6 +141,7 @@ static void MSM5205StreamUpdate(INT32 chip)
 		memset (stream[chip], 0, SOUND_LEN * sizeof(INT16));
 	}
 
+	if(voice->streampos!=0)
 	{
 		INT16 *buffer = stream[chip];
 		buffer += pos;
@@ -207,33 +196,25 @@ static void MSM5205_vclk_callback(INT32 chip)
 //#define CLIP(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 #define CLIP(A) ((A) < -0x5000 ? -0x5000 : (A) > 0x4fff ? 0x4fff : (A))
 
+void MSM5205InitPos(INT32 chip)
+{
+	voice = &chips[chip];
+	voice->streampos = 0;
+}
+
 void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 {
 	voice = &chips[chip];
 	INT16 *source = stream[chip];
-//	memset(buffer, 0, len * sizeof(short));
 	MSM5205StreamUpdate(chip);
-
 	voice->streampos = 0;
 	
 	for (INT32 i = 0; i < len; i++) 
 	{
-		INT32 nLeftSample = 0;
-//		INT16 nLeftSample = 0;
-
-		nLeftSample += source[i]; // | (source[i]<<8); // (source[i]>>8) | (source[i]<<8);//(source[i]); //  >> 8);
-		nLeftSample = BURN_SND_CLIP(nLeftSample);
-
-		if (voice->bAdd) 
-		{
-			buffer[i] += nLeftSample;
-			buffer[i] = BURN_SND_CLIP(buffer[i] + nLeftSample);
-		} 
-		else 
-		{
-			buffer[i] = nLeftSample;
-		}
-//		*buffer++;
+		int	Temp = buffer[0] + source[i];
+		if (Temp > 32767) Temp = 32767;
+		else {if (Temp < -32768) Temp = -32768;}
+		*buffer++ = Temp;
 	}
 }
 
@@ -267,7 +248,7 @@ void MSM5205Reset()
 	}
 }
 
-void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd)
+void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd, float nVolume)
 {
 //	DebugSnd_MSM5205Initted = 1;
 	
@@ -280,12 +261,13 @@ void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vc
 	voice->select		= select;
 	voice->clock		= clock;
 	voice->bAdd		= bAdd;
-	voice->volume	= 1.00;
-	voice->output_dir = BURN_SND_ROUTE_BOTH;
+//	voice->volume	= 1.00;
+	voice->volume	= nVolume;
+//	voice->output_dir = BURN_SND_ROUTE_BOTH;
 	
-	voice->left_volume = 1.00;
-	voice->right_volume = 1.00;
-	voice->use_seperate_vols = 0;
+//	voice->left_volume = 1.00;
+//	voice->right_volume = 1.00;
+//	voice->use_seperate_vols = 0;
 	
 //	float FPSRatio = (float)(6000 - hz*100) / 6000;
 	float FPSRatio = (float)(60 - HZ) / 60;
@@ -298,56 +280,6 @@ void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vc
 	ComputeTables (chip);
 	
 	nNumChips = chip;
-}
-
-/*
-void MSM5205SetRoute(INT32 chip, double nVolume, INT32 nRouteDir)
-{
-#if defined FBA_DEBUG
-//	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205SetRoute called without init\n"));
-	if (chip > nNumChips) bprintf(PRINT_ERROR, _T("MSM5205SetRoute called with invalid chip %x\n"), chip);
-#endif
-
-	voice = &chips[chip];
-	voice->volume = nVolume;
-	voice->output_dir = nRouteDir;
-}
-*/
-
-void MSM5205SetLeftVolume(INT32 chip, double nLeftVolume)
-{
-/*
-#if defined FBA_DEBUG
-	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205SetLeftVolume called without init\n"));
-	if (chip > nNumChips) bprintf(PRINT_ERROR, _T("MSM5205SetLeftVolume called with invalid chip %x\n"), chip);
-#endif
-*/
-	voice = &chips[chip];
-	voice->left_volume = nLeftVolume;
-}
-
-void MSM5205SetRightVolume(INT32 chip, double nRightVolume)
-{
-/*
-#if defined FBA_DEBUG
-	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205SetRightVolume called without init\n"));
-	if (chip > nNumChips) bprintf(PRINT_ERROR, _T("MSM5205SetRightVolume called with invalid chip %x\n"), chip);
-#endif
-*/
-	voice = &chips[chip];
-	voice->left_volume = nRightVolume;
-}
-
-void MSM5205SetSeperateVolumes(INT32 chip, INT32 state)
-{
-/*
-#if defined FBA_DEBUG
-	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205SetSeperateVolumes called without init\n"));
-	if (chip > nNumChips) bprintf(PRINT_ERROR, _T("MSM5205SetSeperateVolumes called with invalid chip %x\n"), chip);
-#endif
-*/
-	voice = &chips[chip];
-	voice->use_seperate_vols = state;
 }
 
 void MSM5205Exit()

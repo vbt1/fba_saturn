@@ -6,7 +6,6 @@
 //   cleanup(s)
 //   Robo Wres init ok?
 static UINT8 is_fg_dirty[0x400];
-//static UINT8 is_bg_dirty[0x400];
 
 int ovlInit(char *szShortName)
 {
@@ -129,8 +128,6 @@ static INT32 MemIndex()
 
 	DrvMainROM	 	= Next; Next += 0x24000;
 	DrvFetch		= Next; Next += 0x24000;
-//	DrvMainROM	 	= Next; Next += 0x10000;
-//	DrvFetch		= Next; Next += 0x10000;
 
 	AllRam			= Next;
 	DrvRAM0			= Next; Next += 0x800;
@@ -150,26 +147,14 @@ static INT32 MemIndex()
 	DrvPalette        = (UINT16*)colBgAddr;
 	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 
-	if(!game_select)
-	{
-		DrvGfxTMP0		= Next; Next += 0x0c000;
-		DrvGfxTMP1		= Next; Next += 0x0c000;
-		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-		DrvGfxROM0		= SS_CACHE;//Next; Next += 0x0c000*8;
-		DrvGfxROM1		= SS_CACHE + 0x0c000*4; //*4;
-		DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);//Next; Next += 0x0c000*8;
-		DrvGfxROM3		= DrvGfxROM2 + 0x0c000*2; //*4;
-	}
-	else
-	{
-		DrvGfxTMP0		= (UINT8 *)0x00200000;
-		DrvGfxTMP1		= (UINT8 *)0x00218000;
-		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-		DrvGfxROM0		= SS_CACHE;//Next; Next += 0x0c000*8;
-		DrvGfxROM1		= SS_CACHE + 0x18000*2; //*4;
-		DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);//Next; Next += 0x0c000*8;
-		DrvGfxROM3		= DrvGfxROM2 + 0x0c000*2; //*4;
-	}
+	DrvGfxTMP0		= (UINT8 *)0x00200000;
+	DrvGfxTMP1		= (UINT8 *)0x00218000;
+	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	DrvGfxROM0		= SS_CACHE;
+	DrvGfxROM1		= SS_CACHE + 0x30000;
+	DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);
+	DrvGfxROM3		= DrvGfxROM2 + 0x18000;
+
 	MemEnd			= Next;
 
 	return 0;
@@ -226,7 +211,7 @@ static void DrvGfxDecode()
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP0, DrvGfxROM2);
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM3);
 }
-// #define RGN_FRAC(length, numerator, denominator) ((((length) * 8) * (numerator)) / (denominator))
+
 static void DrvRobowresGfxDecode()
 {
 	INT32 Planes0[3] = { RGN_FRAC(0x18000, 2,3), RGN_FRAC(0x18000, 1,3), RGN_FRAC(0x18000, 0,3) };
@@ -241,21 +226,17 @@ static void DrvRobowresGfxDecode()
 	INT32 YOffs1[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
 
 	GfxDecode4Bpp(0x0400, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP0, &DrvGfxTMP1[0x30000]);
-//	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP0+0xc000, DrvGfxROM2);
 	memcpy(DrvGfxROM2,&DrvGfxTMP1[0x40000],0x18000);
 	GfxDecode4Bpp(0x0400, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, &DrvGfxTMP1[0x30000]);
 	memcpy(DrvGfxROM3,&DrvGfxTMP1[0x40000],0x18000);
-//	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1+0xc000, DrvGfxROM3);
 }
 
 static void bankswitch(INT32 data)
 {
 	DrvZ80Bank0 = (data & 0x40);
-// cpu_setbank(1,&RAM[data&0x40 ? 0x10000 : 0x0a000]);
 // 1 bank de 16k																  
 	if(DrvZ80Bank0)
 	{
-		//bprintf (0, _T("bankswitch %02d\n"), DrvZ80Bank0);
 		CZetMapArea(0xa000, 0xdfff, 0, DrvMainROM + 0x10000);
 		CZetMapArea(0xa000, 0xdfff, 2, DrvMainROM + 0x10000);
 	}
@@ -314,12 +295,7 @@ static void __fastcall appoooh_write(unsigned short address, unsigned char data)
 	if(address >= 0xf820 && address <= 0xfc1f/*0xfbff*/)
 	{
 		address-=0xf820;
-
-//		if(DrvBgVidRAM[address] != data)
-//		{
-			DrvBgVidRAM[address] = data;
-//			is_bg_dirty[address] = 1;
-//		}
+		DrvBgVidRAM[address] = data;
 		return;
 	}
 
@@ -493,14 +469,13 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 
 static void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 {
-	INT32 flipy = 0; //flip_screen_get(gfx->machine);
 	UINT32 i = 3 + spriteoffset;
 
 	for (INT32 offs = 0x20 - 4; offs >= 0; offs -= 4)
 	{
 		INT32 sy    = 240 - sprite[offs + 0];
 		UINT32 code  = (sprite[offs + 1] >> 2) + ((sprite[offs + 2] >> 5) & 0x07) * 0x40;
-		UINT32 color = (sprite[offs + 2] & 0x0f);//+(spriteoffset*2);    /* TODO: bit 4 toggles continuously, what is it? */
+		UINT32 color = (sprite[offs + 2] & 0x0f);    /* TODO: bit 4 toggles continuously, what is it? */
 		INT32 sx    = sprite[offs + 3];
 		UINT32 flipx = (sprite[offs + 1] & 0x01) << 4;
 		code		  &= 0x1ff;
@@ -509,20 +484,11 @@ static void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 		if(sx >= 248)
 			sx -= 256;
 
-		if (flipy)
-		{
-			sx = 239 - sx;
-			sy = 239 - sy;
-			flipx = !flipx;
-		}
-
 		ss_sprite[i].ax		= sx;
 		ss_sprite[i].ay		= sy;
 		ss_sprite[i].control    = ( JUMP_NEXT | FUNC_NORMALSP | flipx);
 		ss_sprite[i].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
 		ss_sprite[i].color     = (color<<4);
-//		if(!spriteoffset)
-//			ss_sprite[i].color+=0x100;
 		++i;
 	}
 }
@@ -636,26 +602,26 @@ static INT32 DrvCommonInit()
 	CZetInit(1);
 	CZetOpen(0);
 
-	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM + 0x0000);	 // AM_RANGE(0x0000, 0x7fff) AM_ROM
+	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM + 0x0000);
 	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM + 0x0000);
-	CZetMapArea(0x8000, 0x9fff, 0, DrvMainROM + 0x8000);	// AM_RANGE(0x8000, 0x9fff) AM_ROM
+	CZetMapArea(0x8000, 0x9fff, 0, DrvMainROM + 0x8000);
 	CZetMapArea(0x8000, 0x9fff, 2, DrvMainROM + 0x8000);
 
  	bankswitch(0);
 
 	if (game_select == 1) 
 	{ // map decoded fetch for robowres
-		CZetMapArea2(0x0000, 0x7fff, 0, DrvFetch, DrvMainROM);	 // AM_RANGE(0x0000, 0x7fff) AM_ROM
+		CZetMapArea2(0x0000, 0x7fff, 0, DrvFetch, DrvMainROM);
 		CZetMapArea2(0x0000, 0x7fff, 2, DrvFetch, DrvMainROM);
 	}
 
-	CZetMapArea(0xe000, 0xe7ff, 0, DrvRAM0);	// AM_RANGE(0xe000, 0xe7ff) AM_RAM
-	CZetMapArea(0xe000, 0xe7ff, 1, DrvRAM0);	// AM_RANGE(0xe000, 0xe7ff) AM_RAM
-	CZetMapArea(0xe000, 0xe7ff, 2, DrvRAM0);	// AM_RANGE(0xe000, 0xe7ff) AM_RAM
+	CZetMapArea(0xe000, 0xe7ff, 0, DrvRAM0);
+	CZetMapArea(0xe000, 0xe7ff, 1, DrvRAM0);
+	CZetMapArea(0xe000, 0xe7ff, 2, DrvRAM0);
 
-	CZetMapArea(0xe800, 0xefff, 0, DrvRAM1);		// AM_RANGE(0xe800, 0xefff) AM_RAM // RAM ? 
-	CZetMapArea(0xe800, 0xefff, 1, DrvRAM1);		// AM_RANGE(0xe800, 0xefff) AM_RAM // RAM ? 
-	CZetMapArea(0xe800, 0xefff, 2, DrvRAM1);		// AM_RANGE(0xe800, 0xefff) AM_RAM // RAM ? 
+	CZetMapArea(0xe800, 0xefff, 0, DrvRAM1);
+	CZetMapArea(0xe800, 0xefff, 1, DrvRAM1);
+	CZetMapArea(0xe800, 0xefff, 2, DrvRAM1);
 
  	CZetSetWriteHandler(appoooh_write);
 	CZetSetReadHandler(appoooh_read);
@@ -668,8 +634,7 @@ static INT32 DrvCommonInit()
 	SN76489Init(1, 18432000 / 6, 1);
 	SN76489Init(2, 18432000 / 6, 1);
 
-//	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1);
-	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1);
+	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1, 0.50);
 
 	make_lut();
 	DrvDoReset();
@@ -863,13 +828,6 @@ static void make_lut(void)
 
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
-/*
-//			sx = offs % 32;
-//			sy = offs / 32;
-	*/
-
-//		INT32 sx = ((i) % 32) <<6; //% 32;
-//		INT32 sy = (i) / 32;
 		UINT32	sx = i & 0x1f;
 		UINT32	sy = (i<<1) & (~0x3f);
 		map_offset_lut[i] = (sx| sy)<<1;
@@ -906,7 +864,6 @@ static void DrvInitSaturn()
 
 	memset((Uint8 *)ss_map  ,0,0x2000);
 	memset((Uint8 *)ss_map2,0,0x2000);
-//	memset(is_bg_dirty,1,0x400);
 	memset(is_fg_dirty,1,0x400);
 
 	SprSpCmd *ss_spritePtr;
@@ -924,10 +881,8 @@ static void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
 {
-//	GenericTilesExit();
 	CZetExit();
 
-//	SN76496Exit();
 	MSM5205Exit();
 
 	free (AllMem);
@@ -949,39 +904,33 @@ static INT32 DrvFrame()
 		DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 
 	}
-	INT32 nInterleave = (hz==50)?128:100; //100 for 60hz MSM5205CalcInterleave(0, nCyclesTotal);//128
+	UINT32 nInterleave = SOUND_LEN; //(hz==50)?128:100; //100 for 60hz MSM5205CalcInterleave(0, nCyclesTotal);//128
+	UINT32 cycles = nCyclesTotal / 60 / nInterleave;
 	CZetNewFrame();
 
 	CZetOpen(0);
 
 	CZetOpen(0);
-/* 
-	CZetRun(nCyclesTotal);
- 
-	if (interrupt_enable) CZetNmi();
-
-	MSM5205Update();	*/   
 
 	for (INT32 i = 0; i < nInterleave; i++) {
-		CZetRun(nCyclesTotal / 60 / nInterleave);
+		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
-//		if (interrupt_enable)
 			CZetNmi();
 
 		MSM5205Update();
 	}
-//		if (interrupt_enable)
-//			CZetNmi();
 	CZetClose();
 	DrvDraw();
 
-//	signed short *nSoundBuffer = (signed short *)0x25a20000;
-	signed short *nSoundBuffer = (signed short *)0x25a20000;
-	SN76496Update(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
-	SN76496Update(1, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
-	SN76496Update(2, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);	
-	MSM5205Render(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
-
+	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
+	SN76496Update(0, nSoundBuffer, SOUND_LEN);
+	SN76496Update(1, nSoundBuffer, SOUND_LEN);
+#if 1
+	SN76496Update(2, nSoundBuffer, SOUND_LEN);
+	MSM5205Render(0, nSoundBuffer, SOUND_LEN);
+#else
+	SN76496MSM5205Update(2, nSoundBuffer, SOUND_LEN);
+#endif
 	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
 	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
 	{
