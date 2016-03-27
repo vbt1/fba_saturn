@@ -295,7 +295,13 @@ static void __fastcall appoooh_write(unsigned short address, unsigned char data)
 	if(address >= 0xf820 && address <= 0xfc1f/*0xfbff*/)
 	{
 		address-=0xf820;
-		DrvBgVidRAM[address] = data;
+		if(DrvBgVidRAM[address]!=data)
+		{
+			DrvBgVidRAM[address] = data;
+			UINT32 x = map_offset_lut[address]; //(sx| sy)<<1;
+			UINT32 code = data + (256 * ((DrvBgColRAM[address]>>5) & 0x07));
+			ss_map2[x+1] =code+0x2000; 
+		}
 		return;
 	}
 
@@ -836,6 +842,8 @@ static void make_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
+	SPR_InitSlaveSH();
+
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
 	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
@@ -876,11 +884,13 @@ static void DrvInitSaturn()
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	drawWindow(0,224,240,0,64);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
 {
+	SPR_InitSlaveSH();
 	CZetExit();
 
 	MSM5205Exit();
@@ -889,7 +899,12 @@ static INT32 DrvExit()
 
 	return 0;
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
+void dummy()
+{
 
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvFrame()
 {
 	if (DrvReset) {
@@ -904,22 +919,22 @@ static INT32 DrvFrame()
 		DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 
 	}
-	UINT32 nInterleave = SOUND_LEN; //(hz==50)?128:100; //100 for 60hz MSM5205CalcInterleave(0, nCyclesTotal);//128
+	UINT32 nInterleave = SOUND_LEN/2; //(hz==50)?128:100; //100 for 60hz MSM5205CalcInterleave(0, nCyclesTotal);//128
 	UINT32 cycles = nCyclesTotal / 60 / nInterleave;
 	CZetNewFrame();
 
-	CZetOpen(0);
-
-	CZetOpen(0);
+//	CZetOpen(0);
 
 	for (INT32 i = 0; i < nInterleave; i++) {
+
 		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
 			CZetNmi();
-
-		MSM5205Update();
+		SPR_WaitEndSlaveSH();
+	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205Update, NULL);
+//		MSM5205Update();
 	}
-	CZetClose();
+//	CZetClose();
 	DrvDraw();
 
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));

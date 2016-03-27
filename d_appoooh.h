@@ -14,6 +14,7 @@ static INT32 DrvFrame();
 static INT32 DrvDraw();
 static void make_lut(void);
 static void DrvInitSaturn();
+void dummy();
 
 #include "sn76496.h"
 //#include "msm5205.h"
