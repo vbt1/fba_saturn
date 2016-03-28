@@ -57,6 +57,10 @@ Track MODE1
 				Source D_BANKP.BIN
 			EndFile
 
+			File D_BLKTGR.BIN;1
+				Source D_BLKTGR.BIN
+			EndFile
+
 			File D_NEWS.BIN;1
 				Source D_NEWS.BIN
 			EndFile
@@ -3749,6 +3753,69 @@ EndFile
 				EndFile
 				File EPR7540.13D;1
 					Source ROBOWRES\EPR7540.13D
+				EndFile
+			EndDirectory
+
+			Directory BLKTIGER
+				File BD01.8J;1
+					Source BLKTIGER\BD01.8J
+				EndFile
+				File BD02.9J;1
+					Source BLKTIGER\BD02.9J
+				EndFile
+				File BD03.11K;1
+					Source BLKTIGER\BD03.11K
+				EndFile
+				File BD04.11L;1
+					Source BLKTIGER\BD04.11L
+				EndFile
+				File BD04.9E;1
+					Source BLKTIGER\BD04.9E
+				EndFile
+				File BD05.10E;1
+					Source BLKTIGER\BD05.10E
+				EndFile
+				File BD06.1L;1
+					Source BLKTIGER\BD06.1L
+				EndFile
+				File BD07.4A;1
+					Source BLKTIGER\BD07.4A
+				EndFile
+				File BD08.5A;1
+					Source BLKTIGER\BD08.5A
+				EndFile
+				File BD09.8A;1
+					Source BLKTIGER\BD09.8A
+				EndFile
+				File BD10.9A;1
+					Source BLKTIGER\BD10.9A
+				EndFile
+				File BD11.4B;1
+					Source BLKTIGER\BD11.4B
+				EndFile
+				File BD12.5B;1
+					Source BLKTIGER\BD12.5B
+				EndFile
+				File BD13.8B;1
+					Source BLKTIGER\BD13.8B
+				EndFile
+				File BD14.9B;1
+					Source BLKTIGER\BD14.9B
+				EndFile
+				File BD15.2N;1
+					Source BLKTIGER\BD15.2N
+				EndFile
+				File BDU01A.5E;1
+					Source BLKTIGER\BDU01A.5E
+				EndFile
+				File BDU02A.6E;1
+					Source BLKTIGER\BDU02A.6E
+				EndFile
+				File BDU03A.8E;1
+					Source BLKTIGER\BDU03A.8E
+				EndFile
+				File BD.6K;1
+					Source BLKTIGER\BD.6K
 				EndFile
 			EndDirectory
 

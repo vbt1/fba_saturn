@@ -192,6 +192,13 @@ LDOVLAPPOOOFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(M
 SRCOVLAPPOOO         = d_appoooh.c czet.c cz80/cz80.c sn76496.c msm5205.c saturn/ovl.c
 OBJOVLAPPOOO         = $(SRCOVLAPPOOO:.c=.o)
 
+OVLBLKTGR                 = root/d_blktgr.coff
+OVLBLKTGR1               = root/d_blktgr.bin
+MPOVLBLKTGRFILE    = $(OVLBLKTGR:.coff=.maps)
+LDOVLBLKTGRFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBLKTGRFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c saturn/ovl.c
+OBJOVLBLKTGR         = $(SRCOVLBLKTGR:.c=.o)
+
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
@@ -209,7 +216,6 @@ LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
 
 LIBSOVL = ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_dma.a
 
-
 all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \
      $(OVLHIGEMARU) $(OVLHIGEMARU1) $(OVLPKUNW) $(OVLPKUNW1) \
@@ -219,6 +225,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) \
      $(OVLGGCZ) $(OVLGGCZ1) $(OVLAPPOOO) $(OVLAPPOOO1) \
+     $(OVLBLKTGR) $(OVLBLKTGR1) \
      $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
@@ -365,6 +372,12 @@ $(OVLAPPOOO) : $(OBJOVLAPPOOO) $(MAKEFILE) $(OBJOVLAPPOOO) $(LDOVLAPPOOOFILE)
 
 $(OVLAPPOOO1) : $(OBJOVLAPPOOO) $(MAKEFILE) $(LDOVLAPPOOOFILE)
 	$(CONV) -O binary $(OVLAPPOOO) $(OVLAPPOOO1)
+
+$(OVLBLKTGR) : $(OBJOVLBLKTGR) $(MAKEFILE) $(OBJOVLBLKTGR) $(LDOVLBLKTGRFILE)
+	$(CC) $(LDOVLBLKTGRFLAGS) $(OBJOVLBLKTGR) $(LIBSOVL) raze/raze.o -o $@
+
+$(OVLBLKTGR1) : $(OBJOVLBLKTGR) $(MAKEFILE) $(LDOVLBLKTGRFILE)
+	$(CONV) -O binary $(OVLBLKTGR) $(OVLBLKTGR1)
 
 # suffix
 .SUFFIXES: .asm
