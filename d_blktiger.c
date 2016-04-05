@@ -15,6 +15,15 @@
 <CyberWarriorX> vblank in
 <CyberWarriorX> vblank in is the start of the vblank. vblank out is the end of it
 */
+#define VDP2_BASE           0x25e00000
+#define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
+#define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
+#define VDP2_VRAM           VDP2_BASE
+#define VDP2_CRAM           (VDP2_BASE+0x100000)
+
+
+#define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
+
 static UINT16 remap4to16_lut[256];
 static UINT16 remap16_lut[768];
 static UINT16 cram_lut[4096];
@@ -100,6 +109,12 @@ static void DrvVidRamBankswitch(INT32 bank)
 	*DrvVidBank = bank & 0x03;
 
 	INT32 nBank = (bank & 3) * 0x1000;
+
+char toto[100];
+char *titi = &toto[0];
+titi=itoa(bank & 0x03);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bank            ",4,10);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,10);
 
 	CZetMapArea(0xc000, 0xcfff, 0, DrvBgRAM + nBank);
 //	CZetMapArea(0xc000, 0xcfff, 1, DrvBgRAM + nBank);
@@ -203,6 +218,15 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 
 			*flipscreen  =  data & 0x40;
 			*DrvFgEnable = ~data & 0x80;
+/*
+char toto[100];
+char *titi = &toto[0];
+titi=itoa(~data & 0x80);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"fgenab            ",4,20);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20);
+*/			ss_regs->dispenbl &= 0xfffb;
+			ss_regs->dispenbl |= (*DrvFgEnable >> 5) & 0x0004;
+			BGON = ss_regs->dispenbl;
 
 		return;
 
@@ -233,6 +257,19 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 		case 0x0c:
 			*DrvSprEnable = ~data & 0x02;
 			*DrvBgEnable  = ~data & 0x04;
+
+			ss_regs->dispenbl &= 0xfffD;
+			ss_regs->dispenbl |= (*DrvBgEnable >> 1) & 0x0002;
+			BGON = ss_regs->dispenbl;
+/*
+titi=itoa(~data & 0x02);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"spenab            ",4,30);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,30);
+
+titi=itoa(~data & 0x04);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bgenab            ",4,40);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,40);
+*/		
 		return;
 
 		case 0x0d:
@@ -241,6 +278,11 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 
 		case 0x0e:
 			*DrvScreenLayout = data ? 1 : 0;
+/*
+titi=itoa(data ? 1 : 0);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"scrlayou            ",4,50);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,50);
+*/
 		return;
 	}
 }
@@ -1090,13 +1132,7 @@ static INT32 DrvExit()
 
 	return 0;
 }
-#define VDP2_BASE           0x25e00000
-#define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
-#define VDP2_VRAM           VDP2_BASE
-#define VDP2_CRAM           (VDP2_BASE+0x100000)
-#define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 
-#define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
 
 void updateBgTile(INT32 type, UINT32 offs)
 {
@@ -1484,7 +1520,20 @@ static INT32 DrvFrame()
 	CZetClose();
 #endif	
 	draw_sprites();
-	memcpy (DrvSprBuf, DrvSprRAM, 0x1200);
+// à corriger
+	if(ss_map2[0]<0x400)
+	{
+			Scl_d_reg.patnamecontrl[1] = 0x0008;
+			Scl_d_reg.patnamecontrl[1] &= 0x7fff;
+			Scl_d_reg.patnamecontrl[1] |= 0x8000;
+
+		PNCN1 = Scl_d_reg.patnamecontrl[1];
+	}
+	else
+	{
+		PNCN1 = 0x000c;
+	}
+	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 
 //	ss_reg->n1_move_x =  ((1024)<<16) ;
 //	ss_reg->n1_move_y =  ((384)<<16) ;
