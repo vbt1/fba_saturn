@@ -2,7 +2,7 @@
 #define _D_PKUNWAR_H_
 
 #include "burnint.h"
-#include "ay8910.h"
+#include "snd/ay8910.h"
 #include "saturn/ovl.h"
 
 #define SOUND_LEN 128

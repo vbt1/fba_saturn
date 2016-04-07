@@ -298,6 +298,7 @@ wait_vblank();
 	wait_vblank();
 
 	SS_REG   = &Scl_n_reg;
+	SS_REGD =	&Scl_d_reg;
 	SS_REGS =	&Scl_s_reg;
 	SS_SPRAM = &aVRAM[0];
  	SS_N0PRI = &SclBgPriNum;
@@ -1754,8 +1755,8 @@ static void run_fba_emulator()
 			_spr2_transfercommand();
 			frame_x++;
 
-			 if(frame_x>=frame_y)
-				wait_vblank();
+//			 if(frame_x>=frame_y)
+//				wait_vblank();
 		}
 	}
 	if(drvquit==1)

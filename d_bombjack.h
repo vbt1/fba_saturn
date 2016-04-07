@@ -2,7 +2,7 @@
 #define _D_BOMBJACK_H_
 
 #include "burnint.h"
-#include "ay8910.h"
+#include "snd/ay8910.h"
 #include "sega_spr.h"
 #include "sega_pcm.h"
 #include "saturn/ovl.h"

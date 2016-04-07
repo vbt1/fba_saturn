@@ -62,14 +62,14 @@ OVLHIGEMARU                 = root/d_higemaru.coff
 OVLHIGEMARU1               = root/d_higema.bin
 MPOVLHIGEMARUFILE    = $(OVLHIGEMARU:.coff=.maps)
 LDOVLHIGEMARUFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLHIGEMARUFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLHIGEMARU         = d_higemaru.c czet.c cz80/cz80.c ay8910.c  saturn/ovl.c
+SRCOVLHIGEMARU         = d_higemaru.c czet.c cz80/cz80.c snd/ay8910.c  saturn/ovl.c
 OBJOVLHIGEMARU         = $(SRCOVLHIGEMARU:.c=.o)
 
 OVLPKUNW                 = root/d_pkunw.coff
 OVLPKUNW1               = root/d_pkunw.bin
 MPOVLPKUNWFILE    = $(OVLPKUNW:.coff=.maps)
 LDOVLPKUNWFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPKUNWFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLPKUNW         = d_pkunwar.c czet.c cz80/cz80.c ay8910.c
+SRCOVLPKUNW         = d_pkunwar.c czet.c cz80/cz80.c snd/ay8910.c
 OBJOVLPKUNW         = $(SRCOVLPKUNW:.c=.o)
 
 OVLMITCH                 = root/d_mitch.coff
@@ -182,7 +182,7 @@ OVLBOMBJACK                 = root/d_bombja.coff
 OVLBOMBJACK1               = root/d_bombja.bin
 MPOVLBOMBJACKFILE    = $(OVLBOMBJACK:.coff=.maps)
 LDOVLBOMBJACKFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBOMBJACKFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLBOMBJACK         = d_bombjack.c czet.c cz80/cz80.c ay8910.c  saturn/ovl.c
+SRCOVLBOMBJACK         = d_bombjack.c czet.c cz80/cz80.c snd/ay8910.c  saturn/ovl.c
 OBJOVLBOMBJACK         = $(SRCOVLBOMBJACK:.c=.o)
 
 OVLAPPOOO                 = root/d_appooo.coff
@@ -196,7 +196,7 @@ OVLBLKTGR                 = root/d_blktgr.coff
 OVLBLKTGR1               = root/d_blktgr.bin
 MPOVLBLKTGRFILE    = $(OVLBLKTGR:.coff=.maps)
 LDOVLBLKTGRFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBLKTGRFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c saturn/ovl.c
+SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c snd/timer.c snd/ay8910.c snd/fm.c snd/burn_ym2203.c saturn/ovl.c
 OBJOVLBLKTGR         = $(SRCOVLBLKTGR:.c=.o)
 
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
@@ -374,7 +374,7 @@ $(OVLAPPOOO1) : $(OBJOVLAPPOOO) $(MAKEFILE) $(LDOVLAPPOOOFILE)
 	$(CONV) -O binary $(OVLAPPOOO) $(OVLAPPOOO1)
 
 $(OVLBLKTGR) : $(OBJOVLBLKTGR) $(MAKEFILE) $(OBJOVLBLKTGR) $(LDOVLBLKTGRFILE)
-	$(CC) $(LDOVLBLKTGRFLAGS) $(OBJOVLBLKTGR) $(LIBSOVL) raze/raze.o -o $@
+	$(CC) $(LDOVLBLKTGRFLAGS) $(OBJOVLBLKTGR) $(LIBSOVL) -lm -o $@
 
 $(OVLBLKTGR1) : $(OBJOVLBLKTGR) $(MAKEFILE) $(LDOVLBLKTGRFILE)
 	$(CONV) -O binary $(OVLBLKTGR) $(OVLBLKTGR1)

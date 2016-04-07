@@ -3,7 +3,7 @@
 
 //#include "tiles_generic.h"
 //#include "z80_intf.h"
-//#include "burn_ym2203.h"
+#include "snd/burn_ym2203.h"
 //#include "bitswap.h"
 #include "d_blktiger.h"
 //#define RAZE 1
@@ -69,8 +69,9 @@ int ovlInit(char *szShortName)
 	if (strcmp(nBurnDrvBlktiger.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvBlktiger,sizeof(struct BurnDriver));
 
-	ss_reg    = (SclNorscl *)SS_REG;
-	ss_regs  = (SclSysreg *)SS_REGS;
+	ss_reg   = (SclNorscl *)SS_REG;
+	ss_regs = (SclSysreg *)SS_REGS;
+	ss_regd = (SclDataset *)SS_REGD;
 }
 
 static void palette_write(INT32 offset)
@@ -315,19 +316,19 @@ void __fastcall blacktiger_sound_write(UINT16 address, UINT8 data)
 	switch (address)
 	{
 		case 0xe000:
-//			BurnYM2203Write(0, 0, data);
+			BurnYM2203Write(0, 0, data);
 			return;
 
 		case 0xe001:
-//			BurnYM2203Write(0, 1, data);
+			BurnYM2203Write(0, 1, data);
 			return;
 
 		case 0xe002:
-//			BurnYM2203Write(1, 0, data);
+			BurnYM2203Write(1, 0, data);
 			return;
 
 		case 0xe003:
-//			BurnYM2203Write(1, 1, data);
+			BurnYM2203Write(1, 1, data);
 			return;
 	}
 }
@@ -340,16 +341,16 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 			return *soundlatch;
 
 		case 0xe000:
-			return 0;//BurnYM2203Read(0, 0);
+			return BurnYM2203Read(0, 0);
 
 		case 0xe001:
-			return 0;//BurnYM2203Read(0, 1);
+			return BurnYM2203Read(0, 1);
 
 		case 0xe002:
-			return 0;//BurnYM2203Read(1, 0);
+			return BurnYM2203Read(1, 0);
 
 		case 0xe003:
-			return 0;//BurnYM2203Read(1, 1);
+			return BurnYM2203Read(1, 1);
 	}
 
 	return 0;
@@ -486,7 +487,7 @@ static INT32 DrvDoReset(INT32 full_reset)
 	z80_reset();
 #endif
 
-//	BurnYM2203Reset();
+	BurnYM2203Reset();
 
 	watchdog = 0;
 
@@ -664,8 +665,8 @@ static INT32 DrvInit()
 
 //	GenericTilesInit();
 
-//	BurnYM2203Init(2, 3579545, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
-//	BurnTimerAttachZet(3579545);
+	BurnYM2203Init(2, 3579545/2, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnTimerAttachZet(3579545/2);
 //	BurnYM2203SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 //	BurnYM2203SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
 //	BurnYM2203SetPSGVolume(0, 0.05);
@@ -701,7 +702,7 @@ static void initLayers()
 	scfg.platesize     = SCL_PL_SIZE_2X1; // ou 2X2 ?
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
-	scfg.patnamecontrl =  0x0008;// VRAM A0?
+	scfg.patnamecontrl =  0x000c;// VRAM A0?
 	scfg.flip          = SCL_PN_10BIT; // on force à 0
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
 	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x800);
@@ -731,6 +732,7 @@ static void initLayers()
 	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
 	scfg.dispenbl      = ON;
+//	scfg.dispenbl      = OFF;
 
 	SCL_SetConfig(SCL_NBG0, &scfg);
 #endif
@@ -1054,15 +1056,15 @@ static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 
- 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xA000;		   //c
+ 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8
 // 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1;		   //c
 //	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8
 #ifdef BG_BANK
-	ss_map3	=(Uint16 *)SCL_VDP2_VRAM_B1+0xE000;								//a
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
+	ss_map3	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;								//a
+	SS_FONT = NULL; //ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
 #else
-SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
+SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
 //SS_FONT = ss_font		=(Uint16 *)NULL;
 #endif
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
@@ -1105,7 +1107,7 @@ SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
 
 
 //	memset((Uint8 *)ss_map  ,0,0x2000);
-	memset((Uint8 *)ss_map2,0x11,0x4000);
+//	memset((Uint8 *)ss_map2,0x11,0x4000);
 //	memset((Uint8 *)ss_map3,0,0x2000);
 //	memset((Uint8 *)bg_map_dirty,1,0x4000);
 	SprSpCmd *ss_spritePtr;
@@ -1119,12 +1121,11 @@ SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
 	make_lut();
-	drawWindow(0,224,240,0,64);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
 {
-//	BurnYM2203Exit();
+	BurnYM2203Exit();
 	CZetExit();
 //	GenericTilesExit();
 
@@ -1148,7 +1149,7 @@ void updateBgTile(INT32 type, UINT32 offs)
 
 static void draw_bg(INT32 type, INT32 layer)
 {
-//			   PNCN1 = 0x000c;
+// PNCN1 = 0x000c;
 // Priority masks should be enabled, but I don't see anywhere that they are used?
 //	INT32 scrollx = (*DrvScrollx)     & (0x3ff | (0x200 << type));
 //	INT32 scrolly = ((*DrvScrolly)+16) & (0x7ff >> type);
@@ -1488,8 +1489,8 @@ static INT32 DrvFrame()
 	CZetNewFrame();
 
 	INT32 nInterleave = 100;
-	nCyclesTotal[0] = 4000000 / 60;
-	nCyclesTotal[1] = 3000000 / 60;
+	nCyclesTotal[0] = 4000000 / 60/2;
+	nCyclesTotal[1] = 3000000 / 60/2;
 	INT32 nCyclesDone[2] = { 0, 0 };
 	
 	for (INT32 i = 0; i < nInterleave; i++) {
@@ -1509,30 +1510,22 @@ static INT32 DrvFrame()
 #ifndef RAZE
 		nCurrentCPU = 1;
 		CZetOpen(nCurrentCPU);
-//		BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
+		BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
 		CZetClose();
 #endif
 	}
 #ifndef RAZE
 	CZetOpen(1);
-//	BurnTimerEndFrame(nCyclesTotal[1]);
-//	if (pBurnSoundOut) BurnYM2203Update(pBurnSoundOut, nBurnSoundLen);
+	BurnTimerEndFrame(nCyclesTotal[1]);
+//	if (pBurnSoundOut)
+	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
+	BurnYM2203Update(nSoundBuffer, nBurnSoundLen);
 	CZetClose();
 #endif	
 	draw_sprites();
-// à corriger
-	if(ss_map2[0]<0x400)
-	{
-			Scl_d_reg.patnamecontrl[1] = 0x0008;
-			Scl_d_reg.patnamecontrl[1] &= 0x7fff;
-			Scl_d_reg.patnamecontrl[1] |= 0x8000;
+//	UINT32 position = ((*DrvScrollx)+32) / 16 + (((*DrvScrolly) /16)+32)*128;
+//	PNCN1 = ((ss_map2[position]&0x7ff)<0x400) ? 0x8008 : 0x800c;
 
-		PNCN1 = Scl_d_reg.patnamecontrl[1];
-	}
-	else
-	{
-		PNCN1 = 0x000c;
-	}
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 
 //	ss_reg->n1_move_x =  ((1024)<<16) ;

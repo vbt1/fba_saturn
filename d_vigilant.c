@@ -535,7 +535,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 static INT32 VigilantSyncDAC()
 {
 //	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (nBurnFPS / 100.0000))));
-	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (60 / 100.0000))));
+	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (6000 / 100.0000))));
 }
 
 /*static*/int DrvInit()

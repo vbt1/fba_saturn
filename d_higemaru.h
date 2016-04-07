@@ -2,7 +2,7 @@
 #define _D_HIGEMARU_H_
 
 #include "burnint.h"
-#include "ay8910.h"
+#include "snd/ay8910.h"
 #include "saturn/ovl.h"
 #include "raze/raze.h"
 //#include "saturn/sc_saturn.h"
