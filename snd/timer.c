@@ -32,6 +32,7 @@ double BurnTimerGetTime()
 
 // ---------------------------------------------------------------------------
 // Update timers
+#define INT_DIGITS 19
 
 static INT32 nTicksTotal, nTicksDone, nTicksExtra;
 
@@ -40,8 +41,6 @@ INT32 BurnTimerUpdate(INT32 nCycles)
 	INT32 nIRQStatus = 0;
 
 	nTicksTotal = MAKE_TIMER_TICKS(nCycles, nCPUClockspeed);
-
-//	bprintf(PRINT_NORMAL, _T(" -- Ticks: %08X, cycles %i\n"), nTicksTotal, nCycles);
 
 	while (nTicksDone < nTicksTotal) {
 		INT32 nTimer, nCyclesSegment, nTicksSegment;
@@ -55,15 +54,9 @@ INT32 BurnTimerUpdate(INT32 nCycles)
 		if (nTicksSegment > nTicksTotal) {
 			nTicksSegment = nTicksTotal;
 		}
-
 		nCyclesSegment = MAKE_CPU_CYLES(nTicksSegment + nTicksExtra, nCPUClockspeed);
-//		bprintf(PRINT_NORMAL, _T("  - Timer: %08X, %08X, %08X, cycles %i, %i\n"), nTicksDone, nTicksSegment, nTicksTotal, nCyclesSegment, pCPUTotalCycles());
-
 		pCPURun(nCyclesSegment - pCPUTotalCycles());
-
 		nTicksDone = MAKE_TIMER_TICKS(pCPUTotalCycles() + 1, nCPUClockspeed) - 1;
-//		bprintf(PRINT_NORMAL, _T("  - ticks done -> %08X cycles -> %i\n"), nTicksDone, pCPUTotalCycles());
-
 		nTimer = 0;
 		if (nTicksDone >= nTimerCount[0]) {
 			if (nTimerStart[0] == MAX_TIMER_VALUE) {
@@ -71,7 +64,6 @@ INT32 BurnTimerUpdate(INT32 nCycles)
 			} else {
 				nTimerCount[0] += nTimerStart[0];
 			}
-//			bprintf(PRINT_NORMAL, _T("  - timer 0 fired\n"));
 			nTimer |= 1;
 		}
 		if (nTicksDone >= nTimerCount[1]) {
@@ -80,7 +72,6 @@ INT32 BurnTimerUpdate(INT32 nCycles)
 			} else {
 				nTimerCount[1] += nTimerStart[1];
 			}
-//			bprintf(PRINT_NORMAL, _T("  - timer 1 fired\n"));
 			nTimer |= 2;
 		}
 		if (nTimer & 1) {

@@ -641,7 +641,7 @@ INT32 BurnYM2203Init(INT32 num, INT32 nClockFrequency, FM_IRQHANDLER IRQCallback
 
 	if((pBuffer = (INT16*)malloc(4096 * 4 * num * sizeof(INT16)))==NULL)
 	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failled            ",4,10);
+		FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"malloc failled            ",4,10);
 		while (1);
 	}
 	memset(pBuffer, 0, 4096 * 4 * num * sizeof(INT16));

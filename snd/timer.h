@@ -1,8 +1,8 @@
 // FM timers
 
 #define TIMER_TICKS_PER_SECOND (2048000000)
-#define MAKE_TIMER_TICKS(n, m) ((INT32)(n) * TIMER_TICKS_PER_SECOND / (m))
-#define MAKE_CPU_CYLES(n, m) ((INT32)(n) * (m) / TIMER_TICKS_PER_SECOND)
+#define MAKE_TIMER_TICKS(n, m) ((INT32)(	(n*1.00) * ((TIMER_TICKS_PER_SECOND*1.00) / (m*1.00))))
+#define MAKE_CPU_CYLES(n, m) ((INT32)((n*1.00) * ((m*1.00) / (TIMER_TICKS_PER_SECOND*1.00))))
 
 double BurnTimerGetTime();
 

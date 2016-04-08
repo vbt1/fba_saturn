@@ -665,8 +665,8 @@ static INT32 DrvInit()
 
 //	GenericTilesInit();
 
-	BurnYM2203Init(2, 3579545/2, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
-	BurnTimerAttachZet(3579545/2);
+	BurnYM2203Init(2, 3579545, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnTimerAttachZet(3579545);
 //	BurnYM2203SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 //	BurnYM2203SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
 //	BurnYM2203SetPSGVolume(0, 0.05);
@@ -1460,6 +1460,7 @@ static void draw_sprites()
 
 static INT32 DrvFrame()
 {
+//		FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"dfvframe start           ",4,10);
 #ifndef BG_BANK
 		SCL_SetColRam(SCL_NBG0,8,8,palette);
 #endif
@@ -1485,6 +1486,7 @@ static INT32 DrvFrame()
 
 		DrvInputs[0] |= *coin_lockout;
 	}
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"CZetNewFrame           ",4,20);
 
 	CZetNewFrame();
 
@@ -1495,7 +1497,7 @@ static INT32 DrvFrame()
 	
 	for (INT32 i = 0; i < nInterleave; i++) {
 		INT32 nCurrentCPU, nNext, nCyclesSegment;
-
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"CZetOpen 0           ",4,20);
 		// Run Z80 #1
 		nCurrentCPU = 0;
 		CZetOpen(nCurrentCPU);
@@ -1505,31 +1507,51 @@ static INT32 DrvFrame()
 		if (i == 98) CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
 		if (i == 99) CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 		CZetClose();
-
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"CZetOpen 1           ",4,20);
 		// Run Z80 #2
 #ifndef RAZE
 		nCurrentCPU = 1;
 		CZetOpen(nCurrentCPU);
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"BurnTimerUpdate           ",4,20);
 		BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
 		CZetClose();
 #endif
 	}
 #ifndef RAZE
 	CZetOpen(1);
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"BurnTimerEndFrame           ",4,20);
 	BurnTimerEndFrame(nCyclesTotal[1]);
 //	if (pBurnSoundOut)
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"BurnYM2203Update           ",4,20);
 	BurnYM2203Update(nSoundBuffer, nBurnSoundLen);
 	CZetClose();
-#endif	
+
+	nSoundBufferPos+=(nBurnSoundLen); // DOIT etre deux fois la taille copiee
+	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
+	{
+		PCM_Task(pcm); // bon emplacement
+		nSoundBufferPos=0;
+	}
+#endif
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"draw_sprites           ",4,20);
+	
 	draw_sprites();
 //	UINT32 position = ((*DrvScrollx)+32) / 16 + (((*DrvScrolly) /16)+32)*128;
 //	PNCN1 = ((ss_map2[position]&0x7ff)<0x400) ? 0x8008 : 0x800c;
 
+/*
+	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) 
+	{
+		pTransDraw[i] = 0x3ff;
+	}
+*/
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 
 //	ss_reg->n1_move_x =  ((1024)<<16) ;
 //	ss_reg->n1_move_y =  ((384)<<16) ;
+
+//		FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"dfvframe end           ",4,10);
 	return 0;
 }
 
