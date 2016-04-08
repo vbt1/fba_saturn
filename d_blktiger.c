@@ -570,12 +570,12 @@ static void DrvFMIRQHandler(INT32 irq, INT32 nStatus)
 
 static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 {
-	return (INT32)CZetTotalCycles() * nSoundRate / 3579545;
+	return (INT32)CZetTotalCycles() * nSoundRate / 3579545 / 2;
 }
 
 static double DrvGetTime()
 {
-	return (double)CZetTotalCycles() / 3579545;
+	return (double)CZetTotalCycles() / 3579545 / 2;
 }
 
 static INT32 DrvInit()
@@ -665,8 +665,8 @@ static INT32 DrvInit()
 
 //	GenericTilesInit();
 
-	BurnYM2203Init(2, 3579545, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
-	BurnTimerAttachZet(3579545);
+	BurnYM2203Init(2, 3579545 / 2, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnTimerAttachZet(3579545 / 2);
 //	BurnYM2203SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 //	BurnYM2203SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
 //	BurnYM2203SetPSGVolume(0, 0.05);
@@ -1490,7 +1490,8 @@ static INT32 DrvFrame()
 
 	CZetNewFrame();
 
-	INT32 nInterleave = 100;
+//	INT32 nInterleave = 100;
+	INT32 nInterleave = 20;
 	nCyclesTotal[0] = 4000000 / 60/2;
 	nCyclesTotal[1] = 3000000 / 60/2;
 	INT32 nCyclesDone[2] = { 0, 0 };
@@ -1504,8 +1505,10 @@ static INT32 DrvFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
-		if (i == 98) CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
-		if (i == 99) CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+//		if (i == 98) CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+//		if (i == 99) CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+		if (i == 18) CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+		if (i == 19) CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 		CZetClose();
 //	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"CZetOpen 1           ",4,20);
 		// Run Z80 #2
