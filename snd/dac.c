@@ -1,5 +1,5 @@
-#include "burnint.h"
-#include "burn_sound.h"
+#include "../burnint.h"
+#include "../burn_sound.h"
 
 #define DAC_NUM		(1)	// Maximum DAC chips
 #define nBurnSoundLen 128

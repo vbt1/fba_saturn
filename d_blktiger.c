@@ -570,12 +570,12 @@ static void DrvFMIRQHandler(INT32 irq, INT32 nStatus)
 
 static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 {
-	return (INT32)CZetTotalCycles() * nSoundRate / 3579545 / 2;
+	return (INT32)CZetTotalCycles() * nSoundRate / 3579545;
 }
 
 static double DrvGetTime()
 {
-	return (double)CZetTotalCycles() / 3579545 / 2;
+	return (double)CZetTotalCycles() / 3579545;
 }
 
 static INT32 DrvInit()
@@ -665,8 +665,8 @@ static INT32 DrvInit()
 
 //	GenericTilesInit();
 
-	BurnYM2203Init(2, 3579545 / 2, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
-	BurnTimerAttachZet(3579545 / 2);
+	BurnYM2203Init(2, 3579545, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 7680L);
+	BurnTimerAttachZet(3579545);
 //	BurnYM2203SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 //	BurnYM2203SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
 //	BurnYM2203SetPSGVolume(0, 0.05);

@@ -2,7 +2,7 @@
 #define SOUND 1
 #define CZ80 1
 //#define RAZE1 1
-#define RAZE0 1
+//#define RAZE0 1
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
@@ -236,7 +236,7 @@ void __fastcall VigilanteZ80Write1_d000(UINT16 a, UINT8 d)
 				if(a > 768)
 					map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c) ?0x2000:0x0000);
 				else
-					map[0] = Colour + 0x2000;	
+					map[0] = map[0x2000] = Colour + 0x2000;	
 			}
 			else	  // transparence
 			{
@@ -292,7 +292,7 @@ void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
 				if(a > 768)
 					map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c) ?0x2000:0x0000);
 				else
-					map[0] = Colour + 0x2000;	
+					map[0] = map[0x2000] = Colour + 0x2000;	
 			}
 			else	  // transparence
 			{
@@ -677,11 +677,11 @@ static INT32 VigilantSyncDAC()
 #endif
 
 	nCyclesTotal[0] = 3579645 / 55 / 2;
-	nCyclesTotal[1] = 3579645 / 55 / 4;
+	nCyclesTotal[1] = 3579645 / 55 / 2;
 	
 #ifdef SOUND
 //	BurnYM2151Init(3579645);
-	YM2151Init(1, 3579645/1.5, nBurnSoundRate);
+	YM2151Init(1, 3579645/2, nBurnSoundRate);
 	BurnYM2151SetIrqHandler(&VigilantYM2151IrqHandler);	
 //	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_1, 0.55, BURN_SND_ROUTE_LEFT);
 //	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_2, 0.55, BURN_SND_ROUTE_RIGHT);
@@ -1027,7 +1027,7 @@ void dummy()
 		INT16 ScrollBg = 0x17a - (DrvRearHorizScrollLo + DrvRearHorizScrollHi);
 		if (ScrollBg > 0) Scroll -= 2048;
 
-		memset4_fast(&ss_scl[32],Scroll | (Scroll<<16),0x300);
+		memset4_fast(&ss_scl[47],Scroll | (Scroll<<16),0x2C0);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1078,18 +1078,23 @@ int vspfunc(char *format, ...)
 /*static*/int DrvFrame()
 {
 //	INT32 nInterleave = 8; //128; // dac needs 128 NMIs
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame            ",4,10);
 	
-	if (DrvReset) DrvDoReset();
-
+//	if (DrvReset) DrvDoReset();
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvMakeInputs            ",4,10);
 	DrvMakeInputs();
 
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	
-	CZetOpen(1);
+//	CZetOpen(1);
 	CZetNewFrame();
 	
-	for (INT32 i = 0; i < nInterleave; ++i) {
+	for (INT32 i = 0; i < nInterleave; ++i) 
+	{
+//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",4,10);
+
 		INT32 nNext;
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"nInterleave            ",4,10);
 
 		// Run Z80 #1
 #ifdef RAZE0
@@ -1105,6 +1110,7 @@ int vspfunc(char *format, ...)
 //			z80_emulate(0);
 		}
 #else
+//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",4,10);
 		UINT8 nCurrentCPU = 0;
 		CZetOpen(nCurrentCPU);
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
@@ -1112,6 +1118,7 @@ int vspfunc(char *format, ...)
 		nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
 		if (i == (nInterleave - 1)) CZetRaiseIrq(0);
 		CZetClose();
+//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",4,10);
 #endif
 #ifdef RAZE1
 			nCurrentCPU = 1;
@@ -1124,8 +1131,8 @@ int vspfunc(char *format, ...)
 		}
 #else
 //		nCurrentCPU = 1;
-//		CZetOpen(1);
-
+		CZetOpen(1);
+//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",4,10);
 			nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 			nCyclesSegment = nNext - nCyclesDone[1];
 			nCyclesDone[1] += CZetRun(nCyclesSegment);
@@ -1133,27 +1140,41 @@ int vspfunc(char *format, ...)
 //		if ((i % 2) == 0) {
 			CZetNmi();
 		}
-//		CZetClose();
+//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",4,10);
+		CZetClose();
 #endif
 
 //	  SPR_RunSlaveSH((PARA_RTN*)DrvDrawSprites, NULL);
 
 #ifdef SOUND
 			signed short *	pBurnSoundOut = (signed short *)0x25a20000;
-//			short *	pBurnSoundOut = (short *)0x00200000;
+ 
 			signed short* pSoundBuf = pBurnSoundOut + nSoundBufferPos;
 
-//			CZetOpen(1);
+			CZetOpen(1);
 			YM2151UpdateOne(0, pSoundBuf, nSegmentLength1);
-//			CZetClose();
+//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"e",4,10);
+			CZetClose();
 
 			nSoundBufferPos += nSegmentLength1;
-			
+/*
+			if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x2400)
+			{
+	//			memcpy((short *)0x25a20000,(short *)0x00200000,nSoundBufferPos*sizeof(short));
+				PCM_Task(pcm); // bon emplacement
+				nSoundBufferPos=0;
+			}		   
+*/			
 #endif
 	}
-		SPR_WaitEndSlaveSH();
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"f",4,10);
+
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_WaitEndSlaveSH            ",4,10);
+//		SPR_WaitEndSlaveSH();
 	
 #ifdef SOUND
+//		if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
+//		SPR_WaitEndSlaveSH();
 		INT32 nSegmentLength2 = nBurnSoundLen - nSoundBufferPos;
 		
 		if (nSegmentLength2>0) 
@@ -1162,12 +1183,11 @@ int vspfunc(char *format, ...)
 //			short* pBurnSoundOut = (short *)0x00200000;
 			signed short* pSoundBuf = pBurnSoundOut + nSoundBufferPos;
 //			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos);
-
 			CZetOpen(1);
 			YM2151UpdateOne(0, pSoundBuf, nSegmentLength2);
 			CZetClose();
 			
-			nSoundBufferPos += nSegmentLength2;
+			nSoundBufferPos += nSegmentLength2;	
 		}
 //		DACUpdate(nSoundBuffer, nBurnSoundLen);
 //		BurnSoundCopyClamp_Mono_C(pBuffer, pSoundBuf, nSegmentLength);
@@ -1179,6 +1199,7 @@ int vspfunc(char *format, ...)
 			pBurnSoundOut[n] = pBurnBuffer[n];
 		}*/
 #endif
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvRenderDrawSound            ",4,10);
 
 	  DrvRenderDrawSound();
 
@@ -1188,14 +1209,14 @@ int vspfunc(char *format, ...)
 void DrvRenderDrawSound()
 {
 //		SPR_RunSlaveSH((PARA_RTN*)DrvDrawSprites, NULL);	
-
+#ifdef SOUND
 		if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x2400)
 		{
 //			memcpy((short *)0x25a20000,(short *)0x00200000,nSoundBufferPos*sizeof(short));
 			PCM_Task(pcm); // bon emplacement
 			nSoundBufferPos=0;
 		}
-		
+#endif		
 	DrvDrawForeground();
 	DrvDrawSprites();
 	if (!DrvRearDisable) 

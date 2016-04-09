@@ -3,7 +3,7 @@
 
 #include "burnint.h"
 #include "burn_ym2151.h"
-#include "dac.h"
+#include "snd/dac.h"
 #include "sega_spr.h"
 #include "sega_scl2.h"
 #include "sega_pcm.h"
