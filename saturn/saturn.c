@@ -161,7 +161,8 @@ static void initSound()
 	PCM_SetInfo(pcm, &info);
 	PCM_ChangePcmPara(pcm);
 
-	PCM_MeSetLoop(pcm, 0x1FF);//SOUNDRATE*60);
+//	PCM_MeSetLoop(pcm, 0x1FF);//SOUNDRATE*60);
+	PCM_MeSetLoop(pcm, 0x3FF);//SOUNDRATE*120);
 
 //	if (pcm == NULL) {
 //		while(1);

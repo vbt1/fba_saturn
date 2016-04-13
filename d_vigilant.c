@@ -2,17 +2,41 @@
 #define SOUND 1
 #define CZ80 1
 //#define RAZE1 1
-//#define RAZE0 1
+#define RAZE0 1
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
-#define nInterleave 128 // dac needs 128 NMIs
+#define nInterleave 140 // dac needs 128 NMIs
 #define nSegmentLength1 nBurnSoundLen / nInterleave
 
 #include "d_vigilant.h"
-
+void YM2151UpdateOneSlave();
 UINT32 nBurnCurrentYM2151Register;
 INT16 oldScroll =0;
+
+#define INT_DIGITS 19
+char *itoa(i)
+     int i;
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
 
 int ovlInit(char *szShortName)
 {
@@ -173,7 +197,7 @@ int ovlInit(char *szShortName)
 #ifdef SOUND
 //	BurnYM2151Reset();
 	YM2151ResetChip(0);
-	DACReset();
+//	DACReset();
 #endif
 	
 	DrvRomBank = 0;
@@ -676,17 +700,17 @@ static INT32 VigilantSyncDAC()
 	CZetClose();
 #endif
 
-	nCyclesTotal[0] = 3579645 / 55 / 2;
-	nCyclesTotal[1] = 3579645 / 55 / 2;
+	nCyclesTotal[0] = 3579645 / 55/1.5;
+	nCyclesTotal[1] = 3579645 / 55 /1.5;
 	
 #ifdef SOUND
 //	BurnYM2151Init(3579645);
-	YM2151Init(1, 3579645/2, nBurnSoundRate);
+	YM2151Init(1, 3579645/1.5, nBurnSoundRate);	 //11025);//
 	BurnYM2151SetIrqHandler(&VigilantYM2151IrqHandler);	
 //	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_1, 0.55, BURN_SND_ROUTE_LEFT);
 //	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_2, 0.55, BURN_SND_ROUTE_RIGHT);
-	DACInit(0, 0, 1, VigilantSyncDAC);
-	DACSetRoute(0, 0.45, BURN_SND_ROUTE_BOTH);
+//	DACInit(0, 0, 1, VigilantSyncDAC);
+//	DACSetRoute(0, 0.45, BURN_SND_ROUTE_BOTH);
 #endif
 //FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"init cpu done                 ",10,100);
 	DrvDoReset();
@@ -935,7 +959,7 @@ void dummy()
 	BurnYM2151SetIrqHandler(NULL);
 //	BurnYM2151SetPortHandler(NULL);
 	YM2151Shutdown();
-	DACExit();
+//	DACExit();
 #endif
 
 	
@@ -1057,45 +1081,15 @@ void dummy()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-///sprintf broken
-
-//char buffer[80];
-//int vspfunc(char *format, ...);
-  /*
-int vspfunc(char *format, ...)
-{
-   va_list aptr;
-   int ret;
-
-   va_start(aptr, format);
-   ret = vsprintf(buffer, format, aptr);
-   va_end(aptr);
-
-   return(ret);
-}
-*/
-
 /*static*/int DrvFrame()
 {
-//	INT32 nInterleave = 8; //128; // dac needs 128 NMIs
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame            ",4,10);
-	
-//	if (DrvReset) DrvDoReset();
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvMakeInputs            ",4,10);
 	DrvMakeInputs();
-
 	nCyclesDone[0] = nCyclesDone[1] = 0;
-	
-//	CZetOpen(1);
 	CZetNewFrame();
-	
+			
 	for (INT32 i = 0; i < nInterleave; ++i) 
 	{
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",4,10);
-
 		INT32 nNext;
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"nInterleave            ",4,10);
-
 		// Run Z80 #1
 #ifdef RAZE0
 //		nCurrentCPU = 0;
@@ -1105,12 +1099,9 @@ int vspfunc(char *format, ...)
 		if (i == (nInterleave - 1)) 
 		{
 			z80_raise_IRQ(0);
-//			z80_emulate(0);
-//			z80_lower_IRQ(0);
-//			z80_emulate(0);
+			z80_emulate(1);
 		}
 #else
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",4,10);
 		UINT8 nCurrentCPU = 0;
 		CZetOpen(nCurrentCPU);
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
@@ -1118,97 +1109,74 @@ int vspfunc(char *format, ...)
 		nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
 		if (i == (nInterleave - 1)) CZetRaiseIrq(0);
 		CZetClose();
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",4,10);
 #endif
+
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+	SPR_WaitEndSlaveSH();
+
+		}
+	else
+		{
+    *(volatile Uint8 *)0xfffffe11 = 0x00; // FTCSR clear
+    *(volatile Uint16 *)0xfffffe92 |= 0x10; // chache parse all
+		}
 #ifdef RAZE1
-			nCurrentCPU = 1;
-			nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-			nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-			nCyclesDone[nCurrentCPU] += z80_emulate(nCyclesSegment);
+		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+		nCyclesDone[1] += z80_emulate(nCyclesSegment);
 		if (i & 1) {
-//		if ((i % 2) == 0) {
 			z80_cause_NMI();
 		}
 #else
-//		nCurrentCPU = 1;
 		CZetOpen(1);
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",4,10);
-			nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
-			nCyclesSegment = nNext - nCyclesDone[1];
-			nCyclesDone[1] += CZetRun(nCyclesSegment);
-		if (i & 1) {
-//		if ((i % 2) == 0) {
+		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[1];
+		nCyclesDone[1] += CZetRun(nCyclesSegment);
+//		if (i & 1) 
+//		if (i % 1)
+		if (i % 1) 
+		{
 			CZetNmi();
 		}
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",4,10);
 		CZetClose();
 #endif
 
-//	  SPR_RunSlaveSH((PARA_RTN*)DrvDrawSprites, NULL);
+	CZetOpen(1);
+	SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
 
-#ifdef SOUND
-			signed short *	pBurnSoundOut = (signed short *)0x25a20000;
- 
-			signed short* pSoundBuf = pBurnSoundOut + nSoundBufferPos;
-
-			CZetOpen(1);
-			YM2151UpdateOne(0, pSoundBuf, nSegmentLength1);
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"e",4,10);
-			CZetClose();
-
-			nSoundBufferPos += nSegmentLength1;
-/*
-			if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x2400)
-			{
-	//			memcpy((short *)0x25a20000,(short *)0x00200000,nSoundBufferPos*sizeof(short));
-				PCM_Task(pcm); // bon emplacement
-				nSoundBufferPos=0;
-			}		   
-*/			
-#endif
+/*	 YM2151UpdateOneSlave();
+	 CZetClose();	 
+*/
 	}
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"f",4,10);
 
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_WaitEndSlaveSH            ",4,10);
-//		SPR_WaitEndSlaveSH();
-	
-#ifdef SOUND
-//		if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-//		SPR_WaitEndSlaveSH();
-		INT32 nSegmentLength2 = nBurnSoundLen - nSoundBufferPos;
-		
-		if (nSegmentLength2>0) 
-		{
-			signed short *	pBurnSoundOut = (signed short *)0x25a20000;
-//			short* pBurnSoundOut = (short *)0x00200000;
-			signed short* pSoundBuf = pBurnSoundOut + nSoundBufferPos;
-//			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos);
-			CZetOpen(1);
-			YM2151UpdateOne(0, pSoundBuf, nSegmentLength2);
-			CZetClose();
-			
-			nSoundBufferPos += nSegmentLength2;	
-		}
-//		DACUpdate(nSoundBuffer, nBurnSoundLen);
-//		BurnSoundCopyClamp_Mono_C(pBuffer, pSoundBuf, nSegmentLength);
-/*		short* pBurnSoundOut = (short *)0x25a20000;
-		short* pBurnBuffer = (short *)0x00200000;
-
-		for (int n = 0; n < nSoundBufferPos; n++) 
-		{
-			pBurnSoundOut[n] = pBurnBuffer[n];
-		}*/
-#endif
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvRenderDrawSound            ",4,10);
-
-	  DrvRenderDrawSound();
-
+// 	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
+//	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+//	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
+/*  
+	CZetOpen(1);
+	YM2151UpdateOne(0,buffers, 14);
+	CZetClose();	
+//	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
+//	signed short* buffers = pBurnSoundOut + nSoundBufferPos - nBurnSoundLen;
+//	DACUpdate(buffers, nBurnSoundLen);
+	nSoundBufferPos += 14;*/	 
+	DrvRenderDrawSound();
 	return 0;
 }
 
 void DrvRenderDrawSound()
 {
 //		SPR_RunSlaveSH((PARA_RTN*)DrvDrawSprites, NULL);	
+	
+	DrvDrawForeground();
+	DrvDrawSprites();
+	if (!DrvRearDisable) 
+	{
+		DrvRenderBackground();
+	}
+//							SPR_WaitEndSlaveSH();
+
 #ifdef SOUND
 		if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x2400)
 		{
@@ -1216,14 +1184,7 @@ void DrvRenderDrawSound()
 			PCM_Task(pcm); // bon emplacement
 			nSoundBufferPos=0;
 		}
-#endif		
-	DrvDrawForeground();
-	DrvDrawSprites();
-	if (!DrvRearDisable) 
-	{
-		DrvRenderBackground();
-	}
-
+#endif	
 //	SPR_WaitEndSlaveSH();
 }
 

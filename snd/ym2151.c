@@ -220,20 +220,20 @@ typedef struct
 *	TL_RES_LEN - sinus resolution (X axis)
 */
 #define TL_TAB_LEN (13*2*TL_RES_LEN)
-static signed int tl_tab[TL_TAB_LEN];
+/*static*/ signed int tl_tab[TL_TAB_LEN];
 
 #define ENV_QUIET		(TL_TAB_LEN>>3)
 
 /* sin waveform table in 'decibel' scale */
-static unsigned int sin_tab[SIN_LEN];
+/*static*/ unsigned int sin_tab[SIN_LEN];
 
 
 /* translate from D1L to volume index (16 D1L levels) */
-static UINT32 d1l_tab[16];
+/*static*/ UINT32 d1l_tab[16];
 
 
 #define RATE_STEPS (8)
-static UINT8 eg_inc[19*RATE_STEPS]={
+/*static*/ UINT8 eg_inc[19*RATE_STEPS]={
 
 /*cycle:0 1  2 3  4 5  6 7*/
 
@@ -266,7 +266,7 @@ static UINT8 eg_inc[19*RATE_STEPS]={
 #define O(a) (a*RATE_STEPS)
 
 /*note that there is no O(17) in this table - it's directly in the code */
-static UINT8 eg_rate_select[32+64+32]={	/* Envelope Generator rates (32 + 64 rates + 32 RKS) */
+/*static*/ UINT8 eg_rate_select[32+64+32]={	/* Envelope Generator rates (32 + 64 rates + 32 RKS) */
 /* 32 dummy (infinite time) rates */
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
@@ -313,7 +313,7 @@ O(16),O(16),O(16),O(16),O(16),O(16),O(16),O(16)
 /*mask  2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3, 1,  0,  0,  0,  0,  0 */
 
 #define O(a) (a*1)
-static UINT8 eg_rate_shift[32+64+32]={	/* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
+/*static*/ UINT8 eg_rate_shift[32+64+32]={	/* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
 /* 32 infinite time rates */
 O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
 O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
@@ -366,14 +366,14 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 *	DT2=0 DT2=1 DT2=2 DT2=3
 *	0     600   781   950
 */
-static UINT32 dt2_tab[4] = { 0, 384, 500, 608 };
+/*static*/ UINT32 dt2_tab[4] = { 0, 384, 500, 608 };
 
 /*	DT1 defines offset in Hertz from base note
 *	This table is converted while initialization...
 *	Detune table shown in YM2151 User's Manual is wrong (verified on the real chip)
 */
 
-static UINT8 dt1_tab[4*32] = { /* 4*32 DT1 values */
+/*static*/ UINT8 dt1_tab[4*32] = { /* 4*32 DT1 values */
 /* DT1=0 */
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -391,7 +391,7 @@ static UINT8 dt1_tab[4*32] = { /* 4*32 DT1 values */
   8, 8, 9,10,11,12,13,14,16,17,19,20,22,22,22,22
 };
 
-static UINT16 phaseinc_rom[768]={
+/*static*/ UINT16 phaseinc_rom[768]={
 1299,1300,1301,1302,1303,1304,1305,1306,1308,1309,1310,1311,1313,1314,1315,1316,
 1318,1319,1320,1321,1322,1323,1324,1325,1327,1328,1329,1330,1332,1333,1334,1335,
 1337,1338,1339,1340,1341,1342,1343,1344,1346,1347,1348,1349,1351,1352,1353,1354,
@@ -461,7 +461,7 @@ static UINT16 phaseinc_rom[768]={
 		some 0x80 could be 0x81 as well as some 0x00 could be 0x01.
 */
 
-static UINT8 lfo_noise_waveform[256] = {
+/*static*/ UINT8 lfo_noise_waveform[256] = {
 0xFF,0xEE,0xD3,0x80,0x58,0xDA,0x7F,0x94,0x9E,0xE3,0xFA,0x00,0x4D,0xFA,0xFF,0x6A,
 0x7A,0xDE,0x49,0xF6,0x00,0x33,0xBB,0x63,0x91,0x60,0x51,0xFF,0x00,0xD8,0x7F,0xDE,
 0xDC,0x73,0x21,0x85,0xB2,0x9C,0x5D,0x24,0xCD,0x91,0x9E,0x76,0x7F,0x20,0xFB,0xF3,
@@ -484,15 +484,15 @@ static UINT8 lfo_noise_waveform[256] = {
 };
 
 
-static YM2151 * YMPSG = NULL;	/* array of YM2151's */
-static unsigned int YMNumChips;	/* total # of YM2151's emulated */
+/*static*/ YM2151 * YMPSG = NULL;	/* array of YM2151's */
+/*static*/ unsigned int YMNumChips;	/* total # of YM2151's emulated */
 
 
 /* these variables stay here for speedup purposes only */
-static YM2151 * PSG;
-static signed int chanout[8];
-static signed int m2,c1,c2; /* Phase Modulation input for operators 2,3,4 */
-static signed int mem;		/* one sample delay memory */
+/*static*/ YM2151 * PSG;
+/*static*/ signed int chanout[8];
+/*static*/ signed int m2,c1,c2; /* Phase Modulation input for operators 2,3,4 */
+/*static*/ signed int mem;		/* one sample delay memory */
 
 
 /* save output as raw 16-bit sample */
@@ -656,8 +656,9 @@ static signed int mem;		/* one sample delay memory */
 			chip->freq[768+ j*768 + i ] = chip->freq[768 + 8*768 -1];
 		}
 	}
+	unsigned int *lowram = (unsigned int *)0x00200000;
 
-	mult = (1<<FREQ_SH);
+	mult = 0x10000;//(1<<FREQ_SH);
 	for (j=0; j<4; j++)
 	{
 		for (i=0; i<32; i++)
@@ -670,14 +671,14 @@ static signed int mem;		/* one sample delay memory */
 			/*positive and negative values*/
 			chip->dt1_freq[ (j+0)*32 + i ] = phaseinc * mult;
 			chip->dt1_freq[ (j+4)*32 + i ] = -chip->dt1_freq[ (j+0)*32 + i ];
-
+//			lowram[i+j*32]=chip->dt1_freq[ (j+0)*32 + i ];
 		}
 	}
-
+//	while(1);
 
 	/* calculate timers' deltas */
 	/* User's Manual pages 15,16  */
-	mult = (1<<TIMER_SH);
+	mult = 0x10000;//(1<<TIMER_SH);
 	for (i=0; i<1024; i++)
 	{
 		/* ASG 980324: changed to compute both tim_A_tab and timer_A_time */
@@ -687,7 +688,10 @@ static signed int mem;		/* one sample delay memory */
 		#else
 			chip->tim_A_tab[i] = pom * (double)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
 		#endif
+//
+// vbt : tim_A_tab correct
 	}
+
 	for (i=0; i<256; i++)
 	{
 		/* ASG 980324: changed to compute both tim_B_tab and timer_B_time */
@@ -697,10 +701,13 @@ static signed int mem;		/* one sample delay memory */
 		#else
 			chip->tim_B_tab[i] = pom * (double)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
 		#endif
+// vbt : tim_B_tab correct
 	}
 
 	/* calculate noise periods table */
 	scaler = ( (double)chip->clock / 64.0 ) / ( (double)chip->sampfreq );
+
+
 	for (i=0; i<32; i++)
 	{
 		j = (i!=31 ? i : 30);				/* rate 30 and 31 are the same */
@@ -708,8 +715,15 @@ static signed int mem;		/* one sample delay memory */
 		j = (65536.0 / (double)(j*32.0));	/* number of samples per one shift of the shift register */
 		/*chip->noise_tab[i] = j * 64;*/	/* number of chip clock cycles per one shift */
 		chip->noise_tab[i] = j * 64 * scaler;
+// vbt : noise_tab correct
 		/*logerror("noise_tab[%02x]=%08x\n", i, chip->noise_tab[i]);*/
+//		char toto[100];
+
+//		sprintf(toto,"i %d noise %d",i, chip->noise_tab[i]);
+//		lowram[i]=chip->noise_tab[i];
+//		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)toto,10,i*10);
 	}
+//	while(1);
 }
 
 #define KEY_ON(op, key_set){									\
@@ -2165,8 +2179,8 @@ void slaveRender(INT16 *buffers)
 		outl += (chanout[7] & PSG->pan[14]);
 		outr += (chanout[7] & PSG->pan[15]);
 
-		outl >>= FINAL_SH;
-		outr >>= FINAL_SH;
+//		outl >>= FINAL_SH;
+//		outr >>= FINAL_SH;
 //		if (outl > MAXOUT) outl = MAXOUT;
 //			else if (outl < MINOUT) outl = MINOUT;
 //		if (outr > MAXOUT) outr = MAXOUT;
@@ -2175,7 +2189,9 @@ void slaveRender(INT16 *buffers)
 //		((SAMP*)bufR)[i] = (SAMP)outr;
 
 //		buffers[i] = ((int)(outl) + outr) / 2;
-		buffers[0] = BURN_SND_CLIP((outl + outr) / 2);
+//		buffers[0] = BURN_SND_CLIP((outl + outr) / 2);
+		buffers[0] = BURN_SND_CLIP((outl + outr) >> 1);
+//		buffers[0] = BURN_SND_CLIP(outl);
 }
 
 
@@ -2225,10 +2241,15 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 	{
 		advance_eg();
 //		slaveRender(&buffers[i]);
-		if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-		SPR_WaitEndSlaveSH();
+#if 0
+	
+//		if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
+//		SPR_WaitEndSlaveSH();
 		SPR_RunSlaveSH((void *)slaveRender, &buffers[i]);
-	/*
+//		slaveRender(&buffers[i]);
+#else
+		signed int outl,outr;
+
 		chanout[0] = 0;
 		chanout[1] = 0;
 		chanout[2] = 0;
@@ -2237,68 +2258,45 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 		chanout[5] = 0;
 		chanout[6] = 0;
 		chanout[7] = 0;
-  	
+
 		chan_calc(0);
-		SAVE_SINGLE_CHANNEL(0)
+//		SAVE_SINGLE_CHANNEL(0)
 		chan_calc(1);
-		SAVE_SINGLE_CHANNEL(1)
+//		SAVE_SINGLE_CHANNEL(1)
 		chan_calc(2);
-		SAVE_SINGLE_CHANNEL(2)
+//		SAVE_SINGLE_CHANNEL(2)
 		chan_calc(3);
-		SAVE_SINGLE_CHANNEL(3)
+//		SAVE_SINGLE_CHANNEL(3)
 		chan_calc(4);
-		SAVE_SINGLE_CHANNEL(4)
+//		SAVE_SINGLE_CHANNEL(4)
 		chan_calc(5);
-		SAVE_SINGLE_CHANNEL(5)
+//		SAVE_SINGLE_CHANNEL(5)
 		chan_calc(6);
-		SAVE_SINGLE_CHANNEL(6)
-		chan7_calc();
-		SAVE_SINGLE_CHANNEL(7)
- 
-		outl = chanout[0] & PSG->pan[0];
+//		SAVE_SINGLE_CHANNEL(6)
+		chan_calc(7);
+//		SAVE_SINGLE_CHANNEL(7)
+
+//		outl = chanout[0] & PSG->pan[0];
 		outr = chanout[0] & PSG->pan[1];
-		outl += (chanout[1] & PSG->pan[2]);
+//		outl += (chanout[1] & PSG->pan[2]);
 		outr += (chanout[1] & PSG->pan[3]);
-		outl += (chanout[2] & PSG->pan[4]);
+//		outl += (chanout[2] & PSG->pan[4]);
 		outr += (chanout[2] & PSG->pan[5]);
-		outl += (chanout[3] & PSG->pan[6]);
+//		outl += (chanout[3] & PSG->pan[6]);
 		outr += (chanout[3] & PSG->pan[7]);
-		outl += (chanout[4] & PSG->pan[8]);
+//		outl += (chanout[4] & PSG->pan[8]);
 		outr += (chanout[4] & PSG->pan[9]);
-		outl += (chanout[5] & PSG->pan[10]);
+//		outl += (chanout[5] & PSG->pan[10]);
 		outr += (chanout[5] & PSG->pan[11]);
-		outl += (chanout[6] & PSG->pan[12]);
+//		outl += (chanout[6] & PSG->pan[12]);
 		outr += (chanout[6] & PSG->pan[13]);
-		outl += (chanout[7] & PSG->pan[14]);
+//		outl += (chanout[7] & PSG->pan[14]);
 		outr += (chanout[7] & PSG->pan[15]);
 
-		
-	
-
-		outl >>= FINAL_SH;
-		outr >>= FINAL_SH;
-		if (outl > MAXOUT) outl = MAXOUT;
-			else if (outl < MINOUT) outl = MINOUT;
 		if (outr > MAXOUT) outr = MAXOUT;
 			else if (outr < MINOUT) outr = MINOUT;
-//		((SAMP*)bufL)[i] = (SAMP)outl;
-//		((SAMP*)bufR)[i] = (SAMP)outr;
-
-//		buffers[i] = ((int)(outl) + outr) / 2;
-		buffers[i] = (outl + outr) / 2;
- */
-
-/*	
-	  char toto[50];
-	 vspfunc("%03d ", sizeof(YM2151));
-
-		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)buffer,4,80);
-*/
-//	 vspfunc("out[4]%03x out[5] %03x out[6] %03x out[7] %03x", chanout[4],chanout[5],chanout[6],chanout[7]);
-
-//				FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)buffer,4,90);
-   
-
+		buffers[0] = ((signed short)outr);
+#endif
 
 #ifdef USE_MAME_TIMERS
 		/* ASG 980324 - handled by real timers now */
@@ -2324,10 +2322,126 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 //FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"c",4,10);
 		advance();
 //FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"d",4,10);
-
-//		SPR_WaitEndSlaveSH();
 	}
 }
+
+extern unsigned int  nSoundBufferPos;
+
+void YM2151UpdateOneSlave()
+{
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"a",10,10);
+	unsigned int i;
+	unsigned int num=0;
+	unsigned int length = 1; //140/128; //128;
+	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
+//	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
+
+	PSG = &YMPSG[num];
+
+	if (PSG->tim_B)
+	{
+		PSG->tim_B_val -= 0x10000;//( length << TIMER_SH );
+		if (PSG->tim_B_val<=0)
+		{
+			PSG->tim_B_val += PSG->tim_B_tab[ PSG->timer_B_index ];
+			if ( PSG->irq_enable & 0x08 )
+			{
+				int oldstate = PSG->status & 3;
+				PSG->status |= 2;
+				if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
+			}
+		}
+	}
+//  i=0;
+	for (i=0; i<length; ++i)
+	{
+		advance_eg();
+//		slaveRender(&buffers[i]);
+
+  		signed int outl,outr;
+
+		chanout[0] = 0;
+		chanout[1] = 0;
+		chanout[2] = 0;
+		chanout[3] = 0;
+		chanout[4] = 0;
+		chanout[5] = 0;
+		chanout[6] = 0;
+		chanout[7] = 0;
+  	
+		chan_calc(0);
+//		SAVE_SINGLE_CHANNEL(0)
+		chan_calc(1);
+//		SAVE_SINGLE_CHANNEL(1)
+		chan_calc(2);
+//		SAVE_SINGLE_CHANNEL(2)
+		chan_calc(3);
+//		SAVE_SINGLE_CHANNEL(3)
+		chan_calc(4);
+//		SAVE_SINGLE_CHANNEL(4)
+		chan_calc(5);
+//		SAVE_SINGLE_CHANNEL(5)
+		chan_calc(6);
+//		SAVE_SINGLE_CHANNEL(6)
+		chan_calc(7);
+//		SAVE_SINGLE_CHANNEL(7)
+ 
+		outl = chanout[0] & PSG->pan[0];
+		outr = chanout[0] & PSG->pan[1];
+		outl += (chanout[1] & PSG->pan[2]);
+		outr += (chanout[1] & PSG->pan[3]);
+		outl += (chanout[2] & PSG->pan[4]);
+		outr += (chanout[2] & PSG->pan[5]);
+		outl += (chanout[3] & PSG->pan[6]);
+		outr += (chanout[3] & PSG->pan[7]);
+		outl += (chanout[4] & PSG->pan[8]);
+		outr += (chanout[4] & PSG->pan[9]);
+		outl += (chanout[5] & PSG->pan[10]);
+		outr += (chanout[5] & PSG->pan[11]);
+		outl += (chanout[6] & PSG->pan[12]);
+		outr += (chanout[6] & PSG->pan[13]);
+		outl += (chanout[7] & PSG->pan[14]);
+		outr += (chanout[7] & PSG->pan[15]);
+
+//		outl >>= FINAL_SH;
+//		outr >>= FINAL_SH;
+		if (outl > MAXOUT) outl = MAXOUT;
+			else if (outl < MINOUT) outl = MINOUT;
+		if (outr > MAXOUT) outr = MAXOUT;
+			else if (outr < MINOUT) outr = MINOUT;
+//		((SAMP*)bufL)[i] = (SAMP)outl;
+//		((SAMP*)bufR)[i] = (SAMP)outr;
+
+//		buffers[i] = ((int)(outl) + outr) / 2;
+		buffers[i] = BURN_SND_CLIP(((signed short)outl + (signed short)outr) / 2);
+//		buffers[i] = ((signed short)outr); //BURN_SND_CLIP( ( ((signed short)outl)/2 + ((signed short)outr)/2   ));
+
+		/* calculate timer A */
+		if (PSG->tim_A)
+		{
+			PSG->tim_A_val -= 0x10000;//( 1 << TIMER_SH );
+			if (PSG->tim_A_val <= 0)
+			{
+				PSG->tim_A_val += PSG->tim_A_tab[ PSG->timer_A_index ];
+				if (PSG->irq_enable & 0x04)
+				{
+					int oldstate = PSG->status & 3;
+					PSG->status |= 1;
+					if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
+				}
+				if (PSG->irq_enable & 0x80)
+					PSG->csm_req = 2;	/* request KEY ON / KEY OFF sequence */
+			}
+		}
+		advance();
+	}
+	nSoundBufferPos+=length;
+//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"b",10,10);
+}
+
+
 
 void YM2151SetIrqHandler(int n, void(*handler)(int irq))
 {

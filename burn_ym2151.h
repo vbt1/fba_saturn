@@ -1,8 +1,8 @@
 // burn_ym2151.h
 #include "driver.h"
 //extern "C" {
-// #include "ym2151.h"
- #include "ym2151_s16.h"
+ #include "snd/ym2151.h"
+// #include "ym2151_s16.h"
 //}
 
 INT32 BurnYM2151Init(INT32 nClockFrequency);
