@@ -2,7 +2,7 @@
 #include "../burn_sound.h"
 
 #define DAC_NUM		(1)	// Maximum DAC chips
-#define nBurnSoundLen 128
+#define nBurnSoundLen 140
 typedef struct //dac_info
 {
 	INT16	Output;
@@ -29,13 +29,13 @@ static INT32 bAddSignal;
 static void UpdateStream(INT32 chip, INT32 length)
 {
 	dac_info *ptr;
- char toto[100];
+/* char toto[100];
 char *titi = &toto[0];
 titi=itoa(length);
  			FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"        ",4,60);
 
 			FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,4,60);
-
+*/
 
 
 	if (lBuffer == NULL) {	// delay buffer allocation for cases when fps is not 60
@@ -71,7 +71,7 @@ titi=itoa(length);
         ptr->nCurrentPosition += length;
 
         if (rOut && lOut) {
-		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"a",4,10);
+//		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"a",4,10);
 			
                 while (length--) {
 //                      *lbuf++ = *lbuf + lOut;

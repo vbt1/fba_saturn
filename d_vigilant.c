@@ -700,7 +700,7 @@ static INT32 VigilantSyncDAC()
 	CZetClose();
 #endif
 
-	nCyclesTotal[0] = 3579645 / 55/1.5;
+	nCyclesTotal[0] = 3579645 / 55/3;
 	nCyclesTotal[1] = 3579645 / 55 /1.5;
 	
 #ifdef SOUND
