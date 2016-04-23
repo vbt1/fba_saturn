@@ -291,30 +291,30 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,40)
 			if(data)		  // 1 = 128x64, 0 = 64x128
 			{
 				*DrvScreenLayout = 1;
-/*				ss_regd->platesize &= 0xfff3;
-				ss_regd->platesize |= 0x0004;		*/
+//				ss_regd->platesize &= 0xfff3;
+//				ss_regd->platesize |= 0x0004;		
 				bg_map_lut = &bg_map_lut2x1[0];
-
+	 /*
 				plate_addr[0] = (Uint32)SS_MAP2;
 				plate_addr[1] = (Uint32)(SS_MAP2+0x800);
 				plate_addr[2] = (Uint32)(SS_MAP2+0x400);	 // good	  0x400
-				plate_addr[3] = (Uint32)(SS_MAP2+0xC00);
+				plate_addr[3] = (Uint32)(SS_MAP2+0xC00);	 */  
 			}
 			else
 			{
 				*DrvScreenLayout = 0;
-/*				ss_regd->platesize &= 0xfff3;
-				ss_regd->platesize |= 0x000c;	 */
+//				ss_regd->platesize &= 0xfff3;
+//				ss_regd->platesize |= 0x000c;	 
 				bg_map_lut = &bg_map_lut2x2[0];
-
-				plate_addr[0] = (Uint32)(SS_MAP2);
-				plate_addr[1] = (Uint32)(SS_MAP2);
+ /*
+				plate_addr[0] = (Uint32)(SS_MAP2);//////
+				plate_addr[1] = (Uint32)(SS_MAP2);//////
 				plate_addr[2] = (Uint32)(SS_MAP2+0x800);	 // good	  0x400
-				plate_addr[3] = (Uint32)(SS_MAP2+0x800);
+				plate_addr[3] = (Uint32)(SS_MAP2+0x800);  */
 			}
-//			PLSZ = ss_regd->platesize;
-
-/*			UINT16	*map = 0;
+			PLSZ = ss_regd->platesize;
+ 
+			UINT16	*map = 0;
 			UINT16	temp;
 			map = &ss_regd->normap[2];
 
@@ -323,7 +323,7 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,40)
 				map[i] = (0x003f & ((plate_addr[i * 2] - VDP2_BASE)	/ 0x800));
 				temp = (0x003f & ((plate_addr[i * 2 + 1] - VDP2_BASE)	/ 0x800)) << 8;
 				map[i] |= (temp & 0x3f00);
-			}			*/
+			}
 		}
 /*
 titi=itoa(data ? 1 : 0);
@@ -777,24 +777,29 @@ static void initLayers()
 	scfg.patnamecontrl =  0x0008;// VRAM A0?
 	scfg.flip          = SCL_PN_10BIT; // on force à 0
  //2x1
-/* 
+/*
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
 	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x800);
 	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x400);	 // good	  0x400
 	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0xC00);
-*/ 
-	
-//2x2
+*/
+
 	scfg.plate_addr[0] = (Uint32)(SS_MAP2);
+	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x800);
+	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x800);	 // good	  0x400
+	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x800);
+	
+//2x2	 vertical
+/*	scfg.plate_addr[0] = (Uint32)(SS_MAP2);
 	scfg.plate_addr[1] = (Uint32)(SS_MAP2);
 	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x800);	 // good	  0x400
 	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x800);
-
+*/
  /*
 	scfg.plate_addr[4] = (Uint32)(SS_MAP2+0x800);
 	scfg.plate_addr[6] = (Uint32)(SS_MAP2+0xC00);
 */
-SCL_SetConfig(SCL_NBG1, &scfg);
+	SCL_SetConfig(SCL_NBG1, &scfg);
 #ifdef BG_BANK
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.patnamecontrl =  0x000c;// VRAM A0?
@@ -1782,7 +1787,7 @@ static INT32 DrvFrame()
 #endif
 //  	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame          ",4,10);
 
-DrvZ80RAM0[0xF3A1-0xe000]=2;
+//DrvZ80RAM0[0xF3A1-0xe000]=2;
 DrvZ80RAM0[0xE905-0xe000]= 0x01;
 DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
