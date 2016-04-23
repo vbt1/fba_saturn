@@ -199,6 +199,13 @@ LDOVLBLKTGRFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(M
 SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c snd/timer.c snd/ay8910.c snd/fm.c snd/burn_ym2203.c saturn/ovl.c
 OBJOVLBLKTGR         = $(SRCOVLBLKTGR:.c=.o)
 
+OVLWIZ                 = root/d_wiz.coff
+OVLWIZ1               = root/d_wiz.bin
+MPOVLWIZFILE    = $(OVLWIZ:.coff=.maps)
+LDOVLWIZFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLWIZFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLWIZ         = d_wiz.c czet.c cz80/cz80.c snd/ay8910.c
+OBJOVLWIZ         = $(SRCOVLWIZ:.c=.o)
+
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
@@ -225,7 +232,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) \
      $(OVLGGCZ) $(OVLGGCZ1) $(OVLAPPOOO) $(OVLAPPOOO1) \
-     $(OVLBLKTGR) $(OVLBLKTGR1) \
+     $(OVLBLKTGR) $(OVLBLKTGR1) $(OVLWIZ) $(OVLWIZ1) \
      $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
@@ -378,6 +385,12 @@ $(OVLBLKTGR) : $(OBJOVLBLKTGR) $(MAKEFILE) $(OBJOVLBLKTGR) $(LDOVLBLKTGRFILE)
 
 $(OVLBLKTGR1) : $(OBJOVLBLKTGR) $(MAKEFILE) $(LDOVLBLKTGRFILE)
 	$(CONV) -O binary $(OVLBLKTGR) $(OVLBLKTGR1)
+
+$(OVLWIZ) : $(OBJOVLWIZ) $(MAKEFILE) $(OBJOVLWIZ) $(LDOVLWIZFILE)
+	$(CC) $(LDOVLWIZFLAGS) $(OBJOVLWIZ) $(LIBSOVL) raze/raze.o -o $@
+
+$(OVLWIZ1) : $(OBJOVLWIZ) $(MAKEFILE) $(LDOVLWIZFILE)
+	$(CONV) -O binary $(OVLWIZ) $(OVLWIZ1)
 
 # suffix
 .SUFFIXES: .asm

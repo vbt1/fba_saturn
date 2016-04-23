@@ -137,6 +137,10 @@ Track MODE1
 				Source D_BOMBJA.BIN
 			EndFile
 
+			File D_WIZ.BIN;1
+				Source D_WIZ.BIN
+			EndFile
+
 			Directory BOMBJA
 				File 01H03T.BIN;1
 					Source BOMBJA\01H03T.BIN
@@ -3819,6 +3823,49 @@ EndFile
 				EndFile
 			EndDirectory
 
+			Directory WIZ
+				File IC07_01.BIN;1
+					Source WIZ\IC07_01.BIN
+				EndFile
+				File IC05_03.BIN;1
+					Source WIZ\IC05_03.BIN
+				EndFile
+				File IC06_02.BIN;1
+					Source WIZ\IC06_02.BIN
+				EndFile
+				File IC57_10.BIN;1
+					Source WIZ\IC57_10.BIN
+				EndFile
+				File IC12_04.BIN;1
+					Source WIZ\IC12_04.BIN
+				EndFile
+				File IC13_05.BIN;1
+					Source WIZ\IC13_05.BIN
+				EndFile
+				File IC14_06.BIN;1
+					Source WIZ\IC14_06.BIN
+				EndFile
+				File IC03_07.BIN;1
+					Source WIZ\IC03_07.BIN
+				EndFile
+				File IC02_08.BIN;1
+					Source WIZ\IC02_08.BIN
+				EndFile
+				File IC01_09.BIN;1
+					Source WIZ\IC01_09.BIN
+				EndFile
+				File IC23_31.BIN;1
+					Source WIZ\IC23_31.BIN
+				EndFile
+				File IC23_32.BIN;1
+					Source WIZ\IC23_32.BIN
+				EndFile
+				File IC23_33.BIN;1
+					Source WIZ\IC23_33.BIN
+				EndFile
+			EndDirectory
+
+
 ;			Directory CUBYBOP
 ;				File CB06.6;1
 ;					Source CUBYBOP\CB06.6
@@ -3994,8 +4041,6 @@ File SHADOW_1.SMS;1
 	Source L:\PC\MASTER~2\SHADOW~1.SMS
 EndFile
 			EndDirectory
-
-
 
 		EndDirectory
 	EndHierarchy
