@@ -260,7 +260,7 @@ static void DrvPaletteInit()
 		bit3 = (DrvColPROM[0x200 + i] >> 3) & 0x01;
 		UINT32 b = 0x0e * bit0 + 0x1f * bit1 + 0x42 * bit2 + 0x90 * bit3;
 
-		DrvPalette[i] = colBgAddr[i] = RGB(r>>3, g>>3, b>>3);
+		DrvPalette[i] = colBgAddr[i] = colBgAddr2[i] = RGB(r>>3, g>>3, b>>3);
 	}
 }
 
@@ -270,11 +270,12 @@ static INT32 MemIndex()
 	UINT8 *Next; Next = AllMem;
 
 	DrvZ80ROM0		= Next; Next += 0x010000;
-	DrvZ80Dec		= Next; Next += 0x010000;
+	DrvZ80Dec			= Next; Next += 0x010000;
 	DrvZ80ROM1		= Next; Next += 0x010000;
 
 	DrvGfxROM0		= SS_CACHE; //Next; Next += 6 *  8 *  8 * 256; // 6 banks,   8x8 tiles, 256 tiles (characters)
-	DrvGfxROM1		= Next; Next += 3 * 16 * 16 * 256; // 3 banks, 16x16 tiles, 256 tiles (sprites)
+ 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	DrvGfxROM1		= &ss_vram[0x1100]; //Next; Next += 3 * 16 * 16 * 256; // 3 banks, 16x16 tiles, 256 tiles (sprites)
 
 	DrvColPROM		= Next; Next += 0x000300;
 
@@ -438,7 +439,10 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 	AllMem = NULL;
 	MemIndex();
 	UINT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
+	{
+		return 1;
+	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
@@ -448,7 +452,7 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 		DrvPaletteInit();
 	}
 
-	CZetInit(1);
+	CZetInit(2);
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM0);
 	CZetMapArea(0x0000, 0xbfff, 2, DrvZ80ROM0);
@@ -476,7 +480,7 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 	CZetSetReadHandler(wiz_main_read);
 	CZetClose();
 
-	CZetInit(1);
+//	CZetInit(1);
 	CZetOpen(1);
 	CZetMapArea(0x0000, 0x1fff, 0, DrvZ80ROM1);
 	CZetMapArea(0x0000, 0x1fff, 2, DrvZ80ROM1);
@@ -501,28 +505,45 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initLayers()
+static void initLayers()
 {
-
     Uint16	CycleTb[]={
-		0xff5e, 0xffff, //A1
-		0xffff, 0xffff,	//A0
-		0x04ff, 0xffff,   //B1
-		0xffff, 0xffff  //B0
+		0x1f56, 0xffff, //A0
+		0xffff, 0xffff,	//A1
+		0xf5f2,0x4eff,   //B0
+		0xffff, 0xffff  //B1
+//		0x4eff, 0x1fff, //B1
 	};
-
  	SclConfig	scfg;
-	scfg.dispenbl      = ON;
-	scfg.charsize      = SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
-	scfg.pnamesize     = SCL_PN1WORD;
-	scfg.flip          = SCL_PN_10BIT; 
-	scfg.platesize     = SCL_PL_SIZE_2X2;
-	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-	scfg.datatype      = SCL_CELL;
-	scfg.patnamecontrl =  0x000c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
-	scfg.plate_addr[0] = (Uint32)ss_map;
+
+// 3 nbg
+	scfg.dispenbl			= ON;
+	scfg.charsize			= SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
+	scfg.pnamesize		= SCL_PN1WORD; //2word
+	scfg.platesize		= SCL_PL_SIZE_1X1; // ou 2X2 ?
+	scfg.coltype			= SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
+	scfg.datatype		= SCL_CELL;
+	scfg.flip					= SCL_PN_12BIT; // on force à 0
+	scfg.plate_addr[0] = (Uint32)SS_MAP2;
+	scfg.plate_addr[1] = 0x00;
+	SCL_SetConfig(SCL_NBG1, &scfg);
+// 3 nbg
+	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
+	scfg.plate_addr[0] = (Uint32)SS_MAP;
+	scfg.plate_addr[1] = (Uint32)SS_MAP;
+	scfg.plate_addr[2] = (Uint32)SS_MAP;
+	scfg.plate_addr[3] = (Uint32)SS_MAP;
+
+	SCL_SetConfig(SCL_NBG2, &scfg);
+
+	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
+	scfg.datatype 	   = SCL_BITMAP;
+	scfg.mapover	   = SCL_OVER_0;
+	scfg.plate_addr[0] = (Uint32)SS_FONT;
+
+// 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
-	SCL_SetCycleTable(CycleTb);
+	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initPosition()
@@ -534,10 +555,12 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
 {
-	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
-	SCL_AllocColRam(SCL_SPR,OFF);
-	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
-	SCL_SetColRam(SCL_NBG1,8,8,palette);
+	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
+	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
+//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+//	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
+	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
@@ -546,23 +569,24 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 	nBurnSprites = 51;
 	nSoundBufferPos = 0;
 
-	SS_CACHE = cache   =(Uint8 *)SCL_VDP2_VRAM_B1;
-	SS_MAP   = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_MAP2  = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A0;
+	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE= cache    =(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-	ss_scl			= (Fixed32 *)SS_SCL;
+//	ss_scl			= (Fixed32 *)SS_SCL;
 #ifdef CACHE
 	memset(bg_dirtybuffer,1,2048);
 #endif
 
 	SS_SET_S0PRIN(6);
-	SS_SET_N1PRIN(7);
-	SS_SET_N2PRIN(4);
-	SS_SET_N0PRIN(5);
+	SS_SET_N0PRIN(7);
+	SS_SET_N1PRIN(4);
+	SS_SET_N2PRIN(5);
 
 	initLayers();
 	initPosition();
@@ -578,11 +602,8 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-
 static INT32 DrvExit()
 {
-//	GenericTilesExit();
-
 	CZetExit();
 
 	AY8910Exit(0);
@@ -604,8 +625,9 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
 		INT16 sx    = (offs & 0x1f);
-		UINT8 sy = (((offs / 32)<<3) - DrvSprRAM0[2 * sx + 0]) &0xff;
+//		UINT8 sy = (((offs / 32)<<3) - DrvSprRAM0[2 * sx + 0]) &0xff;
 		INT16 color;
+		UINT32 sy   =(offs / 32) <<6;
 
 		if (colortype) 
 		{
@@ -618,7 +640,7 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 
 		INT16 code  = DrvVidRAM0[offs] | (bank << 8);
 
-		ss_map2[offs] = ss_map2[offs+0x1000] = (color << 12 | /*flip << 6 |*/ code&0x3FF) ;
+		ss_map2[offs] = ss_map2[offs+0x1000] = code;//(color << 12 | /*flip << 6 |*/ code&0x3FF) ;
 /* 
 		if (screen_flip[1]) { // flipy
 			if (screen_flip[0]) { // flipx
@@ -645,10 +667,13 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
 		INT16 sx    = (offs & 0x1f);
-		UINT8 sy    = (((offs / 32)<<3) - DrvSprRAM1[2 * sx + 0]);
+//		UINT8 sy    = (((offs / 32)<<3) - DrvSprRAM1[2 * sx + 0]);
  		INT16 code  = DrvVidRAM1[offs] | (char_bank_select[1] << 8);
 		INT16 color = DrvColRAM1[sx << 1 | 1] & 7;
 		INT16 scroll;
+
+//		sx = (offs & 0x1f);
+		UINT32 sy   =(offs / 32) <<6;
 
 		if (colortype)
 		{
@@ -668,7 +693,8 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 
 		if (screen_flip[0]) sx = 31 - sx;
 */
-		ss_map[offs] = ss_map[offs+0x1000] = (color << 12 | /*flip << 6 |*/ code&0x3FF) ;
+color = 0;
+		ss_map[sx|sy] = ss_map[offs+0x1000] = (color << 12 | /*flip << 6 |*/ code&0x3FF) ;
 
 //		Render8x8Tile_Mask_Clip(pTransDraw, code, (sx << 3)-Scionmodeoffset, sy-16, color, 3, 0, 0, DrvGfxROM0);
 	}
@@ -676,6 +702,8 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 
 static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank)
 {
+	UINT32 delta=3;
+
 	for (INT16 offs = 0x1c; offs >= 0; offs -= 4)
 	{
 		INT16 sy =    240 - ram[offs + 0];
@@ -683,33 +711,26 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank)
 		INT16 color = (ram[offs + 2] & 0x07) | (palbank << 3);
 		INT16 sx =    ram[offs + 3];
 		if (!sx || !sy) continue;
-/*
-		if (screen_flip[1]) { // flipy
-			if (screen_flip[0]) { // flipx
-				Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, code, 240 - sx, (240 - sy) - 16, color, 3, 0, 0, DrvGfxROM1);
-			} else {
-				Render16x16Tile_Mask_FlipY_Clip(pTransDraw, code, sx, (240 - sy) - 16, color, 3, 0, 0, DrvGfxROM1);
-			}
-		} else {
-			if (screen_flip[0]) { // flipx
-				Render16x16Tile_Mask_FlipX_Clip(pTransDraw, code, 240 - sx, sy - 16, color, 3, 0, 0, DrvGfxROM1);
-			} else {
-				Render16x16Tile_Mask_Clip(pTransDraw, code, sx-Scionmodeoffset, sy - 16, color, 3, 0, 0, DrvGfxROM1);
-			}
-		}
-*/
+
+		ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_sprite[delta].ax				= sx;
+		ss_sprite[delta].ay				= sy;
+		ss_sprite[delta].color			= color<<3;
+		ss_sprite[delta].charSize	= 0x210;
+		ss_sprite[delta].charAddr	= 0x220+((code)<<4 );
+		delta++;
 	}
 }
 
 static INT32 DrvDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
-
+/*
 	if (DrvRecalc) {
 		DrvPaletteInit();
 		DrvRecalc = 0;
 	}
-/*
+
 	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
 		pTransDraw[i] = *background_color;
 	} 
@@ -720,7 +741,7 @@ static INT32 DrvDraw()
 	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0);
 	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank);
 
-	BurnTransferCopy(DrvPalette);
+//	BurnTransferCopy(DrvPalette);
 
 	return 0;
 }
@@ -744,7 +765,7 @@ static INT32 StingerDraw()
 	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0);
 	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1);
 
-	BurnTransferCopy(DrvPalette);
+//	BurnTransferCopy(DrvPalette);
 
 	return 0;
 }
@@ -768,17 +789,17 @@ static INT32 KungfutDraw()
 	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0);
 	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1);
 
-	BurnTransferCopy(DrvPalette);
+//	BurnTransferCopy(DrvPalette);
 	
 	return 0;
 }
 
 static INT32 DrvFrame()
 {
-	if (DrvReset) {
+/*	if (DrvReset) {
 		DrvDoReset();
 	}
-
+ */
 	{
 		memset (DrvInputs, 0, 2);
 		for (INT16 i = 0; i < 8; i++) {
@@ -811,7 +832,7 @@ static INT32 DrvFrame()
 //	if (pBurnDraw) {
 //		BurnDrvRedraw();
 //	}
-
+	DrvDraw();
 	return 0;
 }
 
