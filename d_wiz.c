@@ -576,7 +576,7 @@ static void initLayers()
 /*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);	  //ON
+	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
@@ -589,7 +589,7 @@ static void initLayers()
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	nBurnSprites = 32;
+	nBurnSprites = 19;
 	nSoundBufferPos = 0;
 
 	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
@@ -674,7 +674,7 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 //		UINT32 x = (((sy>>3)*64)|sx)<<1;
 		UINT32 x = ((sy>>3)<<1)|((31-sx)*128);
 		ss_map2[x] = ss_map2[x+0x40] = color ;
-		ss_map2[x+1] = ss_map2[x+0x41] = ((code+0x200)&0x5FF) ;
+		ss_map2[x+1] = ss_map2[x+0x41] = ((code+0x200)); //&0x5FF) ;
 /* 
 		if (screen_flip[1]) { // flipy
 			if (screen_flip[0]) { // flipx
@@ -733,16 +733,14 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 //		color = 0;
 //		UINT32 x = ((sy>>3)*64)|sx;
 		UINT32 x = ((sy>>3))|((31-sx)*64);
-		ss_map[x] = ss_map[offs+0x1000] = (color << 12 | /*flip << 6 |*/ code&0x1FF) ;
+		ss_map[x] = ss_map[offs+0x1000] = (color << 12 | /*flip << 6 |*/ code&0x7FF) ;
 
 //		Render8x8Tile_Mask_Clip(pTransDraw, code, (sx << 3)-Scionmodeoffset, sy-16, color, 3, 0, 0, DrvGfxROM0);
 	}
 }
 
-static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank)
+static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta)
 {
-	UINT32 delta=3;
-
 	for (INT16 offs = 0x1c; offs >= 0; offs -= 4)
 	{
 		INT16 sy =    240 - ram[offs + 0];
@@ -774,9 +772,23 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank)
 	}
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void cleanSprites()
+{
+	unsigned int delta;	
+	for (delta=3; delta<nBurnSprites; delta++)
+	{
+		ss_sprite[delta].charSize   = 0;
+		ss_sprite[delta].charAddr   = 0;
+		ss_sprite[delta].ax   = 0;
+		ss_sprite[delta].ay   = 0;
+	} 
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
+	*(Uint16 *)0x25E00000 = DrvPalette[0x1a];
 /*
 	if (DrvRecalc) {
 		DrvPaletteInit();
@@ -787,11 +799,13 @@ static INT32 DrvDraw()
 		pTransDraw[i] = *background_color;
 	} 
 */
+	cleanSprites();
+
 	draw_background(2 + ((char_bank_select[0] << 1) | char_bank_select[1]), palbank, 0);
 	draw_foreground(palbank, 0);
 
-	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0);
-	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank);
+	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3);
+	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank, 11);
 
 //	BurnTransferCopy(DrvPalette);
 
@@ -814,8 +828,8 @@ static INT32 StingerDraw()
 	draw_background(2 + char_bank_select[0], palbank, 1);
 	draw_foreground(palbank, 1);
 
-	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0);
-	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1);
+	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3);
+	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1, 11);
 
 //	BurnTransferCopy(DrvPalette);
 
@@ -838,8 +852,8 @@ static INT32 KungfutDraw()
 	draw_background(2 + char_bank_select[0], palbank, 0);
 	draw_foreground(palbank, 0);
 
-	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0);
-	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1);
+	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3);
+	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1, 11);
 
 //	BurnTransferCopy(DrvPalette);
 	
