@@ -27,6 +27,7 @@ static UINT8 *DrvZ80ROM0;
 static UINT8 *DrvZ80Dec;
 static UINT8 *DrvZ80ROM1;
 static UINT8 *DrvGfxROM0;
+static UINT8 *DrvGfxROM0b;
 static UINT8 *DrvGfxROM1;
 static UINT8 *DrvColPROM;
 static UINT8 *DrvZ80RAM0;
@@ -38,7 +39,7 @@ static UINT8 *DrvColRAM1;
 static UINT8 *DrvSprRAM0;
 static UINT8 *DrvSprRAM1;
 
-static UINT32 *DrvPalette;
+static UINT16 *DrvPalette;
 static UINT8 DrvRecalc;
 
 static UINT8 *soundlatch;

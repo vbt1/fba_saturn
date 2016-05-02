@@ -240,6 +240,8 @@ static INT32 DrvDoReset()
 
 static void DrvPaletteInit()
 {
+	UINT32 delta=0;
+
 	for (UINT32 i = 0; i < 0x100; i++)
 	{
 		UINT32 bit0 = (DrvColPROM[0x000 + i] >> 0) & 0x01;
@@ -260,7 +262,8 @@ static void DrvPaletteInit()
 		bit3 = (DrvColPROM[0x200 + i] >> 3) & 0x01;
 		UINT32 b = 0x0e * bit0 + 0x1f * bit1 + 0x42 * bit2 + 0x90 * bit3;
 
-		DrvPalette[i] = colBgAddr[i] = colBgAddr2[i] = RGB(r>>3, g>>3, b>>3);
+		DrvPalette[i] = colBgAddr[delta] = RGB(r>>3, g>>3, b>>3);
+		delta++; if ((delta & 7) == 0) delta += 8;
 	}
 }
 
@@ -274,12 +277,13 @@ static INT32 MemIndex()
 	DrvZ80ROM1		= Next; Next += 0x010000;
 
 	DrvGfxROM0		= SS_CACHE; //Next; Next += 6 *  8 *  8 * 256; // 6 banks,   8x8 tiles, 256 tiles (characters)
+	DrvGfxROM0b    = (SS_CACHE+0x2000); //SCL_VDP2_VRAM_B0;
  	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	DrvGfxROM1		= &ss_vram[0x1100]; //Next; Next += 3 * 16 * 16 * 256; // 3 banks, 16x16 tiles, 256 tiles (sprites)
 
 	DrvColPROM		= Next; Next += 0x000300;
 
-	DrvPalette		= (unsigned int*)Next; Next += 0x0100 * sizeof(int);
+	DrvPalette		= (UINT16 *)colBgAddr2;//(unsigned int*)Next; Next += 0x0100 * sizeof(int);
 
 	AllRam			= Next;
 
@@ -320,10 +324,12 @@ static INT32 MemIndex()
 static void DrvGfxDecode(UINT32 type)
 {
 	INT32 Plane[3]  = { 0x4000*8, 0x2000*8, 0 };
-	INT32 XOffs[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7 };
-	INT32 YOffs[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
+//	INT32 XOffs[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7 };
+//	INT32 YOffs[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
+	INT32 YOffs[16] = { 7, 6, 5, 4, 3, 2, 1, 0, 8*8+7, 8*8+6, 8*8+5, 8*8+4, 8*8+3, 8*8+2, 8*8+1, 8*8+0 };
+	INT32 XOffs[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
 
-	UINT8 *tmp0 = (UINT8*)malloc(0x6000);
+	UINT8 *tmp0 = (UINT8*)0x00200000;
 	UINT8 *tmp1 = (UINT8*)malloc(0xc000);
 
 	memcpy (tmp0, DrvGfxROM0, 0x6000);
@@ -331,24 +337,31 @@ static void DrvGfxDecode(UINT32 type)
 	memset (DrvGfxROM0, 0, 0x6000);
 	memset (DrvGfxROM1, 0, 0xc000);
 
-	GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp0 + 0x0000, DrvGfxROM0 + 0 *  8 *  8 * 256);
-	GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp0 + 0x0800, DrvGfxROM0 + 1 *  8 *  8 * 256);
+// ok
+	GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp0 + 0x0000, DrvGfxROM0 + 0 *  8 *  4 * 256);
+	GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp0 + 0x0800, DrvGfxROM0 + 1 *  8 *  4 * 256);
+
 	if (type == 0)
 	{
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x6000, DrvGfxROM0 + 2 *  8 *  8 * 256);
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0000, DrvGfxROM0 + 3 *  8 *  8 * 256);
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0800, DrvGfxROM0 + 4 *  8 *  8 * 256);
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x6800, DrvGfxROM0 + 5 *  8 *  8 * 256);
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x6000, DrvGfxROM0b + 0 *  8 *  4 * 256);
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0000, DrvGfxROM0b + 1 *  8 *  4 * 256);
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0800, DrvGfxROM0b + 2 *  8 *  4 * 256);
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x6800, DrvGfxROM0b + 3 *  8 *  4 * 256);
 	} else {
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0000, DrvGfxROM0 + 2 *  8 *  8 * 256);
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0800, DrvGfxROM0 + 3 *  8 *  8 * 256);
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0000, DrvGfxROM0b + 0 *  8 *  4 * 256);
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0800, DrvGfxROM0b + 1 *  8 *  4 * 256);
 	}
 
-	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs, YOffs, 0x100, tmp0 + 0x0000, DrvGfxROM1 + 0 * 16 * 16 * 256);
-	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs, YOffs, 0x100, tmp1 + 0x0000, DrvGfxROM1 + 1 * 16 * 16 * 256);
-	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs, YOffs, 0x100, tmp1 + 0x6000, DrvGfxROM1 + 2 * 16 * 16 * 256);
+	INT32 XOffs1[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7 };
+	INT32 YOffs1[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
 
-	free (tmp0);
+
+	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp0 + 0x0000, DrvGfxROM1 + 0 * 16 * 8 * 256);
+	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp1 + 0x0000, DrvGfxROM1 + 1 * 16 * 8 * 256);
+	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp1 + 0x6000, DrvGfxROM1 + 2 * 16 * 8 * 256);
+ 
+	//free (tmp0);
+	tmp0=NULL;
 	free (tmp1);
 }
 
@@ -494,9 +507,9 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 	AY8910Init(0, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(1, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(2, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910SetAllRoutes(0, 0.10, BURN_SND_ROUTE_BOTH);
-	AY8910SetAllRoutes(1, 0.10, BURN_SND_ROUTE_BOTH);
-	AY8910SetAllRoutes(2, 0.10, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(0, 0.10, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(1, 0.10, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(2, 0.10, BURN_SND_ROUTE_BOTH);
 
 //	GenericTilesInit();
 
@@ -519,16 +532,23 @@ static void initLayers()
 // 3 nbg
 	scfg.dispenbl			= ON;
 	scfg.charsize			= SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
-	scfg.pnamesize		= SCL_PN1WORD; //2word
+	scfg.pnamesize		= SCL_PN2WORD; //2word
 	scfg.platesize		= SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.coltype			= SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype		= SCL_CELL;
-	scfg.flip					= SCL_PN_12BIT; // on force à 0
+	scfg.flip					= SCL_PN_10BIT; // on force à 0
+	scfg.patnamecontrl =  0x0000; // a0 + 0x8000
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
-	scfg.plate_addr[1] = 0x00;
+	scfg.plate_addr[1] = (Uint32)SS_MAP2;
+	scfg.plate_addr[2] = (Uint32)SS_MAP2;
+	scfg.plate_addr[3] = (Uint32)SS_MAP2;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
-	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
+
+	scfg.pnamesize		= SCL_PN1WORD; //2word
+	scfg.platesize		= SCL_PL_SIZE_1X1; // ou 2X2 ?
+	scfg.flip					= SCL_PN_12BIT; // on force à 0
+	scfg.patnamecontrl =  0x0000; // a0 + 0x8000
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
 	scfg.plate_addr[1] = (Uint32)SS_MAP;
 	scfg.plate_addr[2] = (Uint32)SS_MAP;
@@ -556,22 +576,25 @@ static void initLayers()
 /*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
-//	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);	  //ON
+	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 //	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
+	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	nBurnSprites = 51;
+	nBurnSprites = 32;
 	nSoundBufferPos = 0;
 
 	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
+	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_CACHE= cache    =(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
@@ -582,6 +605,7 @@ static void initLayers()
 #ifdef CACHE
 	memset(bg_dirtybuffer,1,2048);
 #endif
+	ss_regs->tvmode = 0x8011;
 
 	SS_SET_S0PRIN(6);
 	SS_SET_N0PRIN(7);
@@ -591,14 +615,14 @@ static void initLayers()
 	initLayers();
 	initPosition();
 	initColors();
-	initSprites(256-1,224-1,8,0,0,-16);
+	initSprites(256-1,256-1,8,0,-16,0);
 	//play=1;
 //	drawWindow(0,240,0,2,66);
 //	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	memset(&ss_scl[0],16<<16,64);
 //	memset(&ss_scl[0],16<<16,128);
 
-	drawWindow(0,240,0,2,66);
+	drawWindow(0,256,0,4,68);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -622,12 +646,19 @@ static INT32 DrvExit()
 
 static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 {
+//	SCL_Open();
+	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
+
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
-		INT16 sx    = (offs & 0x1f);
-//		UINT8 sy = (((offs / 32)<<3) - DrvSprRAM0[2 * sx + 0]) &0xff;
+		INT16 sx  = (offs & 0x1f);
+//		UINT8 sy = (((offs / 32)<<3)); // - DrvSprRAM0[2 * sx + 0]) &0xff;
+		UINT8 sy = (((offs / 32)<<3)) &0xff; // - DrvSprRAM0[2 * sx + 0]) &0xff;
 		INT16 color;
-		UINT32 sy   =(offs / 32) <<6;
+
+//			UINT32 sx1 = (31-((offs) & 0x1f))<<6;
+//			UINT32 sy1 = ((offs) >> 5);
+			
 
 		if (colortype) 
 		{
@@ -638,9 +669,12 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 			color = (DrvSprRAM0[2 * sx + 1] & 0x04) | (DrvVidRAM0[offs] & 3) | (palbank << 3);
 		}
 
-		INT16 code  = DrvVidRAM0[offs] | (bank << 8);
+		UINT16 code  = DrvVidRAM0[offs] | (bank << 8);
 
-		ss_map2[offs] = ss_map2[offs+0x1000] = code;//(color << 12 | /*flip << 6 |*/ code&0x3FF) ;
+//		UINT32 x = (((sy>>3)*64)|sx)<<1;
+		UINT32 x = ((sy>>3)<<1)|((31-sx)*128);
+		ss_map2[x] = ss_map2[x+0x40] = color ;
+		ss_map2[x+1] = ss_map2[x+0x41] = ((code+0x200)&0x5FF) ;
 /* 
 		if (screen_flip[1]) { // flipy
 			if (screen_flip[0]) { // flipx
@@ -666,14 +700,17 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 {
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
-		INT16 sx    = (offs & 0x1f);
-//		UINT8 sy    = (((offs / 32)<<3) - DrvSprRAM1[2 * sx + 0]);
+		INT32 sx    = (offs & 0x1f);
+		UINT8 sy    = (((offs / 32)<<3) - DrvSprRAM1[2 * sx + 0]);
  		INT16 code  = DrvVidRAM1[offs] | (char_bank_select[1] << 8);
 		INT16 color = DrvColRAM1[sx << 1 | 1] & 7;
 		INT16 scroll;
 
 //		sx = (offs & 0x1f);
-		UINT32 sy   =(offs / 32) <<6;
+//		UINT32 sy   =(offs / 32) <<6;
+//		INT32 sx = (31-((offs & 0x1f) - (DrvSprRAM1[2 * sx1 + 0]>>3))) & 0x1f;
+//		sx = sx << 6;
+//		UINT32 sy = ((offs) >> 5);
 
 		if (colortype)
 		{
@@ -693,8 +730,10 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 
 		if (screen_flip[0]) sx = 31 - sx;
 */
-color = 0;
-		ss_map[sx|sy] = ss_map[offs+0x1000] = (color << 12 | /*flip << 6 |*/ code&0x3FF) ;
+//		color = 0;
+//		UINT32 x = ((sy>>3)*64)|sx;
+		UINT32 x = ((sy>>3))|((31-sx)*64);
+		ss_map[x] = ss_map[offs+0x1000] = (color << 12 | /*flip << 6 |*/ code&0x1FF) ;
 
 //		Render8x8Tile_Mask_Clip(pTransDraw, code, (sx << 3)-Scionmodeoffset, sy-16, color, 3, 0, 0, DrvGfxROM0);
 	}
@@ -710,11 +749,24 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank)
 		INT16 code  = ram[offs + 1] | (bank << 8);
 		INT16 color = (ram[offs + 2] & 0x07) | (palbank << 3);
 		INT16 sx =    ram[offs + 3];
-		if (!sx || !sy) continue;
+		if (!sx || !sy) 
+		{
+			ss_sprite[delta].ax		= ss_sprite[delta].ay		= 	ss_sprite[delta].bx		= ss_sprite[delta].by		= 0;
+			ss_sprite[delta].cy		= 	ss_sprite[delta].cx		= 	ss_sprite[delta].dx		= ss_sprite[delta].dy		= 0;
+			continue;
+		}
 
-		ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP);
-		ss_sprite[delta].ax				= sx;
-		ss_sprite[delta].ay				= sy;
+	ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_DISTORSP);
+
+	ss_sprite[delta].ax		= sy+16;
+	ss_sprite[delta].ay		= 256-sx;
+	ss_sprite[delta].bx		= ss_sprite[delta].ax;
+	ss_sprite[delta].by		= ss_sprite[delta].ay-16;
+	ss_sprite[delta].cy		= ss_sprite[delta].by;
+	ss_sprite[delta].cx		= ss_sprite[delta].ax+16;
+	ss_sprite[delta].dx		= ss_sprite[delta].cx;
+	ss_sprite[delta].dy		= ss_sprite[delta].ay;
+
 		ss_sprite[delta].color			= color<<3;
 		ss_sprite[delta].charSize	= 0x210;
 		ss_sprite[delta].charAddr	= 0x220+((code)<<4 );
