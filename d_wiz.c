@@ -542,35 +542,29 @@ static void initLayers()
 	scfg.plate_addr[1] = (Uint32)SS_MAP2;
 	scfg.plate_addr[2] = (Uint32)SS_MAP2;
 	scfg.plate_addr[3] = (Uint32)SS_MAP2;
-	SCL_SetConfig(SCL_NBG1, &scfg);
+	SCL_SetConfig(SCL_NBG0, &scfg);
 // 3 nbg
 
-	scfg.pnamesize		= SCL_PN1WORD; //2word
+//	scfg.pnamesize		= SCL_PN1WORD; //2word
 	scfg.platesize		= SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.flip					= SCL_PN_12BIT; // on force à 0
 	scfg.patnamecontrl =  0x0000; // a0 + 0x8000
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	scfg.plate_addr[1] = (Uint32)SS_MAP;
-	scfg.plate_addr[2] = (Uint32)SS_MAP;
-	scfg.plate_addr[3] = (Uint32)SS_MAP;
+	scfg.plate_addr[1] = NULL;//(Uint32)SS_MAP;
+	scfg.plate_addr[2] = NULL;//(Uint32)SS_MAP;
+	scfg.plate_addr[3] = NULL;//(Uint32)SS_MAP;
 
-	SCL_SetConfig(SCL_NBG2, &scfg);
+	SCL_SetConfig(SCL_NBG1, &scfg);
 
+	scfg.dispenbl			= OFF;
 	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	   = SCL_BITMAP;
 	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
 
 // 3 nbg	
-	SCL_SetConfig(SCL_NBG0, &scfg);
+	SCL_SetConfig(SCL_NBG2, &scfg);
 	SCL_SetCycleTable(CycleTb);	
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initPosition()
-{
-	SCL_Open();
-	ss_reg->n0_move_y =  (16<<16) ;
-	SCL_Close();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
@@ -581,8 +575,8 @@ static void initLayers()
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 //	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
-	(Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
-	SCL_SetColRam(SCL_NBG0,8,8,palette);
+	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
+	SCL_SetColRam(SCL_NBG2,8,8,palette);
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -590,39 +584,45 @@ static void initLayers()
 {
 	SPR_InitSlaveSH();
 	nBurnSprites = 19;
+	nBurnLinescrollSize = 0x400;
 	nSoundBufferPos = 0;
 
-	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
-	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_CACHE= cache    =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_MAP  = ss_map   =(Uint16 *)(SCL_VDP2_VRAM_B0+0x14000);
+	SS_MAP2 = ss_map2  =(Uint16 *)(SCL_VDP2_VRAM_B0+0x18000);
+	SS_FONT = ss_font  = NULL;  //(Uint16 *)(SCL_VDP2_VRAM_A1+0x10000);
+	SS_CACHE= cache    =(Uint8  *)(SCL_VDP2_VRAM_A0+32);
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-//	ss_scl			= (Fixed32 *)SS_SCL;
+	ss_scl			= (Fixed32 *)SS_SCL;
 #ifdef CACHE
 	memset(bg_dirtybuffer,1,2048);
 #endif
 	ss_regs->tvmode = 0x8011;
 
+
+	SS_SET_N0PRIN(4);
+	SS_SET_N1PRIN(5);
+	SS_SET_N2PRIN(7);
 	SS_SET_S0PRIN(6);
-	SS_SET_N0PRIN(7);
-	SS_SET_N1PRIN(4);
-	SS_SET_N2PRIN(5);
 
 	initLayers();
-	initPosition();
 	initColors();
 	initSprites(256-1,256-1,8,0,-16,0);
+	initScrolling(ON,SCL_VDP2_VRAM_B1); //+0x200000-0x1000);
+	memset((Uint8 *)ss_map, 0x11,0x4000);
+	memset((Uint8 *)ss_map2,0x11,0x4000);
+	memset(&ss_scl[0],0,240);
+
 	//play=1;
 //	drawWindow(0,240,0,2,66);
 //	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	memset(&ss_scl[0],16<<16,64);
 //	memset(&ss_scl[0],16<<16,128);
 
-	drawWindow(0,256,0,4,68);
+//	drawWindow(0,256,0,4,68);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -647,7 +647,8 @@ static INT32 DrvExit()
 static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 {
 //	SCL_Open();
-	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
+//	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
+	memset(&ss_scl[71],(DrvSprRAM0[16]),0x400);
 
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
@@ -658,7 +659,6 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 
 //			UINT32 sx1 = (31-((offs) & 0x1f))<<6;
 //			UINT32 sy1 = ((offs) >> 5);
-			
 
 		if (colortype) 
 		{
@@ -674,34 +674,28 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 //		UINT32 x = (((sy>>3)*64)|sx)<<1;
 		UINT32 x = ((sy>>3)<<1)|((31-sx)*128);
 		ss_map2[x] = ss_map2[x+0x40] = color ;
-		ss_map2[x+1] = ss_map2[x+0x41] = ((code+0x200)); //&0x5FF) ;
-/* 
-		if (screen_flip[1]) { // flipy
-			if (screen_flip[0]) { // flipx
-				Render8x8Tile_Mask_FlipXY_Clip(pTransDraw, code, (sx << 3) ^ 0xf8, sy - 16, color, 3, 0, 0, DrvGfxROM0);
-			} else {
-//				Render8x8Tile_Mask_FlipY_Clip(pTransDraw, code, sx << 3, (248 - (sy <<3)) + 16, color, 3, 0, 0, DrvGfxROM0);
-				Render8x8Tile_Mask_FlipY_Clip(pTransDraw, code, sx << 3, sy - 16, color, 3, 0, 0, DrvGfxROM0);
-			}
-		} else {
-			if (screen_flip[0]) { // flipx
-//				Render8x8Tile_Mask_FlipX_Clip(pTransDraw, code, (sx << 3) ^ 0xf8, (sy <<3) + 16, color, 3, 0, 0, DrvGfxROM0);
-				Render8x8Tile_Mask_FlipX_Clip(pTransDraw, code, (sx << 3) ^ 0xf8, sy - 16, color, 3, 0, 0, DrvGfxROM0);
-			} else {
-//				Render8x8Tile_Mask_Clip(pTransDraw, code, sx << 3, (sy <<3) + 16, color, 3, 0, 0, DrvGfxROM0);
-				Render8x8Tile_Mask_Clip(pTransDraw, code, (sx << 3)-Scionmodeoffset, sy - 16, color, 3, 0, 0, DrvGfxROM0);
-			}
-		}
-*/ 
+		ss_map2[x+1] = ss_map2[x+0x41] = ((code+0x201)); //&0x5FF) ;
 	}
 }
-
+int vbt = 0;
 static void draw_foreground(INT16 palbank, INT16 colortype)
 {
+//	memset(&ss_scl[71],(DrvSprRAM1[32]),0x400);
+//INT16 scl =  (8*sy + 256 - DrvVidRAM1[2 * sx]) % 256;
+//SCL_Open();
+ss_reg->n1_move_x =  (DrvSprRAM1[0x20]<<16) ;
+memcpy((UINT8*)0x00200000,DrvSprRAM0,0x40);
+memcpy((UINT8*)0x00200040,DrvSprRAM1,0x40);
+//ss_reg->n0_move_x =  (vbt<<16) ;
+vbt++;
+
+if(vbt>256)
+	vbt=0;
+
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
 		INT32 sx    = (offs & 0x1f);
-		UINT8 sy    = (((offs / 32)<<3) - DrvSprRAM1[2 * sx + 0]);
+		UINT8 sy    = (((offs / 32)<<3))&0xff;// - DrvSprRAM1[2 * sx + 0]);
  		INT16 code  = DrvVidRAM1[offs] | (char_bank_select[1] << 8);
 		INT16 color = DrvColRAM1[sx << 1 | 1] & 7;
 		INT16 scroll;
@@ -732,8 +726,11 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 */
 //		color = 0;
 //		UINT32 x = ((sy>>3)*64)|sx;
-		UINT32 x = ((sy>>3))|((31-sx)*64);
-		ss_map[x] = ss_map[offs+0x1000] = (color << 12 | /*flip << 6 |*/ code&0x7FF) ;
+//		UINT32 x = ((sy>>3))|((31-sx)*64);
+		UINT32 x = ((sy>>3)<<1)|((31-sx)*128);
+//		ss_map[x] = (color << 12 | code) ;
+		ss_map[x] = ss_map[x+0x40] = color;
+		ss_map[x+1] = ss_map[x+0x41] = code+1;
 
 //		Render8x8Tile_Mask_Clip(pTransDraw, code, (sx << 3)-Scionmodeoffset, sy-16, color, 3, 0, 0, DrvGfxROM0);
 	}
@@ -778,6 +775,7 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta)
 	unsigned int delta;	
 	for (delta=3; delta<nBurnSprites; delta++)
 	{
+		ss_sprite[delta].control	   = ( JUMP_NEXT | FUNC_NORMALSP);
 		ss_sprite[delta].charSize   = 0;
 		ss_sprite[delta].charAddr   = 0;
 		ss_sprite[delta].ax   = 0;
@@ -787,18 +785,10 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvDraw()
 {
+//	DrvGfxROM0 = NULL;
+//		DrvGfxROM0b = NULL;
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
-	*(Uint16 *)0x25E00000 = DrvPalette[0x1a];
-/*
-	if (DrvRecalc) {
-		DrvPaletteInit();
-		DrvRecalc = 0;
-	}
-
-	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
-		pTransDraw[i] = *background_color;
-	} 
-*/
+	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
 	cleanSprites();
 
 	draw_background(2 + ((char_bank_select[0] << 1) | char_bank_select[1]), palbank, 0);
@@ -806,8 +796,6 @@ static INT32 DrvDraw()
 
 	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3);
 	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank, 11);
-
-//	BurnTransferCopy(DrvPalette);
 
 	return 0;
 }

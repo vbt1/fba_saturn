@@ -119,6 +119,8 @@ void initScrolling(Uint8 enabled,void *address)
 	}
 
 	Scl_n_reg.linecontrl = (lp.h_enbl << 1) & 0x0002;
+// vbt : test ajout linescroll nbg1
+//	Scl_n_reg.linecontrl |= (lp.h_enbl <<8) & 0xff00;
     lp.interval=0;
 
 	(*(Uint16 *)0x25F8009A) = 0x0003; 
@@ -285,7 +287,7 @@ void resetLayers()
 //	_spr2_transfercommand();
 	//SclProcess = 2;
 	SetVblank();
-	SCL_SetLineParam2(&lp);
+	SCL_SetLineParamNBG0(&lp);
 wait_vblank();
 	play=1;
 
@@ -896,11 +898,18 @@ static Uint32  SCL_GetColRamOffset(Uint32 Object)
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void SCL_SetLineParam2(SclLineparam *lp)
+static void SCL_SetLineParamNBG0(SclLineparam *lp)
 {
 	Uint32	*addr;
 	addr = &Scl_n_reg.lineaddr[0];
-	//*addr = (lp->line_addr / 2) & 0x0007ffff;
+	*addr = (lp->line_addr >>1) & 0x0007ffff;
+	SclProcess = 2; //obligatoire
+}
+
+static void SCL_SetLineParamNBG1(SclLineparam *lp)
+{
+	Uint32	*addr;
+	addr = &Scl_n_reg.lineaddr[1];
 	*addr = (lp->line_addr >>1) & 0x0007ffff;
 	SclProcess = 2; //obligatoire
 }
@@ -1747,17 +1756,34 @@ static void run_fba_emulator()
 		int (*Frame)();
 		Frame = (int *)pDriver[nBurnDrvSelect]->Frame;
 
-		while (play)
+		if(lp.h_enbl)
 		{
-	//		BurnDrvFrame();
-//			pDriver[nBurnDrvSelect]->Frame();		// Forward to drivers function
-			Frame();
-			SCL_SetLineParam2(&lp);
-			_spr2_transfercommand();
-			frame_x++;
+			while (play)
+			{
+				Frame();
+	 
+				SCL_SetLineParamNBG0(&lp);
+				SCL_SetLineParamNBG1(&lp);
+				_spr2_transfercommand();
+				frame_x++;
 
-//			 if(frame_x>=frame_y)
-//				wait_vblank();
+	//			 if(frame_x>=frame_y)
+	//				wait_vblank();
+			}
+		}
+		else
+		{
+			while (play)
+			{
+				Frame();
+				SclProcess = 2; 
+//				SCL_SetLineParamNBG0(&lp);
+				_spr2_transfercommand();
+				frame_x++;
+
+	//			 if(frame_x>=frame_y)
+	//				wait_vblank();
+			}
 		}
 	}
 	if(drvquit==1)
