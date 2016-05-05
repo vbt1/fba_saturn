@@ -20,7 +20,7 @@
 
 #undef  SCL_MAXLINE
 #undef  SCL_MAXCELL
-#define	SCL_MAXLINE	 256//256
+#define	SCL_MAXLINE	 384 //256//256
 #define	SCL_MAXCELL	32//32
 
 extern void (*nBurnFunction)();
