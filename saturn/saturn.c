@@ -105,7 +105,6 @@ void initScrolling(Uint8 enabled,void *address)
     lp.h_enbl=enabled;
 	if(enabled==ON)
 	{
-//		lp.line_addr=SCL_VDP2_VRAM_B1-0x600;
 		lp.line_addr=(Uint32 )&address[0];//SCL_VDP2_VRAM_B0+0x4000;
 		SclAddrLsTbl[0] = lp.line_addr;//+0x20;
 		SclAddrLsTbl[1] = (Uint32 )&ls_tbl[0];
@@ -119,12 +118,43 @@ void initScrolling(Uint8 enabled,void *address)
 	}
 
 	Scl_n_reg.linecontrl = (lp.h_enbl << 1) & 0x0002;
-// vbt : test ajout linescroll nbg1
-//	Scl_n_reg.linecontrl |= (lp.h_enbl <<8) & 0xff00;
     lp.interval=0;
 
 	(*(Uint16 *)0x25F8009A) = 0x0003; 
 	(*(Uint16 *)0x25F80020) = 0x0303;
+	SclProcess = 2;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+void initScrollingNBG1(Uint8 enabled,void *address)
+{
+//    SCL_InitLineParamTb(&lp);
+	lp.delta_enbl=OFF;
+	lp.cell_enbl=OFF;
+    lp.v_enbl=OFF;
+    lp.h_enbl=enabled;
+	lp.interval=3; // pour 8
+	
+	if(enabled==ON)
+	{
+		lp.line_addr1=(Uint32 )&address[0];//SCL_VDP2_VRAM_B0+0x4000;
+		SclAddrLsTbl[2] = lp.line_addr1;//+0x20;
+		SclAddrLsTbl[3] = (Uint32 )&ls_tbl1[0];
+	}
+	else
+	{
+		lp.line_addr1=0x00;
+		SclAddrLsTbl[2] = 0x00;
+		SclAddrLsTbl[3] = NULL;
+		nBurnLinescrollSize = 1;
+	}
+
+	Uint16 temp = (lp.h_enbl << 1) & 0x0002;
+//	temp |= (lp.interval << 4) & 0x0030;
+	temp = (temp <<8) & 0xff00;
+    lp.interval = 0;
+
+	Scl_n_reg.linecontrl |= temp;
 	SclProcess = 2;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -310,6 +340,7 @@ wait_vblank();
 	SS_BGMIX = &SclBgColMix;
 	SS_SPRIT = &smsSprite[0];
 	SS_SCL	 = &ls_tbl[0];
+	SS_SCL1	 = &ls_tbl1[0];
 
 	col[0]=0;
 	col[1]=9;
@@ -614,6 +645,7 @@ static void	SCL_ScrollShow(void)
 	    case 2:			/* line scroll setting */
 		//SCL_Memcpyw((void *)SclAddrLsTbl[0],(void *)SclAddrLsTbl[1], 0x300);
 		memcpyl((void *)SclAddrLsTbl[0],(void *)SclAddrLsTbl[1], nBurnLinescrollSize);
+//		memcpyl((void *)SclAddrLsTbl[2],(void *)SclAddrLsTbl[3], nBurnLinescrollSize1);
 		SCL_CopyReg();
 		SclProcess = 0;
 		break;
@@ -910,7 +942,7 @@ static void SCL_SetLineParamNBG1(SclLineparam *lp)
 {
 	Uint32	*addr;
 	addr = &Scl_n_reg.lineaddr[1];
-	*addr = (lp->line_addr >>1) & 0x0007ffff;
+	*addr = (lp->line_addr1 >>1) & 0x0007ffff;
 	SclProcess = 2; //obligatoire
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1756,7 +1788,7 @@ static void run_fba_emulator()
 		int (*Frame)();
 		Frame = (int *)pDriver[nBurnDrvSelect]->Frame;
 
-		if(lp.h_enbl)
+		if(lp.h_enbl || lp.cell_enbl)
 		{
 			while (play)
 			{

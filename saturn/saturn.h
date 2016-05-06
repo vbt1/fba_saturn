@@ -143,8 +143,9 @@ SclLineparam lp;
 //static Uint16 *ss_map2;
 //static unsigned char *cache;
 
-static Uint32	SclAddrLsTbl[2];
+static Uint32	SclAddrLsTbl[4];
 static Fixed32	ls_tbl[SCL_MAXLINE];
+static Fixed32	ls_tbl1[SCL_MAXLINE];
 //Uint16	SclProcess = 0;
 extern Uint16	SclProcess;
 extern unsigned char col[4];

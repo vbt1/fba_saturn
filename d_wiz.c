@@ -585,6 +585,7 @@ static void initLayers()
 	SPR_InitSlaveSH();
 	nBurnSprites = 19;
 	nBurnLinescrollSize = 0x400;
+//	nBurnLinescrollSize1 = 0;
 	nSoundBufferPos = 0;
 
 	SS_MAP  = ss_map   =(Uint16 *)(SCL_VDP2_VRAM_B0+0x14000);
@@ -597,6 +598,7 @@ static void initLayers()
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
+	ss_scl1			= (Fixed32 *)SS_SCL1;
 #ifdef CACHE
 	memset(bg_dirtybuffer,1,2048);
 #endif
@@ -612,9 +614,11 @@ static void initLayers()
 	initColors();
 	initSprites(256-1,256-1,8,0,-16,0);
 	initScrolling(ON,SCL_VDP2_VRAM_B1); //+0x200000-0x1000);
+//	initScrollingNBG1(ON,SCL_VDP2_VRAM_A1);
 	memset((Uint8 *)ss_map, 0x11,0x4000);
 	memset((Uint8 *)ss_map2,0x11,0x4000);
 	memset(&ss_scl[0],0,240);
+//	memset(&ss_scl1[0],0,240);
 
 	//play=1;
 //	drawWindow(0,240,0,2,66);
@@ -683,7 +687,14 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 //	memset(&ss_scl[71],(DrvSprRAM1[32]),0x400);
 //INT16 scl =  (8*sy + 256 - DrvVidRAM1[2 * sx]) % 256;
 //SCL_Open();
-ss_reg->n1_move_x =  (DrvSprRAM1[0x20]<<16) ;
+//ss_reg->n1_move_x =  (DrvSprRAM1[0x20]<<16) ;
+/*	for (INT16 i = 0; i <64*16; i+=2*16)
+	{
+	   ss_scl1[i]=DrvSprRAM1[i/16];
+	   ss_scl1[i+1]=DrvSprRAM1[i/16];
+	   ss_scl1[i+2]=DrvSprRAM1[i/16];
+	   ss_scl1[i+3]=DrvSprRAM1[i/16];
+	}			*/
 memcpy((UINT8*)0x00200000,DrvSprRAM0,0x40);
 memcpy((UINT8*)0x00200040,DrvSprRAM1,0x40);
 //ss_reg->n0_move_x =  (vbt<<16) ;

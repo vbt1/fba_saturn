@@ -24,11 +24,12 @@ SECTIONS {
 		_nBurnSoundRate = . + 36;
 		_nBurnSprites = . + 40;
 		_nBurnLinescrollSize = . + 44;
-		_nBurnFunction = . + 48;
-		_nSoundBufferPos = . + 52;
-		_SclProcess = . + 56;
-		_SclColRamAlloc256 = . + 60;
-		_shared = . + 92;
+		_nBurnLinescrollSize1 = . + 48;
+		_nBurnFunction = . + 52;
+		_nSoundBufferPos = . + 56;
+		_SclProcess = . + 60;
+		_SclColRamAlloc256 = . + 64;
+		_shared = . + 96;
 	} > ram
 
 	.entry 0x6004000  (NOLOAD):

@@ -24,6 +24,7 @@ static SclNorscl *ss_reg = NULL;
 /*static*/ Uint16  *ss_map = NULL;
 /*static*/ Uint16  *ss_map2 = NULL;
 /*static*/ Fixed32 *ss_scl = NULL;
+/*static*/ Fixed32 *ss_scl1 = NULL;
 
 static unsigned char *cache = NULL;
 
@@ -48,6 +49,7 @@ static unsigned char *cache = NULL;
 #define SS_OTHR *(&shared + 12)
 #define SS_BGMIX *(&shared + 13)
 #define SS_SCL *(&shared + 14)
+#define SS_SCL1 *(&shared + 15)
 
 #endif
 
