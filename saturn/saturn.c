@@ -30,12 +30,12 @@ void	UsrVblankIn( void )
 					 
 		if(frame_y==hz)
 		{
-				if(frame_displayed!=frame_x)
+		/*		if(frame_displayed!=frame_x)
 				{
 					sprintf(xx,"%03d",frame_x);
 					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)xx,136,20);
 					frame_displayed = frame_x;
-				}
+				}*/
 				frame_y=frame_x=0;
 		}		   
 #endif
@@ -120,12 +120,13 @@ void initScrolling(Uint8 enabled,void *address)
 	Scl_n_reg.linecontrl = (lp.h_enbl << 1) & 0x0002;
     lp.interval=0;
 
-	(*(Uint16 *)0x25F8009A) = 0x0003; 
-	(*(Uint16 *)0x25F80020) = 0x0303;
+//	(*(Uint16 *)0x25F8009A) = 0x0003; 		// line scroll space
+//	(*(Uint16 *)0x25F80020) = 0x0303;			// display enable
 	SclProcess = 2;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*
 void initScrollingNBG1(Uint8 enabled,void *address)
 {
 //    SCL_InitLineParamTb(&lp);
@@ -157,6 +158,7 @@ void initScrollingNBG1(Uint8 enabled,void *address)
 	Scl_n_reg.linecontrl |= temp;
 	SclProcess = 2;
 }
+*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initSound()
 {
@@ -340,7 +342,7 @@ wait_vblank();
 	SS_BGMIX = &SclBgColMix;
 	SS_SPRIT = &smsSprite[0];
 	SS_SCL	 = &ls_tbl[0];
-	SS_SCL1	 = &ls_tbl1[0];
+//	SS_SCL1	 = &ls_tbl1[0];
 
 	col[0]=0;
 	col[1]=9;
@@ -551,6 +553,83 @@ static void display_menu(void)
 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+static void SCL_SetWindowSub(Uint32 surfaces,Uint32 enable,Uint8 *contrl,Uint8 on,Uint8 off)
+{
+//    if( (enable & SCL_NBG0) || (enable & SCL_RBG1) )
+    if( enable & SCL_NBG0 )
+    {
+//	if( (surfaces & SCL_NBG0) || (surfaces & SCL_RBG1) )
+	if( surfaces & SCL_NBG0 )
+				contrl[1] |= on;
+	else			contrl[1] &= off;
+    }
+
+//    if( (enable & SCL_NBG1) || (enable & SCL_EXBG) )
+    if( enable & SCL_NBG1 )
+    {
+//	if( (surfaces & SCL_NBG1) || (surfaces & SCL_EXBG) )
+	if( surfaces & SCL_NBG1 )
+				contrl[0] |= on;
+	else			contrl[0] &= off;
+    }
+
+    if(enable & SCL_SPR)
+    {
+	if(surfaces & SCL_SPR)	contrl[4] |= on;
+	else			contrl[4] &= off;
+    }
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void	SCL_SetWindow(Uint8 win,Uint32 logic,Uint32 enable,Uint32 area,
+		Uint16 sx,Uint16 sy,Uint16 ex,Uint16 ey)
+{
+    Uint16	*sxy,*exy;
+    Uint8	*contrl;
+    Uint8	en_on,en_off;
+    Uint8	ar_on,ar_off;
+
+    switch(win)
+    {
+	case SCL_W0:
+		Scl_w_reg.linewin0_addr = 0;
+		sxy = &Scl_w_reg.win0_start[0];
+		exy = &Scl_w_reg.win0_end[0];
+		en_on  = 0x02;
+		en_off = 0xfd;
+		ar_on  = 0x01;
+		ar_off = 0xfe;
+		break;
+	case SCL_W1:
+		Scl_w_reg.linewin1_addr = 0;
+		sxy = &Scl_w_reg.win1_start[0];
+		exy = &Scl_w_reg.win1_end[0];
+		en_on  = 0x08;
+		en_off = 0xf7;
+		ar_on  = 0x04;
+		ar_off = 0xfb;
+		break;
+	default:
+		return;
+		break;
+    }
+
+    contrl = (Uint8 *)&Scl_w_reg.wincontrl[0];
+
+	sxy[0] = sx*2;
+	exy[0] = ex*2;
+
+	sxy[1] = sy;
+    exy[1] = ey;
+
+    if(logic | enable)	SCL_SetWindowSub(logic,enable,contrl,0x80,0x7f);
+
+    if(area | enable)	SCL_SetWindowSub(area,enable,contrl,ar_on,ar_off);
+
+    SCL_SetWindowSub(enable,0xffffffff,contrl,en_on,en_off);
+
+    if(SclProcess == 0)	SclProcess = 1;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void SCL_ParametersInit(void)
 {
 //	Uint16	i;
@@ -597,6 +676,7 @@ static void SCL_CopyReg()
 		regaddr[3] = Scl_s_reg.vramsize;		/* add				by C.Y	*/
 		memcpyw(&regaddr[7] , &Scl_s_reg.ramcontrl , 26 );
 		memcpyl(&regaddr[0x14], &Scl_d_reg, sizeof(SclDataset));
+	    memcpyw(&regaddr[0x60], &Scl_w_reg, sizeof(SclWinscl));
 
 		memcpyl((SclOtherPriRegister *)0x25F800E0, &SclOtherPri, sizeof(SclOtherPri));
 		memcpyl((SclSpPriNumRegister *)0x25F800F0, &SclSpPriNum, sizeof(SclSpPriNum));
@@ -937,14 +1017,14 @@ static void SCL_SetLineParamNBG0(SclLineparam *lp)
 	*addr = (lp->line_addr >>1) & 0x0007ffff;
 	SclProcess = 2; //obligatoire
 }
-
+/*
 static void SCL_SetLineParamNBG1(SclLineparam *lp)
 {
 	Uint32	*addr;
 	addr = &Scl_n_reg.lineaddr[1];
 	*addr = (lp->line_addr1 >>1) & 0x0007ffff;
 	SclProcess = 2; //obligatoire
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SPR_Initial(Uint8 **VRAM)
 {
@@ -1788,14 +1868,14 @@ static void run_fba_emulator()
 		int (*Frame)();
 		Frame = (int *)pDriver[nBurnDrvSelect]->Frame;
 
-		if(lp.h_enbl || lp.cell_enbl)
+		if(lp.h_enbl)
 		{
 			while (play)
 			{
 				Frame();
 	 
 				SCL_SetLineParamNBG0(&lp);
-				SCL_SetLineParamNBG1(&lp);
+//				SCL_SetLineParamNBG1(&lp);
 				_spr2_transfercommand();
 				frame_x++;
 
@@ -1841,6 +1921,8 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 	memset(smsSprite,0,sizeof(SprSpCmd)*131);
     smsSprite[0].control    = (JUMP_NEXT | FUNC_SCLIP);
 
+    smsSprite[0].ax         = sx2;
+    smsSprite[0].ay         = sy2;
     smsSprite[0].cx         = sx;
     smsSprite[0].cy         = sy;
     smsSprite[0].dx         = sx2;
@@ -1852,6 +1934,9 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
     smsSprite[1].ay         = ly;
 
     smsSprite[2].control    = (JUMP_NEXT | FUNC_UCLIP);
+
+    smsSprite[2].ax         = sx2;
+    smsSprite[2].ay         = sy2;
 
 	smsSprite[2].cx         = sx;
 	smsSprite[2].cy         = sy;

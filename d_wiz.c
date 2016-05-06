@@ -521,9 +521,9 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 static void initLayers()
 {
     Uint16	CycleTb[]={
-		0x1f56, 0xffff, //A0
+		0xff45, 0x6fff, //A0
 		0xffff, 0xffff,	//A1
-		0xf5f2,0x4eff,   //B0
+		0x012f,0xffff,   //B0
 		0xffff, 0xffff  //B1
 //		0x4eff, 0x1fff, //B1
 	};
@@ -538,10 +538,10 @@ static void initLayers()
 	scfg.datatype		= SCL_CELL;
 	scfg.flip					= SCL_PN_10BIT; // on force à 0
 	scfg.patnamecontrl =  0x0000; // a0 + 0x8000
-	scfg.plate_addr[0] = (Uint32)SS_MAP2;
-	scfg.plate_addr[1] = (Uint32)SS_MAP2;
-	scfg.plate_addr[2] = (Uint32)SS_MAP2;
-	scfg.plate_addr[3] = (Uint32)SS_MAP2;
+	scfg.plate_addr[0] = (Uint32)SS_MAP;
+	scfg.plate_addr[1] = (Uint32)SS_MAP;
+	scfg.plate_addr[2] = (Uint32)SS_MAP;
+	scfg.plate_addr[3] = (Uint32)SS_MAP;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 // 3 nbg
 
@@ -549,23 +549,60 @@ static void initLayers()
 	scfg.platesize		= SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.flip					= SCL_PN_12BIT; // on force à 0
 	scfg.patnamecontrl =  0x0000; // a0 + 0x8000
-	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	scfg.plate_addr[1] = NULL;//(Uint32)SS_MAP;
-	scfg.plate_addr[2] = NULL;//(Uint32)SS_MAP;
-	scfg.plate_addr[3] = NULL;//(Uint32)SS_MAP;
+	scfg.plate_addr[0] = (Uint32)SS_MAP2;
+	scfg.plate_addr[1] = (Uint32)SS_MAP2;
+	scfg.plate_addr[2] = (Uint32)SS_MAP2;
+	scfg.plate_addr[3] = (Uint32)SS_MAP2;
 
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
-	scfg.dispenbl			= OFF;
-	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
-	scfg.datatype 	   = SCL_BITMAP;
-	scfg.mapover	   = SCL_OVER_0;
+//	scfg.dispenbl			= OFF;
+//	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
+//	scfg.datatype 	   = SCL_BITMAP;
+//	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
-
+	scfg.plate_addr[1] = NULL;
+	scfg.plate_addr[2] = NULL;
+	scfg.plate_addr[3] = NULL;
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG2, &scfg);
 	SCL_SetCycleTable(CycleTb);	
 }
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*
+void drawTileWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright)
+{
+
+	int x,j;  
+// drawTileWindow(32/8,240/8,0,0,64/4);
+	for( x = 0; x < l1*64; x+=2 ) // 2 lignes
+    {
+			ss_font[x] = 1;
+			ss_font[x+1] = 0xb0;
+	}
+
+ */
+/*
+	// barre horizontale haut
+
+	for( x = 0; x < l1; x++ ) // 2 lignes
+    {
+		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
+	}
+
+	for( x = 0; x < l2; x++ ) 
+    {
+		for( j = 0; j < vertleft			  ; j++ ) *VRAM++ = 0xaaaa; // barre verticale gauche
+		for( j = 0; j < 128-vertleft-vertright; j++ ) *VRAM++ = 0x0000; // noir
+		for( j = 0; j < vertright			  ; j++ ) *VRAM++ = 0xaaaa; // barre verticale droite
+	}
+// barre horizontale bas
+	for( x = 0; x < l3; x++ ) 
+    {
+		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
+	}	 */
+//}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
 {
@@ -575,8 +612,8 @@ static void initLayers()
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 //	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
-	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
-	SCL_SetColRam(SCL_NBG2,8,8,palette);
+//	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
+	SCL_SetColRam(SCL_NBG1,8,8,palette);
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -585,12 +622,12 @@ static void initLayers()
 	SPR_InitSlaveSH();
 	nBurnSprites = 19;
 	nBurnLinescrollSize = 0x400;
-//	nBurnLinescrollSize1 = 0;
+//	nBurnLinescrollSize1 = 0x400;
 	nSoundBufferPos = 0;
 
 	SS_MAP  = ss_map   =(Uint16 *)(SCL_VDP2_VRAM_B0+0x14000);
 	SS_MAP2 = ss_map2  =(Uint16 *)(SCL_VDP2_VRAM_B0+0x18000);
-	SS_FONT = ss_font  = NULL;  //(Uint16 *)(SCL_VDP2_VRAM_A1+0x10000);
+	SS_FONT = ss_font  = (Uint16 *)(SCL_VDP2_VRAM_B0+0x1C000);
 	SS_CACHE= cache    =(Uint8  *)(SCL_VDP2_VRAM_A0+32);
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
@@ -598,30 +635,37 @@ static void initLayers()
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
-	ss_scl1			= (Fixed32 *)SS_SCL1;
+//	ss_scl1			= (Fixed32 *)SS_SCL1;
 #ifdef CACHE
 	memset(bg_dirtybuffer,1,2048);
 #endif
 	ss_regs->tvmode = 0x8011;
+//   	SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG0,SCL_NBG0,0,0,256-9,192-1);
+ 	SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,16,0,240,256);
+ 	SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,16,0,240,256);
 
-
-	SS_SET_N0PRIN(4);
+	SS_SET_N0PRIN(6);
 	SS_SET_N1PRIN(5);
-	SS_SET_N2PRIN(7);
-	SS_SET_S0PRIN(6);
+	SS_SET_N2PRIN(4);
+	SS_SET_S0PRIN(7);
 
 	initLayers();
 	initColors();
-	initSprites(256-1,256-1,8,0,-16,0);
+	initSprites(240-1,256-1,16,0,16,0);
 	initScrolling(ON,SCL_VDP2_VRAM_B1); //+0x200000-0x1000);
-//	initScrollingNBG1(ON,SCL_VDP2_VRAM_A1);
+//	initScrollingNBG1(ON,SCL_VDP2_VRAM_B1+0x10000);
 	memset((Uint8 *)ss_map, 0x11,0x4000);
 	memset((Uint8 *)ss_map2,0x11,0x4000);
+	memset((Uint8 *)ss_font,0x11,0x4000);
 	memset(&ss_scl[0],0,240);
 //	memset(&ss_scl1[0],0,240);
 
 	//play=1;
 //	drawWindow(0,240,0,2,66);
+
+//	drawTileWindow(32/8,240/8,0,0,64/4);
+
+
 //	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	memset(&ss_scl[0],16<<16,64);
 //	memset(&ss_scl[0],16<<16,128);
@@ -650,9 +694,7 @@ static INT32 DrvExit()
 
 static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 {
-//	SCL_Open();
-//	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
-	memset(&ss_scl[71],(DrvSprRAM0[16]),0x400);
+	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
 
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
@@ -677,31 +719,28 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 
 //		UINT32 x = (((sy>>3)*64)|sx)<<1;
 		UINT32 x = ((sy>>3)<<1)|((31-sx)*128);
-		ss_map2[x] = ss_map2[x+0x40] = color ;
-		ss_map2[x+1] = ss_map2[x+0x41] = ((code+0x201)); //&0x5FF) ;
+		if(x < 0x440 )
+		{
+			if(sy>=16 && sy<240)
+			{
+				ss_font[x] = color ;
+				ss_font[x+1] = ((code+0x201));
+			}
+		}
+		else	
+		{	
+			ss_map2[x] = ss_map2[x+0x40] = color ;
+			ss_map2[x+1] = ss_map2[x+0x41] = ((code+0x201)); //&0x5FF) ;
+		}
 	}
 }
-int vbt = 0;
+
 static void draw_foreground(INT16 palbank, INT16 colortype)
 {
-//	memset(&ss_scl[71],(DrvSprRAM1[32]),0x400);
-//INT16 scl =  (8*sy + 256 - DrvVidRAM1[2 * sx]) % 256;
-//SCL_Open();
-//ss_reg->n1_move_x =  (DrvSprRAM1[0x20]<<16) ;
-/*	for (INT16 i = 0; i <64*16; i+=2*16)
+	for (INT16 i = 0; i <32; i++)
 	{
-	   ss_scl1[i]=DrvSprRAM1[i/16];
-	   ss_scl1[i+1]=DrvSprRAM1[i/16];
-	   ss_scl1[i+2]=DrvSprRAM1[i/16];
-	   ss_scl1[i+3]=DrvSprRAM1[i/16];
-	}			*/
-memcpy((UINT8*)0x00200000,DrvSprRAM0,0x40);
-memcpy((UINT8*)0x00200040,DrvSprRAM1,0x40);
-//ss_reg->n0_move_x =  (vbt<<16) ;
-vbt++;
-
-if(vbt>256)
-	vbt=0;
+		memset(&ss_scl[((i-1)*8)],DrvSprRAM1[64-(i*2)],32);
+	}
 
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
@@ -727,7 +766,7 @@ if(vbt>256)
 		}
 
 		color |= (palbank << 3);
-		scroll = (8*sy + 256 - DrvVidRAM1[2 * sx]) % 256;
+//		scroll = (8*sy + 256 - DrvVidRAM1[2 * sx]) % 256;
 /*		if (screen_flip[1])
 		{
 			scroll = (248 - scroll) % 256;
@@ -740,8 +779,13 @@ if(vbt>256)
 //		UINT32 x = ((sy>>3))|((31-sx)*64);
 		UINT32 x = ((sy>>3)<<1)|((31-sx)*128);
 //		ss_map[x] = (color << 12 | code) ;
-		ss_map[x] = ss_map[x+0x40] = color;
-		ss_map[x+1] = ss_map[x+0x41] = code+1;
+		if(x >= 0x440 )
+		{
+			ss_map[x+0x40] = color;
+			ss_map[x+0x41] = code+1;
+		}
+		ss_map[x] = color;
+		ss_map[x+1] = code+1;
 
 //		Render8x8Tile_Mask_Clip(pTransDraw, code, (sx << 3)-Scionmodeoffset, sy-16, color, 3, 0, 0, DrvGfxROM0);
 	}
@@ -764,7 +808,7 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta)
 
 	ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_DISTORSP);
 
-	ss_sprite[delta].ax		= sy+16;
+	ss_sprite[delta].ax		= sy-16;
 	ss_sprite[delta].ay		= 256-sx;
 	ss_sprite[delta].bx		= ss_sprite[delta].ax;
 	ss_sprite[delta].by		= ss_sprite[delta].ay-16;
