@@ -55,7 +55,8 @@ static UINT8 *char_bank_select;
 static UINT8 *screen_flip;
 static UINT8 *background_color;
 
-static INT16 *pAY8910Buffer[9];
+static INT16* pFMBuffer = NULL;
+static INT16* pAY8910Buffer[9];
 
 static UINT8 DrvInputs[2];
 static UINT8 DrvJoy1[8];

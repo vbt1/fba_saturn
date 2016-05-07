@@ -317,14 +317,8 @@ static INT32 MemIndex()
 	background_color= Next; Next += 0x000001;
 
 	RamEnd			= Next;
-
-	{
-		for (INT32 i = 0; i < 9; i++) {
-			pAY8910Buffer[i] = (INT16*)Next; Next += nBurnSoundLen * sizeof(UINT16);
-		}
-	}
 	map_offset_lut = (UINT16*)Next; Next += 1024 * sizeof(UINT16);
-
+	pFMBuffer	= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 	MemEnd			= Next;
 
 	return 0;
@@ -558,6 +552,16 @@ static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 	CZetSetReadHandler(wiz_sound_read);
 	CZetClose();
 
+	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
+	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
+	pAY8910Buffer[2] = pFMBuffer + nBurnSoundLen * 2;
+	pAY8910Buffer[3] = pFMBuffer + nBurnSoundLen * 3;
+	pAY8910Buffer[4] = pFMBuffer + nBurnSoundLen * 4;
+	pAY8910Buffer[5] = pFMBuffer + nBurnSoundLen * 5;
+	pAY8910Buffer[6] = pFMBuffer + nBurnSoundLen * 6;
+	pAY8910Buffer[7] = pFMBuffer + nBurnSoundLen * 7;
+	pAY8910Buffer[8] = pFMBuffer + nBurnSoundLen * 8;
+
 	AY8910Init(0, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(1, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(2, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
@@ -682,7 +686,6 @@ static void make_lut(int rotated)
 	memset(bg_dirtybuffer,1,2048);
 #endif
 	ss_regs->tvmode = 0x8011;
-//   	SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG0,SCL_NBG0,0,0,256-9,192-1);
  	SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,16,0,240,256);
  	SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,16,0,240,256);
 
@@ -694,26 +697,14 @@ static void make_lut(int rotated)
 	initLayers();
 	initColors();
 	initSprites(240-1,256-1,16,0,16,0);
-	initScrolling(ON,SCL_VDP2_VRAM_B1); //+0x200000-0x1000);
-//	initScrollingNBG1(ON,SCL_VDP2_VRAM_B1+0x10000);
+	initScrolling(ON,SCL_VDP2_VRAM_B1);
 	memset((Uint8 *)ss_map, 0x11,0x4000);
 	memset((Uint8 *)ss_map2,0x11,0x4000);
 	memset((Uint8 *)ss_font,0x11,0x4000);
 	memset(&ss_scl[0],0,240);
-//	memset(&ss_scl1[0],0,240);
-
-	//play=1;
-//	drawWindow(0,240,0,2,66);
-
-//	drawTileWindow(32/8,240/8,0,0,64/4);
-
-
-//	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
-//	memset(&ss_scl[0],16<<16,64);
-//	memset(&ss_scl[0],16<<16,128);
 
 //	drawWindow(0,256,0,4,68);
-//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
@@ -724,12 +715,20 @@ static INT32 DrvExit()
 	AY8910Exit(1);
 	AY8910Exit(2);
 
-	free (AllMem);
+	for (int i = 0; i < 9; i++) {
+		pAY8910Buffer[i] = NULL;
+	}
+
+	pFMBuffer = NULL;
+
+	free(AllMem);
 	AllMem = NULL;
 
 	Wizmode = 0;
 	Scionmodeoffset = 0;
 
+ 	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
+ 	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
 	return 0;
 }
 
@@ -855,6 +854,61 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta, UIN
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void updateSound()
+{
+	int nSample;
+	int n;
+	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
+	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+
+	AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
+	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
+	AY8910Update(2, &pAY8910Buffer[6], nBurnSoundLen);
+
+	for (n = 0; n < nBurnSoundLen; n++) 
+	{
+		nSample  = pAY8910Buffer[0][n]; // >> 2;
+		nSample += pAY8910Buffer[1][n]; // >> 2;
+		nSample += pAY8910Buffer[2][n]; // >> 2;
+		nSample += pAY8910Buffer[3][n]; // >> 2;
+		nSample += pAY8910Buffer[4][n]; // >> 2;
+		nSample += pAY8910Buffer[5][n]; // >> 2;
+		nSample += pAY8910Buffer[6][n]; // >> 2;
+		nSample += pAY8910Buffer[7][n]; // >> 2;
+		nSample += pAY8910Buffer[8][n]; // >> 2;
+
+		nSample /=4;
+
+		if (nSample < -32768) 
+		{
+			nSample = -32768;
+		} 
+		else 
+		{
+			if (nSample > 32767) 
+			{
+				nSample = 32767;
+			}
+		}	
+		nSoundBuffer[deltaSlave + n] = nSample;
+//		nSoundBuffer[nSoundBufferPos + n] = nSample;
+	}
+
+	if(deltaSlave>=RING_BUF_SIZE/2)
+//	if(nSoundBufferPos>=RING_BUF_SIZE/2)
+	{
+		deltaSlave=0;
+//		nSoundBufferPos = 0;
+		PCM_Task(pcm); // bon emplacement
+	}
+
+	deltaSlave+=nBurnSoundLen;
+//	nSoundBufferPos+=nBurnSoundLen;
+
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 WizDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
@@ -862,14 +916,14 @@ static INT32 WizDraw()
 	cleanSprites();
 
 	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
-	for (INT16 i = 0; i <32; i++)
+	for (INT16 i = 1; i <32; i++)
 	{
 		memset(&ss_scl[((i-1)*8)],DrvSprRAM1[64-(i*2)],32);
 	}
 
 	draw_background(2 + ((char_bank_select[0] << 1) | char_bank_select[1]), palbank, 0);
 	draw_foreground(palbank, 0);
-
+ 
 	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3, 1);
 	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank, 11, 1);
 
@@ -939,6 +993,8 @@ static INT32 DrvFrame()
 	INT32 nCyclesTotal[2] = { 3072000 / 60, 1789750 / 60 };
 	INT32 nCyclesDone[2]  = { 0, 0 };
 
+ 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
+
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
 		CZetOpen(0);
@@ -951,15 +1007,14 @@ static INT32 DrvFrame()
 		if ((i & 0x03) == 0x03 && interrupt_enable[1]) CZetNmi();
 		CZetClose();
 	}
+//	updateSound();
  /*
 	if (pBurnSoundOut) {
 		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
 	}
  */ 
-//	if (pBurnDraw) {
-//		BurnDrvRedraw();
-//	}
 	DrvDraw();
+	SPR_WaitEndSlaveSH();
 	return 0;
 }
 
