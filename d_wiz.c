@@ -35,7 +35,15 @@ int ovlInit(char *szShortName)
 		ScionInit, DrvExit, DrvFrame, NULL
 	};
 
+	if (strcmp(nBurnDrvWiz.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvWiz,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvKungfut.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvKungfut,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvStinger.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvStinger,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvScion.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvScion,sizeof(struct BurnDriver));
+
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
@@ -315,19 +323,22 @@ static INT32 MemIndex()
 			pAY8910Buffer[i] = (INT16*)Next; Next += nBurnSoundLen * sizeof(UINT16);
 		}
 	}
+	map_offset_lut = (UINT16*)Next; Next += 1024 * sizeof(UINT16);
 
 	MemEnd			= Next;
 
 	return 0;
 }
 
-static void DrvGfxDecode(UINT32 type)
+static void DrvGfxDecode(UINT32 type, int rotated)
 {
 	INT32 Plane[3]  = { 0x4000*8, 0x2000*8, 0 };
 //	INT32 XOffs[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7 };
 //	INT32 YOffs[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
 	INT32 YOffs[16] = { 7, 6, 5, 4, 3, 2, 1, 0, 8*8+7, 8*8+6, 8*8+5, 8*8+4, 8*8+3, 8*8+2, 8*8+1, 8*8+0 };
 	INT32 XOffs[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
+	INT32 XOffs1[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7 };
+	INT32 YOffs1[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
 
 	UINT8 *tmp0 = (UINT8*)0x00200000;
 	UINT8 *tmp1 = (UINT8*)malloc(0xc000);
@@ -338,23 +349,38 @@ static void DrvGfxDecode(UINT32 type)
 	memset (DrvGfxROM1, 0, 0xc000);
 
 // ok
-	GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp0 + 0x0000, DrvGfxROM0 + 0 *  8 *  4 * 256);
-	GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp0 + 0x0800, DrvGfxROM0 + 1 *  8 *  4 * 256);
-
-	if (type == 0)
+	if (rotated)
 	{
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x6000, DrvGfxROM0b + 0 *  8 *  4 * 256);
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0000, DrvGfxROM0b + 1 *  8 *  4 * 256);
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0800, DrvGfxROM0b + 2 *  8 *  4 * 256);
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x6800, DrvGfxROM0b + 3 *  8 *  4 * 256);
-	} else {
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0000, DrvGfxROM0b + 0 *  8 *  4 * 256);
-		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0800, DrvGfxROM0b + 1 *  8 *  4 * 256);
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp0 + 0x0000, DrvGfxROM0 + 0 *  8 *  4 * 256);
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp0 + 0x0800, DrvGfxROM0 + 1 *  8 *  4 * 256);
+
+		if (type == 0)
+		{
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x6000, DrvGfxROM0b + 0 *  8 *  4 * 256);
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0000, DrvGfxROM0b + 1 *  8 *  4 * 256);
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0800, DrvGfxROM0b + 2 *  8 *  4 * 256);
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x6800, DrvGfxROM0b + 3 *  8 *  4 * 256);
+		} else {
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0000, DrvGfxROM0b + 0 *  8 *  4 * 256);
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs, YOffs, 0x040, tmp1 + 0x0800, DrvGfxROM0b + 1 *  8 *  4 * 256);
+		}
 	}
+	else
+	{
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs1, YOffs1, 0x040, tmp0 + 0x0000, DrvGfxROM0 + 0 *  8 *  4 * 256);
+		GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs1, YOffs1, 0x040, tmp0 + 0x0800, DrvGfxROM0 + 1 *  8 *  4 * 256);
 
-	INT32 XOffs1[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7 };
-	INT32 YOffs1[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
-
+		if (type == 0)
+		{
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs1, YOffs1, 0x040, tmp1 + 0x6000, DrvGfxROM0b + 0 *  8 *  4 * 256);
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs1, YOffs1, 0x040, tmp1 + 0x0000, DrvGfxROM0b + 1 *  8 *  4 * 256);
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs1, YOffs1, 0x040, tmp1 + 0x0800, DrvGfxROM0b + 2 *  8 *  4 * 256);
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs1, YOffs1, 0x040, tmp1 + 0x6800, DrvGfxROM0b + 3 *  8 *  4 * 256);
+		} else {
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs1, YOffs1, 0x040, tmp1 + 0x0000, DrvGfxROM0b + 0 *  8 *  4 * 256);
+			GfxDecode4Bpp(256, 3,  8,  8, Plane, XOffs1, YOffs1, 0x040, tmp1 + 0x0800, DrvGfxROM0b + 1 *  8 *  4 * 256);
+		}
+	}
 
 	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp0 + 0x0000, DrvGfxROM1 + 0 * 16 * 8 * 256);
 	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp1 + 0x0000, DrvGfxROM1 + 1 * 16 * 8 * 256);
@@ -389,7 +415,7 @@ static INT32 WizLoadRoms()
 	if (BurnLoadRom(DrvColPROM + 0x00100, 11, 1)) return 1;
 	if (BurnLoadRom(DrvColPROM + 0x00200, 12, 1)) return 1;
 
-	DrvGfxDecode(0);
+	DrvGfxDecode(0, 1);
 
 	return 0;
 }
@@ -414,7 +440,7 @@ static INT32 KungfutLoadRoms()
 	if (BurnLoadRom(DrvColPROM + 0x00100, 11, 1)) return 1;
 	if (BurnLoadRom(DrvColPROM + 0x00200, 12, 1)) return 1;
 
-	DrvGfxDecode(1);
+	DrvGfxDecode(1,0);
 
 	return 0;
 }
@@ -441,12 +467,39 @@ static INT32 StingerLoadRoms()
 	if (BurnLoadRom(DrvColPROM + 0x00100, 13, 1)) return 1;
 	if (BurnLoadRom(DrvColPROM + 0x00200, 14, 1)) return 1;
 
-	DrvGfxDecode(1);
+	DrvGfxDecode(1,1);
 
 	return 0;
 }
 
-static INT32 DrvInit(int (*RomLoadCallback)())
+static INT32 ScionLoadRoms()
+{
+	if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
+	if (BurnLoadRom(DrvZ80ROM0 + 0x02000,  1, 1)) return 1;
+	if (BurnLoadRom(DrvZ80ROM0 + 0x04000,  2, 1)) return 1;
+	if (BurnLoadRom(DrvZ80ROM0 + 0x06000,  3, 1)) return 1;
+	if (BurnLoadRom(DrvZ80ROM0 + 0x08000,  4, 1)) return 1;
+
+	if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  5, 1)) return 1;
+
+	if (BurnLoadRom(DrvGfxROM0 + 0x00000,  6, 1)) return 1;
+	if (BurnLoadRom(DrvGfxROM0 + 0x02000,  7, 1)) return 1;
+	if (BurnLoadRom(DrvGfxROM0 + 0x04000,  8, 1)) return 1;
+
+	if (BurnLoadRom(DrvGfxROM1 + 0x00000,  9, 1)) return 1;
+	if (BurnLoadRom(DrvGfxROM1 + 0x02000, 10, 1)) return 1;
+	if (BurnLoadRom(DrvGfxROM1 + 0x04000, 11, 1)) return 1;
+
+	if (BurnLoadRom(DrvColPROM + 0x00000, 12, 1)) return 1;
+	if (BurnLoadRom(DrvColPROM + 0x00100, 13, 1)) return 1;
+	if (BurnLoadRom(DrvColPROM + 0x00200, 14, 1)) return 1;
+
+	DrvGfxDecode(1,0);
+
+	return 0;
+}
+
+static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 {
 	DrvInitSaturn();
 	AllMem = NULL;
@@ -458,6 +511,7 @@ static INT32 DrvInit(int (*RomLoadCallback)())
 	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
+	make_lut(rotated);
 
 	{
 		if (RomLoadCallback()) return 1;
@@ -568,41 +622,6 @@ static void initLayers()
 	SCL_SetConfig(SCL_NBG2, &scfg);
 	SCL_SetCycleTable(CycleTb);	
 }
-
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*
-void drawTileWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright)
-{
-
-	int x,j;  
-// drawTileWindow(32/8,240/8,0,0,64/4);
-	for( x = 0; x < l1*64; x+=2 ) // 2 lignes
-    {
-			ss_font[x] = 1;
-			ss_font[x+1] = 0xb0;
-	}
-
- */
-/*
-	// barre horizontale haut
-
-	for( x = 0; x < l1; x++ ) // 2 lignes
-    {
-		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
-	}
-
-	for( x = 0; x < l2; x++ ) 
-    {
-		for( j = 0; j < vertleft			  ; j++ ) *VRAM++ = 0xaaaa; // barre verticale gauche
-		for( j = 0; j < 128-vertleft-vertright; j++ ) *VRAM++ = 0x0000; // noir
-		for( j = 0; j < vertright			  ; j++ ) *VRAM++ = 0xaaaa; // barre verticale droite
-	}
-// barre horizontale bas
-	for( x = 0; x < l3; x++ ) 
-    {
-		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
-	}	 */
-//}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
 {
@@ -615,6 +634,29 @@ void drawTileWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned 
 //	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void make_lut(int rotated)
+{
+	if (rotated)
+	{
+		for (UINT32 i = 0; i < 1024;i++) 
+		{
+			INT32 sx    = (i & 0x1f);
+			UINT8 sy    = (((i / 32)<<3))&0xff;// - DrvSprRAM1[2 * sx + 0]);
+
+			map_offset_lut[i] = ((sy>>3)<<1)|((31-sx)*128);
+		}
+	}
+	else
+	{
+		for (UINT32 i = 0; i < 1024;i++) 
+		{
+			INT32 sy = ((i >> 5) & 0x1f)<<7;
+			INT32 sx = (i & 0x1f)<<1;
+			map_offset_lut[i] = sy | sx;
+		}
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
@@ -694,17 +736,11 @@ static INT32 DrvExit()
 
 static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 {
-	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
-
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
 		INT16 sx  = (offs & 0x1f);
-//		UINT8 sy = (((offs / 32)<<3)); // - DrvSprRAM0[2 * sx + 0]) &0xff;
-		UINT8 sy = (((offs / 32)<<3)) &0xff; // - DrvSprRAM0[2 * sx + 0]) &0xff;
-		INT16 color;
-
-//			UINT32 sx1 = (31-((offs) & 0x1f))<<6;
-//			UINT32 sy1 = ((offs) >> 5);
+		UINT8 sy = (((offs / 32)<<3)) &0xff;
+		UINT16 color;
 
 		if (colortype) 
 		{
@@ -717,8 +753,7 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 
 		UINT16 code  = DrvVidRAM0[offs] | (bank << 8);
 
-//		UINT32 x = (((sy>>3)*64)|sx)<<1;
-		UINT32 x = ((sy>>3)<<1)|((31-sx)*128);
+		UINT32 x = map_offset_lut[offs];
 		if(x < 0x440 )
 		{
 			if(sy>=16 && sy<240)
@@ -737,24 +772,12 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 
 static void draw_foreground(INT16 palbank, INT16 colortype)
 {
-	for (INT16 i = 0; i <32; i++)
-	{
-		memset(&ss_scl[((i-1)*8)],DrvSprRAM1[64-(i*2)],32);
-	}
-
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
 		INT32 sx    = (offs & 0x1f);
-		UINT8 sy    = (((offs / 32)<<3))&0xff;// - DrvSprRAM1[2 * sx + 0]);
- 		INT16 code  = DrvVidRAM1[offs] | (char_bank_select[1] << 8);
-		INT16 color = DrvColRAM1[sx << 1 | 1] & 7;
-		INT16 scroll;
-
-//		sx = (offs & 0x1f);
-//		UINT32 sy   =(offs / 32) <<6;
-//		INT32 sx = (31-((offs & 0x1f) - (DrvSprRAM1[2 * sx1 + 0]>>3))) & 0x1f;
-//		sx = sx << 6;
-//		UINT32 sy = ((offs) >> 5);
+		UINT8 sy    = (((offs / 32)<<3))&0xff;
+ 		UINT16 code  = DrvVidRAM1[offs] | (char_bank_select[1] << 8);
+		UINT16 color = DrvColRAM1[sx << 1 | 1] & 7;
 
 		if (colortype)
 		{
@@ -766,19 +789,8 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 		}
 
 		color |= (palbank << 3);
-//		scroll = (8*sy + 256 - DrvVidRAM1[2 * sx]) % 256;
-/*		if (screen_flip[1])
-		{
-			scroll = (248 - scroll) % 256;
-		}
 
-		if (screen_flip[0]) sx = 31 - sx;
-*/
-//		color = 0;
-//		UINT32 x = ((sy>>3)*64)|sx;
-//		UINT32 x = ((sy>>3))|((31-sx)*64);
-		UINT32 x = ((sy>>3)<<1)|((31-sx)*128);
-//		ss_map[x] = (color << 12 | code) ;
+		UINT32 x = map_offset_lut[offs]; 
 		if(x >= 0x440 )
 		{
 			ss_map[x+0x40] = color;
@@ -786,12 +798,10 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 		}
 		ss_map[x] = color;
 		ss_map[x+1] = code+1;
-
-//		Render8x8Tile_Mask_Clip(pTransDraw, code, (sx << 3)-Scionmodeoffset, sy-16, color, 3, 0, 0, DrvGfxROM0);
 	}
 }
-
-static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta)
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta, UINT8 rotated)
 {
 	for (INT16 offs = 0x1c; offs >= 0; offs -= 4)
 	{
@@ -801,21 +811,29 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta)
 		INT16 sx =    ram[offs + 3];
 		if (!sx || !sy) 
 		{
-			ss_sprite[delta].ax		= ss_sprite[delta].ay		= 	ss_sprite[delta].bx		= ss_sprite[delta].by		= 0;
-			ss_sprite[delta].cy		= 	ss_sprite[delta].cx		= 	ss_sprite[delta].dx		= ss_sprite[delta].dy		= 0;
+			ss_sprite[delta].ax		= ss_sprite[delta].ay		= 0;
 			continue;
 		}
 
-	ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_DISTORSP);
+		if(rotated)
+		{
+			ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_DISTORSP);
+			ss_sprite[delta].drawMode = UCLPIN_ENABLE;		
 
-	ss_sprite[delta].ax		= sy-16;
-	ss_sprite[delta].ay		= 256-sx;
-	ss_sprite[delta].bx		= ss_sprite[delta].ax;
-	ss_sprite[delta].by		= ss_sprite[delta].ay-16;
-	ss_sprite[delta].cy		= ss_sprite[delta].by;
-	ss_sprite[delta].cx		= ss_sprite[delta].ax+16;
-	ss_sprite[delta].dx		= ss_sprite[delta].cx;
-	ss_sprite[delta].dy		= ss_sprite[delta].ay;
+			ss_sprite[delta].ax		= sy-16;
+			ss_sprite[delta].ay		= 256-sx;
+			ss_sprite[delta].bx		= ss_sprite[delta].ax;
+			ss_sprite[delta].by		= ss_sprite[delta].ay-16;
+			ss_sprite[delta].cy		= ss_sprite[delta].by;
+			ss_sprite[delta].cx		= ss_sprite[delta].ax+16;
+			ss_sprite[delta].dx		= ss_sprite[delta].cx;
+			ss_sprite[delta].dy		= ss_sprite[delta].ay;
+		}
+		else
+		{
+			ss_sprite[delta].ax		= sx-16;
+			ss_sprite[delta].ay		= sy;
+		}
 
 		ss_sprite[delta].color			= color<<3;
 		ss_sprite[delta].charSize	= 0x210;
@@ -823,7 +841,6 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta)
 		delta++;
 	}
 }
-
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void cleanSprites()
 {
@@ -838,19 +855,44 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta)
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvDraw()
+static INT32 WizDraw()
 {
-//	DrvGfxROM0 = NULL;
-//		DrvGfxROM0b = NULL;
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
 	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
 	cleanSprites();
 
+	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
+	for (INT16 i = 0; i <32; i++)
+	{
+		memset(&ss_scl[((i-1)*8)],DrvSprRAM1[64-(i*2)],32);
+	}
+
 	draw_background(2 + ((char_bank_select[0] << 1) | char_bank_select[1]), palbank, 0);
 	draw_foreground(palbank, 0);
 
-	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3);
-	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank, 11);
+	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3, 1);
+	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank, 11, 1);
+
+	return 0;
+}
+
+static INT32 ScionDraw()
+{
+	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
+	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
+	cleanSprites();
+
+	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
+	for (INT16 i = 0; i <32; i++)
+	{
+		memset(&ss_scl[((i-1)*8)],DrvSprRAM1[64-(i*2)],32);
+	}
+
+	draw_background(2 + ((char_bank_select[0] << 1) | char_bank_select[1]), palbank, 0);
+	draw_foreground(palbank, 0);
+
+	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3, 0);
+	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank, 11, 0);
 
 	return 0;
 }
@@ -858,23 +900,14 @@ static INT32 DrvDraw()
 static INT32 StingerDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
+	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
+	cleanSprites();
 
-	if (DrvRecalc) {
-		DrvPaletteInit();
-		DrvRecalc = 0;
-	}
-/*
-	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
-		pTransDraw[i] = *background_color;
-	}
-*/
 	draw_background(2 + char_bank_select[0], palbank, 1);
 	draw_foreground(palbank, 1);
 
-	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3);
-	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1, 11);
-
-//	BurnTransferCopy(DrvPalette);
+	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3, 1);
+	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1, 11, 1);
 
 	return 0;
 }
@@ -882,39 +915,24 @@ static INT32 StingerDraw()
 static INT32 KungfutDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
+	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
+	cleanSprites();
 
-	if (DrvRecalc) {
-		DrvPaletteInit();
-		DrvRecalc = 0;
-	}
-/*
-	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
-		pTransDraw[i] = *background_color;
-	}
-*/
 	draw_background(2 + char_bank_select[0], palbank, 0);
 	draw_foreground(palbank, 0);
 
-	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3);
-	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1, 11);
-
-//	BurnTransferCopy(DrvPalette);
-	
+	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3, 0);
+	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1, 11, 0);
 	return 0;
 }
 
 static INT32 DrvFrame()
 {
-/*	if (DrvReset) {
-		DrvDoReset();
-	}
- */
+	memset (DrvInputs, 0, 2);
+	for (INT16 i = 0; i < 8; i++) 
 	{
-		memset (DrvInputs, 0, 2);
-		for (INT16 i = 0; i < 8; i++) {
-			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
-			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
-		}
+		DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
+		DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 	}
 
 	INT32 nInterleave = 16;
@@ -948,13 +966,18 @@ static INT32 DrvFrame()
 static INT32 WizInit()
 {
 	Wizmode = 1;
-
-	return DrvInit(WizLoadRoms);
+	DrvDraw = WizDraw;
+	return DrvInit(WizLoadRoms,1);
 }
 
 static INT32 KungfutInit()
 {
-	return DrvInit(KungfutLoadRoms);
+	DrvDraw = KungfutDraw;
+	int result = DrvInit(KungfutLoadRoms,0);
+ 	SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,0,0,255,256);
+ 	SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,0,0,256,256);
+
+	return result;
 }
 
 static void StingerDecode()
@@ -988,7 +1011,8 @@ static void StingerDecode()
 
 static INT32 StingerInit()
 {
-	INT32 nRet = DrvInit(StingerLoadRoms);
+	DrvDraw = StingerDraw;
+	INT32 nRet = DrvInit(StingerLoadRoms,1);
 
 	if (nRet == 0) {
 		StingerDecode();
@@ -999,7 +1023,8 @@ static INT32 StingerInit()
 
 static INT32 ScionInit()
 {
+	DrvDraw = ScionDraw;
 	Scionmodeoffset = 8*4; // 8 8x8char offset
 
-	return DrvInit(StingerLoadRoms);
+	return DrvInit(ScionLoadRoms,0);
 }

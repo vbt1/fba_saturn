@@ -1923,10 +1923,9 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 
     smsSprite[0].ax         = sx2;
     smsSprite[0].ay         = sy2;
-    smsSprite[0].cx         = sx;
+
+	smsSprite[0].cx         = sx;
     smsSprite[0].cy         = sy;
-    smsSprite[0].dx         = sx2;
-    smsSprite[0].dy         = sy2;
 
     smsSprite[1].control    =  (JUMP_NEXT | FUNC_LCOORD);
 

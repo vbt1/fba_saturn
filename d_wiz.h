@@ -7,6 +7,8 @@
 
 #define nBurnSoundLen 128
 
+UINT16 *map_offset_lut = NULL;
+
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ void DrvInitSaturn();
 static INT32 WizInit();
@@ -14,10 +16,13 @@ static INT32 KungfutInit();
 static INT32 StingerInit();
 static INT32 ScionInit();
 
-static INT32  DrvInit();
+static INT32 DrvInit(int (*RomLoadCallback)(), int rotated);
 static INT32  DrvExit();
 static INT32  DrvFrame();
-static INT32  DrvDraw();
+//static INT32  DrvDraw();
+
+static void make_lut(int rotated);
+INT32 (*DrvDraw)();
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -514,21 +519,21 @@ STD_ROM_FN(kungfut)
 // Stinger
 
 static struct BurnRomInfo stingerRomDesc[] = {
-	{ "1-5j.bin",	0x2000, 0x1a2ca600, 1 }, //  0 maincpu
-	{ "2-6j.bin",	0x2000, 0x957cd39c, 1 }, //  1
-	{ "3-8j.bin",	0x2000, 0x404c932e, 1 }, //  2
-	{ "4-9j.bin",	0x2000, 0x2d570f91, 1 }, //  3
-	{ "5-10j.bin",	0x2000, 0xc841795c, 1 }, //  4
+	{ "15j.bin",	0x2000, 0x1a2ca600, 1 }, //  0 maincpu
+	{ "26j.bin",	0x2000, 0x957cd39c, 1 }, //  1
+	{ "38j.bin",	0x2000, 0x404c932e, 1 }, //  2
+	{ "49j.bin",	0x2000, 0x2d570f91, 1 }, //  3
+	{ "510j.bin",	0x2000, 0xc841795c, 1 }, //  4
 
-	{ "6-9f.bin",	0x2000, 0x79757f0c, 2 }, //  5 audiocpu
+	{ "69f.bin",	0x2000, 0x79757f0c, 2 }, //  5 audiocpu
 
-	{ "7-9e.bin",	0x2000, 0x775489be, 3 }, //  6 gfx1
-	{ "8-11e.bin",	0x2000, 0x43c61b3f, 3 }, //  7
-	{ "9-14e.bin",	0x2000, 0xc9ed8fc7, 3 }, //  8
+	{ "79e.bin",	0x2000, 0x775489be, 3 }, //  6 gfx1
+	{ "811e.bin",	0x2000, 0x43c61b3f, 3 }, //  7
+	{ "914e.bin",	0x2000, 0xc9ed8fc7, 3 }, //  8
 
-	{ "10-9h.bin",	0x2000, 0x6fc3a22d, 4 }, //  9 gfx2
-	{ "11-11h.bin",	0x2000, 0x3df1f57e, 4 }, // 10
-	{ "12-14h.bin",	0x2000, 0x2fbe1391, 4 }, // 11
+	{ "109h.bin",	0x2000, 0x6fc3a22d, 4 }, //  9 gfx2
+	{ "1111h.bin",	0x2000, 0x3df1f57e, 4 }, // 10
+	{ "1214h.bin",	0x2000, 0x2fbe1391, 4 }, // 11
 
 	{ "stinger.a7",	0x0100, 0x52c06fc2, 5 }, // 12 proms
 	{ "stinger.b7",	0x0100, 0x9985e575, 5 }, // 13
@@ -541,13 +546,13 @@ STD_ROM_FN(stinger)
 // Scion
 
 static struct BurnRomInfo scionRomDesc[] = {
-	{ "sc1",	0x2000, 0x8dcad575, 1 }, //  0 maincpu
-	{ "sc2",	0x2000, 0xf608e0ba, 1 }, //  1
-	{ "sc3",	0x2000, 0x915289b9, 1 }, //  2
+	{ "sc1.bin",	0x2000, 0x8dcad575, 1 }, //  0 maincpu
+	{ "sc2.bin",	0x2000, 0xf608e0ba, 1 }, //  1
+	{ "sc3.bin",	0x2000, 0x915289b9, 1 }, //  2
 	{ "4.9j",	0x2000, 0x0f40d002, 1 }, //  3
 	{ "5.10j",	0x2000, 0xdc4923b7, 1 }, //  4
 
-	{ "sc6",	0x2000, 0x09f5f9c1, 2 }, //  5 audiocpu
+	{ "sc6.bin",	0x2000, 0x09f5f9c1, 2 }, //  5 audiocpu
 
 	{ "7.10e",	0x2000, 0x223e0d2a, 3 }, //  6 gfx1
 	{ "8.12e",	0x2000, 0xd3e39b48, 3 }, //  7

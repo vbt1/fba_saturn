@@ -3865,6 +3865,144 @@ EndFile
 				EndFile
 			EndDirectory
 
+ 			Directory KUNGFUT
+				File 1.BIN;1
+					Source KUNGFUT\1.BIN
+				EndFile
+				File 2.BIN;1
+					Source KUNGFUT\2.BIN
+				EndFile
+				File 3.BIN;1
+					Source KUNGFUT\3.BIN
+				EndFile
+				File 4.BIN;1
+					Source KUNGFUT\4.BIN
+				EndFile
+				File 5.BIN;1
+					Source KUNGFUT\5.BIN
+				EndFile
+				File 6.BIN;1
+					Source KUNGFUT\6.BIN
+				EndFile
+				File 7.BIN;1
+					Source KUNGFUT\7.BIN
+				EndFile
+				File 82S129.0;1
+					Source KUNGFUT\82S129.0
+				EndFile
+				File 82S129.1;1
+					Source KUNGFUT\82S129.1
+				EndFile
+				File 82S129.2;1
+					Source KUNGFUT\82S129.2
+				EndFile
+
+				File P1.BIN;1
+					Source KUNGFUT\P1.BIN
+				EndFile
+				File P2.BIN;1
+					Source KUNGFUT\P2.BIN
+				EndFile
+				File P3.BIN;1
+					Source KUNGFUT\P3.BIN
+				EndFile
+ 			EndDirectory
+
+ 			Directory STINGER
+				File 15J.BIN;1
+					Source STINGER\1-5J.BIN
+				EndFile
+				File 109H.BIN;1
+					Source STINGER\10-9H.BIN
+				EndFile
+				File 1111H.BIN;1
+					Source STINGER\11-11H.BIN
+				EndFile
+				File 1214H.BIN;1
+					Source STINGER\12-14H.BIN
+				EndFile
+				File 26J.BIN;1
+					Source STINGER\2-6J.BIN
+				EndFile
+				File 38J.BIN;1
+					Source STINGER\3-8J.BIN
+				EndFile
+				File 49J.BIN;1
+					Source STINGER\4-9J.BIN
+				EndFile
+				File 510J.BIN;1
+					Source STINGER\5-10J.BIN
+				EndFile
+				File 69F.BIN;1
+					Source STINGER\6-9F.BIN
+				EndFile
+				File 79E.BIN;1
+					Source STINGER\7-9E.BIN
+				EndFile
+				File 811E.BIN;1
+					Source STINGER\8-11E.BIN
+				EndFile
+				File 914E.BIN;1
+					Source STINGER\9-14E.BIN
+				EndFile
+				File STINGER.A7;1
+					Source STINGER\STINGER.A7
+				EndFile
+				File STINGER.A8;1
+					Source STINGER\STINGER.A8
+				EndFile
+				File STINGER.B7;1
+					Source STINGER\STINGER.B7
+				EndFile
+  			EndDirectory
+
+ 			Directory SCION
+				File 10.10H;1
+					Source SCION\10.10H
+				EndFile
+				File 11.12H;1
+					Source SCION\11.12H
+				EndFile
+				File 12.15H;1
+					Source SCION\12.15H
+				EndFile
+				File 4.9J;1
+					Source SCION\4.9J
+				EndFile
+				File 5.10J;1
+					Source SCION\5.10J
+				EndFile
+				File 7.10E;1
+					Source SCION\7.10E
+				EndFile
+				File 8.12E;1
+					Source SCION\8.12E
+				EndFile
+				File 82S129.7A;1
+					Source SCION\82S129.7A
+				EndFile
+				File 82S129.7B;1
+					Source SCION\82S129.7B
+				EndFile
+				File 82S129.8A;1
+					Source SCION\82S129.8A
+				EndFile
+				File 9.15E;1
+					Source SCION\9.15E
+				EndFile
+				File SC1.BIN;1
+					Source SCION\SC1
+				EndFile
+				File SC2.BIN;1
+					Source SCION\SC2
+				EndFile
+				File SC3.BIN;1
+					Source SCION\SC3
+				EndFile
+				File SC6.BIN;1
+					Source SCION\SC6
+				EndFile
+  			EndDirectory
 
 ;			Directory CUBYBOP
 ;				File CB06.6;1
