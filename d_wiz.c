@@ -4,6 +4,8 @@
 // scion: static in audio is normal (no kidding)
 //
 #include "d_wiz.h"
+//#define RAZE0 1
+#define RAZE1 1
 
 int ovlInit(char *szShortName)
 {
@@ -82,8 +84,73 @@ int ovlInit(char *szShortName)
 //	wait_vblank();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void 	 fg_line(UINT16 offs,UINT8 data)
+{
+	UINT8 bank   = 2 + ((char_bank_select[0] << 1) | char_bank_select[1]);
+	UINT8 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
+	UINT32 sx		 = (offs & 0x1f);
+	UINT32 code	 = data | (char_bank_select[1] << 8);
+	UINT32 color	 = (DrvColRAM1[offs] & 0x07) | (palbank << 3);
+	UINT32 x		 = map_offset_lut[offs]; 
+
+	if(x >= 0x440 )
+	{
+		ss_map[x+0x40] = color;
+		ss_map[x+0x41] = code+1;
+	}
+	ss_map[x] = color;
+	ss_map[x+1] = code+1;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void 	 bg_line(UINT16 offs,UINT8 data)
+{
+	UINT8 bank   = 2 + ((char_bank_select[0] << 1) | char_bank_select[1]);
+	UINT8 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
+	UINT8 sx		= (offs & 0x1f);
+	UINT8 sy		= (offs / 32)<<3;
+	UINT32	color = (DrvSprRAM0[2 * sx + 1] & 0x04) | (data & 3) | (palbank << 3);
+	UINT32 code = data | (bank << 8);
+	UINT32 x		= map_offset_lut[offs];
+
+	if(x < 0x440 )
+	{
+		if(sy>=16 && sy<240)
+		{
+			ss_font[x] = color ;
+			ss_font[x+1] = code+0x201;
+		}
+	}
+	else	
+	{	
+		ss_map2[x] = ss_map2[x+0x40] = color ;
+		ss_map2[x+1] = ss_map2[x+0x41] = code+0x201;
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 void __fastcall wiz_main_write(UINT16 address, UINT8 data)
 {
+/*	if(address >= 0xd000 && address <=0xd3ff)
+	{
+		address &= 0x3ff;
+		if(DrvVidRAM1[address]!=data)
+		{
+			DrvVidRAM1[address]=data;
+			fg_line(address, data);
+		}
+		return;
+	}
+
+	if(address >= 0xe000 && address <=0xe3ff)
+	{
+		address &= 0x3ff;
+		if(DrvVidRAM0[address]!=data)
+		{
+			DrvVidRAM0[address]=data;
+			bg_line(address, data);
+		}
+		return;
+	}
+ */
 	switch (address)
 	{
 		case 0xc800:
@@ -231,13 +298,21 @@ static INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 
+#ifdef RAZE0
+	z80_reset();
+#else
 	CZetOpen(0);
 	CZetReset();
 	CZetClose();
+#endif
 
+#ifdef RAZE1
+	z80_reset();
+#else
 	CZetOpen(1);
 	CZetReset();
 	CZetClose();
+#endif
 
 	AY8910Reset(0);
 	AY8910Reset(1);
@@ -514,6 +589,41 @@ static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 	}
 
 	CZetInit(2);
+
+#ifdef RAZE0
+	z80_init_memmap();
+	z80_map_fetch	(0x0000,0xbfff,DrvZ80ROM0); 
+	z80_map_read	(0x0000,0xbfff,DrvZ80ROM0);  
+	z80_map_fetch	(0xc000,0xc7ff,DrvZ80RAM0); 
+	z80_map_read	(0xc000,0xc7ff,DrvZ80RAM0);  
+	z80_map_write	(0xc000,0xc7ff,DrvZ80RAM0);  
+
+	z80_map_read	(0xd000, 0xd3ff, DrvVidRAM1);
+	z80_map_write	(0xd000, 0xd3ff, DrvVidRAM1);
+	z80_map_fetch	(0xd000, 0xd3ff, DrvVidRAM1);
+	z80_map_write	(0xd400, 0xd7ff, DrvColRAM1);
+	z80_map_fetch	(0xd400, 0xd7ff, DrvColRAM1);
+	z80_map_read	(0xd800, 0xd8ff, DrvSprRAM1); // 00 - 3f attributs, 40-5f sprites, 60+ junk
+	z80_map_write	(0xd800, 0xd8ff, DrvSprRAM1);
+	z80_map_fetch	(0xd800, 0xd8ff, DrvSprRAM1);
+	z80_map_read	(0xe000, 0xe3ff, DrvVidRAM0);
+	z80_map_write	(0xe000, 0xe3ff, DrvVidRAM0);
+	z80_map_fetch	(0xe000, 0xe3ff, DrvVidRAM0);
+	z80_map_read	(0xe400, 0xe7ff, DrvColRAM0); //just ram?
+	z80_map_write	(0xe400, 0xe7ff, DrvColRAM0);
+	z80_map_fetch	(0xe400, 0xe7ff, DrvColRAM0);
+	z80_map_read	(0xe800, 0xe8ff, DrvSprRAM0); // 00 - 3f attributs, 40-5f sprites, 60+ junk
+	z80_map_write	(0xe800, 0xe8ff, DrvSprRAM0);
+	z80_map_fetch	(0xe800, 0xe8ff, DrvSprRAM0);
+
+	z80_add_write(0xc800, 0xc80f, 1, (void *)&wiz_main_write);
+	z80_add_write(0xf000, 0xf00f, 1, (void *)&wiz_main_write);
+	z80_add_write(0xf800, 0xf81f, 1, (void *)&wiz_main_write);
+
+	z80_add_read(0xd400, 0xd7ff, 1, (void *)&wiz_main_read);
+	z80_add_read(0xf000, 0xf01f, 1, (void *)&wiz_main_read);
+	z80_add_read(0xf800, 0xf01f, 1, (void *)&wiz_main_read);
+#else
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM0);
 	CZetMapArea(0x0000, 0xbfff, 2, DrvZ80ROM0);
@@ -540,8 +650,26 @@ static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 	CZetSetWriteHandler(wiz_main_write);
 	CZetSetReadHandler(wiz_main_read);
 	CZetClose();
-
+#endif
 //	CZetInit(1);
+
+#ifdef RAZE1
+	z80_init_memmap();
+	z80_map_fetch	(0x0000,0x1fff,DrvZ80ROM1); 
+	z80_map_read	(0x0000,0x1fff,DrvZ80ROM1);  
+	z80_map_fetch	(0x2000,0x23ff,DrvZ80RAM1); 
+	z80_map_read	(0x2000,0x23ff,DrvZ80RAM1);  
+	z80_map_write	(0x2000,0x23ff,DrvZ80RAM1);
+	
+	z80_add_write(0x4000, 0x400f, 1, (void *)&wiz_sound_write);
+	z80_add_write(0x5000, 0x500f, 1, (void *)&wiz_sound_write);
+	z80_add_write(0x6000, 0x600f, 1, (void *)&wiz_sound_write);
+	z80_add_write(0x7000, 0x700f, 1, (void *)&wiz_sound_write);
+
+	z80_add_read(0x3000, 0x300f, 1, (void *)&wiz_sound_read);
+	z80_add_read(0x7000, 0x700f, 1, (void *)&wiz_sound_read);
+
+#else
 	CZetOpen(1);
 	CZetMapArea(0x0000, 0x1fff, 0, DrvZ80ROM1);
 	CZetMapArea(0x0000, 0x1fff, 2, DrvZ80ROM1);
@@ -551,6 +679,7 @@ static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 	CZetSetWriteHandler(wiz_sound_write);
 	CZetSetReadHandler(wiz_sound_read);
 	CZetClose();
+#endif
 
 	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
 	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
@@ -565,12 +694,6 @@ static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 	AY8910Init(0, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(1, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(2, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-//	AY8910SetAllRoutes(0, 0.10, BURN_SND_ROUTE_BOTH);
-//	AY8910SetAllRoutes(1, 0.10, BURN_SND_ROUTE_BOTH);
-//	AY8910SetAllRoutes(2, 0.10, BURN_SND_ROUTE_BOTH);
-
-//	GenericTilesInit();
-
 	DrvDoReset();
 
 	return 0;
@@ -709,6 +832,9 @@ static void make_lut(int rotated)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
 {
+#ifdef RAZE0
+	z80_stop_emulating();
+#endif
 	CZetExit();
 
 	AY8910Exit(0);
@@ -732,13 +858,12 @@ static INT32 DrvExit()
 	return 0;
 }
 
-
 static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 {
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
 		INT16 sx  = (offs & 0x1f);
-		UINT8 sy = (((offs / 32)<<3)) &0xff;
+		UINT8 sy = (offs / 32)<<3;
 		UINT16 color;
 
 		if (colortype) 
@@ -773,10 +898,9 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 {
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
-		INT32 sx    = (offs & 0x1f);
-		UINT8 sy    = (((offs / 32)<<3))&0xff;
- 		UINT16 code  = DrvVidRAM1[offs] | (char_bank_select[1] << 8);
-		UINT16 color = DrvColRAM1[sx << 1 | 1] & 7;
+		INT32 sx     = (offs & 0x1f);
+  		INT16 code = DrvVidRAM1[offs] | (char_bank_select[1] << 8);
+		INT16 color = 0;//DrvColRAM1[sx << 1 | 1] & 7;
 
 		if (colortype)
 		{
@@ -997,15 +1121,26 @@ static INT32 DrvFrame()
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
+#ifdef RAZE0
+		nCyclesDone[0] += z80_emulate(nCyclesTotal[0] / nInterleave);
+
+		if ((i & 0x0f) == 0x0f && interrupt_enable[0]) z80_cause_NMI();
+#else
 		CZetOpen(0);
 		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
 		if ((i & 0x0f) == 0x0f && interrupt_enable[0]) CZetNmi();
 		CZetClose();
+#endif
 
+#ifdef RAZE1
+		nCyclesDone[1] += z80_emulate(nCyclesTotal[1] / nInterleave);
+		if ((i & 0x03) == 0x03 && interrupt_enable[1]) z80_cause_NMI();
+#else
 		CZetOpen(1);
 		nCyclesDone[1] += CZetRun(nCyclesTotal[1] / nInterleave);
 		if ((i & 0x03) == 0x03 && interrupt_enable[1]) CZetNmi();
 		CZetClose();
+#endif
 	}
 //	updateSound();
  /*

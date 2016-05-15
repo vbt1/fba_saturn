@@ -141,6 +141,10 @@ Track MODE1
 				Source D_WIZ.BIN
 			EndFile
 
+			File D_SLPFGH.BIN;1
+				Source D_SLPFGH.BIN
+			EndFile
+
 			Directory BOMBJA
 				File 01H03T.BIN;1
 					Source BOMBJA\01H03T.BIN
@@ -4001,6 +4005,63 @@ EndFile
 				EndFile
 				File SC6.BIN;1
 					Source SCION\SC6
+				EndFile
+  			EndDirectory
+
+ 			Directory TIGERHB1
+				File A4702.8K;1
+					Source TIGERHB1\A47_02.8K
+				EndFile
+				File B0.5;1
+					Source TIGERHB1\B0.5
+				EndFile
+ 				File A4701.8N;1
+					Source TIGERHB1\A47_01.8N
+				EndFile
+ 				File 82S129.12M;1
+					Source TIGERHB1\82S129.12M
+				EndFile
+ 				File 82S129.12N;1
+					Source TIGERHB1\82S129.12N
+				EndFile
+ 				File 82S129.12Q;1
+					Source TIGERHB1\82S129.12Q
+				EndFile
+ 				File A4703.12D;1
+					Source TIGERHB1\A47_03.12D
+				EndFile
+ 				File A4704.6G;1
+					Source TIGERHB1\A47_04.6G
+				EndFile
+ 				File A4705.6F;1
+					Source TIGERHB1\A47_05.6F
+				EndFile
+ 				File A4706.6P;1
+					Source TIGERHB1\A47_06.6P
+				EndFile
+ 				File A4707.6N;1
+					Source TIGERHB1\A47_07.6N
+				EndFile
+ 				File A4708.6M;1
+					Source TIGERHB1\A47_08.6M
+				EndFile
+ 				File A4709.4M;1
+					Source TIGERHB1\A47_09.4M
+				EndFile
+ 				File A4710.6H;1
+					Source TIGERHB1\A47_10.6H
+				EndFile
+ 				File A4711.8H;1
+					Source TIGERHB1\A47_11.8H
+				EndFile
+ 				File A4712.6J;1
+					Source TIGERHB1\A47_12.6J
+				EndFile
+ 				File A4713.8J;1
+					Source TIGERHB1\A47_13.8J
+				EndFile
+ 				File A4714.6A;1
+					Source TIGERHB1\A47_14.6A
 				EndFile
   			EndDirectory
 

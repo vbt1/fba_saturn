@@ -16,7 +16,9 @@
 
 #define	RING_BUF_SIZE	(2048L*5)//(2048L*10)
 #define SOUND_BUFFER    0x25a20000
-
+#define BurnFree(a) free(a)
+#define BurnMalloc(a) malloc(a)
+#define BurnHighCol(r,g,b,z)  RGB(r>>3,g>>3,b>>3)
 
 #undef  SCL_MAXLINE
 #undef  SCL_MAXCELL

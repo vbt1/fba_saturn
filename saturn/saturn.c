@@ -30,12 +30,16 @@ void	UsrVblankIn( void )
 					 
 		if(frame_y==hz)
 		{
-		/*		if(frame_displayed!=frame_x)
+				if(frame_displayed!=frame_x)
 				{
+//					UINT8 *tmp0 = (UINT8*)0x00200000;
+//					sprintf(tmp0,"*%03d*",frame_x);
+				//tmp0[0] = frame_x;
 					sprintf(xx,"%03d",frame_x);
 					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)xx,136,20);
 					frame_displayed = frame_x;
-				}*/
+				}
+
 				frame_y=frame_x=0;
 		}		   
 #endif

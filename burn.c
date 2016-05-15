@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 42
+#define NB_DRV 40
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -113,6 +113,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvKungfut = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvStinger = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvScion = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvTigerHB1 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -306,6 +307,10 @@ BurnDrvScion.szShortName="scion";
 BurnDrvScion.szFullNameA="Scion";
 BurnDrvScion.szParent="wiz";
 
+BurnDrvTigerHB1.szShortName="tigerhb1";
+BurnDrvTigerHB1.szFullNameA="Tiger Heli (bootleg, set 1)";
+BurnDrvTigerHB1.szParent="slpfgh";
+
 unsigned int i=0;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsms_cz80;
@@ -313,9 +318,10 @@ pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvWiz;
-pDriver[i++] = &BurnDrvKungfut;
-pDriver[i++] = &BurnDrvStinger;
-pDriver[i++] = &BurnDrvScion;
+pDriver[i++] = &BurnDrvTigerHB1;
+//pDriver[i++] = &BurnDrvKungfut;
+//pDriver[i++] = &BurnDrvStinger;
+//pDriver[i++] = &BurnDrvScion;
 pDriver[i++] = &BurnDrvAppoooh;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlktiger;
