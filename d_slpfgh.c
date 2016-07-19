@@ -18,49 +18,17 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*inline*/ /*static*/ int readbit(const UINT8 *src, int bitnum)
-{
-	return src[bitnum / 8] & (0x80 >> (bitnum % 8));
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
-{
-	int c;
-//	wait_vblank();
-	for (c = 0; c < num; c++) {
-		int plane, x, y;
-	
-		UINT8 *dp = pDest + (c * (xSize/2) * ySize);
-		memset(dp, 0, (xSize/2) * ySize);
-	
-		for (plane = 0; plane < numPlanes; plane++) {
-			int planebit = 1 << (numPlanes - 1 - plane);
-			int planeoffs = (c * modulo) + planeoffsets[plane];
-		
-			for (y = 0; y < ySize; y++) {
-				int yoffs = planeoffs + yoffsets[y];
-				dp = pDest + (c * (xSize/2) * ySize) + (y * (xSize/2));
-			
-				for (x = 0; x < xSize; x+=2) {
-					if (readbit(pSrc, yoffs + xoffsets[x])) dp[x>>1] |= (planebit&0x0f)<<4;
-					if (readbit(pSrc, yoffs + xoffsets[x+1])) dp[x>>1] |= (planebit& 0x0f);
-					//(NewsTiles[i+1]& 0x0f)| ((NewsTiles[i]& 0x0f) <<4)
-				}
-			}
-		}
-	}
-//	wait_vblank();
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 MemIndex()
 {
 	UINT8* Next; Next = Mem;
 	Rom01				= Next; Next += 0x012000;		// Z80 main program
 	Rom02				= Next; Next += 0x002000;		// Z80 sound program
-	Rom03				= Next; Next += 0x000800;		// m68705 mcu program
-	TigerHeliTextROM	= Next; Next += 0x010000;
-	TigerHeliSpriteROM	= Next; Next += 0x040000;
-	TigerHeliTileROM	= Next; Next += 0x040000;
+//	Rom03				= Next; Next += 0x000800;		// m68705 mcu program
+	TigerHeliTextROM	= (UINT8 *)(SS_CACHE); //Next; Next += 0x010000;
+ 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	TigerHeliSpriteROM	= &ss_vram[0x2200]; //Next; Next += 3 * 16 * 16 * 256; // 3 banks, 16x16 tiles, 256 tiles (sprites)
+//		= 0x00240000;//Next; Next += 0x040000;
+	TigerHeliTileROM	= (UINT8 *)(SS_CACHE+0x8000); //0x00280000;//Next; Next += 0x040000;
 	RamStart			= Next;
 	Ram01				= Next; Next += 0x000800;		// Z80 main work RAM
 	RamShared			= Next; Next += 0x000800;		// Shared RAM
@@ -68,7 +36,7 @@ static INT32 MemIndex()
 	TigerHeliSpriteRAM	= Next; Next += 0x000800;
 	TigerHeliSpriteBuf	= Next; Next += 0x000800;
 	TigerHeliTileRAM	= Next; Next += 0x001000;
-	Ram03			= Next; Next += 0x000080;
+//	Ram03			= Next; Next += 0x000080;
 	RamEnd				= Next;
 	pFMBuffer			= (INT16*)Next; Next += nBurnSoundLen * 6 * sizeof(INT16);
 	TigerHeliPaletteROM	= Next; Next += 0x000300;
@@ -88,6 +56,7 @@ static UINT8 tigerhRecalcPalette = 0;
 
 static void TigerHeliPaletteInit()
 {
+	int delta=0;
 	for (INT32 i = 0; i < 0x0100; i++) {
 		INT32 r, g, b;
 
@@ -98,7 +67,8 @@ static void TigerHeliPaletteInit()
 		b = TigerHeliPaletteROM[i + 0x0200];	  // Blue
 		b |= b << 4;
 
-		TigerHeliPalette[i] = BurnHighCol(r, g, b, 0);
+		colBgAddr[delta] = colBgAddr2[i] = TigerHeliPalette[i] = BurnHighCol(r, g, b, 0);
+		delta++; if ((delta & 3) == 0) delta += 12;
 	}
 
 	return;
@@ -146,6 +116,54 @@ UINT8 __fastcall tigerhReadCPU0_tigerhb1(UINT16 a)
 
 void __fastcall tigerhWriteCPU0(UINT16 a, UINT8 d)
 {
+	if(a>= 0xD000 && a <= 0xDFFF)
+	{
+		a-= 0xD000;
+		if(TigerHeliTileRAM[a]!=d)
+		{
+			TigerHeliTileRAM[a] = d;
+			if(a>=0x800)
+			{
+				a &=0x7ff;
+				INT32 sx = (a & 0x3f);// * 8;
+				INT32 sy = (a / 0x40);// * 8;
+
+				INT32 attr  = TigerHeliTileRAM[a] + (d * 0x100);
+				INT32 code  = (attr & 0x0fff) & nTigerHeliTileMask;
+				INT32 color = (attr & 0xf000) >> 12;
+
+				int x = (sx|(sy<<6))<<1;
+				ss_map2[x] = color;
+				ss_map2[x+1] = code+0x1000;
+			}
+		}
+		 return;
+	}
+
+	if(a>= 0xF000 && a <= 0xFFFF)
+	{
+		a-= 0xF000;
+		if(TigerHeliTextRAM[a]!=d)
+		{
+			TigerHeliTextRAM[a] = d;
+			if(a>=0x800)
+			{
+				a &=0x7ff;
+				INT32 sx = (a & 0x3f); // * 8); // - 8;
+				INT32 sy = (a / 0x40); // * 8); // - 15;
+
+				INT32 attr  = TigerHeliTextRAM[a] + (d * 0x100);
+				INT32 code  =  attr & 0x03ff;
+				INT32 color = (attr & 0xfc00) >> 10;
+
+				int x = (sx|(sy<<6))<<1;
+				ss_map[x] = color & 0x3f;
+				ss_map[x+1] = code;
+			}
+		}
+		 return;
+	}
+
 	switch (a) {
 		case 0xE800:
 			nTigerHeliTileXPosLo = d;
@@ -339,16 +357,20 @@ static INT32 tigerhLoadROMs()
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb2")) nRomOffset = 1;
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb3")) nRomOffset = 2;
 
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom ",4,80);
 	// Z80 main program
 	switch (nWhichGame) {
 		case 0:											// Tiger Heli
 			if (BurnLoadRom(Rom01 + 0x0000, 0, 1)) {
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 1",4,80);
 				return 1;
 			}
 			if (BurnLoadRom(Rom01 + 0x4000, 1, 1)) {
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 2",4,80);
 				return 1;
 			}
 			if (BurnLoadRom(Rom01 + 0x8000, 2, 1)) {
+				//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 3",4,80);
 				return 1;
 			}
 			break;
@@ -417,11 +439,14 @@ static INT32 tigerhLoadROMs()
 			nSize = ri.nLen;
 		}
 
-		UINT8* pTemp = (UINT8*)BurnMalloc(nSize * 4);
+//		UINT8* pTemp = (UINT8*)BurnMalloc(nSize * 4);
+		UINT8* pTemp = (UINT8*)0x00240000;
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 4",4,80);
 
 		for (INT32 i = 0; i < 4; i++) {
 			nRet |= BurnLoadRom(pTemp + nSize * i, nBaseROM + i, 1);
 		}
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 5",4,80);
 
 		for (INT32 i = 0; i < nSize; i++) {
 			for (INT32 j = 0; j < 8; j++) {
@@ -432,7 +457,13 @@ static INT32 tigerhLoadROMs()
 			}
 		}
 
-		BurnFree(pTemp);
+		for (INT32 i = 0; i < nSize*8; i+=2) 
+		{
+			TigerHeliSpriteROM[(i >>1)]  = TigerHeliSpriteROM[i] << 4 | TigerHeliSpriteROM[i+1];
+		}
+
+//		BurnFree(pTemp);
+		pTemp = NULL;
 
 		nTigerHeliSpriteMask = (nSize >> 5) - 1;
 
@@ -456,11 +487,15 @@ static INT32 tigerhLoadROMs()
 				break;
 		}
 
-		UINT8* pTemp = (UINT8*)BurnMalloc(0x4000);
+//		UINT8* pTemp = (UINT8*)BurnMalloc(0x4000);
+		UINT8* pTemp = (UINT8*)0x00240000;
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 6",4,80);
 
 		if (BurnLoadRom(pTemp + 0x0000, nBaseROM + 0, 1)) {
 			return 1;
 		}
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 7",4,80);
+
 		if (BurnLoadRom(pTemp + 0x2000, nBaseROM + 1, 1)) {
 			return 1;
 		}
@@ -472,7 +507,13 @@ static INT32 tigerhLoadROMs()
 			}
 		}
 
-		BurnFree(pTemp);
+		for (INT32 i = 0; i < 0x10000; i+=2) 
+		{
+			TigerHeliTextROM[(i >>1)]  = TigerHeliTextROM[i] << 4 | TigerHeliTextROM[i+1];
+		}
+
+//		BurnFree(pTemp);
+		pTemp = NULL;
 	}
 
 	// Tile layer
@@ -503,11 +544,15 @@ static INT32 tigerhLoadROMs()
 			nSize = ri.nLen;
 		}
 
-		UINT8* pTemp = (UINT8*)BurnMalloc(nSize * 4);
+//		UINT8* pTemp = (UINT8*)BurnMalloc(nSize * 4);
+		UINT8* pTemp = (UINT8*)0x00240000;
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 8",4,80);
 
 		for (INT32 i = 0; i < 4; i++) {
 			nRet |= BurnLoadRom(pTemp + nSize * i, nBaseROM + i, 1);
 		}
+
+  	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 9",4,80);
 
 		for (INT32 i = 0; i < nSize; i++) {
 			for (INT32 j = 0; j < 8; j++) {
@@ -518,7 +563,13 @@ static INT32 tigerhLoadROMs()
 			}
 		}
 
-		BurnFree(pTemp);
+		for (INT32 i = 0; i < nSize*8; i+=2) 
+		{
+			TigerHeliTileROM[(i >>1)]  = TigerHeliTileROM[i] << 4 | TigerHeliTileROM[i+1];
+		}
+
+//		BurnFree(pTemp);
+		pTemp = NULL;
 
 		nTigerHeliTileMask = (nSize >> 3) - 1;
 
@@ -538,10 +589,13 @@ static INT32 tigerhLoadROMs()
 				nBaseROM = 12 + nRomOffset;
 				break;
 		}
+   	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom10",4,80);
 
 		if (BurnLoadRom(TigerHeliPaletteROM + 0x0000, nBaseROM + 0, 1)) {
 			return 1;
 		}
+  	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom11",4,80);
+
 		if (BurnLoadRom(TigerHeliPaletteROM + 0x0100, nBaseROM + 1, 1)) {
 			return 1;
 		}
@@ -561,11 +615,13 @@ static INT32 tigerhLoadROMs()
 				nBaseROM = 15 + nRomOffset;
 				break;
 		}
-
+  	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom12",4,80);
 		if (BurnLoadRom(Rom02, nBaseROM, 1)) {
 			return 1;
 		}
 	}
+  	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom13",4,80);
+
 	return 0;
 }
 
@@ -599,52 +655,51 @@ static void initLayers()
 
 //	scfg.pnamesize		= SCL_PN1WORD; //2word
 	scfg.platesize		= SCL_PL_SIZE_1X1; // ou 2X2 ?
-	scfg.flip					= SCL_PN_12BIT; // on force à 0
-	scfg.patnamecontrl =  0x0000; // a0 + 0x8000
+	scfg.flip					= SCL_PN_10BIT; // on force à 0
+	scfg.patnamecontrl =  0x0000; // a1
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
 	scfg.plate_addr[1] = (Uint32)SS_MAP2;
 	scfg.plate_addr[2] = (Uint32)SS_MAP2;
 	scfg.plate_addr[3] = (Uint32)SS_MAP2;
 
-	SCL_SetConfig(SCL_NBG1, &scfg);
+	SCL_SetConfig(SCL_NBG2, &scfg);
 
 //	scfg.dispenbl			= OFF;
-//	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
-//	scfg.datatype 	   = SCL_BITMAP;
-//	scfg.mapover	   = SCL_OVER_0;
+	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
+	scfg.datatype 	   = SCL_BITMAP;
+	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
 	scfg.plate_addr[1] = NULL;
 	scfg.plate_addr[2] = NULL;
 	scfg.plate_addr[3] = NULL;
 // 3 nbg	
-	SCL_SetConfig(SCL_NBG2, &scfg);
+	SCL_SetConfig(SCL_NBG1, &scfg);
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
+	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);	  //ON
+	SCL_SetColRamOffset(SCL_NBG2, 0,OFF);
+	SCL_SetColRam(SCL_NBG1,8,8,palette);
 //	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
 //	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
-	SCL_SetColRam(SCL_NBG1,8,8,palette);
-	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
+
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	nBurnSprites = 19;
+	nBurnSprites = 259; //256;
 	nBurnLinescrollSize = 0;
 	nSoundBufferPos = 0;
 
-	SS_MAP  = ss_map   =(Uint16 *)(SCL_VDP2_VRAM_B0+0x14000);
-	SS_MAP2 = ss_map2  =(Uint16 *)(SCL_VDP2_VRAM_B0+0x18000);
-	SS_FONT = ss_font  = (Uint16 *)(SCL_VDP2_VRAM_B0+0x1C000);
-	SS_CACHE= cache    =(Uint8  *)(SCL_VDP2_VRAM_A0+32);
+	SS_MAP  = ss_map   =(Uint16 *)(SCL_VDP2_VRAM_B0+0x10000);
+	SS_MAP2 = ss_map2  = (Uint16 *)(SCL_VDP2_VRAM_B0+0x14000);
+	SS_FONT = ss_font  = (Uint16 *)(SCL_VDP2_VRAM_B1);
+	SS_CACHE= cache    =(Uint8  *)(SCL_VDP2_VRAM_A0);
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -658,13 +713,13 @@ static void initLayers()
 // 	SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,16,0,240,256);
 
 	SS_SET_N0PRIN(6);
-	SS_SET_N1PRIN(5);
+	SS_SET_N1PRIN(7);
 	SS_SET_N2PRIN(4);
-	SS_SET_S0PRIN(7);
+	SS_SET_S0PRIN(5);
 
 	initLayers();
 	initColors();
-	initSprites(240-1,256-1,16,0,16,0);
+	initSprites(240-1,256-1,0,0,0,0);
 //	initScrolling(ON,SCL_VDP2_VRAM_B1);
 //	memset((Uint8 *)ss_map, 0x11,0x4000);
 //	memset((Uint8 *)ss_map2,0x11,0x4000);
@@ -717,6 +772,10 @@ static INT32 tigerhInit()
 {
 	DrvInitSaturn();
 
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvInitSaturn",4,80);
+	UINT8 *tmp0 = (UINT8*)0x00200000;
+	sprintf(tmp0,"drvinitsaturn      ");
+
 	INT32 nLen;
 
 	nWhichGame = -1;
@@ -733,16 +792,24 @@ static INT32 tigerhInit()
 	Mem = NULL;
 	MemIndex();
 	nLen = MemEnd - (UINT8*)0;
-	if ((Mem = (UINT8*)BurnMalloc(nLen)) == NULL) {
+		sprintf(tmp0,"before malloc      ");
+
+	if ((Mem = (UINT8*)BurnMalloc(nLen)) == NULL) 
+	{
+		sprintf(tmp0,"malloc failed      ");
 		return 1;
 	}
 	memset(Mem, 0, nLen);										   	// blank all memory
 	MemIndex();													   	// Index the allocated memory
+		sprintf(tmp0,"malloc done      ");
 
 	// Load the roms into memory
-	if (tigerhLoadROMs()) {
+	if (tigerhLoadROMs()) 
+	{
+		sprintf(tmp0,"loadrom failed      ");
 		return 1;
 	}
+	sprintf(tmp0,"loadrom done      ");
 	
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "getstarb1")) Rom01[0x6d56] = 0xc3;
 
@@ -773,7 +840,7 @@ static INT32 tigerhInit()
 		
 		// Tile RAM
 		CZetMapArea(0xD000, 0xDFFF, 0, TigerHeliTileRAM);
-		CZetMapArea(0xD000, 0xDFFF, 1, TigerHeliTileRAM);
+//		CZetMapArea(0xD000, 0xDFFF, 1, TigerHeliTileRAM);
 		CZetMapArea(0xD000, 0xDFFF, 2, TigerHeliTileRAM);
 		// Sprite RAM
 		CZetMapArea(0xE000, 0xE7FF, 0, TigerHeliSpriteRAM);
@@ -787,7 +854,7 @@ static INT32 tigerhInit()
 		
 		// Text RAM
 		CZetMapArea(0xF000, 0xFFFF, 0, TigerHeliTextRAM);
-		CZetMapArea(0xF000, 0xFFFF, 1, TigerHeliTextRAM);
+//		CZetMapArea(0xF000, 0xFFFF, 1, TigerHeliTextRAM);
 		CZetMapArea(0xF000, 0xFFFF, 2, TigerHeliTextRAM);
 
 
@@ -845,39 +912,16 @@ static INT32 tigerhInit()
 
 	AY8910Init(0, 1500000, nBurnSoundRate, &tigerhReadPort0, &tigerhReadPort1, NULL, NULL);
 	AY8910Init(1, 1500000, nBurnSoundRate, &tigerhReadPort2, &tigerhReadPort3, NULL, NULL);
-	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
-	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
+	sprintf(tmp0,"drvinit done      ");
 
 	TigerHeliPaletteInit();
+	sprintf(tmp0,"palette done      ");
 
 //	GenericTilesInit();
 
 	tigerhDoReset();
-
-	return 0;
-}
-
-static INT32 perfrmanLoadGfx(UINT8 *dst, INT32 offset)
-{
-	UINT8 *tmp = (UINT8*)BurnMalloc(0x6000);
-	if (tmp == NULL) {
-		return 1;
-	}
-
-	if (BurnLoadRom(tmp + 0x0000, offset+0, 1)) return 1;
-	if (BurnLoadRom(tmp + 0x2000, offset+1, 1)) return 1;
-	if (BurnLoadRom(tmp + 0x4000, offset+2, 1)) return 1;
-
-	memset (dst, 0, (0x6000 / 3) * 8);
-
-	for (INT32 i = 0; i < (0x6000 / 3) * 8; i++)
-	{
-		dst[i]  = ((tmp[0x0000 + (i / 8)] >> (~i & 7)) & 1) << 2;
-		dst[i] |= ((tmp[0x2000 + (i / 8)] >> (~i & 7)) & 1) << 1;
-		dst[i] |= ((tmp[0x4000 + (i / 8)] >> (~i & 7)) & 1) << 0;
-	}
-
-	BurnFree (tmp);
 
 	return 0;
 }
@@ -894,13 +938,13 @@ static void draw_bg_layer()
 
 	for (INT32 offs = 0; offs < 64 * 32; offs++)
 	{
-		INT32 sx = (offs & 0x3f) * 8;
-		INT32 sy = (offs / 0x40) * 8;
+		INT32 sx = (offs & 0x3f);// * 8;
+		INT32 sy = (offs / 0x40);// * 8;
 
-		sx -= scrollx;
-		if (sx < -7) sx += 512;
-		sy -= scrolly;
-		if (sy < -7) sy += 256;
+//		sx -= scrollx;
+//		if (sx < -7) sx += 512;
+//		sy -= scrolly;
+//		if (sy < -7) sy += 256;
 
 //		if (sy >= nScreenHeight || sx >= nScreenWidth) continue;
 
@@ -908,16 +952,19 @@ static void draw_bg_layer()
 		INT32 code  = (attr & 0x0fff) & nTigerHeliTileMask;
 		INT32 color = (attr & 0xf000) >> 12;
 
+		int x = (sx|(sy<<6))<<1;
+		ss_map2[x] = color;
+		ss_map2[x+1] = code+0x1000;
 //		Render8x8Tile_Clip(pTransDraw, code, sx, sy, color, 4, 0, TigerHeliTileROM);
 	}
 }
-
+/*
 static void draw_txt_layer()
 {
 	for (INT32 offs = 0; offs < 64 * 32; offs++)
 	{
-		INT32 sx = ((offs & 0x3f) * 8) - 8;
-		INT32 sy = ((offs / 0x40) * 8) - 15;
+		INT32 sx = (offs & 0x3f); // * 8); // - 8;
+		INT32 sy = (offs / 0x40); // * 8); // - 15;
 
 //		if (sy < -7 || sx < -7 || sy >= nScreenHeight || sx >= nScreenWidth) continue;
 
@@ -926,41 +973,49 @@ static void draw_txt_layer()
 		INT32 color = (attr & 0xfc00) >> 10;
 
 //		Render8x8Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 2, 0, 0, TigerHeliTextROM);
+		int x = (sx|(sy<<6))<<1;
+		ss_map[x] = color & 0x3f;
+		ss_map[x+1] = code;
 	}
 }
-
+*/
 static void draw_sprites()
 {
 	UINT8 *ram = TigerHeliSpriteBuf;
-
+	UINT8 delta=3;
+	for (INT32 i = 3; i < 131; i++)
+	{
+			ss_sprite[i].charAddr = 0;
+			ss_sprite[i].charSize  = 0;
+			ss_sprite[i].ax    = 0;
+			ss_sprite[i].ay    =  0;
+	}
+//	for (INT32 offs = 0; offs < 0x800; offs += 4)
 	for (INT32 offs = 0; offs < 0x800; offs += 4)
 	{
-		INT32 attr  =  ram[offs + 2];
-		INT32 code  = (ram[offs + 0] | ((attr & 0xc0) << 2)) & nTigerHeliSpriteMask;
-		INT32 sx    = (ram[offs + 1] | (attr << 8 & 0x100)) - (13 + 8);
-		INT32 sy    =  ram[offs + 3] - 15;
-		INT32 color =  attr >> 1 & 0xf;
+/*			ss_sprite[delta].control   = ( JUMP_NEXT | FUNC_NORMALSP);
+			ss_sprite[delta].charAddr = 0x440+((offs+64*4)<<2);
+			ss_sprite[delta].charSize  = 0x210;
+			ss_sprite[delta].ax    = ((offs/4) & 0x0f)*16;
+			ss_sprite[delta].ay    =  ((offs/4) / 0x10)*16;
+			delta++;  
+*/
+		if( (ram[offs + 3] - 15) > 0)
+		{
+			INT32 attr  =  ram[offs + 2];
+			ss_sprite[delta].control   = ( JUMP_NEXT | FUNC_NORMALSP);
+			UINT16 code  = (ram[offs + 0] | ((attr & 0xc0) << 2)) & 0x1ff; // nTigerHeliSpriteMask;
+			ss_sprite[delta].charAddr = 0x440+(code<<4);
+			ss_sprite[delta].charSize  = 0x210;
+//			ss_sprite[delta].ax    = /*((offs/4) & 0x0f)*16; */(ram[offs + 1] | (attr << 8 & 0x100)) - (13 + 8);
+			ss_sprite[delta].ax    = /*((offs/4) & 0x0f)*16; */(ram[offs + 1] | (attr << 8 & 0x100)) - (13);
+			ss_sprite[delta].ay    =  /*((offs/4) / 0x10)*16; */ram[offs + 3] - 15;
+			ss_sprite[delta].color=  (attr >> 1 & 0xf)<<4;
+			delta++;
+		}	   
 
 //		Render16x16Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 4, 0, 0, TigerHeliSpriteROM);
 	}
-}
-
-static INT32 tigerhDraw()
-{
-	if (tigerhRecalcPalette) {
-		TigerHeliPaletteInit();
-		tigerhRecalcPalette = 0;
-	}
-
-//	if (!(nBurnLayer & 1)) BurnTransferClear();
-
-//	if (nBurnLayer & 1) draw_bg_layer();
-//	if (nBurnLayer & 2) draw_sprites();
-//	if (nBurnLayer & 4) draw_txt_layer();
-
-	BurnTransferCopy(TigerHeliPalette);
-
-	return 0;
 }
 
 static inline INT32 CheckSleep(INT32 duration)
@@ -971,10 +1026,14 @@ static inline INT32 CheckSleep(INT32 duration)
 static INT32 tigerhFrame()
 {
 	INT32 nCyclesTotal[3], nCyclesDone[3];
-
+/*
 	if (tigerhReset) {													// Reset machine
 		tigerhDoReset();
 	}
+*/
+	UINT8 *tmp0 = (UINT8*)0x00200000;
+
+//	sprintf(tmp0,"frame start      ");
 
 	CZetNewFrame();
 
@@ -1007,20 +1066,22 @@ static INT32 tigerhFrame()
 		tigerhInput[0] = (tigerhInput[0] & 0x99) | ((tigerhInput[0] << 1) & 0x44) | ((tigerhInput[0] >> 1) & 0x22);
 	}
 
-	nCyclesTotal[0] = nCyclesTotal[1] = 6000000 / 60;
+	nCyclesTotal[0] = 6000000 / 60;
+	nCyclesTotal[1] = 3000000 / 60;
+
 	nCyclesDone[0] = nCyclesDone[1] = nCyclesDone[2] = 0;
 	nCyclesTotal[2] = 3000000 / 60;
 
 	INT32 nVBlankCycles = 248 * 6000000 / 60 / 262;
 	const INT32 nInterleave = 12;
-
+/*
 	if (nWhichGame == 9)
 	{
 		nCyclesTotal[0] = 4000000 / 60;
 		nCyclesTotal[1] = 2000000 / 60;
 		nVBlankCycles = 248 * 4000000 / 60 / 262;
 	}
-
+*/
 	INT32 nSoundBufferPos = 0;
 	INT32 nSoundNMIMask = 0;
 	switch (nWhichGame) {
@@ -1033,10 +1094,10 @@ static INT32 tigerhFrame()
 		case 2:
 			nSoundNMIMask = 3;
 			break;
-
+/*
 		case 9:
 			nSoundNMIMask = 3; //??
-			break;
+			break;			*/
 	}
 
 	bVBlank = false;
@@ -1049,6 +1110,7 @@ static INT32 tigerhFrame()
 		CZetOpen(nCurrentCPU);
 
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+// 	sprintf(tmp0,"cpu0run      ");
 
 		if (nNext > nVBlankCycles && !bVBlank) {
 			nCyclesDone[nCurrentCPU] += CZetRun(nNext - nVBlankCycles);
@@ -1056,9 +1118,11 @@ static INT32 tigerhFrame()
 //			if (pBurnDraw != NULL) {
 //				BurnDrvRedraw();											// Draw screen if needed
 //			}
+// 	sprintf(tmp0,"sprite run      ");
+//				draw_bg_layer();
+//				draw_txt_layer();
 
 			TigerHeliBufferSprites();
-
 			bVBlank = true;
 
 			if (bInterruptEnable) {
@@ -1087,6 +1151,7 @@ static INT32 tigerhFrame()
 					CZetNmi();
 				}
 			}
+// 	sprintf(tmp0,"cpu1run      ");
 
 			nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
 			CZetClose();
@@ -1104,6 +1169,7 @@ static INT32 tigerhFrame()
 				nSoundBufferPos += nSegmentLength;
 			}
 		}
+
 	}
 
 	{
@@ -1118,6 +1184,12 @@ static INT32 tigerhFrame()
 			}
 		}
 	}
-
+//	sprintf(tmp0,"frame done      ");
+	draw_sprites();
+//	INT32 scrollx = (((nTigerHeliTileXPosHi * 256) + nTigerHeliTileXPosLo) + 8 -16) & 0x1ff;
+	INT32 scrollx = (((nTigerHeliTileXPosHi * 256) + nTigerHeliTileXPosLo)) & 0x1ff;
+	INT32 scrolly = (nTigerHeliTileYPosLo + 15) & 0xff;
+	ss_reg->n2_move_x = scrollx;
+//	
 	return 0;
 }

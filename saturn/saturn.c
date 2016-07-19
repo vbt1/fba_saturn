@@ -954,7 +954,7 @@ void  SCL_SetColRam(Uint32 Object, Uint32 Index,Uint32 num,void *Color)
 	memcpyl(ram16,(Uint16 *)Color,num*2);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent)
+/*static*/ void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent)
 {
     if(Object & SCL_SPR)	SCL_SET_SPCAOS(Offset);
 

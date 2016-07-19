@@ -135,7 +135,7 @@ static Uint8        *aVRAM;
 //Uint16       *colBgAddr2;
 //Uint16       *colBgAddr; // color
 //static Uint32       SclColRamAlloc256[8];
-static SprSpCmd     smsSprite[128+3];
+static SprSpCmd     smsSprite[512+3];
 SclLineparam lp;
 
 //static Uint16 *ss_font;
@@ -299,7 +299,7 @@ static void SCL_CopyReg(void);
 static void SCL_SetLineParamNBG0(SclLineparam *lp);
 //static void SCL_SetLineParamNBG1(SclLineparam *lp);
 //static void SCL_PriIntProc(void);
-static void SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
+/*static*/ void SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
 //static void SCL_SetColRam(Uint32 Object, Uint32 Index,Uint32 num,void *Color);
 static void SCL_ParametersInit(void);
 static void ss_main(void);

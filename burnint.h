@@ -38,7 +38,7 @@ extern unsigned short palette[8];
 extern int nBurnSoundRate;			// sample rate of sound or zero for no sound
 extern unsigned int nBurnLinescrollSize;
 //extern unsigned int nBurnLinescrollSize1;
-extern unsigned char nBurnSprites;
+extern unsigned int nBurnSprites;
 extern unsigned int nBurnDrvCount;		// Count of game drivers
 extern unsigned int nBurnDrvSelect;	// Which game driver is selected
 //extern unsigned int nBurnMallocAddr; // address before loading first game
