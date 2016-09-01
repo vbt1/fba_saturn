@@ -17,6 +17,7 @@ static INT32 DrvExit();
 static INT32 DrvFrame();
 static INT32 DrvDraw();
 static void DrvInitSaturn();
+static void make_lut(void);
 
 static UINT8 DrvJoy1[8];
 static UINT8 DrvJoy2[8];
@@ -42,9 +43,11 @@ static UINT8 *DrvSprRAM;
 static UINT8 *DrvColRAM;
 static UINT8 *DrvGfxROM0;
 static UINT8 *DrvGfxROM1;
+static UINT8 *DrvGfxTMP0;
+static UINT8 *DrvGfxTMP1;
 static UINT8 *DrvColPROM;
 static UINT8 *MC8123Key;
-static UINT32 *DrvPalette;
+static UINT16 *DrvPalette;
 static UINT8 DrvZ80Bank0;
 typedef void (*RenderSprite)(INT32);
 static RenderSprite DrawSprite;
@@ -59,6 +62,7 @@ static UINT16 romaddr;
 static UINT8 use_encrypted = 0;
 static UINT8 countrunbmode = 0;
 static UINT8 pbillrdmode = 0;
+static UINT16 *map_offset_lut = NULL;
 
 static void DrvPaletteInit();
 
@@ -594,9 +598,9 @@ static struct BurnRomInfo freekickb1RomDesc[] = {
 	{ "24s10n.8h",		0x00100, 0x8aac5fd0, 5 | BRF_GRA },           // 12
 	{ "24s10n.7h",		0x00100, 0xa507f941, 5 | BRF_GRA },           // 13
 
-	{ "pal16l8.q10.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA },           // 14 pals
-	{ "pal16l8.r1.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA },           // 15
-	{ "pal16l8.s1.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA },           // 16
+//	{ "pal16l8.q10.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA },           // 14 pals
+//	{ "pal16l8.r1.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA },           // 15
+//	{ "pal16l8.s1.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA },           // 16
 };
 
 STD_ROM_PICK(freekickb1)
@@ -631,16 +635,16 @@ STD_ROM_FN(countrunb)
 // Gigas (bootleg)
 
 static struct BurnRomInfo gigasbRomDesc[] = {
-	{ "g-7",	0x08000, 0xdaf4e88d, 1 }, //  0 maincpu
-	{ "g-8",	0x10000, 0x4ab4c1f1, 1 }, //  1
+	{ "g7.bin",	0x08000, 0xdaf4e88d, 1 }, //  0 maincpu
+	{ "g8.bin",	0x10000, 0x4ab4c1f1, 1 }, //  1
 
-	{ "g-4",	0x04000, 0x8ed78981, 2 }, //  2 gfx1
-	{ "g-5",	0x04000, 0x0645ec2d, 2 }, //  3
-	{ "g-6",	0x04000, 0x99e9cb27, 2 }, //  4
+	{ "g4.bin",	0x04000, 0x8ed78981, 2 }, //  2 gfx1
+	{ "g5.bin",	0x04000, 0x0645ec2d, 2 }, //  3
+	{ "g6.bin",	0x04000, 0x99e9cb27, 2 }, //  4
 
-	{ "g-1",	0x04000, 0xd78fae6e, 3 }, //  5 gfx2
-	{ "g-3",	0x04000, 0x37df4a4c, 3 }, //  6
-	{ "g-2",	0x04000, 0x3a46e354, 3 }, //  7
+	{ "g1.bin",	0x04000, 0xd78fae6e, 3 }, //  5 gfx2
+	{ "g3.bin",	0x04000, 0x37df4a4c, 3 }, //  6
+	{ "g2.bin",	0x04000, 0x3a46e354, 3 }, //  7
 
 	{ "1.pr",	0x00100, 0xa784e71f, 4 }, //  8 proms
 	{ "6.pr",	0x00100, 0x376df30c, 4 }, //  9

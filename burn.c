@@ -321,7 +321,7 @@ BurnDrvPbillrd.szShortName="pbillrd";
 BurnDrvPbillrd.szFullNameA="Perfect Billiard";
 BurnDrvPbillrd.szParent="freek";
 
-BurnDrvFreekickb1.szShortName="freekickb1";
+BurnDrvFreekickb1.szShortName="freekb1";
 BurnDrvFreekickb1.szFullNameA="Free Kick (bootleg set 1)";
 BurnDrvFreekickb1.szParent="freek";
 

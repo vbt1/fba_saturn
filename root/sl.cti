@@ -4088,30 +4088,126 @@ EndFile
 				File 6.PR;1
 					Source GIGASB\6.PR
 				EndFile
-				File G1;1
-					Source GIGASB\G1
+				File G1.BIN;1
+					Source GIGASB\G1.BIN
 				EndFile
-				File G2;1
-					Source GIGASB\G2
+				File G2.BIN;1
+					Source GIGASB\G2.BIN
 				EndFile
-				File G3;1
-					Source GIGASB\G3
+				File G3.BIN;1
+					Source GIGASB\G3.BIN
 				EndFile
-				File G4;1
-					Source GIGASB\G4
+				File G4.BIN;1
+					Source GIGASB\G4.BIN
 				EndFile
-				File G5;1
-					Source GIGASB\G5
+				File G5.BIN;1
+					Source GIGASB\G5.BIN
 				EndFile
-				File G6;1
-					Source GIGASB\G6
+				File G6.BIN;1
+					Source GIGASB\G6.BIN
 				EndFile
-				File G7;1
-					Source GIGASB\G7
+				File G7.BIN;1
+					Source GIGASB\G7.BIN
 				EndFile
-				File G8;1
-					Source GIGASB\G8
+				File G8.BIN;1
+					Source GIGASB\G8.BIN
 				EndFile
+  			EndDirectory
+
+ 			Directory GIGASM2B
+				File 1.PR;1
+					Source GIGASM2B\1.PR
+				EndFile
+				File 2.PR;1
+					Source GIGASM2B\2.PR
+				EndFile
+				File 3.PR;1
+					Source GIGASM2B\3.PR
+				EndFile
+				File 4.PR;1
+					Source GIGASM2B\4.PR
+				EndFile
+				File 5.PR;1
+					Source GIGASM2B\5.PR
+				EndFile
+				File 6.PR;1
+					Source GIGASM2B\6.PR
+				EndFile
+				File 1.ROM;1
+					Source GIGASM2B\1.ROM
+				EndFile
+				File 2.ROM;1
+					Source GIGASM2B\2.ROM
+				EndFile
+				File 3.ROM;1
+					Source GIGASM2B\3.ROM
+				EndFile
+				File 4.ROM;1
+					Source GIGASM2B\4.ROM
+				EndFile
+				File 5.ROM;1
+					Source GIGASM2B\5.ROM
+				EndFile
+				File 6.ROM;1
+					Source GIGASM2B\6.ROM
+				EndFile
+				File 7.ROM;1
+					Source GIGASM2B\7.ROM
+				EndFile
+				File 8.ROM;1
+					Source GIGASM2B\8.ROM
+				EndFile
+				File 9.ROM;1
+					Source GIGASM2B\9.ROM
+				EndFile
+  			EndDirectory
+
+
+  			Directory FREEKB1
+				File FREEKBL8.Q7;1
+					Source FREEKB1\FREEKBL8.Q7
+				EndFile
+				File 11.1E;1
+					Source FREEKB1\11.1E
+				EndFile
+				File 12.1H;1
+					Source FREEKB1\12.1H
+				EndFile
+				File 13.1J;1
+					Source FREEKB1\13.1J
+				EndFile
+				File 14.1L;1
+					Source FREEKB1\14.1L
+				EndFile
+				File 15.1M;1
+					Source FREEKB1\15.1M
+				EndFile
+
+				File 16.1P;1
+					Source FREEKB1\16.1P
+				EndFile
+				File 17.1R;1
+					Source FREEKB1\17.1R
+				EndFile
+				File 24S10N.8J;1
+					Source FREEKB1\24S10N.8J
+				EndFile
+				File 24S10N.7J;1
+					Source FREEKB1\24S10N.7J
+				EndFile
+				File 24S10N.8K;1
+					Source FREEKB1\24S10N.8K
+				EndFile
+				File 24S10N.7K;1
+					Source FREEKB1\24S10N.7K
+				EndFile
+				File 24S10N.8H;1
+					Source FREEKB1\24S10N.8H
+				EndFile
+				File 24S10N.7H;1
+					Source FREEKB1\24S10N.7H
+				EndFile
+
   			EndDirectory
 
 ;			Directory CUBYBOP

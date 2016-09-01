@@ -67,12 +67,12 @@ static void DrvPaletteInit()
 
 		if (i>=0x00 && i < 0x100)
 		{
-			colBgAddr2[delta] = RGB(r,g,b); // fg
+			colBgAddr2[delta] = BurnHighCol(r, g, b, 0); // fg
 			delta++; if ((delta & 7) == 0) delta += 8;
 		}
 		else
 		{
-			DrvPalette[delta2] = RGB(r,g,b);			   // bg !!!!	correct
+			DrvPalette[delta2] = BurnHighCol(r, g, b, 0);			   // bg !!!!	correct
 			delta2++; if ((delta2 & 7) == 0) delta2 += 8;
 		}
 	}

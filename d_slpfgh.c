@@ -33,7 +33,7 @@ static INT32 MemIndex()
 	Ram01				= Next; Next += 0x000800;		// Z80 main work RAM
 	RamShared			= Next; Next += 0x000800;		// Shared RAM
 	TigerHeliTextRAM	= Next; Next += 0x001000;
-	TigerHeliSpriteRAM	= Next; Next += 0x000800;
+	TigerHeliSpriteRAM= Next; Next += 0x000800;
 	TigerHeliSpriteBuf	= Next; Next += 0x000800;
 	TigerHeliTileRAM	= Next; Next += 0x001000;
 //	Ram03					= Next; Next += 0x000080;
