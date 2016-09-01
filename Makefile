@@ -210,8 +210,15 @@ OVLSLPFGHT                = root/d_slpfgh.coff
 OVLSLPFGHT1              = root/d_slpfgh.bin
 MPOVLSLPFGHTFILE    = $(OVLSLPFGHT:.coff=.maps)
 LDOVLSLPFGHTFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSLPFGHTFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSLPFGHT         = d_slpfgh.c czet.c cz80/cz80.c snd/ay8910.c
+SRCOVLSLPFGHT         = d_slpfgh.c czet.c cz80/cz80.c snd/ay8910.c saturn/ovl.c
 OBJOVLSLPFGHT         = $(SRCOVLSLPFGHT:.c=.o)
+
+OVLFREEK                 = root/d_freek.coff
+OVLFREEK1               = root/d_freek.bin
+MPOVLFREEKFILE    = $(OVLFREEK:.coff=.maps)
+LDOVLFREEKFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFREEKFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLFREEK         = d_freekick.c czet.c cz80/cz80.c sn76496.c 8255ppi.c saturn/ovl.c
+OBJOVLFREEK         = $(SRCOVLFREEK:.c=.o)
 
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
@@ -241,7 +248,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLGGCZ) $(OVLGGCZ1) $(OVLAPPOOO) $(OVLAPPOOO1) \
      $(OVLBLKTGR) $(OVLBLKTGR1) $(OVLWIZ) $(OVLWIZ1) \
      $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
-     $(OVLSLPFGHT) $(OVLSLPFGHT1) \
+     $(OVLSLPFGHT) $(OVLSLPFGHT1) $(OVLFREEK) $(OVLFREEK1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
 # Use gcc to link so it will automagically find correct libs directory
@@ -405,6 +412,12 @@ $(OVLSLPFGHT) : $(OBJOVLSLPFGHT) $(MAKEFILE) $(OBJOVLSLPFGHT) $(LDOVLSLPFGHTFILE
 
 $(OVLSLPFGHT1) : $(OBJOVLSLPFGHT) $(MAKEFILE) $(LDOVLSLPFGHTFILE)
 	$(CONV) -O binary $(OVLSLPFGHT) $(OVLSLPFGHT1)
+
+$(OVLFREEK) : $(OBJOVLFREEK) $(MAKEFILE) $(OBJOVLFREEK) $(LDOVLFREEKFILE)
+	$(CC) $(LDOVLFREEKFLAGS) $(OBJOVLFREEK) $(LIBSOVL) -o $@
+
+$(OVLFREEK1) : $(OBJOVLFREEK) $(MAKEFILE) $(LDOVLFREEKFILE)
+	$(CONV) -O binary $(OVLFREEK) $(OVLFREEK1)
 
 # suffix
 .SUFFIXES: .asm

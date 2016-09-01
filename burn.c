@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 40
+#define NB_DRV 45
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -114,6 +114,12 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvStinger = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvScion = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvTigerHB1 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+
+	static struct BurnDriver BurnDrvPbillrd = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvFreekickb1 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvCountrunb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvGigasb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvGigasm2 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -311,13 +317,37 @@ BurnDrvTigerHB1.szShortName="tigerhb1";
 BurnDrvTigerHB1.szFullNameA="Tiger Heli (bootleg, set 1)";
 BurnDrvTigerHB1.szParent="slpfgh";
 
+BurnDrvPbillrd.szShortName="pbillrd";
+BurnDrvPbillrd.szFullNameA="Perfect Billiard";
+BurnDrvPbillrd.szParent="freek";
+
+BurnDrvFreekickb1.szShortName="freekickb1";
+BurnDrvFreekickb1.szFullNameA="Free Kick (bootleg set 1)";
+BurnDrvFreekickb1.szParent="freek";
+
+BurnDrvCountrunb.szShortName="countrunb";
+BurnDrvCountrunb.szFullNameA="Counter Run (bootleg set 1)";
+BurnDrvCountrunb.szParent="freek";
+
+BurnDrvGigasb.szShortName="gigasb";
+BurnDrvGigasb.szFullNameA="Gigas (bootleg)";
+BurnDrvGigasb.szParent="freek";
+
+BurnDrvGigasm2.szShortName="gigasm2b";
+BurnDrvGigasm2.szFullNameA="Gigas Mark II";
+BurnDrvGigasm2.szParent="freek";
+
 unsigned int i=0;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsms_cz80;
 pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
-pDriver[i++] = &BurnDrvWiz;
+pDriver[i++] = &BurnDrvGigasb;
+pDriver[i++] = &BurnDrvGigasm2;
+pDriver[i++] = &BurnDrvCountrunb;
+pDriver[i++] = &BurnDrvFreekickb1;
+pDriver[i++] = &BurnDrvPbillrd;
 pDriver[i++] = &BurnDrvTigerHB1;
 //pDriver[i++] = &BurnDrvKungfut;
 //pDriver[i++] = &BurnDrvStinger;
@@ -352,6 +382,7 @@ pDriver[i++] = &BurnDrvSpang;
 pDriver[i++] = &BurnDrvSzaxxon;	  
 pDriver[i++] = &BurnDrvTeddybb;
 pDriver[i++] = &BurnDrvVigilant;
+pDriver[i++] = &BurnDrvWiz;
 pDriver[i++] = &BurnDrvWboyu;
 pDriver[i++] = &BurnDrvWbdeluxe;
 pDriver[i++] = &BurnDrvWbml;

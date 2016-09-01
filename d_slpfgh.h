@@ -10,6 +10,9 @@
 #define	true	1
 #define	false	0
 
+/*static*/ UINT16 *map_offset_lut;
+/*static*/ UINT16 *map_offset_lut2;
+
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
 static INT32 tigerhInit();

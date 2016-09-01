@@ -145,6 +145,10 @@ Track MODE1
 				Source D_SLPFGH.BIN
 			EndFile
 
+			File D_FREEK.BIN;1
+				Source D_FREEK.BIN
+			EndFile
+
 			Directory BOMBJA
 				File 01H03T.BIN;1
 					Source BOMBJA\01H03T.BIN
@@ -4062,6 +4066,51 @@ EndFile
 				EndFile
  				File A4714.6A;1
 					Source TIGERHB1\A47_14.6A
+				EndFile
+  			EndDirectory
+
+ 			Directory GIGASB
+				File 1.PR;1
+					Source GIGASB\1.PR
+				EndFile
+				File 2.PR;1
+					Source GIGASB\2.PR
+				EndFile
+				File 3.PR;1
+					Source GIGASB\3.PR
+				EndFile
+				File 4.PR;1
+					Source GIGASB\4.PR
+				EndFile
+				File 5.PR;1
+					Source GIGASB\5.PR
+				EndFile
+				File 6.PR;1
+					Source GIGASB\6.PR
+				EndFile
+				File G1;1
+					Source GIGASB\G1
+				EndFile
+				File G2;1
+					Source GIGASB\G2
+				EndFile
+				File G3;1
+					Source GIGASB\G3
+				EndFile
+				File G4;1
+					Source GIGASB\G4
+				EndFile
+				File G5;1
+					Source GIGASB\G5
+				EndFile
+				File G6;1
+					Source GIGASB\G6
+				EndFile
+				File G7;1
+					Source GIGASB\G7
+				EndFile
+				File G8;1
+					Source GIGASB\G8
 				EndFile
   			EndDirectory
 
