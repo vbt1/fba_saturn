@@ -75,6 +75,35 @@ static INT32 DrvDoReset()
 	return 0;
 }
 
+static void pbillrd_draw_sprite(INT32 offs)
+{
+	INT32 sx = DrvSprRAM[offs + 3];
+	INT32 sy = 224 - DrvSprRAM[offs + 2];
+
+	if(sx > 0 && sy > 0)
+	{
+		UINT32 code = (DrvSprRAM[offs + 0] | ((DrvSprRAM[offs + 1] & 0x20) << 3)) & 0x1ff;
+		UINT32 color = DrvSprRAM[offs + 1] & 0x1f;
+
+		if (pbillrdmode) {
+			code = DrvSprRAM[offs + 0];
+			color = DrvSprRAM[offs + 1] & 0x0f;
+		}
+
+		ss_sprite[sprite_number].ax		= sx;
+		ss_sprite[sprite_number].ay		= sy;
+		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4);
+		ss_sprite[sprite_number].color     = (color<<4);
+		sprite_number++;
+	}
+	else
+	{
+		ss_sprite[sprite_number].ax		= -16;
+		ss_sprite[sprite_number].ay		= -16;
+		sprite_number++;
+	}
+}
+
 void countrun_draw_sprite(INT32 offs)
 {
 	INT32 sx = DrvSprRAM[offs + 3];
@@ -531,7 +560,7 @@ static void DrvGfxDecode()
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x40, DrvGfxTMP0, DrvGfxROM0);
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM1);
 
-	if(!countrunbmode)
+	if(!countrunbmode && !pbillrdmode)
 	{
 		rotate_tile(0x800,1,DrvGfxROM0);
 		rotate_tile16x16(0x200,1,DrvGfxROM1);
@@ -752,6 +781,13 @@ static INT32 DrvInit()
 
 	LoadRoms();
 
+	if(pbillrdmode)
+	{
+		DrawSprite = pbillrd_draw_sprite;
+		ss_reg->n1_move_y =  16 <<16;
+		drawWindow(0,224,240,0,64);
+	}
+
 	DrvPaletteInit();
 	DrvGfxDecode();
 
@@ -915,7 +951,7 @@ static void make_lut(void)
 	{
 		UINT32	sx, sy;
 
-		if(countrunbmode)
+		if(countrunbmode || pbillrdmode)
 		{
 			sx = i & 0x1f;
 			sy = (i<<1) & (~0x3f);
@@ -971,7 +1007,10 @@ static void DrvInitSaturn()
 	for (i = 3; i <nBurnSprites; i++) 
 	{
 		ss_spritePtr				= &ss_sprite[i];
-		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | DIR_LRREV);
+		if (pbillrdmode)
+			ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | DIR_TBREV);
+		else
+			ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | DIR_LRREV);
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
