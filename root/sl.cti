@@ -4162,7 +4162,6 @@ EndFile
 				EndFile
   			EndDirectory
 
-
   			Directory FREEKB1
 				File FREEKBL8.Q7;1
 					Source FREEKB1\FREEKBL8.Q7
@@ -4209,6 +4208,52 @@ EndFile
 				EndFile
 
   			EndDirectory
+
+  			Directory COUNTRNB
+				File ROM_CPU.BIN;1
+					Source COUNTRNB\ROM_CPU.BIN
+				EndFile
+				File CRUN.E1;1
+					Source COUNTRNB\CRUN.E1
+				EndFile
+				File CRUN.H1;1
+					Source COUNTRNB\CRUN.H1
+				EndFile
+				File CRUN.J1;1
+					Source COUNTRNB\CRUN.J1
+				EndFile
+				File CRUN.L1;1
+					Source COUNTRNB\CRUN.L1
+				EndFile
+				File CRUN.M1;1
+					Source COUNTRNB\CRUN.M1
+				EndFile
+				File CRUN.P1;1
+					Source COUNTRNB\CRUN.P1
+				EndFile
+				File CRUN.R1;1
+					Source COUNTRNB\CRUN.R1
+				EndFile
+  
+				File 24S10N.8J;1
+					Source COUNTRNB\24S10N.8J
+				EndFile
+				File 24S10N.7J;1
+					Source COUNTRNB\24S10N.7J
+				EndFile
+				File 24S10N.8K;1
+					Source COUNTRNB\24S10N.8K
+				EndFile
+				File 24S10N.7K;1
+					Source COUNTRNB\24S10N.7K
+				EndFile
+				File 24S10N.8H;1
+					Source COUNTRNB\24S10N.8H
+				EndFile
+				File 24S10N.7H;1
+					Source COUNTRNB\24S10N.7H
+				EndFile 
+			EndDirectory
 
 ;			Directory CUBYBOP
 ;				File CB06.6;1

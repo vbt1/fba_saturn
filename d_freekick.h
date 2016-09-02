@@ -611,18 +611,18 @@ STD_ROM_FN(freekickb1)
 static struct BurnRomInfo countrunbRomDesc[] = {
 	{ "rom_cpu.bin",	0x10000, 0xf65639ae, 1 }, //  0 maincpu
 
-	{ "c-run.e1",		0x08000, 0x2c3b6f8f, 2 }, //  1 user1
+	{ "crun.e1",		0x08000, 0x2c3b6f8f, 2 }, //  1 user1
 
-	{ "c-run.h1",		0x04000, 0x3385b7b5, 3 }, //  2 gfx1
-	{ "c-run.j1",		0x04000, 0x58dc148d, 3 }, //  3
-	{ "c-run.l1",		0x04000, 0x3201f1e9, 3 }, //  4
+	{ "crun.h1",		0x04000, 0x3385b7b5, 3 }, //  2 gfx1
+	{ "crun.j1",			0x04000, 0x58dc148d, 3 }, //  3
+	{ "crun.l1",			0x04000, 0x3201f1e9, 3 }, //  4
 
-	{ "c-run.m1",		0x04000, 0x1efab3b4, 4 }, //  5 gfx2
-	{ "c-run.p1",		0x04000, 0xd0bf8d42, 4 }, //  6
-	{ "c-run.r1",		0x04000, 0x4bb4a3e3, 4 }, //  7
+	{ "crun.m1",		0x04000, 0x1efab3b4, 4 }, //  5 gfx2
+	{ "crun.p1",		0x04000, 0xd0bf8d42, 4 }, //  6
+	{ "crun.r1",			0x04000, 0x4bb4a3e3, 4 }, //  7
 
-	{ "24s10n.8j",		0x00100, 0x63c114ad, 5 }, //  8 proms
-	{ "24s10n.7j",		0x00100, 0xd16f95cc, 5 }, //  9
+	{ "24s10n.8j",			0x00100, 0x63c114ad, 5 }, //  8 proms
+	{ "24s10n.7j",			0x00100, 0xd16f95cc, 5 }, //  9
 	{ "24s10n.8k",		0x00100, 0x217db2c1, 5 }, // 10
 	{ "24s10n.7k",		0x00100, 0x8d983949, 5 }, // 11
 	{ "24s10n.8h",		0x00100, 0x33e87550, 5 }, // 12

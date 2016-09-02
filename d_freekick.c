@@ -75,6 +75,33 @@ static INT32 DrvDoReset()
 	return 0;
 }
 
+void countrun_draw_sprite(INT32 offs)
+{
+	INT32 sx = DrvSprRAM[offs + 3];
+	INT32 sy = 232-DrvSprRAM[offs + 0];
+
+	if(sx > 0 && sy > 0)
+	{	
+		UINT32 code = DrvSprRAM[offs + 1] + ((DrvSprRAM[offs + 2] & 0x20) << 3)  & 0x1ff;
+		UINT32 color = DrvSprRAM[offs + 2] & 0x1f;
+		INT32 flipx		= (DrvSprRAM[offs + 2] & 0x80) >> 3;    //?? unused ?
+		INT32 flipy		= 0x20 - (((DrvSprRAM[offs + 2] & 0x40)) >> 1);
+
+		ss_sprite[sprite_number].ax		= sx;
+		ss_sprite[sprite_number].ay		= sy;
+		ss_sprite[sprite_number].control   = ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
+		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4);
+		ss_sprite[sprite_number].color     = (color<<4);
+		sprite_number++;
+	}
+	else
+	{
+		ss_sprite[sprite_number].ax		= -16;
+		ss_sprite[sprite_number].ay		= -16;
+		sprite_number++;
+	}
+}
+
 void freekick_draw_sprite(INT32 offs)
 {
 	INT32 sx = 224 - DrvSprRAM[offs + 3];
@@ -90,8 +117,7 @@ void freekick_draw_sprite(INT32 offs)
 		ss_sprite[sprite_number].ax		= sy;
 		ss_sprite[sprite_number].ay		= sx;
 		ss_sprite[sprite_number].control   = ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
-	//	ss_sprite[offs].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
-		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
+		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4);
 		ss_sprite[sprite_number].color     = (color<<4);
 		sprite_number++;
 	}
@@ -114,7 +140,7 @@ static void gigas_draw_sprite(INT32 offs)
 
 		ss_sprite[sprite_number].ax		= sy;
 		ss_sprite[sprite_number].ay		= sx;
-		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//c
+		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4);
 		ss_sprite[sprite_number].color     = (color<<4);
 		sprite_number++;
 	}
@@ -502,19 +528,14 @@ static void DrvGfxDecode()
 //	INT32 YOffs1[16] = {0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 8*8, 9*8, 10*8, 11*8,12*8,13*8,14*8,15*8};
 	INT32 YOffs1[16] = {15*8, 14*8, 13*8, 12*8, 11*8, 10*8, 9*8, 8*8, 7*8, 6*8, 5*8, 4*8,3*8,2*8,1*8,0*8};
 
-/*	UINT8 *tmp = (UINT8*)BurnMalloc(0xc000);
-	if (tmp == NULL) {
-		return;
-	}	  */
-//	memcpy (tmp, DrvGfxROM0, 0xc000);
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x40, DrvGfxTMP0, DrvGfxROM0);
-
-//	memcpy (tmp, DrvGfxROM1, 0xc000);
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM1);
 
-	rotate_tile(0x800,1,DrvGfxROM0);
-	rotate_tile16x16(0x200,1,DrvGfxROM1);
-//	BurnFree (tmp);
+	if(!countrunbmode)
+	{
+		rotate_tile(0x800,1,DrvGfxROM0);
+		rotate_tile16x16(0x200,1,DrvGfxROM1);
+	}
 }
 
 static void DrvPaletteInit()
@@ -649,6 +670,12 @@ static INT32 DrvFreeKickInit()
 	MemIndex();
 
 	LoadRoms();
+
+	if(countrunbmode)
+	{
+		DrawSprite = countrun_draw_sprite;
+		drawWindow(0,224,240,0,64);
+	}
 
 	DrvPaletteInit();
 
@@ -886,14 +913,19 @@ static void make_lut(void)
 
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
-/*
-		UINT32	sx = i & 0x1f;
-		UINT32	sy = (i<<1) & (~0x3f);
-		map_offset_lut[i] = (sx| sy)<<1;
-*/
- 		UINT32 sx = (31-((i) & 0x1f))<<6;//% 32;
-		UINT32 sy = ((i >> 5)) & 0x3f;
-		map_offset_lut[i] = ((sx) | sy)<<1;
+		UINT32	sx, sy;
+
+		if(countrunbmode)
+		{
+			sx = i & 0x1f;
+			sy = (i<<1) & (~0x3f);
+		}
+		else
+		{
+			sx = (31-((i) & 0x1f))<<6;//% 32;
+			sy = ((i >> 5)) & 0x3f;
+		}
+		map_offset_lut[i] = (sx | sy)<<1;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
