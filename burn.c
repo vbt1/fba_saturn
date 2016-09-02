@@ -325,7 +325,7 @@ BurnDrvFreekickb1.szShortName="freekb1";
 BurnDrvFreekickb1.szFullNameA="Free Kick (bootleg set 1)";
 BurnDrvFreekickb1.szParent="freek";
 
-BurnDrvCountrunb.szShortName="countrunb";
+BurnDrvCountrunb.szShortName="countrnb";
 BurnDrvCountrunb.szFullNameA="Counter Run (bootleg set 1)";
 BurnDrvCountrunb.szParent="freek";
 

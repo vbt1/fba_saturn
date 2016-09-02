@@ -1,5 +1,6 @@
 #include "d_freekick.h"
 
+UINT32 sprite_number = 3;
 // Gigas / Freekick / Counter Run / Perfect Billiard for FBA, ported by vbt
 
 int ovlInit(char *szShortName)
@@ -19,7 +20,7 @@ int ovlInit(char *szShortName)
 	};
 
 	struct BurnDriver nBurnDrvCountrunb = {
-		"countrunb", "freek",
+		"countrnb", "freek",
 		"Counter Run (bootleg set 1)",
 		countrunbRomInfo, countrunbRomName, CountrunInputInfo, CountrunDIPInfo,
 		DrvFreeKickInit, DrvExit, DrvFrame, DrvDraw
@@ -76,58 +77,47 @@ static INT32 DrvDoReset()
 
 void freekick_draw_sprite(INT32 offs)
 {
-	INT32 sx = DrvSprRAM[offs + 3];
-	INT32 sy = 232 - DrvSprRAM[offs + 0];
-	INT32 code = DrvSprRAM[offs + 1] + ((DrvSprRAM[offs + 2] & 0x20) << 3);
+	INT32 sx = 224 - DrvSprRAM[offs + 3];
+	INT32 sy = 240 - DrvSprRAM[offs + 0];
 
-	INT32 flipx  = DrvSprRAM[offs + 2] & 0x80;    //?? unused ?
-	INT32 flipy  = !(DrvSprRAM[offs + 2] & 0x40);
-	INT32 color = DrvSprRAM[offs + 2] & 0x1f;
+	if(sx > 0 && sy > 0)
+	{	
+		UINT32 code = DrvSprRAM[offs + 1] + ((DrvSprRAM[offs + 2] & 0x20) << 3)  & 0x1ff;
+		UINT32 color = DrvSprRAM[offs + 2] & 0x1f;
+		INT32 flipx		= (!DrvSprRAM[offs + 2] & 0x80) >> 2;    //?? unused ?
+		INT32 flipy		= 0x10-(((DrvSprRAM[offs + 2] & 0x40)) >> 2);
 
-	if (flipy)
-	{
-		if (flipx)
-		{
-//			Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, code, sx, sy, color, 3, 0, 256, DrvGfxROM1);
-		}
-		else
-		{
-//			Render16x16Tile_Mask_FlipY_Clip(pTransDraw, code, sx, sy, color, 3, 0, 256, DrvGfxROM1);
-		}
-	}
-	else
-	{
-		if (flipx)
-		{
-//			Render16x16Tile_Mask_FlipX_Clip(pTransDraw, code, sx, sy, color, 3, 0, 256, DrvGfxROM1);
-		}
-		else
-		{
-//			Render16x16Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 3, 0, 256, DrvGfxROM1);
-		}
+		ss_sprite[sprite_number].ax		= sy;
+		ss_sprite[sprite_number].ay		= sx;
+		ss_sprite[sprite_number].control   = ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
+	//	ss_sprite[offs].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
+		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
+		ss_sprite[sprite_number].color     = (color<<4);
+		sprite_number++;
 	}
 }
 
 static void gigas_draw_sprite(INT32 offs)
 {
-	INT32 sx = DrvSprRAM[offs + 3];
-	INT32 sy = DrvSprRAM[offs + 2];
-	UINT32 code = (DrvSprRAM[offs + 0] | ((DrvSprRAM[offs + 1] & 0x20) << 3)) & 0x1ff;
+	INT32 sx = 224 - DrvSprRAM[offs + 3];
+	INT32 sy = 240 - DrvSprRAM[offs + 2];
 
-	INT32 flipx = 0;
-	INT32 flipy = 0;
-	INT32 color = DrvSprRAM[offs + 1] & 0x1f;
+	if(sx > 0 && sy > 0)
+	{
+		UINT32 code = (DrvSprRAM[offs + 0] | ((DrvSprRAM[offs + 1] & 0x20) << 3)) & 0x1ff;
+		UINT32 color = DrvSprRAM[offs + 1] & 0x1f;
 
-	if (pbillrdmode) {
-		code = DrvSprRAM[offs + 0];
-		color = DrvSprRAM[offs + 1] & 0x0f;
+		if (pbillrdmode) {
+			code = DrvSprRAM[offs + 0];
+			color = DrvSprRAM[offs + 1] & 0x0f;
+		}
+
+		ss_sprite[sprite_number].ax		= sy;
+		ss_sprite[sprite_number].ay		= sx;
+		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//c
+		ss_sprite[sprite_number].color     = (color<<4);
+		sprite_number++;
 	}
-
-		offs+=3;
-		ss_sprite[offs].ax		= 240-sy;
-		ss_sprite[offs].ay		= 224-sx;
-		ss_sprite[offs].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
-		ss_sprite[offs].color     = (color<<4);
 }
 
 static INT32 DrvDraw()
@@ -575,9 +565,9 @@ static INT32 LoadRoms()
 {
 	INT32 rom_number = 0;
 
-	countrunbmode = !strcmp(BurnDrvGetTextA(DRV_NAME), "countrunb");
+	countrunbmode = !strcmp(BurnDrvGetTextA(DRV_NAME), "countrnb");
 
-	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "countrunb") || 
+	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "countrnb") || 
 		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekick") ||
 		!strcmp(BurnDrvGetTextA(DRV_NAME), "freeka") ||
 		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekb1") ||
@@ -710,7 +700,7 @@ static INT32 DrvFreeKickInit()
 //	SN76496SetRoute(3, 1.00, BURN_SND_ROUTE_BOTH);
 
 //	GenericTilesInit();
-
+	make_lut();
 	DrvDoReset();
 
 	return 0;
@@ -891,7 +881,7 @@ static void make_lut(void)
 {
 /*	for (UINT32 i = 0; i<0x400; i++)
 	{
-		charaddr_lut[i] = 0x220+(i<<4);
+		charaddr_lut[i] = 0x'+(i<<4);
 	}					   */
 
 	for (UINT32 i = 0; i < 1024;i++) 
@@ -925,7 +915,7 @@ static void DrvInitSaturn()
 	ss_scl			= (Fixed32 *)SS_SCL;
 
 	nBurnLinescrollSize = 0;
-	nBurnSprites = 128+3;
+	nBurnSprites = 64+3;
 
 //3 nbg
 	SS_SET_N0PRIN(7);
@@ -978,6 +968,7 @@ static INT32 DrvFrame()
 		DrvDoReset();
 	}
 
+	sprite_number = 3;
 	DrvInputs[0] = 0xff; // Active LOW
 	DrvInputs[1] = 0xff;
 
