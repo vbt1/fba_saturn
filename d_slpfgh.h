@@ -14,6 +14,7 @@
 /*static*/ UINT16 *map_offset_lut2;
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
+void updateSound();
 
 static INT32 tigerhInit();
 static INT32 tigerhExit();

@@ -123,17 +123,23 @@ void __fastcall tigerhWriteCPU0(UINT16 a, UINT8 d)
 		if(TigerHeliTileRAM[a]!=d)
 		{
 			TigerHeliTileRAM[a] = d;
+
+			UINT32 attr;
 			if(a>=0x800)
 			{
 				a &=0x7ff;
-				UINT32 attr   = TigerHeliTileRAM[a] + (d * 0x100);
-				UINT32 code = (attr & 0x0fff) & nTigerHeliTileMask;
-				UINT32 color = (attr & 0xf000) >> 12;
-
-				UINT32 x		  = map_offset_lut[a];
-				ss_map2[x]     = /*ss_map2[x+0x40] = ss_map2[x+0x1000] = ss_map2[x+0x1040] =*/ color;
-				ss_map2[x+1] = /*ss_map2[x+0x41] = ss_map2[x+0x1001] = ss_map2[x+0x1041] =*/ code+0x1000;
+				attr   = TigerHeliTileRAM[a & 0x7ff] + (d * 0x100);
 			}
+			else
+			{
+				attr   = d + (TigerHeliTileRAM[0x800 + a] * 0x100);
+			}
+			UINT32 code = (attr & 0x0fff) & nTigerHeliTileMask;
+			UINT32 color = (attr & 0xf000) >> 12;
+
+			UINT32 x		  = map_offset_lut[a];
+			ss_map2[x]     = color;
+			ss_map2[x+1] = code+0x1000;
 		}
 		 return;
 	}
@@ -160,20 +166,6 @@ void __fastcall tigerhWriteCPU0(UINT16 a, UINT8 d)
 			UINT32 x		= map_offset_lut2[a];
 			ss_map[x]		= color & 0x3f;
 			ss_map[x+1] = code;
-				
-/*			if(a>=0x800)
-			{
-//		INT32 attr  = TigerHeliTextRAM[offs] + (TigerHeliTextRAM[0x800 + offs] * 0x100);
-
-				a &=0x7ff;
-				UINT32 attr   = TigerHeliTextRAM[a] + (d * 0x100);
-				UINT32 code =  attr & 0x03ff;
-				UINT32 color = (attr & 0xfc00) >> 10;
-
-				UINT32 x		= map_offset_lut2[a];
-				ss_map[x]		= color & 0x3f;
-				ss_map[x+1] = code;
-			}*/
 		}
 		 return;
 	}
@@ -737,7 +729,7 @@ static void initLayers()
 //	memset((Uint8 *)ss_map2,0x11,0x4000);
 //	memset((Uint8 *)ss_font,0x11,0x4000);
 //	memset(&ss_scl[0],0,240);
-
+	ss_reg->n0_move_x = 16<<16;
 	drawWindow(0,256,0,0,68);
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
@@ -930,15 +922,8 @@ static INT32 tigerhInit()
 
 	AY8910Init(0, 1500000, nBurnSoundRate, &tigerhReadPort0, &tigerhReadPort1, NULL, NULL);
 	AY8910Init(1, 1500000, nBurnSoundRate, &tigerhReadPort2, &tigerhReadPort3, NULL, NULL);
-//	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
-//	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
-	sprintf(tmp0,"drvinit done      ");
 
 	TigerHeliPaletteInit();
-	sprintf(tmp0,"palette done      ");
-
-//	GenericTilesInit();
-
 	tigerhDoReset();
 
 	return 0;
@@ -948,55 +933,6 @@ static void TigerHeliBufferSprites()
 {
 	memcpy(TigerHeliSpriteBuf, TigerHeliSpriteRAM, 0x0800);
 }
-/*
-static void draw_bg_layer()
-{
-	INT32 scrollx = (((nTigerHeliTileXPosHi * 256) + nTigerHeliTileXPosLo) + 8) & 0x1ff;
-	INT32 scrolly = (nTigerHeliTileYPosLo + 15) & 0xff;
-
-	for (INT32 offs = 0; offs < 64 * 32; offs++)
-	{
-		INT32 sx = (offs & 0x3f);// * 8;
-		INT32 sy = (offs / 0x40);// * 8;
-
-//		sx -= scrollx;
-//		if (sx < -7) sx += 512;
-//		sy -= scrolly;
-//		if (sy < -7) sy += 256;
-
-//		if (sy >= nScreenHeight || sx >= nScreenWidth) continue;
-
-		INT32 attr  = TigerHeliTileRAM[offs] + (TigerHeliTileRAM[0x800 + offs] * 0x100);
-		INT32 code  = (attr & 0x0fff) & nTigerHeliTileMask;
-		INT32 color = (attr & 0xf000) >> 12;
-
-		int x = (sx|(sy<<6))<<1;
-		ss_map2[x]     =  color;
-		ss_map2[x+1] =  code+0x1000;
-//		Render8x8Tile_Clip(pTransDraw, code, sx, sy, color, 4, 0, TigerHeliTileROM);
-	}
-}
-*/
-
-static void draw_txt_layer()
-{
-	for (INT32 offs = 0; offs < 64 * 32; offs++)
-	{
-		INT32 sx = (offs & 0x3f); // * 8); // - 8;
-		INT32 sy = (offs / 0x40); // * 8); // - 15;
-
-//		if (sy < -7 || sx < -7 || sy >= nScreenHeight || sx >= nScreenWidth) continue;
-
-		INT32 attr  = TigerHeliTextRAM[offs] + (TigerHeliTextRAM[0x800 + offs] * 0x100);
-		INT32 code  =  attr & 0x03ff;
-		INT32 color = (attr & 0xfc00) >> 10;
-
-//		Render8x8Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 2, 0, 0, TigerHeliTextROM);
-		int x = map_offset_lut2[offs];//(sx|(sy<<6))<<1;
-		ss_map[x] = color & 0x3f;
-		ss_map[x+1] = code;
-	}
-}
 
 static void draw_sprites()
 {
@@ -1004,21 +940,11 @@ static void draw_sprites()
 	UINT8 delta=3;
 	for (INT32 i = 3; i < 131; i++)
 	{
-			ss_sprite[i].charAddr = 0;
-			ss_sprite[i].charSize  = 0;
-			ss_sprite[i].ax    = 0;
-			ss_sprite[i].ay    =  0;
+			ss_sprite[i].ax    = -16;
+			ss_sprite[i].ay    =  -16;
 	}
-//	for (INT32 offs = 0; offs < 0x800; offs += 4)
 	for (INT32 offs = 0; offs < 0x800; offs += 4)
 	{
-/*			ss_sprite[delta].control   = ( JUMP_NEXT | FUNC_NORMALSP);
-			ss_sprite[delta].charAddr = 0x440+((offs+64*4)<<2);
-			ss_sprite[delta].charSize  = 0x210;
-			ss_sprite[delta].ax    = ((offs/4) & 0x0f)*16;
-			ss_sprite[delta].ay    =  ((offs/4) / 0x10)*16;
-			delta++;  
-*/
 		if( (ram[offs + 3] - 15) > 0)
 		{
 			INT32 attr  =  ram[offs + 2];
@@ -1027,14 +953,11 @@ static void draw_sprites()
 			ss_sprite[delta].charAddr = 0x440+(code<<4);
 			ss_sprite[delta].charSize  = 0x210;
 			ss_sprite[delta].drawMode  = ( ECD_DISABLE | COMPO_REP);
-//			ss_sprite[delta].ax    = /*((offs/4) & 0x0f)*16; */(ram[offs + 1] | (attr << 8 & 0x100)) - (13 + 8);
 			ss_sprite[delta].ay    = /*((offs/4) & 0x0f)*16; */280-(ram[offs + 1] | (attr << 8 & 0x100));// - (13);
 			ss_sprite[delta].ax    =  /*((offs/4) / 0x10)*16; */ram[offs + 3] - 15;
 			ss_sprite[delta].color=  (attr >> 1 & 0xf)<<4;
 			delta++;
 		}	   
-
-//		Render16x16Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 4, 0, 0, TigerHeliSpriteROM);
 	}
 }
 
@@ -1046,14 +969,7 @@ static inline INT32 CheckSleep(INT32 duration)
 static INT32 tigerhFrame()
 {
 	INT32 nCyclesTotal[3], nCyclesDone[3];
-/*
-	if (tigerhReset) {													// Reset machine
-		tigerhDoReset();
-	}
-*/
 	UINT8 *tmp0 = (UINT8*)0x00200000;
-
-//	sprintf(tmp0,"frame start      ");
 
 	CZetNewFrame();
 
@@ -1086,13 +1002,15 @@ static INT32 tigerhFrame()
 		tigerhInput[0] = (tigerhInput[0] & 0x99) | ((tigerhInput[0] << 1) & 0x44) | ((tigerhInput[0] >> 1) & 0x22);
 	}
 
-	nCyclesTotal[0] = 6000000 / 60;
-	nCyclesTotal[1] = 3000000 / 60;
+//	nCyclesTotal[0] = 6000000 / 60;
+	nCyclesTotal[0] = 4000000 / 60;
+	nCyclesTotal[1] = 2000000 / 60;
 
-	nCyclesDone[0] = nCyclesDone[1] = nCyclesDone[2] = 0;
-	nCyclesTotal[2] = 3000000 / 60;
+	nCyclesDone[0] = nCyclesDone[1] = /*nCyclesDone[2] =*/ 0;
+//	nCyclesTotal[2] = 3000000 / 60;
 
-	INT32 nVBlankCycles = 248 * 6000000 / 60 / 262;
+//	INT32 nVBlankCycles = 248 * 6000000 / 60 / 262;
+	INT32 nVBlankCycles = 248 * 4000000 / 60 / 262;
 	const INT32 nInterleave = 12;
 /*
 	if (nWhichGame == 9)
@@ -1121,8 +1039,10 @@ static INT32 tigerhFrame()
 	}
 
 	bVBlank = false;
+ 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 
-	for (INT32 i = 0; i < nInterleave; i++) {
+	for (INT32 i = 0; i < nInterleave; i++) 
+	{
     	INT32 nCurrentCPU;
 		INT32 nNext, nCyclesSegment;
 
@@ -1130,18 +1050,10 @@ static INT32 tigerhFrame()
 		CZetOpen(nCurrentCPU);
 
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-// 	sprintf(tmp0,"cpu0run      ");
 
-		if (nNext > nVBlankCycles && !bVBlank) {
+		if (nNext > nVBlankCycles && !bVBlank) 
+		{
 			nCyclesDone[nCurrentCPU] += CZetRun(nNext - nVBlankCycles);
-
-//			if (pBurnDraw != NULL) {
-//				BurnDrvRedraw();											// Draw screen if needed
-//			}
-// 	sprintf(tmp0,"sprite run      ");
-//				draw_bg_layer();
-//				draw_txt_layer();
-
 			TigerHeliBufferSprites();
 			bVBlank = true;
 
@@ -1151,9 +1063,12 @@ static INT32 tigerhFrame()
 		}
 
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		if (bVBlank || (!CheckSleep(nCurrentCPU))) {					// See if this CPU is busywaiting
+		if (bVBlank || (!CheckSleep(nCurrentCPU))) 
+		{					// See if this CPU is busywaiting
 			nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
-		} else {
+		} 
+		else 
+		{
 			nCyclesDone[nCurrentCPU] += nCyclesSegment;
 		}
 
@@ -1182,12 +1097,12 @@ static INT32 tigerhFrame()
 		{
 			// Render sound segment
 //			if (pBurnSoundOut) 
-			{
+/*			{
 				INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 //				INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 //				AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
 				nSoundBufferPos += nSegmentLength;
-			}
+			}*/
 		}
 
 	}
@@ -1195,25 +1110,20 @@ static INT32 tigerhFrame()
 	{
 		// Make sure the buffer is entirely filled.
 //		if (pBurnSoundOut) 
-		{
+/*		{
 			INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 //			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 			if (nSegmentLength) 
 			{
 //				AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
 			}
-		}
+		}*/
 	}
-//	sprintf(tmp0,"frame done      ");
 	draw_sprites();
-//	INT32 scrollx = (((nTigerHeliTileXPosHi * 256) + nTigerHeliTileXPosLo) + 8 -16) & 0x1ff;
 	INT32 scrollx = (((nTigerHeliTileXPosHi * 256) + nTigerHeliTileXPosLo)) & 0x1ff;
 	INT32 scrolly = (nTigerHeliTileYPosLo + 15) & 0xff;
-//	ss_reg->n2_move_y = -scrollx-256-16+13; //-scrollx-512;
-	ss_reg->n2_move_y = -scrollx-256-40+13; //-scrollx-512;
-//	ss_reg->n0_move_y = (128)<<16;
-//	ss_reg->n2_move_x = -128;
-//	
+	ss_reg->n2_move_y = -scrollx-283;
+	SPR_WaitEndSlaveSH();
 	return 0;
 }
 
@@ -1249,6 +1159,54 @@ static INT32 tigerhFrame()
 					target[l+(i*8)+j]    = (rot[i][j*2]<<4)|(rot[i][(j*2)+1]&0xf);
 		l+=128;
 	}	
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void updateSound()
+{
+	int nSample;
+	int n;
+	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
+	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+
+//	soundLenSlave = nBurnSoundLen);
+	AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
+	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
+
+	for (n = 0; n < nBurnSoundLen; n++) 
+	{
+		nSample  = pAY8910Buffer[0][n]; // >> 2;
+		nSample += pAY8910Buffer[1][n]; // >> 2;
+		nSample += pAY8910Buffer[2][n]; // >> 2;
+		nSample += pAY8910Buffer[3][n]; // >> 2;
+		nSample += pAY8910Buffer[4][n]; // >> 2;
+		nSample += pAY8910Buffer[5][n]; // >> 2;
+
+		nSample /=4;
+
+		if (nSample < -32768) 
+		{
+			nSample = -32768;
+		} 
+		else 
+		{
+			if (nSample > 32767) 
+			{
+				nSample = 32767;
+			}
+		}
+		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
+	}
+
+	if(deltaSlave>=RING_BUF_SIZE/2)
+	{
+		deltaSlave=0;
+		PCM_Task(pcm); // bon emplacement
+	}
+
+	deltaSlave+=nBurnSoundLen;
+
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_lut(void)
