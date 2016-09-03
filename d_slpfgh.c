@@ -141,20 +141,39 @@ void __fastcall tigerhWriteCPU0(UINT16 a, UINT8 d)
 	if(a>= 0xF000 && a <= 0xFFFF)
 	{
 		a-= 0xF000;
-//		if(TigerHeliTextRAM[a]!=d)
+		if(TigerHeliTextRAM[a]!=d)
 		{
 			TigerHeliTextRAM[a] = d;
+			UINT32 attr;
 			if(a>=0x800)
 			{
+				a &=0x7ff;
+				attr   = TigerHeliTextRAM[a & 0x7ff] + (d * 0x100);
+			}
+			else
+			{
+				attr   = d + (TigerHeliTextRAM[0x800 + a] * 0x100);
+			}
+			UINT32 code =  attr & 0x03ff;
+			UINT32 color = (attr & 0xfc00) >> 10;
+
+			UINT32 x		= map_offset_lut2[a];
+			ss_map[x]		= color & 0x3f;
+			ss_map[x+1] = code;
+				
+/*			if(a>=0x800)
+			{
+//		INT32 attr  = TigerHeliTextRAM[offs] + (TigerHeliTextRAM[0x800 + offs] * 0x100);
+
 				a &=0x7ff;
 				UINT32 attr   = TigerHeliTextRAM[a] + (d * 0x100);
 				UINT32 code =  attr & 0x03ff;
 				UINT32 color = (attr & 0xfc00) >> 10;
 
-				UINT32 x		= map_offset_lut[a];
-				ss_map[x]		= /*ss_map[x+0x40]		= ss_map[x+0x1000] =*/ color & 0x3f;
-				ss_map[x+1] = /*ss_map[x+0x40]		= ss_map[x+0x1001] =*/ code;
-			}
+				UINT32 x		= map_offset_lut2[a];
+				ss_map[x]		= color & 0x3f;
+				ss_map[x+1] = code;
+			}*/
 		}
 		 return;
 	}
@@ -640,9 +659,9 @@ static void initLayers()
 	scfg.flip					= SCL_PN_10BIT; // on force à 0
 	scfg.patnamecontrl =  0x0000; // a0 + 0x8000
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	scfg.plate_addr[1] = NULL; (Uint32)SS_MAP;
-	scfg.plate_addr[2] = NULL; (Uint32)SS_MAP;
-	scfg.plate_addr[3] = NULL; (Uint32)SS_MAP;
+	scfg.plate_addr[1] = NULL; //(Uint32)SS_MAP;
+	scfg.plate_addr[2] = NULL; //(Uint32)SS_MAP;
+	scfg.plate_addr[3] = NULL; //(Uint32)SS_MAP;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 // 3 nbg
 
@@ -689,8 +708,8 @@ static void initLayers()
 	nBurnLinescrollSize = 0;
 	nSoundBufferPos = 0;
 
-	SS_MAP  = ss_map   =(Uint16 *)(SCL_VDP2_VRAM_B0+0x10000);
-	SS_MAP2 = ss_map2  = (Uint16 *)(SCL_VDP2_VRAM_B0+0x14000);
+	SS_MAP  = ss_map   =(Uint16 *)(SCL_VDP2_VRAM_B1+0x10000);
+	SS_MAP2 = ss_map2  = (Uint16 *)(SCL_VDP2_VRAM_B1+0x14000);
 	SS_FONT = ss_font  = (Uint16 *)(SCL_VDP2_VRAM_B1);
 	SS_CACHE= cache    =(Uint8  *)(SCL_VDP2_VRAM_A0);
 
@@ -803,9 +822,11 @@ static INT32 tigerhInit()
 		sprintf(tmp0,"loadrom failed      ");
 		return 1;
 	}
-			rotate_tile(0x400,1,TigerHeliTextROM);
-			rotate_tile(0x800,1,TigerHeliTileROM);
-			rotate_tile16x16(0x200,1,TigerHeliSpriteROM);
+
+	rotate_tile(0x400,1,TigerHeliTextROM);
+	rotate_tile(0x800,1,TigerHeliTileROM);
+	rotate_tile16x16(0x200,1,TigerHeliSpriteROM);
+
 	sprintf(tmp0,"loadrom done      ");
 	
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "getstarb1")) Rom01[0x6d56] = 0xc3;
@@ -971,7 +992,7 @@ static void draw_txt_layer()
 		INT32 color = (attr & 0xfc00) >> 10;
 
 //		Render8x8Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 2, 0, 0, TigerHeliTextROM);
-		int x = (sx|(sy<<6))<<1;
+		int x = map_offset_lut2[offs];//(sx|(sy<<6))<<1;
 		ss_map[x] = color & 0x3f;
 		ss_map[x+1] = code;
 	}
@@ -1005,6 +1026,7 @@ static void draw_sprites()
 			UINT16 code  = (ram[offs + 0] | ((attr & 0xc0) << 2)) & 0x1ff; // nTigerHeliSpriteMask;
 			ss_sprite[delta].charAddr = 0x440+(code<<4);
 			ss_sprite[delta].charSize  = 0x210;
+			ss_sprite[delta].drawMode  = ( ECD_DISABLE | COMPO_REP);
 //			ss_sprite[delta].ax    = /*((offs/4) & 0x0f)*16; */(ram[offs + 1] | (attr << 8 & 0x100)) - (13 + 8);
 			ss_sprite[delta].ay    = /*((offs/4) & 0x0f)*16; */280-(ram[offs + 1] | (attr << 8 & 0x100));// - (13);
 			ss_sprite[delta].ax    =  /*((offs/4) / 0x10)*16; */ram[offs + 3] - 15;
@@ -1189,7 +1211,7 @@ static INT32 tigerhFrame()
 	INT32 scrolly = (nTigerHeliTileYPosLo + 15) & 0xff;
 //	ss_reg->n2_move_y = -scrollx-256-16+13; //-scrollx-512;
 	ss_reg->n2_move_y = -scrollx-256-40+13; //-scrollx-512;
-	ss_reg->n0_move_y = (128)<<16;
+//	ss_reg->n0_move_y = (128)<<16;
 //	ss_reg->n2_move_x = -128;
 //	
 	return 0;
@@ -1236,12 +1258,20 @@ static INT32 tigerhFrame()
 
 	for (i = 0; i < 0x800; i++)
 	{
-//		sx = (i & 0x3f);// * 8;
-//		sy = (i / 0x40);// * 8;
-//		map_offset_lut[i] = (sx|(sy<<6))<<1;
+/*		sx = (i & 0x3f);// * 8;
+		sy = (i / 0x40);// * 8;
+		map_offset_lut[i] = (sx|(sy<<6))<<1;
 
- 		sx = (31-((i) & 0x1f))<<6;//% 32;
-		sy = ((i >> 6)) & 0x1f;
+		sx = (i & 0x3f);// * 8;
+		sy = (i / 0x40);// * 8;
+		map_offset_lut2[i] = (sx|(sy<<6))<<1;
+*/
+
+// 		sx = (15-((i) & 0x1f))<<6;//% 32;
+//		sy = ((i >> 6)) & 0x1f;
+//		sx = (34-((i) & 0x3f))<<6;//% 32;
+		sx = (35-((i) & 0x3f))<<6;//% 32;
+		sy = ((i >> 6)) & 0x3f;
 		map_offset_lut2[i] = ((sx) | sy)<<1;
 
 		sx = (63-((i) & 0x3f))<<6;//% 32;
