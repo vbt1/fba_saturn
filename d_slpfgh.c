@@ -4,12 +4,22 @@
 
 int ovlInit(char *szShortName)
 {
+	struct BurnDriver nBurnDrvSlapBtJP = {
+		"slapfib1", "slpfgh",
+		"Slap Fight (bootleg set 1)",
+		slapbtjpRomInfo, slapbtjpRomName, tigerhInputInfo, slapfighDIPInfo,
+		tigerhInit, tigerhExit, tigerhFrame, NULL
+	};
+
 	struct BurnDriver nBurnDrvTigerHB1 = {
-		"tigerhb1", "slpfgh", 
+		"tigerhb1", "slpfgh", 			
 		"Tiger Heli (bootleg, set 1)",
 		tigerhb1RomInfo, tigerhb1RomName, tigerhInputInfo, tigerhDIPInfo,
 		tigerhInit, tigerhExit, tigerhFrame, NULL
 	};
+
+	if (strcmp(nBurnDrvSlapBtJP.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvSlapBtJP,sizeof(struct BurnDriver));
 
 	if (strcmp(nBurnDrvTigerHB1.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvTigerHB1,sizeof(struct BurnDriver));
@@ -363,20 +373,16 @@ static INT32 tigerhLoadROMs()
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb2")) nRomOffset = 1;
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb3")) nRomOffset = 2;
 
-	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom ",4,80);
 	// Z80 main program
 	switch (nWhichGame) {
 		case 0:											// Tiger Heli
 			if (BurnLoadRom(Rom01 + 0x0000, 0, 1)) {
-	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 1",4,80);
 				return 1;
 			}
 			if (BurnLoadRom(Rom01 + 0x4000, 1, 1)) {
-	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 2",4,80);
 				return 1;
 			}
 			if (BurnLoadRom(Rom01 + 0x8000, 2, 1)) {
-				//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 3",4,80);
 				return 1;
 			}
 			break;
@@ -723,12 +729,16 @@ static void initLayers()
 
 	initLayers();
 	initColors();
-	initSprites(240-1,256-1,0,0,0,0);
-//	initScrolling(ON,SCL_VDP2_VRAM_B1);
-//	memset((Uint8 *)ss_map, 0x11,0x4000);
-//	memset((Uint8 *)ss_map2,0x11,0x4000);
-//	memset((Uint8 *)ss_font,0x11,0x4000);
-//	memset(&ss_scl[0],0,240);
+	initSprites(240-1,256-1,-15,0,0,0);
+	
+	for (unsigned int i = 3; i <nBurnSprites; i++) 
+	{
+		ss_sprite[i].control   = ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_sprite[i].charSize  = 0x210;
+		ss_sprite[i].drawMode  = ( ECD_DISABLE | COMPO_REP);
+		ss_sprite[i].ax    = -32;
+		ss_sprite[i].ay    =  -32;
+	}
 	ss_reg->n0_move_x = 16<<16;
 	drawWindow(0,256,0,0,68);
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
@@ -788,7 +798,7 @@ static INT32 tigerhInit()
 		nWhichGame = 0;
 	}
 
-	if (strcmp(BurnDrvGetTextA(DRV_NAME), "alcon") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfigh") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb1") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb2") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb3") == 0) {
+	if (strcmp(BurnDrvGetTextA(DRV_NAME), "alcon") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfigh") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfib1") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb2") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb3") == 0) {
 		nWhichGame = 2;
 	}
 
@@ -817,7 +827,7 @@ static INT32 tigerhInit()
 
 	rotate_tile(0x400,1,TigerHeliTextROM);
 	rotate_tile(0x800,1,TigerHeliTileROM);
-	rotate_tile16x16(0x200,1,TigerHeliSpriteROM);
+	rotate_tile16x16(nTigerHeliSpriteMask+1,1,TigerHeliSpriteROM);
 
 	sprintf(tmp0,"loadrom done      ");
 	
@@ -931,30 +941,28 @@ static INT32 tigerhInit()
 
 static void TigerHeliBufferSprites()
 {
-	memcpy(TigerHeliSpriteBuf, TigerHeliSpriteRAM, 0x0800);
+	memcpyl(TigerHeliSpriteBuf, TigerHeliSpriteRAM, 0x0800);
 }
 
 static void draw_sprites()
 {
 	UINT8 *ram = TigerHeliSpriteBuf;
 	UINT8 delta=3;
-	for (INT32 i = 3; i < 131; i++)
+	for (INT32 i = 3; i < 259; i++)
 	{
-			ss_sprite[i].ax    = -16;
-			ss_sprite[i].ay    =  -16;
+			ss_sprite[i].ax    = -32;
+			ss_sprite[i].ay    =  -32;
 	}
+
 	for (INT32 offs = 0; offs < 0x800; offs += 4)
 	{
-		if( (ram[offs + 3] - 15) > 0)
+		if( (ram[offs + 3] - 15) > -7)
 		{
 			INT32 attr  =  ram[offs + 2];
-			ss_sprite[delta].control   = ( JUMP_NEXT | FUNC_NORMALSP);
-			UINT16 code  = (ram[offs + 0] | ((attr & 0xc0) << 2)) & 0x1ff; // nTigerHeliSpriteMask;
+			UINT16 code  = (ram[offs + 0] | ((attr & 0xc0) << 2)) & nTigerHeliSpriteMask;
 			ss_sprite[delta].charAddr = 0x440+(code<<4);
-			ss_sprite[delta].charSize  = 0x210;
-			ss_sprite[delta].drawMode  = ( ECD_DISABLE | COMPO_REP);
-			ss_sprite[delta].ay    = /*((offs/4) & 0x0f)*16; */280-(ram[offs + 1] | (attr << 8 & 0x100));// - (13);
-			ss_sprite[delta].ax    =  /*((offs/4) / 0x10)*16; */ram[offs + 3] - 15;
+			ss_sprite[delta].ay    = 280-(ram[offs + 1] | (attr << 8 & 0x100));// - (13);
+			ss_sprite[delta].ax    =  ram[offs + 3] - 15;
 			ss_sprite[delta].color=  (attr >> 1 & 0xf)<<4;
 			delta++;
 		}	   
@@ -1010,8 +1018,8 @@ static INT32 tigerhFrame()
 //	nCyclesTotal[2] = 3000000 / 60;
 
 //	INT32 nVBlankCycles = 248 * 6000000 / 60 / 262;
-	INT32 nVBlankCycles = 248 * 4000000 / 60 / 262;
-	const INT32 nInterleave = 12;
+	const UINT32 nVBlankCycles = 248 * 4000000 / 60 / 262;
+	const UINT32 nInterleave = 12;
 /*
 	if (nWhichGame == 9)
 	{

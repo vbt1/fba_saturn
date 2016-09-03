@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 45
+#define NB_DRV 46
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -114,6 +114,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvStinger = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvScion = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvTigerHB1 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvSlapFigh = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 	static struct BurnDriver BurnDrvPbillrd = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvFreekickb1 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
@@ -337,13 +338,16 @@ BurnDrvGigasm2.szShortName="gigasm2b";
 BurnDrvGigasm2.szFullNameA="Gigas Mark II";
 BurnDrvGigasm2.szParent="freek";
 
+BurnDrvSlapFigh.szShortName="slapfib1";
+BurnDrvSlapFigh.szFullNameA="Slap Fight (bootleg set 1)";
+BurnDrvSlapFigh.szParent="slpfgh";
+
 unsigned int i=0;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsms_cz80;
 pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
-pDriver[i++] = &BurnDrvTigerHB1;
 //pDriver[i++] = &BurnDrvKungfut;
 //pDriver[i++] = &BurnDrvStinger;
 //pDriver[i++] = &BurnDrvScion;
@@ -377,10 +381,12 @@ pDriver[i++] = &BurnDrvpuckman;
 pDriver[i++] = &BurnDrvRaflesia;
 pDriver[i++] = &BurnDrvRaiders5;
 pDriver[i++] = &BurnDrvRobowres;
+pDriver[i++] = &BurnDrvSlapFigh;
 pDriver[i++] = &BurnDrvStarjack;
 pDriver[i++] = &BurnDrvSpang;
 pDriver[i++] = &BurnDrvSzaxxon;	  
 pDriver[i++] = &BurnDrvTeddybb;
+pDriver[i++] = &BurnDrvTigerHB1;
 pDriver[i++] = &BurnDrvVigilant;
 pDriver[i++] = &BurnDrvWiz;
 pDriver[i++] = &BurnDrvWboyu;

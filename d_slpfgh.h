@@ -733,29 +733,29 @@ STD_ROM_PICK(alcon)
 STD_ROM_FN(alcon)
 
 static struct BurnRomInfo slapfighRomDesc[] = {
-	{ "a77_00.8p",    0x008000, 0x674c0e0f, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
-	{ "a77_01.8n",    0x008000, 0x3c42e4a7, BRF_ESS | BRF_PRG }, //  1
+	{ "a7700.8p",    0x008000, 0x674c0e0f, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
+	{ "a7701.8n",    0x008000, 0x3c42e4a7, BRF_ESS | BRF_PRG }, //  1
 
-	{ "a77_12.8j",    0x008000, 0x8545d397, BRF_GRA },			 //  2 Sprite data
-	{ "a77_11.7j",    0x008000, 0xb1b7b925, BRF_GRA },			 //  3
-	{ "a77_10.8h",    0x008000, 0x422d946b, BRF_GRA },			 //  4
-	{ "a77_09.7h",    0x008000, 0x587113ae, BRF_GRA },			 //  5
+	{ "a7712.8j",    0x008000, 0x8545d397, BRF_GRA },			 //  2 Sprite data
+	{ "a7711.7j",    0x008000, 0xb1b7b925, BRF_GRA },			 //  3
+	{ "a7710.8h",    0x008000, 0x422d946b, BRF_GRA },			 //  4
+	{ "a7709.7h",    0x008000, 0x587113ae, BRF_GRA },			 //  5
 
-	{ "a77_04.6f",    0x002000, 0x2ac7b943, BRF_GRA },			 //  6 Text layer
-	{ "a77_03.6g",    0x002000, 0x33cadc93, BRF_GRA },			 //  7
+	{ "a7704.6f",    0x002000, 0x2ac7b943, BRF_GRA },			 //  6 Text layer
+	{ "a7703.6g",    0x002000, 0x33cadc93, BRF_GRA },			 //  7
 
-	{ "a77_08.6k",    0x008000, 0xb6358305, BRF_GRA },			 //  8 Background layer
-	{ "a77_07.6m",    0x008000, 0xe92d9d60, BRF_GRA },			 //  9
-	{ "a77_06.6n",    0x008000, 0x5faeeea3, BRF_GRA },			 // 10
-	{ "a77_05.6p",    0x008000, 0x974e2ea9, BRF_GRA },			 // 11
+	{ "a7708.6k",    0x008000, 0xb6358305, BRF_GRA },			 //  8 Background layer
+	{ "a7707.6m",    0x008000, 0xe92d9d60, BRF_GRA },			 //  9
+	{ "a7706.6n",    0x008000, 0x5faeeea3, BRF_GRA },			 // 10
+	{ "a7705.6p",    0x008000, 0x974e2ea9, BRF_GRA },			 // 11
 
-	{ "21_82s129.12q",0x000100, 0xa0efaf99, BRF_GRA },			 // 12
-	{ "20_82s129.12m",0x000100, 0xa56d57e5, BRF_GRA },			 // 13
-	{ "19_82s129.12n",0x000100, 0x5cbf9fbf, BRF_GRA },			 // 14
+	{ "2182s129.12q",0x000100, 0xa0efaf99, BRF_GRA },			 // 12
+	{ "2082s129.12m",0x000100, 0xa56d57e5, BRF_GRA },			 // 13
+	{ "1982s129.12n",0x000100, 0x5cbf9fbf, BRF_GRA },			 // 14
 
-	{ "a77_02.12d",   0x002000, 0x87f4705a, BRF_ESS | BRF_PRG }, // 15
+	{ "a7702.12d",   0x002000, 0x87f4705a, BRF_ESS | BRF_PRG }, // 15
 
-	{ "a77_13.6a",    0x000800, 0xa70c81d9, BRF_ESS | BRF_PRG }, // 16 MCU ROM
+	{ "a7713.6a",    0x000800, 0xa70c81d9, BRF_ESS | BRF_PRG }, // 16 MCU ROM
 };
 
 
@@ -763,27 +763,27 @@ STD_ROM_PICK(slapfigh)
 STD_ROM_FN(slapfigh)
 
 static struct BurnRomInfo slapbtjpRomDesc[] = {
-	{ "sf_r19jb.bin", 0x008000, 0x9a7ac8b3, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
-	{ "sf_rh.bin",    0x008000, 0x3c42e4a7, BRF_ESS | BRF_PRG }, //  1
+	{ "sfr19jb.bin", 0x008000, 0x9a7ac8b3, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
+	{ "sfrh.bin",    0x008000, 0x3c42e4a7, BRF_ESS | BRF_PRG }, //  1
 
-	{ "sf_r03.bin",   0x008000, 0x8545d397, BRF_GRA },			 //  2 Sprite data
-	{ "sf_r01.bin",   0x008000, 0xb1b7b925, BRF_GRA },			 //  3
-	{ "sf_r04.bin",   0x008000, 0x422d946b, BRF_GRA },			 //  4
-	{ "sf_r02.bin",   0x008000, 0x587113ae, BRF_GRA },			 //  5
+	{ "sfr03.bin",   0x008000, 0x8545d397, BRF_GRA },			 //  2 Sprite data
+	{ "sfr01.bin",   0x008000, 0xb1b7b925, BRF_GRA },			 //  3
+	{ "sfr04.bin",   0x008000, 0x422d946b, BRF_GRA },			 //  4
+	{ "sfr02.bin",   0x008000, 0x587113ae, BRF_GRA },			 //  5
 
-	{ "sf_r11.bin",   0x002000, 0x2ac7b943, BRF_GRA },			 //  6 Text layer
-	{ "sf_r10.bin",   0x002000, 0x33cadc93, BRF_GRA },			 //  7
+	{ "sfr11.bin",   0x002000, 0x2ac7b943, BRF_GRA },			 //  6 Text layer
+	{ "sfr10.bin",   0x002000, 0x33cadc93, BRF_GRA },			 //  7
 
-	{ "sf_r06.bin",   0x008000, 0xb6358305, BRF_GRA },			 //  8 Background layer
-	{ "sf_r09.bin",   0x008000, 0xe92d9d60, BRF_GRA },			 //  9
-	{ "sf_r08.bin",   0x008000, 0x5faeeea3, BRF_GRA },			 // 10
-	{ "sf_r07.bin",   0x008000, 0x974e2ea9, BRF_GRA },			 // 11
+	{ "sfr06.bin",   0x008000, 0xb6358305, BRF_GRA },			 //  8 Background layer
+	{ "sfr09.bin",   0x008000, 0xe92d9d60, BRF_GRA },			 //  9
+	{ "sfr08.bin",   0x008000, 0x5faeeea3, BRF_GRA },			 // 10
+	{ "sfr07.bin",   0x008000, 0x974e2ea9, BRF_GRA },			 // 11
 
-	{ "sf_col21.bin", 0x000100, 0xa0efaf99, BRF_GRA },			 // 12
-	{ "sf_col20.bin", 0x000100, 0xa56d57e5, BRF_GRA },			 // 13
-	{ "sf_col19.bin", 0x000100, 0x5cbf9fbf, BRF_GRA },			 // 14
+	{ "sfcol21.bin", 0x000100, 0xa0efaf99, BRF_GRA },			 // 12
+	{ "sfcol20.bin", 0x000100, 0xa56d57e5, BRF_GRA },			 // 13
+	{ "sfcol19.bin", 0x000100, 0x5cbf9fbf, BRF_GRA },			 // 14
 
-	{ "sf_r05.bin",   0x002000, 0x87f4705a, BRF_ESS | BRF_PRG }, // 15
+	{ "sfr05.bin",   0x002000, 0x87f4705a, BRF_ESS | BRF_PRG }, // 15
 };
 
 

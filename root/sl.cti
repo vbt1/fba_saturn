@@ -4303,6 +4303,57 @@ EndFile
 				EndFile
 			EndDirectory
 
+			Directory SLAPFIB1
+				File SFR19JB.BIN;1
+					Source SLAPFIB1\SFR19JB.BIN
+				EndFile
+				File SFRH.BIN;1
+					Source SLAPFIB1\SFRH.BIN
+				EndFile
+				File SFR03.BIN;1
+					Source SLAPFIB1\SFR03.BIN
+				EndFile
+				File SFR01.BIN;1
+					Source SLAPFIB1\SFR01.BIN
+				EndFile
+				File SFR04.BIN;1
+					Source SLAPFIB1\SFR04.BIN
+				EndFile
+				File SFR02.BIN;1
+					Source SLAPFIB1\SFR02.BIN
+				EndFile
+				File SFR11.BIN;1
+					Source SLAPFIB1\SFR11.BIN
+				EndFile
+				File SFR10.BIN;1
+					Source SLAPFIB1\SFR10.BIN
+				EndFile
+				File SFR06.BIN;1
+					Source SLAPFIB1\SFR06.BIN
+				EndFile
+				File SFR09.BIN;1
+					Source SLAPFIB1\SFR09.BIN
+				EndFile
+				File SFR08.BIN;1
+					Source SLAPFIB1\SFR08.BIN
+				EndFile
+				File SFR07.BIN;1
+					Source SLAPFIB1\SFR07.BIN
+				EndFile
+				File SFCOL21.BIN;1
+					Source SLAPFIB1\SFCOL21.BIN
+				EndFile
+				File SFCOL20.BIN;1
+					Source SLAPFIB1\SFCOL20.BIN
+				EndFile
+				File SFCOL19.BIN;1
+					Source SLAPFIB1\SFCOL19.BIN
+				EndFile
+				File SFR05.BIN;1
+					Source SLAPFIB1\SFR05.BIN
+				EndFile
+			EndDirectory
+
 ;			Directory CUBYBOP
 ;				File CB06.6;1
 ;					Source CUBYBOP\CB06.6
