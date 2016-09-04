@@ -18,6 +18,8 @@
 #define VDP2_BASE           0x25e00000
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
+#define PLANEADDR1 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x44)) 
+#define PLANEADDR2 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x46)) 
 #define PLSZ    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x3a))
 #define VDP2_VRAM           VDP2_BASE
 #define VDP2_CRAM           (VDP2_BASE+0x100000)
@@ -170,7 +172,7 @@ void __fastcall blacktiger_write(UINT16 address, UINT8 data)
 		{
 			DrvBgRAM[address]=data;
 //			updateBgTile(*DrvScreenLayout, address>>1);
-			updateBgTile2Words(*DrvScreenLayout, address>>1);
+			updateBgTile2Words(/* *DrvScreenLayout,*/ address>>1);
 		}
 		return;
 	}
@@ -283,45 +285,15 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,40)
 
 			if(data)		  // 1 = 128x64, 0 = 64x128
 			{
-				*DrvScreenLayout = 1;
-//				ss_regd->platesize &= 0xfff3;
-//				ss_regd->platesize |= 0x0004;	
-
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bg_map_lut2x1            ",4,10);
-
-
+//				*DrvScreenLayout = 1;
 				bg_map_lut = &bg_map_lut2x1[0];
-	 /*
-				plate_addr[0] = (Uint32)SS_MAP2;
-				plate_addr[1] = (Uint32)(SS_MAP2+0x800);
-				plate_addr[2] = (Uint32)(SS_MAP2+0x400);	 // good	  0x400
-				plate_addr[3] = (Uint32)(SS_MAP2+0xC00);	 */  
+				PLANEADDR1 = ss_regd->normap[2] = 0x3430;
 			}
 			else
 			{
-				*DrvScreenLayout = 0;
-//				ss_regd->platesize &= 0xfff3;
-//				ss_regd->platesize |= 0x000c;
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bg_map_lut2x2            ",4,10);
-
+//				*DrvScreenLayout = 0;
 				bg_map_lut = &bg_map_lut2x2[0];
- /*
-				plate_addr[0] = (Uint32)(SS_MAP2);//////
-				plate_addr[1] = (Uint32)(SS_MAP2);//////
-				plate_addr[2] = (Uint32)(SS_MAP2+0x800);	 // good	  0x400
-				plate_addr[3] = (Uint32)(SS_MAP2+0x800);  */
-			}
-			PLSZ = ss_regd->platesize;
- 
-			UINT16	*map = 0;
-			UINT16	temp;
-			map = &ss_regd->normap[2];
-
-			for(UINT32 i = 0; i < 2; i++) 
-			{
-				map[i] = (0x003f & ((plate_addr[i * 2] - VDP2_BASE)	/ 0x800));
-				temp = (0x003f & ((plate_addr[i * 2 + 1] - VDP2_BASE)	/ 0x800)) << 8;
-				map[i] |= (temp & 0x3f00);
+				PLANEADDR1 = ss_regd->normap[2] = 0x3030;
 			}
 		}
 /*
@@ -786,12 +758,15 @@ static void initLayers()
 // pour 2x1
 				scfg.plate_addr[0] = (Uint32)(SS_MAP2);
 				scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x1000);
+				scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
+				scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
 // pour 2x2
+/*
 				scfg.plate_addr[0] = (Uint32)(SS_MAP2);//////
 				scfg.plate_addr[1] = (Uint32)(SS_MAP2);//////
 				scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
 				scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
-
+*/
 
 
 /*	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
@@ -836,7 +811,7 @@ static void initLayers()
 	SCL_SetConfig(SCL_NBG0, &scfg);
 #endif
 
-	SCL_SetCycleTable(CycleTb);	
+	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initColors()
@@ -1482,7 +1457,7 @@ void updateBgTile(INT32 type, UINT32 offs)
 	ss_map2[ofst]=(code&0x3ff) | color<<12 | flipx <<3;
 }
 
-void updateBgTile2Words(INT32 type, UINT32 offs)
+void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 {
 	UINT32 ofst;
 	UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
@@ -1816,7 +1791,7 @@ static INT32 DrvFrame()
 #endif
 //  	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame          ",4,10);
 // cheat code level
-DrvZ80RAM0[0xF3A1-0xe000]=2;
+//DrvZ80RAM0[0xF3A1-0xe000]=1;
 // cheat code invincible
 DrvZ80RAM0[0xE905-0xe000]= 0x01;
 DrvZ80RAM0[0xF424-0xe000]= 0x0F;
