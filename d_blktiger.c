@@ -114,12 +114,6 @@ static void DrvVidRamBankswitch(INT32 bank)
 
 	INT32 nBank = (bank & 3) * 0x1000;
 
-char toto[100];
-char *titi = &toto[0];
-titi=itoa(DrvVidBank[0]);//(bank & 0x03);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bank            ",4,10);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,10);
-
 	CZetMapArea(0xc000, 0xcfff, 0, DrvBgRAM + nBank);
 //	CZetMapArea(0xc000, 0xcfff, 1, DrvBgRAM + nBank);
 	CZetMapArea(0xc000, 0xcfff, 2, DrvBgRAM + nBank);
@@ -241,14 +235,12 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20)
 
 		case 0x08:
 			*DrvScrollx = (*DrvScrollx & 0xff00) | data;
-			ss_reg->n1_move_y =  (((*DrvScrolly)+32)<<16) ;	  //  à remettre
-//			ss_reg->n1_move_y =  ((1152)<<16) ;	  //  à remettre
+			ss_reg->n1_move_y =  (((*DrvScrolly)+16)<<16) ;	  //  à remettre
 		return;
 
 		case 0x09:
 			*DrvScrollx = (*DrvScrollx & 0x00ff) | (data << 8);
-			ss_reg->n1_move_y =  (((*DrvScrolly)+32)<<16) ;	  // à remettre
-//			ss_reg->n1_move_y =  ((1152)<<16) ;	  // à remettre
+			ss_reg->n1_move_y =  (((*DrvScrolly)+16)<<16) ;	  // à remettre
 		return;
 
 		case 0x0a:
@@ -293,7 +285,11 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,40)
 			{
 				*DrvScreenLayout = 1;
 //				ss_regd->platesize &= 0xfff3;
-//				ss_regd->platesize |= 0x0004;		
+//				ss_regd->platesize |= 0x0004;	
+
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bg_map_lut2x1            ",4,10);
+
+
 				bg_map_lut = &bg_map_lut2x1[0];
 	 /*
 				plate_addr[0] = (Uint32)SS_MAP2;
@@ -305,7 +301,9 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,40)
 			{
 				*DrvScreenLayout = 0;
 //				ss_regd->platesize &= 0xfff3;
-//				ss_regd->platesize |= 0x000c;	 
+//				ss_regd->platesize |= 0x000c;
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bg_map_lut2x2            ",4,10);
+
 				bg_map_lut = &bg_map_lut2x2[0];
  /*
 				plate_addr[0] = (Uint32)(SS_MAP2);//////
@@ -785,12 +783,20 @@ static void initLayers()
 	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x400);	 // good	  0x400
 	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0xC00);
 */
+// pour 2x1
+				scfg.plate_addr[0] = (Uint32)(SS_MAP2);
+				scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x1000);
+// pour 2x2
+				scfg.plate_addr[0] = (Uint32)(SS_MAP2);//////
+				scfg.plate_addr[1] = (Uint32)(SS_MAP2);//////
+				scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
+				scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
 
-	scfg.plate_addr[0] = (Uint32)(SS_MAP2);
-	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x1000);
-	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
+
+
+/*	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
 	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
-	
+*/	
 //2x2	 vertical
 /*	scfg.plate_addr[0] = (Uint32)(SS_MAP2);
 	scfg.plate_addr[1] = (Uint32)(SS_MAP2);
@@ -1424,7 +1430,7 @@ SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
 
 	initLayers();
 	initColors();
-	initSprites(256-1,224-1,0,0,0,-32);
+	initSprites(256-1,224-1,0,0,0,-16);
 
 	SCL_Open();
 //	ss_reg->n1_move_y =  16 <<16;
@@ -1809,8 +1815,9 @@ static INT32 DrvFrame()
 		SCL_SetColRam(SCL_NBG0,8,8,palette);
 #endif
 //  	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame          ",4,10);
-
-//DrvZ80RAM0[0xF3A1-0xe000]=2;
+// cheat code level
+DrvZ80RAM0[0xF3A1-0xe000]=2;
+// cheat code invincible
 DrvZ80RAM0[0xE905-0xe000]= 0x01;
 DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
