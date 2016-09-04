@@ -110,13 +110,13 @@ static void DrvRomBankswitch(INT32 bank)
 
 static void DrvVidRamBankswitch(INT32 bank)
 {
-	*DrvVidBank = bank & 0x03;
+	*DrvVidBank = (bank & 0x03);
 
 	INT32 nBank = (bank & 3) * 0x1000;
 
 char toto[100];
 char *titi = &toto[0];
-titi=itoa(bank & 0x03);
+titi=itoa(DrvVidBank[0]);//(bank & 0x03);
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bank            ",4,10);
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,10);
 
@@ -175,7 +175,8 @@ void __fastcall blacktiger_write(UINT16 address, UINT8 data)
 		if(DrvBgRAM[address]!=data)
 		{
 			DrvBgRAM[address]=data;
-			updateBgTile(*DrvScreenLayout, address>>1);
+//			updateBgTile(*DrvScreenLayout, address>>1);
+			updateBgTile2Words(*DrvScreenLayout, address>>1);
 		}
 		return;
 	}
@@ -436,7 +437,7 @@ static INT32 MemIndex()
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	DrvGfxROM0	= SS_CACHE; //Next; Next += 0x020000;
 //	DrvGfxROM1	= SS_CACHE + 0x010000;
-	DrvGfxROM1	= SS_CACHE + 0x010000;
+	DrvGfxROM1	= SS_CACHE + 0x08000;
 	DrvGfxROM2	= (UINT8 *)(ss_vram+0x1100);
 
 	DrvPalette	= (UINT16*)colBgAddr; //(UINT32*)Next; Next += 0x0400 * sizeof(UINT32);
@@ -770,7 +771,8 @@ static void initLayers()
 // à passer en 1 word ?
 	scfg.dispenbl      = ON;
 	scfg.charsize      = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
-	scfg.pnamesize     = SCL_PN1WORD; //2word
+//	scfg.pnamesize     = SCL_PN1WORD; //2word
+	scfg.pnamesize     = SCL_PN2WORD; //2word
 	scfg.platesize     = SCL_PL_SIZE_2X2; // ou 2X2 ?
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
@@ -785,9 +787,9 @@ static void initLayers()
 */
 
 	scfg.plate_addr[0] = (Uint32)(SS_MAP2);
-	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x800);
-	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x800);	 // good	  0x400
-	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x800);
+	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x1000);
+	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
+	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
 	
 //2x2	 vertical
 /*	scfg.plate_addr[0] = (Uint32)(SS_MAP2);
@@ -1369,6 +1371,12 @@ static void make_lut(void)
 	}
 //---------------------------------------------------------------------------------
 //#endif
+// commenter si  1 word
+	for (UINT32 offs = 0; offs < 0x2000; offs++) // page 8 16x16
+	{
+		bg_map_lut2x2[offs] = bg_map_lut2x2[offs] * 2;
+		bg_map_lut2x1[offs] = bg_map_lut2x1[offs] * 2;
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
@@ -1461,12 +1469,27 @@ void updateBgTile(INT32 type, UINT32 offs)
 	UINT32 ofst;
 	UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
 	UINT32 color = (attr >> 3) & 0x0f;
-	UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
+	UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8); // +((3-DrvVidBank[0])*0x400);
 	UINT32 flipx = attr & 0x80;
 
 	ofst = bg_map_lut[offs];
 	ss_map2[ofst]=(code&0x3ff) | color<<12 | flipx <<3;
 }
+
+void updateBgTile2Words(INT32 type, UINT32 offs)
+{
+	UINT32 ofst;
+	UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
+	UINT32 color = (attr >> 3) & 0x0f;
+	UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8); // + ((3-DrvVidBank[0])*0x400);
+	UINT32 flipx = attr & 0x80;
+
+	ofst = bg_map_lut[offs];
+	ss_map2[ofst] = color | flipx << 7;
+	ss_map2[ofst+1] = (code*4)+0x1000; 
+}
+
+
 
 static void draw_bg(INT32 type, INT32 layer)
 {
