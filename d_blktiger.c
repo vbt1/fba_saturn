@@ -6,8 +6,7 @@
 #include "snd/burn_ym2203.h"
 //#include "bitswap.h"
 #include "d_blktiger.h"
-//#define RAZE 1
-//#define BG_BANK 1
+#define RAZE0 1
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -15,6 +14,7 @@
 <CyberWarriorX> vblank in
 <CyberWarriorX> vblank in is the start of the vblank. vblank out is the end of it
 */
+#define nBurnSoundLen 128
 #define VDP2_BASE           0x25e00000
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
@@ -23,44 +23,15 @@
 #define PLSZ    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x3a))
 #define VDP2_VRAM           VDP2_BASE
 #define VDP2_CRAM           (VDP2_BASE+0x100000)
-
-
 #define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
-
-static UINT16 remap4to16_lut[256];
-static UINT16 remap16_lut[768];
-static UINT16 cram_lut[4096];
-static UINT16 fg_map_lut[0x400];
-static UINT16 bg_map_lut2x1[0x2000];
-static UINT16 bg_map_lut2x2[0x2000];
+//#define SND 1
+static UINT16 *remap4to16_lut = NULL;
+static UINT16 *remap16_lut = NULL;
+static UINT16 *cram_lut = NULL;
+static UINT16 *fg_map_lut = NULL;
+static UINT16 *bg_map_lut2x1;
+static UINT16 *bg_map_lut2x2;
 static UINT16 *bg_map_lut = NULL;
-//static UINT32 bg_map_dirty[0x4000];
-
-//#define RAZE 1
-#define INT_DIGITS 19
-char *itoa(i)
-     int i;
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}
-
 
 int ovlInit(char *szShortName)
 {
@@ -71,7 +42,6 @@ int ovlInit(char *szShortName)
 		DrvInit, DrvExit, DrvFrame, NULL //, DrvScan, &DrvRecalc, 0x400,
 	};
 	
-	if (strcmp(nBurnDrvBlktiger.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvBlktiger,sizeof(struct BurnDriver));
 
 	ss_reg   = (SclNorscl *)SS_REG;
@@ -106,8 +76,13 @@ static void DrvRomBankswitch(INT32 bank)
 
 	INT32 nBank = 0x10000 + (bank & 0x0f) * 0x4000;
 
+#ifdef RAZE0
+	z80_map_read  (0x8000, 0xbfff, DrvZ80ROM0 + nBank);
+	z80_map_fetch (0x8000, 0xbfff, DrvZ80ROM0 + nBank);
+#else
 	CZetMapArea(0x8000, 0xbfff, 0, DrvZ80ROM0 + nBank);
 	CZetMapArea(0x8000, 0xbfff, 2, DrvZ80ROM0 + nBank);
+#endif
 }
 
 static void DrvVidRamBankswitch(INT32 bank)
@@ -116,9 +91,14 @@ static void DrvVidRamBankswitch(INT32 bank)
 
 	INT32 nBank = (bank & 3) * 0x1000;
 
+#ifdef RAZE0
+	z80_map_read  (0xc000, 0xcfff, DrvBgRAM + nBank);
+	z80_map_fetch (0xc000, 0xcfff, DrvBgRAM + nBank);
+#else
 	CZetMapArea(0xc000, 0xcfff, 0, DrvBgRAM + nBank);
 //	CZetMapArea(0xc000, 0xcfff, 1, DrvBgRAM + nBank);
 	CZetMapArea(0xc000, 0xcfff, 2, DrvBgRAM + nBank);
+#endif
 }
 
 void __fastcall blacktiger_write(UINT16 address, UINT8 data)
@@ -171,7 +151,6 @@ void __fastcall blacktiger_write(UINT16 address, UINT8 data)
 		if(DrvBgRAM[address]!=data)
 		{
 			DrvBgRAM[address]=data;
-//			updateBgTile(*DrvScreenLayout, address>>1);
 			updateBgTile2Words(/* *DrvScreenLayout,*/ address>>1);
 		}
 		return;
@@ -296,11 +275,6 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,40)
 				PLANEADDR1 = ss_regd->normap[2] = 0x3030;
 			}
 		}
-/*
-titi=itoa(data ? 1 : 0);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"scrlayou            ",4,50);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,50);
-*/
 		return;
 	}
 }
@@ -322,7 +296,11 @@ UINT8 __fastcall blacktiger_in(UINT16 port)
 			return 0x01;
 
 		case 0x07:
+#ifdef RAZE0
+			return z80_get_reg(Z80_REG_DE)  >> 8;
+#else
 			return CZetDe(-1) >> 8;
+#endif
 	}
 
 	return 0;
@@ -393,7 +371,6 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 			return 0;
 #endif
 	}
-
 	return 0;
 }
 
@@ -438,9 +415,14 @@ static INT32 MemIndex()
 	flipscreen	= Next; Next += 0x000001;
 	coin_lockout	= Next; Next += 0x000001;
 
-	RamEnd		= Next;
-
-	MemEnd		= Next;
+	RamEnd			= Next;
+	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
+	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
+	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
+	fg_map_lut		= Next; Next += 0x400 * sizeof (UINT16);
+	bg_map_lut2x1	= Next; Next += 0x2000 * sizeof (UINT16);
+	bg_map_lut2x2	= Next; Next += 0x2000 * sizeof (UINT16);
+	MemEnd			= Next;
 
 	return 0;
 }
@@ -515,11 +497,17 @@ static INT32 DrvDoReset(INT32 full_reset)
 		memset (AllRam, 0, RamEnd - AllRam);
 	}
 
+#ifdef RAZE0
+	z80_reset();
+	DrvRomBankswitch(1);
+	DrvVidRamBankswitch(1);
+#else
 	CZetOpen(0);
 	CZetReset();
 	DrvRomBankswitch(1);
 	DrvVidRamBankswitch(1);
 	CZetClose();
+#endif
 #ifndef RAZE
 	CZetOpen(1);
 	CZetReset();
@@ -580,8 +568,6 @@ static INT32 DrvGfxDecode()
 	}
 //sprites
 	memcpy (tmp, DrvGfxROM2, 0x40000);
-// 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode4          ",4,120);
-
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane + 0, XOffs, YOffs, 0x200, tmp, DrvGfxROM2);
 
  	for (int i=0;i<0x40000;i++ )
@@ -592,11 +578,6 @@ static INT32 DrvGfxDecode()
 		if ((DrvGfxROM2[i]& 0xf0)       ==0x00)DrvGfxROM2[i] = 0xf0 | DrvGfxROM2[i] & 0x0f;
 		else if ((DrvGfxROM2[i]& 0xf0)==0xf0) DrvGfxROM2[i] = DrvGfxROM2[i] & 0x0f;
 	}
-
- //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode5 end          ",4,130);
-
-//	free (tmp);
-	
 	return 0;
 }
 
@@ -633,6 +614,7 @@ static INT32 DrvInit()
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
+	make_lut();
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"BurnLoadRom 1        ",4,20);
 
 	{
@@ -652,23 +634,38 @@ static INT32 DrvInit()
 		DrvGfxDecode();
 	}
 //  	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"CZetInit          ",4,70);
-#ifndef BG_BANK
 	drawWindow(0,224,240,0,64);
-#endif
-
 #ifndef RAZE
 	CZetInit(2);
 #else
 	CZetInit(1);
 #endif
+
+
+#ifdef RAZE0
+	z80_map_read(0x0000, 0x7fff, DrvZ80ROM0);
+	z80_map_fetch(0x0000, 0x7fff, DrvZ80ROM0);
+	z80_map_read(0xd000, 0xd7ff, DrvTxRAM);
+	z80_map_fetch(0xd000, 0xd7ff, DrvTxRAM);
+	z80_map_read(0xd800, 0xdfff, DrvPalRAM);
+	z80_map_fetch(0xd800, 0xdfff, DrvPalRAM);
+	z80_map_read(0xe000, 0xfdff, DrvZ80RAM0);
+	z80_map_write(0xe000, 0xfdff, DrvZ80RAM0);
+	z80_map_fetch(0xe000, 0xfdff, DrvZ80RAM0);
+	z80_map_read(0xfe00, 0xffff, DrvSprRAM);
+	z80_map_write(0xfe00, 0xffff, DrvSprRAM);
+	z80_map_fetch(0xfe00, 0xffff, DrvSprRAM);
+	z80_add_write(0xc000, 0xdfff, 1, (void *)&blacktiger_write);
+//	z80_add_read(0xc000, 0xcfff, 1, (void *)&blacktiger_read);
+	z80_set_in(blacktiger_in);
+	z80_set_out(blacktiger_out);
+#else
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM0);
 	CZetMapArea(0x0000, 0x7fff, 2, DrvZ80ROM0);
 	CZetMapArea(0xd000, 0xd7ff, 0, DrvTxRAM);
-//	CZetMapArea(0xd000, 0xd7ff, 1, DrvTxRAM);
 	CZetMapArea(0xd000, 0xd7ff, 2, DrvTxRAM);
 	CZetMapArea(0xd800, 0xdfff, 0, DrvPalRAM);
-//	CZetMapArea(0xd800, 0xdfff, 1, DrvPalRAM);
 	CZetMapArea(0xd800, 0xdfff, 2, DrvPalRAM);
 	CZetMapArea(0xe000, 0xfdff, 0, DrvZ80RAM0);
 	CZetMapArea(0xe000, 0xfdff, 1, DrvZ80RAM0);
@@ -677,10 +674,11 @@ static INT32 DrvInit()
 	CZetMapArea(0xfe00, 0xffff, 1, DrvSprRAM);
 	CZetMapArea(0xfe00, 0xffff, 2, DrvSprRAM);
 	CZetSetWriteHandler(blacktiger_write);
-	CZetSetReadHandler(blacktiger_read);
+//	CZetSetReadHandler(blacktiger_read);
 	CZetSetInHandler(blacktiger_in);
 	CZetSetOutHandler(blacktiger_out);
 	CZetClose();
+#endif
 
 //	CZetInit(1);
 #ifndef RAZE
@@ -767,28 +765,7 @@ static void initLayers()
 				scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
 				scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
 */
-
-
-/*	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
-	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
-*/	
-//2x2	 vertical
-/*	scfg.plate_addr[0] = (Uint32)(SS_MAP2);
-	scfg.plate_addr[1] = (Uint32)(SS_MAP2);
-	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x800);	 // good	  0x400
-	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x800);
-*/
- /*
-	scfg.plate_addr[4] = (Uint32)(SS_MAP2+0x800);
-	scfg.plate_addr[6] = (Uint32)(SS_MAP2+0xC00);
-*/
 	SCL_SetConfig(SCL_NBG1, &scfg);
-#ifdef BG_BANK
-	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
-	scfg.patnamecontrl =  0x000c;// VRAM A0?
-	scfg.plate_addr[0] = (Uint32)ss_map3;
-	SCL_SetConfig(SCL_NBG0, &scfg);
-#endif
 // 3 nbg
 	scfg.pnamesize     = SCL_PN2WORD; //2word
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
@@ -800,7 +777,6 @@ static void initLayers()
 // nbg2 8x8 foreground
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
- #ifndef BG_BANK
  	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	   = SCL_BITMAP;
 	scfg.mapover	   = SCL_OVER_0;
@@ -809,7 +785,6 @@ static void initLayers()
 //	scfg.dispenbl      = OFF;
 
 	SCL_SetConfig(SCL_NBG0, &scfg);
-#endif
 
 	SCL_SetCycleTable(CycleTb);
 }
@@ -821,14 +796,10 @@ static void initColors()
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_SPR,OFF);
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
-#ifdef BG_BANK
-	ss_regs->dispenbl &= 0xfeff;
-#else
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 
 	SCL_SetColRam(SCL_NBG0,8,8,palette);	 // vbt à remettre
-#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
@@ -864,7 +835,6 @@ static void make_lut(void)
 		{
 			remap4to16_lut[i] = delta;
 		}
-//		remap4to16_lut[i] = delta;
 		delta++; if ((delta & 3) == 0) delta += 12;
 	}
 
@@ -1368,13 +1338,8 @@ static void DrvInitSaturn()
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
 // 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1;		   //c
 //	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8
-#ifdef BG_BANK
-	ss_map3	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;								//a
-	SS_FONT = NULL; //ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
-#else
-SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
+	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
 //SS_FONT = ss_font		=(Uint16 *)NULL;
-#endif
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum	 = (SclSpPriNumRegister *)SS_N0PRI;
@@ -1428,7 +1393,7 @@ SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
-	make_lut();
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
@@ -1437,24 +1402,8 @@ static INT32 DrvExit()
 	BurnYM2203Exit();
 #endif
 	CZetExit();
-//	GenericTilesExit();
-
 	free (AllMem);
-
 	return 0;
-}
-
-
-void updateBgTile(INT32 type, UINT32 offs)
-{
-	UINT32 ofst;
-	UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-	UINT32 color = (attr >> 3) & 0x0f;
-	UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8); // +((3-DrvVidBank[0])*0x400);
-	UINT32 flipx = attr & 0x80;
-
-	ofst = bg_map_lut[offs];
-	ss_map2[ofst]=(code&0x3ff) | color<<12 | flipx <<3;
 }
 
 void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
@@ -1468,287 +1417,6 @@ void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 	ofst = bg_map_lut[offs];
 	ss_map2[ofst] = color | flipx << 7;
 	ss_map2[ofst+1] = (code*4)+0x1000; 
-}
-
-
-
-static void draw_bg(INT32 type, INT32 layer)
-{
-// PNCN1 = 0x000c;
-// Priority masks should be enabled, but I don't see anywhere that they are used?
-//	INT32 scrollx = (*DrvScrollx)     & (0x3ff | (0x200 << type));
-//	INT32 scrolly = ((*DrvScrolly)+16) & (0x7ff >> type);
-//	ss_reg->n1_move_x =  ((((scrollx-1) & 0x0f))<<16) ;
-//	ss_reg->n1_move_y =  ((((scrolly-1) & 0x0f))<<16) ;
-
-//ss_reg->n1_move_y =  (((*DrvScrolly)+32)<<16) ;
-//ss_reg->n1_move_x =  (((*DrvScrollx))<<16) ;
-
-  /*
-	char toto[100];
-	char *titi = &toto[0];
- 	titi=itoa(scrollx);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"       ",4,10);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,4,10);
- 	titi=itoa(scrolly);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,4,20);
-	 */
-//	for (UINT32 offs = 000; offs < 0x100; offs++) // page 1 16x16
-//	for (UINT32 offs = 0x100; offs < 0x200; offs++) // page 2 16x16
-//	for (UINT32 offs = 0x200; offs < 0x300; offs++) // page 3 16x16
-//	for (UINT32 offs = 0x300; offs < 0x400; offs++) // page 4 16x16
-//	for (UINT32 offs = 0x400; offs < 0x500; offs++) // page 5 16x16
-//	for (UINT32 offs = 0x500; offs < 0x600; offs++) // page 6 16x16
-//	for (UINT32 offs = 0x600; offs < 0x700; offs++) // page 7 16x16
-//	for (UINT32 offs = 0x700; offs < 0x800; offs++) // page 8 16x16
-//memset(ss_map2,0x33,0x1000*sizeof(unsigned short));
-//memset(&ss_map2[0x1000],0x22,0x1000*sizeof(unsigned short));
-//memset(&ss_map2[0x2000],0x33,0x1000*sizeof(unsigned short));
-//memset(&ss_map2[0x3000],0x44,0x1000*sizeof(unsigned short));
-/*	
-	for (UINT32 offs = 0; offs < 0x2000; offs++) // page 8 16x16
-	{
-		UINT32 ofst;
- 		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ofst = bg_map_lut[offs];
-		ss_map2[ofst]=(code&0x3ff) | color<<12 | flipx <<3;
-	} */
-//-------------------------------------------------------------------------------
-#if 0
-// x0-63,y0-15
-	for (UINT32 offs = 0; offs < 0x100; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f);
-		sy = ((offs) >> 4);				  // page 0 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0x100; offs < 0x200; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+16;
-		sy = ((offs-0x100) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0x200; offs < 0x300; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x400;
-		sy = ((offs-0x200) >> 4);				  // page 2 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0x300; offs < 0x400; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x400+16;
-		sy = ((offs-0x300) >> 4);				  // page 3 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-//---------------------------------------------------------------------------------
-// x0-63,y16-31
- // working
-	for (UINT32 offs = 0x800; offs < 0x900; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f);
-		sy = ((offs-0x700) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
- 
-	for (UINT32 offs = 0x900; offs < 0xA00; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+16;
-		sy = ((offs-0x800) >> 4);	  // page 9 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0xA00; offs < 0xB00; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x400;
-		sy = ((offs-0x900) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-	
-	for (UINT32 offs = 0xB00; offs < 0xC00; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x400+16;
-		sy = ((offs-0xA00) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-//---------------------------------------------------------------------------------
-// x0-63,y32-47
-	for (UINT32 offs = 0x1000; offs < 0x1100; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x800+0;
-		sy = ((offs-0x1000) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0x1100; offs < 0x1200; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x800+16;
-		sy = ((offs-0x1100) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0x1200; offs < 0x1300; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x800+0x400;
-		sy = ((offs-0x1200) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0x1300; offs < 0x1400; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x800+0x400+16;
-		sy = ((offs-0x1300) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-//---------------------------------------------------------------------------------
-// x0-63,y48-63
-	for (UINT32 offs = 0x1800; offs < 0x1900; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x800;
-		sy = ((offs-0x1700) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0x1900; offs < 0x1A00; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x800+16;
-		sy = ((offs-0x1800) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0x1A00; offs < 0x1B00; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x800+0x400;
-		sy = ((offs-0x1900) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-
-	for (UINT32 offs = 0x1B00; offs < 0x1C00; offs++) // page 8 16x16
-	{
-		INT32 sx, sy, ofst;
-		sx = (offs & 0x0f)+0x800+0x400+16;
-		sy = ((offs-0x1A00) >> 4);				  // page 1 16x16
-
-		UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
-		INT32 color = (attr >> 3) & 0x0f;
-		UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8);
-		UINT32 flipx = attr & 0x80;
-
-		ss_map2[sx|(sy<<5)]=(code&0x3ff) | color<<12 | flipx <<3;
-	}
-#endif
-//---------------------------------------------------------------------------------
 }
 
 static void draw_sprites()
@@ -1787,7 +1455,8 @@ static INT32 DrvFrame()
 {
 //		FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"dfvframe start           ",4,10);
 #ifndef BG_BANK
-		SCL_SetColRam(SCL_NBG0,8,8,palette);
+// vbt à déplacer supprimer
+SCL_SetColRam(SCL_NBG0,8,8,palette);
 #endif
 //  	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame          ",4,10);
 // cheat code level
@@ -1796,11 +1465,11 @@ static INT32 DrvFrame()
 DrvZ80RAM0[0xE905-0xe000]= 0x01;
 DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
-
+/*
 	if (DrvReset) {
 		DrvDoReset(1);
 	}
-
+*/
 	if (watchdog >= 180) {
 		DrvDoReset(0);
 	}
@@ -1817,20 +1486,28 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
 		DrvInputs[0] |= *coin_lockout;
 	}
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"CZetNewFrame           ",4,20);
 
 	CZetNewFrame();
 
-	INT32 nInterleave = 100;
-//	INT32 nInterleave = 20;
-	nCyclesTotal[0] = 4000000 / 60; ///2;
-	nCyclesTotal[1] = 3000000 / 60; ///2;
-	INT32 nCyclesDone[2] = { 0, 0 };
+	UINT32 nInterleave = 100;
+//	UINT32 nInterleave = 20;
+	nCyclesTotal[0] = 3000000 / 60; ///2;
+	nCyclesTotal[1] = 3000000 / 60 / 2; ///2;
+	UINT32 nCyclesDone[2] = { 0, 0 };
 	
 	for (INT32 i = 0; i < nInterleave; i++) {
 		INT32 nCurrentCPU, nNext, nCyclesSegment;
 //	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"CZetOpen 0           ",4,20);
 		// Run Z80 #1
+#ifdef RAZE0
+		nCurrentCPU = 0;
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+		nCyclesDone[nCurrentCPU] += z80_emulate(nCyclesSegment);
+// z80_raise_IRQ(0);
+		if (i == 98) z80_raise_IRQ(0);
+		if (i == 99) z80_lower_IRQ();
+#else
 		nCurrentCPU = 0;
 		CZetOpen(nCurrentCPU);
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
@@ -1841,6 +1518,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 //		if (i == 18) CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
 //		if (i == 19) CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 		CZetClose();
+#endif
 //	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"CZetOpen 1           ",4,20);
 		// Run Z80 #2
 #ifndef RAZE
@@ -1848,7 +1526,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 		CZetOpen(nCurrentCPU);
 //	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"BurnTimerUpdate           ",4,20);
 #ifdef SND
-		BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
+//		BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
 #endif
 		CZetClose();
 #endif
@@ -1862,8 +1540,9 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
 //	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"BurnYM2203Update           ",4,20);
 	BurnYM2203Update(nSoundBuffer, nBurnSoundLen);
-#endif
+//	updateAY8910Sound();
 	CZetClose();
+#endif
 
 #ifdef SND
 	nSoundBufferPos+=(nBurnSoundLen); // DOIT etre deux fois la taille copiee
@@ -1875,55 +1554,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 #endif
 
 #endif
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"draw_sprites           ",4,20);
-	
 	draw_sprites();
-//	UINT32 position = ((*DrvScrollx)+32) / 16 + (((*DrvScrolly) /16)+32)*128;
-//	PNCN1 = ((ss_map2[position]&0x7ff)<0x400) ? 0x8008 : 0x800c;
-
-/*
-	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) 
-	{
-		pTransDraw[i] = 0x3ff;
-	}
-*/
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
-
-//	ss_reg->n1_move_x =  ((1024)<<16) ;
-//	ss_reg->n1_move_y =  ((384)<<16) ;
-
-//		FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"dfvframe end           ",4,10);
 	return 0;
 }
-
-/*
-static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
-{
-	struct BurnArea ba;
-	
-	if (pnMin != NULL) {
-		*pnMin = 0x029698;
-	}
-
-	if (nAction & ACB_MEMORY_RAM) {
-		memset(&ba, 0, sizeof(ba));
-		ba.Data	  = AllRam;
-		ba.nLen	  = RamEnd-AllRam;
-		ba.szName = "All Ram";
-		BurnAcb(&ba);
-	}
-
-	if (nAction & ACB_DRIVER_DATA) {
-		CZetScan(nAction);
-
-		BurnYM2203Scan(nAction, pnMin);
-	}
-
-	CZetOpen(0);
-	DrvRomBankswitch(*DrvRomBank);
-	DrvVidRamBankswitch(*DrvVidBank);
-	CZetClose();
-
-	return 0;
-}
-*/

@@ -12,7 +12,6 @@ static INT32 DrvFrame();
 static INT32 DrvDraw();
 static void make_lut(void);
 static void DrvInitSaturn();
-UINT16 *ss_map3;
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -31,7 +30,6 @@ static UINT8 *DrvPalRAM;
 static UINT8 *DrvBgRAM;
 static UINT8 *DrvTxRAM;
 static UINT16 *DrvPalette;
-static UINT8 DrvRecalc;
 
 static UINT8 *DrvScreenLayout;
 static UINT8 *DrvBgEnable;
@@ -156,60 +154,7 @@ static struct BurnDIPInfo DrvDIPList[]=
 };
 
 STDDIPINFO(Drv)
-/*
-struct BurnDriver BurnDrvBlkdrgon = {
-	"blkdrgon", "blktiger", NULL, NULL, "1987",
-	"Black Dragon (Japan)\0", NULL, "Capcom", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
-	NULL, blkdrgonRomInfo, blkdrgonRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
-	256, 224, 4, 3
-};
-*/
 
-// Black Dragon (bootleg)
-
-static struct BurnRomInfo blkdrgonbRomDesc[] = {
-	{ "a1",				0x08000, 0x7caf2ba0, 1 | BRF_PRG | BRF_ESS }, //  0 - Z80 #0 Code
-	{ "blkdrgon.6e",	0x10000, 0x7d39c26f, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "a3",				0x10000, 0xf4cd0f39, 1 | BRF_PRG | BRF_ESS }, //  2
-	{ "blkdrgon.9e",	0x10000, 0x4d1d6680, 1 | BRF_PRG | BRF_ESS }, //  3
-	{ "blkdrgon.10e",	0x10000, 0xc8d0c45e, 1 | BRF_PRG | BRF_ESS }, //  4
-
-	{ "bd-06.1l",		0x08000, 0x2cf54274, 2 | BRF_PRG | BRF_ESS }, //  5 - Z80 #0 Code
-
-	{ "b5",				0x08000, 0x852ad2b7, 3 | BRF_GRA },           //  6 - Characters
-
-	{ "blkdrgon.5b",	0x10000, 0x22d0a4b0, 4 | BRF_GRA },           //  7 - Background Tiles
-	{ "b1",				0x10000, 0x053ab15c, 4 | BRF_GRA },           //  8
-	{ "blkdrgon.9b",	0x10000, 0x9498c378, 4 | BRF_GRA },           //  9
-	{ "b3",				0x10000, 0x9dc6e943, 4 | BRF_GRA },           // 10
-
-	{ "bd-08.5a",		0x10000, 0xe2f17438, 5 | BRF_GRA },           // 11 - Sprites
-	{ "bd-07.4a",		0x10000, 0x5fccbd27, 5 | BRF_GRA },           // 12
-	{ "bd-10.9a",		0x10000, 0xfc33ccc6, 5 | BRF_GRA },           // 13
-	{ "bd-09.8a",		0x10000, 0xf449de01, 5 | BRF_GRA },           // 14
-
-	{ "bd01.8j",		0x00100, 0x29b459e5, 6 | BRF_OPT },           // 15 - Proms (not used)
-	{ "bd02.9j",		0x00100, 0x8b741e66, 6 | BRF_OPT },           // 16
-	{ "bd03.11k",		0x00100, 0x27201c75, 6 | BRF_OPT },           // 17
-	{ "bd04.11l",		0x00100, 0xe5490b68, 6 | BRF_OPT },           // 18
-};
-
-STD_ROM_PICK(blkdrgonb)
-STD_ROM_FN(blkdrgonb)
-/*
-struct BurnDriver BurnDrvBlkdrgonb = {
-	"blkdrgonb", "blktiger", NULL, NULL, "1987",
-	"Black Dragon (bootleg)\0", NULL, "bootleg", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
-	NULL, blkdrgonbRomInfo, blkdrgonbRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
-	256, 224, 4, 3
-};
-*/
 // Black Tiger
 
 static struct BurnRomInfo blktigerRomDesc[] = {
@@ -243,15 +188,4 @@ static struct BurnRomInfo blktigerRomDesc[] = {
 
 STD_ROM_PICK(blktiger)
 STD_ROM_FN(blktiger)
-/*
-struct BurnDriver BurnDrvBlktiger = {
-	"blktiger", NULL, NULL, NULL, "1987",
-	"Black Tiger\0", NULL, "Capcom", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
-	NULL, blktigerRomInfo, blktigerRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
-	256, 224, 4, 3
-};
-*/
 #endif
