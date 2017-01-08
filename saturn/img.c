@@ -9,7 +9,8 @@ static inline void load_main()
 {
 	TVOFF;
 	tga_load(main_tga,(Uint8 *)ss_map,(Uint16 *)SCL_COLRAM_ADDR);
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"A : Help  C : Credits",88,211);
+// vbt à remettre
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"A : Help  C : Credits",88,211);
 	TVON;
 }
 //--------------------------------------------------------------------------------------------------------------

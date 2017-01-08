@@ -95,10 +95,10 @@ static UINT8 *DrvZ80RAM	= NULL;
 static UINT8 *DrvZ80ExtRAM = NULL;
 static UINT8 *CZ80Context = NULL;
 
-static UINT8 DrvInputs[2];
-static UINT8 DrvJoy1[8];
-static UINT8 DrvJoy2[8];
-static UINT8 DrvDips[1];
+static UINT8 DrvInputs[2]={0,0};
+static UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
+static UINT8 DrvDips[1]={0};
 static UINT8 DrvReset = 0;
 /*
 static struct BurnInputInfo Sg1000InputList[] = {

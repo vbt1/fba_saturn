@@ -2,21 +2,7 @@
 //#define RAZE 1
 #define draw_background(x) draw_background_test2()
 //#define draw_background(x) draw_background_not_rotated(x)
-/*
-unsigned char buffer[100];
 
-int vspfunc(char *format, ...)
-{
-   va_list aptr;
-   int ret;
-
-   va_start(aptr, format);
-   ret = vsprintf(buffer, format, aptr);
-   va_end(aptr);
-
-   return(ret);
-}
-*/
 int ovlInit(char *szShortName)
 {
 /*	struct BurnDriver nBurnDrvCongo = {
@@ -28,7 +14,7 @@ int ovlInit(char *szShortName)
 */
 	struct BurnDriver nBurnDrvZaxxon = {
 		"zaxxon", NULL,
-		"Zaxxon (set 1)\0",
+		"Zaxxon (set 1)",
 		zaxxonRomInfo, zaxxonRomName, ZaxxonInputInfo, ZaxxonDIPInfo,
 		DrvInit, DrvExit, DrvFrame, NULL, 
 	};
@@ -41,7 +27,7 @@ int ovlInit(char *szShortName)
 */
 struct BurnDriver nBurnDrvSzaxxon = {
 		"szaxxon", "zaxxon",
-		"Super Zaxxon\0",
+		"Super Zaxxon",
 		szaxxonRomInfo, szaxxonRomName, ZaxxonInputInfo, ZaxxonDIPInfo,
 		sZaxxonInit, DrvExit, DrvFrame, NULL, 
 	};
@@ -250,7 +236,7 @@ void ZaxxonPPIWriteC(UINT8 data)
 {
 //	bprintf (PRINT_NORMAL, _T("ZaxxonPPIWriteC %02x\n"),data);
 
-	if(1)
+//	if(1)
 	{
 	UINT8 diff = data ^ sound_state[2];
 	sound_state[2] = data;
@@ -272,7 +258,7 @@ void CongoPPIWriteB(UINT8 data)
 	UINT8 diff = data ^ sound_state[1];
 	sound_state[1] = data;
 
-	if(1)
+//	if(1)
 	{
 		/* GORILLA: channel 0 */
 //		if ((diff & 0x02) && !(data & 0x02) && !BurnSampleGetStatus(0)) BurnSamplePlay(0);
@@ -402,7 +388,7 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xc006:
-			*zaxxon_flipscreen = ~data & 1;
+			zaxxon_flipscreen = ~data & 1;
 		return;
 
 		case 0xe03c:
@@ -537,7 +523,7 @@ void __fastcall congo_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xc01e:
-			*zaxxon_flipscreen = ~data & 1;
+			zaxxon_flipscreen = ~data & 1;
 		return;
 
 		case 0xc01f:
@@ -712,11 +698,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 			64*8, 65*8, 66*8, 67*8, 68*8, 69*8, 70*8, 71*8,
 			96*8, 97*8, 98*8, 99*8, 100*8, 101*8, 102*8, 103*8 };
 
-	UINT8 *tmp = (UINT8*)0x00200000;//(UINT8*)malloc(0xc000);
-//	if (tmp == NULL) {
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc tmp failed",4,80);
-//		return 1;
-//	}
+	UINT8 *tmp = (UINT8*)0x00200000;//(UINT8*) size (0xc000);
 
 	memcpy (tmp, DrvGfxROM0, 0x1000);
 // foreground (text)
@@ -845,69 +827,13 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	return 0;
 }
 
-/*static*/INT32 MemIndex()
-{
-	UINT8 *Next; Next = AllMem;
-
-	DrvZ80ROM		= Next; Next += 0x010000;
-	DrvZ80DecROM		= Next; Next += 0x010000;
-	DrvZ80ROM2		= Next; Next += 0x010000;
-
-	DrvGfxROM0		= cache;
-
- 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	DrvGfxROM2		= &ss_vram[0x1100];//Next; Next += 0x020000;
-
-//	DrvGfxROM1		= Next; Next += 0x010000;
-//	DrvGfxROM3		= Next; Next += 0x010000;
-
-	DrvColPROM		= Next; Next += 0x000200;
-
-	zaxxon_bg_pixmap = (UINT8*)0x00200000;
-
-	AllRam			= Next;
-
-	DrvZ80RAM		= Next; Next += 0x001000;
-	DrvZ80RAM2		= Next; Next += 0x001000;
-	DrvSprRAM		= Next; Next += 0x000100;
-	DrvVidRAM		= Next; Next += 0x000400;
-	DrvColRAM		= Next; Next += 0x000400;
-
-	interrupt_enable	= Next; Next += 0x000001;
-
-	zaxxon_fg_color		= Next; Next += 0x000001;
-	zaxxon_bg_color		= Next; Next += 0x000001;
-	zaxxon_bg_enable	= Next; Next += 0x000001;
-	congo_color_bank	= Next; Next += 0x000001;
-	congo_fg_bank		= Next; Next += 0x000001;
-	congo_custom		= Next; Next += 0x000004;
-	zaxxon_flipscreen	= Next; Next += 0x000001;
-	zaxxon_coin_enable	= Next; Next += 0x000004;
-	zaxxon_coin_status	= Next; Next += 0x000004;
-	zaxxon_coin_last	= Next; Next += 0x000004;
-
-//	zaxxon_bg_scroll	= (UINT32*)Next; Next += 0x000001 * sizeof(INT32);
-
-	soundlatch		= Next; Next += 0x000001;
-
-	sound_state		= Next; Next += 0x000003;
-
-	RamEnd		= Next;
-	MemEnd		= Next;
-
-	return 0;
-}
-
 /*static*/INT32 DrvInit()
 {
 	DrvInitSaturn();
 	INT32 nLen = MemEnd - AllRam;
 	memset(AllMem, 0, nLen);
-	MemIndex();
-
 	memset(bitmap,	 0x00,0xE000);
-	memset(DrvGfxROM2+0x00010000,0x00,0xF400);
-
+	memset(DrvGfxROM2+0x00010000,0x00,0xE000);
 	DrvGfxROM1		= (UINT8 *)0x25a60000;
 	DrvGfxROM3		= (UINT8 *)DrvGfxROM1+0x010000;
 
@@ -930,6 +856,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 		DrvPaletteInit(0x100);
 //		DrvPaletteInit(0x200);
+
 		bg_layer_init();
 
 		DrvGfxROM3 = NULL;
@@ -983,13 +910,13 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 //	SN76489Init(0, 4000000 / 1, 0);
 //	SN76489Init(1, 4000000 / 4, 1);
-
 	DrvDoReset();
 	return 0;
 }
 
 /*static*/INT32 DrvExit()
 {
+	SPR_InitSlaveSH();
 #ifndef RAZE
 	CZetExit2();
 #else
@@ -997,20 +924,21 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 #endif
 //	DMA_CpuAllStop();
 
-	nBurnFunction = NULL;
+//	nBurnFunction = NULL;
 
-    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
-    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
+//    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
+//    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
 
 	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = DrvZ80ROM2 = NULL;
 	DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =DrvGfxROM3 = NULL;
 	DrvColPROM = DrvZ80RAM = DrvZ80RAM2 = DrvSprRAM = DrvVidRAM = DrvColRAM = NULL;
 	zaxxon_bg_pixmap = 	interrupt_enable	= zaxxon_fg_color = zaxxon_bg_color= NULL;
 	zaxxon_bg_enable = congo_color_bank= congo_fg_bank = congo_custom = NULL;
-	zaxxon_flipscreen = zaxxon_coin_enable = soundlatch = NULL;
+/*	zaxxon_flipscreen =*/ zaxxon_coin_enable = soundlatch = NULL;
 	zaxxon_coin_status = zaxxon_coin_last = sound_state = NULL;
 	zaxxon_bg_scroll = 0;
-	free (AllMem);
+	zaxxon_flipscreen = 0;
+//	free (AllMem);
 	AllMem = NULL;
 
 	ss_map264 = NULL;
@@ -1021,8 +949,6 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	sx_lut = NULL;
 	sy_lut = NULL;
 	charaddr_lut = NULL;
-//	free(srcxmask);
-//	srcxmask = NULL;
 	free(SaturnMem);
 	SaturnMem = NULL;
 
@@ -1034,7 +960,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 //	GenericTilesExit();
 	return 0;
 }
-int vbtvbt=0;
+
 // ajouter srcxmask en param
 /*static*/void draw_background_test2_no_color(/*UINT32 *srcmask,*/ UINT8 *ss_map264,UINT8 *zaxxon_bg_pixmap,unsigned int yoffset)
 {
@@ -1062,8 +988,8 @@ vbt> thanks for help & good night =)
 
 INT32 find_minimum_y(UINT8 value)
 {
-	INT32 flipmask = *zaxxon_flipscreen ? 0xff : 0x00;
-	INT32 flipconst = *zaxxon_flipscreen ? 0xef : 0xf1;
+	INT32 flipmask = 0x00;//*zaxxon_flipscreen ? 0xff : 0x00;
+	INT32 flipconst = 0xf1;//*zaxxon_flipscreen ? 0xef : 0xf1;
 	INT32 y;
 
 	/* first find a 16-pixel bucket where we hit */
@@ -1090,7 +1016,7 @@ INT32 find_minimum_y(UINT8 value)
 
 int find_minimum_x(UINT8 value)
 {
-	INT32 flipmask = *zaxxon_flipscreen ? 0xff : 0x00;
+	INT32 flipmask = zaxxon_flipscreen ? 0xff : 0x00;
 	INT32 x;
 
 	/* the sum of the X position plus a constant specifies the address within */
@@ -1130,6 +1056,12 @@ int find_minimum_x(UINT8 value)
 		}
 		++j;
 	}
+	ss_sprite[j].control = CTRL_END;
+	ss_sprite[j].drawMode = 0;
+	ss_sprite[j].charAddr	= 0;
+	ss_sprite[j].charSize		= 0;
+	ss_sprite[j].ax	= 0;
+	ss_sprite[j].ay	= 0;
 }
 
 /*static*/int DrvDraw()
@@ -1142,14 +1074,12 @@ int find_minimum_x(UINT8 value)
 	}
 	else
 	{
-//		memset4_fast(bitmap+0xE80,0x10101010,0xD240);
-		memset4_fast(bitmap+0xE80,0x10101010,0xC400);
+		memset4_fast(bitmap+0xE80,0x10101010,0xCA00);
 	}
-//	draw_sprites(0x140, 0x180);
+//	draw_sprites(); //0x140, 0x180);
 	copyBitmap();
 
 	SPR_WaitEndSlaveSH();
-	
 	return 0;
 }
 
@@ -1455,52 +1385,6 @@ void nprinces_decode()
 
 	return DrvInit();
 }
-
-/*static*/int CongoInit()
-{
-
-	DrvInitSaturn();
-
-	hardware_type = 2;
-	futspy_sprite = 1;
-
-	AllMem = NULL;
-	MemIndex();
-	int nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
-
-	{
-		for (int i = 0; i < 4; i++) {
-			if (BurnLoadRom(DrvZ80ROM  + i * 0x2000,  0 + i, 1)) return 1;
-		}
-
-		for (int i = 0; i < 3; i++) {
-			if (BurnLoadRom(DrvGfxROM1 + i * 0x2000,  6 + i, 1)) return 1;
-		}
-
-		for (int i = 0; i < 6; i++) {
-			if (BurnLoadRom(DrvGfxROM2 + i * 0x2000,  9 + i, 1)) return 1;
-		}
-
-		for (int i = 0; i < 2; i++) {
-			if (BurnLoadRom(DrvGfxROM3 + i * 0x2000, 15 + i, 1)) return 1;
-		}
-
-		if (BurnLoadRom(DrvZ80ROM2 ,  4, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM0,  5, 1)) return 1;
-		if (BurnLoadRom(DrvColPROM, 17, 1)) return 1;
-		if (BurnLoadRom(DrvColPROM + 0x100, 17, 1)) return 1;
-
-		DrvGfxDecode();
-		DrvPaletteInit(0x100);
-		bg_layer_init();
-	}
-	DrvDoReset();
-
-	return 0;
-}
 //-------------------------------------------------------------------------------------------------------------------------------------
 // el piratero : utilise dma_scu et retester !
 void copyBitmap()
@@ -1509,9 +1393,9 @@ void copyBitmap()
 //	memcpyl(DrvGfxROM2+0x00010000,bitmap,0x10000);
 //	DMA_CpuMemCopy1(ss_map+264,bitmap,0x1C000);
 //	DMA_ScuMemCopy(DrvGfxROM2+0x00010000,bitmap+0xE80,0xD240);
-	DMA_ScuMemCopy(DrvGfxROM2+0x00010000,bitmap+0xE80,0xC400);
-//memcpyl(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCB00);
+	DMA_ScuMemCopy(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCA00);
 	while(DMA_ScuResult()==2);
+//	memcpyl(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCA00);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void initLayers()
@@ -1630,7 +1514,7 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	congo_color_bank	= Next; Next += 0x000001;
 	congo_fg_bank		= Next; Next += 0x000001;
 	congo_custom		= Next; Next += 0x000004;
-	zaxxon_flipscreen	= Next; Next += 0x000001;
+//	zaxxon_flipscreen	= Next; Next += 0x000001;
 	zaxxon_coin_enable	= Next; Next += 0x000004;
 	zaxxon_coin_status	= Next; Next += 0x000004;
 	zaxxon_coin_last	= Next; Next += 0x000004;
@@ -1663,7 +1547,7 @@ void DrvInitSaturn()
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
 
-	nBurnSprites = 35;
+	nBurnSprites = 36;
 
 	SS_SET_N0PRIN(7);
 	SS_SET_S0PRIN(4);
@@ -1676,40 +1560,23 @@ void DrvInitSaturn()
 	initPosition();
 	initColors();	
 	SaturnInitMem();
-	int nLen = MemEnd - AllMem;
+	int nLen = MemEnd - (UINT8 *)0;
 
 	SaturnMem = (UINT8 *)malloc(nLen);
 	if(SaturnMem==NULL)
 	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc SaturnMem failed",4,80);
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc SaturnMem failed",4,50);
 		return 1;
 	}
 
 	SaturnInitMem();
-	memset(AllMem, 0, nLen);
 	memset(CZ80Context,0x00,0x1080);
 
-/*
-	srcxmask = malloc(sizeof(UINT32 **) * 120);
-	for(int i = 0;i < 120;i++) 
-		srcxmask[i] = malloc(sizeof(UINT32 *) * 256);
-*/
 	make_lut();
 //3 nbg
-
 	initSprites(256-1,256-1,0,0,0,0);  //les deux derniers => delta
-//initSprites(256-1,240-1,16,0,0,0);  //les deux derniers => delta
-		/* the starting X value is offset by 1 pixel (normal) or 7 pixels */
-		/* (flipped) due to a delay in the loading */
 
-//	ss_map264 = ((UINT8 *)bitmap) + (247);
-//	ss_map264 = ((UINT8 *)bitmap)+ (247)+0xE80-224;// + (247);
-//	ss_map264 = ((UINT8 *)bitmap)+ (247)+0xE80-225;// + (247);
 	ss_map264 = ((UINT8 *)bitmap)+ (247)+0xE80-225;// + (247);
-
-//	ss_map264 = ((UINT8 *)bitmap)+ (247)+0xE80-224;// + (247);
-//	ss_sprite[3].ax = 16;
-//	ss_sprite[3].ay = -15;
 
 	ss_sprite[3].color          = 0x400;
 	ss_sprite[3].charAddr    = 0x2220;// 0x2000 => 0x80 sprites <<6
@@ -1720,64 +1587,33 @@ void DrvInitSaturn()
 //	ss_sprite[3].charSize    = 0x1EE8;  // 232x*224y
 	ss_sprite[3].charSize    = 0x1EE0;  // 224x*224y
 
-	ss_sprite[3].ax = 16;
-	ss_sprite[3].ay = 0; //-15
+//	ss_sprite[3].ax = 16;
+//	ss_sprite[3].ay = 0; //-15
 
-//   b devient a
-//   c devient b
-//   d devient c
-//	a devient d
-/*		ss_sprite[3].ax			= 0;
-		ss_sprite[3].ay			= 256;
-		ss_sprite[3].bx			= 232;
-		ss_sprite[3].by			= 256;
-		ss_sprite[3].cx			= 232;
-		ss_sprite[3].cy			= 0;
-		ss_sprite[3].dx			= 0;
-		ss_sprite[3].dy			= 0;
-/
-/*
-		ss_sprite[3].dx			= 0;
-		ss_sprite[3].dy			= 256;
-		ss_sprite[3].ax			= 232;
-		ss_sprite[3].ay			= 256;
-		ss_sprite[3].bx			= 232;
-		ss_sprite[3].by			= 0;
-		ss_sprite[3].cx			= 0;
-		ss_sprite[3].cy			= 0;
- */
- // a => b
- // c=> d
-/* 		ss_sprite[3].bx			= 16+240-1;
-		ss_sprite[3].by			= -25+232;
-		ss_sprite[3].ax			= 16+240-1;
-		ss_sprite[3].ay			= -25+0;
-		ss_sprite[3].dx			= 16+0;
-		ss_sprite[3].dy			= -25+0;
- 		ss_sprite[3].cx			= 16+0;
-		ss_sprite[3].cy			= -25+232;
-*/
-
- 		ss_sprite[3].bx			= 223+16;
-		ss_sprite[3].by			= 239-31;
-		ss_sprite[3].ax			= 223+16;
-		ss_sprite[3].ay			= 0-31;
-		ss_sprite[3].dx			= 0+16;
-		ss_sprite[3].dy			= 0-31;
- 		ss_sprite[3].cx			= 0+16;
-		ss_sprite[3].cy			= 239-31;
-
-
+	ss_sprite[3].bx			= 223+16;
+	ss_sprite[3].by			= 239-31;
+	ss_sprite[3].ax			= 223+16;
+	ss_sprite[3].ay			= 0-31;
+	ss_sprite[3].dx			= 0+16;
+	ss_sprite[3].dy			= 0-31;
+	ss_sprite[3].cx			= 0+16;
+	ss_sprite[3].cy			= 239-31;
 
 	for (unsigned int j = 4; j<nBurnSprites; ++j)
 	{
-		ss_sprite[j].control      = ( JUMP_NEXT | FUNC_NORMALSP ); // | DIR_LRTBREV); // | flip);
+		ss_sprite[j].control      = ( JUMP_NEXT | FUNC_NORMALSP);
 		ss_sprite[j].drawMode= ( ECD_DISABLE | COMPO_REP);		
-		ss_sprite[j].charSize   = 0x420;  // 32*32
+		ss_sprite[j].charSize   = 0x420;
 	}
-//	nBurnFunction = copyBitmap;
 
-	drawWindow(0,240,0,6,66);
+    ss_sprite[nBurnSprites-1].control			= CTRL_END;
+    ss_sprite[nBurnSprites-1].link				= 0;        
+    ss_sprite[nBurnSprites-1].drawMode	= 0;                
+    ss_sprite[nBurnSprites-1].color			= 0;                
+    ss_sprite[nBurnSprites-1].charAddr		= 0;                
+    ss_sprite[nBurnSprites-1].charSize		= 0;
+
+	drawWindow(0,240,0,4,68);
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------

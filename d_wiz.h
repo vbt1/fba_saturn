@@ -45,7 +45,7 @@ static UINT8 *DrvSprRAM0;
 static UINT8 *DrvSprRAM1;
 
 static UINT16 *DrvPalette;
-static UINT8 DrvRecalc;
+//static UINT8 DrvRecalc;
 
 static UINT8 *soundlatch;
 static UINT8 *sprite_bank;
@@ -58,12 +58,11 @@ static UINT8 *background_color;
 static INT16* pFMBuffer = NULL;
 static INT16* pAY8910Buffer[9];
 
-static UINT8 DrvInputs[2];
-static UINT8 DrvJoy1[8];
-static UINT8 DrvJoy2[8];
-static UINT8 DrvDips[2];
-static UINT8 DrvReset;
-
+static UINT8 DrvInputs[2] = {0,0};
+static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvDips[2] = {0,0};
+static UINT8 DrvReset = 0;
 static UINT8 Wizmode = 0;
 static UINT8 Scionmodeoffset = 0;
 

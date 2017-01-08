@@ -10,14 +10,14 @@ int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvbankp	 = {
 	"bankp", NULL, 
-	"Bank Panic\0",  
+	"Bank Panic",  
 	bankpRomInfo, bankpRomName, bankpInputInfo, bankpDIPInfo,
 	DrvInit, DrvBpExit, DrvFrame, NULL//, NULL, 
 	};
 
 	struct BurnDriver nBurnDrvcombh = {
 	"combh", "bankp", 
-	"Combat Hawk\0",
+	"Combat Hawk",
 	combhRomInfo, combhRomName, combhInputInfo, combhDIPInfo,
 	DrvChInit, DrvBpExit, DrvFrame, NULL//, NULL
 	};
@@ -558,7 +558,7 @@ static void DrvInitSaturn()
 	CZetExit();
 #endif	
 //	SN76496Exit();
- 
+
 	MemEnd = Rom  = 	Gfx0 = Gfx1 = Prom = NULL;
 	Palette = NULL;
 	 map_offset_lut = /*bg_dirtybuffer = fg_dirtybuffer =*/ NULL;
@@ -566,10 +566,7 @@ static void DrvInitSaturn()
 	free(Mem);
 	Mem = NULL;
 
-//	layer_delta = 0;
-//	free(SaturnMem);
-//	SaturnMem = NULL;
-	DrvDips = priority = flipscreen = interrupt_enable = 0;
+	DrvReset = DrvDips = priority = flipscreen = interrupt_enable = 0;
 
 	return 0;
 }

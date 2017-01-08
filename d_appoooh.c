@@ -144,6 +144,7 @@ static INT32 MemIndex()
 	DrvColPROM		= Next; Next += 0x00220;
 	DrvSoundROM	    = Next; Next += 0x0a000;
 //	DrvSoundROM	= (UINT8*)0x2F6000;
+	CZ80Context		= Next; Next += 0x1080;
 	DrvPalette        = (UINT16*)colBgAddr;
 	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 
@@ -605,7 +606,7 @@ static INT32 DrvCommonInit()
 {
 	nCyclesTotal = 3072000;
 
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 
 	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM + 0x0000);
@@ -740,6 +741,8 @@ static INT32 DrvRobowresInit()
 	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
+	memset(CZ80Context,0x00,0x1080);
+
 	if(DrvRobowresLoadRoms()) return 1;
 		
  	sega_decode_315( DrvMainROM, DrvFetch );
@@ -765,6 +768,8 @@ static INT32 DrvInit()
 	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
+	memset(CZ80Context,0x00,0x1080);
+
 	if(DrvLoadRoms()) return 1;
 	DrvPaletteInit();
 	DrvGfxDecode();
@@ -891,11 +896,23 @@ static void DrvInitSaturn()
 static INT32 DrvExit()
 {
 	SPR_InitSlaveSH();
-	CZetExit();
+	CZetExit2();
 
 	MSM5205Exit();
 
+	MemEnd = AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
+	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvGfxROM0 = DrvGfxROM1 = NULL;
+	DrvGfxROM2 = DrvGfxROM3 = DrvGfxTMP0 = DrvGfxTMP1 = DrvColPROM = DrvMainROM = NULL;
+	DrvSoundROM = DrvFetch = CZ80Context = NULL;
+	DrvPalette = map_offset_lut = charaddr_lut = NULL;
+
 	free (AllMem);
+	AllMem = NULL;
+
+	DrvReset = scroll_x = flipscreen = priority = interrupt_enable = 0;
+	adpcm_data = adpcm_address = 0;
+	nCyclesTotal = game_select = 0;
+	DrvZ80Bank0 = 0;
 
 	return 0;
 }

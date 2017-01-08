@@ -407,6 +407,7 @@ static int DrvInit()
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
+	memset(CZ80Context,0x00,0x1080);
 
 	#ifndef RAZE
 	CZetInit2(1,CZ80Context);

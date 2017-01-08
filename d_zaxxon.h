@@ -54,12 +54,12 @@ static UINT8 *CZ80Context = NULL;
 
 /*static*/ //UINT8 DrvRecalc;
 
-static UINT8 DrvJoy1[8];
-static UINT8 DrvJoy2[8];
-static UINT8 DrvJoy3[8];
-static UINT8 DrvJoy4[8];
-static UINT8 DrvDips[2];
-static UINT8 DrvInputs[8];
+static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy4[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvDips[2] = {0,0};
+static UINT8 DrvInputs[8] = {0,0,0,0,0,0,0,0};
 static UINT8 DrvReset = 0;
 
 
@@ -69,7 +69,7 @@ static UINT8 *zaxxon_fg_color = NULL;
 static UINT8 *zaxxon_bg_color = NULL;
 static UINT8 *zaxxon_bg_enable = NULL;
 static UINT32  zaxxon_bg_scroll = 0;
-static UINT8 *zaxxon_flipscreen = NULL;
+static UINT8 zaxxon_flipscreen = 0;
 static UINT8 *zaxxon_coin_enable = NULL;
 static UINT8 *zaxxon_coin_status = NULL;
 static UINT8 *zaxxon_coin_last = NULL;

@@ -1024,11 +1024,19 @@ static INT32 DrvExit()
 	CZetExit();
 //	SN76496Exit();
 	ppi8255_exit();
-	BurnFree (AllMem);
+
+	MemEnd = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
+	DrvVidRAM = DrvSprRAM = DrvColRAM = DrvGfxROM0 = DrvGfxROM1 = DrvGfxTMP0 =DrvGfxTMP1 = DrvColPROM = NULL;
+//	MC8123Key = NULL;
+	DrvPalette = map_offset_lut = NULL;
+	free (AllMem);
+	AllMem = NULL;
 
 	countrunbmode = 0;
 	pbillrdmode = 0;
 	use_encrypted = 0;
+	DrvZ80Bank0 = 0;
+	DrvReset = 0;
 
 	return 0;
 }

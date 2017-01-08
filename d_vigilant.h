@@ -42,6 +42,7 @@ int DrvFrame();
 /*static*/unsigned char *DrvSamples          = NULL;
 /*static*/unsigned char *DrvTempRom          = NULL;
 /*static*/unsigned int  *DrvPalette          = NULL;
+unsigned char *CZ80Context          = NULL;
 
 /*static*/unsigned char DrvRomBank;
 /*static*/unsigned char DrvSoundLatch;

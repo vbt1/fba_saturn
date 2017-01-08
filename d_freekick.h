@@ -28,7 +28,7 @@ static INT16 DrvDial1;
 static INT16 DrvDial2;
 static UINT8 DrvReset;
 
-static UINT8 DrvRecalc;
+//static UINT8 DrvRecalc;
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -46,7 +46,7 @@ static UINT8 *DrvGfxROM1;
 static UINT8 *DrvGfxTMP0;
 static UINT8 *DrvGfxTMP1;
 static UINT8 *DrvColPROM;
-static UINT8 *MC8123Key;
+//static UINT8 *MC8123Key;
 static UINT16 *DrvPalette;
 static UINT8 DrvZ80Bank0;
 typedef void (*RenderSprite)(INT32);

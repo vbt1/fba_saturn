@@ -7,6 +7,8 @@
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvInit();
+static INT32 DrvFMInit();
+static INT32 DrvFMFrame();
 static INT32 DrvExit();
 static INT32 DrvFrame();
 static INT32 DrvDraw();

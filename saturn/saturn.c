@@ -373,8 +373,8 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-	unsigned char *Mem = malloc((unsigned char *)0x84000);
-	memset(Mem,0x00,0x84000);
+	unsigned char *Mem = malloc((unsigned char *)0x86000);
+	memset(Mem,0x00,0x86000);
 	free(Mem);
 	Mem=NULL;
 
@@ -472,7 +472,7 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 					loaded[0] = 0;
 					modified[0] = 1;
 
-	 //heapWalk();
+	 heapWalk();
 
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
@@ -504,7 +504,7 @@ static void display_menu(void)
 //	sc_init();
 //	the_loop = 1;
 
-	//heapWalk();
+	heapWalk();
 
 	unsigned int current_page = 1,m;
 	unsigned char modified = 1;
@@ -1150,7 +1150,10 @@ Uint8 SND_ChgMap(Uint8 area_no)
 static void sndInit(void)
 {
 	SndIniDt 	snd_init;
-	unsigned char sound_map[]={0xFF,0xFF};
+//	unsigned char sound_map[]={0xFF,0xFF};
+//	unsigned char sound_map[]={ 0x00, 0x00, 0xB0, 0x00, 0x00, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+// 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x00 0x00, 0x07 0x4D, 0x8C, 0xFF, 0xFF                ......M...
+unsigned char sound_map[]={ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x00, 0x00, 0x07, 0x4D, 0x8C, 0xFF, 0xFF };
 
 #ifndef ACTION_REPLAY
 	GFS_Load(GFS_NameToId(SDDRV_NAME),0,(void *)SDDRV_ADDR,SDDRV_SIZE);
@@ -1386,7 +1389,8 @@ static int DoInputBlank(int bDipSwitch)
 		{
 			DIPInfo.nFirstDIP = i;
 			DIPInfo.nDIP = nGameInpCount - i;
-			DIPInfo.DIPData = (struct GameInp *)malloc(DIPInfo.nDIP * sizeof(struct GameInp));
+			if (DIPInfo.DIPData== NULL)
+				DIPInfo.DIPData = (struct GameInp *)malloc(DIPInfo.nDIP * sizeof(struct GameInp));
 			memset(DIPInfo.DIPData,0,DIPInfo.nDIP * sizeof(struct GameInp));
 		}
 		DIPInfo.DIPData[i-DIPInfo.nFirstDIP].pVal = bii.pVal;
@@ -1517,10 +1521,11 @@ void InpExit()
 {
 //  bInputOk = false;
 //  nGameInpCount = 0;
-  if (DIPInfo.nDIP)
+  if (DIPInfo.nDIP!=NULL)
 	{
 	memset(DIPInfo.DIPData,0,DIPInfo.nDIP * sizeof(struct GameInp));
-	free (DIPInfo.DIPData);
+		if (DIPInfo.DIPData!=NULL)
+			free (DIPInfo.DIPData);
 	}
 	nGameInpCount = 0;
   DIPInfo.DIPData=NULL;
@@ -1922,7 +1927,7 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 	SPR_WRITE_REG(SPR_W_TVMR, 0x0007 & SPR_TV_NORMAL);//SPR_TV_ROT8);//SPR_TV_NORMAL);
 	SPR_SetEraseData( 0x0000, 0, 0, sx, sy );
 
-	memset(smsSprite,0,sizeof(SprSpCmd)*131);
+	memset(smsSprite,0,sizeof(SprSpCmd)*259);
     smsSprite[0].control    = (JUMP_NEXT | FUNC_SCLIP);
 
     smsSprite[0].ax         = sx2;
@@ -2005,7 +2010,7 @@ int vspfunc(char *format, ...)
 */
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-#if 0
+#if 1
 extern UINT32  end;
 extern UINT32  __malloc_free_list;
 extern UINT32  _sbrk(int size);
@@ -2022,8 +2027,8 @@ void heapWalk(void)
     
 //    printf("Heap Size: %lu\n", heapEnd - chunkCurr);
     char toto[200];
-	sprintf (toto,"Heap Size: %d  e%08x s%08x                     \n", heapEnd - chunkCurr,heapEnd, chunkCurr) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,216);
+//	sprintf (toto,"Heap Size: %d  e%08x s%08x                     \n", heapEnd - chunkCurr,heapEnd, chunkCurr) ;
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,216);
 
     // Walk through the chunks until we hit the end of the heap.
     while (chunkCurr < heapEnd)

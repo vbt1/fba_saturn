@@ -134,7 +134,7 @@ static void DrvInitSaturn()
 	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
-	nBurnSprites  = 24+3;//27;
+	nBurnSprites  = 24+4;//27;
 
 	SS_FONT        = ss_font     =(Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_MAP          = ss_map    =(Uint16 *)SCL_VDP2_VRAM_A1+0x08000;
@@ -159,6 +159,14 @@ static void DrvInitSaturn()
 	initColors();
 	make_lut();
 	initSprites(256-1,240-1,0,0,7,0);
+
+    ss_sprite[nBurnSprites-1].control			= CTRL_END;
+    ss_sprite[nBurnSprites-1].link				= 0;        
+    ss_sprite[nBurnSprites-1].drawMode	= 0;                
+    ss_sprite[nBurnSprites-1].color			= 0;                
+    ss_sprite[nBurnSprites-1].charAddr		= 0;                
+    ss_sprite[nBurnSprites-1].charSize		= 0;
+
 	nBurnFunction = CalcAll;
 	drawWindow(0,240,0,6,66); 
 }

@@ -4354,6 +4354,21 @@ EndFile
 				EndFile
 			EndDirectory
 
+			Directory FM
+				File TONE1.BIN;1
+					Source FM\TONE17.BIN
+				EndFile
+				File TONE.BIN;1
+					Source FM\TONE.BIN
+				EndFile
+;				File MAP.BIN;1
+;					Source FM\MAP.BIN
+;				EndFile
+				File    SDDRVS.TSK;1
+					Source SDDRVS.TSK
+				EndFile
+			EndDirectory
+
 ;			Directory CUBYBOP
 ;				File CB06.6;1
 ;					Source CUBYBOP\CB06.6

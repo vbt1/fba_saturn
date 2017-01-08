@@ -129,28 +129,6 @@ void 	 bg_line(UINT16 offs,UINT8 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void __fastcall wiz_main_write(UINT16 address, UINT8 data)
 {
-/*	if(address >= 0xd000 && address <=0xd3ff)
-	{
-		address &= 0x3ff;
-		if(DrvVidRAM1[address]!=data)
-		{
-			DrvVidRAM1[address]=data;
-			fg_line(address, data);
-		}
-		return;
-	}
-
-	if(address >= 0xe000 && address <=0xe3ff)
-	{
-		address &= 0x3ff;
-		if(DrvVidRAM0[address]!=data)
-		{
-			DrvVidRAM0[address]=data;
-			bg_line(address, data);
-		}
-		return;
-	}
- */
 	switch (address)
 	{
 		case 0xc800:
@@ -179,7 +157,6 @@ void __fastcall wiz_main_write(UINT16 address, UINT8 data)
 		case 0xf007: // y
 			screen_flip[address & 1] = data;
 			//bprintf(PRINT_NORMAL, _T("address %04d screen_flip %04d\n"),address,data );
-
 		return;
 
 		case 0xf008:
@@ -245,7 +222,6 @@ UINT8 __fastcall wiz_main_read(UINT16 address)
 					return 0x00;
 			}
 		}
-
 		return DrvColRAM1[address & 0x3ff];
 	}
 
@@ -458,6 +434,7 @@ static void DrvGfxDecode(UINT32 type, int rotated)
 	//free (tmp0);
 	tmp0=NULL;
 	free (tmp1);
+	tmp1 = NULL;
 }
 
 static INT32 WizLoadRoms()
@@ -832,14 +809,32 @@ static void make_lut(int rotated)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
 {
+	nSoundBufferPos=0;
+	SPR_InitSlaveSH();
 #ifdef RAZE0
 	z80_stop_emulating();
 #endif
+#ifdef RAZE1
+	z80_stop_emulating();
+	z80_map_fetch	(0x0000,0x1fff,(void *)NULL); 
+	z80_map_read	(0x0000,0x1fff,(void *)NULL);  
+	z80_map_fetch	(0x2000,0x23ff,(void *)NULL); 
+	z80_map_read	(0x2000,0x23ff,(void *)NULL);  
+	z80_map_write	(0x2000,0x23ff,(void *)NULL);
+	
+	z80_add_write(0x4000, 0x400f, 1, (void *)NULL);
+	z80_add_write(0x5000, 0x500f, 1, (void *)NULL);
+	z80_add_write(0x6000, 0x600f, 1, (void *)NULL);
+	z80_add_write(0x7000, 0x700f, 1, (void *)NULL);
+
+	z80_add_read(0x3000, 0x300f, 1, (void *)NULL);
+	z80_add_read(0x7000, 0x700f, 1, (void *)NULL);
+#endif	
 	CZetExit();
 
-	AY8910Exit(0);
-	AY8910Exit(1);
 	AY8910Exit(2);
+	AY8910Exit(1);
+	AY8910Exit(0);
 
 	for (int i = 0; i < 9; i++) {
 		pAY8910Buffer[i] = NULL;
@@ -847,9 +842,17 @@ static INT32 DrvExit()
 
 	pFMBuffer = NULL;
 
+	MemEnd = AllRam = RamEnd = DrvZ80ROM0 = DrvZ80Dec = DrvZ80ROM1 = DrvGfxROM0 = NULL;
+	DrvGfxROM0b = DrvGfxROM1 = DrvColPROM = DrvZ80RAM0 = DrvZ80RAM1 = DrvVidRAM0 = NULL;
+	DrvVidRAM1 = DrvColRAM0  = DrvColRAM1 = DrvSprRAM0 = DrvSprRAM1 = NULL;
+
+	soundlatch = sprite_bank = interrupt_enable = palette_bank = char_bank_select = screen_flip = background_color = NULL;
+	DrvPalette = NULL;
+
 	free(AllMem);
 	AllMem = NULL;
 
+	DrvReset  = 0;
 	Wizmode = 0;
 	Scionmodeoffset = 0;
 

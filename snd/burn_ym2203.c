@@ -2,8 +2,9 @@
 #include "../burn_sound.h"
 #include "burn_ym2203.h"
 #include "timer.h"
-#define MAX_YM2203	3
+#define MAX_YM2203	2
 
+extern unsigned int  nSoundBufferPos;
 INT32 nBurnFPS = 6000;
 extern double dTime;
 
@@ -26,11 +27,11 @@ static INT32 nNumChips = 0;
 
 static INT32 bYM2203AddSignal;
 
-static double YM2203Volumes[4 * MAX_YM2203];
-static INT32 YM2203RouteDirs[4 * MAX_YM2203];
+//static double YM2203Volumes[4 * MAX_YM2203];
+//static INT32 YM2203RouteDirs[4 * MAX_YM2203];
 
-static double YM2203LeftVolumes[4 * MAX_YM2203];
-static double YM2203RightVolumes[4 * MAX_YM2203];
+//static double YM2203LeftVolumes[4 * MAX_YM2203];
+//static double YM2203RightVolumes[4 * MAX_YM2203];
 
 INT32 bYM2203UseSeperateVolumes; // support custom Taito panning hardware
 
@@ -319,6 +320,7 @@ static void YM2203UpdateResample(INT16* pSoundBuf, INT32 nSegmentEnd)
 */
 static void YM2203UpdateNormal(INT16* pSoundBuf, INT32 nSegmentEnd)
 {
+
 #if defined FBA_DEBUG
 	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("YM2203UpdateNormal called without init\n"));
 #endif
@@ -337,9 +339,10 @@ static void YM2203UpdateNormal(INT16* pSoundBuf, INT32 nSegmentEnd)
 		nSegmentLength = nBurnSoundLen;
 	}
 
-	YM2203Render(nSegmentEnd);
-	AY8910Render(nSegmentEnd);
+//	YM2203Render(nSegmentEnd);
+//	AY8910Render(nSegmentEnd);
 
+#if 0
 	pYM2203Buffer[0] = pBuffer + 4 + 0 * 4096;
 	pYM2203Buffer[1] = pBuffer + 4 + 1 * 4096;
 	pYM2203Buffer[2] = pBuffer + 4 + 2 * 4096;
@@ -350,13 +353,13 @@ static void YM2203UpdateNormal(INT16* pSoundBuf, INT32 nSegmentEnd)
 		pYM2203Buffer[6] = pBuffer + 4 + 6 * 4096;
 		pYM2203Buffer[7] = pBuffer + 4 + 7 * 4096;
 	}
-	if (nNumChips > 2) {
+/*	if (nNumChips > 2) {
 		pYM2203Buffer[8] = pBuffer + 4 + 8 * 4096;
 		pYM2203Buffer[9] = pBuffer + 4 + 9 * 4096;
 		pYM2203Buffer[10] = pBuffer + 4 + 10 * 4096;
 		pYM2203Buffer[11] = pBuffer + 4 + 11 * 4096;
 	}
-
+*/
 	for (INT32 n = nFractionalPosition; n < nSegmentLength; n++) {
 		INT32 nLeftSample = 0, nRightSample = 0;
 /*		
@@ -511,6 +514,7 @@ static void YM2203UpdateNormal(INT16* pSoundBuf, INT32 nSegmentEnd)
 //			pSoundBuf[(n << 1) + 1] = nRightSample;
 		}
 	}
+#endif
 
 	nFractionalPosition = nSegmentLength;
 
@@ -629,20 +633,6 @@ INT32 BurnYM2203Init(INT32 num, INT32 nClockFrequency, FM_IRQHANDLER IRQCallback
 	}
 
 	BurnYM2203StreamCallback = StreamCallback;
-/*
-	if (nFMInterpolation == 3) {
-		// Set YM2203 core samplerate to match the hardware
-		nBurnYM2203SoundRate = nClockFrequency >> 6;
-		// Bring YM2203 core samplerate within usable range
-		while (nBurnYM2203SoundRate > nBurnSoundRate * 3) {
-			nBurnYM2203SoundRate >>= 1;
-		}
-
-		BurnYM2203Update = YM2203UpdateResample;
-		nSampleSize = (UINT32)nBurnYM2203SoundRate * (1 << 16) / nBurnSoundRate;
-
-   } else
-*/
 	{
 		nBurnYM2203SoundRate = nBurnSoundRate;
 		BurnYM2203Update = YM2203UpdateNormal;
@@ -668,133 +658,58 @@ INT32 BurnYM2203Init(INT32 num, INT32 nClockFrequency, FM_IRQHANDLER IRQCallback
 	
 	nNumChips = num;
 	bYM2203AddSignal = bAddSignal;
-	
-	// default routes
-	YM2203Volumes[BURN_SND_YM2203_YM2203_ROUTE] = 1.00;
-	YM2203Volumes[BURN_SND_YM2203_AY8910_ROUTE_1] = 1.00;
-	YM2203Volumes[BURN_SND_YM2203_AY8910_ROUTE_2] = 1.00;
-	YM2203Volumes[BURN_SND_YM2203_AY8910_ROUTE_3] = 1.00;
-	YM2203RouteDirs[BURN_SND_YM2203_YM2203_ROUTE] = BURN_SND_ROUTE_BOTH;
-	YM2203RouteDirs[BURN_SND_YM2203_AY8910_ROUTE_1] = BURN_SND_ROUTE_BOTH;
-	YM2203RouteDirs[BURN_SND_YM2203_AY8910_ROUTE_2] = BURN_SND_ROUTE_BOTH;
-	YM2203RouteDirs[BURN_SND_YM2203_AY8910_ROUTE_3] = BURN_SND_ROUTE_BOTH;
-	
-	bYM2203UseSeperateVolumes = 0;
-	YM2203LeftVolumes[BURN_SND_YM2203_YM2203_ROUTE] = 1.00;
-	YM2203LeftVolumes[BURN_SND_YM2203_AY8910_ROUTE_1] = 1.00;
-	YM2203LeftVolumes[BURN_SND_YM2203_AY8910_ROUTE_2] = 1.00;
-	YM2203LeftVolumes[BURN_SND_YM2203_AY8910_ROUTE_3] = 1.00;
-	YM2203RightVolumes[BURN_SND_YM2203_YM2203_ROUTE] = 1.00;
-	YM2203RightVolumes[BURN_SND_YM2203_AY8910_ROUTE_1] = 1.00;
-	YM2203RightVolumes[BURN_SND_YM2203_AY8910_ROUTE_2] = 1.00;
-	YM2203RightVolumes[BURN_SND_YM2203_AY8910_ROUTE_3] = 1.00;	
-	
-	if (nNumChips > 1) {
-		YM2203Volumes[4 + BURN_SND_YM2203_YM2203_ROUTE] = 1.00;
-		YM2203Volumes[4 + BURN_SND_YM2203_AY8910_ROUTE_1] = 1.00;
-		YM2203Volumes[4 + BURN_SND_YM2203_AY8910_ROUTE_2] = 1.00;
-		YM2203Volumes[4 + BURN_SND_YM2203_AY8910_ROUTE_3] = 1.00;
-		YM2203RouteDirs[4 + BURN_SND_YM2203_YM2203_ROUTE] = BURN_SND_ROUTE_BOTH;
-		YM2203RouteDirs[4 + BURN_SND_YM2203_AY8910_ROUTE_1] = BURN_SND_ROUTE_BOTH;
-		YM2203RouteDirs[4 + BURN_SND_YM2203_AY8910_ROUTE_2] = BURN_SND_ROUTE_BOTH;
-		YM2203RouteDirs[4 + BURN_SND_YM2203_AY8910_ROUTE_3] = BURN_SND_ROUTE_BOTH;
-		
-		YM2203LeftVolumes[4 + BURN_SND_YM2203_YM2203_ROUTE] = 1.00;
-		YM2203LeftVolumes[4 + BURN_SND_YM2203_AY8910_ROUTE_1] = 1.00;
-		YM2203LeftVolumes[4 + BURN_SND_YM2203_AY8910_ROUTE_2] = 1.00;
-		YM2203LeftVolumes[4 + BURN_SND_YM2203_AY8910_ROUTE_3] = 1.00;
-		YM2203RightVolumes[4 + BURN_SND_YM2203_YM2203_ROUTE] = 1.00;
-		YM2203RightVolumes[4 + BURN_SND_YM2203_AY8910_ROUTE_1] = 1.00;
-		YM2203RightVolumes[4 + BURN_SND_YM2203_AY8910_ROUTE_2] = 1.00;
-		YM2203RightVolumes[4 + BURN_SND_YM2203_AY8910_ROUTE_3] = 1.00;	
-	}
-	
-	if (nNumChips > 2) {
-		YM2203Volumes[8 + BURN_SND_YM2203_YM2203_ROUTE] = 1.00;
-		YM2203Volumes[8 + BURN_SND_YM2203_AY8910_ROUTE_1] = 1.00;
-		YM2203Volumes[8 + BURN_SND_YM2203_AY8910_ROUTE_2] = 1.00;
-		YM2203Volumes[8 + BURN_SND_YM2203_AY8910_ROUTE_3] = 1.00;
-		YM2203RouteDirs[8 + BURN_SND_YM2203_YM2203_ROUTE] = BURN_SND_ROUTE_BOTH;
-		YM2203RouteDirs[8 + BURN_SND_YM2203_AY8910_ROUTE_1] = BURN_SND_ROUTE_BOTH;
-		YM2203RouteDirs[8 + BURN_SND_YM2203_AY8910_ROUTE_2] = BURN_SND_ROUTE_BOTH;
-		YM2203RouteDirs[8 + BURN_SND_YM2203_AY8910_ROUTE_3] = BURN_SND_ROUTE_BOTH;
-		
-		YM2203LeftVolumes[8 + BURN_SND_YM2203_YM2203_ROUTE] = 1.00;
-		YM2203LeftVolumes[8 + BURN_SND_YM2203_AY8910_ROUTE_1] = 1.00;
-		YM2203LeftVolumes[8 + BURN_SND_YM2203_AY8910_ROUTE_2] = 1.00;
-		YM2203LeftVolumes[8 + BURN_SND_YM2203_AY8910_ROUTE_3] = 1.00;
-		YM2203RightVolumes[8 + BURN_SND_YM2203_YM2203_ROUTE] = 1.00;
-		YM2203RightVolumes[8 + BURN_SND_YM2203_AY8910_ROUTE_1] = 1.00;
-		YM2203RightVolumes[8 + BURN_SND_YM2203_AY8910_ROUTE_2] = 1.00;
-		YM2203RightVolumes[8 + BURN_SND_YM2203_AY8910_ROUTE_3] = 1.00;	
-	}
 
 	return 0;
 }
-
-void BurnYM2203SetRoute(INT32 nChip, INT32 nIndex, double nVolume, INT32 nRouteDir)
+//-------------------------------------------------------------------------------------------------
+/*static*/ void updateAY8910Sound()
 {
-#if defined FBA_DEBUG
-	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("BurnYM2203SetRoute called without init\n"));
-	if (nIndex < 0 || nIndex > 3) bprintf(PRINT_ERROR, _T("BurnYM2203SetRoute called with invalid index %i\n"), nIndex);
-	if (nChip >= nNumChips) bprintf(PRINT_ERROR, _T("BurnYM2203SetRoute called with invalid chip %i\n"), nChip);
-#endif
+	int nSample;
+	int n;
+	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
+	deltaSlave    = nSoundBufferPos; //*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+//	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
 
-	if (nChip == 0) {
-		YM2203Volumes[nIndex] = nVolume;
-		YM2203RouteDirs[nIndex] = nRouteDir;
+//	soundLenSlave = SOUND_LEN);
+	AY8910Update(0, &pYM2203Buffer[0], nBurnSoundLen);
+	AY8910Update(1, &pYM2203Buffer[3], nBurnSoundLen);
+
+	for (n = 0; n < nBurnSoundLen; n++) 
+	{
+		nSample  = pYM2203Buffer[0][n]; // >> 2;
+		nSample += pYM2203Buffer[1][n]; // >> 2;
+		nSample += pYM2203Buffer[2][n]; // >> 2;
+		nSample += pYM2203Buffer[3][n]; // >> 2;
+		nSample += pYM2203Buffer[4][n]; // >> 2;
+		nSample += pYM2203Buffer[5][n]; // >> 2;
+
+		nSample /=4;
+
+		if (nSample < -32768) 
+		{
+			nSample = -32768;
+		} 
+		else 
+		{
+			if (nSample > 32767) 
+			{
+				nSample = 32767;
+			}
+		}
+		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
 	}
-	
-	if (nChip == 1) {
-		YM2203Volumes[4 + nIndex] = nVolume;
-		YM2203RouteDirs[4 + nIndex] = nRouteDir;
+
+	if(deltaSlave>=RING_BUF_SIZE/2)
+	{
+		deltaSlave=0;
+		PCM_Task(pcm); // bon emplacement
 	}
-	
-	if (nChip == 2) {
-		YM2203Volumes[8 + nIndex] = nVolume;
-		YM2203RouteDirs[8 + nIndex] = nRouteDir;
-	}
+
+	deltaSlave+=nBurnSoundLen;
+
+//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+	nSoundBufferPos = deltaSlave;
 }
 
-void BurnYM2203SetLeftVolume(INT32 nChip, INT32 nIndex, double nLeftVolume)
-{
-#if defined FBA_DEBUG
-	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("BurnYM2203SetLeftVolume called without init\n"));
-	if (nIndex < 0 || nIndex > 3) bprintf(PRINT_ERROR, _T("BurnYM2203SetLeftVolume called with invalid index %i\n"), nIndex);
-	if (nChip >= nNumChips) bprintf(PRINT_ERROR, _T("BurnYM2203SetLeftVolume called with invalid chip %i\n"), nChip);
-#endif
-	
-	if (nChip == 0) YM2203LeftVolumes[nIndex] = nLeftVolume;
-	if (nChip == 1) YM2203LeftVolumes[4 + nIndex] = nLeftVolume;
-	if (nChip == 2) YM2203LeftVolumes[8 + nIndex] = nLeftVolume;
-}
-
-void BurnYM2203SetRightVolume(INT32 nChip, INT32 nIndex, double nRightVolume)
-{
-#if defined FBA_DEBUG
-	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("BurnYM2203SetRightVolume called without init\n"));
-	if (nIndex < 0 || nIndex > 3) bprintf(PRINT_ERROR, _T("BurnYM2203SetRightVolume called with invalid index %i\n"), nIndex);
-	if (nChip >= nNumChips) bprintf(PRINT_ERROR, _T("BurnYM2203SetRightVolume called with invalid chip %i\n"), nChip);
-#endif
-	
-	if (nChip == 0) YM2203RightVolumes[nIndex] = nRightVolume;
-	if (nChip == 1) YM2203RightVolumes[4 + nIndex] = nRightVolume;
-	if (nChip == 2) YM2203RightVolumes[8 + nIndex] = nRightVolume;
-}
-/*
-void BurnYM2203Scan(INT32 nAction, INT32* pnMin)
-{
-#if defined FBA_DEBUG
-	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("BurnYM2203Scan called without init\n"));
-#endif
-
-	BurnTimerScan(nAction, pnMin);
-	AY8910Scan(nAction, pnMin);
-
-	if (nAction & ACB_DRIVER_DATA) {
-		SCAN_VAR(nYM2203Position);
-		SCAN_VAR(nAY8910Position);
-	}
-}
-*/
 #undef MAX_YM2203

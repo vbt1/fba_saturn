@@ -39,8 +39,9 @@ static INT32 MemIndex()
 	TigerHeliSpriteROM	= &ss_vram[0x2200]; //Next; Next += 3 * 16 * 16 * 256; // 3 banks, 16x16 tiles, 256 tiles (sprites)
 //		= 0x00240000;//Next; Next += 0x040000;
 	TigerHeliTileROM	= (UINT8 *)(SS_CACHE+0x8000); //0x00280000;//Next; Next += 0x040000;
-	RamStart			= Next;
-	Ram01				= Next; Next += 0x000800;		// Z80 main work RAM
+	CZ80Context			= Next; Next += (0x1080*2);
+	RamStart				= Next;
+	Ram01					= Next; Next += 0x000800;		// Z80 main work RAM
 	RamShared			= Next; Next += 0x000800;		// Shared RAM
 	TigerHeliTextRAM	= Next; Next += 0x001000;
 	TigerHeliSpriteRAM= Next; Next += 0x000800;
@@ -59,11 +60,6 @@ static INT32 MemIndex()
 
 // ---------------------------------------------------------------------------
 //	Graphics
-
-static INT32 nTigerHeliTileXPosLo, nTigerHeliTileXPosHi, nTigerHeliTileYPosLo;
-static INT32 nTigerHeliTileMask, nTigerHeliSpriteMask;
-
-static UINT8 tigerhRecalcPalette = 0;
 
 static void TigerHeliPaletteInit()
 {
@@ -451,7 +447,7 @@ static INT32 tigerhLoadROMs()
 			nSize = ri.nLen;
 		}
 
-//		UINT8* pTemp = (UINT8*)BurnMalloc(nSize * 4);
+//		UINT8* pTemp = (UINT8*)size (nSize * 4);
 		UINT8* pTemp = (UINT8*)0x00240000;
 	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 4",4,80);
 
@@ -499,7 +495,7 @@ static INT32 tigerhLoadROMs()
 				break;
 		}
 
-//		UINT8* pTemp = (UINT8*)BurnMalloc(0x4000);
+//		UINT8* pTemp = (UINT8*) size (0x4000);
 		UINT8* pTemp = (UINT8*)0x00240000;
 	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 6",4,80);
 
@@ -554,7 +550,7 @@ static INT32 tigerhLoadROMs()
 			nSize = ri.nLen;
 		}
 
-//		UINT8* pTemp = (UINT8*)BurnMalloc(nSize * 4);
+//		UINT8* pTemp = (UINT8*)size (nSize * 4);
 		UINT8* pTemp = (UINT8*)0x00240000;
 	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"loadrom 8",4,80);
 
@@ -639,9 +635,9 @@ static INT32 tigerhLoadROMs()
 static void initLayers()
 {
     Uint16	CycleTb[]={
-		0xff45, 0x6fff, //A0
+		0xfff4, 0x6fff, //A0
 		0xffff, 0xffff,	//A1
-		0x012f,0xffff,   //B0
+		0x025e,0xffff,   //B0
 		0xffff, 0xffff  //B1
 //		0x4eff, 0x1fff, //B1
 	};
@@ -715,7 +711,7 @@ static void initLayers()
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-	ss_scl			= (Fixed32 *)SS_SCL;
+//	ss_scl			= (Fixed32 *)SS_SCL;
 //	ss_scl1			= (Fixed32 *)SS_SCL1;
 
 	ss_regs->tvmode = 0x8021;
@@ -746,16 +742,41 @@ static void initLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 tigerhExit()
 {
-//	GenericTilesExit();
-
-	CZetExit();
-	AY8910Exit(0);
+	SPR_InitSlaveSH();
+	CZetExit2();
 	AY8910Exit(1);
+	AY8910Exit(0);
 
-	// Deallocate all used memory
-	BurnFree(Mem);
-	
-//	GetStarType = 0;
+// Deallocate all used memory
+	map_offset_lut = map_offset_lut2 = NULL;
+	CZ80Context = MemEnd = RamStart = RamEnd = NULL;
+	Rom01 = Rom02 = /*Rom03 =*/ NULL;
+	TigerHeliTileROM = TigerHeliSpriteROM = TigerHeliTextROM = TigerHeliPaletteROM = NULL;
+	Ram01 = RamShared = /*Ram03 =*/ NULL;
+	TigerHeliTileRAM = TigerHeliSpriteRAM = TigerHeliSpriteBuf = TigerHeliTextRAM = NULL;
+	TigerHeliPalette = NULL;
+
+	for (int i = 0; i < 6; i++) {
+		pAY8910Buffer[i] = NULL;
+	}
+//	free (pFMBuffer);
+	pFMBuffer = NULL;
+
+	free(Mem);
+	Mem = NULL;
+
+	nWhichGame = 0;
+	bInterruptEnable = bSoundNMIEnable = bSoundCPUEnable = bVBlank = 0;
+	nStatusIndex = nProtectIndex = 0;
+
+	nTigerHeliTileXPosLo = nTigerHeliTileXPosHi = nTigerHeliTileYPosLo = 0;
+	nTigerHeliTileMask = nTigerHeliSpriteMask = 0;	
+
+	nStatusIndex = nProtectIndex = nPalettebank = nFlipscreen = 0;
+
+//	memset(&ss_scl[0],0,240);
+//	drawWindow(0,256,0,4,68);
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 
 	return 0;
 }
@@ -766,10 +787,7 @@ static void tigerhDoReset()
 	bSoundNMIEnable = false;
 	bSoundCPUEnable = true;
 	
-	nStatusIndex = 0;
-	nProtectIndex = 0;
-	nPalettebank = 0;
-	nFlipscreen = 0;
+	nStatusIndex = nProtectIndex = nPalettebank = nFlipscreen = 0;
 
 	CZetOpen(0);
 	CZetReset();
@@ -785,13 +803,7 @@ static void tigerhDoReset()
 static INT32 tigerhInit()
 {
 	DrvInitSaturn();
-
-	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvInitSaturn",4,80);
-	UINT8 *tmp0 = (UINT8*)0x00200000;
-	sprintf(tmp0,"drvinitsaturn      ");
-
 	INT32 nLen;
-
 	nWhichGame = -1;
 
 	if (strcmp(BurnDrvGetTextA(DRV_NAME), "tigerh") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhj") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhb1") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhb2") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhb3") == 0) {
@@ -806,22 +818,22 @@ static INT32 tigerhInit()
 	Mem = NULL;
 	MemIndex();
 	nLen = MemEnd - (UINT8*)0;
-		sprintf(tmp0,"before malloc      ");
+//		sprintf(tmp0,"before malloc      ");
 
 	if ((Mem = (UINT8*)BurnMalloc(nLen)) == NULL) 
 	{
-		sprintf(tmp0,"malloc failed      ");
+//		sprintf(tmp0,"malloc failed      ");
 		return 1;
 	}
 	memset(Mem, 0, nLen);										   	// blank all memory
 	MemIndex();													   	// Index the allocated memory
-		sprintf(tmp0,"malloc done      ");
+//		sprintf(tmp0,"malloc done      ");
 	make_lut();
 
 	// Load the roms into memory
 	if (tigerhLoadROMs()) 
 	{
-		sprintf(tmp0,"loadrom failed      ");
+//		sprintf(tmp0,"loadrom failed      ");
 		return 1;
 	}
 
@@ -829,12 +841,13 @@ static INT32 tigerhInit()
 	rotate_tile(0x800,1,TigerHeliTileROM);
 	rotate_tile16x16(nTigerHeliSpriteMask+1,1,TigerHeliSpriteROM);
 
-	sprintf(tmp0,"loadrom done      ");
+//	sprintf(tmp0,"loadrom done      ");
 	
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "getstarb1")) Rom01[0x6d56] = 0xc3;
 
 	{
-		CZetInit(2);
+//		CZetInit(2);
+		CZetInit2(2,CZ80Context);
 
 		// Main CPU setup
 		CZetOpen(0);
@@ -852,9 +865,9 @@ static INT32 tigerhInit()
 		CZetMapArea(0xC000, 0xC7FF, 2, Ram01);
 
 		// Shared RAM
-		if (strcmp(BurnDrvGetTextA(DRV_NAME), "getstarb1")) {
-			CZetMapArea(0xC800, 0xCFFF, 0, RamShared);
-		}
+//		if (strcmp(BurnDrvGetTextA(DRV_NAME), "getstarb1")) {
+//			CZetMapArea(0xC800, 0xCFFF, 0, RamShared);
+//		}
 		CZetMapArea(0xC800, 0xCFFF, 1, RamShared);
 		CZetMapArea(0xC800, 0xCFFF, 2, RamShared);
 		
@@ -890,11 +903,11 @@ static INT32 tigerhInit()
 			CZetSetWriteHandler(tigerhWriteCPU0);
 		}
 		
-		if (!strcmp(BurnDrvGetTextA(DRV_NAME), "getstarb1")) {
-			CZetSetInHandler(tigerhInCPU0_gtstarba);
-		} else {
+//		if (!strcmp(BurnDrvGetTextA(DRV_NAME), "getstarb1")) {
+//			CZetSetInHandler(tigerhInCPU0_gtstarba);
+//		} else {
 			CZetSetInHandler(tigerhInCPU0);
-		}
+//		}
 		
 		CZetSetOutHandler(tigerhOutCPU0);
 
@@ -1217,7 +1230,7 @@ static INT32 tigerhFrame()
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_lut(void)
+static void make_lut(void)
 {
 	unsigned int i;
 	int sx, sy;

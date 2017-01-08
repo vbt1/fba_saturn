@@ -135,7 +135,7 @@ static Uint8        *aVRAM;
 //Uint16       *colBgAddr2;
 //Uint16       *colBgAddr; // color
 //static Uint32       SclColRamAlloc256[8];
-static SprSpCmd     smsSprite[512+3];
+static SprSpCmd     smsSprite[256+3];
 SclLineparam lp;
 
 //static Uint16 *ss_font;

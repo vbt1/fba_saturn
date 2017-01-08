@@ -19,50 +19,51 @@ void dummy();
 #include "sn76496.h"
 //#include "msm5205.h"
 
-static INT32 DrvZ80Bank0;
-static UINT8 DrvJoy1[8];
-static UINT8 DrvJoy2[8];
-static UINT8 DrvJoy3[8];
-static UINT8 DrvInputs[3];
-static UINT8 DrvDip[2];
-static UINT8 DrvReset;
-static UINT8 DrvRecalc;
+static UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy3[8]={0,0,0,0,0,0,0,0};
+static UINT8 DrvInputs[3]={0,0,0};
+static UINT8 DrvDip[2]={0,0};
+static INT32 DrvZ80Bank0 = 0;
+static UINT8 DrvReset=0;
+//static UINT8 DrvRecalc;
 
-static UINT8 *AllMem;
-static UINT8 *MemEnd;
-static UINT8 *AllRam;
-static UINT8 *RamEnd;
-static UINT8 *DrvRAM0;
-static UINT8 *DrvRAM1;
-static UINT8 *DrvRAM2;
-static UINT8 *DrvFgVidRAM;
-static UINT8 *DrvBgVidRAM;
-static UINT8 *DrvSprRAM0;
-static UINT8 *DrvSprRAM1;
-static UINT8 *DrvFgColRAM;
-static UINT8 *DrvBgColRAM;
-static UINT8 *DrvGfxROM0;
-static UINT8 *DrvGfxROM1;
-static UINT8 *DrvGfxROM2;
-static UINT8 *DrvGfxROM3;
-static UINT8 *DrvGfxTMP0;
-static UINT8 *DrvGfxTMP1;
-static UINT8 *DrvColPROM;
-static UINT8 *DrvMainROM;
-static UINT8 *DrvSoundROM;
-static UINT8 *DrvFetch;
+static UINT8 *CZ80Context = NULL;
+static UINT8 *AllMem = NULL;
+static UINT8 *MemEnd = NULL;
+static UINT8 *AllRam = NULL;
+static UINT8 *RamEnd = NULL;
+static UINT8 *DrvRAM0 = NULL;
+static UINT8 *DrvRAM1 = NULL;
+static UINT8 *DrvRAM2 = NULL;
+static UINT8 *DrvFgVidRAM = NULL;
+static UINT8 *DrvBgVidRAM = NULL;
+static UINT8 *DrvSprRAM0 = NULL;
+static UINT8 *DrvSprRAM1 = NULL;
+static UINT8 *DrvFgColRAM = NULL;
+static UINT8 *DrvBgColRAM = NULL;
+static UINT8 *DrvGfxROM0 = NULL;
+static UINT8 *DrvGfxROM1 = NULL;
+static UINT8 *DrvGfxROM2 = NULL;
+static UINT8 *DrvGfxROM3 = NULL;
+static UINT8 *DrvGfxTMP0 = NULL;
+static UINT8 *DrvGfxTMP1 = NULL;
+static UINT8 *DrvColPROM = NULL;
+static UINT8 *DrvMainROM = NULL;
+static UINT8 *DrvSoundROM = NULL;
+static UINT8 *DrvFetch = NULL;
 //static UINT32 *DrvPalette;
-static UINT16 *DrvPalette;
+static UINT16 *DrvPalette = NULL;
 static UINT16 *map_offset_lut = NULL;
 static UINT16 *charaddr_lut = NULL;
-static UINT8 scroll_x;
-static UINT8 flipscreen;
-static UINT8 priority;
-static UINT8 interrupt_enable;
-static UINT32 adpcm_data;
-static UINT32 adpcm_address;
-static INT32 nCyclesTotal;
-static INT32 game_select; // 1 = robowres
+static UINT8 scroll_x = 0;
+static UINT8 flipscreen = 0;
+static UINT8 priority = 0;
+static UINT8 interrupt_enable = 0;
+static UINT32 adpcm_data = 0;
+static UINT32 adpcm_address = 0;
+static INT32 nCyclesTotal = 0;
+static INT32 game_select = 0; // 1 = robowres
 
 static struct BurnInputInfo AppooohInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 coin"},

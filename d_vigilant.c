@@ -1,5 +1,5 @@
 #define BMP 1
-#define SOUND 1
+//#define SOUND 1
 #define CZ80 1
 //#define RAZE1 1
 #define RAZE0 1
@@ -95,7 +95,7 @@ int ovlInit(char *szShortName)
 	DrvZ80Rom1             = Next; Next += 0x28000;
 	DrvZ80Rom2             = Next; Next += 0x10000;
 	DrvSamples             = Next; Next += 0x10000;
-
+	CZ80Context			  = Next; Next += (0x1080*2);
 	RamStart               = Next;
 
 	DrvZ80Ram1             = Next; Next += 0x02000;
@@ -624,7 +624,7 @@ static INT32 VigilantSyncDAC()
 	nRet = BurnLoadRom(DrvSamples + 0x00000, 16, 1); if (nRet != 0) return 1;
 //FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom done                ",10,100);
 	// Setup the Z80 emulation
-	CZetInit(2);
+	CZetInit2(2,CZ80Context);
 #ifdef RAZE0
 	z80_init_memmap();
 //	z80_add_read(0x0000, 0xffff, 1, (void *)&VigilanteZ80Read1); 	   // inutile
@@ -947,12 +947,14 @@ void dummy()
 	}
 
 	PrecalcBgMap();
+#ifdef SOUND
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
-	CZetExit();
+	CZetExit2();
 
 #ifdef SOUND
 //	BurnYM2151Exit();
@@ -962,7 +964,12 @@ void dummy()
 //	DACExit();
 #endif
 
-	
+	CZ80Context = NULL;
+	MemEnd = RamEnd = DrvZ80Rom1 = DrvZ80Rom2 = DrvZ80Ram1 = DrvZ80Ram2 = NULL;
+	DrvVideoRam = DrvSpriteRam = DrvPaletteRam = DrvChars = DrvBackTiles = DrvSprites = NULL;
+	DrvSamples = DrvTempRom = CZ80Context = NULL;
+	DrvPalette = NULL;
+
 	if (Mem) {
 		free(Mem);
 		Mem = NULL;
@@ -1111,6 +1118,7 @@ void dummy()
 		CZetClose();
 #endif
 
+#ifdef SOUND
 		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		{
 	SPR_WaitEndSlaveSH();
@@ -1121,6 +1129,8 @@ void dummy()
     *(volatile Uint8 *)0xfffffe11 = 0x00; // FTCSR clear
     *(volatile Uint16 *)0xfffffe92 |= 0x10; // chache parse all
 		}
+#endif
+
 #ifdef RAZE1
 		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
@@ -1143,7 +1153,9 @@ void dummy()
 #endif
 
 	CZetOpen(1);
+#ifdef SOUND
 	SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
+#endif
 
 /*	 YM2151UpdateOneSlave();
 	 CZetClose();	 

@@ -46,7 +46,7 @@ static int MSM6295StepShift[8] = {-1, -1, -1, -1, 2, 4, 6, 8};
 
 static int* MSM6295ChannelData[MAX_MSM6295][4];
 
-static int* pBuffer = NULL;
+int* pBuffer = NULL;
 static int nLastChip;
 
 static bool bAdd;
@@ -275,7 +275,8 @@ void MSM6295Exit(int nChip)
 //		MSM6295ChannelData[nChip][3-nChannel] = NULL;
 		MSM6295ChannelData[nChip][3-nChannel] = NULL;
 	}
-	free(pBuffer);
+	if(pBuffer!=NULL)
+		free(pBuffer);
 	pBuffer = NULL;
 }
 

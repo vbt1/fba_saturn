@@ -121,6 +121,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvCountrunb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvGigasb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvGigasm2 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+//	static struct BurnDriver BurnDrvFM = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -342,7 +343,12 @@ BurnDrvSlapFigh.szShortName="slapfib1";
 BurnDrvSlapFigh.szFullNameA="Slap Fight (bootleg set 1)";
 BurnDrvSlapFigh.szParent="slpfgh";
 
+//BurnDrvFM.szShortName="fm";
+//BurnDrvFM.szFullNameA="FM Test Driver";
+//BurnDrvFM.szParent="blktgr";
+
 unsigned int i=0;
+//pDriver[i++] = &BurnDrvFM;
 pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsms_cz80;
 pDriver[i++] = &BurnDrvsms_gg;

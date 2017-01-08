@@ -6,13 +6,23 @@
 #include "snd/burn_ym2203.h"
 //#include "bitswap.h"
 #include "d_blktiger.h"
+#include    "machine.h"
 #define RAZE0 1
+//#define SND 1
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
 <vbt1> with dma, etc
 <CyberWarriorX> vblank in
 <CyberWarriorX> vblank in is the start of the vblank. vblank out is the end of it
+*/
+/*
+vbt> <Kale_> Ok, have you asked to Arbee?
+<vbt> <Kale_> The idea is first to write a sound engine to m68k, using a portion of the shared RAM as your i/o registers
+<vbt> <Kale_> Then banging the individual registers according to what the 2203 expects
+<vbt> <smf-> I might just emulate the games sound program on the 68000
+<vbt> <smf-> I imagine the sh2 would be happier emulating one less z80
+<vbt> <smf-> as it running in rom you could probably even do an upfront translation
 */
 #define nBurnSoundLen 128
 #define VDP2_BASE           0x25e00000
@@ -39,10 +49,21 @@ int ovlInit(char *szShortName)
 		"blktiger", "blktgr",
 		"Black Tiger",
 		blktigerRomInfo, blktigerRomName, DrvInputInfo, DrvDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL //, DrvScan, &DrvRecalc, 0x400,
+		DrvInit, DrvExit, DrvFrame, NULL
 	};
-	
+
+	struct BurnDriver nBurnDrvFM = {
+		"fm", "blktgr",
+		"FM Test Driver",
+		blktigerRomInfo, blktigerRomName, DrvInputInfo, DrvDIPInfo,
+		DrvFMInit, DrvExit, DrvFMFrame, NULL //, DrvScan, &DrvRecalc, 0x400,
+	};
+
+	if (strcmp(nBurnDrvBlktiger.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvBlktiger,sizeof(struct BurnDriver));
+
+	if (strcmp(nBurnDrvFM.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvFM,sizeof(struct BurnDriver));
 
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs = (SclSysreg *)SS_REGS;
@@ -378,7 +399,7 @@ static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
-	DrvZ80ROM0	= Next; Next += 0x050000;
+	DrvZ80ROM0	= Next; Next += 0x040000;
 	DrvZ80ROM1	= Next; Next += 0x008000;
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
@@ -595,9 +616,901 @@ static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 	return (INT32)CZetTotalCycles() * nSoundRate / 3579545;
 }
 
-static double DrvGetTime()
+//static double DrvGetTime()
+static INT32 DrvGetTime()
 {
-	return (double)CZetTotalCycles() / 3579545;
+//	return (double)CZetTotalCycles() / 3579545;
+	return (INT32)CZetTotalCycles() / 3579545;
+}
+
+typedef struct{
+    Uint16 *prg_adr;                        /* 68KÌßÛ¸Ş×ÑŠi”[æ“ª±ÄŞÚ½       */
+    Uint16 prg_sz;                          /* 68KÌßÛ¸Ş×Ñ»²½Ş»²½Ş           */
+    Uint16 *ara_adr;                        /* »³İÄŞ´Ø±Ï¯ÌßŠi”[æ“ª±ÄŞÚ½     */
+    Uint16 ara_sz;                          /* »³İÄŞ´Ø±Ï¯Ìß»²½Ş(Ü°ÄŞ’PˆÊ)    */
+}SndIniDt; 
+
+#define SND_PRM_MODE(prm)       ((prm).mode)        /* ½ÃÚµ¥ÓÉ¸Û+»İÌßØİ¸ŞÚ°Ä */
+#define SND_PRM_SADR(prm)       ((prm).sadr)        /* PCM½ÄØ°ÑÊŞ¯Ì§½À°Ä±ÄŞÚ½*/
+#define SND_PRM_SIZE(prm)       ((prm).size)        /* PCM½ÄØ°ÑÊŞ¯Ì§»²½Ş   */
+#define SND_PRM_OFSET(prm)      ((prm).ofset)       /* PCM½ÄØ°ÑÄ¶ŠJnµÌ¾¯Ä */
+/******** SndPcmChgPrm(PCM•ÏXƒpƒ‰ƒ[ƒ^) ************************************/
+#define SND_PRM_NUM(prm)        ((prm).num)         /* PCM½ÄØ°ÑÄ¶”Ô†       */
+#define SND_PRM_LEV(prm)        ((prm).lev)         /* ÀŞ²Ú¸Ä‰¹Level         */
+#define SND_PRM_PAN(prm)        ((prm).pan)         /* ÀŞ²Ú¸Ä‰¹pan           */
+#define SND_PRM_PICH(prm)       ((prm).pich)        /* PICHÜ°ÄŞ              */
+#define SND_R_EFCT_IN(prm)      ((prm).r_efct_in)   /* Efect in select(‰E)   */
+#define SND_R_EFCT_LEV(prm)     ((prm).r_efct_lev)  /* Efect send Level(‰E)  */
+#define SND_L_EFCT_IN(prm)      ((prm).l_efct_in)   /* Efect in select(¶)   */
+#define SND_L_EFCT_LEV(prm)     ((prm).l_efct_lev)  /* Efect send Level(¶)  */
+#define SND_PRM_TL(prm)     	((prm).lev)  		/* Master Level			 */
+
+
+#define SCSP_REG_SET    0x0200                  /* SCSPƒŒƒWƒXƒ^İ’è’l        */
+#define MEM_CLR_SIZE    0xb000                  /* »³İÄŞÒÓØ¸Ø±»²½Ş           */
+#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* ƒTƒEƒ“ƒhƒxƒNƒ^ƒAƒhƒŒƒX    */
+#define ADR_SCSP_REG    ((Uint8 *)0x25b00400)   /* SCSP‹¤’Ê§ŒäƒŒƒWƒXƒ^      */
+#define ADR_SND_MEM     ((Uint8 *)0x25a00000)   /* ƒTƒEƒ“ƒhƒƒ‚ƒŠæ“ªƒAƒhƒŒƒX*/
+#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* ƒTƒEƒ“ƒhƒxƒNƒ^ƒAƒhƒŒƒX    */
+
+#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ¼½ÃÑ²İÀÌª°½—Ìˆæ           */
+#define ADR_ARA_CRNT    (0x08)                /* »³İÄŞ´Ø±Ï¯ÌßCRNTÜ°¸æ“ª±ÄŞÚ½*/
+#define ARA_MAP_SIZE        0x2                 /* »³İÄŞ´Ø±Ï¯Ìß»²½Ş          */
+
+#define B_LOAD_MARK         31                  /* “]‘—Ï‚İËŞ¯Ä              */
+#define M_LOAD_MARK        (0x1  << B_LOAD_MARK)/* “]‘—Ï‚İËŞ¯Ä              */
+#define B_END_MARK          31                  /* ÃŞ°ÀI—¹ËŞ¯Ä              */
+
+#define B_START_ADR         0                   /* ½À°Ä±ÄŞÚ½                 */
+#define M_START_ADR        (0xfffff << B_START_ADR) /* ½À°Ä±ÄŞÚ½             */
+#define B_ID_NUM            24                  /* ÃŞ°À”Ô†                  */
+#define M_ID_NUM           (0xf  << B_ID_NUM)   /* ÃŞ°À”Ô†                  */
+#define B_DATA_ID           28                  /* ÃŞ°Àí•Ê@@@@@@@    */
+#define M_DATA_ID          (0x7  << B_DATA_ID)  /* ÃŞ°Àí•Ê@@@@@@@    */
+#define M_END_MARK         (0x1  << B_END_MARK) /* ÃŞ°ÀI—¹ËŞ¯Ä              */
+
+#define ARA_MAP_0           0x0         /* ÃŞ°Àí•Ê,ÃŞ°À”Ô†,´Ø±ŠJn±ÄŞÚ½    */
+#define ARA_MAP_4           0x1         /* “]‘—Ï‚İËŞ¯Ä,´Ø±»²½Ş              */
+
+#define ADR_SYS_INFO    (0x00)                  /* ¼½ÃÑî•ñÃ°ÌŞÙ±ÄŞÚ½        */
+#define ADR_HOST_INT    (0x04)                  /* Î½Ä²İÀÌª°½Ü°¸±ÄŞÚ½        */
+#define ADR_ARA_CRNT    (0x08)                /* »³İÄŞ´Ø±Ï¯ÌßCRNTÜ°¸æ“ª±ÄŞÚ½*/
+#define ADR_SYS_INT_WORK    (0x12)            /* ¼½ÃÑ²İÀÌª°½Ü°¸æ“ª±ÄŞÚ½     */
+#define ADR_HARD_CHK_STAT   (0x18)            /* Ê°ÄŞÁª¯¸ØÀ°İ½Ã°À½Ši”[Ü°¸    */
+#define ADR_SONG_STAT   (0x80)                  /* song status               */
+#define ADR_PCM         (0xa0)                  /* PCM                       */
+#define ADR_SEQ         (0xb0)                  /* Sequence                  */
+#define ADR_TL_VL       (0x90)                  /* Total volume              */
+#define ADR_TL_HZ_VL    (0x94)                  /* ü”g”‘Ñˆæ•ÊVolume        */
+#define ADR_ARA_ADR     (0x08)                  /* »³İÄŞ´Ø±Ï¯Ìß—Ìˆææ“ª±ÄŞÚ½ */
+#define CHG_LONG(x)    (((x) * 2) + (0x4 - ( ((x) * 2) % 4) ))
+
+#define POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data))) /* Ü°ÄŞ  */
+#define PEEK_W(adr)         (*((volatile Uint16 *)(adr)))                    /* Ü°ÄŞ  */
+#define PEEK_L(adr)         (*((volatile Uint32 *)(adr)))                    /* Ûİ¸Ş  */
+#define POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data)))   /* ÊŞ²Ä  */
+#define POKE_L(adr, data)   (*((volatile Uint32 *)(adr)) = ((Uint32)(data))) /* Ûİ¸Ş  */
+
+#define SND_INI_PRG_ADR(sys_ini)    ((sys_ini).prg_adr) /* 68KÌßÛ¸Ş×ÑŠi”[... */
+#define SND_INI_PRG_SZ(sys_ini)     ((sys_ini).prg_sz)  /* 68KÌßÛ¸Ş×Ñ»²½Ş... */
+#define SND_INI_ARA_ADR(sys_ini)    ((sys_ini).ara_adr) /* »³İÄŞ´Ø±Ï¯ÌßŠi”[. */
+#define SND_INI_ARA_SZ(sys_ini)     ((sys_ini).ara_sz)  /* »³İÄŞ´Ø±Ï¯Ìß»²½Ş. */
+#define SND_KD_TONE         0x0                         /* ‰¹F              */
+
+#define SND_ADR_INTR_RESET  ((volatile Uint16 *)0x25b0042e)  /* SCSPŠ„‚è‚İØ¾¯ÄÚ¼Ş½À */
+#define SND_POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data)))
+#define SND_ADR_INTR_CTRL_WORD  (0x00)          /* Interrupt control word    */
+#define SND_POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data))) /* ÊŞ²Ä*/
+
+#define SND_RET_SET     0                       /* ³íI—¹                     */
+#define SND_RET_NSET    1                       /* ˆÙíI—¹                     */
+#define ADR_PRM_DATA    (0x02)                  /* ƒpƒ‰ƒ[ƒ^                */
+#define COM_SET_TL_VL      0x82                 /* Total Volume              */
+
+#define COM_CHG_MIX        0x87                 /* Mixer change              */
+#define COM_CHG_MIX_PRM    0x88                 /* Mixer parameter change    */
+#define COM_CHK_HARD       0x89                 /* Hard check                */
+#define COM_CHG_PCM_PRM    0x8a                 /* PCM parameter change      */
+#define COM_CTRL_DIR_MIDI  0x09                 /* MIDI direct control       */
+
+#define SND_SET_ENA_INT(ena_bit)\
+    do{\
+        snd_msk_work_work = get_imask();           /* »³İÄŞŠ„‚è‚İ‚ğDisable*/\
+        set_imask(15);\
+        SND_POKE_B(snd_adr_sys_int_work + SND_ADR_INTR_CTRL_WORD, (ena_bit));\
+        set_imask(snd_msk_work_work);\
+    }while(FALSE)
+
+static Uint32 intrflag;
+#define HOST_SET_RETURN(ret)\
+    do{\
+		intrflag=0;\
+        return(ret);\
+    }while(FALSE)
+
+#define SET_PRM(no, set_prm)\
+(POKE_B(adr_com_block + ADR_PRM_DATA + (no), (set_prm))) /* Êß×Ò°ÀƒZƒbƒg      */
+
+#define SIZE_COM_BLOCK      (0x10)              /* ºÏİÄŞÌŞÛ¯¸»²½Ş          */
+#define MAX_NUM_COM_BLOCK   8                   /* ºÏİÄŞÌŞÛ¯¸”              */
+
+#define SND_INT_PCM_ADR     (1 <<  7)           /* PCM play address XV   */
+#define SND_RESET_INT()\
+        (SND_POKE_W(SND_ADR_INTR_RESET, (1 << 5)))
+
+#define ADR_COM_DATA    (0x00)                  /* ƒRƒ}ƒ“ƒh                  */
+
+#define NOW_ADR_COM_DATA                        /* Œ»İºÏİÄŞÃŞ°À±ÄŞÚ½     */\
+    (adr_com_block + ADR_COM_DATA)
+
+#define MAX_ADR_COM_DATA                        /* Å‘åºÏİÄŞÃŞ°À±ÄŞÚ½     */\
+    (adr_host_int_work + ADR_COM_DATA + (SIZE_COM_BLOCK * MAX_NUM_COM_BLOCK))
+
+#define SET_COMMAND(set_com)\
+(POKE_W((adr_com_block + ADR_COM_DATA), (Uint16)(set_com) << 8)) /* ƒRƒ}ƒ“ƒhƒZƒbƒg   */
+
+#define SND_MD_MONO     (0 <<  7)                   /* ÓÉ¸Û                  */
+#define SND_MD_STEREO   (1 <<  7)                   /* ½ÃÚµ                  */
+#define SND_MD_16       (0 <<  4)                   /* 16bitPCM              */
+#define SND_MD_8        (1 <<  4)                   /* 8bitPCM               */
+
+Uint8 *snd_adr_sys_int_work;                 /*¼½ÃÑ²İÀÌª°½Ü°¸æ“ª±ÄŞÚ½Ši”[*/
+Uint32 snd_msk_work_work;                    /* sound priority msk        */
+
+static volatile Uint32 *adr_snd_area_crnt;             /* »³İÄŞ´Ø±Ï¯ÌßCRNTÜ°¸æ“ª±ÄŞÚ½*/
+static volatile Uint8 *adr_sys_info_tbl;                 /* ¼½ÃÑî•ñÃ°ÌŞÙ±ÄŞÚ½Ši”[    */
+static volatile Uint8 *adr_host_int_work;                /* Î½Ä²İÀÌª°½Ü°¸æ“ª±ÄŞÚ½Ši”[*/
+static volatile Uint8  *adr_com_block;                   /* Œ»İ‘‚«‚İºÏİÄŞÌŞÛ¯¸      */
+static volatile Uint16 *adr_song_stat;                   /* song status               */
+static volatile Uint16 *adr_pcm;                         /* PCM                       */
+static volatile Uint16 *adr_seq;                         /* Sequence                  */
+static volatile Uint16 *adr_tl_vl;                       /* Total volume              */
+static volatile Uint16 *adr_tl_hz_vl;                    /* ü”g”‘Ñˆæ•ÊVolume        */
+static Uint32 intrflag;
+
+typedef struct{
+    Uint8 mode;                             /* ½ÃÚµ¥ÓÉ¸Û+»İÌßØİ¸ŞÚ°Ä         */
+    Uint16 sadr;                            /* PCM½ÄØ°ÑÊŞ¯Ì§½À°Ä±ÄŞÚ½        */
+    Uint16 size;                            /* PCM½ÄØ°ÑÊŞ¯Ì§»²½Ş             */
+}SndPcmStartPrm;                            /* PCMŠJnƒpƒ‰ƒ[ƒ^          */
+typedef Uint8 SndSeqPri;                    /* Priorty level                 */
+
+typedef Uint8 SndSeqNum;                    /* ”­‰¹ŠÇ—”Ô†                  */
+typedef Uint8 SndAreaMap;                   /* »³İÄŞ´Ø±Ï¯Ìßƒf[ƒ^Œ^          */
+typedef Uint8 SndTlVl;                      /* ‘S‘Ì‰¹—Êƒf[ƒ^Œ^              */
+typedef Uint8 SndEfctBnkNum;                /* Effct bank numberƒf[ƒ^Œ^     */
+typedef Uint8 SndToneBnkNum;                /* ‰¹F bank numberƒf[ƒ^Œ^      */
+typedef Uint8 SndMixBnkNum;                 /* Mixer numberƒf[ƒ^Œ^          */
+typedef Uint8 SndEfctOut;                   /* Effect out selectƒf[ƒ^Œ^     */
+typedef Uint8 SndLev;                       /* Levelƒf[ƒ^Œ^                 */
+typedef Sint8 SndPan;                       /* PANƒf[ƒ^Œ^                   */
+typedef Uint8 SndRet;                       /* ºÏİÄŞÀsó‘Ôƒf[ƒ^Œ^         */
+typedef Uint8 SndHardPrm;                   /* Ê°ÄŞ³ª±Áª¯¸Êß×Ò°Àƒf[ƒ^Œ^     */
+typedef Uint16 SndHardStat;                 /* Ê°ÄŞ³ª±Áª¯¸½Ã°À½ƒf[ƒ^Œ^      */
+typedef Uint8 SndPcmNum;                    /* PCM½ÄØ°ÑÄ¶”Ô†               */
+typedef Uint8 SndEfctIn;                    /* Efect in select               */
+typedef struct{
+    SndPcmNum num;                          /* PCM½ÄØ°ÑÄ¶”Ô†               */
+    SndLev lev;                             /* ÀŞ²Ú¸Ä‰¹Level                 */
+    SndPan pan;                             /* ÀŞ²Ú¸Ä‰¹pan                   */
+    Uint16 pich;                            /* PICHÜ°ÄŞ                      */
+    SndEfctIn r_efct_in;                    /* Efect in select(‰Eo—Í)       */
+    SndLev r_efct_lev;                      /* Efect send Level(‰Eo—Í)      */
+    SndEfctIn l_efct_in;                    /* Efect in select(¶o—Í)       */
+    SndLev l_efct_lev;                      /* Efect send Level(¶o—Í)      */
+}SndPcmChgPrm;   
+
+#define INT_DIGITS 19
+char *itoa(i)
+     int i;
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
+
+static void DmaClrZero(void *dst, Uint32 cnt)
+{
+    memset(dst, 0x00, cnt);
+}
+
+
+static Uint8 GetComBlockAdr(void)
+{
+    if(*NOW_ADR_COM_DATA){              /* ˆÈ‘O‚ÌÌŞÛ¯¸‚ªˆø‚«æ‚èÏ‚İ‚Å‚È‚¢‚©?*/
+        /* ŸƒRƒ}ƒ“ƒhƒuƒƒbƒNƒAƒhƒŒƒXİ’èˆ— ********************************/
+        if(NOW_ADR_COM_DATA >= (MAX_ADR_COM_DATA - SIZE_COM_BLOCK)){
+                                                    /* Å‘å’l‚©?            */
+            return OFF;                             /* ÌŞÛ¯¸‹ó‚«–³‚µ      */
+        }else{
+            adr_com_block += SIZE_COM_BLOCK;        /* Œ»İºÏİÄŞÌŞÛ¯¸¶³İÄ±¯Ìß*/
+            while(NOW_ADR_COM_DATA < (MAX_ADR_COM_DATA - SIZE_COM_BLOCK)){
+                if(*NOW_ADR_COM_DATA){
+                    adr_com_block += SIZE_COM_BLOCK;
+                }else{
+                    return ON;                      /* ÌŞÛ¯¸‹ó‚«—L‚è         */
+                }
+            }
+            return OFF;                             /* ÌŞÛ¯¸‹ó‚«–³‚µ         */
+        }
+    }else{
+        adr_com_block = adr_host_int_work;  /* ÌŞÛ¯¸‚Ìæ“ª‚Ö              */
+        while(NOW_ADR_COM_DATA < (MAX_ADR_COM_DATA - SIZE_COM_BLOCK)){
+            if(*NOW_ADR_COM_DATA){
+                adr_com_block += SIZE_COM_BLOCK;
+            }else{
+                return ON;                          /* ÌŞÛ¯¸‹ó‚«—L‚è         */
+            }
+        }
+        return OFF;                                 /* ÌŞÛ¯¸‹ó‚«–³‚µ         */
+    }
+}
+
+ SndRet SND_SetTlVl(SndTlVl vol)
+ {
+/* 1994/02/24 Start */
+#if 0
+    HOST_SET_INIT();                            /* Î½Ä²İÀÌª°½´Ø±İ’è‰Šúˆ— */
+#endif
+    if(intrflag) return(SND_RET_NSET);
+    intrflag = 1;
+/* 1994/02/24 End */
+    if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
+    SET_PRM(0, vol);                            /* ƒpƒ‰ƒ[ƒ^ƒZƒbƒg          */
+    SET_COMMAND(COM_SET_TL_VL);                 /* ƒRƒ}ƒ“ƒhƒZƒbƒg            */
+    HOST_SET_RETURN(SND_RET_SET);
+}
+
+ SndRet SND_CtrlDirMidi(SndSeqNum seq_no, SndSeqPri seq_pri, Uint8 md_com,
+                        Uint8 ch, Uint8 dt1, Uint8 dt2)
+ {
+/* 1994/02/24 Start */
+#if 0
+    HOST_SET_INIT();                            /* Î½Ä²İÀÌª°½´Ø±İ’è‰Šúˆ— */
+#endif
+    if(intrflag) return(SND_RET_NSET);
+    intrflag = 1;
+/* 1994/02/24 End */
+    if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
+    SET_PRM(0, (seq_pri << 3) | md_com);        /* ƒpƒ‰ƒ[ƒ^ƒZƒbƒg          */
+    SET_PRM(1, (seq_no << 5) | ch);             /* ƒpƒ‰ƒ[ƒ^ƒZƒbƒg          */
+    SET_PRM(2, dt1);                            /* ƒpƒ‰ƒ[ƒ^ƒZƒbƒg          */
+    SET_PRM(3, dt2);                            /* ƒpƒ‰ƒ[ƒ^ƒZƒbƒg          */
+    SET_COMMAND(COM_CTRL_DIR_MIDI);             /* ƒRƒ}ƒ“ƒhƒZƒbƒg            */
+    HOST_SET_RETURN(SND_RET_SET);
+}
+
+void SND_Init2(SndIniDt *sys_ini)
+{
+    /** BEGIN ****************************************************************/
+#ifdef _DMA_SCU
+    DMA_ScuInit();                              /* DMA SCU‰Šú‰»ˆ—         */
+#endif /* _DMA_SCU */
+
+    PER_SMPC_SND_OFF();                         /* ƒTƒEƒ“ƒhOFF               */
+    POKE_W(ADR_SCSP_REG, SCSP_REG_SET); 
+                                                /* SCSP‹¤’ÊÚ¼Ş½Àİ’è         */
+    DmaClrZero(ADR_SND_MEM, MEM_CLR_SIZE);      /* DMAƒƒ‚ƒŠƒ[ƒƒNƒŠƒA       */
+    memcpy(ADR_SND_VECTOR,
+                   (void *)(SND_INI_PRG_ADR(*sys_ini)),
+                   SND_INI_PRG_SZ(*sys_ini));   /* 68KÌßÛ¸Ş×Ñ“]‘—            */
+
+    adr_sys_info_tbl = (Uint8 *)(ADR_SND_MEM + PEEK_L(ADR_SYS_TBL +
+                                 ADR_SYS_INFO));
+                                                /* ¼½ÃÑî•ñÃ°ÌŞÙ±ÄŞÚ½æ“¾    */
+    adr_host_int_work = (Uint8 *)(ADR_SND_MEM + PEEK_L(ADR_SYS_TBL +
+                                  ADR_HOST_INT));
+                                                /* Î½Ä²İÀÌª°½Ü°¸±ÄŞÚ½æ“¾    */
+    snd_adr_sys_int_work = (Uint8 *)(ADR_SND_MEM + 
+                 ((Uint32)PEEK_W(ADR_SYS_TBL + ADR_SYS_INT_WORK) << 16
+                  | (Uint32)PEEK_W(ADR_SYS_TBL + ADR_SYS_INT_WORK + 2)));
+                                                /* ¼½ÃÑ²İÀÌª°½Ü°¸±ÄŞÚ½æ“¾   */
+                                                
+    adr_com_block = adr_host_int_work;  /* Œ»İ‘‚«‚İºÏİÄŞÌŞÛ¯¸±ÄŞÚ½‰Šú‰» */
+                                                
+    adr_snd_area_crnt = (Uint32 *)(ADR_SND_MEM + 
+                                  PEEK_L(ADR_SYS_TBL + ADR_ARA_CRNT));
+                                                /* »³İÄŞ´Ø±Ï¯ÌßCRNTÜ°¸æ“¾   */
+    adr_song_stat = (Uint16 *)(adr_host_int_work + ADR_SONG_STAT);
+    adr_pcm = (Uint16 *)(adr_host_int_work + ADR_PCM);
+    adr_seq = (Uint16 *)(adr_host_int_work + ADR_SEQ);
+    adr_tl_vl = (Uint16 *)(adr_host_int_work + ADR_TL_VL);
+    adr_tl_hz_vl = (Uint16 *)(adr_host_int_work + ADR_TL_HZ_VL);
+
+    memcpy((void *)
+                    (PEEK_L(adr_sys_info_tbl + ADR_ARA_ADR) + ADR_SND_MEM),
+                   (void *)(SND_INI_ARA_ADR(*sys_ini)),
+                   CHG_LONG(SND_INI_ARA_SZ(*sys_ini))); /* »³İÄŞ´Ø±Ï¯Ìß“]‘—  */
+/* 1994/02/24 Start*/
+    intrflag = 0;         /* Š„‚è‚İƒtƒ‰ƒO‚Ì‰Šú‰» */
+/* 1994/02/24 End */
+
+    PER_SMPC_SND_ON();                          /* ƒTƒEƒ“ƒhON                */
+
+}
+
+
+
+static void GetSndMapInfo(void **adr, Uint32 **ladr, Uint16 data_kind, Uint16 data_no)
+{
+    Uint32 i = 0;
+    Uint32 map0;
+
+//    adr_snd_area_crnt = (Uint32 *)(ADR_SND_MEM + 
+//                                  PEEK_L(ADR_SYS_TBL + ADR_ARA_CRNT));
+
+    map0 = PEEK_L(adr_snd_area_crnt + ARA_MAP_0);
+
+    for(i = 1; (map0 & M_END_MARK) != M_END_MARK; i++){
+        if((((map0 & M_DATA_ID) >> B_DATA_ID) == (Uint32)data_kind) &&
+           (((map0 & M_ID_NUM) >> B_ID_NUM) == (Uint32)data_no)){
+            *adr = (void *)(ADR_SND_MEM +
+                       ((map0 & M_START_ADR) >> B_START_ADR)
+              );
+            *ladr = (Uint32 *)(adr_snd_area_crnt + ARA_MAP_SIZE * (i - 1) +
+                     ARA_MAP_4);
+            break;
+        }
+        map0 = PEEK_L(adr_snd_area_crnt + ARA_MAP_SIZE * i + ARA_MAP_0);
+    }
+}
+static void CopyMem(void *dst, void *src, Uint32 cnt)
+{
+#ifndef _DMA_SCU
+	memcpy(dst, src, cnt);
+#else
+                                                /*****************************/
+    DMA_ScuMemCopy(dst, src, cnt);
+    while(DMA_SCU_END != DMA_ScuResult());
+#endif /* _DMA_SCU */
+}
+void SND_MoveData(Uint16 *source, Uint32 size,Uint16 data_kind, Uint16 data_no)
+{
+    void *adr;                                  /* “]‘—æƒAƒhƒŒƒX            */
+    Uint32 *load_mark_adr;                      /* “]‘—Ï‚İƒrƒbƒgİ’è±ÄŞÚ½  */
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"getsndmap    ",4,80);
+
+    GetSndMapInfo(&adr, &load_mark_adr, data_kind, data_no);
+                                                /* »³İÄŞ´Ø±Ï¯Ìßî•ñæ“¾      */
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"memcpy    ",4,80);
+
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(adr),4,90);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(source),4,100);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size),4,110);
+
+
+
+    CopyMem(adr, (void *)source, size);         /* »³İÄŞ´Ø±Ï¯Ìß“]‘—         */
+
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"poke l    ",4,80);
+
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(load_mark_adr),4,120);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa((*load_mark_adr | M_LOAD_MARK)),4,130);
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size),4,110);
+
+	POKE_L(load_mark_adr, (*load_mark_adr | M_LOAD_MARK));
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"poke l done   ",4,80);
+                                                /* “]‘—Ï‚İËŞ¯Ä µİ            */
+}
+
+ SndRet SND_ChgMix(SndToneBnkNum tone_no, SndMixBnkNum mix_no)
+ {
+/* 1994/02/24 Start */
+#if 0
+    HOST_SET_INIT();                            /* Î½Ä²İÀÌª°½´Ø±İ’è‰Šúˆ— */
+#endif
+    if(intrflag) return(SND_RET_NSET);
+    intrflag = 1;
+/* 1994/02/24 End */
+    if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
+    SET_PRM(0, tone_no);                        /* ƒpƒ‰ƒ[ƒ^ƒZƒbƒg          */
+    SET_PRM(1, mix_no);                         /* ƒpƒ‰ƒ[ƒ^ƒZƒbƒg          */
+    SET_COMMAND(COM_CHG_MIX);                   /* ƒRƒ}ƒ“ƒhƒZƒbƒg            */
+    HOST_SET_RETURN(SND_RET_SET);
+}
+typedef unsigned char bool;
+char	MidiLastKeyOn[ 16 ];
+INT16	MidiOneShotCnt[ 16 ];
+
+typedef struct
+{
+	char	patch;
+	char	pitch;
+	char	volume;
+	char	pan;
+} Midi;
+
+Midi MidiStatus[ 16 ];
+int	SfxVolume;
+typedef struct
+{
+	char a, b, c, d;
+} MidiCmd;
+
+MidiCmd MidiCmdBuf[ 64 ];
+
+int	MidiBufInIdx = 0;
+int	MidiBufOutIdx = 0;
+int	MidiBufCnt = 0;
+bool	MidiBufBusy = TRUE;
+
+/*--------------------------------------------------------------------------*\
+\*--------------------------------------------------------------------------*/
+
+void DoMidiCmd( void );
+void SendMidiCmd( char a, char b, char c, char d );
+
+void DoMidiInterrupt( void )
+{
+	if( !MidiBufBusy )
+	{
+		DoMidiCmd();
+		DoMidiCmd();
+		DoMidiCmd();
+	}
+}
+
+typedef struct
+{
+	char	prog;
+	char	key;
+
+} MidiData;
+
+#define	MIDI_PATCH( chan, val )				{ SendMidiCmd( 4, chan,  val,    0 ); }
+#define	MIDI_PITCH( chan, val )				{ SendMidiCmd( 6, chan,    0,  val ); }
+#define	MIDI_BANK( chan, val )				{ SendMidiCmd( 3, chan,   32,  val ); }
+#define	MIDI_VOLUME( chan, val )			{ SendMidiCmd( 3, chan,    7,  val ); }
+#define	MIDI_PAN( chan, val )				{ SendMidiCmd( 3, chan,   10,  val ); }
+#define	MIDI_KEY( chan, note, velo )		{ SendMidiCmd( 1, chan, note, velo ); }
+#define	MIDI_OFF( chan, note )				{ SendMidiCmd( 0, chan, note,  127 ); }
+
+void MidiPatch( int chan, int val )
+{
+	/* Issuing a 'patch' midi command to the Sega sound driver resets the pitch bend and pan, but not volume. */
+
+	if( MidiStatus[ chan ].patch != val )
+	{
+		MidiStatus[ chan ].patch	= val;
+		MidiStatus[ chan ].pitch	= 64;
+		MidiStatus[ chan ].pan		= 64;
+
+		/* The Sega library sometimes seems to 'miss' a patch change. Let's reducee the chance of that happening. */
+		MIDI_PATCH( chan, val );
+		MIDI_PATCH( chan, val );
+	}
+}
+
+void MidiBank( int chan, int val )
+{
+	/* Issuing a 'bank' midi command to the Sega sound driver resets everything. */
+	MidiStatus[ chan ].patch	= -1;
+	MidiStatus[ chan ].pitch	= 64;
+	MidiStatus[ chan ].pan		= 64;
+	MidiStatus[ chan ].volume	= 64;
+	MIDI_BANK( chan, val );
+}
+
+void MidiVolume( int chan, int val )
+{
+	if( MidiStatus[ chan ].volume != val )
+	{
+		MidiStatus[ chan ].volume = val;
+		val = ( val * SfxVolume ) >> 12;
+		MIDI_VOLUME( chan, val );
+	}
+}
+
+void MidiPan( int chan, int val )
+{
+	if( MidiStatus[ chan ].pan != val )
+	{
+		MidiStatus[ chan ].pan = val;
+		MIDI_PAN( chan, val );
+	}
+}
+
+void MidiPitch( int chan, int val )
+{
+	if( MidiStatus[ chan ].pitch != val )
+	{
+		MidiStatus[ chan ].pitch = val;
+		MIDI_PITCH( chan, val );
+	}
+}
+
+void _MidiKeyOff( int chan, int note )
+{
+	MIDI_OFF( chan, note );
+}
+
+void _MidiKeyOn( int chan, int note )
+{
+	MIDI_KEY( chan, note, 64 );
+}
+
+void MidiKeyOff( int chan )
+{
+	if( MidiLastKeyOn[ chan ] )
+	{
+		_MidiKeyOff( chan, MidiLastKeyOn[ chan ] );
+		MidiLastKeyOn[ chan ] = 0;
+	}
+	MidiOneShotCnt[ chan ] = 0;
+}
+
+void MidiKeyOn( int chan, int note )
+{
+	MidiKeyOff( chan );
+	_MidiKeyOn( chan, note );
+
+	MidiLastKeyOn[ chan ] = note;
+}
+
+void MidiReset( int chan )
+{
+	MidiStatus[ chan ].patch	= -1;
+	MidiStatus[ chan ].pitch	= -1;
+	MidiStatus[ chan ].pan		= -1;
+	MidiStatus[ chan ].volume	= -1;
+
+	MidiBank( chan, 0 );
+	MidiKeyOff( chan );
+	MidiVolume( chan, 127 );
+	MidiPan( chan, 64 );
+	MidiPitch( chan, 64 );
+}
+
+void MidiDuration( int chan, int len )
+{
+	MidiOneShotCnt[ chan ] = len;
+}
+
+/*--------------------------------------------------------------------------*\
+\*--------------------------------------------------------------------------*/
+
+void DoMidiCmd( void )
+{
+	/* Variables. */
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"xxxxxx",4,20);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(MidiBufCnt),4,30);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"xxxxxx",4,40);
+
+	int		a, b, c, d;
+	/* Code. */
+	if( MidiBufCnt != 0 )
+	{
+		a = MidiCmdBuf[ MidiBufOutIdx ].a;
+		b = MidiCmdBuf[ MidiBufOutIdx ].b;
+		c = MidiCmdBuf[ MidiBufOutIdx ].c;
+		d = MidiCmdBuf[ MidiBufOutIdx ].d;
+
+		if( 0 == SND_CtrlDirMidi( 0, 0, a, b, c, d ) )
+		{
+			/* Command successfully transmitted. */
+			MidiBufOutIdx = ( MidiBufOutIdx + 1 ) & 63;
+			MidiBufCnt -= 1;
+		}
+	}
+}
+
+void SendMidiCmd( char a, char b, char c, char d )
+{
+	/* Variables. */
+	int	was_busy;
+	/* Code. */
+	was_busy = MidiBufBusy;
+	MidiBufBusy = TRUE;
+	/* If buffer full, send some data now, to make space. */
+	while( MidiBufCnt == 64 ) DoMidiCmd();
+
+	/* Store command parameters. */
+	MidiCmdBuf[ MidiBufInIdx ].a = a;
+	MidiCmdBuf[ MidiBufInIdx ].b = b;
+	MidiCmdBuf[ MidiBufInIdx ].c = c;
+	MidiCmdBuf[ MidiBufInIdx ].d = d;
+
+	MidiBufInIdx = ( MidiBufInIdx + 1 ) & 63;
+	MidiBufCnt += 1;
+	MidiBufBusy = was_busy;
+}
+
+enum
+{
+	ROADKILL_CHAN,
+	ROADKILL_CHAN_2,
+	CRASH_CHAN,
+	CRASH_CHAN_2,
+	CRASH_CHAN_3,
+	CRASH_CHAN_4,
+	SKID_LCHAN,
+	SKID_RCHAN,
+	HORN_CHAN,
+	ENGINE_CHAN,
+	ENGINE_NOISE_LCHAN,
+	ENGINE_NOISE_RCHAN,
+	SPEECH_CHAN,
+	DOPPLER_CHAN_0,
+	DOPPLER_CHAN_1,
+};
+
+MidiData CrashMidiData[] =
+{
+	{  6, 62 },
+	{  4, 55 },
+	{  9, 64 },
+	{ 10, 60 },
+	{  5, 69 },
+	{  4, 60 },
+	{  6, 54 },
+	{  9, 56 },
+
+	{  6, 59 },
+	{  9, 60 },
+	{ 10, 57 },
+	{  5, 63 },
+	{  4, 61 },
+	{ 11, 64 },
+	{  9, 56 },
+	{  4, 59 },
+
+	{  6, 62 },
+	{  4, 56 },
+	{  9, 62 },
+	{ 10, 60 },
+	{  5, 63 },
+	{  4, 61 },
+	{  6, 50 },
+	{  9, 52 },
+
+	{  6, 62 },
+	{  9, 64 },
+	{ 10, 53 },
+	{  5, 61 },
+	{  4, 64 },
+	{  6, 54 },
+	{  9, 52 },
+	{  4, 60 },
+};
+	int SystemClock;
+	int LastCrashClock,CrashCnt;
+#define	MIDI_KILL1		0
+#define	MIDI_KILL2		1
+#define	MIDI_KILL3		2
+#define	MIDI_KILL4		67
+#define	MIDI_KILL5		68
+#define	MIDI_KILL6		36	/* KEY=57 short */
+#define	MIDI_KILL7		26	/* KEY=57 short */
+
+#define	MIDI_PICKUP		8
+
+#define MIDI_EXPLOSION	12
+#define MIDI_EXPLOSION2	42
+#define MIDI_EXPLOSION3	 5
+
+#define	MIDI_Z_RIGHT	14
+#define	MIDI_Z_MAKEIT	15
+#define	MIDI_Z_LEFT		16
+#define	MIDI_Z_DONTSTOP	17
+#define	MIDI_Z_GOTBOMB	21
+#define	MIDI_Z_NICEMOVE	24
+#define	MIDI_Z_UHOH		25
+#define	MIDI_Z_WHOAH	26
+#define	MIDI_Z_TRYNOT	27
+#define	MIDI_Z_NOPLEASE	28
+#define	MIDI_Z_WATCHIT	29
+#define	MIDI_Z_NONONO	36
+#define	MIDI_Z_AIMING	59
+#define	MIDI_Z_STRAIGHT	61
+#define	MIDI_Z_WRONG	62
+
+#define	MIDI_PLING		57
+
+#define	MIDI_B_BUMPY	18
+#define	MIDI_B_HANGON	19
+#define	MIDI_B_AIRBAGS	22
+#define	MIDI_B_YIPPEE	30
+#define	MIDI_B_GOGOGO	31
+#define	MIDI_B_SOMEONE	32
+#define	MIDI_B_EATTHIS	33
+#define	MIDI_B_BUCKLE	37
+#define	MIDI_B_LICENSE	40
+#define	MIDI_B_OOPS		41
+#define	MIDI_B_SORRYPAL	58
+
+#define	MIDI_ENG_CAR	50	// KEY 62
+#define	MIDI_ENG_TRUCK	51	// KEY 61
+#define	MIDI_ENG_SPORT	52	// KEY 70
+
+#define	MIDI_ENG_CARN	56	// KEY 60
+#define	MIDI_ENG_TRUCKN	43
+
+#define	MIDI_HRN_TRUCK	64	/* Key 36 */
+#define	MIDI_HRN_CAR	63	/* Key 36 */
+#define	MIDI_HRN_SIREN	34
+#define	MIDI_CHOPPER	35
+
+
+#define Z_PAN 64 + 4
+#define B_PAN 64 - 4
+
+int	EngineKey;
+int	EngineNoiseKey;
+int	EngineRev;
+int	EnginePitchVal;
+int	EnginePitchMax;
+int	EnginePitchAdd;
+int	EngineType;
+int	HornStatus;
+
+void RonsSfxCrash( void )
+{
+	/* Variables. */
+
+	int	chan;
+	int	select;
+
+	/* Code. */
+
+//	if( SfxQuietCnt ) return;
+
+//	if( ( UINT32 )( SystemClock - LastCrashClock ) > 15 )
+	{
+//		LastCrashClock = SystemClock;
+
+		select = CrashCnt & 31;
+		chan = CRASH_CHAN + ( CrashCnt & 3 );
+		MidiPatch( chan, CrashMidiData[ select ].prog );
+		MidiVolume( chan, 64 );
+		MidiPan( chan, 64 - 7 );
+		MidiKeyOn( chan, CrashMidiData[ select ].key );
+		MidiDuration( chan, 200 );
+		CrashCnt++;
+
+		select = CrashCnt & 31;
+		chan = CRASH_CHAN + ( CrashCnt & 3 );
+		MidiPatch( chan, CrashMidiData[ select ].prog );
+		MidiVolume( chan, 64 );
+		MidiPan( chan, 64 + 7 );
+		MidiKeyOn( chan, CrashMidiData[ select ].key );
+		MidiDuration( chan, 200 );
+		CrashCnt++;
+	}
+}
+void RonsSfxApplyVolume( void )
+{
+	/* Variables. */
+
+	int	i, vol;
+
+	/* Code. */
+
+	/* Use this to apply the set volume to running channels. */
+
+	for( i = 0; i < 16; i++ )
+	{
+		vol = 64;
+		MidiStatus[ i ].volume = -1;		/* Force a rewrite. */
+		MidiVolume( i, vol );
+	}
+}
+void RonsSfxVolumeTestSound( void )
+{
+	/* Variables. */
+
+	int	chan;
+
+	/* Code. */
+
+	chan = CRASH_CHAN + ( CrashCnt & 3 );
+	MidiStatus[ chan ].volume = -1;			/* Force volume update. */
+	MidiPatch( chan, MIDI_PICKUP );
+	MidiVolume( chan, 64 );
+	MidiPan( chan, 64 );
+	MidiKeyOn( chan, 62 );
+	MidiDuration( chan, 200 );
+	CrashCnt++;
+}
+static INT32 DrvFMInit()
+{
+	DrvInitSaturn();
+
+	void * buffer_ptr,	* data_ptr;
+	SndIniDt	snd_init;
+	int		len, fid;
+	data_ptr = buffer_ptr = (void *)0x00200000; //0x6080000;
+/*
+Map for our example :
+char map[] = { 0x00, 0x00, 0xB0, 0x00, 0x00, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+                       <>              <------>           <----------->      <------------------>
+						\Tone Data   \ Start			\ Size of			\ Map Terminator
+						#0 (first)		Address		Tone Bank
+*/
+#define DRIVER_FNAME	"SDDRVS.TSK"
+#define TONE_FNAME		"TONE1.BIN"
+#define MAP_FNAME		"MAP.BIN"
+#if 1
+
+	char map[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x00, 0x00, 0x07, 0x4D, 0x8C, 0xFF, 0xFF };
+//	char map[] = { 0x00, 0x00, 0xB0, 0x00, 0x00, 0x00,0x00,0x04, 0x02, 0xFF, 0xF0, 0x00, 0xB0, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00 };
+	fid		= GFS_NameToId((Sint8 *)DRIVER_FNAME);
+	len	= GetFileSize(fid);
+	if(fid>0 && len >0)	{GFS_Load(fid, 0, ( void * )data_ptr, len);}
+	else {FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"not loaded ",4,70);}
+
+	SND_INI_PRG_ADR( snd_init ) = data_ptr;
+	SND_INI_PRG_SZ( snd_init ) = len;
+
+	SND_INI_ARA_ADR(snd_init) 	= (Uint16 *)map;
+	SND_INI_ARA_SZ(snd_init) 	= (Uint16)sizeof(map);
+
+	SND_Init2(&snd_init);
+	SND_ChgMap(0);
+
+	SfxVolume = ( 4096 + 255 ) >> 1;
+#endif
+	data_ptr = buffer_ptr;
+
+fid		= GFS_NameToId((Sint8 *)TONE_FNAME);
+len	= GetFileSize(fid);
+GFS_Load(fid, 0, ( void * )data_ptr, len);
+
+	SND_MoveData( data_ptr, len, SND_KD_TONE, 0 );
+	MidiBufBusy = TRUE;
+	MidiBufCnt =  0;
+#if 0
+
+	for(int i = 0; i < 16; i++ )	{		MidiReset( i );	}
+//	while( MidiBufCnt != 0 ) {		DoMidiCmd();	}
+	MidiBufBusy = FALSE;
+    SND_ChgMix(0,0);
+    SND_SetTlVl(15);
+#endif
+
+while(1)
+	{
+MidiBufCnt=0;
+MidiBufBusy=FALSE;
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"midi play         ",4,80);
+#if 0
+
+	for (int i=0; i<16; i++)
+	{
+//	MidiBank(i, 0);
+//	MidiPatch( i, 0 );
+//	MidiVolume( i, 115 );
+//	MidiPan( i, 64 );
+	MidiKeyOn( i, 56 );
+	}
+	DoMidiInterrupt();
+
+	PCM_Task();
+#endif
+
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"midi play  end       ",4,80);
+	}
+	return 0;
+}
+
+
+static INT32 DrvFMFrame()
+{
+//	PCM_Task(pcm); 
 }
 
 static INT32 DrvInit()
@@ -720,6 +1633,7 @@ static INT32 DrvInit()
 	{
 		palette_write(i);
 	}
+	SCL_SetColRam(SCL_NBG0,8,8,palette);
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1402,7 +2316,18 @@ static INT32 DrvExit()
 	BurnYM2203Exit();
 #endif
 	CZetExit();
+
+	DrvZ80ROM0 = DrvZ80ROM1 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
+	DrvZ80RAM0	 = DrvZ80RAM1 = DrvPalRAM = DrvTxRAM = DrvBgRAM = DrvSprRAM = DrvSprBuf = NULL;
+	DrvScreenLayout = DrvBgEnable = DrvFgEnable = DrvSprEnable = DrvVidBank = DrvRomBank	= NULL;
+	DrvPalette = DrvScrollx	= DrvScrolly = NULL;
+	soundlatch = flipscreen = coin_lockout = NULL;
+	remap16_lut = remap4to16_lut	= cram_lut = fg_map_lut = bg_map_lut2x1 = bg_map_lut2x2 = NULL;
+	MemEnd = AllRam = RamEnd = NULL;
+	watchdog = 0;
+
 	free (AllMem);
+	AllMem = NULL;
 	return 0;
 }
 
@@ -1456,20 +2381,15 @@ static INT32 DrvFrame()
 //		FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"dfvframe start           ",4,10);
 #ifndef BG_BANK
 // vbt à déplacer supprimer
-SCL_SetColRam(SCL_NBG0,8,8,palette);
+//SCL_SetColRam(SCL_NBG0,8,8,palette);
 #endif
 //  	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame          ",4,10);
 // cheat code level
 //DrvZ80RAM0[0xF3A1-0xe000]=1;
 // cheat code invincible
-DrvZ80RAM0[0xE905-0xe000]= 0x01;
-DrvZ80RAM0[0xF424-0xe000]= 0x0F;
+//DrvZ80RAM0[0xE905-0xe000]= 0x01;
+//DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
-/*
-	if (DrvReset) {
-		DrvDoReset(1);
-	}
-*/
 	if (watchdog >= 180) {
 		DrvDoReset(0);
 	}
@@ -1489,8 +2409,8 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
 	CZetNewFrame();
 
-	UINT32 nInterleave = 100;
-//	UINT32 nInterleave = 20;
+//	UINT32 nInterleave = 100;
+	UINT32 nInterleave = 20;
 	nCyclesTotal[0] = 3000000 / 60; ///2;
 	nCyclesTotal[1] = 3000000 / 60 / 2; ///2;
 	UINT32 nCyclesDone[2] = { 0, 0 };
@@ -1505,8 +2425,10 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += z80_emulate(nCyclesSegment);
 // z80_raise_IRQ(0);
-		if (i == 98) z80_raise_IRQ(0);
-		if (i == 99) z80_lower_IRQ();
+//		if (i == 98) z80_raise_IRQ(0);
+//		if (i == 99) z80_lower_IRQ();
+		if (i == 18) z80_raise_IRQ(0);
+		if (i == 19) z80_lower_IRQ();
 #else
 		nCurrentCPU = 0;
 		CZetOpen(nCurrentCPU);
@@ -1525,8 +2447,8 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 		nCurrentCPU = 1;
 		CZetOpen(nCurrentCPU);
 //	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"BurnTimerUpdate           ",4,20);
-#ifdef SND
-//		BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
+#ifdef SND2
+		BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
 #endif
 		CZetClose();
 #endif

@@ -23,7 +23,7 @@ int ovlInit(char *szShortName)
 #ifdef RAZE
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"sms", NULL,
-		"Sega Master System (Faze)\0",
+		"Sega Master System (Faze)",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
 		SMSInit, SMSExit, SMSFrame, NULL
@@ -32,7 +32,7 @@ int ovlInit(char *szShortName)
 #ifdef CZ80
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"smscz", "sms",
-		"Sega Master System (CZ80)\0",
+		"Sega Master System (CZ80)",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
 		SMSInit, SMSExit, SMSFrame, NULL
@@ -41,7 +41,7 @@ int ovlInit(char *szShortName)
 #ifdef CZ80
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"ggcz", "gg",
-		"Sega Game Gear (CZ80)\0",
+		"Sega Game Gear (CZ80)",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
 		SMSInit, SMSExit, SMSFrame, NULL
@@ -49,7 +49,7 @@ int ovlInit(char *szShortName)
 #else
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"gg", NULL,
-		"Sega Game Gear (Faze)\0",
+		"Sega Game Gear (Faze)",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
 		SMSInit, SMSExit, SMSFrame, NULL
@@ -185,7 +185,8 @@ static void SaturnInitMem()
 #endif
 	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
-	MemEnd			= Next;	
+	CZ80Context	= Next; Next += 0x1080;
+	MemEnd		= Next;	
 	 
 /*	name_lut	= (UINT16 *)malloc(0x10000*sizeof(UINT16)); 
 	cram_lut	= (UINT16 *)malloc(0x40*sizeof(UINT16));
@@ -201,10 +202,9 @@ void dummy()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
-
+	SPR_InitSlaveSH();
 //	InitCDsms();
 #ifndef OLD_SOUND
-	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 #endif
 	nBurnSprites  = 67;//131;//27;
@@ -228,13 +228,14 @@ static void DrvInitSaturn()
 		//8;//aleste
 //	name_lut	= (UINT16 *)malloc(0x10000*sizeof(UINT16));
 //	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
-	
+		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
 	SaturnMem = (UINT8 *)malloc(nLen);
 	SaturnInitMem();
+	memset(CZ80Context,0x00,0x1080);
+		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	make_lut();
-
 #ifdef TWO_WORDS
     SS_SET_N0PRIN(4);
     SS_SET_S0PRIN(4);	
@@ -252,11 +253,12 @@ static void DrvInitSaturn()
 	initLayers();
 	initColors();
 	initPosition();
-//	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
+		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
+//	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 	initSprites(256-1,192-1,0,0,0,0);
-	
 	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
 //	drawWindow(32,192,192,14,52);
 	nBurnFunction = update_input1;
@@ -266,49 +268,18 @@ static void DrvInitSaturn()
 	drawWindow(0,192,192,2,66);
 #endif
 	SetVblank2();
-
-
-//	extern int __malloc_trim_threshold;
-//	extern int __malloc_top_pad;
-//	extern mallinfo  __malloc_current_mallinfo;
-
-//	__malloc_trim_threshold = 1024;
-
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
-//			sauvegarder __malloc_sbrk_base puis restaurer à la fin
-//   Uint32 __malloc_sbrk_base;
-//__malloc_sbrk_base = &_bend;
-/*	Uint8	*dst;
-	for (dst = (Uint8 *)&_bend; dst < (Uint8 *)0x060A5000; dst++)
-		*dst = 0;  */
- /*   for (dst = (Uint8 *)&__malloc_sbrk_base
-*/
-/*		Uint8	*dst;
-    for (dst = (Uint8 *)&bss_start; dst < (Uint8 *)&bss_end; dst++)
-			 *dst = 0;  
-  */
-/*	char toto[50];
-	extern Uint32 __malloc_sbrk_base, _bend,_bstart,bss_start,bss_end;
-	extern int __malloc_trim_threshold;
-	extern int __malloc_top_pad;
-
-	sprintf (toto,"malloc_top_pad %08x %08x",__malloc_top_pad,__malloc_sbrk_base) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,201);
-
-	sprintf (toto,"malloc_trim_threshold %08x %08x",__malloc_trim_threshold,sbrk(0)) ;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);	   */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void sms_start()
 {
-//	fba_drv->Frame = NULL;
+		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+
 //	z80_stop_emulating();
 	nSoundBufferPos=0;
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	
-	for (int i=0;i<256 ; ++i ) colAddr[i]=colBgAddr[i]=RGB( 0, 0, 0 );//palette2[0];
-	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );//palette2[0];
+	for (int i=0;i<256 ; ++i ) colAddr[i]=colBgAddr[i]=RGB( 0, 0, 0 );
+	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );
 	
 	memset(&ss_vram[0x1100],0,0x10000-0x1100);
 	memset((Uint8 *)cache,0x0,0x20000);
@@ -335,7 +306,6 @@ static void sms_start()
 	system_init();
 
 	running = 1;
-//	fba_drv->Frame = SMSFrame;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 SMSInit(void)
@@ -355,6 +325,8 @@ static INT32 SMSInit(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 SMSExit(void)
 {
+	nBurnFunction = NULL;
+
 	SS_SET_N0SPRM(0);
 	ss_regs->specialcode=0x0000;
 	SPR_InitSlaveSH();
@@ -365,19 +337,21 @@ static INT32 SMSExit(void)
 	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
 	z80_set_in((unsigned char (*)(short unsigned int))NULL);
 	z80_set_out((void (*)(short unsigned int, unsigned char))NULL);
-#else
-	CZetExit();
+#endif
+#ifdef CZ80
+	CZetExit2();
 #endif
 
 	cart.rom = NULL;
 	__port = NULL;
-	nBurnFunction = NULL;
 
 	dummy_write = MemEnd = NULL;
 	cram_lut = map_lut = NULL;
 
 	bp_lut = NULL;
 	name_lut = NULL;
+	CZ80Context = NULL;
+
 	free(SaturnMem);
 	SaturnMem = NULL;
 
@@ -553,8 +527,6 @@ static void system_init()
 //SN76489Init(0,MASTER_CLOCK, 0);
 //PSG_Init(0,MASTER_CLOCK, 7680);
 	PSG_Init(MASTER_CLOCK, 7680);
-
-//30720
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void sms_init(void)
@@ -1324,24 +1296,14 @@ static unsigned char cz80_z80_readport16(unsigned short PortNo)
 #ifdef GG
 			if(( device = PER_GetDeviceR( &__port[0], 0 )) != NULL )
 			{
-		//		pltriggerE[0] = pltrigger[1];
 				pltrigger[0]  = PER_GetTrigger( device );
-		//		pltriggerE[0] = (pltrigger[1]) ^ (pltriggerE[1]);
-		//		pltriggerE[0] = (pltrigger[1]) & (pltriggerE[1]);
-
-//				if((pltrigger[0] & PER_DGT_U)!=0)  temp &= ~0x40;
 				if((pltrigger[0] & PER_DGT_C)!=0)  temp &= ~0x80;	
 			}
 			return temp;
 #else
  			return 0xff;
 #endif
-//            temp = 0xFF;
-//			return (update_system());
-//            if(input.system & INPUT_START) temp &= ~0x80;
-//            if(sms.country == TYPE_DOMESTIC) temp &= ~0x40;
-//            return (temp);
-    
+
 		case 0xC0: /* INPUT #0 */  
 		case 0xDC:
 			return (update_input1());
@@ -1438,7 +1400,6 @@ static UINT8 update_input1(void)
 		for(i=0;i<6;i++)
 		{
 			if((pltrigger[0] & pad_asign[i])!=0)
-//			if((pltriggerE[0] & pad_asign[i])!=0)
 			{
 				switch(pltrigger[0] & pad_asign[i] )
 				{
@@ -1448,9 +1409,6 @@ static UINT8 update_input1(void)
 					case PER_DGT_R: temp &= ~0x08; break;
 					case PER_DGT_A: temp &= ~0x10; break;
 					case PER_DGT_B: temp &= ~0x20; break;
-#ifdef GG
-					case PER_DGT_C: temp &= ~0x80; break;
-#endif
 					default: 	break;
 				}
 			}
@@ -1458,7 +1416,6 @@ static UINT8 update_input1(void)
 
 		for(;i<12;i++)
 		{
-//			if((pltrigger[0] & pad_asign[i])!=0)
 			if((pltriggerE[0] & pad_asign[i])!=0)
 			{
 				switch(pltriggerE[0] & pad_asign[i] )
@@ -1471,7 +1428,6 @@ static UINT8 update_input1(void)
 					break;
 #endif
 					case PER_DGT_X:
-
 
 #ifdef PROFILING
 	for (k=0;k<21 ;k++)
@@ -1770,7 +1726,8 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 
 	z80_reset();
 #else
-	CZetInit(1);
+//	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 /* Bank #0 */ 
 	CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)(&cart.rom[0]));

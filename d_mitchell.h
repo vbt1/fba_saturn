@@ -15,14 +15,14 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int PangInit();
 /*static*/ void DrvInitSaturn();
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
-static UINT16 charaddr_lut[0x0800];
-static Uint16 cram_lut[4096];
 ///*static*/ Uint16 *cram_lut;
 /*static*/ void make_lut(void);
 /*static*/ void DrvCalcPalette();
 /*static*/ //unsigned char 	bg_dirtybuffer[4096];
 static UINT16 map_lut[256];
-static UINT16 map_offset_lut[2048];
+static UINT16 *map_offset_lut = NULL;  //[2048];
+static UINT16 *charaddr_lut = NULL; //[0x0800];
+static UINT16 cram_lut[4096];
 ///*static*/ unsigned char 	*bg_dirtybuffer;
 static unsigned char 	color_dirty = 0;
 
@@ -41,10 +41,11 @@ static unsigned char DrvInputPort11[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static unsigned char DrvInput[12]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static unsigned char DrvDip[2]         = {0, 0};
 static unsigned char DrvReset          = 0;
-static short         DrvDial1          = 0;
-static short         DrvDial2          = 0;
+//static short         DrvDial1          = 0;
+//static short         DrvDial2          = 0;
 
 extern unsigned char* MSM6295ROM;
+extern int* pBuffer;
 
 static unsigned char *Mem                 = NULL;
 static unsigned char *MemEnd              = NULL;
@@ -59,26 +60,26 @@ static unsigned char *DrvVideoRam         = NULL;
 static unsigned char *DrvSpriteRam        = NULL;
 static unsigned char *DrvChars            = NULL;
 static unsigned char *DrvSprites          = NULL;
-static int nCyclesDone = 0; //, nCyclesTotal;
+static UINT8 *CZ80Context = NULL;
+//static int nCyclesDone = 0; //, nCyclesTotal;
 /*static*/ //int nCyclesSegment;
 
-static unsigned char DrvRomBank;
-static unsigned char DrvPaletteRamBank;
-static unsigned char DrvOkiBank;
-static unsigned char DrvFlipScreen;
-static unsigned char DrvVideoBank;
-static unsigned char DrvInput5Toggle;
-static unsigned char DrvPort5Kludge;
-static int DrvTileMask;
-static unsigned char DrvHasEEPROM;
-static int DrvNumColours;
-static int DrvNVRamSize;
-static int DrvNVRamAddress;
-static unsigned char DrvDialSelected;
-static int DrvDial[2];
-static unsigned char DrvSoundLatch;
-
-static unsigned char DrvInputType;
+static unsigned char DrvRomBank = 0;
+static unsigned char DrvPaletteRamBank = 0;
+static unsigned char DrvOkiBank = 0;
+static unsigned char DrvFlipScreen = 0;
+static unsigned char DrvVideoBank = 0;
+static unsigned char DrvInput5Toggle = 0;
+static unsigned char DrvPort5Kludge = 0;
+static unsigned char DrvHasEEPROM = 0;
+//static int DrvTileMask;
+//static int DrvNumColours;
+//static int DrvNVRamSize;
+//static int DrvNVRamAddress;
+//static unsigned char DrvDialSelected;
+//static int DrvDial[2];
+//static unsigned char DrvSoundLatch;
+//static unsigned char DrvInputType;
 
 #define DRV_INPUT_TYPE_BLOCK		2
 
@@ -108,7 +109,7 @@ static struct BurnInputInfo PangInputList[] =
 };
 
 STDINPUTINFO(Pang)
-
+/*
 static struct BurnInputInfo BlockInputList[] =
 {
 	{"Coin 1"            , BIT_DIGITAL  , DrvInputPort0  + 7, "p1 coin"   },
@@ -129,7 +130,7 @@ static struct BurnInputInfo BlockInputList[] =
 };
 
 STDINPUTINFO(Block)
-
+*/
 static struct BurnRomInfo PangRomDesc[] = {
 	{ "pang6.bin",     0x08000, 0x68be52cd, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "pang7.bin",     0x20000, 0x4a2e70f6, BRF_ESS | BRF_PRG }, //	 1
