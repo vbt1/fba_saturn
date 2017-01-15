@@ -729,6 +729,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
  
 static INT32 DrvRobowresInit()
 {
+	nSoundBufferPos=0;
 	DrvInitSaturn();
 	game_select = 1;
 	AllMem = NULL;
@@ -755,12 +756,14 @@ static INT32 DrvRobowresInit()
 
 static INT32 DrvInit()
 {
+	nSoundBufferPos=0;
 	DrvInitSaturn();
 
 	game_select = 0;
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
+
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
 	{
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
@@ -769,7 +772,6 @@ static INT32 DrvInit()
 	memset(AllMem, 0, nLen);
 	MemIndex();
 	memset(CZ80Context,0x00,0x1080);
-
 	if(DrvLoadRoms()) return 1;
 	DrvPaletteInit();
 	DrvGfxDecode();
@@ -889,7 +891,7 @@ static void DrvInitSaturn()
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	drawWindow(0,224,240,0,64);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -914,20 +916,25 @@ static INT32 DrvExit()
 	nCyclesTotal = game_select = 0;
 	DrvZ80Bank0 = 0;
 
+	nSoundBufferPos=0;
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*
 void dummy()
 {
 
 }
+*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvFrame()
 {
+//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame     ",120,60);
+/*
 	if (DrvReset) {
 		DrvDoReset();
 	}
-
+*/
 	memset (DrvInputs, 0x00, 3);
 
 	for (INT32 i = 0; i < 8; i++) {
@@ -944,19 +951,26 @@ static INT32 DrvFrame()
 
 	for (INT32 i = 0; i < nInterleave; i++) {
 
+//	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205Update, NULL);
+
 		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
 			CZetNmi();
-		SPR_WaitEndSlaveSH();
-	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205Update, NULL);
-//		MSM5205Update();
+//		SPR_WaitEndSlaveSH();
+//	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205Update, NULL);
+		MSM5205Update();
 	}
 //	CZetClose();
+//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame     ",120,60);
+
 	DrvDraw();
+//	SPR_WaitEndSlaveSH();
+//	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
 	SN76496Update(0, nSoundBuffer, SOUND_LEN);
 	SN76496Update(1, nSoundBuffer, SOUND_LEN);
+
 #if 1
 	SN76496Update(2, nSoundBuffer, SOUND_LEN);
 	MSM5205Render(0, nSoundBuffer, SOUND_LEN);

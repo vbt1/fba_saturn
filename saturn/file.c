@@ -1,4 +1,5 @@
 #include "sega_gfs.h"
+#define DEBUG_DRV 1
 #ifdef DEBUG
 //#include "string.h"
 #endif
@@ -38,7 +39,7 @@ static Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
 
 //#define VBT
 
-#ifdef VBT
+#ifdef DEBUG_DRV2
 #define SYS_CDINIT1(i) \
 ((**(void(**)(int))0x60002dc)(i))
 
@@ -57,7 +58,7 @@ void InitCD()
 
 #ifndef ACTION_REPLAY
 
-#ifdef VBT
+#ifdef DEBUG_DRV2
 //CdUnlock();
 	cd_auth();
 #endif
@@ -125,7 +126,7 @@ Sint32 GetFileSize(int file_id)
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 
-#ifdef VBT
+#ifdef DEBUG_DRV2
 
  #include "sega_cdc.h"
 

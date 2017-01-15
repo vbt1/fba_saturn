@@ -5,6 +5,7 @@
 //#define OVLADDR  0x060A5000
 #define OVLADDR  0x060B4000
 #define LOWADDR 0x00200000
+//#define DEBUG_DRV 1
 volatile SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
 extern unsigned char play;
@@ -13,7 +14,7 @@ unsigned char drvquit;
 void	UsrVblankIn( void )
 {
 #ifdef FONT
-	char xx[4];
+//	char xx[4];
    PER_GetPort(__port);	
 #endif
 	PCM_MeVblIn();
@@ -30,7 +31,7 @@ void	UsrVblankIn( void )
 					 
 		if(frame_y==hz)
 		{
-				if(frame_displayed!=frame_x)
+/*				if(frame_displayed!=frame_x)
 				{
 //					UINT8 *tmp0 = (UINT8*)0x00200000;
 //					sprintf(tmp0,"*%03d*",frame_x);
@@ -39,7 +40,7 @@ void	UsrVblankIn( void )
 					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)xx,136,20);
 					frame_displayed = frame_x;
 				}
-
+*/
 				frame_y=frame_x=0;
 		}		   
 #endif
@@ -472,7 +473,7 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 					loaded[0] = 0;
 					modified[0] = 1;
 
-	 heapWalk();
+//	 heapWalk();
 
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
@@ -504,7 +505,7 @@ static void display_menu(void)
 //	sc_init();
 //	the_loop = 1;
 
-	heapWalk();
+//	heapWalk();
 
 	unsigned int current_page = 1,m;
 	unsigned char modified = 1;
@@ -513,8 +514,10 @@ static void display_menu(void)
 		if(!loaded)
 		{
 // vbt à remette			
+#ifndef DEBUG_DRV
 			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			load_img(0);	
+#endif
 			loaded=1;
 
 //			char toto[100];
@@ -1757,7 +1760,9 @@ static int nDrvInit(int nDrvNum)
 
 
 // vbt à remettre    
+#ifndef DEBUG_DRV 
 	GFS_Load(GFS_NameToId(strupr(drv_file)), 0, (void *)OVLADDR, GFS_BUFSIZ_INF);
+#endif
 	ChangeDir(BurnDrvGetTextA(DRV_NAME));
 
 	fp = (void *)OVLADDR;
@@ -1888,8 +1893,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-	//			 if(frame_x>=frame_y)
-	//				wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 		else
@@ -1902,8 +1907,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-	//			 if(frame_x>=frame_y)
-	//				wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 	}
@@ -2010,7 +2015,7 @@ int vspfunc(char *format, ...)
 */
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-#if 1
+#if 0
 extern UINT32  end;
 extern UINT32  __malloc_free_list;
 extern UINT32  _sbrk(int size);

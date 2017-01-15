@@ -6,7 +6,7 @@
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
-#define nInterleave 140 // dac needs 128 NMIs
+#define nInterleave 20//140 // dac needs 128 NMIs
 #define nSegmentLength1 nBurnSoundLen / nInterleave
 
 #include "d_vigilant.h"
@@ -372,11 +372,15 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 #ifndef RAZE0
 			CZetClose();
 #endif
+
+#ifdef SOUND
 			CZetOpen(1);
 			DrvSetVector(Z80_ASSERT);
 			CZetClose();
+#endif
+
 #ifndef RAZE0
-			CZetOpen(0);
+	CZetOpen(0);
 #endif
 			return;
 		}
@@ -700,9 +704,13 @@ static INT32 VigilantSyncDAC()
 	CZetClose();
 #endif
 
-	nCyclesTotal[0] = 3579645 / 55/3;
+//	nCyclesTotal[0] = 3579645 / 55/3;
+//	nCyclesTotal[1] = 3579645 / 55 /1.5;
+
+	nCyclesTotal[0] = 3579645 / 55/1.5;
 	nCyclesTotal[1] = 3579645 / 55 /1.5;
 	
+
 #ifdef SOUND
 //	BurnYM2151Init(3579645);
 	YM2151Init(1, 3579645/1.5, nBurnSoundRate);	 //11025);//
@@ -1058,7 +1066,7 @@ void dummy()
 		INT16 ScrollBg = 0x17a - (DrvRearHorizScrollLo + DrvRearHorizScrollHi);
 		if (ScrollBg > 0) Scroll -= 2048;
 
-		memset4_fast(&ss_scl[47],Scroll | (Scroll<<16),0x2C0);
+		memset4_fast(&ss_scl[48],Scroll | (Scroll<<16),0x2C0);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1129,7 +1137,6 @@ void dummy()
     *(volatile Uint8 *)0xfffffe11 = 0x00; // FTCSR clear
     *(volatile Uint16 *)0xfffffe92 |= 0x10; // chache parse all
 		}
-#endif
 
 #ifdef RAZE1
 		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
@@ -1152,8 +1159,8 @@ void dummy()
 		CZetClose();
 #endif
 
+
 	CZetOpen(1);
-#ifdef SOUND
 	SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
 #endif
 

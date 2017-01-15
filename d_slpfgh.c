@@ -725,18 +725,19 @@ static void initLayers()
 
 	initLayers();
 	initColors();
-	initSprites(240-1,256-1,-15,0,0,0);
+	initSprites(240-1,256-1,-7,0,0,0);
 	
 	for (unsigned int i = 3; i <nBurnSprites; i++) 
 	{
 		ss_sprite[i].control   = ( JUMP_NEXT | FUNC_NORMALSP);
 		ss_sprite[i].charSize  = 0x210;
 		ss_sprite[i].drawMode  = ( ECD_DISABLE | COMPO_REP);
-		ss_sprite[i].ax    = -32;
+		ss_sprite[i].ax    = -48;
 		ss_sprite[i].ay    =  -32;
 	}
 	ss_reg->n0_move_x = 16<<16;
-	drawWindow(0,256,0,0,68);
+	ss_reg->n2_move_x = 4;
+	drawWindow(0,256,0,2,68);
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -963,7 +964,7 @@ static void draw_sprites()
 	UINT8 delta=3;
 	for (INT32 i = 3; i < 259; i++)
 	{
-			ss_sprite[i].ax    = -32;
+			ss_sprite[i].ax    = -48;
 			ss_sprite[i].ay    =  -32;
 	}
 
@@ -975,7 +976,7 @@ static void draw_sprites()
 			UINT16 code  = (ram[offs + 0] | ((attr & 0xc0) << 2)) & nTigerHeliSpriteMask;
 			ss_sprite[delta].charAddr = 0x440+(code<<4);
 			ss_sprite[delta].ay    = 280-(ram[offs + 1] | (attr << 8 & 0x100));// - (13);
-			ss_sprite[delta].ax    =  ram[offs + 3] - 15;
+			ss_sprite[delta].ax    =  ram[offs + 3] - 11;
 			ss_sprite[delta].color=  (attr >> 1 & 0xf)<<4;
 			delta++;
 		}	   

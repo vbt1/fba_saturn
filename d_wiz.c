@@ -734,8 +734,8 @@ static void initLayers()
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-//	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
-//	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
+	ss_regs->dispenbl &= 0xfbff;
+
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
 }
@@ -801,6 +801,7 @@ static void make_lut(int rotated)
 	memset((Uint8 *)ss_map, 0x11,0x4000);
 	memset((Uint8 *)ss_map2,0x11,0x4000);
 	memset((Uint8 *)ss_font,0x11,0x4000);
+
 	memset(&ss_scl[0],0,240);
 
 //	drawWindow(0,256,0,4,68);
@@ -1035,11 +1036,34 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta, UIN
 
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
+
+char buffer[80];
+int vspfunc(char *format, ...);
+
+int vspfunc(char *format, ...)
+{
+   va_list aptr;
+   int ret;
+
+   va_start(aptr, format);
+   ret = vsprintf(buffer, format, aptr);
+   va_end(aptr);
+
+   return(ret);
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 WizDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
 	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
+
+vspfunc("id %03d %4x       ",*background_color,DrvPalette[*background_color]);
+
+memcpy((UINT8*)0x00200000,buffer,80);
+
+
+
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)toto,4,50);
 	cleanSprites();
 
 	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;

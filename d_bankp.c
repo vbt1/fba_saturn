@@ -65,6 +65,7 @@ static INT32 MemIndex()
 static INT32 DrvInit()
 {
 //	flipscreen = 0;
+	nSoundBufferPos=0;
 	DrvInitSaturn();
 
 	int nLen;
@@ -77,10 +78,6 @@ static INT32 DrvInit()
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
-	memset(Mem, 0, nLen);
-	memset(Gfx0, 0, 0x20000);
-	memset(Gfx1, 0, 0x20000);
-
 	MemIndex();
 
 	make_lut();

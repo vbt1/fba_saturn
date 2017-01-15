@@ -1378,8 +1378,14 @@ static INT32 Raiders5Init()
 	SS_SET_N0PRIN(7);
 	SS_SET_N2PRIN(4);
 	SS_SET_N1PRIN(6);
+	initPosition();
+
 	if (i == 0)
+	{
 		initColors();
+		SCL_Open();
+		ss_reg->n1_move_x =  (0<<16) ;
+	}
 	if (i == 1)
 		initNovaColors();
 	if(i == 2)
@@ -1387,7 +1393,7 @@ static INT32 Raiders5Init()
 	if(i == 3)
 		initNinjaKunColors();
 	initLayers();
-	initPosition();
+
 	initSprites(264-1,216-1,0,0,8,-32);
 	drawWindow(0,192,192,2,62);
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;

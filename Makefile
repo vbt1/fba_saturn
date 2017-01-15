@@ -196,7 +196,8 @@ OVLBLKTGR                 = root/d_blktgr.coff
 OVLBLKTGR1               = root/d_blktgr.bin
 MPOVLBLKTGRFILE    = $(OVLBLKTGR:.coff=.maps)
 LDOVLBLKTGRFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBLKTGRFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c snd/timer.c snd/ay8910.c snd/fm.c snd/burn_ym2203.c saturn/ovl.c
+#SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c snd/timer.c snd/ay8910.c snd/fm.c snd/burn_ym2203.c saturn/ovl.c
+SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c snd/timer.c saturn/ovl.c
 OBJOVLBLKTGR         = $(SRCOVLBLKTGR:.c=.o)
 
 OVLWIZ                = root/d_wiz.coff
