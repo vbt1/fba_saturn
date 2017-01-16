@@ -86,20 +86,20 @@ typedef	struct	SysDevice	{
 #define MAPPER_MSX         (0x21)
 #define MAPPER_MSX_NEMESIS (0x22)
 
-static UINT8 *AllMem	= NULL;
-static UINT8 *MemEnd	= NULL;
-static UINT8 *AllRam	= NULL;
-static UINT8 *RamEnd	= NULL;
-static UINT8 *DrvZ80ROM	= NULL;
-static UINT8 *DrvZ80RAM	= NULL;
-static UINT8 *DrvZ80ExtRAM = NULL;
-static UINT8 *CZ80Context = NULL;
+/*static*/ UINT8 *AllMem	= NULL;
+/*static*/ UINT8 *MemEnd	= NULL;
+/*static*/ UINT8 *AllRam	= NULL;
+/*static*/ UINT8 *RamEnd	= NULL;
+/*static*/ UINT8 *DrvZ80ROM	= NULL;
+/*static*/ UINT8 *DrvZ80RAM	= NULL;
+/*static*/ UINT8 *DrvZ80ExtRAM = NULL;
+/*static*/ UINT8 *CZ80Context = NULL;
 
-static UINT8 DrvInputs[2]={0,0};
-static UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
-static UINT8 DrvDips[1]={0};
-static UINT8 DrvReset = 0;
+/*static*/ UINT8 DrvInputs[2]={0,0};
+/*static*/ UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvDips[1]={0};
+/*static*/ UINT8 DrvReset = 0;
 /*
 static struct BurnInputInfo Sg1000InputList[] = {
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},

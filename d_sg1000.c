@@ -433,6 +433,7 @@ static int DrvInit()
 
 static int DrvExit()
 {
+//	SPR_InitSlaveSH();
 	nBurnFunction = NULL;
 //	nSoundBufferPos=0;
 #ifdef RAZE
@@ -458,6 +459,7 @@ static int DrvExit()
 	free (AllMem);
 	AllMem = NULL;
 	DrvReset = 0;
+	nSoundBufferPos = 0;
 	return 0;
 }
 
@@ -603,7 +605,7 @@ void initPosition(void)
 /*static*/ void DrvInitSaturn()
 {
 //	InitCDsms();
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 	nBurnSprites  = 4+32;//131;//27;
 	nBurnLinescrollSize = 0;

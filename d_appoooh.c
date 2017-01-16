@@ -731,6 +731,7 @@ static INT32 DrvRobowresInit()
 {
 	nSoundBufferPos=0;
 	DrvInitSaturn();
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 	game_select = 1;
 	AllMem = NULL;
 	MemIndex();
@@ -750,6 +751,7 @@ static INT32 DrvRobowresInit()
 	DrvRobowresPaletteInit();
 	DrvRobowresGfxDecode();
 	DrvCommonInit();
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
 
 	return 0;
 }
@@ -758,7 +760,7 @@ static INT32 DrvInit()
 {
 	nSoundBufferPos=0;
 	DrvInitSaturn();
-
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 	game_select = 0;
 	AllMem = NULL;
 	MemIndex();
@@ -771,11 +773,16 @@ static INT32 DrvInit()
 	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
+
 	memset(CZ80Context,0x00,0x1080);
+
 	if(DrvLoadRoms()) return 1;
+
 	DrvPaletteInit();
 	DrvGfxDecode();
 	DrvCommonInit();
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
