@@ -24,30 +24,6 @@ vbt> <Kale_> Ok, have you asked to Arbee?
 <vbt> <smf-> I imagine the sh2 would be happier emulating one less z80
 <vbt> <smf-> as it running in rom you could probably even do an upfront translation
 */
-#define nBurnSoundLen 128
-#define VDP2_BASE           0x25e00000
-#define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
-#define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
-#define PLANEADDR1 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x44)) 
-#define PLANEADDR2 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x46)) 
-#define PLSZ    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x3a))
-#define VDP2_VRAM           VDP2_BASE
-#define VDP2_CRAM           (VDP2_BASE+0x100000)
-#define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
-//#define SND 1
-//static UINT16 *remap4to16_lut = NULL;
-//static UINT16 *remap16_lut = NULL;
-//static UINT16 *cram_lut = NULL;
-//static UINT16 *fg_map_lut = NULL;
-//static UINT16 *bg_map_lut2x1=NULL;
-//static UINT16 *bg_map_lut2x2=NULL;
-/*static*/ UINT16 remap4to16_lut[256];
-/*static*/ UINT16 remap16_lut[768];
-/*static*/ UINT16 cram_lut[4096];
-/*static*/ UINT16 fg_map_lut[0x400];
-/*static*/ UINT16 bg_map_lut2x1[0x2000];
-/*static*/ UINT16 bg_map_lut2x2[0x2000];
-/*static*/ UINT16 *bg_map_lut = NULL;
 
 #define INT_DIGITS 19
 char *itoa(i)
@@ -140,8 +116,7 @@ static void DrvRomBankswitch(INT32 bank)
 static void DrvVidRamBankswitch(INT32 bank)
 {
 	*DrvVidBank = (bank & 0x03);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa((bank & 0x03)),4,100);
-
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa((bank & 0x03)),4,100);
 	INT32 nBank = (bank & 3) * 0x1000;
 
 #ifdef RAZE0
@@ -232,7 +207,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 
 		case 0x03:
 			if (DrvDips[2] & 1) {
-				*coin_lockout = ~data << 6;
+				coin_lockout = ~data << 6;
 			}
 		return;
 
@@ -269,12 +244,12 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20)
 
 		case 0x08:
 			*DrvScrollx = (*DrvScrollx & 0xff00) | data;
-			ss_reg->n1_move_y =  (((*DrvScrolly)+16)<<16) ;	  //  ‡ remettre
+			ss_reg->n1_move_y =  (((*DrvScrolly)+16)<<16) ;	  //  ? remettre
 		return;
 
 		case 0x09:
 			*DrvScrollx = (*DrvScrollx & 0x00ff) | (data << 8);
-			ss_reg->n1_move_y =  (((*DrvScrolly)+16)<<16) ;	  // ‡ remettre
+			ss_reg->n1_move_y =  (((*DrvScrolly)+16)<<16) ;	  // ? remettre
 		return;
 
 		case 0x0a:
@@ -431,7 +406,7 @@ static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
-	DrvZ80ROM0	= Next; Next += 0x040000;
+	DrvZ80ROM0	= Next; Next += 0x050000;
 	DrvZ80ROM1	= Next; Next += 0x008000;
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
@@ -466,15 +441,15 @@ static INT32 MemIndex()
 
 	soundlatch	= Next; Next += 0x000001;
 	flipscreen	= Next; Next += 0x000001;
-	coin_lockout	= Next; Next += 0x000001;
+//	coin_lockout	= Next; Next += 0x000001;
 
 	RamEnd			= Next;
-//	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
-//	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
-//	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
-//	fg_map_lut		= Next; Next += 0x400 * sizeof (UINT16);
-//	bg_map_lut2x1	= Next; Next += 0x2000 * sizeof (UINT16);
-//	bg_map_lut2x2	= Next; Next += 0x2000 * sizeof (UINT16);
+	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
+	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
+	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
+	fg_map_lut		= Next; Next += 0x400 * sizeof (UINT16);
+	bg_map_lut2x1	= Next; Next += 0x2000 * sizeof (UINT16);
+	bg_map_lut2x2	= Next; Next += 0x2000 * sizeof (UINT16);
 	MemEnd			= Next;
 
 	return 0;
@@ -810,7 +785,7 @@ static void initLayers()
 
 // 3 nbg
 // nbg1 16*16 background
-// ‡ passer en 1 word ?
+// ? passer en 1 word ?
 	scfg.dispenbl      = ON;
 	scfg.charsize      = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
 //	scfg.pnamesize     = SCL_PN1WORD; //2word
@@ -820,7 +795,7 @@ static void initLayers()
 	scfg.datatype      = SCL_CELL;
 //	scfg.patnamecontrl =  0x0008;// VRAM A0?
 	scfg.patnamecontrl =  0x0008;// VRAM A0?
-	scfg.flip          = SCL_PN_10BIT; // on force ‡ 0
+	scfg.flip          = SCL_PN_10BIT; // on force ? 0
  //2x1
 /*
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
@@ -874,7 +849,7 @@ static void initColors()
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 
-	SCL_SetColRam(SCL_NBG0,8,8,palette);	 // vbt ‡ remettre
+	SCL_SetColRam(SCL_NBG0,8,8,palette);	 // vbt ? remettre
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
@@ -1491,12 +1466,13 @@ static INT32 DrvExit()
 
 	DrvZ80ROM0 = DrvZ80ROM1 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
 	DrvZ80RAM0	 = DrvZ80RAM1 = DrvPalRAM = DrvTxRAM = DrvBgRAM = DrvSprRAM = DrvSprBuf = NULL;
-	DrvScreenLayout = DrvBgEnable = DrvFgEnable = DrvSprEnable = DrvVidBank = DrvRomBank	= NULL;
+/*	DrvScreenLayout =*/ DrvBgEnable = DrvFgEnable = DrvSprEnable = DrvVidBank = DrvRomBank	= NULL;
 	DrvPalette = DrvScrollx	= DrvScrolly = NULL;
-	soundlatch = flipscreen = coin_lockout = NULL;
-//	/*remap16_lut = remap4to16_lut	= cram_lut = fg_map_lut =*/ bg_map_lut2x1 = bg_map_lut2x2 = NULL;
+	soundlatch = flipscreen /*= coin_lockout*/ = NULL;
+	remap16_lut = remap4to16_lut	= cram_lut = fg_map_lut = bg_map_lut2x1 = bg_map_lut2x2 = NULL;
 	MemEnd = AllRam = RamEnd = NULL;
 	watchdog = 0;
+	coin_lockout = 0;
 
 	free (AllMem);
 	AllMem = NULL;
@@ -1551,10 +1527,10 @@ static void draw_sprites()
 static INT32 DrvFrame()
 {
 // cheat code level
-DrvZ80RAM0[0xF3A1-0xe000]=4;
+//DrvZ80RAM0[0xF3A1-0xe000]=6;
 // cheat code invincible
-DrvZ80RAM0[0xE905-0xe000]= 0x01;
-DrvZ80RAM0[0xF424-0xe000]= 0x0F;
+//DrvZ80RAM0[0xE905-0xe000]= 0x01;
+//DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
 	if (watchdog >= 180) {
 		DrvDoReset(0);
@@ -1570,7 +1546,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 		}
 
-		DrvInputs[0] |= *coin_lockout;
+		DrvInputs[0] |= coin_lockout;
 	}
 
 	CZetNewFrame();
@@ -1649,87 +1625,87 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
 #ifdef FM
 typedef struct{
-    Uint16 *prg_adr;                        /* 68KÃﬂ€∏ﬁ◊—äiî[êÊì™±ƒﬁ⁄Ω       */
-    Uint16 prg_sz;                          /* 68KÃﬂ€∏ﬁ◊—ª≤Ωﬁª≤Ωﬁ           */
-    Uint16 *ara_adr;                        /* ª≥›ƒﬁ¥ÿ±œØÃﬂäiî[êÊì™±ƒﬁ⁄Ω     */
-    Uint16 ara_sz;                          /* ª≥›ƒﬁ¥ÿ±œØÃﬂª≤Ωﬁ(‹∞ƒﬁíPà )    */
+    Uint16 *prg_adr;                        /* 68K??????i?[??????       */
+    Uint16 prg_sz;                          /* 68K????????????           */
+    Uint16 *ara_adr;                        /* ?????????i?[??????     */
+    Uint16 ara_sz;                          /* ????????????(???P??)    */
 }SndIniDt; 
 
-#define SND_PRM_MODE(prm)       ((prm).mode)        /* Ω√⁄µ•”…∏€+ª›Ãﬂÿ›∏ﬁ⁄∞ƒ */
-#define SND_PRM_SADR(prm)       ((prm).sadr)        /* PCMΩƒÿ∞— ﬁØÃßΩ¿∞ƒ±ƒﬁ⁄Ω*/
-#define SND_PRM_SIZE(prm)       ((prm).size)        /* PCMΩƒÿ∞— ﬁØÃßª≤Ωﬁ   */
-#define SND_PRM_OFSET(prm)      ((prm).ofset)       /* PCMΩƒÿ∞—çƒê∂äJénµÃæØƒ */
-/******** SndPcmChgPrm(PCMïœçXÉpÉâÉÅÅ[É^) ************************************/
-#define SND_PRM_NUM(prm)        ((prm).num)         /* PCMΩƒÿ∞—çƒê∂î‘çÜ       */
-#define SND_PRM_LEV(prm)        ((prm).lev)         /* ¿ﬁ≤⁄∏ƒâπLevel         */
-#define SND_PRM_PAN(prm)        ((prm).pan)         /* ¿ﬁ≤⁄∏ƒâπpan           */
-#define SND_PRM_PICH(prm)       ((prm).pich)        /* PICH‹∞ƒﬁ              */
-#define SND_R_EFCT_IN(prm)      ((prm).r_efct_in)   /* Efect in select(âE)   */
-#define SND_R_EFCT_LEV(prm)     ((prm).r_efct_lev)  /* Efect send Level(âE)  */
-#define SND_L_EFCT_IN(prm)      ((prm).l_efct_in)   /* Efect in select(ç∂)   */
-#define SND_L_EFCT_LEV(prm)     ((prm).l_efct_lev)  /* Efect send Level(ç∂)  */
+#define SND_PRM_MODE(prm)       ((prm).mode)        /* ???????+????????? */
+#define SND_PRM_SADR(prm)       ((prm).sadr)        /* PCM??????∏???i???*/
+#define SND_PRM_SIZE(prm)       ((prm).size)        /* PCM??????∏????   */
+#define SND_PRM_OFSET(prm)      ((prm).ofset)       /* PCM????–??J?n???? */
+/******** SndPcmChgPrm(PCM??X?p?????[?^) ************************************/
+#define SND_PRM_NUM(prm)        ((prm).num)         /* PCM????–????       */
+#define SND_PRM_LEV(prm)        ((prm).lev)         /* ???c?Level         */
+#define SND_PRM_PAN(prm)        ((prm).pan)         /* ???c?pan           */
+#define SND_PRM_PICH(prm)       ((prm).pich)        /* PICH???              */
+#define SND_R_EFCT_IN(prm)      ((prm).r_efct_in)   /* Efect in select(?E)   */
+#define SND_R_EFCT_LEV(prm)     ((prm).r_efct_lev)  /* Efect send Level(?E)  */
+#define SND_L_EFCT_IN(prm)      ((prm).l_efct_in)   /* Efect in select(??)   */
+#define SND_L_EFCT_LEV(prm)     ((prm).l_efct_lev)  /* Efect send Level(??)  */
 #define SND_PRM_TL(prm)     	((prm).lev)  		/* Master Level			 */
 
 
-#define SCSP_REG_SET    0x0200                  /* SCSPÉåÉWÉXÉ^ê›íËíl        */
-#define MEM_CLR_SIZE    0xb000                  /* ª≥›ƒﬁ“”ÿ∏ÿ±ª≤Ωﬁ           */
-#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* ÉTÉEÉìÉhÉxÉNÉ^ÉAÉhÉåÉX    */
-#define ADR_SCSP_REG    ((Uint8 *)0x25b00400)   /* SCSPã§í êßå‰ÉåÉWÉXÉ^      */
-#define ADR_SND_MEM     ((Uint8 *)0x25a00000)   /* ÉTÉEÉìÉhÉÅÉÇÉäêÊì™ÉAÉhÉåÉX*/
-#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* ÉTÉEÉìÉhÉxÉNÉ^ÉAÉhÉåÉX    */
+#define SCSP_REG_SET    0x0200                  /* SCSP???W?X?^???l        */
+#define MEM_CLR_SIZE    0xb000                  /* ?????????????           */
+#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* ?T?E???h?x?N?^?A?h???X    */
+#define ADR_SCSP_REG    ((Uint8 *)0x25b00400)   /* SCSP????????W?X?^      */
+#define ADR_SND_MEM     ((Uint8 *)0x25a00000)   /* ?T?E???h?????????A?h???X*/
+#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* ?T?E???h?x?N?^?A?h???X    */
 
-#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ºΩ√—≤›¿Ã™∞ΩóÃàÊ           */
-#define ADR_ARA_CRNT    (0x08)                /* ª≥›ƒﬁ¥ÿ±œØÃﬂCRNT‹∞∏êÊì™±ƒﬁ⁄Ω*/
-#define ARA_MAP_SIZE        0x2                 /* ª≥›ƒﬁ¥ÿ±œØÃﬂª≤Ωﬁ          */
+#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ??????????®?           */
+#define ADR_ARA_CRNT    (0x08)                /* ?????????CRNT????????*/
+#define ARA_MAP_SIZE        0x2                 /* ????????????          */
 
-#define B_LOAD_MARK         31                  /* ì]ëóçœÇ›ÀﬁØƒ              */
-#define M_LOAD_MARK        (0x1  << B_LOAD_MARK)/* ì]ëóçœÇ›ÀﬁØƒ              */
-#define B_END_MARK          31                  /* √ﬁ∞¿èIóπÀﬁØƒ              */
+#define B_LOAD_MARK         31                  /* ?]????????              */
+#define M_LOAD_MARK        (0x1  << B_LOAD_MARK)/* ?]????????              */
+#define B_END_MARK          31                  /* ????I?????              */
 
-#define B_START_ADR         0                   /* Ω¿∞ƒ±ƒﬁ⁄Ω                 */
-#define M_START_ADR        (0xfffff << B_START_ADR) /* Ω¿∞ƒ±ƒﬁ⁄Ω             */
-#define B_ID_NUM            24                  /* √ﬁ∞¿î‘çÜ                  */
-#define M_ID_NUM           (0xf  << B_ID_NUM)   /* √ﬁ∞¿î‘çÜ                  */
-#define B_DATA_ID           28                  /* √ﬁ∞¿éÌï Å@Å@Å@Å@Å@Å@Å@    */
-#define M_DATA_ID          (0x7  << B_DATA_ID)  /* √ﬁ∞¿éÌï Å@Å@Å@Å@Å@Å@Å@    */
-#define M_END_MARK         (0x1  << B_END_MARK) /* √ﬁ∞¿èIóπÀﬁØƒ              */
+#define B_START_ADR         0                   /* ???i???                 */
+#define M_START_ADR        (0xfffff << B_START_ADR) /* ???i???             */
+#define B_ID_NUM            24                  /* ??????                  */
+#define M_ID_NUM           (0xf  << B_ID_NUM)   /* ??????                  */
+#define B_DATA_ID           28                  /* ??????@?@?@?@?@?@?@    */
+#define M_DATA_ID          (0x7  << B_DATA_ID)  /* ??????@?@?@?@?@?@?@    */
+#define M_END_MARK         (0x1  << B_END_MARK) /* ????I?????              */
 
-#define ARA_MAP_0           0x0         /* √ﬁ∞¿éÌï ,√ﬁ∞¿î‘çÜ,¥ÿ±äJén±ƒﬁ⁄Ω    */
-#define ARA_MAP_4           0x1         /* ì]ëóçœÇ›ÀﬁØƒ,¥ÿ±ª≤Ωﬁ              */
+#define ARA_MAP_0           0x0         /* ??????,??????,???J?n????    */
+#define ARA_MAP_4           0x1         /* ?]????????,??????              */
 
-#define ADR_SYS_INFO    (0x00)                  /* ºΩ√—èÓïÒ√∞ÃﬁŸ±ƒﬁ⁄Ω        */
-#define ADR_HOST_INT    (0x04)                  /* ŒΩƒ≤›¿Ã™∞Ω‹∞∏±ƒﬁ⁄Ω        */
-#define ADR_ARA_CRNT    (0x08)                /* ª≥›ƒﬁ¥ÿ±œØÃﬂCRNT‹∞∏êÊì™±ƒﬁ⁄Ω*/
-#define ADR_SYS_INT_WORK    (0x12)            /* ºΩ√—≤›¿Ã™∞Ω‹∞∏êÊì™±ƒﬁ⁄Ω     */
-#define ADR_HARD_CHK_STAT   (0x18)            /*  ∞ƒﬁ¡™Ø∏ÿ¿∞›Ω√∞¿Ωäiî[‹∞∏    */
+#define ADR_SYS_INFO    (0x00)                  /* ????????????        */
+#define ADR_HOST_INT    (0x04)                  /* ?????????????        */
+#define ADR_ARA_CRNT    (0x08)                /* ?????????CRNT????????*/
+#define ADR_SYS_INT_WORK    (0x12)            /* ?????????????????     */
+#define ADR_HARD_CHK_STAT   (0x18)            /* ??????????????i?[??    */
 #define ADR_SONG_STAT   (0x80)                  /* song status               */
 #define ADR_PCM         (0xa0)                  /* PCM                       */
 #define ADR_SEQ         (0xb0)                  /* Sequence                  */
 #define ADR_TL_VL       (0x90)                  /* Total volume              */
-#define ADR_TL_HZ_VL    (0x94)                  /* é¸îgêîë—àÊï Volume        */
-#define ADR_ARA_ADR     (0x08)                  /* ª≥›ƒﬁ¥ÿ±œØÃﬂóÃàÊêÊì™±ƒﬁ⁄Ω */
+#define ADR_TL_HZ_VL    (0x94)                  /* ???g??????Volume        */
+#define ADR_ARA_ADR     (0x08)                  /* ?????????®?????? */
 #define CHG_LONG(x)    (((x) * 2) + (0x4 - ( ((x) * 2) % 4) ))
 
-#define POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data))) /* ‹∞ƒﬁ  */
-#define PEEK_W(adr)         (*((volatile Uint16 *)(adr)))                    /* ‹∞ƒﬁ  */
-#define PEEK_L(adr)         (*((volatile Uint32 *)(adr)))                    /* €›∏ﬁ  */
-#define POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data)))   /*  ﬁ≤ƒ  */
-#define POKE_L(adr, data)   (*((volatile Uint32 *)(adr)) = ((Uint32)(data))) /* €›∏ﬁ  */
+#define POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data))) /* ???  */
+#define PEEK_W(adr)         (*((volatile Uint16 *)(adr)))                    /* ???  */
+#define PEEK_L(adr)         (*((volatile Uint32 *)(adr)))                    /* ???  */
+#define POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data)))   /* ???  */
+#define POKE_L(adr, data)   (*((volatile Uint32 *)(adr)) = ((Uint32)(data))) /* ???  */
 
-#define SND_INI_PRG_ADR(sys_ini)    ((sys_ini).prg_adr) /* 68KÃﬂ€∏ﬁ◊—äiî[... */
-#define SND_INI_PRG_SZ(sys_ini)     ((sys_ini).prg_sz)  /* 68KÃﬂ€∏ﬁ◊—ª≤Ωﬁ... */
-#define SND_INI_ARA_ADR(sys_ini)    ((sys_ini).ara_adr) /* ª≥›ƒﬁ¥ÿ±œØÃﬂäiî[. */
-#define SND_INI_ARA_SZ(sys_ini)     ((sys_ini).ara_sz)  /* ª≥›ƒﬁ¥ÿ±œØÃﬂª≤Ωﬁ. */
-#define SND_KD_TONE         0x0                         /* âπêF              */
+#define SND_INI_PRG_ADR(sys_ini)    ((sys_ini).prg_adr) /* 68K??????i?[... */
+#define SND_INI_PRG_SZ(sys_ini)     ((sys_ini).prg_sz)  /* 68K?????????... */
+#define SND_INI_ARA_ADR(sys_ini)    ((sys_ini).ara_adr) /* ?????????i?[. */
+#define SND_INI_ARA_SZ(sys_ini)     ((sys_ini).ara_sz)  /* ????????????. */
+#define SND_KD_TONE         0x0                         /* ???F              */
 
-#define SND_ADR_INTR_RESET  ((volatile Uint16 *)0x25b0042e)  /* SCSPäÑÇËçûÇ›ÿæØƒ⁄ºﬁΩ¿ */
+#define SND_ADR_INTR_RESET  ((volatile Uint16 *)0x25b0042e)  /* SCSP???????????? */
 #define SND_POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data)))
 #define SND_ADR_INTR_CTRL_WORD  (0x00)          /* Interrupt control word    */
-#define SND_POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data))) /*  ﬁ≤ƒ*/
+#define SND_POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data))) /* ???*/
 
-#define SND_RET_SET     0                       /* ê≥èÌèIóπ                     */
-#define SND_RET_NSET    1                       /* àŸèÌèIóπ                     */
-#define ADR_PRM_DATA    (0x02)                  /* ÉpÉâÉÅÅ[É^                */
+#define SND_RET_SET     0                       /* ????I??                     */
+#define SND_RET_NSET    1                       /* ???I??                     */
+#define ADR_PRM_DATA    (0x02)                  /* ?p?????[?^                */
 #define COM_SET_TL_VL      0x82                 /* Total Volume              */
 
 #define COM_CHG_MIX        0x87                 /* Mixer change              */
@@ -1740,7 +1716,7 @@ typedef struct{
 
 #define SND_SET_ENA_INT(ena_bit)\
     do{\
-        snd_msk_work_work = get_imask();           /* ª≥›ƒﬁäÑÇËçûÇ›ÇDisable*/\
+        snd_msk_work_work = get_imask();           /* ???????????Disable*/\
         set_imask(15);\
         SND_POKE_B(snd_adr_sys_int_work + SND_ADR_INTR_CTRL_WORD, (ena_bit));\
         set_imask(snd_msk_work_work);\
@@ -1754,75 +1730,75 @@ static Uint32 intrflag;
     }while(FALSE)
 
 #define SET_PRM(no, set_prm)\
-(POKE_B(adr_com_block + ADR_PRM_DATA + (no), (set_prm))) /*  ﬂ◊“∞¿ÉZÉbÉg      */
+(POKE_B(adr_com_block + ADR_PRM_DATA + (no), (set_prm))) /* ??????Z?b?g      */
 
-#define SIZE_COM_BLOCK      (0x10)              /* ∫œ›ƒﬁÃﬁ€Ø∏ª≤Ωﬁ          */
-#define MAX_NUM_COM_BLOCK   8                   /* ∫œ›ƒﬁÃﬁ€Ø∏êî              */
+#define SIZE_COM_BLOCK      (0x10)              /* ?????????????          */
+#define MAX_NUM_COM_BLOCK   8                   /* ???????????              */
 
-#define SND_INT_PCM_ADR     (1 <<  7)           /* PCM play address çXêV   */
+#define SND_INT_PCM_ADR     (1 <<  7)           /* PCM play address ?X?V   */
 #define SND_RESET_INT()\
         (SND_POKE_W(SND_ADR_INTR_RESET, (1 << 5)))
 
-#define ADR_COM_DATA    (0x00)                  /* ÉRÉ}ÉìÉh                  */
+#define ADR_COM_DATA    (0x00)                  /* ?R?}???h                  */
 
-#define NOW_ADR_COM_DATA                        /* åªç›∫œ›ƒﬁ√ﬁ∞¿±ƒﬁ⁄Ω     */\
+#define NOW_ADR_COM_DATA                        /* ???????????????     */\
     (adr_com_block + ADR_COM_DATA)
 
-#define MAX_ADR_COM_DATA                        /* ç≈ëÂ∫œ›ƒﬁ√ﬁ∞¿±ƒﬁ⁄Ω     */\
+#define MAX_ADR_COM_DATA                        /* ?o????????????     */\
     (adr_host_int_work + ADR_COM_DATA + (SIZE_COM_BLOCK * MAX_NUM_COM_BLOCK))
 
 #define SET_COMMAND(set_com)\
-(POKE_W((adr_com_block + ADR_COM_DATA), (Uint16)(set_com) << 8)) /* ÉRÉ}ÉìÉhÉZÉbÉg   */
+(POKE_W((adr_com_block + ADR_COM_DATA), (Uint16)(set_com) << 8)) /* ?R?}???h?Z?b?g   */
 
-#define SND_MD_MONO     (0 <<  7)                   /* ”…∏€                  */
-#define SND_MD_STEREO   (1 <<  7)                   /* Ω√⁄µ                  */
+#define SND_MD_MONO     (0 <<  7)                   /* ???                  */
+#define SND_MD_STEREO   (1 <<  7)                   /* ???                  */
 #define SND_MD_16       (0 <<  4)                   /* 16bitPCM              */
 #define SND_MD_8        (1 <<  4)                   /* 8bitPCM               */
 
-Uint8 *snd_adr_sys_int_work;                 /*ºΩ√—≤›¿Ã™∞Ω‹∞∏êÊì™±ƒﬁ⁄Ωäiî[*/
+Uint8 *snd_adr_sys_int_work;                 /*??????????????????i?[*/
 Uint32 snd_msk_work_work;                    /* sound priority msk        */
 
-static volatile Uint32 *adr_snd_area_crnt;             /* ª≥›ƒﬁ¥ÿ±œØÃﬂCRNT‹∞∏êÊì™±ƒﬁ⁄Ω*/
-static volatile Uint8 *adr_sys_info_tbl;                 /* ºΩ√—èÓïÒ√∞ÃﬁŸ±ƒﬁ⁄Ωäiî[    */
-static volatile Uint8 *adr_host_int_work;                /* ŒΩƒ≤›¿Ã™∞Ω‹∞∏êÊì™±ƒﬁ⁄Ωäiî[*/
-static volatile Uint8  *adr_com_block;                   /* åªç›èëÇ´çûÇ›∫œ›ƒﬁÃﬁ€Ø∏      */
+static volatile Uint32 *adr_snd_area_crnt;             /* ?????????CRNT????????*/
+static volatile Uint8 *adr_sys_info_tbl;                 /* ?????????????i?[    */
+static volatile Uint8 *adr_host_int_work;                /* ????????????????i?[*/
+static volatile Uint8  *adr_com_block;                   /* ???????????????????      */
 static volatile Uint16 *adr_song_stat;                   /* song status               */
 static volatile Uint16 *adr_pcm;                         /* PCM                       */
 static volatile Uint16 *adr_seq;                         /* Sequence                  */
 static volatile Uint16 *adr_tl_vl;                       /* Total volume              */
-static volatile Uint16 *adr_tl_hz_vl;                    /* é¸îgêîë—àÊï Volume        */
+static volatile Uint16 *adr_tl_hz_vl;                    /* ???g??????Volume        */
 static Uint32 intrflag;
 
 typedef struct{
-    Uint8 mode;                             /* Ω√⁄µ•”…∏€+ª›Ãﬂÿ›∏ﬁ⁄∞ƒ         */
-    Uint16 sadr;                            /* PCMΩƒÿ∞— ﬁØÃßΩ¿∞ƒ±ƒﬁ⁄Ω        */
-    Uint16 size;                            /* PCMΩƒÿ∞— ﬁØÃßª≤Ωﬁ             */
-}SndPcmStartPrm;                            /* PCMäJénÉpÉâÉÅÅ[É^          */
+    Uint8 mode;                             /* ???????+?????????         */
+    Uint16 sadr;                            /* PCM??????∏???i???        */
+    Uint16 size;                            /* PCM??????∏????             */
+}SndPcmStartPrm;                            /* PCM?J?n?p?????[?^          */
 typedef Uint8 SndSeqPri;                    /* Priorty level                 */
 
-typedef Uint8 SndSeqNum;                    /* î≠âπä«óùî‘çÜ                  */
-typedef Uint8 SndAreaMap;                   /* ª≥›ƒﬁ¥ÿ±œØÃﬂÉfÅ[É^å^          */
-typedef Uint8 SndTlVl;                      /* ëSëÃâπó ÉfÅ[É^å^              */
-typedef Uint8 SndEfctBnkNum;                /* Effct bank numberÉfÅ[É^å^     */
-typedef Uint8 SndToneBnkNum;                /* âπêF bank numberÉfÅ[É^å^      */
-typedef Uint8 SndMixBnkNum;                 /* Mixer numberÉfÅ[É^å^          */
-typedef Uint8 SndEfctOut;                   /* Effect out selectÉfÅ[É^å^     */
-typedef Uint8 SndLev;                       /* LevelÉfÅ[É^å^                 */
-typedef Sint8 SndPan;                       /* PANÉfÅ[É^å^                   */
-typedef Uint8 SndRet;                       /* ∫œ›ƒﬁé¿çsèÛë‘ÉfÅ[É^å^         */
-typedef Uint8 SndHardPrm;                   /*  ∞ƒﬁ≥™±¡™Ø∏ ﬂ◊“∞¿ÉfÅ[É^å^     */
-typedef Uint16 SndHardStat;                 /*  ∞ƒﬁ≥™±¡™Ø∏Ω√∞¿ΩÉfÅ[É^å^      */
-typedef Uint8 SndPcmNum;                    /* PCMΩƒÿ∞—çƒê∂î‘çÜ               */
+typedef Uint8 SndSeqNum;                    /* ?????U????                  */
+typedef Uint8 SndAreaMap;                   /* ?????????f?[?^?^          */
+typedef Uint8 SndTlVl;                      /* ?S?????f?[?^?^              */
+typedef Uint8 SndEfctBnkNum;                /* Effct bank number?f?[?^?^     */
+typedef Uint8 SndToneBnkNum;                /* ???F bank number?f?[?^?^      */
+typedef Uint8 SndMixBnkNum;                 /* Mixer number?f?[?^?^          */
+typedef Uint8 SndEfctOut;                   /* Effect out select?f?[?^?^     */
+typedef Uint8 SndLev;                       /* Level?f?[?^?^                 */
+typedef Sint8 SndPan;                       /* PAN?f?[?^?^                   */
+typedef Uint8 SndRet;                       /* ???????s???f?[?^?^         */
+typedef Uint8 SndHardPrm;                   /* ???????????????f?[?^?^     */
+typedef Uint16 SndHardStat;                 /* ?????????????f?[?^?^      */
+typedef Uint8 SndPcmNum;                    /* PCM????–????               */
 typedef Uint8 SndEfctIn;                    /* Efect in select               */
 typedef struct{
-    SndPcmNum num;                          /* PCMΩƒÿ∞—çƒê∂î‘çÜ               */
-    SndLev lev;                             /* ¿ﬁ≤⁄∏ƒâπLevel                 */
-    SndPan pan;                             /* ¿ﬁ≤⁄∏ƒâπpan                   */
-    Uint16 pich;                            /* PICH‹∞ƒﬁ                      */
-    SndEfctIn r_efct_in;                    /* Efect in select(âEèoóÕ)       */
-    SndLev r_efct_lev;                      /* Efect send Level(âEèoóÕ)      */
-    SndEfctIn l_efct_in;                    /* Efect in select(ç∂èoóÕ)       */
-    SndLev l_efct_lev;                      /* Efect send Level(ç∂èoóÕ)      */
+    SndPcmNum num;                          /* PCM????–????               */
+    SndLev lev;                             /* ???c?Level                 */
+    SndPan pan;                             /* ???c?pan                   */
+    Uint16 pich;                            /* PICH???                      */
+    SndEfctIn r_efct_in;                    /* Efect in select(?E?o??)       */
+    SndLev r_efct_lev;                      /* Efect send Level(?E?o??)      */
+    SndEfctIn l_efct_in;                    /* Efect in select(???o??)       */
+    SndLev l_efct_lev;                      /* Efect send Level(???o??)      */
 }SndPcmChgPrm;   
 
 static void DmaClrZero(void *dst, Uint32 cnt)
@@ -1833,32 +1809,32 @@ static void DmaClrZero(void *dst, Uint32 cnt)
 
 static Uint8 GetComBlockAdr(void)
 {
-    if(*NOW_ADR_COM_DATA){              /* à»ëOÇÃÃﬁ€Ø∏Ç™à¯Ç´éÊÇËçœÇ›Ç≈Ç»Ç¢Ç©?*/
-        /* éüÉRÉ}ÉìÉhÉuÉçÉbÉNÉAÉhÉåÉXê›íËèàóù ********************************/
+    if(*NOW_ADR_COM_DATA){              /* ??O?????????????????l?????*/
+        /* ???R?}???h?u???b?N?A?h???X????? ********************************/
         if(NOW_ADR_COM_DATA >= (MAX_ADR_COM_DATA - SIZE_COM_BLOCK)){
-                                                    /* ç≈ëÂílÇ©?            */
-            return OFF;                             /* Ãﬁ€Ø∏ãÛÇ´ñ≥Çµ      */
+                                                    /* ?o?l???            */
+            return OFF;                             /* ??????????      */
         }else{
-            adr_com_block += SIZE_COM_BLOCK;        /* åªç›∫œ›ƒﬁÃﬁ€Ø∏∂≥›ƒ±ØÃﬂ*/
+            adr_com_block += SIZE_COM_BLOCK;        /* ???????????????i???*/
             while(NOW_ADR_COM_DATA < (MAX_ADR_COM_DATA - SIZE_COM_BLOCK)){
                 if(*NOW_ADR_COM_DATA){
                     adr_com_block += SIZE_COM_BLOCK;
                 }else{
-                    return ON;                      /* Ãﬁ€Ø∏ãÛÇ´óLÇË         */
+                    return ON;                      /* ???????L??         */
                 }
             }
-            return OFF;                             /* Ãﬁ€Ø∏ãÛÇ´ñ≥Çµ         */
+            return OFF;                             /* ??????????         */
         }
     }else{
-        adr_com_block = adr_host_int_work;  /* Ãﬁ€Ø∏ÇÃêÊì™Ç÷              */
+        adr_com_block = adr_host_int_work;  /* ?????????              */
         while(NOW_ADR_COM_DATA < (MAX_ADR_COM_DATA - SIZE_COM_BLOCK)){
             if(*NOW_ADR_COM_DATA){
                 adr_com_block += SIZE_COM_BLOCK;
             }else{
-                return ON;                          /* Ãﬁ€Ø∏ãÛÇ´óLÇË         */
+                return ON;                          /* ???????L??         */
             }
         }
-        return OFF;                                 /* Ãﬁ€Ø∏ãÛÇ´ñ≥Çµ         */
+        return OFF;                                 /* ??????????         */
     }
 }
 
@@ -1866,14 +1842,14 @@ static Uint8 GetComBlockAdr(void)
  {
 /* 1994/02/24 Start */
 #if 0
-    HOST_SET_INIT();                            /* ŒΩƒ≤›¿Ã™∞Ω¥ÿ±ê›íËèâä˙èàóù */
+    HOST_SET_INIT();                            /* ?????????????????? */
 #endif
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
 /* 1994/02/24 End */
     if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
-    SET_PRM(0, vol);                            /* ÉpÉâÉÅÅ[É^ÉZÉbÉg          */
-    SET_COMMAND(COM_SET_TL_VL);                 /* ÉRÉ}ÉìÉhÉZÉbÉg            */
+    SET_PRM(0, vol);                            /* ?p?????[?^?Z?b?g          */
+    SET_COMMAND(COM_SET_TL_VL);                 /* ?R?}???h?Z?b?g            */
     HOST_SET_RETURN(SND_RET_SET);
 }
 
@@ -1882,17 +1858,17 @@ static Uint8 GetComBlockAdr(void)
  {
 /* 1994/02/24 Start */
 #if 0
-    HOST_SET_INIT();                            /* ŒΩƒ≤›¿Ã™∞Ω¥ÿ±ê›íËèâä˙èàóù */
+    HOST_SET_INIT();                            /* ?????????????????? */
 #endif
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
 /* 1994/02/24 End */
     if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
-    SET_PRM(0, (seq_pri << 3) | md_com);        /* ÉpÉâÉÅÅ[É^ÉZÉbÉg          */
-    SET_PRM(1, (seq_no << 5) | ch);             /* ÉpÉâÉÅÅ[É^ÉZÉbÉg          */
-    SET_PRM(2, dt1);                            /* ÉpÉâÉÅÅ[É^ÉZÉbÉg          */
-    SET_PRM(3, dt2);                            /* ÉpÉâÉÅÅ[É^ÉZÉbÉg          */
-    SET_COMMAND(COM_CTRL_DIR_MIDI);             /* ÉRÉ}ÉìÉhÉZÉbÉg            */
+    SET_PRM(0, (seq_pri << 3) | md_com);        /* ?p?????[?^?Z?b?g          */
+    SET_PRM(1, (seq_no << 5) | ch);             /* ?p?????[?^?Z?b?g          */
+    SET_PRM(2, dt1);                            /* ?p?????[?^?Z?b?g          */
+    SET_PRM(3, dt2);                            /* ?p?????[?^?Z?b?g          */
+    SET_COMMAND(COM_CTRL_DIR_MIDI);             /* ?R?}???h?Z?b?g            */
     HOST_SET_RETURN(SND_RET_SET);
 }
 
@@ -1900,33 +1876,33 @@ void SND_Init2(SndIniDt *sys_ini)
 {
     /** BEGIN ****************************************************************/
 #ifdef _DMA_SCU
-    DMA_ScuInit();                              /* DMA SCUèâä˙âªèàóù         */
+    DMA_ScuInit();                              /* DMA SCU??????????         */
 #endif /* _DMA_SCU */
 
-    PER_SMPC_SND_OFF();                         /* ÉTÉEÉìÉhOFF               */
+    PER_SMPC_SND_OFF();                         /* ?T?E???hOFF               */
     POKE_W(ADR_SCSP_REG, SCSP_REG_SET); 
-                                                /* SCSPã§í ⁄ºﬁΩ¿ê›íË         */
-    DmaClrZero(ADR_SND_MEM, MEM_CLR_SIZE);      /* DMAÉÅÉÇÉäÉ[ÉçÉNÉäÉA       */
+                                                /* SCSP??????????         */
+    DmaClrZero(ADR_SND_MEM, MEM_CLR_SIZE);      /* DMA???????[???N???A       */
     memcpy(ADR_SND_VECTOR,
                    (void *)(SND_INI_PRG_ADR(*sys_ini)),
-                   SND_INI_PRG_SZ(*sys_ini));   /* 68KÃﬂ€∏ﬁ◊—ì]ëó            */
+                   SND_INI_PRG_SZ(*sys_ini));   /* 68K??????]??            */
 
     adr_sys_info_tbl = (Uint8 *)(ADR_SND_MEM + PEEK_L(ADR_SYS_TBL +
                                  ADR_SYS_INFO));
-                                                /* ºΩ√—èÓïÒ√∞ÃﬁŸ±ƒﬁ⁄ΩéÊìæ    */
+                                                /* ??????????????    */
     adr_host_int_work = (Uint8 *)(ADR_SND_MEM + PEEK_L(ADR_SYS_TBL +
                                   ADR_HOST_INT));
-                                                /* ŒΩƒ≤›¿Ã™∞Ω‹∞∏±ƒﬁ⁄ΩéÊìæ    */
+                                                /* ???????????????    */
     snd_adr_sys_int_work = (Uint8 *)(ADR_SND_MEM + 
                  ((Uint32)PEEK_W(ADR_SYS_TBL + ADR_SYS_INT_WORK) << 16
                   | (Uint32)PEEK_W(ADR_SYS_TBL + ADR_SYS_INT_WORK + 2)));
-                                                /* ºΩ√—≤›¿Ã™∞Ω‹∞∏±ƒﬁ⁄ΩéÊìæ   */
+                                                /* ?????????????????   */
                                                 
-    adr_com_block = adr_host_int_work;  /* åªç›èëÇ´çûÇ›∫œ›ƒﬁÃﬁ€Ø∏±ƒﬁ⁄Ωèâä˙âª */
+    adr_com_block = adr_host_int_work;  /* ????????????????????????????? */
                                                 
     adr_snd_area_crnt = (Uint32 *)(ADR_SND_MEM + 
                                   PEEK_L(ADR_SYS_TBL + ADR_ARA_CRNT));
-                                                /* ª≥›ƒﬁ¥ÿ±œØÃﬂCRNT‹∞∏éÊìæ   */
+                                                /* ?????????CRNT????   */
     adr_song_stat = (Uint16 *)(adr_host_int_work + ADR_SONG_STAT);
     adr_pcm = (Uint16 *)(adr_host_int_work + ADR_PCM);
     adr_seq = (Uint16 *)(adr_host_int_work + ADR_SEQ);
@@ -1936,12 +1912,12 @@ void SND_Init2(SndIniDt *sys_ini)
     memcpy((void *)
                     (PEEK_L(adr_sys_info_tbl + ADR_ARA_ADR) + ADR_SND_MEM),
                    (void *)(SND_INI_ARA_ADR(*sys_ini)),
-                   CHG_LONG(SND_INI_ARA_SZ(*sys_ini))); /* ª≥›ƒﬁ¥ÿ±œØÃﬂì]ëó  */
+                   CHG_LONG(SND_INI_ARA_SZ(*sys_ini))); /* ?????????]??  */
 /* 1994/02/24 Start*/
-    intrflag = 0;         /* äÑÇËçûÇ›ÉtÉâÉOÇÃèâä˙âª */
+    intrflag = 0;         /* ??????t???O??????? */
 /* 1994/02/24 End */
 
-    PER_SMPC_SND_ON();                          /* ÉTÉEÉìÉhON                */
+    PER_SMPC_SND_ON();                          /* ?T?E???hON                */
 
 }
 
@@ -1982,12 +1958,12 @@ static void CopyMem(void *dst, void *src, Uint32 cnt)
 }
 void SND_MoveData(Uint16 *source, Uint32 size,Uint16 data_kind, Uint16 data_no)
 {
-    void *adr;                                  /* ì]ëóêÊÉAÉhÉåÉX            */
-    Uint32 *load_mark_adr;                      /* ì]ëóçœÇ›ÉrÉbÉgê›íË±ƒﬁ⁄Ω  */
+    void *adr;                                  /* ?]????A?h???X            */
+    Uint32 *load_mark_adr;                      /* ?]?????r?b?g??????  */
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"getsndmap    ",4,80);
 
     GetSndMapInfo(&adr, &load_mark_adr, data_kind, data_no);
-                                                /* ª≥›ƒﬁ¥ÿ±œØÃﬂèÓïÒéÊìæ      */
+                                                /* ????????????      */
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"memcpy    ",4,80);
 
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(adr),4,90);
@@ -1996,7 +1972,7 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size),
 
 
 
-    CopyMem(adr, (void *)source, size);         /* ª≥›ƒﬁ¥ÿ±œØÃﬂì]ëó         */
+    CopyMem(adr, (void *)source, size);         /* ?????????]??         */
 
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"poke l    ",4,80);
 
@@ -2006,22 +1982,22 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa((*load
 
 	POKE_L(load_mark_adr, (*load_mark_adr | M_LOAD_MARK));
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"poke l done   ",4,80);
-                                                /* ì]ëóçœÇ›ÀﬁØƒ µ›            */
+                                                /* ?]???????? ??            */
 }
 
  SndRet SND_ChgMix(SndToneBnkNum tone_no, SndMixBnkNum mix_no)
  {
 /* 1994/02/24 Start */
 #if 0
-    HOST_SET_INIT();                            /* ŒΩƒ≤›¿Ã™∞Ω¥ÿ±ê›íËèâä˙èàóù */
+    HOST_SET_INIT();                            /* ?????????????????? */
 #endif
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
 /* 1994/02/24 End */
     if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
-    SET_PRM(0, tone_no);                        /* ÉpÉâÉÅÅ[É^ÉZÉbÉg          */
-    SET_PRM(1, mix_no);                         /* ÉpÉâÉÅÅ[É^ÉZÉbÉg          */
-    SET_COMMAND(COM_CHG_MIX);                   /* ÉRÉ}ÉìÉhÉZÉbÉg            */
+    SET_PRM(0, tone_no);                        /* ?p?????[?^?Z?b?g          */
+    SET_PRM(1, mix_no);                         /* ?p?????[?^?Z?b?g          */
+    SET_COMMAND(COM_CHG_MIX);                   /* ?R?}???h?Z?b?g            */
     HOST_SET_RETURN(SND_RET_SET);
 }
 typedef unsigned char bool;

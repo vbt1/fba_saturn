@@ -15,45 +15,64 @@ static INT32 DrvDraw();
 static void make_lut(void);
 static void DrvInitSaturn();
 
-static UINT8 *AllMem;
-static UINT8 *MemEnd;
-static UINT8 *AllRam;
-static UINT8 *RamEnd;
-static UINT8 *DrvZ80ROM0;
-static UINT8 *DrvZ80ROM1;
-static UINT8 *DrvGfxROM0;
-static UINT8 *DrvGfxROM1;
-static UINT8 *DrvGfxROM2;
-static UINT8 *DrvZ80RAM0;
-static UINT8 *DrvZ80RAM1;
-static UINT8 *DrvSprRAM;
-static UINT8 *DrvSprBuf;
-static UINT8 *DrvPalRAM;
-static UINT8 *DrvBgRAM;
-static UINT8 *DrvTxRAM;
-static UINT16 *DrvPalette;
+#define nBurnSoundLen 128
+#define VDP2_BASE           0x25e00000
+#define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
+#define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
+#define PLANEADDR1 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x44)) 
+#define PLANEADDR2 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x46)) 
+#define PLSZ    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x3a))
+#define VDP2_VRAM           VDP2_BASE
+#define VDP2_CRAM           (VDP2_BASE+0x100000)
+#define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
+//#define SND 1
+/*static*/ UINT16 *remap4to16_lut = NULL;//[256];
+/*static*/ UINT16 *remap16_lut = NULL;//[768];
+/*static*/ UINT16 *cram_lut = NULL;//[4096];
+/*static*/ UINT16 *fg_map_lut = NULL;//[0x400];
+/*static*/ UINT16 *bg_map_lut2x1 = NULL;//[0x2000];
+/*static*/ UINT16 *bg_map_lut2x2 = NULL;//[0x2000];
+/*static*/ UINT16 *bg_map_lut = NULL;
 
-static UINT8 *DrvScreenLayout;
-static UINT8 *DrvBgEnable;
-static UINT8 *DrvFgEnable;
-static UINT8 *DrvSprEnable;
-static UINT8 *DrvVidBank;
-static UINT8 *DrvRomBank;
 
-static UINT8 *soundlatch;
-static UINT8 *flipscreen;
-static UINT8 *coin_lockout;
-static INT32 watchdog;
+static UINT8 *AllMem = NULL;
+static UINT8 *MemEnd = NULL;
+static UINT8 *AllRam = NULL;
+static UINT8 *RamEnd = NULL;
+static UINT8 *DrvZ80ROM0 = NULL;
+static UINT8 *DrvZ80ROM1 = NULL;
+static UINT8 *DrvGfxROM0 = NULL;
+static UINT8 *DrvGfxROM1 = NULL;
+static UINT8 *DrvGfxROM2 = NULL;
+static UINT8 *DrvZ80RAM0 = NULL;
+static UINT8 *DrvZ80RAM1 = NULL;
+static UINT8 *DrvSprRAM = NULL;
+static UINT8 *DrvSprBuf = NULL;
+static UINT8 *DrvPalRAM = NULL;
+static UINT8 *DrvBgRAM = NULL;
+static UINT8 *DrvTxRAM = NULL;
+static UINT16 *DrvPalette = NULL;
 
-static UINT16 *DrvScrollx;
-static UINT16 *DrvScrolly;
+static UINT8 *DrvScreenLayout = NULL;
+static UINT8 *DrvBgEnable = NULL;
+static UINT8 *DrvFgEnable = NULL;
+static UINT8 *DrvSprEnable = NULL;
+static UINT8 *DrvVidBank = NULL;
+static UINT8 *DrvRomBank = NULL;
 
-static UINT8 DrvJoy1[8];
-static UINT8 DrvJoy2[8];
-static UINT8 DrvJoy3[8];
-static UINT8 DrvDips[3];
-static UINT8 DrvInputs[3];
-static UINT8 DrvReset;
+static UINT8 *soundlatch = NULL;
+static UINT8 *flipscreen = NULL;
+static UINT16 *DrvScrollx = NULL;
+static UINT16 *DrvScrolly = NULL;
+static UINT8 coin_lockout = 0;
+
+static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvDips[3] = {0,0,0};
+static UINT8 DrvInputs[3] = {0,0,0};
+static UINT8 DrvReset = 0;
+static INT32 watchdog = 0;
 
 static INT32 nCyclesTotal[2];
 

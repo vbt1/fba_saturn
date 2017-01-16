@@ -171,7 +171,7 @@ void __fastcall wiz_main_write(UINT16 address, UINT8 data)
 
 		case 0xf800:
 			if (data != 0x90) {
-				*soundlatch = data;
+				soundlatch = data;
 			}
 		return;
 
@@ -264,7 +264,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	{
 		case 0x3000:
 		case 0x7000:
-			return *soundlatch;
+			return soundlatch;
 	}
 
 	return 0;
@@ -358,7 +358,7 @@ static INT32 MemIndex()
 	DrvSprRAM0		= Next; Next += 0x000100;
 	DrvSprRAM1		= Next; Next += 0x000100;
 
-	soundlatch		= Next; Next += 0x000001;
+//	soundlatch		= Next; Next += 0x000001;
 
 	sprite_bank		= Next; Next += 0x000001;
 	interrupt_enable= Next; Next += 0x000002;
@@ -548,6 +548,7 @@ static INT32 ScionLoadRoms()
 static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 {
 	DrvInitSaturn();
+
 	AllMem = NULL;
 	MemIndex();
 	UINT32 nLen = MemEnd - (UINT8 *)0;
@@ -557,11 +558,11 @@ static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
+
 	make_lut(rotated);
 
 	{
 		if (RomLoadCallback()) return 1;
-
 		DrvPaletteInit();
 	}
 
@@ -782,9 +783,7 @@ static void make_lut(int rotated)
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
 //	ss_scl1			= (Fixed32 *)SS_SCL1;
-#ifdef CACHE
-	memset(bg_dirtybuffer,1,2048);
-#endif
+
 	ss_regs->tvmode = 0x8011;
  	SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,16,0,240,256);
  	SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,16,0,240,256);
@@ -796,6 +795,7 @@ static void make_lut(int rotated)
 
 	initLayers();
 	initColors();
+
 	initSprites(240-1,256-1,16,0,16,0);
 	initScrolling(ON,SCL_VDP2_VRAM_B1);
 	memset((Uint8 *)ss_map, 0x11,0x4000);
@@ -847,7 +847,7 @@ static INT32 DrvExit()
 	DrvGfxROM0b = DrvGfxROM1 = DrvColPROM = DrvZ80RAM0 = DrvZ80RAM1 = DrvVidRAM0 = NULL;
 	DrvVidRAM1 = DrvColRAM0  = DrvColRAM1 = DrvSprRAM0 = DrvSprRAM1 = NULL;
 
-	soundlatch = sprite_bank = interrupt_enable = palette_bank = char_bank_select = screen_flip = background_color = NULL;
+/*	soundlatch =*/ sprite_bank = interrupt_enable = palette_bank = char_bank_select = screen_flip = background_color = NULL;
 	DrvPalette = NULL;
 
 	free(AllMem);
@@ -1036,7 +1036,7 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta, UIN
 
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
-
+/*
 char buffer[80];
 int vspfunc(char *format, ...);
 
@@ -1050,16 +1050,16 @@ int vspfunc(char *format, ...)
    va_end(aptr);
 
    return(ret);
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 WizDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
 	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
 
-vspfunc("id %03d %4x       ",*background_color,DrvPalette[*background_color]);
+//vspfunc("id %03d %4x       ",*background_color,DrvPalette[*background_color]);
 
-memcpy((UINT8*)0x00200000,buffer,80);
+//memcpy((UINT8*)0x00200000,buffer,80);
 
 
 

@@ -849,7 +849,7 @@ static void make_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
@@ -897,7 +897,7 @@ static void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
 {
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	CZetExit2();
 
 	MSM5205Exit();
