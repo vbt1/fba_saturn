@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 46
+#define NB_DRV 47
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -122,6 +122,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvGigasb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvGigasm2 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvFM = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvMSX_1942 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -343,6 +344,10 @@ BurnDrvSlapFigh.szShortName="slapfib1";
 BurnDrvSlapFigh.szFullNameA="Slap Fight (bootleg set 1)";
 BurnDrvSlapFigh.szParent="slpfgh";
 
+BurnDrvMSX_1942.szShortName="msx";
+BurnDrvMSX_1942.szFullNameA="MSX1 System";
+BurnDrvMSX_1942.szParent=NULL;
+
 //BurnDrvFM.szShortName="fm";
 //BurnDrvFM.szFullNameA="FM Test Driver";
 //BurnDrvFM.szParent="blktgr";
@@ -354,6 +359,7 @@ pDriver[i++] = &BurnDrvsms_cz80;
 pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
+pDriver[i++] = &BurnDrvMSX_1942;
 //pDriver[i++] = &BurnDrvKungfut;
 //pDriver[i++] = &BurnDrvStinger;
 //pDriver[i++] = &BurnDrvScion;
