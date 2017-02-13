@@ -221,6 +221,13 @@ LDOVLFREEKFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MP
 SRCOVLFREEK         = d_freekick.c czet.c cz80/cz80.c sn76496.c 8255ppi.c saturn/ovl.c
 OBJOVLFREEK         = $(SRCOVLFREEK:.c=.o)
 
+OVLMSX                 = root/d_msx.coff
+OVLMSX1               = root/d_msx.bin
+MPOVLMSXFILE    = $(OVLMSX:.coff=.maps)
+LDOVLMSXFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMSXFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLMSX         = d_msx.c czet.c cz80/cz80.c sn76496.c 8255ppi.c saturn/ovl.c
+OBJOVLMSX         = $(SRCOVLMSX:.c=.o)
+
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
@@ -250,7 +257,8 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLBLKTGR) $(OVLBLKTGR1) $(OVLWIZ) $(OVLWIZ1) \
      $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
      $(OVLSLPFGHT) $(OVLSLPFGHT1) $(OVLFREEK) $(OVLFREEK1) \
-     $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1)
+     $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
+     $(OVLMSX) $(OVLMSX1)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -419,6 +427,12 @@ $(OVLFREEK) : $(OBJOVLFREEK) $(MAKEFILE) $(OBJOVLFREEK) $(LDOVLFREEKFILE)
 
 $(OVLFREEK1) : $(OBJOVLFREEK) $(MAKEFILE) $(LDOVLFREEKFILE)
 	$(CONV) -O binary $(OVLFREEK) $(OVLFREEK1)
+
+$(OVLMSX) : $(OBJOVLMSX) $(MAKEFILE) $(OBJOVLMSX) $(LDOVLMSXFILE)
+	$(CC) $(LDOVLMSXFLAGS) $(OBJOVLMSX) $(LIBSOVL) -o $@
+
+$(OVLMSX1) : $(OBJOVLMSX) $(MAKEFILE) $(LDOVLMSXFILE)
+	$(CONV) -O binary $(OVLMSX) $(OVLMSX1)
 
 # suffix
 .SUFFIXES: .asm
