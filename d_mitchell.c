@@ -1,10 +1,10 @@
 #define CZ80 1
 //#define RAZE 1
 //#define LOOP 1
-#define SWITCH 1
+//#define SWITCH 1
 #include "d_mitchell.h"
 
-#define nInterleave  10
+#define nInterleave  32
 #define nBurnSoundLen 192
 #define nSegmentLength nBurnSoundLen / nInterleave
 #define 	nCyclesTotal 4500000 / 60
@@ -122,6 +122,13 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
+/*static*/ void oki_bankswitch(INT32 bank)
+{
+	DrvOkiBank = bank;
+
+	MSM6295SetBank(0, DrvSoundRom + (DrvOkiBank * 0x40000), 0x00000, 0x3ffff);
+}
+
 /*static*/ int DrvDoReset()
 {
 #ifdef CZ80
@@ -165,7 +172,8 @@ int ovlInit(char *szShortName)
 #endif
 //	BurnYM2413Reset();
 	MSM6295Reset(0);
-	
+	oki_bankswitch(0);
+
 	if (DrvHasEEPROM) EEPROMReset();
 	
 	DrvPaletteRamBank = 0;
@@ -296,14 +304,20 @@ int ovlInit(char *szShortName)
 	switch (a) {
 		case 0x00: {
 			DrvFlipScreen = d & 0x04;
-			if (DrvOkiBank != (d & 0x10)) {
+/*			if (DrvOkiBank != (d & 0x10)) {
 				DrvOkiBank = d & 0x10;
 				if (DrvOkiBank) {
 					memcpyl(MSM6295ROM, DrvSoundRom + 0x40000, 0x40000);
 				} else {
 					memcpyl(MSM6295ROM, DrvSoundRom + 0x00000, 0x40000);
 				}
+			}*/
+			if (DrvOkiBank != (d & 0x10)>>4) 
+			{
+				DrvOkiBank = (d & 0x10)>>4;
+				oki_bankswitch(DrvOkiBank);
 			}
+
 			DrvPaletteRamBank = d & 0x20;
 			return;
 		}
@@ -666,10 +680,9 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 		else if ((DrvSprites[i]& 0xf0)==0xf0) DrvSprites[i] = DrvSprites[i] & 0x0f;
 	}
 	
-	nRet = BurnLoadRom(DrvSoundRom + 0x00000,  9, 1); if (nRet != 0) return 1;
-
 	spang_decode();
 	MitchellMachineInit();
+	nRet = BurnLoadRom(DrvSoundRom + 0x00000,  9, 1); if (nRet != 0) return 1;
 	
 if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 	
@@ -970,88 +983,17 @@ static void dummy(void)
 	
 #ifdef CZ80
 	CZetNewFrame();
-//	CZetCPUContext[0].nCyclesTotal = 0;
 #endif
 	for (unsigned int i = 0; i < nInterleave; i++) 
 	{
-//		int nNext;
-
-		// Run Z80 #1
-		//nCurrentCPU = 0;
 #ifdef CZ80
-/*
- if(0)
-		{	
-		CZetOpen(0);
-
 		nCyclesDone += CZetRun(nCyclesSegment);
-		if (i == 0 || i == 237) { // Needs to be ACK'd for one full scanline twice per frame. -dink
-			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
-			DrvInput5Toggle = (i == 237);
-		}
-		if (i == 1 || i == 238) {
-			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
-		}
-		CZetClose();
-		}  
- if(1)
-*/
+
+		if (i == 0 || i == 29) 
 		{
-
-//		nCyclesSegment = nCyclesTotal / nInterleave;
-		nCyclesDone += CZetRun(nCyclesSegment);
-#ifdef SWITCH
-
-	switch (i)
-	{
-		case 4:
-			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
-//			CZetRaiseIrq(0);
-			/*CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
-			nCyclesDone += CZetRun(500);
-			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
-
-			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
-			nCyclesDone += CZetRun(500);
-			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);	  */
-			break;
-//		case 1:
-//		case 3:
-//		case 5:
-		case 7:
-			DrvInput5Toggle = 1;
-			break;
-		case 9:
-			CZetRaiseIrq(0);
-			/*
-			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
-			nCyclesDone += CZetRun(500);
-			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
-			*/
-			break;
-	}
-#else
-
-		if (i == 4) 
-		{
-			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
-			nCyclesDone += CZetRun(500);
-			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
-
-			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
-			nCyclesDone += CZetRun(500);
-			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+			CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
+			DrvInput5Toggle = (i == 29);
 		}
-//		if (i == 7) DrvInput5Toggle = 1;
-		if (i == 9) 
-		{
-			CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
-			nCyclesDone += CZetRun(500);
-			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
-		}
-#endif
-		}
-//		CZetClose();
 #else
 		nNext = (i + 1) * nCyclesTotal / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone;

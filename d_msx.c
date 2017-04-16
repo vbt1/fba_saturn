@@ -157,24 +157,24 @@ static void Z80EDFECallback(Z80_Regs *Regs)
 	{
 		case 0x00e1: // TAPION (open & read header)
 			{
-				bprintf(0, _T("CAS: Searching header: "));
+//				bprintf(0, _T("CAS: Searching header: "));
 
 				Regs->af.b.l |= Z80CF;
 				if (CASMode) {
 					while (CASPos + 8 < curtapelen) {
 						if (!memcmp(curtape + CASPos, TapeHeader, 8)) {
 							CASPos+=8;
-							bprintf(0, _T("Found.\n"));
+//							bprintf(0, _T("Found.\n"));
 							Regs->af.b.l &= ~Z80CF;
 							return;
 						}
 						CASPos += 1;
 					}
-					bprintf(0, _T("Not found.\n"));
+//					bprintf(0, _T("Not found.\n"));
 					CASPos = 0;
 					return;
 				}
-				bprintf(0, _T("Tape offline.\n"));
+//				bprintf(0, _T("Tape offline.\n"));
 
 				return;
 			}
@@ -204,11 +204,11 @@ static void Z80EDFECallback(Z80_Regs *Regs)
 		  return;
 
 		  case 0x00ea: // TAPOON (write header)
-			  bprintf(0, _T("TAPOON"));
+//			  bprintf(0, _T("TAPOON"));
 			  return;
 
 		  case 0x00ed: // TAPOUT (write byte)
-			  bprintf(0, _T("TAPOUT"));
+//			  bprintf(0, _T("TAPOUT"));
 			  return;
 
 		  case 0x00f0: // TAPOOF (stop writing)
@@ -242,7 +242,7 @@ void msxinit(INT32 cart_len)
 		CARTSLOTB = 3;
 	}
 
-	bprintf(0, _T("Slots: BIOS %d RAM %d CART1 %d CART2 %d\n"), BIOSSLOT, RAMSLOT, CARTSLOTA, CARTSLOTB);
+//	bprintf(0, _T("Slots: BIOS %d RAM %d CART1 %d CART2 %d\n"), BIOSSLOT, RAMSLOT, CARTSLOTA, CARTSLOTB);
 
 	memset(EmptyRAM, 0xff, 0x4000); // bus is pulled high for unmapped reads
 
@@ -255,8 +255,8 @@ void msxinit(INT32 cart_len)
 	RAMData = main_mem;
 
 	if (CASMode) {
-		bprintf(0, _T("Cassette mode.\n"));
-		ZetSetEDFECallback(Z80EDFECallback);
+//		bprintf(0, _T("Cassette mode.\n"));
+		CZetSetEDFECallback(Z80EDFECallback);
 		CASPatchBIOS(maincpu);
 		CASAutoLoad();
 		CASSide = 0; // Always start @ side A
@@ -755,7 +755,7 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 	}
 
 	if ((ca != 'A') || (cb != 'B')) {
-		bprintf(0, _T("MSX Cartridge signature not found!\n"));
+//		bprintf(0, _T("MSX Cartridge signature not found!\n"));
 		return 0;
 	}
 
@@ -765,12 +765,12 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 			   (Pages - Len) * 0x2000);
 	}
 
-	bprintf(0, _T("Cartridge %c: %dk "), 'A' + nSlot - CARTSLOTA, Len * 8);
+//	bprintf(0, _T("Cartridge %c: %dk "), 'A' + nSlot - CARTSLOTA, Len * 8);
 
 
 	ROMMask[nSlot]= !Flat64 && (Len > 4) ? (Pages - 1) : 0x00;
 
-	bprintf(0, _T("%S\n"), (BasicROM) ? "Basic ROM Detected." : "");
+//	bprintf(0, _T("%S\n"), (BasicROM) ? "Basic ROM Detected." : "");
 /*
 	// Override mapper from hardware code
 	switch (BurnDrvGetHardwareCode() & 0xff) {
@@ -840,7 +840,7 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 					PageMap(nSlot, "0:1:0:1:2:3:2:3"); // normal
 				} else {
 					PageMap(nSlot, "2:3:0:1:2:3:0:1"); // swapped
-					bprintf(0, _T("Swapped mirroring.\n"));
+//					bprintf(0, _T("Swapped mirroring.\n"));
 				}
 				break;
 
@@ -851,9 +851,9 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 			}
 			break;
 		}
-		if (Flat64 || Len < 5)
-			bprintf(0, _T("starting address 0x%04X.\n"),
-					MemMap[nSlot][2][2] + 256 * MemMap[nSlot][2][3]);
+//		if (Flat64 || Len < 5)
+//			bprintf(0, _T("starting address 0x%04X.\n"),
+//					MemMap[nSlot][2][2] + 256 * MemMap[nSlot][2][3]);
 	}
 
 	// map gen/16k megaROM pages 0:1:last-1:last
@@ -909,11 +909,11 @@ static void __fastcall msx_write_port(UINT16 port, UINT8 data)
 		case 0xfc: // map ram-page 0x0000, 0x4000, 0x8000, 0xc000
 		case 0xfd:
 		case 0xfe:
-		case 0xff: bprintf(0, _T("Port %X Data %X.\n"), port, data);
+		case 0xff: //bprintf(0, _T("Port %X Data %X.\n"), port, data);
 			INT32 PSlot = port - 0xfc;
 			data &= RAMMask;
 			if (RAMMapper[PSlot] != data) {
-				bprintf(0, _T("Mapped RAM chunk %d @ 0x%X\n"), data, PSlot * 0x4000);
+//				bprintf(0, _T("Mapped RAM chunk %d @ 0x%X\n"), data, PSlot * 0x4000);
 				INT32 Page = PSlot << 1;
 				RAMMapper[PSlot] = data;
 				MemMap[RAMSLOT][Page] = RAMData + (data << 14);
@@ -1010,7 +1010,7 @@ static void ay8910portBwrite(UINT32 offset, UINT32 data)
 
 static void vdp_interrupt(INT32 state)
 {
-	ZetSetIRQLine(0, state ? CZET_IRQSTATUS_ACK : CZET_IRQSTATUS_NONE);
+	CZetSetIRQLine(0, state ? CZET_IRQSTATUS_ACK : CZET_IRQSTATUS_NONE);
 }
 
 static INT32 DrvDoReset()
@@ -1027,10 +1027,10 @@ static INT32 DrvDoReset()
 
 	ppi8255_init(1); // there is no reset, so use this.
 
-	ZetOpen(0);
-	ZetReset();
+	CZetOpen(0);
+	CZetReset();
 	TMS9928AReset();
-	ZetClose();
+	CZetClose();
 
 	AY8910Reset(0);
 	K051649Reset();
@@ -1091,7 +1091,7 @@ static UINT8 __fastcall msx_read(UINT16 address)
 
 static INT32 DrvSyncDAC()
 {
-	return (INT32)(float)(nBurnSoundLen * (ZetTotalCycles() / (3579545.000 / ((Hertz60) ? 60.0 : 50.0))));
+	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / (3579545.000 / ((Hertz60) ? 60.0 : 50.0))));
 }
 
 static INT32 DrvInit()
@@ -1106,25 +1106,25 @@ static INT32 DrvInit()
 	{
 		struct BurnRomInfo ri;
 
-		bprintf(0, _T("MSXINIT...\n"));
+//		bprintf(0, _T("MSXINIT...\n"));
 		Hertz60 = (DrvDips[0] & 0x10) ? 1 : 0;
 		BiosmodeJapan = (DrvDips[0] & 0x01) ? 1 : 0;
 		SwapJoyports = (DrvDips[0] & 0x20) ? 1 : 0;
 
-		bprintf(0, _T("%Shz mode.\n"), (Hertz60) ? "60" : "50");
-		bprintf(0, _T("BIOS mode: %S\n"), (BiosmodeJapan) ? "Japanese" : "Normal");
-		bprintf(0, _T("%S"), (SwapJoyports) ? "Joystick Ports: Swapped.\n" : "");
+//		bprintf(0, _T("%Shz mode.\n"), (Hertz60) ? "60" : "50");
+//		bprintf(0, _T("BIOS mode: %S\n"), (BiosmodeJapan) ? "Japanese" : "Normal");
+//		bprintf(0, _T("%S"), (SwapJoyports) ? "Joystick Ports: Swapped.\n" : "");
 		if (BurnLoadRom(maincpu, 0x80 + BiosmodeJapan, 1)) return 1; // BIOS
 
 		use_kanji = (BurnLoadRom(kanji_rom, 0x82, 1) == 0);
 
-		if (use_kanji)
-			bprintf(0, _T("Kanji ROM loaded.\n"));
+//		if (use_kanji)
+//			bprintf(0, _T("Kanji ROM loaded.\n"));
 
 		BurnDrvGetRomInfo(&ri, 0);
 
 		if (ri.nLen > MAX_MSX_CARTSIZE) {
-			bprintf(0, _T("Bad MSX1 ROMSize! exiting.. (> %dk) \n"), MAX_MSX_CARTSIZE / 1024);
+//			bprintf(0, _T("Bad MSX1 ROMSize! exiting.. (> %dk) \n"), MAX_MSX_CARTSIZE / 1024);
 			return 1;
 		}
 
@@ -1142,7 +1142,7 @@ static INT32 DrvInit()
 			if (BurnLoadRom(game2 + 0x00000, 1, 1)) return 1;
 
 			CurRomSizeB = ri.nLen;
-			bprintf(0, _T("Loaded secondary tape/rom, size: %d.\n"), CurRomSizeB);
+//			bprintf(0, _T("Loaded secondary tape/rom, size: %d.\n"), CurRomSizeB);
 		}
 
 		// msxinit(ri.nLen); (in DrvDoReset()! -dink)
@@ -1154,14 +1154,14 @@ static INT32 DrvInit()
 #endif
 	BurnSetRefreshRate((Hertz60) ? 60.0 : 50.0);
 
-	ZetInit(0);
-	ZetOpen(0);
+	CZetInit(0);
+	CZetOpen(0);
 
-	ZetSetOutHandler(msx_write_port);
-	ZetSetInHandler(msx_read_port);
-	ZetSetWriteHandler(msx_write);
-	ZetSetReadHandler(msx_read);
-	ZetClose();
+	CZetSetOutHandler(msx_write_port);
+	CZetSetInHandler(msx_read_port);
+	CZetSetWriteHandler(msx_write);
+	CZetSetReadHandler(msx_read);
+	CZetClose();
 
 	AY8910Init(0, 3579545/2, nBurnSoundRate, ay8910portAread, NULL, ay8910portAwrite, ay8910portBwrite);
 	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
@@ -1187,7 +1187,7 @@ static INT32 DrvInit()
 static INT32 DrvExit()
 {
 	TMS9928AExit();
-	ZetExit();
+	CZetExit();
 
 	AY8910Exit(0);
 	K051649Exit();
@@ -1273,7 +1273,7 @@ static INT32 DrvFrame()
 	{   // detect tape side changes
 		CASSide = (DrvDips[0] & 0x40) ? 1 : 0;
 		if (CASSideLast != CASSide) {
-			bprintf(0, _T("Tape change: Side %c\n"), (CASSide) ? 'B' : 'A');
+//			bprintf(0, _T("Tape change: Side %c\n"), (CASSide) ? 'B' : 'A');
 			CASSideChange();
 		}
 
@@ -1288,17 +1288,17 @@ static INT32 DrvFrame()
 	INT32 nCyclesDone[1] = { 0 };
 	INT32 nSoundBufferPos = 0;
 
-	ZetNewFrame();
-	ZetOpen(0);
+	CZetNewFrame();
+	CZetOpen(0);
 
 	if (DrvNMI && !lastnmi) {
-		ZetNmi();
+		CZetNmi();
 		lastnmi = DrvNMI;
 	} else lastnmi = DrvNMI;
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		nCyclesDone[0] += ZetRun(nCyclesTotal[0] / nInterleave);
+		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
 
 		TMS9928AScanline(i);
 
@@ -1313,7 +1313,7 @@ static INT32 DrvFrame()
 //		}
 	}
 
-	ZetClose();
+	CZetClose();
 
 	// Make sure the buffer is entirely filled.
 	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
