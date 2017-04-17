@@ -149,6 +149,10 @@ Track MODE1
 				Source D_FREEK.BIN
 			EndFile
 
+			File D_MSX.BIN;1
+				Source D_MSX.BIN
+			EndFile
+
 			Directory BOMBJA
 				File 01H03T.BIN;1
 					Source BOMBJA\01H03T.BIN
@@ -4351,6 +4355,19 @@ EndFile
 				EndFile
 				File SFR05.BIN;1
 					Source SLAPFIB1\SFR05.BIN
+				EndFile
+			EndDirectory
+
+			Directory MSX
+				File 1942.ROM;1
+					Source MSX\1942.ROM
+				EndFile
+
+				File MSX.ROM;1
+					Source MSX\MSX.ROM
+				EndFile
+				File MSXJ.ROM;1
+					Source MSX\MSXJ.ROM
 				EndFile
 			EndDirectory
 

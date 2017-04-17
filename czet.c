@@ -14,7 +14,13 @@ unsigned char __fastcall CZetDummyReadHandler(unsigned short a) { return 0; }
 void __fastcall CZetDummyWriteHandler(unsigned short a, unsigned char b) { }
 unsigned char __fastcall CZetDummyInHandler(unsigned short a) { return 0; }
 void __fastcall CZetDummyOutHandler(unsigned short a, unsigned char b) { }
-
+/*
+void CZetSetEDFECallback(void (*pCallback)(Z80_Regs*))
+{
+	// Can be set before init. it's cleared at exit.
+	z80edfe_callback = pCallback;
+}
+*/
 void CZetSetSP(unsigned short data)
 {
 	lastCZetCPUContext->SP.W = data;

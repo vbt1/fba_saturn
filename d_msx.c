@@ -7,7 +7,12 @@
 //  VoidRunner and Milk Race freeze when selecting between kbd/joy. (VoidRunner has a kludge, but it doesn't work for Milk Race)
 //  Krakout any key starts, can't get into settings
 
+#include    "machine.h"
 #include "d_msx.h"
+
+//#define K051649 1
+//#define CASSETTE 1
+//#define KANJI 1
 
 int ovlInit(char *szShortName)
 {
@@ -21,9 +26,105 @@ int ovlInit(char *szShortName)
 	memcpy(shared,&nBurnDrvMSX_1942,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
+	ss_regs  = (SclSysreg *)SS_REGS;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+static void load_rom()
+{
+	memset (AllRam, 0, RamEnd - AllRam);
 
+	BurnLoadRom(game + 0x0000, 0, 1);
+//	set_memory_map(mapper);
+	
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)GFS_IdToName(file_id),26,200);
+
+	DrvDoReset();
+#ifdef RAZE	
+	z80_set_reg(Z80_REG_IR,0x00);
+	z80_set_reg(Z80_REG_PC,0x0000);
+	z80_set_reg(Z80_REG_SP,0x00);
+	z80_set_reg(Z80_REG_IRQVector,0xff);
+#endif	
+	PCM_MeStop(pcm);
+	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
+	nSoundBufferPos=0;
+	PCM_MeStart(pcm);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ UINT8 update_input1(void)
+{
+	unsigned int i=0,k;
+	UINT8 temp = 0xFF;
+	SysDevice	*device;
+//	__port = PER_OpenPort();
+//	PER_GetPort(__port);
+	if(( device = PER_GetDeviceR( &__port[0], 0 )) != NULL )
+	{
+		pltriggerE[0] = pltrigger[0];
+		pltrigger[0] = PER_GetTrigger( device );
+		pltriggerE[0] = (pltrigger[0]) ^ (pltriggerE[0]);
+		pltriggerE[0] = (pltrigger[0]) & (pltriggerE[0]);
+
+		if((pltriggerE[0] & PER_DGT_S)!=0)
+		{
+			load_rom();
+//			DrvDoReset();
+		}
+
+		for(i=10;i<12;i++)
+		{
+//			if((pltrigger[0] & pad_asign[i])!=0)
+			if((pltriggerE[0] & pad_asign[i])!=0)
+			{
+				switch(pltriggerE[0] & pad_asign[i] )
+				{
+					case PER_DGT_TR:
+					if (file_id<=file_max)	file_id++;
+					else							file_id=2;
+//#ifdef FONT
+						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
+						(Uint8 *)"            ",26,200);
+						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
+						(Uint8 *)GFS_IdToName(file_id),26,200);					
+//#endif
+					break;
+
+					case PER_DGT_TL:
+					if (file_id>2)	file_id--;
+					else				file_id=file_max;
+						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
+						(Uint8 *)"            ",26,200);
+						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
+						(Uint8 *)GFS_IdToName(file_id),26,200);
+
+				    default:
+					break;
+				}
+			}
+		}
+	}
+	else	pltrigger[0] = pltriggerE[0] = 0;
+
+	return 0;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void	SetVblank2( void ){
+	int			imask;
+
+
+	imask = get_imask();
+	set_imask(2);
+//	INT_ChgMsk(INT_MSK_NULL,INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT);
+	INT_ChgMsk(INT_MSK_NULL, INT_MSK_VBLK_OUT);
+//	INT_SetScuFunc(INT_SCU_VBLK_IN,UsrVblankIn2);
+	INT_SetScuFunc(INT_SCU_VBLK_OUT,update_input1);
+//	INT_ChgMsk(INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT,INT_MSK_NULL);
+	INT_ChgMsk(INT_MSK_VBLK_OUT,INT_MSK_NULL);
+	set_imask(imask);
+	__port = PER_OpenPort();
+	
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static inline void intkeyOn(INT32 row, INT32 bit) {
 	keyRows[row] = ((keyRows[row] & 0xff) | (1 << bit));
 }
@@ -79,6 +180,7 @@ static const char *ROMNames[MAXMAPPERS + 1] =
   "Dooly\0", "Cross Blaim\0", "R-Type\0", "???\0"
 };
 
+#ifdef CASSETTE
 #define CAS_BLOAD 1
 #define CAS_RUN 2
 #define CAS_CLOAD 3
@@ -90,11 +192,13 @@ static const char *CASAutoLoadTypes[] =
 	"bload \"cas:\", r\x0d", "run \"cas:\"\x0d", "cload\x0drun\x0d",
 	"cload\x0drun\x0drun\x0d", "rem Set Tape Side-A in DIPs & reboot!\x0d"
 };
+#endif
 
 static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot);
 static void PageMap(INT32 CartSlot, const char *cMap); //("0:0:0:0:0:0:0:0")
 static void MapMegaROM(UINT8 nSlot, UINT8 nPg0, UINT8 nPg1, UINT8 nPg2, UINT8 nPg3);
 
+#ifdef CASSETTE
 static INT32 CASAutoLoadPos = 0;
 static INT32 CASAutoLoadTicker = 0;
 
@@ -145,7 +249,8 @@ static void CASPatchBIOS(UINT8 *bios)
 		i++;
 	}
 }
-
+#endif
+/*
 extern void (*z80edfe_callback)(Z80_Regs *Regs);
 
 static void Z80EDFECallback(Z80_Regs *Regs)
@@ -220,7 +325,7 @@ static void Z80EDFECallback(Z80_Regs *Regs)
 			  return;
 	}
 }
-
+*/
 
 void msxinit(INT32 cart_len)
 {
@@ -253,16 +358,16 @@ void msxinit(INT32 cart_len)
 	RAMPages = 4; // 64k
 	RAMMask = RAMPages - 1;
 	RAMData = main_mem;
-
+#ifdef CASSETTE
 	if (CASMode) {
 //		bprintf(0, _T("Cassette mode.\n"));
-		CZetSetEDFECallback(Z80EDFECallback);
+//		CZetSetEDFECallback(Z80EDFECallback);
 		CASPatchBIOS(maincpu);
 		CASAutoLoad();
 		CASSide = 0; // Always start @ side A
 		CASSideChange();
 	}
-
+#endif
 	// "Insert" BIOS ROM
 	ROMData[BIOSSLOT] = maincpu;
 	PageMap(BIOSSLOT, "0:1:2:3:e:e:e:e");
@@ -328,12 +433,16 @@ static void Mapper_write(UINT16 address, UINT8 data)
 	if (((address & 0xdf00) == 0x9800) && SCCReg[PSlot]) { // Handle Konami-SCC (+)
 		UINT16 offset = address & 0x00ff;
 
+#ifdef K051649
 		if (offset < 0x80) {
 			K051649WaveformWrite(offset, data);
 		}
-		else if (offset < 0xa0)	{
+		else
+#endif
+			if (offset < 0xa0)	{
 			offset &= 0xf;
 
+#ifdef K051649
 			if (offset < 0xa) {
 				K051649FrequencyWrite(offset, data);
 			}
@@ -343,6 +452,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			else {
 				K051649KeyonoffWrite(data);
 			}
+#endif
 		}
 
 		return;
@@ -1033,7 +1143,9 @@ static INT32 DrvDoReset()
 	CZetClose();
 
 	AY8910Reset(0);
+#ifdef K051649
 	K051649Reset();
+#endif
 	DACReset();
 
 	return 0;
@@ -1044,10 +1156,13 @@ static INT32 MemIndex()
 	UINT8 *Next; Next = AllMem;
 
 	maincpu		    = Next; Next += 0x020000;
-	game		    = Next; Next += MAX_MSX_CARTSIZE;
+	game		    = (UINT8 *)0x00200000; //MAX_MSX_CARTSIZE;
+#ifdef CASSETTE
 	game2		    = Next; Next += MAX_MSX_CARTSIZE;
+#endif
+#ifdef KANJI
 	kanji_rom       = Next; Next += 0x040000;
-
+#endif
 	game_sram       = Next; Next += 0x004000;
 
 	AllRam			= Next;
@@ -1096,10 +1211,14 @@ static INT32 DrvSyncDAC()
 
 static INT32 DrvInit()
 {
+	DrvInitSaturn();
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"initsat complete     ",26,200);
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"bef malloc      ",26,200);
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"aft malloc      ",26,200);
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
@@ -1114,21 +1233,28 @@ static INT32 DrvInit()
 //		bprintf(0, _T("%Shz mode.\n"), (Hertz60) ? "60" : "50");
 //		bprintf(0, _T("BIOS mode: %S\n"), (BiosmodeJapan) ? "Japanese" : "Normal");
 //		bprintf(0, _T("%S"), (SwapJoyports) ? "Joystick Ports: Swapped.\n" : "");
-		if (BurnLoadRom(maincpu, 0x80 + BiosmodeJapan, 1)) return 1; // BIOS
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"jp        ",26,200);
 
-		use_kanji = (BurnLoadRom(kanji_rom, 0x82, 1) == 0);
-
+//		if (BurnLoadRom(maincpu, 0x80 + BiosmodeJapan, 1)) return 1; // BIOS
+		if (BurnLoadRom(maincpu, 1 + BiosmodeJapan, 1)) return 1; // BIOS
+#ifdef KANJI
+//		use_kanji = (BurnLoadRom(kanji_rom, 0x82, 1) == 0);
+		use_kanji = (BurnLoadRom(kanji_rom, 3, 1) == 0);
+#endif
 //		if (use_kanji)
 //			bprintf(0, _T("Kanji ROM loaded.\n"));
 
 		BurnDrvGetRomInfo(&ri, 0);
 
 		if (ri.nLen > MAX_MSX_CARTSIZE) {
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"bad rom size        ",26,200);
 //			bprintf(0, _T("Bad MSX1 ROMSize! exiting.. (> %dk) \n"), MAX_MSX_CARTSIZE / 1024);
 			return 1;
 		}
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"memset         ",26,200);
 
 		memset(game, 0xff, MAX_MSX_CARTSIZE);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"game load         ",26,200);
 
 		if (BurnLoadRom(game + 0x00000, 0, 1)) return 1;
 
@@ -1147,12 +1273,7 @@ static INT32 DrvInit()
 
 		// msxinit(ri.nLen); (in DrvDoReset()! -dink)
 	}
-#ifdef BUILD_WIN32
-	cBurnerKeyCallback = msxKeyCallback;
-	nReplayExternalDataCount = sizeof(keyRows);
-	ReplayExternalData = &keyRows[0];
-#endif
-	BurnSetRefreshRate((Hertz60) ? 60.0 : 50.0);
+//	BurnSetRefreshRate((Hertz60) ? 60.0 : 50.0);
 
 	CZetInit(0);
 	CZetOpen(0);
@@ -1164,13 +1285,15 @@ static INT32 DrvInit()
 	CZetClose();
 
 	AY8910Init(0, 3579545/2, nBurnSoundRate, ay8910portAread, NULL, ay8910portAwrite, ay8910portBwrite);
-	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 
+#ifdef K051649
 	K051649Init(3579545/2);
-	K051649SetRoute(0.20, BURN_SND_ROUTE_BOTH);
+#endif
+//	K051649SetRoute(0.20, BURN_SND_ROUTE_BOTH);
 
 	DACInit(0, 0, 1, DrvSyncDAC);
-	DACSetRoute(0, 0.30, BURN_SND_ROUTE_BOTH);
+//	DACSetRoute(0, 0.30, BURN_SND_ROUTE_BOTH);
 
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt);
 
@@ -1178,7 +1301,7 @@ static INT32 DrvInit()
 	PPI0PortReadB	= msx_ppi8255_portB_read;
 	PPI0PortWriteA	= msx_ppi8255_portA_write;
 	PPI0PortWriteC	= msx_ppi8255_portC_write;
-
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"init complete     ",26,200);
 	DrvDoReset();
 
 	return 0;
@@ -1190,7 +1313,9 @@ static INT32 DrvExit()
 	CZetExit();
 
 	AY8910Exit(0);
+#ifdef K051649
 	K051649Exit();
+#endif
 	DACExit();
 
 	ppi8255_exit();
@@ -1269,7 +1394,7 @@ static INT32 DrvFrame()
 			keyInput(0xfb, DrvJoy4[12]); // Key RIGHT
 		}
 	}
-
+#ifdef CASSETTE
 	{   // detect tape side changes
 		CASSide = (DrvDips[0] & 0x40) ? 1 : 0;
 		if (CASSideLast != CASSide) {
@@ -1282,6 +1407,7 @@ static INT32 DrvFrame()
 			CASAutoLoadTick();
 		CASFrameCounter++;
 	}
+#endif
 
 	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[1] = { 3579545 / ((Hertz60) ? 60 : 50) };
@@ -1300,20 +1426,26 @@ static INT32 DrvFrame()
 	{
 		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
 
-		TMS9928AScanline(i);
+//		TMS9928AScanline(i);
 
 		// Render Sound Segment
 		volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
 //		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+//			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+// vbt à remettre
+#ifdef K051649
 			K051649Update(pSoundBuf, nSegmentLength);
+#endif
 			nSoundBufferPos += nSegmentLength;
 //		}
 	}
 
 	CZetClose();
+
+	TMS9928AInterrupt();
+	TMS9928ADraw();
 
 	// Make sure the buffer is entirely filled.
 	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
@@ -1321,8 +1453,11 @@ static INT32 DrvFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+//			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+// bt à remettre
+#ifdef K051649
 			K051649Update(pSoundBuf, nSegmentLength);
+#endif
 		}
 		DACUpdate(pBurnSoundOut, nBurnSoundLen);
 //	}
@@ -1475,7 +1610,7 @@ static INT32 BasicDrvInit()
 	msx_basicmode = 1;
 	return DrvInit();
 }
-
+#ifdef CASSETTE
 static INT32 CasBloadDrvInit()
 {
 	msx_basicmode = 1;
@@ -1519,3 +1654,125 @@ static INT32 VoidrunnerDrvInit()
 	CASMode = CAS_RUN;
 	return DrvInit();
 }
+#endif
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void initColors()
+{
+	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
+//	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
+	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+//	SCL_SetColRam(SCL_NBG1,0,8,palette);
+	SCL_SetColRam(SCL_NBG1,8,8,palette);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void initLayers(void)
+{
+//    SclConfig	config;
+// **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
+
+	Uint16	CycleTb[]={
+		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
+		0xff5e, 0xffff, //A1
+		0xffff, 0xffff,	//A0
+		0x04ee, 0xffff,   //B1
+		0xffff, 0xffff  //B0
+	};
+ 	SclConfig	scfg;
+
+//	SCL_InitConfigTb(&scfg);
+	scfg.dispenbl		= OFF;
+/*	
+	scfg.charsize		= SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
+	scfg.pnamesize	= SCL_PN1WORD;
+	scfg.flip				= SCL_PN_10BIT;
+	scfg.platesize	= SCL_PL_SIZE_1X1;
+	scfg.coltype		= SCL_COL_TYPE_16;
+	scfg.datatype	= SCL_CELL;
+	scfg.patnamecontrl =  0x000c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
+	scfg.plate_addr[0] = ss_map;		 */
+	SCL_SetConfig(SCL_NBG0, &scfg);
+	SCL_SetConfig(SCL_NBG2, &scfg);
+	
+/********************************************/	
+
+//	SCL_InitConfigTb(&scfg);
+	scfg.dispenbl 	 = ON;
+	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
+	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
+	scfg.datatype 	 = SCL_BITMAP;
+	scfg.mapover       = SCL_OVER_0;
+	scfg.plate_addr[0] = ss_font;
+	SCL_SetConfig(SCL_NBG1, &scfg);
+	SCL_SetCycleTable(CycleTb);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void initPosition(void)
+{
+	SCL_Open();
+	ss_reg->n1_move_x = 0;
+	ss_reg->n1_move_y = 0;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*void dummy()
+{
+
+} */
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void DrvInitSaturn()
+{
+//	InitCDsms();
+//	SPR_InitSlaveSH();
+//	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
+	nBurnSprites  = 4+32;//131;//27;
+	nBurnLinescrollSize = 0;
+	nSoundBufferPos = 0;//sound position à renommer
+
+	SS_CACHE = cache      =(Uint8  *)SCL_VDP2_VRAM_B1;
+	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_A1;
+
+	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
+	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
+
+	ss_sprite		= (SprSpCmd *)SS_SPRIT;
+//	ss_scl			= (Fixed32 *)SS_SCL;
+//	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+//	pTransDraw	= (ss_vram+0x1100);
+	file_id			= 2; // bubble bobble
+//	file_max		= getNbFiles();
+
+//	SaturnInitMem();
+	int nLen = MemEnd - (UINT8 *)0;
+//	SaturnMem = (UINT8 *)malloc(nLen);
+//	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
+//	SaturnInitMem();
+	ss_sprite[3].ax = 0;
+	ss_sprite[3].ay = 0;
+
+	ss_sprite[3].color          = 0x0;
+	ss_sprite[3].charAddr    = 0x2220;// 0x2000 => 0x80 sprites <<6
+	ss_sprite[3].control       = ( JUMP_NEXT | FUNC_NORMALSP); // | DIR_LRTBREV); // | flip);
+	ss_sprite[3].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP); //256 colors
+	ss_sprite[3].charSize    = 0x20C0;  // 256x*192y
+	
+//	initLayers();
+	
+    SS_SET_N0PRIN(0);
+    SS_SET_N1PRIN(6);
+    SS_SET_S0PRIN(5);
+
+	initLayers();
+	initColors();
+//	initPosition();
+//	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
+
+//	initSprites(256-1,192-1,0,0,0,0);
+
+//	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+//	drawWindow(32,192,192,14,52);
+	nBurnFunction = update_input1;
+	drawWindow(0,192,192,2,66);
+	SetVblank2();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------

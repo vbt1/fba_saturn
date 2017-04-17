@@ -1,9 +1,10 @@
 #ifndef _D_MSX_H_
 #define _D_MSX_H_
 
-//#include "tiles_generic.h"
 #include "burnint.h"
 #include "saturn/ovl.h"
+#include "sega_int.h"
+
 #include "z80_intf.h"
 #include "driver.h"
 #include "tms9928a.h"
@@ -11,12 +12,6 @@
 #include "bitswap.h"
 //#include "k051649.h"
 //#include "dac.h"
-
-#ifndef BUILD_WIN32
-INT32 nReplayExternalDataCount = 0;
-UINT8 *ReplayExternalData = NULL;
-#endif
-
 #include "snd/ay8910.h"
 
 #define nBurnSoundLen 128
@@ -26,7 +21,37 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static int DrvFrame();
 static int DrvExit();
 static int DrvInit();
+static INT32 DrvDoReset();
 static void DrvInitSaturn();
+
+extern int file_id;
+extern int file_max;
+
+typedef UINT16	trigger_t;
+
+static UINT16 pad_asign[]={
+PER_DGT_U,PER_DGT_D,PER_DGT_R,PER_DGT_L,PER_DGT_A,PER_DGT_B,
+PER_DGT_C,PER_DGT_S,PER_DGT_X,PER_DGT_Y,PER_DGT_TR,PER_DGT_TL,
+};
+
+static trigger_t	pltrigger[2],pltriggerE[2];
+
+#define	SZ_PERIPHERAL	20
+typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
+
+typedef	struct	SysPort	{
+	UINT8			id;
+	UINT8			connectable;
+	SysPeripheral	*peripheral;
+} SysPort;
+
+static SysPort	*__port;
+
+typedef	struct	SysDevice	{
+	UINT8	type;
+	UINT8	size;
+	UINT8	data[1];
+} SysDevice;
 
 static INT16 *pAY8910Buffer[6];
 
@@ -284,7 +309,7 @@ static struct BurnRomInfo emptyRomDesc[] = {
 static struct BurnRomInfo msx_msxRomDesc[] = {
     { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios
     { "msxj.rom",    0x8000, 0x071135e0, BRF_BIOS | BRF_OPT }, // 0x81 - japanese bios
-    { "kanji.rom",   0x40000, 0x1f6406fb, BRF_BIOS | BRF_OPT }, // 0x82 - kanji support
+//    { "kanji.rom",   0x40000, 0x1f6406fb, BRF_BIOS | BRF_OPT }, // 0x82 - kanji support
 };
 
 STD_ROM_PICK(msx_msx)
@@ -294,6 +319,8 @@ STD_ROM_FN(msx_msx)
 
 static struct BurnRomInfo MSX_1942RomDesc[] = {
 	{ "1942.rom",	0x20000, 0xa27787af, BRF_PRG | BRF_ESS },
+    { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios
+    { "msxj.rom",    0x8000, 0x071135e0, BRF_BIOS | BRF_OPT }, // 0x81 - japanese bios
 };
 STDROMPICKEXT(MSX_1942, MSX_1942, msx_msx)
 STD_ROM_FN(MSX_1942)
