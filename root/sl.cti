@@ -4360,7 +4360,8 @@ EndFile
 
 			Directory MSX
 				File 1942.ROM;1
-					Source MSX\1942.ROM
+;					Source MSX\1942.ROM
+					Source MSX\PENGADV.ROM
 				EndFile
 
 				File MSX.ROM;1

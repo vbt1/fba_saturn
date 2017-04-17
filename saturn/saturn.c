@@ -14,7 +14,7 @@ unsigned char drvquit;
 void	UsrVblankIn( void )
 {
 #ifdef FONT
-//	char xx[4];
+	char xx[4];
    PER_GetPort(__port);	
 #endif
 	PCM_MeVblIn();
@@ -31,7 +31,7 @@ void	UsrVblankIn( void )
 					 
 		if(frame_y==hz)
 		{
-/*				if(frame_displayed!=frame_x)
+				if(frame_displayed!=frame_x)
 				{
 //					UINT8 *tmp0 = (UINT8*)0x00200000;
 //					sprintf(tmp0,"*%03d*",frame_x);
@@ -40,7 +40,7 @@ void	UsrVblankIn( void )
 					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)xx,136,20);
 					frame_displayed = frame_x;
 				}
-*/
+
 				frame_y=frame_x=0;
 		}		   
 #endif

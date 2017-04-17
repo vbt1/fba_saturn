@@ -1,5 +1,5 @@
-//#include "tiles_generic.h"
 #include "tms9928a.h"
+#include "burn.h"
 #define		_SPR3_
 #include "sega_spr.h"
 #define COLADDR (FBUF_ADDR-0x400)
@@ -32,45 +32,53 @@ unsigned char dirtyc[24*32*8*4];
 
 //unsigned int pattern6[0x400];
 //unsigned int pattern4[0x400];
-static int TMS9928A_palette[16] = {
+
+/* Some defines used in defining the screens */
+#define TMS9928A_TOTAL_HORZ                 342
+#define TMS9928A_TOTAL_VERT_NTSC            262
+#define TMS9928A_TOTAL_VERT_PAL             313
+
+#define TMS9928A_HORZ_DISPLAY_START         (2 + 14 + 8 + 13)
+#define TMS9928A_VERT_DISPLAY_START_PAL     16
+#define TMS9928A_VERT_DISPLAY_START_NTSC    16
+
+static INT32 TMS9928A_palette[16] = {
 	0x000000, 0x000000, 0x21c842, 0x5edc78, 0x5455ed, 0x7d76fc, 0xd4524d, 0x42ebf5,
 	0xfc5554, 0xff7978, 0xd4c154, 0xe6ce80, 0x21b03b, 0xc95bba, 0xcccccc, 0xffffff
 };
 
 typedef struct {
-	unsigned char ReadAhead;
-	unsigned char Regs[8];
-	unsigned char StatusReg;
-	unsigned char FirstByte;
-	unsigned char latch;
-	unsigned char INT;
-	int Addr;
-	int colour;
-	int pattern;
-	int nametbl;
-	int spriteattribute;
-	int spritepattern;
-	int colourmask;
-	int patternmask;
+	UINT8 mode;
+	UINT8 ReadAhead;
+	UINT8 Regs[8];
+	UINT8 StatusReg;
+	UINT8 FifthSprite;
+	UINT8 FirstByte;
+	UINT8 latch;
+	UINT8 INT;
+	INT32 Addr;
+	INT32 colour;
+	INT32 pattern;
+	INT32 nametbl;
+	INT32 spriteattribute;
+	INT32 spritepattern;
+	INT32 colourmask;
+	INT32 patternmask;
 
 //	unsigned char *vMem;
 	unsigned char vMem[0x4000];
 //	unsigned char *dBackMem;
 //	unsigned short *tmpbmp;
 	unsigned char *tmpbmp;
-	int vramsize;
-	int model;
+	INT32 vramsize;
+	INT32 model;
 
-	int max_x;
-	int min_x;
-	int max_y;
-	int min_y;
+	INT32 LimitSprites;
+	INT32 top_border;
+	INT32 bottom_border;
+	INT32 vertical_size;
 
-	int LimitSprites;
-	int top_border;
-	int bottom_border;
-
-	void (*INTCallback)(int);
+	void (*INTCallback)(INT32);
 } TMS9928A;
 
 static TMS9928A tms;
@@ -86,95 +94,104 @@ static void TMS89928aPaletteRecalc()
 	}
 }
 
-static void change_register(int reg, unsigned char val)
+static void check_interrupt()
 {
-	static const unsigned char Mask[8] = { 0x03, 0xfb, 0x0f, 0xff, 0x07, 0x7f, 0x07, 0xff };
+	INT32 b = (tms.StatusReg & 0x80 && tms.Regs[1] & 0x20) ? 1 : 0;
+	if (b != tms.INT) {
+		tms.INT = b;
+		if (tms.INTCallback) tms.INTCallback (tms.INT);
+	}
+}
+
+static void update_table_masks()
+{
+	tms.colourmask = (tms.Regs[3] & 0x7f) * 8 | 7;
+	tms.patternmask = (tms.Regs[4] & 3) * 256 |	(tms.colourmask & 0xff);
+}
+
+static void change_register(INT32 reg, UINT8 val)
+{
+	static const UINT8 Mask[8] = { 0x03, 0xfb, 0x0f, 0xff, 0x07, 0x7f, 0x07, 0xff };
 
 	val &= Mask[reg];
+	tms.Regs[reg] = val;
 
-	if(tms.Regs[reg] != val)
+	switch (reg)
 	{
-		tms.Regs[reg] = val;
-
-		switch (reg)
+		case 0:
 		{
-			case 0:
-			{
-				if (val & 2) {
-					tms.colour = ((tms.Regs[3] & 0x80) * 64) & (tms.vramsize - 1);
-					tms.colourmask = (tms.Regs[3] & 0x7f) * 8 | 7;
-					tms.pattern = ((tms.Regs[4] & 4) * 2048) & (tms.vramsize - 1);
-					tms.patternmask = (tms.Regs[4] & 3) * 256 | (tms.colourmask & 255);
-
-				} else {
-					tms.colour = (tms.Regs[3] * 64) & (tms.vramsize - 1);
-					tms.pattern = (tms.Regs[4] * 2048) & (tms.vramsize - 1);
-				}
+			if (val & 2) {
+				tms.colour = ((tms.Regs[3] & 0x80) * 64) & (tms.vramsize - 1);
+				tms.pattern = ((tms.Regs[4] & 4) * 2048) & (tms.vramsize - 1);
+				update_table_masks();
+			} else {
+				tms.colour = (tms.Regs[3] * 64) & (tms.vramsize - 1);
+				tms.pattern = (tms.Regs[4] * 2048) & (tms.vramsize - 1);
 			}
-			break;
-
-			case 1:
-			{
-					int b = (val & 0x20) && (tms.StatusReg & 0x80);
-					if (b != tms.INT) {
-						tms.INT = b;
-						if (tms.INTCallback) tms.INTCallback (tms.INT);
-					}
-			}
-			break;
-
-			case 2:
-				tms.nametbl = (val * 1024) & (tms.vramsize - 1);
-								
-			break;
-
-			case 3:
-			{
-				if (tms.Regs[0] & 2) {
-					tms.colour = ((val & 0x80) * 64) & (tms.vramsize - 1);
-					tms.colourmask = (val & 0x7f) * 8 | 7;
-				} else {
-					tms.colour = (val * 64) & (tms.vramsize - 1);
-				}
-				tms.patternmask = (tms.Regs[4] & 3) * 256 | (tms.colourmask & 255);
-			}
-			break;
-
-			case 4:
-			{
-				if (tms.Regs[0] & 2) {
-					tms.pattern = ((val & 4) * 2048) & (tms.vramsize - 1);
-					tms.patternmask = (val & 3) * 256 | 255;
-				} else {
-					tms.pattern = (val * 2048) & (tms.vramsize - 1);
-				}
-			}
-			break;
-
-			case 5:
-				tms.spriteattribute = (val * 128) & (tms.vramsize - 1);
-			break;
-
-			case 6:
-				tms.spritepattern = (val * 2048) & (tms.vramsize - 1);
-			break;
-
-			case 7:
-				/* The backdrop is updated at TMS9928A_refresh() */
-			break;
+			tms.mode = (((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
 		}
+		break;
+
+		case 1:
+		{
+			tms.mode = (((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
+			check_interrupt();
+		}
+		break;
+
+		case 2:
+			tms.nametbl = (val * 1024) & (tms.vramsize - 1);
+		break;
+
+		case 3:
+		{
+			if (tms.Regs[0] & 2) {
+				tms.colour = ((val & 0x80) * 64) & (tms.vramsize - 1);
+				update_table_masks();
+			} else {
+				tms.colour = (val * 64) & (tms.vramsize - 1);
+			}
+		}
+		break;
+
+		case 4:
+		{
+			if (tms.Regs[0] & 2) {
+				tms.pattern = ((val & 4) * 2048) & (tms.vramsize - 1);
+				update_table_masks();
+			} else {
+				tms.pattern = (val * 2048) & (tms.vramsize - 1);
+			}
+		}
+		break;
+
+		case 5:
+			tms.spriteattribute = (val * 128) & (tms.vramsize - 1);
+		break;
+
+		case 6:
+			tms.spritepattern = (val * 2048) & (tms.vramsize - 1);
+		break;
+
+		case 7:
+			/* The backdrop is updated at TMS9928A_refresh() */
+		break;
 	}
 }
 
 void TMS9928AReset()
 {
-	for (int i = 0; i < 8; i++)
+	for (INT32 i = 0; i < 8; i++)
 		tms.Regs[i] = 0;
 
+	memset(tms.vMem, 0, tms.vramsize);
+//	memset(tms.tmpbmp, 0, tms.tmpbmpsize);
+
 	tms.StatusReg = 0;
+	tms.FifthSprite = 31;
 	tms.nametbl = tms.pattern = tms.colour = 0;
 	tms.spritepattern = tms.spriteattribute = 0;
-	tms.colourmask = tms.patternmask = 0;
+	tms.colourmask = tms.patternmask = 0x3fff;
 	tms.Addr = tms.ReadAhead = tms.INT = 0;
 	tms.FirstByte = 0;
 	tms.latch = 0;
@@ -199,9 +216,10 @@ static void make_lut()
 }
 #endif
 
-void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallback)(int))
+void TMS9928AInit(INT32 model, INT32 vram, INT32 borderx, INT32 bordery, void (*INTCallback)(int))
 {
 //	GenericTilesInit();
+	memset(&tms, 0, sizeof(tms));
 #ifdef USE_LUT
 	make_lut();
 #endif
@@ -209,17 +227,9 @@ void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallb
 
 	tms.INTCallback = INTCallback;
 
-	tms.top_border		= ((tms.model == TMS9929) || (tms.model == TMS9929A)) ? 51 : 27;
+	tms.top_border		= TMS9928A_VERT_DISPLAY_START_NTSC;
 	tms.bottom_border	= ((tms.model == TMS9929) || (tms.model == TMS9929A)) ? 51 : 24;
-
-#define MIN(x,y) ((x)<(y)?(x):(y))
-
-	tms.min_x = 15 - MIN(borderx, 15);
-	tms.max_x = 15 + 32*8 - 1 + MIN(borderx, 15);
-	tms.min_y = tms.top_border - MIN(bordery, tms.top_border);
-	tms.max_y = tms.top_border + 24*8 - 1 + MIN(bordery, tms.bottom_border);
-
-#undef MIN
+	tms.vertical_size   = TMS9928A_TOTAL_VERT_NTSC;
 
 	tms.vramsize = vram;
 //	tms.vMem = (unsigned char*)0x25e60000;//(unsigned char*)malloc(tms.vramsize);
@@ -240,41 +250,6 @@ void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallb
 
 
 	memset(dirty,0xFF,192*128);
-/*
-                pattern = *patternptr++;
-                colour = *colourptr++;
-                fg = colour / 16;
-                bg = colour & 15;
-
-			   unsigned int color1,color2;
-			   char *vbt = &bitmap[(y * 8 + yy) * 128 + (x*4)];
-*/				/*
-				for (int i=0; i<256; i++)
-				{
-					for (int j=0; j<8; j++)
-					{
-						pattern_lut[i][j]=(i*j*2)&0x80;
-					}
-				} */
-					/*
-				for (int i=0; i<0x400; i++)
-					pattern6[i]=(i>>6)&3;
-				for (int i=0; i<0x400; i++)
-					pattern4[i]=(i>>4)&3;		  */
-/*
-			    for (xx=0;xx<4;xx++) 
-				{
-					color1=(pattern & 0x80) ? fg : bg;
-					pattern *= 2;
-					color2=(pattern & 0x80) ? fg : bg;
-					pattern *= 2;
-*/
-
-
-
-
-
-
 }
 
 void TMS9928AExit()
@@ -292,22 +267,22 @@ void TMS9928AExit()
 
 void TMS9928APostLoad()
 {
-	for (int i = 0; i < 8; i++)
+	for (INT32 i = 0; i < 8; i++)
 		change_register(i, tms.Regs[i]);
 
 	if (tms.INTCallback) tms.INTCallback(tms.INT);
 }
 
-unsigned char TMS9928AReadVRAM()
+UINT8 TMS9928AReadVRAM()
 {
-	int b = tms.ReadAhead;
+	INT32 b = tms.ReadAhead;
 	tms.ReadAhead = tms.vMem[tms.Addr];
 	tms.Addr = (tms.Addr + 1) & (tms.vramsize - 1);
 	tms.latch = 0;
 	return b;
 }
 
-void TMS9928AWriteVRAM(int data)
+void TMS9928AWriteVRAM(INT32 data)
 {
 	tms.vMem[tms.Addr] = data;
 	tms.Addr = (tms.Addr + 1) & (tms.vramsize - 1);
@@ -315,25 +290,23 @@ void TMS9928AWriteVRAM(int data)
 	tms.latch = 0;
 }
 
-unsigned char TMS9928AReadRegs()
+UINT8 TMS9928AReadRegs()
 {
-	int b = tms.StatusReg;
-	tms.StatusReg = 0x1f;
-	if (tms.INT) {
-		tms.INT = 0;
-		if (tms.INTCallback) tms.INTCallback (tms.INT);
-	}
+	INT32 b = tms.StatusReg;
+	tms.StatusReg = tms.FifthSprite;
+	check_interrupt();
 	tms.latch = 0;
 	return b;
 }
 
-void TMS9928AWriteRegs(int data)
+void TMS9928AWriteRegs(INT32 data)
 {
 	if (tms.latch) {
+		/* set high part of read/write address */
+		tms.Addr = ((UINT16)data << 8 | (tms.Addr & 0xff)) & (tms.vramsize - 1);
 		if (data & 0x80) {
 			change_register(data & 0x07, tms.FirstByte);
 		} else {
-			tms.Addr = ((unsigned short)data << 8 | tms.FirstByte) & (tms.vramsize - 1);
 			if (!(data & 0x40)) {
 				TMS9928AReadVRAM();
 			}
@@ -341,14 +314,21 @@ void TMS9928AWriteRegs(int data)
 
 		tms.latch = 0;
 	} else {
+		/* set low part of read/write address */
+		tms.Addr = ((tms.Addr & 0xff00) | data) & (tms.vramsize - 1);
 		tms.FirstByte = data;
 		tms.latch = 1;
 	}
 }
 
-void TMS9928ASetSpriteslimit(int limit)
+void TMS9928ASetSpriteslimit(INT32 limit)
 {
 	tms.LimitSprites = limit;
+}
+
+static inline UINT8 readvmem(INT32 vaddr)
+{
+	return tms.vMem[vaddr];
 }
 
 static void draw_mode0(unsigned char *bitmap,unsigned char *vmem)
@@ -410,7 +390,7 @@ static void draw_mode1(unsigned char *bitmap,unsigned char *vmem)
 {
 	int pattern,x,y,yy,xx,name,charcode;
 	unsigned char fg,bg,*patternptr;
-//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 1 not supported    ",16,40);
+//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 1 not supported    ",16,150);
 	 return;
 
 	fg = tms.Regs[7] / 16;
@@ -444,7 +424,7 @@ static void draw_mode12(unsigned char *bitmap,unsigned char *vmem)
 {
 	int pattern,x,y,yy,xx,name,charcode;
 	unsigned char fg,bg,*patternptr;
-//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 12 not supported    ",16,40);
+//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 12 not supported    ",16,150);
 	 return;
 
 	fg = tms.Regs[7] / 16;
@@ -626,7 +606,7 @@ static void draw_mode3(unsigned char *bitmap,unsigned char *vmem)
     int x,y,yy,yyy,name,charcode;
     unsigned char fg,bg,*patternptr;
 
-//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 3 not supported    ",16,40);
+//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 3 not supported    ",16,150);
 	 return;
 
     name = 0;
@@ -658,7 +638,7 @@ static void draw_mode23(unsigned char *bitmap,unsigned char *vmem)
     int x,y,yy,yyy,name,charcode;
     unsigned char fg,bg,*patternptr;
 
-//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 23 not supported    ",16,40);
+//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 23 not supported    ",16,150);
 	 return;
 
     name = 0;
@@ -691,7 +671,7 @@ static void draw_modebogus(unsigned char *bitmap,unsigned char *vmem)
     unsigned char fg,bg;
     int x,y,n,xx;
 
-//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode bogus not supported    ",16,40);
+//	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode bogus not supported    ",16,150);
 	 return;
 
     fg = tms.Regs[7] / 16;
@@ -918,7 +898,347 @@ void draw_sprites_large(unsigned char *attributeptr,unsigned char *spritepattern
 	tms.StatusReg |= 0x40;
 }
 
-int TMS9928ADraw()
+static void TMS9928AScanline_INT(INT32 vpos)
+{
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT        ",16,150);
+
+	UINT16 BackColour = tms.Regs[7] & 0xf;
+//	UINT16 *p = tms.tmpbmp + (vpos * TMS9928A_TOTAL_HORZ);
+	UINT8 *p = tms.tmpbmp + (vpos * TMS9928A_TOTAL_HORZ);
+
+	INT32 y = vpos - tms.top_border;
+
+	if ( y < 0 || y >= 192 || !(tms.Regs[1] & 0x40) )
+	{
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT no draw        ",16,150);
+
+		/* Draw backdrop colour */
+// vbt inutile
+//		for ( INT32 i = 0; i < TMS9928A_TOTAL_HORZ; i++ )
+//			p[i] = BackColour;
+
+		/* vblank is set at the last cycle of the first inactive line */
+		if ( y == 193 )
+		{
+			tms.StatusReg |= 0x80;
+			check_interrupt();
+		}
+	}
+	else
+	{
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT draw           ",16,150);
+
+		/* Draw regular line */
+
+		/* Left border */
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT bef bord           ",16,150);
+
+//		for ( INT32 i = 0; i < TMS9928A_HORZ_DISPLAY_START; i++ )
+//			p[i] = BackColour;
+
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT aft bord           ",16,150);
+
+		/* Active display */
+
+		switch( tms.mode )
+		{
+		case 0:             /* MODE 0 */
+			{
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 0 not supported    ",16,150);
+				UINT16 addr = tms.nametbl + ( ( y & 0xF8 ) << 2 );
+
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
+				{
+					UINT8 charcode = readvmem( addr );
+					UINT8 pattern =  readvmem( tms.pattern + ( charcode << 3 ) + ( y & 7 ) );
+					UINT8 colour =  readvmem( tms.colour + ( charcode >> 3 ) );
+					UINT16 fg = (colour >> 4) ? (colour >> 4) : BackColour;
+					UINT16 bg = (colour & 15) ? (colour & 15) : BackColour;
+
+					for ( INT32 i = 0; i < 8; pattern <<= 1, i++ )
+						p[x+i] = ( pattern & 0x80 ) ? fg : bg;
+				}
+			}
+			break;
+
+		case 1:             /* MODE 1 */
+			{
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 1 not supported    ",16,150);
+				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 40 );
+				UINT16 fg = (tms.Regs[7] >> 4) ? (tms.Regs[7] >> 4) : BackColour;
+				UINT16 bg = BackColour;
+
+				/* Extra 6 pixels left border */
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 6; x++ )
+					p[x] = bg;
+
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START + 6; x < TMS9928A_HORZ_DISPLAY_START + 246; x+= 6, addr++ )
+				{
+					UINT16 charcode =  readvmem( addr );
+					UINT8 pattern =  readvmem( tms.pattern + ( charcode << 3 ) + ( y & 7 ) );
+
+					for ( INT32 i = 0; i < 6; pattern <<= 1, i++ )
+						p[x+i] = ( pattern & 0x80 ) ? fg : bg;
+				}
+
+				/* Extra 10 pixels right border */
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START + 246; x < TMS9928A_HORZ_DISPLAY_START + 256; x++ )
+					p[x] = bg;
+			}
+			break;
+
+		case 2:             /* MODE 2 */
+			{
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 2 not supported    ",16,150);
+				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 32 );
+
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
+				{
+					UINT16 charcode =  readvmem( addr ) + ( ( y >> 6 ) << 8 );
+					UINT8 pattern =  readvmem( tms.pattern + ( ( charcode & tms.patternmask ) << 3 ) + ( y & 7 ) );
+					UINT8 colour =  readvmem( tms.colour + ( ( charcode & tms.colourmask ) << 3 ) + ( y & 7 ) );
+					UINT16 fg = (colour >> 4) ? (colour >> 4) : BackColour;
+					UINT16 bg = (colour & 15) ? (colour & 15) : BackColour;
+
+					for ( INT32 i = 0; i < 8; pattern <<= 1, i++ )
+						p[x+i] = ( pattern & 0x80 ) ? fg : bg;
+				}
+			}
+			break;
+
+		case 3:             /* MODE 1+2 */
+			{
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 1+2 not supported    ",16,150);
+				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 40 );
+				UINT16 fg = (tms.Regs[7] >> 4) ? (tms.Regs[7] >> 4) : BackColour;
+				UINT16 bg = BackColour;
+
+				/* Extra 6 pixels left border */
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 6; x++ )
+					p[x] = bg;
+
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START + 6; x < TMS9928A_HORZ_DISPLAY_START + 246; x+= 6, addr++ )
+				{
+					UINT16 charcode = (  readvmem( addr ) + ( ( y >> 6 ) << 8 ) ) & tms.patternmask;
+					UINT8 pattern = readvmem( tms.pattern + ( charcode << 3 ) + ( y & 7 ) );
+
+					for ( INT32 i = 0; i < 6; pattern <<= 1, i++ )
+						p[x+i] = ( pattern & 0x80 ) ? fg : bg;
+				}
+
+				/* Extra 10 pixels right border */
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START + 246; x < TMS9928A_HORZ_DISPLAY_START + 256; x++ )
+					p[x] = bg;
+			}
+			break;
+
+		case 4:             /* MODE 3 */
+			{
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 3 not supported    ",16,150);
+				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 32 );
+
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
+				{
+					UINT8 charcode =  readvmem( addr );
+					UINT8 colour =  readvmem( tms.pattern + ( charcode << 3 ) + ( ( y >> 2 ) & 7 ) );
+					UINT16 fg = (colour >> 4) ? (colour >> 4) : BackColour;
+					UINT16 bg = (colour & 15) ? (colour & 15) : BackColour;
+
+					p[x+0] = p[x+1] = p[x+2] = p[x+3] = fg;
+					p[x+4] = p[x+5] = p[x+6] = p[x+7] = bg;
+				}
+			}
+			break;
+
+		case 5: case 7:     /* MODE bogus */
+			{
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode bogus not supported    ",16,150);
+				UINT16 fg = (tms.Regs[7] >> 4) ? (tms.Regs[7] >> 4) : BackColour;
+				UINT16 bg = BackColour;
+
+				/* Extra 6 pixels left border */
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 6; x++ )
+					p[x] = bg;
+
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START + 6; x < TMS9928A_HORZ_DISPLAY_START + 246; x+= 6 )
+				{
+					p[x+0] = p[x+1] = p[x+2] = p[x+3] = fg;
+					p[x+4] = p[x+5] = bg;
+				}
+
+				/* Extra 10 pixels right border */
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START + 246; x < TMS9928A_HORZ_DISPLAY_START + 256; x++ )
+					p[x] = bg;
+			}
+			break;
+
+		case 6:             /* MODE 2+3 */
+			{
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 23 not supported    ",16,150);
+				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 32 );
+
+				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
+				{
+					UINT8 charcode =  readvmem( addr );
+					UINT8 colour =  readvmem( tms.pattern + ( ( ( charcode + ( ( y >> 2 ) & 7 ) + ( ( y >> 6 ) << 8 ) ) & tms.patternmask ) << 3 ) );
+					UINT16 fg = (colour >> 4) ? (colour >> 4) : BackColour;
+					UINT16 bg = (colour & 15) ? (colour & 15) : BackColour;
+
+					p[x+0] = p[x+1] = p[x+2] = p[x+3] = fg;
+					p[x+4] = p[x+5] = p[x+6] = p[x+7] = bg;
+				}
+			}
+			break;
+		}
+
+		/* Draw sprites */
+		if ( ( tms.Regs[1] & 0x50 ) != 0x40 )
+		{
+			/* sprites are disabled */
+			tms.FifthSprite = 31;
+		}
+		else
+		{
+			UINT8 sprite_size = ( tms.Regs[1] & 0x02 ) ? 16 : 8;
+			UINT8 sprite_mag = tms.Regs[1] & 0x01;
+			UINT8 sprite_height = sprite_size * ( sprite_mag + 1 );
+			UINT8 spr_drawn[32+256+32] = { 0 };
+			UINT8 num_sprites = 0;
+			UINT8 fifth_encountered = 0;
+
+			for ( UINT16 sprattr = 0; sprattr < 128; sprattr += 4 )
+			{
+				INT32 spr_y =  readvmem( tms.spriteattribute + sprattr + 0 );
+
+				tms.FifthSprite = sprattr / 4;
+
+				/* Stop processing sprites */
+				if ( spr_y == 208 )
+					break;
+
+				if ( spr_y > 0xE0 )
+					spr_y -= 256;
+
+				/* vert pos 255 is displayed on the first line of the screen */
+				spr_y++;
+
+				/* is sprite enabled on this line? */
+				if ( spr_y <= y && y < spr_y + sprite_height )
+				{
+					INT32 spr_x =  readvmem( tms.spriteattribute + sprattr + 1 );
+					UINT8 sprcode =  readvmem( tms.spriteattribute + sprattr + 2 );
+					UINT8 sprcol =  readvmem( tms.spriteattribute + sprattr + 3 );
+					UINT16 pataddr = tms.spritepattern + ( ( sprite_size == 16 ) ? sprcode & ~0x03 : sprcode ) * 8;
+
+					num_sprites++;
+
+					/* Fifth sprite encountered? */
+					if ( num_sprites == 5 )
+					{
+						fifth_encountered = 1;
+						break;
+					}
+
+					if ( sprite_mag )
+						pataddr += ( ( ( y - spr_y ) & 0x1F ) >> 1 );
+					else
+						pataddr += ( ( y - spr_y ) & 0x0F );
+
+					UINT8 pattern =  readvmem( pataddr );
+
+					if ( sprcol & 0x80 )
+						spr_x -= 32;
+
+					sprcol &= 0x0f;
+
+					for ( INT32 s = 0; s < sprite_size; s += 8 )
+					{
+						for ( INT32 i = 0; i < 8; pattern <<= 1, i++ )
+						{
+							INT32 colission_index = spr_x + ( sprite_mag ? i * 2 : i ) + 32;
+
+							for ( INT32 z = 0; z <= sprite_mag; colission_index++, z++ )
+							{
+								/* Check if pixel should be drawn */
+								if ( pattern & 0x80 )
+								{
+									if ( colission_index >= 32 && colission_index < 32 + 256 )
+									{
+										/* Check for colission */
+										if ( spr_drawn[ colission_index ] )
+											tms.StatusReg |= 0x20;
+										spr_drawn[ colission_index ] |= 0x01;
+
+										if ( sprcol )
+										{
+											/* Has another sprite already drawn here? */
+											if ( ! ( spr_drawn[ colission_index ] & 0x02 ) )
+											{
+												spr_drawn[ colission_index ] |= 0x02;
+												p[ TMS9928A_HORZ_DISPLAY_START + colission_index - 32 ] = sprcol;
+											}
+										}
+									}
+								}
+							}
+						}
+
+						pattern =  readvmem( pataddr + 16 );
+						spr_x += sprite_mag ? 16 : 8;
+					}
+				}
+			}
+
+			/* Update sprite overflow bits */
+			if (~tms.StatusReg & 0x40)
+			{
+				tms.StatusReg = (tms.StatusReg & 0xe0) | tms.FifthSprite;
+				if (fifth_encountered && ~tms.StatusReg & 0x80)
+					tms.StatusReg |= 0x40;
+			}
+		}
+
+		/* Right border */
+		for ( INT32 i = TMS9928A_HORZ_DISPLAY_START + 256; i < TMS9928A_TOTAL_HORZ; i++ )
+			p[i] = BackColour;
+	}
+}
+
+void TMS9928AScanline(INT32 vpos)
+{
+	if (vpos==0) // draw the border on the first scanline, border shouldn't use any cpu
+	{            // to render.  this keeps cv defender's radar working.
+		for (INT32 i = 0; i < tms.top_border+1; i++)
+		{
+			TMS9928AScanline_INT(i);
+		}
+	} else {
+		TMS9928AScanline_INT(vpos + tms.top_border);
+	}
+}
+
+INT32 TMS9928ADrawMSX()
+{
+//	TMS89928aPaletteRecalc();
+	UINT16 BackColour = tms.Regs[7] & 0xf;
+	*(unsigned short *)0x25E00000=colAddr[BackColour];
+/*
+	{
+		for (INT32 y = 0; y < nScreenHeight; y++)
+		{
+			for (INT32 x = 0; x < nScreenWidth; x++)
+			{
+				pTransDraw[y * nScreenWidth + x] = tms.tmpbmp[y * TMS9928A_TOTAL_HORZ + ((TMS9928A_HORZ_DISPLAY_START/2)+10)+x];
+			}
+		}
+	}
+
+	BurnTransferCopy(Palette);
+*/
+	return 0;
+}
+
+INT32 TMS9928ADraw()
 {
 	int BackColour = tms.Regs[7] & 15;
 

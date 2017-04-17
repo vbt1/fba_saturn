@@ -13,7 +13,7 @@
 //#define K051649 1
 //#define CASSETTE 1
 //#define KANJI 1
-
+//#define DAC 1
 int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvMSX_1942 = {
@@ -31,7 +31,7 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void load_rom()
 {
-	memset (AllRam, 0, RamEnd - AllRam);
+//	memset (AllRam, 0, RamEnd - AllRam);
 
 	BurnLoadRom(game + 0x0000, 0, 1);
 //	set_memory_map(mapper);
@@ -67,7 +67,7 @@ static void load_rom()
 
 		if((pltriggerE[0] & PER_DGT_S)!=0)
 		{
-			load_rom();
+//			load_rom();
 //			DrvDoReset();
 		}
 
@@ -833,6 +833,8 @@ static UINT16 GetRomStart(UINT8* romData, INT32 size)
 
 static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 {
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"InsertCart     ",26,120);
+
 	INT32 Len, Pages, Flat64, BasicROM;
 	UINT8 ca, cb;
 
@@ -881,6 +883,7 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 	ROMMask[nSlot]= !Flat64 && (Len > 4) ? (Pages - 1) : 0x00;
 
 //	bprintf(0, _T("%S\n"), (BasicROM) ? "Basic ROM Detected." : "");
+	ROMType[nSlot] = MAP_KONAMI4;
 /*
 	// Override mapper from hardware code
 	switch (BurnDrvGetHardwareCode() & 0xff) {
@@ -1094,8 +1097,10 @@ static void msx_ppi8255_portA_write(UINT8 data)
 static void msx_ppi8255_portC_write(UINT8 data)
 {
 	ppiC_row = data & 0x0f;
+#ifdef DAC
 	if (DrvDips[0] & 0x02)
 		DACWrite(0, (data & 0x80) ? 0x80 : 0x00); // Key-Clicker / 1-bit DAC
+#endif
 }
 
 static UINT8 ay8910portAread(UINT32 offset)
@@ -1146,8 +1151,9 @@ static INT32 DrvDoReset()
 #ifdef K051649
 	K051649Reset();
 #endif
+#ifdef DAC
 	DACReset();
-
+#endif
 	return 0;
 }
 
@@ -1157,9 +1163,7 @@ static INT32 MemIndex()
 
 	maincpu		    = Next; Next += 0x020000;
 	game		    = (UINT8 *)0x00200000; //MAX_MSX_CARTSIZE;
-#ifdef CASSETTE
-	game2		    = Next; Next += MAX_MSX_CARTSIZE;
-#endif
+	game2		    = (UINT8 *)0x00280000; //MAX_MSX_CARTSIZE;
 #ifdef KANJI
 	kanji_rom       = Next; Next += 0x040000;
 #endif
@@ -1189,8 +1193,11 @@ static void __fastcall msx_write(UINT16 address, UINT8 data)
 	}
 
 	if ((address > 0x3fff) && (address < 0xc000))
+	{
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"Mapper_write      ",26,190);
 		Mapper_write(address, data);
-
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"                        ",26,190);
+	}
 }
 
 static UINT8 __fastcall msx_read(UINT16 address)
@@ -1233,7 +1240,7 @@ static INT32 DrvInit()
 //		bprintf(0, _T("%Shz mode.\n"), (Hertz60) ? "60" : "50");
 //		bprintf(0, _T("BIOS mode: %S\n"), (BiosmodeJapan) ? "Japanese" : "Normal");
 //		bprintf(0, _T("%S"), (SwapJoyports) ? "Joystick Ports: Swapped.\n" : "");
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"jp        ",26,200);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"bios        ",26,200);
 
 //		if (BurnLoadRom(maincpu, 0x80 + BiosmodeJapan, 1)) return 1; // BIOS
 		if (BurnLoadRom(maincpu, 1 + BiosmodeJapan, 1)) return 1; // BIOS
@@ -1264,6 +1271,7 @@ static INT32 DrvInit()
 
 		if (ri.nLen > 0 && ri.nLen < MAX_MSX_CARTSIZE) {
 			memset(game2, 0xff, MAX_MSX_CARTSIZE);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"game load2         ",26,200);
 
 			if (BurnLoadRom(game2 + 0x00000, 1, 1)) return 1;
 
@@ -1291,8 +1299,9 @@ static INT32 DrvInit()
 	K051649Init(3579545/2);
 #endif
 //	K051649SetRoute(0.20, BURN_SND_ROUTE_BOTH);
-
+#ifdef DAC
 	DACInit(0, 0, 1, DrvSyncDAC);
+#endif
 //	DACSetRoute(0, 0.30, BURN_SND_ROUTE_BOTH);
 
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt);
@@ -1309,6 +1318,8 @@ static INT32 DrvInit()
 
 static INT32 DrvExit()
 {
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"DrvExit                ",26,200);
+
 	TMS9928AExit();
 	CZetExit();
 
@@ -1316,8 +1327,9 @@ static INT32 DrvExit()
 #ifdef K051649
 	K051649Exit();
 #endif
+#ifdef DAC
 	DACExit();
-
+#endif
 	ppi8255_exit();
 
 	BurnFree (AllMem);
@@ -1342,12 +1354,14 @@ static INT32 DrvExit()
 
 static INT32 DrvFrame()
 {
-	static UINT8 lastnmi = 0;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"frame start    ",26,200);
 
+	static UINT8 lastnmi = 0;
+/*
 	if (DrvReset) {
 		DrvDoReset();
 	}
-
+*/
 	{ // Compile Inputs
 		memset (DrvInputs, 0xff, 2);
 		for (INT32 i = 0; i < 8; i++) {
@@ -1355,6 +1369,7 @@ static INT32 DrvFrame()
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		}
 
+#if 0
 		if (SwapButton2)
 		{ // Kludge for Xenon and Astro Marine Corps where button #2 is the 'm' key.
 			static INT32 lastM = 0;
@@ -1393,7 +1408,10 @@ static INT32 DrvFrame()
 			keyInput(0xfa, DrvJoy4[11]); // Key LEFT
 			keyInput(0xfb, DrvJoy4[12]); // Key RIGHT
 		}
+#endif
 	}
+
+
 #ifdef CASSETTE
 	{   // detect tape side changes
 		CASSide = (DrvDips[0] & 0x40) ? 1 : 0;
@@ -1426,7 +1444,7 @@ static INT32 DrvFrame()
 	{
 		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
 
-//		TMS9928AScanline(i);
+		TMS9928AScanline(i);
 
 		// Render Sound Segment
 		volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
@@ -1444,8 +1462,8 @@ static INT32 DrvFrame()
 
 	CZetClose();
 
-	TMS9928AInterrupt();
-	TMS9928ADraw();
+//	TMS9928AInterrupt();
+//	TMS9928ADraw();
 
 	// Make sure the buffer is entirely filled.
 	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
@@ -1459,12 +1477,24 @@ static INT32 DrvFrame()
 			K051649Update(pSoundBuf, nSegmentLength);
 #endif
 		}
+#ifdef DAC
 		DACUpdate(pBurnSoundOut, nBurnSoundLen);
+#endif
 //	}
 
 //	if (pBurnDraw) {
-		TMS9928ADraw();
+		TMS9928ADrawMSX();
 //	}
+
+	if(nSoundBufferPos>=RING_BUF_SIZE/2.5)
+	{
+		nSoundBufferPos=0;
+//				PCM_Task(pcm); // bon emplacement
+	}
+	PCM_Task(pcm); 
+
+
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"frame end      ",26,200);
 
 	return 0;
 }
@@ -1771,8 +1801,8 @@ void initPosition(void)
 
 //	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	drawWindow(32,192,192,14,52);
-	nBurnFunction = update_input1;
+//	nBurnFunction = update_input1;
 	drawWindow(0,192,192,2,66);
-	SetVblank2();
+//	SetVblank2();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
