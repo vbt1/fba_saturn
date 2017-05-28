@@ -13,7 +13,38 @@
 //#define K051649 1
 //#define CASSETTE 1
 //#define KANJI 1
-//#define DAC 1
+#define DAC 1
+//#define RAZE 1
+
+#ifdef RAZE
+#include "raze\raze.h"
+#endif
+
+#define INT_DIGITS 19
+char *itoa(i)
+     int i;
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
+
+
 int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvMSX_1942 = {
@@ -36,14 +67,12 @@ static void load_rom()
 	BurnLoadRom(game + 0x0000, 0, 1);
 //	set_memory_map(mapper);
 	
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)GFS_IdToName(file_id),26,200);
-
 	DrvDoReset();
 #ifdef RAZE	
-	z80_set_reg(Z80_REG_IR,0x00);
-	z80_set_reg(Z80_REG_PC,0x0000);
-	z80_set_reg(Z80_REG_SP,0x00);
-	z80_set_reg(Z80_REG_IRQVector,0xff);
+//	z80_set_reg(Z80_REG_IR,0x00);
+//	z80_set_reg(Z80_REG_PC,0x0000);
+//	z80_set_reg(Z80_REG_SP,0x00);
+//	z80_set_reg(Z80_REG_IRQVector,0xff);
 #endif	
 	PCM_MeStop(pcm);
 	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
@@ -250,82 +279,6 @@ static void CASPatchBIOS(UINT8 *bios)
 	}
 }
 #endif
-/*
-extern void (*z80edfe_callback)(Z80_Regs *Regs);
-
-static void Z80EDFECallback(Z80_Regs *Regs)
-{
-	static const UINT8 TapeHeader[8] = { 0x1f, 0xa6, 0xde, 0xba, 0xcc, 0x13, 0x7d, 0x74 };
-    #define Z80CF 0x01
-
-	switch (Regs->pc.d - 2)
-	{
-		case 0x00e1: // TAPION (open & read header)
-			{
-//				bprintf(0, _T("CAS: Searching header: "));
-
-				Regs->af.b.l |= Z80CF;
-				if (CASMode) {
-					while (CASPos + 8 < curtapelen) {
-						if (!memcmp(curtape + CASPos, TapeHeader, 8)) {
-							CASPos+=8;
-//							bprintf(0, _T("Found.\n"));
-							Regs->af.b.l &= ~Z80CF;
-							return;
-						}
-						CASPos += 1;
-					}
-//					bprintf(0, _T("Not found.\n"));
-					CASPos = 0;
-					return;
-				}
-//				bprintf(0, _T("Tape offline.\n"));
-
-				return;
-			}
-
-		  case 0x00e4: // TAPIN (read)
-		  {
-			  Regs->af.b.l |= Z80CF;
-
-			  if (CASMode) {
-				  UINT8 c = curtape[CASPos++];
-
-				  if (CASPos > curtapelen) {
-					  CASPos = 0;
-				  }
-				  else
-				  {
-					  Regs->af.b.h = c;
-					  Regs->af.b.l &= ~Z80CF;
-				  }
-			  }
-
-			  return;
-		  }
-
-		  case 0x00e7: // TAPIOF (stop reading from tape)
-		  Regs->af.b.l &= ~Z80CF;
-		  return;
-
-		  case 0x00ea: // TAPOON (write header)
-//			  bprintf(0, _T("TAPOON"));
-			  return;
-
-		  case 0x00ed: // TAPOUT (write byte)
-//			  bprintf(0, _T("TAPOUT"));
-			  return;
-
-		  case 0x00f0: // TAPOOF (stop writing)
-			  Regs->af.b.l &= ~Z80CF;
-			  return;
-
-		  case 0x00f3: // STMOTR (motor control)
-			  Regs->af.b.l &= ~Z80CF;
-			  return;
-	}
-}
-*/
 
 void msxinit(INT32 cart_len)
 {
@@ -387,7 +340,6 @@ void msxinit(INT32 cart_len)
 		RAM[i * 2 + 1] = MemMap[BIOSSLOT][i * 2 + 1];
 	}
 
-
 	for (INT32 J = 0; J < MAXSLOTS; J++)
 		if (((ROMMask[J] + 1) > 4) || (ROMType[J] == MAP_DOOLY))
 		{
@@ -395,6 +347,7 @@ void msxinit(INT32 cart_len)
 			
 			if ((ROMData[J][0] == 'A') && (ROMData[J][1] == 'B')) {
 				MapMegaROM(J, 0, 1, 2, 3);
+
 			} else {
 				if ((ROMData[J][(I - 2) << 13] == 'A') && (ROMData[J][((I - 2) << 13) + 1] == 'B'))
 					MapMegaROM(J, I - 2, I - 1, I - 2, I - 1);
@@ -438,11 +391,9 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			K051649WaveformWrite(offset, data);
 		}
 		else
-#endif
 			if (offset < 0xa0)	{
 			offset &= 0xf;
 
-#ifdef K051649
 			if (offset < 0xa) {
 				K051649FrequencyWrite(offset, data);
 			}
@@ -452,9 +403,8 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			else {
 				K051649KeyonoffWrite(data);
 			}
-#endif
 		}
-
+#endif
 		return;
 	}
 
@@ -621,6 +571,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 
 	//bprintf(0, _T("Unhandled mapper write. 0x%04X: %02X, slot %d\n"), address, data, PSlot);
 }
+//int vbt2 = 0;
 
 static INT32 Mapper_read(UINT16 address, UINT8 *data)
 {
@@ -833,15 +784,23 @@ static UINT16 GetRomStart(UINT8* romData, INT32 size)
 
 static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 {
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"InsertCart     ",26,120);
-
 	INT32 Len, Pages, Flat64, BasicROM;
 	UINT8 ca, cb;
 
 	if (nSlot >= MAXSLOTS) return 0;
 
 	Len = cartsize >> 13; // Len, in 8k pages
+/*
+char toto[100];
+char *titi = &toto[0];
+titi=itoa(Len);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"Len            ",4,10);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,10);
 
+titi=itoa(cartsize);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"cartsize            ",4,20);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20);
+*/
 	for (Pages = 1; Pages < Len; Pages <<= 1); // Calculate nearest power of 2 of len
 
 	ROMData[nSlot] = cartbuf;
@@ -877,52 +836,12 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 			   (Pages - Len) * 0x2000);
 	}
 
-//	bprintf(0, _T("Cartridge %c: %dk "), 'A' + nSlot - CARTSLOTA, Len * 8);
-
-
 	ROMMask[nSlot]= !Flat64 && (Len > 4) ? (Pages - 1) : 0x00;
 
-//	bprintf(0, _T("%S\n"), (BasicROM) ? "Basic ROM Detected." : "");
-	ROMType[nSlot] = MAP_KONAMI4;
-/*
-	// Override mapper from hardware code
-	switch (BurnDrvGetHardwareCode() & 0xff) {
-		case HARDWARE_MSX_MAPPER_BASIC:
-			BasicROM = 1;
-			break;
-		case HARDWARE_MSX_MAPPER_ASCII8:
-			ROMType[nSlot] = MAP_ASCII8;
-			break;
-		case HARDWARE_MSX_MAPPER_ASCII16:
-			ROMType[nSlot] = MAP_ASCII16;
-			break;
-		case HARDWARE_MSX_MAPPER_KONAMI:
-			ROMType[nSlot] = MAP_KONAMI4;
-			break;
-		case HARDWARE_MSX_MAPPER_KONAMI_SCC:
-			ROMType[nSlot] = MAP_KONAMI5;
-			break;
-		case HARDWARE_MSX_MAPPER_DOOLY:
-			ROMType[nSlot] = MAP_DOOLY;
-			ROMMask[nSlot]=3;
-			break;
-		case HARDWARE_MSX_MAPPER_CROSS_BLAIM:
-			ROMType[nSlot] = MAP_CROSSBL;
-			crossblaim_selected_bank = 1;
-			crossblaim_do_bank(ROMData[nSlot]);
-			break;
-		case HARDWARE_MSX_MAPPER_RTYPE:
-			ROMType[nSlot] = MAP_RTYPE;
-			rtype_selected_bank = 15;
-			rtype_do_bank(ROMData[nSlot]);
-			break;
-	default:
-		if (ROMMask[nSlot] + 1 > 4) {
-			ROMType[nSlot] = GuessROM(ROMData[nSlot], 0x2000 * (ROMMask[nSlot] + 1));
-			bprintf(0, _T("Mapper heusitics detected: %S..\n"), ROMNames[ROMType[nSlot]]);
-		}
+	if (ROMMask[nSlot] + 1 > 4) 
+	{
+		ROMType[nSlot] = GuessROM(ROMData[nSlot], 0x2000 * (ROMMask[nSlot] + 1));
 	}
-*/
 
 	if (ROMType[nSlot] != MAP_DOOLY) { // set-up non-megarom mirroring & mapping
 		switch (Len)
@@ -953,7 +872,6 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 					PageMap(nSlot, "0:1:0:1:2:3:2:3"); // normal
 				} else {
 					PageMap(nSlot, "2:3:0:1:2:3:0:1"); // swapped
-//					bprintf(0, _T("Swapped mirroring.\n"));
 				}
 				break;
 
@@ -964,15 +882,13 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 			}
 			break;
 		}
-//		if (Flat64 || Len < 5)
-//			bprintf(0, _T("starting address 0x%04X.\n"),
-//					MemMap[nSlot][2][2] + 256 * MemMap[nSlot][2][3]);
 	}
 
 	// map gen/16k megaROM pages 0:1:last-1:last
 	if ((ROMType[nSlot] == MAP_KONGEN16) && (ROMMask[nSlot] + 1 > 4))
+	{
 		MapMegaROM(nSlot, 0, 1, ROMMask[nSlot] - 1, ROMMask[nSlot]);
-
+	}
 	return 1;
 }
 
@@ -1014,35 +930,7 @@ static void __fastcall msx_write_port(UINT16 port, UINT8 data)
 			Kana = (Kana & 0x007e0) | (data & 0x3f) << 11;
 			KanaByte = 0;
 			return;
-
-#if 0
-		// disable the ram-mapper for now (only really used in msx2)
-		// causes some issues with games that erraneously write to 0xfc (stardust and utopia demo?)
-
-		case 0xfc: // map ram-page 0x0000, 0x4000, 0x8000, 0xc000
-		case 0xfd:
-		case 0xfe:
-		case 0xff: //bprintf(0, _T("Port %X Data %X.\n"), port, data);
-			INT32 PSlot = port - 0xfc;
-			data &= RAMMask;
-			if (RAMMapper[PSlot] != data) {
-//				bprintf(0, _T("Mapped RAM chunk %d @ 0x%X\n"), data, PSlot * 0x4000);
-				INT32 Page = PSlot << 1;
-				RAMMapper[PSlot] = data;
-				MemMap[RAMSLOT][Page] = RAMData + (data << 14);
-				MemMap[RAMSLOT][Page + 1] = MemMap[RAMSLOT][Page] + 0x2000;
-
-				if ((PSL[PSlot] == RAMSLOT))	{
-					WriteMode[PSlot] = 1;
-					RAM[Page] = MemMap[RAMSLOT][Page];
-					RAM[Page + 1] = MemMap[RAMSLOT][Page + 1];
-				}
-			}
-			return;
-#endif
 	}
-
-	//bprintf(0, _T("port[%X] data[%X],"), port, data);
 }
 
 static UINT8 __fastcall msx_read_port(UINT16 port)
@@ -1078,9 +966,6 @@ static UINT8 __fastcall msx_read_port(UINT16 port)
 		case 0xff:
 			return RAMMapper[port - 0xfc] | ~RAMMask;
 	}
-
-	//bprintf(0, _T("port[%X],"), port);
-
 	return 0xff;
 }
 
@@ -1125,7 +1010,14 @@ static void ay8910portBwrite(UINT32 offset, UINT32 data)
 
 static void vdp_interrupt(INT32 state)
 {
-	CZetSetIRQLine(0, state ? CZET_IRQSTATUS_ACK : CZET_IRQSTATUS_NONE);
+#ifdef RAZE
+	if(state)
+		z80_raise_IRQ(0);
+	else
+		z80_lower_IRQ();
+#else
+	ZetSetIRQLine(0, state ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE);
+#endif
 }
 
 static INT32 DrvDoReset()
@@ -1137,16 +1029,26 @@ static INT32 DrvDoReset()
 
 	Kana = 0;
 	KanaByte = 0;
-
+/*
+char toto[100];
+char *titi = &toto[0];
+titi=itoa(CurRomSizeA);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SizeA            ",4,20);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20);
+*/
 	msxinit(CurRomSizeA);
 
 	ppi8255_init(1); // there is no reset, so use this.
-
-	CZetOpen(0);
-	CZetReset();
+#ifdef RAZE
+	z80_reset();
+#else
+	ZetOpen(0);
+	ZetReset();
+#endif
 	TMS9928AReset();
-	CZetClose();
-
+#ifndef RAZE
+	ZetClose();
+#endif
 	AY8910Reset(0);
 #ifdef K051649
 	K051649Reset();
@@ -1160,10 +1062,13 @@ static INT32 DrvDoReset()
 static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
-
 	maincpu		    = Next; Next += 0x020000;
 	game		    = (UINT8 *)0x00200000; //MAX_MSX_CARTSIZE;
+
+#ifdef CASSETTE
 	game2		    = (UINT8 *)0x00280000; //MAX_MSX_CARTSIZE;
+#endif
+
 #ifdef KANJI
 	kanji_rom       = Next; Next += 0x040000;
 #endif
@@ -1181,6 +1086,7 @@ static INT32 MemIndex()
 	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	MemEnd			= Next;
+	CZ80Context		= Next; Next += 0x1080;
 
 	return 0;
 }
@@ -1194,16 +1100,13 @@ static void __fastcall msx_write(UINT16 address, UINT8 data)
 
 	if ((address > 0x3fff) && (address < 0xc000))
 	{
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"Mapper_write      ",26,190);
 		Mapper_write(address, data);
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"                        ",26,190);
 	}
 }
 
 static UINT8 __fastcall msx_read(UINT16 address)
 {
 	UINT8 d = 0;
-
 	if (Mapper_read(address, &d)) {
 		return d;
 	}
@@ -1213,19 +1116,21 @@ static UINT8 __fastcall msx_read(UINT16 address)
 
 static INT32 DrvSyncDAC()
 {
-	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / (3579545.000 / ((Hertz60) ? 60.0 : 50.0))));
+#ifdef RAZE
+	return (INT32)(float)(nBurnSoundLen * (z80_get_cycles_elapsed() / (3579545.000 / ((Hertz60) ? 60.0 : 50.0))));
+#else
+	return (INT32)(float)(nBurnSoundLen * (ZetTotalCycles() / (3579545.000 / ((Hertz60) ? 60.0 : 50.0))));
+#endif
 }
 
 static INT32 DrvInit()
 {
 	DrvInitSaturn();
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"initsat complete     ",26,200);
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"bef malloc      ",26,200);
+
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"aft malloc      ",26,200);
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
@@ -1233,6 +1138,8 @@ static INT32 DrvInit()
 		struct BurnRomInfo ri;
 
 //		bprintf(0, _T("MSXINIT...\n"));
+		DrvDips[0] = 0x10;
+
 		Hertz60 = (DrvDips[0] & 0x10) ? 1 : 0;
 		BiosmodeJapan = (DrvDips[0] & 0x01) ? 1 : 0;
 		SwapJoyports = (DrvDips[0] & 0x20) ? 1 : 0;
@@ -1240,58 +1147,86 @@ static INT32 DrvInit()
 //		bprintf(0, _T("%Shz mode.\n"), (Hertz60) ? "60" : "50");
 //		bprintf(0, _T("BIOS mode: %S\n"), (BiosmodeJapan) ? "Japanese" : "Normal");
 //		bprintf(0, _T("%S"), (SwapJoyports) ? "Joystick Ports: Swapped.\n" : "");
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"bios        ",26,200);
-
 //		if (BurnLoadRom(maincpu, 0x80 + BiosmodeJapan, 1)) return 1; // BIOS
-		if (BurnLoadRom(maincpu, 1 + BiosmodeJapan, 1)) return 1; // BIOS
+
+		if (BurnLoadRom(maincpu, 2 + BiosmodeJapan, 1)) return 1; // BIOS
 #ifdef KANJI
 //		use_kanji = (BurnLoadRom(kanji_rom, 0x82, 1) == 0);
 		use_kanji = (BurnLoadRom(kanji_rom, 3, 1) == 0);
 #endif
 //		if (use_kanji)
 //			bprintf(0, _T("Kanji ROM loaded.\n"));
-
 		BurnDrvGetRomInfo(&ri, 0);
+		ri.nLen = GetFileSize(2);
 
 		if (ri.nLen > MAX_MSX_CARTSIZE) {
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"bad rom size        ",26,200);
 //			bprintf(0, _T("Bad MSX1 ROMSize! exiting.. (> %dk) \n"), MAX_MSX_CARTSIZE / 1024);
 			return 1;
 		}
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"memset         ",26,200);
-
 		memset(game, 0xff, MAX_MSX_CARTSIZE);
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"game load         ",26,200);
 
-		if (BurnLoadRom(game + 0x00000, 0, 1)) return 1;
-
+//		if (BurnLoadRom(game + 0x00000, 0, 1)) return 1;
+		GFS_Load(2, 0, game, ri.nLen);
 		CurRomSizeA = ri.nLen;
-
+#ifdef CASSETTE
 		BurnDrvGetRomInfo(&ri, 1);
 
 		if (ri.nLen > 0 && ri.nLen < MAX_MSX_CARTSIZE) {
 			memset(game2, 0xff, MAX_MSX_CARTSIZE);
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"game load2         ",26,200);
 
 			if (BurnLoadRom(game2 + 0x00000, 1, 1)) return 1;
 
 			CurRomSizeB = ri.nLen;
 //			bprintf(0, _T("Loaded secondary tape/rom, size: %d.\n"), CurRomSizeB);
 		}
-
-		// msxinit(ri.nLen); (in DrvDoReset()! -dink)
+#endif
+		 msxinit(ri.nLen); //(in DrvDoReset()! -dink)
 	}
-//	BurnSetRefreshRate((Hertz60) ? 60.0 : 50.0);
 
-	CZetInit(0);
-	CZetOpen(0);
+//	CZetInit(1);
+#ifdef RAZE
+	z80_init_memmap();
+	z80_add_write(0x0000, 0xffff, 1, (void *)&msx_write);
+	z80_add_read(0x0000,  0xffff, 1, (void *)&msx_read);
+	z80_end_memmap();   
 
-	CZetSetOutHandler(msx_write_port);
-	CZetSetInHandler(msx_read_port);
-	CZetSetWriteHandler(msx_write);
-	CZetSetReadHandler(msx_read);
-	CZetClose();
+	z80_set_in((unsigned char (*)(unsigned short))&msx_read_port);
+	z80_set_out((void (*)(unsigned short, unsigned char))&msx_write_port);
 
+#else
+	ZetInit(0);
+
+//	CZetInit2(1,CZ80Context);
+	ZetOpen(0);
+
+	ZetSetOutHandler(msx_write_port);
+	ZetSetInHandler(msx_read_port);
+/*	CZetSetInHandler(derek> you will need to re-write SET_PC, GET_OP, READ_OP, READ_ARG, READ_ARG16, PUSH*, POP*
+<derek> raze even worse
+<derek> for cz80, if mem not mapped, use fetch handler (see z80_intf.cpp & z80/z80.cpp/h in fba)
+<vbt> UINT8 __fastcall ZetReadOp(UINT32 a)
+<vbt> {
+<vbt> 	// check mem map
+<vbt> 	UINT8 * pr = ZetCPUContext[nOpenedCPU]->pZetMemMap[0x200 | (a >> 8)];
+<vbt> 	if (pr != NULL) {
+<vbt> 		return pr[a & 0xff];
+<vbt> 	}
+<vbt> 	
+<vbt> 	// check read handler
+<vbt> 	if (ZetCPUContext[nOpenedCPU]->ZetRead != NULL) {
+<vbt> 		return ZetCPUContext[nOpenedCPU]->ZetRead(a);
+<vbt> 	}
+<derek> yep
+<derek> make like read_mem8 is better
+<derek> simplified
+<derek> it probably would take a few hrs to impliment this properly
+<derek> why not use our z80 ?
+<derek> so much stuff uses pointers for PC / op stuff :(
+<derek> (cz80...));*/
+	ZetSetWriteHandler(msx_write);
+	ZetSetReadHandler(msx_read);
+	ZetClose();
+#endif
 	AY8910Init(0, 3579545/2, nBurnSoundRate, ay8910portAread, NULL, ay8910portAwrite, ay8910portBwrite);
 //	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 
@@ -1310,7 +1245,7 @@ static INT32 DrvInit()
 	PPI0PortReadB	= msx_ppi8255_portB_read;
 	PPI0PortWriteA	= msx_ppi8255_portA_write;
 	PPI0PortWriteC	= msx_ppi8255_portC_write;
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"init complete     ",26,200);
+
 	DrvDoReset();
 
 	return 0;
@@ -1318,11 +1253,18 @@ static INT32 DrvInit()
 
 static INT32 DrvExit()
 {
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"DrvExit                ",26,200);
-
 	TMS9928AExit();
-	CZetExit();
+#ifdef RAZE
+	z80_stop_emulating();
 
+	z80_set_in((unsigned char (*)(unsigned short))NULL);
+	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
+
+	z80_add_read(0x0000, 0xffff, 1, (void *)NULL);
+	z80_add_write(0x0000, 0xffff, 1, (void *)NULL);
+#else
+	ZetExit();
+#endif
 	AY8910Exit(0);
 #ifdef K051649
 	K051649Exit();
@@ -1354,8 +1296,6 @@ static INT32 DrvExit()
 
 static INT32 DrvFrame()
 {
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"frame start    ",26,200);
-
 	static UINT8 lastnmi = 0;
 /*
 	if (DrvReset) {
@@ -1369,7 +1309,7 @@ static INT32 DrvFrame()
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		}
 
-#if 0
+#if 1
 		if (SwapButton2)
 		{ // Kludge for Xenon and Astro Marine Corps where button #2 is the 'm' key.
 			static INT32 lastM = 0;
@@ -1432,18 +1372,31 @@ static INT32 DrvFrame()
 	INT32 nCyclesDone[1] = { 0 };
 	INT32 nSoundBufferPos = 0;
 
-	CZetNewFrame();
-	CZetOpen(0);
 
+#ifdef RAZE
 	if (DrvNMI && !lastnmi) {
-		CZetNmi();
+		z80_cause_NMI();
+		 z80_emulate(1);
 		lastnmi = DrvNMI;
 	} else lastnmi = DrvNMI;
+#else
+	ZetNewFrame();
+	ZetOpen(0);
+
+	if (DrvNMI && !lastnmi) {
+		ZetNmi();
+		lastnmi = DrvNMI;
+	} else lastnmi = DrvNMI;
+#endif
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
-
+#ifdef RAZE
+		nCyclesDone[0] += z80_emulate(nCyclesTotal[0] / nInterleave);
+#else
+		nCyclesDone[0] += ZetRun(nCyclesTotal[0] / nInterleave);
+#endif
+//
 		TMS9928AScanline(i);
 
 		// Render Sound Segment
@@ -1459,9 +1412,9 @@ static INT32 DrvFrame()
 			nSoundBufferPos += nSegmentLength;
 //		}
 	}
-
-	CZetClose();
-
+#ifndef RAZE
+	ZetClose();
+#endif
 //	TMS9928AInterrupt();
 //	TMS9928ADraw();
 
@@ -1485,16 +1438,13 @@ static INT32 DrvFrame()
 //	if (pBurnDraw) {
 		TMS9928ADrawMSX();
 //	}
-
+//while(1);
 	if(nSoundBufferPos>=RING_BUF_SIZE/2.5)
 	{
 		nSoundBufferPos=0;
 //				PCM_Task(pcm); // bon emplacement
 	}
 	PCM_Task(pcm); 
-
-
-	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"frame end      ",26,200);
 
 	return 0;
 }
@@ -1783,7 +1733,8 @@ void initPosition(void)
 	ss_sprite[3].color          = 0x0;
 	ss_sprite[3].charAddr    = 0x2220;// 0x2000 => 0x80 sprites <<6
 	ss_sprite[3].control       = ( JUMP_NEXT | FUNC_NORMALSP); // | DIR_LRTBREV); // | flip);
-	ss_sprite[3].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP); //256 colors
+	ss_sprite[3].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP); //4bpp
+//	ss_sprite[3].drawMode = ( COLOR_2 | ECD_DISABLE | COMPO_REP); //8bpp
 	ss_sprite[3].charSize    = 0x20C0;  // 256x*192y
 	
 //	initLayers();
@@ -1802,7 +1753,7 @@ void initPosition(void)
 //	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	drawWindow(32,192,192,14,52);
 //	nBurnFunction = update_input1;
-	drawWindow(0,192,192,2,66);
+	drawWindow(0,192,192,0,64);
 //	SetVblank2();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

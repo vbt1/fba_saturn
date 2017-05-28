@@ -225,7 +225,9 @@ OVLMSX                 = root/d_msx.coff
 OVLMSX1               = root/d_msx.bin
 MPOVLMSXFILE    = $(OVLMSX:.coff=.maps)
 LDOVLMSXFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMSXFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLMSX         = d_msx.c czet.c cz80/cz80.c tms9928a.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
+#SRCOVLMSX         = d_msx.c czet.c cz80/cz80.c tms9928a.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
+SRCOVLMSX         = d_msx.c z80_intf.c z80/z80.c z80/z80daisy.c tms9928a.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
+#SRCOVLMSX         = d_msx.c tms9928a.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
 OBJOVLMSX         = $(SRCOVLMSX:.c=.o)
 
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
@@ -429,7 +431,8 @@ $(OVLFREEK1) : $(OBJOVLFREEK) $(MAKEFILE) $(LDOVLFREEKFILE)
 	$(CONV) -O binary $(OVLFREEK) $(OVLFREEK1)
 
 $(OVLMSX) : $(OBJOVLMSX) $(MAKEFILE) $(OBJOVLMSX) $(LDOVLMSXFILE)
-	$(CC) $(LDOVLMSXFLAGS) $(OBJOVLMSX) $(LIBSOVL) -o $@
+	$(CC) $(LDOVLMSXFLAGS) $(OBJOVLMSX) $(LIBSOVL)  -o $@
+#	$(CC) $(LDOVLMSXFLAGS) $(OBJOVLMSX) $(LIBSOVL)  raze/raze.o -o $@
 
 $(OVLMSX1) : $(OBJOVLMSX) $(MAKEFILE) $(LDOVLMSXFILE)
 	$(CONV) -O binary $(OVLMSX) $(OVLMSX1)

@@ -72,6 +72,7 @@ typedef struct {
 	unsigned char *tmpbmp;
 	INT32 vramsize;
 	INT32 model;
+	INT32 revA;
 
 	INT32 LimitSprites;
 	INT32 top_border;
@@ -83,6 +84,7 @@ typedef struct {
 
 static TMS9928A tms;
 
+static INT32 TMS9928A_initted = 0;
 //static unsigned int Palette[16]; // high color support
 
 static void TMS89928aPaletteRecalc()
@@ -128,13 +130,13 @@ static void change_register(INT32 reg, UINT8 val)
 				tms.colour = (tms.Regs[3] * 64) & (tms.vramsize - 1);
 				tms.pattern = (tms.Regs[4] * 2048) & (tms.vramsize - 1);
 			}
-			tms.mode = (((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
+			tms.mode = ( (tms.revA ? (tms.Regs[0] & 2) : 0) | ((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
 		}
 		break;
 
 		case 1:
 		{
-			tms.mode = (((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
+			tms.mode = ( (tms.revA ? (tms.Regs[0] & 2) : 0) | ((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
 			check_interrupt();
 		}
 		break;
@@ -195,6 +197,7 @@ void TMS9928AReset()
 	tms.Addr = tms.ReadAhead = tms.INT = 0;
 	tms.FirstByte = 0;
 	tms.latch = 0;
+	tms.mode = 0;
 }
 
 #ifdef USE_LUT
@@ -224,6 +227,7 @@ void TMS9928AInit(INT32 model, INT32 vram, INT32 borderx, INT32 bordery, void (*
 	make_lut();
 #endif
 	tms.model = model;
+	tms.revA = 1;
 
 	tms.INTCallback = INTCallback;
 
@@ -254,6 +258,9 @@ void TMS9928AInit(INT32 model, INT32 vram, INT32 borderx, INT32 bordery, void (*
 
 void TMS9928AExit()
 {
+	if (!TMS9928A_initted) return;
+
+	TMS9928A_initted = 0;
 	TMS9928AReset();
 
 //	GenericTilesExit();
@@ -333,6 +340,7 @@ static inline UINT8 readvmem(INT32 vaddr)
 
 static void draw_mode0(unsigned char *bitmap,unsigned char *vmem)
 {
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 0     ",16,150);
 	unsigned char *patternptr;
 	unsigned int tab[4];
 	unsigned char *vbt,*dirtycptr;
@@ -361,7 +369,7 @@ static void draw_mode0(unsigned char *bitmap,unsigned char *vmem)
 
 					vbt = (unsigned char *)&bitmap[(y * 8 + yy) * 128 + (x*4)];
 
-					int bg = colour & 0x0f;
+					unsigned int bg = colour & 0x0f;
 					tab[0]=bg|bg<<4;
 
 					if(pattern!=0)
@@ -900,23 +908,12 @@ void draw_sprites_large(unsigned char *attributeptr,unsigned char *spritepattern
 
 static void TMS9928AScanline_INT(INT32 vpos)
 {
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT        ",16,150);
-
 	UINT16 BackColour = tms.Regs[7] & 0xf;
-//	UINT16 *p = tms.tmpbmp + (vpos * TMS9928A_TOTAL_HORZ);
-	UINT8 *p = tms.tmpbmp + (vpos * TMS9928A_TOTAL_HORZ);
-
 	INT32 y = vpos - tms.top_border;
 
 	if ( y < 0 || y >= 192 || !(tms.Regs[1] & 0x40) )
 	{
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT no draw        ",16,150);
-
 		/* Draw backdrop colour */
-// vbt inutile
-//		for ( INT32 i = 0; i < TMS9928A_TOTAL_HORZ; i++ )
-//			p[i] = BackColour;
-
 		/* vblank is set at the last cycle of the first inactive line */
 		if ( y == 193 )
 		{
@@ -926,82 +923,109 @@ static void TMS9928AScanline_INT(INT32 vpos)
 	}
 	else
 	{
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT draw           ",16,150);
-
+		UINT8 *p = tms.tmpbmp +y*128;
 		/* Draw regular line */
-
 		/* Left border */
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT bef bord           ",16,150);
-
-//		for ( INT32 i = 0; i < TMS9928A_HORZ_DISPLAY_START; i++ )
-//			p[i] = BackColour;
-
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AScanline_INT aft bord           ",16,150);
-
 		/* Active display */
 
 		switch( tms.mode )
 		{
 		case 0:             /* MODE 0 */
 			{
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 0 not supported    ",16,150);
 				UINT16 addr = tms.nametbl + ( ( y & 0xF8 ) << 2 );
 
-				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
+//				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr+=2 )
+				for ( UINT32 x = 0; x < 32; x++, addr++, p+=4 )
 				{
 					UINT8 charcode = readvmem( addr );
 					UINT8 pattern =  readvmem( tms.pattern + ( charcode << 3 ) + ( y & 7 ) );
 					UINT8 colour =  readvmem( tms.colour + ( charcode >> 3 ) );
-					UINT16 fg = (colour >> 4) ? (colour >> 4) : BackColour;
-					UINT16 bg = (colour & 15) ? (colour & 15) : BackColour;
+					UINT32 bg = colour & 0x0f;
+					UINT32 tab[4];
 
-					for ( INT32 i = 0; i < 8; pattern <<= 1, i++ )
-						p[x+i] = ( pattern & 0x80 ) ? fg : bg;
+					tab[0]=bg|bg<<4;
+
+					if(pattern!=0)
+					{
+						UINT32 fg = colour >> 4;
+						tab[1] = fg|(*tab&0xf0);
+						tab[2] = colour;
+						tab[3] = fg|(colour&0xf0); 
+
+						p[0] = tab[(pattern>>6)&3]; 
+						p[1] = tab[(pattern>>4)&3]; 
+						p[2] = tab[(pattern>>2)&3]; 
+						p[3] = tab[(pattern>>0)&3];
+					}
+					else
+						p[0] = p[1] = p[2] = p[3] = *tab;
 				}
 			}
 			break;
 
 		case 1:             /* MODE 1 */
 			{
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 1 not supported    ",16,150);
 				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 40 );
-				UINT16 fg = (tms.Regs[7] >> 4) ? (tms.Regs[7] >> 4) : BackColour;
-				UINT16 bg = BackColour;
+				UINT32 tab[4];
+
+				tab[0] = 0;
+				tab[1] = tms.Regs[7] >> 4;
+				tab[2] = tms.Regs[7]&0xf0;
+				tab[3] = tab[1]|tab[2]; 
 
 				/* Extra 6 pixels left border */
-				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 6; x++ )
-					p[x] = bg;
 
-				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START + 6; x < TMS9928A_HORZ_DISPLAY_START + 246; x+= 6, addr++ )
+				for ( UINT32 x = 0; x < 41; x++, addr++, p+=3 )
 				{
 					UINT16 charcode =  readvmem( addr );
 					UINT8 pattern =  readvmem( tms.pattern + ( charcode << 3 ) + ( y & 7 ) );
 
-					for ( INT32 i = 0; i < 6; pattern <<= 1, i++ )
-						p[x+i] = ( pattern & 0x80 ) ? fg : bg;
+					if(pattern!=0)
+					{
+						p[0] = tab[(pattern>>6)&3]; 
+						p[1] = tab[(pattern>>4)&3]; 
+						p[2] = tab[(pattern>>2)&3];
+					}
+					else
+						p[0] = p[1] = p[2] = *tab;
 				}
-
 				/* Extra 10 pixels right border */
-				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START + 246; x < TMS9928A_HORZ_DISPLAY_START + 256; x++ )
-					p[x] = bg;
+				p[0]=p[1]=p[2]=p[3]=p[4]=0;
 			}
 			break;
 
 		case 2:             /* MODE 2 */
 			{
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 2 not supported    ",16,150);
 				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 32 );
 
-				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
+//				for ( UINT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
+				for ( UINT32 x = 0; x < 32; x++, addr++, p+=4 )
 				{
 					UINT16 charcode =  readvmem( addr ) + ( ( y >> 6 ) << 8 );
 					UINT8 pattern =  readvmem( tms.pattern + ( ( charcode & tms.patternmask ) << 3 ) + ( y & 7 ) );
-					UINT8 colour =  readvmem( tms.colour + ( ( charcode & tms.colourmask ) << 3 ) + ( y & 7 ) );
-					UINT16 fg = (colour >> 4) ? (colour >> 4) : BackColour;
-					UINT16 bg = (colour & 15) ? (colour & 15) : BackColour;
+					UINT32 colour =  readvmem( tms.colour + ( ( charcode & tms.colourmask ) << 3 ) + ( y & 7 ) );
+					UINT32 fg = colour >> 4;
+					UINT32 bg = colour & 15;
+					UINT32 tab[4];
 
-					for ( INT32 i = 0; i < 8; pattern <<= 1, i++ )
-						p[x+i] = ( pattern & 0x80 ) ? fg : bg;
+					tab[0]=bg|bg<<4;
+
+					if(pattern!=0)
+					{
+						fg = colour /16;
+						tab[1] = fg|(*tab&0xf0);
+						tab[2] = colour;
+						tab[3] = fg|(colour&0xf0);
+
+						p[0] = tab[(pattern>>6)&3]; 
+						p[1] = tab[(pattern>>4)&3]; 
+						p[2] = tab[(pattern>>2)&3]; 
+						p[3] = tab[(pattern>>0)&3];
+					}
+					else
+					{
+						p[0] = p[1] = p[2] = p[3] = *tab;
+					}
 				}
 			}
 			break;
@@ -1014,7 +1038,7 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 1+2 not suppo
 				UINT16 bg = BackColour;
 
 				/* Extra 6 pixels left border */
-				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 6; x++ )
+				for ( UINT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 6; x++ )
 					p[x] = bg;
 
 				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START + 6; x < TMS9928A_HORZ_DISPLAY_START + 246; x+= 6, addr++ )
@@ -1034,18 +1058,22 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 1+2 not suppo
 
 		case 4:             /* MODE 3 */
 			{
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 3 not supported    ",16,150);
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 3 not supported    ",16,150);
 				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 32 );
 
-				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
+//				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
+				for ( INT32 x = 0; x < 256; x++, addr++, p+=4 )
 				{
 					UINT8 charcode =  readvmem( addr );
 					UINT8 colour =  readvmem( tms.pattern + ( charcode << 3 ) + ( ( y >> 2 ) & 7 ) );
-					UINT16 fg = (colour >> 4) ? (colour >> 4) : BackColour;
-					UINT16 bg = (colour & 15) ? (colour & 15) : BackColour;
-
-					p[x+0] = p[x+1] = p[x+2] = p[x+3] = fg;
-					p[x+4] = p[x+5] = p[x+6] = p[x+7] = bg;
+//					UINT16 fg = (colour >> 4) ? (colour >> 4) : BackColour;
+//					UINT16 bg = (colour & 15) ? (colour & 15) : BackColour;
+					UINT32 fg = colour >> 4;
+					UINT32 bg = colour & 15;
+//					p[x+0] = p[x+1] = p[x+2] = p[x+3] = fg;
+//					p[x+4] = p[x+5] = p[x+6] = p[x+7] = bg;
+					p[0] = p[1] = fg | colour & 0xf0;
+					p[2] = p[3] = bg| bg <<4;
 				}
 			}
 			break;
@@ -1199,8 +1227,8 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 23 not suppor
 		}
 
 		/* Right border */
-		for ( INT32 i = TMS9928A_HORZ_DISPLAY_START + 256; i < TMS9928A_TOTAL_HORZ; i++ )
-			p[i] = BackColour;
+//		for ( INT32 i = TMS9928A_HORZ_DISPLAY_START + 256; i < TMS9928A_TOTAL_HORZ; i++ )
+//			p[i] = BackColour;
 	}
 }
 

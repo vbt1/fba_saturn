@@ -20,6 +20,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
 static int DrvFrame();
 static int DrvExit();
+static INT32 BasicDrvInit();
 static int DrvInit();
 static INT32 DrvDoReset();
 static void DrvInitSaturn();
@@ -55,6 +56,7 @@ typedef	struct	SysDevice	{
 
 static INT16 *pAY8910Buffer[6];
 
+static UINT8 *CZ80Context = NULL;
 static UINT8 *AllMem	= NULL;
 static UINT8 *MemEnd	= NULL;
 static UINT8 *AllRam	= NULL;
@@ -205,7 +207,8 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 #define MAXSLOTS    4
 #define MAXMAPPERS  9
 
-#define MAX_MSX_CARTSIZE 0x200000
+//#define MAX_MSX_CARTSIZE 0x200000
+#define MAX_MSX_CARTSIZE 0x80000
 
 // Machine Config
 #define DEFAULT_BIOSSLOT 0
@@ -344,11 +347,14 @@ STD_ROM_FN(msx_msx)
 // 1942 (Jpn)
 
 static struct BurnRomInfo MSX_1942RomDesc[] = {
-	{ "1942.rom",	0x20000, 0xa27787af, BRF_PRG | BRF_ESS },
+	{ "1942.rom",	0x2000, 0xa27787af, BRF_PRG | BRF_ESS },
     { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios
     { "msxj.rom",    0x8000, 0x071135e0, BRF_BIOS | BRF_OPT }, // 0x81 - japanese bios
 };
-STDROMPICKEXT(MSX_1942, MSX_1942, msx_msx)
+STD_ROM_PICK(MSX_1942)
 STD_ROM_FN(MSX_1942)
+
+//STDROMPICKEXT(MSX_1942, MSX_1942, msx_msx)
+//STD_ROM_FN(MSX_1942)
 
 #endif

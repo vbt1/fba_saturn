@@ -57,10 +57,20 @@
         if ((CPU->nCyclesLeft -= A) > 0) goto Cz80_Exec;				\
         goto Cz80_Exec_End;
 
-#define SET_PC(A)															\
+#define SET_PC_OLD(A)															\
 	CPU->BasePC = (unsigned int)CPU->FetchData[(A) >> CZ80_FETCH_SFT];		\
 	PCDiff = (UINT32)CPU->Fetch[(A) >> CZ80_FETCH_SFT] - (UINT32)CPU->FetchData[(A) >> CZ80_FETCH_SFT];	\
 	PC = (unsigned int)(A) + CPU->BasePC;
+
+#define SET_PC(A)															\
+	if(CPU->FetchData[(A) >> CZ80_FETCH_SFT]!=NULL) { \
+	CPU->BasePC = (unsigned int)CPU->FetchData[(A) >> CZ80_FETCH_SFT];		\
+	PCDiff = (UINT32)CPU->Fetch[(A) >> CZ80_FETCH_SFT] - (UINT32)CPU->FetchData[(A) >> CZ80_FETCH_SFT];	\
+	PC = (unsigned int)(A) + CPU->BasePC; \
+	}else{\
+			CPU->BasePC = (unsigned int)CPU->Read_Byte(A);\
+	}
+
 
 #define GET_OP()			(*(UINT8 *)(PC + PCDiff))
 
@@ -296,8 +306,36 @@ void Cz80_Init(cz80_struc *CPU)
 /*--------------------------------------------------------
 	CPUŽÀs
 --------------------------------------------------------*/
-//int vbt = 0;
-//	   unsigned char *test=(unsigned char*)0x00200000;
+
+#define INT_DIGITS 19
+char *itoa2(i)
+     int i;
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
+
+
+
+
+int vbt = 0;
+	   unsigned char *test=(unsigned char*)0x00280000;
 INT32 Cz80_Exec(cz80_struc* CPU)
 {
 
@@ -325,6 +363,10 @@ INT32 Cz80_Exec(cz80_struc* CPU)
 
     PC = CPU->PC;
     PCDiff = (UINT32)CPU->Fetch[(zRealPC) >> CZ80_FETCH_SFT] - (UINT32)CPU->FetchData[(zRealPC) >> CZ80_FETCH_SFT];
+
+//char toto[100];
+//char *titi = &toto[0];
+
 /*	   sprintf(test,"PC =%08x",PC);
 	   test+=16;
 	   sprintf(test,"PCD=%08x",PCDiff);
@@ -352,6 +394,20 @@ Cz80_Exec:
     {
         union16 *data = pzHL;
         Opcode = READ_OP();
+/*
+if(vbt <150)
+	{
+FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"pc                         ",4,10+vbt);
+titi=itoa2(PC);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,40,10+vbt);
+titi=itoa2(PCDiff);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,60,10+vbt);
+titi=itoa2(Opcode);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,80,10+vbt);
+
+vbt+=10;
+	}
+	*/
 // 	   unsigned int *test=(unsigned int*)0x00200000;
 /*
 	   sprintf(test,"op%08x v%04d",Opcode,vbt++);

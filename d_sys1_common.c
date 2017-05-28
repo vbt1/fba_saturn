@@ -1170,6 +1170,12 @@ void System1DrawSprites()
 		}
 */
 	}
+// VBT 25/06/2017 : coorection dink pour pitfall 2
+	if (System1SpriteRam[0] == 0xff)
+	{
+		for (i = 3; i < 35; ++i) 	ss_sprite[i].ax = ss_sprite[i].ay = ss_sprite[i].charSize = ss_sprite[i].charAddr = 0;
+		return; // 0xff in first byte of spriteram is sprite-disable mode
+	}
 
 	for (i = 0; i < 32; ++i) 
 	{
