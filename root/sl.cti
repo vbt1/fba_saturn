@@ -4360,9 +4360,9 @@ EndFile
 
 			Directory MSX
 				File 1942.ROM;1
-					Source MSX\1942.ROM
+;					Source MSX\1942.ROM
 ;					Source MSX\PENGADV.ROM
-;					Source MSX\PICOPICO.ROM
+					Source MSX\PICOPICO.ROM
 ;					Source MSX\TET8K.ROM
 				EndFile
 

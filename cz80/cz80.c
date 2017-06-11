@@ -57,20 +57,10 @@
         if ((CPU->nCyclesLeft -= A) > 0) goto Cz80_Exec;				\
         goto Cz80_Exec_End;
 
-#define SET_PC_OLD(A)															\
+#define SET_PC(A)															\
 	CPU->BasePC = (unsigned int)CPU->FetchData[(A) >> CZ80_FETCH_SFT];		\
 	PCDiff = (UINT32)CPU->Fetch[(A) >> CZ80_FETCH_SFT] - (UINT32)CPU->FetchData[(A) >> CZ80_FETCH_SFT];	\
 	PC = (unsigned int)(A) + CPU->BasePC;
-
-#define SET_PC(A)															\
-	if(CPU->FetchData[(A) >> CZ80_FETCH_SFT]!=NULL) { \
-	CPU->BasePC = (unsigned int)CPU->FetchData[(A) >> CZ80_FETCH_SFT];		\
-	PCDiff = (UINT32)CPU->Fetch[(A) >> CZ80_FETCH_SFT] - (UINT32)CPU->FetchData[(A) >> CZ80_FETCH_SFT];	\
-	PC = (unsigned int)(A) + CPU->BasePC; \
-	}else{\
-			CPU->BasePC = (unsigned int)CPU->Read_Byte(A);\
-	}
-
 
 #define GET_OP()			(*(UINT8 *)(PC + PCDiff))
 
@@ -333,9 +323,10 @@ char *itoa2(i)
 
 
 
-
+/*
 int vbt = 0;
-	   unsigned char *test=(unsigned char*)0x00280000;
+	   unsigned char toto[150];
+	   unsigned char *titi;*/
 INT32 Cz80_Exec(cz80_struc* CPU)
 {
 
@@ -354,40 +345,20 @@ INT32 Cz80_Exec(cz80_struc* CPU)
     
     INT32 nTodo = 0;
 
- 
-//	   test[vbt]=0x9999;
 
-//vbt++;
-
-
-
+// vbt : ori
     PC = CPU->PC;
-    PCDiff = (UINT32)CPU->Fetch[(zRealPC) >> CZ80_FETCH_SFT] - (UINT32)CPU->FetchData[(zRealPC) >> CZ80_FETCH_SFT];
+   PCDiff = (UINT32)CPU->Fetch[(zRealPC) >> CZ80_FETCH_SFT] - (UINT32)CPU->FetchData[(zRealPC) >> CZ80_FETCH_SFT];
 
-//char toto[100];
-//char *titi = &toto[0];
+/*
+	titi = &toto[0];
+ 
+if(vbt >=1020 && vbt<=1020+200)
+	{
+FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"pc                         ",4,10+vbt-1020);
 
-/*	   sprintf(test,"PC =%08x",PC);
-	   test+=16;
-	   sprintf(test,"PCD=%08x",PCDiff);
-	   test+=16;
-	   sprintf(test,"PCR=%08x",zRealPC);
-	   test+=16;
-*/
- //	   unsigned int *test=(unsigned int*)0x00200000;
-//	   test[vbt]=PC;
-//vbt++;
-//vbt++;
- //	   unsigned int *test=(unsigned int*)0x00200000;
-//	   test[vbt]=PCDiff;
-
-//vbt++;
-//	   test[vbt]=0x9999;
-	
-
-
-//	CPU->nEI = 0;
-	
+	}
+	*/
 	goto Cz80_Try_Int;
 
 Cz80_Exec:
@@ -395,19 +366,18 @@ Cz80_Exec:
         union16 *data = pzHL;
         Opcode = READ_OP();
 /*
-if(vbt <150)
+if(vbt >=1020 && vbt<=1020+200)
 	{
-FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"pc                         ",4,10+vbt);
-titi=itoa2(PC);
-FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,40,10+vbt);
-titi=itoa2(PCDiff);
-FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,60,10+vbt);
+	titi=itoa2(zRealPC);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,40,10+vbt-1020);	
 titi=itoa2(Opcode);
-FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,80,10+vbt);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,80,10+vbt-1020);
 
-vbt+=10;
+
 	}
-	*/
+if(vbt<=1020+200)
+vbt+=10;
+ */
 // 	   unsigned int *test=(unsigned int*)0x00200000;
 /*
 	   sprintf(test,"op%08x v%04d",Opcode,vbt++);
@@ -547,8 +517,9 @@ UINT32 Cz80_Get_PC(cz80_struc *CPU)
 void Cz80_Set_PC(cz80_struc *CPU, UINT32 val)
 {
 	// don't not use this while CZ80 is executting !!!
-    CPU->BasePC = (UINT32) CPU->FetchData[val >> CZ80_FETCH_SFT];
-    CPU->PC = val + CPU->BasePC;
+ //   CPU->BasePC = (UINT32) CPU->FetchData[val >> CZ80_FETCH_SFT];
+   CPU->BasePC = (UINT32) CPU->Read[val >> CZ80_FETCH_SFT];
+	CPU->PC = val + CPU->BasePC;
 }
 
 void Cz80_Reset(cz80_struc *CPU)

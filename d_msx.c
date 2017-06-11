@@ -6,6 +6,18 @@
 // Oddities:
 //  VoidRunner and Milk Race freeze when selecting between kbd/joy. (VoidRunner has a kludge, but it doesn't work for Milk Race)
 //  Krakout any key starts, can't get into settings
+/*
+Bits 	Description
+0-1 	Subslot for page 0 (#0000-#3FFF)
+2-3 	Subslot for page 1 (#4000-#7FFF)
+4-5 	Subslot for page 2 (#8000-#BFFF)
+6-7 	Subslot for page 3 (#C000-#FFFF)
+
+#define DEFAULT_BIOSSLOT 0
+#define DEFAULT_CARTSLOTA 1
+#define DEFAULT_CARTSLOTB 2
+#define DEFAULT_RAMSLOT 3
+*/
 
 #include    "machine.h"
 #include "d_msx.h"
@@ -305,9 +317,13 @@ void msxinit(INT32 cart_len)
 	memset(EmptyRAM, 0xff, 0x4000); // bus is pulled high for unmapped reads
 
 	for(INT32 PSlot = 0; PSlot < 4; PSlot++) // Point all pages there by default
+	{
 		for(INT32 Page = 0; Page < 8; Page++)
+		{
 			MemMap[PSlot][Page] = EmptyRAM;
-
+//			CZetMapArea(Page*0x8000, 0x7fff+(Page*0x8000), 2, EmptyRAM);
+		}
+	}
 	RAMPages = 4; // 64k
 	RAMMask = RAMPages - 1;
 	RAMData = main_mem;
@@ -325,7 +341,7 @@ void msxinit(INT32 cart_len)
 	ROMData[BIOSSLOT] = maincpu;
 	PageMap(BIOSSLOT, "0:1:2:3:e:e:e:e");
 
-	if (!msx_basicmode)
+//	if (!msx_basicmode)
 		InsertCart(game, cart_len, CARTSLOTA);
 
 	PSLReg = 0;
@@ -440,6 +456,9 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			if ((address < 0x4000) || (address > 0xbfff)) break;
 			Page = (address - 0x4000) >> 13;
 			if (Page == 2) SCCReg[PSlot] = (data == 0x3f) ? 1 : 0;
+// vbt : rien sur write !
+//			CZetMapArea(0x4000, 0xbfff, 2, MemMap[PSlot][Page + 2]);
+//			CZetMapArea(	(0x4000*PSlot), (0x4000*PSlot)+0x3fff, 2, RAM[address >> 13][address & 0x1fff] );
 
 			data &= ROMMask[PSlot];
 			if (data != ROMMapper[PSlot][Page])
@@ -454,6 +473,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			Page = (address & 0x8000) >> 14;
 
 			data = (data << 1) & ROMMask[PSlot];
+
 			if (data != ROMMapper[PSlot][Page])
 			{
 				RAM[Page + 2] = MemMap[PSlot][Page + 2] = ROMData[PSlot] + (data << 13);
@@ -629,6 +649,16 @@ static void SetSlot(UINT8 nSlot)
 			PSL[J] = nSlot & 3;
 			RAM[I] = MemMap[PSL[J]][I];
 			RAM[I + 1] = MemMap[PSL[J]][I + 1];
+
+			CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 0, &RAM[I][0x0000] ); // working with zet
+			CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 0, &RAM[(I+1)][0x0000] ); // working with zet
+
+			CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 1, &RAM[I][0x0000] ); // working with zet
+			CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 1, &RAM[(I+1)][0x0000] ); // working with zet
+
+			CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 2, &RAM[I][0x0000] ); // working with zet
+			CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 2, &RAM[(I+1)][0x0000] ); // working with zet
+
 			WriteMode[J] = (PSL[J] == RAMSLOT) && (MemMap[RAMSLOT][I] != EmptyRAM);
 			nSlot >>= 2;
 		}
@@ -644,11 +674,22 @@ static void PageMap(INT32 CartSlot, const char *cMap)
 			case 'e': // empty page
 				{
 					MemMap[CartSlot][i] = EmptyRAM;
+//					CZetMapArea((0x8000*i)+0x0000, (0x8000*i)+0x7fff, 2, EmptyRAM);
+//					CZetMapArea((0x4000*i)+0x0000, (0x4000*i)+0x3fff, 2, EmptyRAM);
+//					if(CartSlot==BIOSSLOT) //mauvais !!!!
+//						CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &MemMap[BIOSSLOT][0] );
 				}
 				break;
 		    default: // map page num.
 				{
 					MemMap[CartSlot][i] = ROMData[CartSlot] + ((cMap[i << 1] - '0') * 0x2000);
+//					if(CartSlot==BIOSSLOT) // mauvais !!!
+//						CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &MemMap[BIOSSLOT][0] );
+// derek : 8k *8
+//					CZetMapArea(	(0x8000*i)+0x0000, (0x8000*i)+0x7fff, 2, ROMData[CartSlot] + ((cMap[i << 1] - '0') * 0x2000)	);
+
+//					CZetMapArea(	(0x4000*i)+0x0000, (0x4000*i)+0x3fff, 2, ROMData[CartSlot] + ((cMap[i << 1] - '0') * 0x2000)	);
+//					CZetMapArea(	(0x4000*i)+0x0000, (0x4000*i)+0x3fff, 2, ROMData[CartSlot] + ((cMap[i << 1] - '0') * 0x2000)	);
 					//bprintf(0, _T("pg %X @ %X\n"), i, ((cMap[i << 1] - '0') * 0x2000));
 				}
 		}
@@ -1016,7 +1057,7 @@ static void vdp_interrupt(INT32 state)
 	else
 		z80_lower_IRQ();
 #else
-	ZetSetIRQLine(0, state ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE);
+	CZetSetIRQLine(0, state ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE);
 #endif
 }
 
@@ -1042,12 +1083,12 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20)
 #ifdef RAZE
 	z80_reset();
 #else
-	ZetOpen(0);
-	ZetReset();
+	CZetOpen(0);
+	CZetReset();
 #endif
 	TMS9928AReset();
 #ifndef RAZE
-	ZetClose();
+	CZetClose();
 #endif
 	AY8910Reset(0);
 #ifdef K051649
@@ -1093,6 +1134,13 @@ static INT32 MemIndex()
 
 static void __fastcall msx_write(UINT16 address, UINT8 data)
 {
+/*	VBT : rien sur write !
+	int i = address >> 13;
+	CZetMapArea(i*0x1000, (i*0x1000)+0x1fff, 2, RAM[address >> 13]);
+*/
+//	unsigned int i = address >> 13;
+//	CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &RAM[i][0x0000] ); // working with zet
+
 	if (WriteMode[address >> 14]) {
 		RAM[address >> 13][address & 0x1fff] = data;
 		return;
@@ -1104,13 +1152,24 @@ static void __fastcall msx_write(UINT16 address, UINT8 data)
 	}
 }
 
-static UINT8 __fastcall msx_read(UINT16 address)
+static UINT8 __fastcall msx_read_ori(UINT16 address)
 {
 	UINT8 d = 0;
 	if (Mapper_read(address, &d)) {
 		return d;
 	}
+	return (RAM[address >> 13][address & 0x1fff]);
+}
 
+static UINT8 __fastcall msx_read(UINT16 address)
+{
+//	unsigned int i = address >> 13;
+//	CZetMapArea(	(0x8000*i), (0x8000*i)+0x7fff, 2, RAM[address >> 13][address & 0x1fff] );
+//	CZetMapArea(	(0x8000*(0>>1)), (0x4000*(0>>1))+0x7fff, 2, RAM[address >> 13][address & 0x1fff] );
+// zz	CZetMapArea(	(0x2000*(i>>1)), (0x2000*(i>>1))+0x1fff, 2, RAM[address >> 13][address & 0x1fff] );
+//	ZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &RAM[i][0x0000] ); // working with zet
+//	CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &RAM[i][0x0000] ); // working with zet
+//	ZetMapArea(	(0x2000*(i+1)), (0x2000*(i+1))+0x1fff, 2, &RAM[i][0x2000] );
 	return (RAM[address >> 13][address & 0x1fff]);
 }
 
@@ -1119,7 +1178,7 @@ static INT32 DrvSyncDAC()
 #ifdef RAZE
 	return (INT32)(float)(nBurnSoundLen * (z80_get_cycles_elapsed() / (3579545.000 / ((Hertz60) ? 60.0 : 50.0))));
 #else
-	return (INT32)(float)(nBurnSoundLen * (ZetTotalCycles() / (3579545.000 / ((Hertz60) ? 60.0 : 50.0))));
+	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / (3579545.000 / ((Hertz60) ? 60.0 : 50.0))));
 #endif
 }
 
@@ -1183,7 +1242,6 @@ static INT32 DrvInit()
 		 msxinit(ri.nLen); //(in DrvDoReset()! -dink)
 	}
 
-//	CZetInit(1);
 #ifdef RAZE
 	z80_init_memmap();
 	z80_add_write(0x0000, 0xffff, 1, (void *)&msx_write);
@@ -1194,38 +1252,36 @@ static INT32 DrvInit()
 	z80_set_out((void (*)(unsigned short, unsigned char))&msx_write_port);
 
 #else
-	ZetInit(0);
+//ZetInit(0);
+//CZetInit(1);
 
-//	CZetInit2(1,CZ80Context);
-	ZetOpen(0);
+//xx	
+	CZetInit2(1,CZ80Context);
+	CZetOpen(0);
+	CZetMapArea(0x0000, 0x3fff, 0, maincpu);
+	CZetMapArea(0x0000, 0x3fff, 2, maincpu);
 
-	ZetSetOutHandler(msx_write_port);
-	ZetSetInHandler(msx_read_port);
-/*	CZetSetInHandler(derek> you will need to re-write SET_PC, GET_OP, READ_OP, READ_ARG, READ_ARG16, PUSH*, POP*
-<derek> raze even worse
-<derek> for cz80, if mem not mapped, use fetch handler (see z80_intf.cpp & z80/z80.cpp/h in fba)
-<vbt> UINT8 __fastcall ZetReadOp(UINT32 a)
-<vbt> {
-<vbt> 	// check mem map
-<vbt> 	UINT8 * pr = ZetCPUContext[nOpenedCPU]->pZetMemMap[0x200 | (a >> 8)];
-<vbt> 	if (pr != NULL) {
-<vbt> 		return pr[a & 0xff];
-<vbt> 	}
-<vbt> 	
-<vbt> 	// check read handler
-<vbt> 	if (ZetCPUContext[nOpenedCPU]->ZetRead != NULL) {
-<vbt> 		return ZetCPUContext[nOpenedCPU]->ZetRead(a);
-<vbt> 	}
-<derek> yep
-<derek> make like read_mem8 is better
-<derek> simplified
-<derek> it probably would take a few hrs to impliment this properly
-<derek> why not use our z80 ?
-<derek> so much stuff uses pointers for PC / op stuff :(
-<derek> (cz80...));*/
-	ZetSetWriteHandler(msx_write);
-	ZetSetReadHandler(msx_read);
-	ZetClose();
+/*
+	for (INT32 i = 0; i < 4; i++) 
+	{
+		CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 0, &MemMap[BIOSSLOT][i] ); // working with zet
+		CZetMapArea(	(0x2000*(i+1)), (0x2000*(i+1))+0x1fff, 0, &MemMap[BIOSSLOT][i+1] ); // working with zet
+
+		CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &MemMap[BIOSSLOT][i] ); // working with zet
+		CZetMapArea(	(0x2000*(i+1)), (0x2000*(i+1))+0x1fff, 2, &MemMap[BIOSSLOT][i+1] ); // working with zet
+	}*/
+
+
+//	CZetMapArea(0x4000, 0x5fff, 0, game);
+//	CZetMapArea(0x4000, 0x5fff, 2, game);
+//	PageMap(BIOSSLOT, "0:1:2:3:e:e:e:e");
+
+	CZetSetOutHandler(msx_write_port);
+	CZetSetInHandler(msx_read_port);
+
+	CZetSetWriteHandler(msx_write);
+	CZetSetReadHandler(msx_read);
+	CZetClose();
 #endif
 	AY8910Init(0, 3579545/2, nBurnSoundRate, ay8910portAread, NULL, ay8910portAwrite, ay8910portBwrite);
 //	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
@@ -1263,7 +1319,7 @@ static INT32 DrvExit()
 	z80_add_read(0x0000, 0xffff, 1, (void *)NULL);
 	z80_add_write(0x0000, 0xffff, 1, (void *)NULL);
 #else
-	ZetExit();
+	CZetExit();
 #endif
 	AY8910Exit(0);
 #ifdef K051649
@@ -1380,11 +1436,11 @@ static INT32 DrvFrame()
 		lastnmi = DrvNMI;
 	} else lastnmi = DrvNMI;
 #else
-	ZetNewFrame();
-	ZetOpen(0);
+	CZetNewFrame();
+	CZetOpen(0);
 
 	if (DrvNMI && !lastnmi) {
-		ZetNmi();
+		CZetNmi();
 		lastnmi = DrvNMI;
 	} else lastnmi = DrvNMI;
 #endif
@@ -1394,7 +1450,7 @@ static INT32 DrvFrame()
 #ifdef RAZE
 		nCyclesDone[0] += z80_emulate(nCyclesTotal[0] / nInterleave);
 #else
-		nCyclesDone[0] += ZetRun(nCyclesTotal[0] / nInterleave);
+		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
 #endif
 //
 		TMS9928AScanline(i);
@@ -1413,7 +1469,7 @@ static INT32 DrvFrame()
 //		}
 	}
 #ifndef RAZE
-	ZetClose();
+	CZetClose();
 #endif
 //	TMS9928AInterrupt();
 //	TMS9928ADraw();
