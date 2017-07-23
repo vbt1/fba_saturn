@@ -4361,9 +4361,27 @@ EndFile
 			Directory MSX
 				File 1942.ROM;1
 ;					Source MSX\1942.ROM
-;					Source MSX\PENGADV.ROM
-					Source MSX\PICOPICO.ROM
+;					Source MSX\1942K.ROM
+;					Source MSX\ARKANOID.ROM
+;				Source MSX\PENGADV.ROM
+;				Source MSX\PENGUIK1.ROM
+;				Source MSX\ROBOCOP.ROM
+;				Source MSX\SALAMAND.ROM
+;				Source MSX\SALAMANK.ROM
+;				Source MSX\MRMOLE.ROM
+				Source MSX\CRAZE.ROM
+;					Source MSX\PARODIUE.ROM
+;					Source MSX\PICOPICO.ROM
 ;					Source MSX\TET8K.ROM
+;					Source MSX\GRADIUS.ROM
+;					Source MSX\VALIS.ROM
+;					Source MSX\VALISK.ROM
+;					Source MSX\SLAYDOKK.ROM
+;					Source MSX\SLAYDOK.ROM
+;					Source MSX\GOLVEL.ROM
+;					Source MSX\TOOBIN.ROM
+;					Source MSX\XANADU.ROM
+
 				EndFile
 
 				File MSX.ROM;1

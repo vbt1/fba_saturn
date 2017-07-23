@@ -32,6 +32,9 @@ Bits 	Description
 #include "raze\raze.h"
 #endif
 
+static void __fastcall msx_write(UINT16 address, UINT8 data);
+static UINT8 __fastcall msx_read(UINT16 address);
+
 #define INT_DIGITS 19
 char *itoa(i)
      int i;
@@ -55,7 +58,6 @@ char *itoa(i)
   }
   return p;
 }
-
 
 int ovlInit(char *szShortName)
 {
@@ -312,8 +314,6 @@ void msxinit(INT32 cart_len)
 		CARTSLOTB = 3;
 	}
 
-//	bprintf(0, _T("Slots: BIOS %d RAM %d CART1 %d CART2 %d\n"), BIOSSLOT, RAMSLOT, CARTSLOTA, CARTSLOTB);
-
 	memset(EmptyRAM, 0xff, 0x4000); // bus is pulled high for unmapped reads
 
 	for(INT32 PSlot = 0; PSlot < 4; PSlot++) // Point all pages there by default
@@ -321,7 +321,6 @@ void msxinit(INT32 cart_len)
 		for(INT32 Page = 0; Page < 8; Page++)
 		{
 			MemMap[PSlot][Page] = EmptyRAM;
-//			CZetMapArea(Page*0x8000, 0x7fff+(Page*0x8000), 2, EmptyRAM);
 		}
 	}
 	RAMPages = 4; // 64k
@@ -394,6 +393,14 @@ static void Mapper_write(UINT16 address, UINT8 data)
 	UINT8 Page = address >> 14; // pg. num
 	UINT8 PSlot = PSL[Page];
 
+char toto[100];
+char *titi = &toto[0];
+titi=itoa(PSlot);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pSlot            ",96,20);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,120,20);
+
+
+
 	if (PSlot >= MAXSLOTS) return;
 
 	if (!ROMData[PSlot] && (address == 0x9000))
@@ -456,14 +463,12 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			if ((address < 0x4000) || (address > 0xbfff)) break;
 			Page = (address - 0x4000) >> 13;
 			if (Page == 2) SCCReg[PSlot] = (data == 0x3f) ? 1 : 0;
-// vbt : rien sur write !
-//			CZetMapArea(0x4000, 0xbfff, 2, MemMap[PSlot][Page + 2]);
-//			CZetMapArea(	(0x4000*PSlot), (0x4000*PSlot)+0x3fff, 2, RAM[address >> 13][address & 0x1fff] );
 
 			data &= ROMMask[PSlot];
 			if (data != ROMMapper[PSlot][Page])
 			{
 				RAM[Page + 2] = MemMap[PSlot][Page + 2] = ROMData[PSlot] + (data << 13);
+				setFetchKonGen8();
 				ROMMapper[PSlot][Page] = data;
 			}
 			return;
@@ -478,6 +483,8 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			{
 				RAM[Page + 2] = MemMap[PSlot][Page + 2] = ROMData[PSlot] + (data << 13);
 				RAM[Page + 3] = MemMap[PSlot][Page + 3] = RAM[Page + 2] + 0x2000;
+				setFetch(Page + 2,Page);
+
 				ROMMapper[PSlot][Page] = data;
 				ROMMapper[PSlot][Page + 1] = data + 1;
 			}
@@ -493,6 +500,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			if (data != ROMMapper[PSlot][Page])
 			{
 				RAM[Page + 2] = MemMap[PSlot][Page + 2] = ROMData[PSlot] + (data << 13);
+				setFetchKonami4SCC();
 				ROMMapper[PSlot][Page] = data;
 			}
 			return;
@@ -505,6 +513,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			if (data != ROMMapper[PSlot][Page])
 			{
 				RAM[Page + 2] = MemMap[PSlot][Page + 2] = ROMData[PSlot] + (data << 13);
+				setFetchKonami4();
 				ROMMapper[PSlot][Page] = data;
 			}
 			return;
@@ -532,7 +541,11 @@ static void Mapper_write(UINT16 address, UINT8 data)
 					ROMMapper[PSlot][Page] = data;
 
 					if (PSL[(Page >> 1) + 1] == PSlot)
+					{
 						RAM[Page + 2] = pgPtr;
+//						setFetch(Page + 2,(Page >> 1) + 1);
+						setFetchAscii8();
+					}
 				}
 				return;
 			}
@@ -556,7 +569,6 @@ static void Mapper_write(UINT16 address, UINT8 data)
 				}
 				else
 				{
-
 					data = (data << 1) & ROMMask[PSlot];
 					pgPtr = ROMData[PSlot] + (data << 13);
 				}
@@ -572,6 +584,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 					{
 						RAM[Page + 2] = pgPtr;
 						RAM[Page + 3] = pgPtr + 0x2000;
+						setFetchAscii16();
 					}
 				}
 				return;
@@ -586,9 +599,9 @@ static void Mapper_write(UINT16 address, UINT8 data)
 					pgPtr[address + 0x3800] = pgPtr[address] = data;
 				return;
 			}
+
 			break;
 	}
-
 	//bprintf(0, _T("Unhandled mapper write. 0x%04X: %02X, slot %d\n"), address, data, PSlot);
 }
 //int vbt2 = 0;
@@ -637,7 +650,184 @@ static INT32 Mapper_read(UINT16 address, UINT8 *data)
   }
   return 0;
 }
+//-----------------------------------------------------------------------------------------------------------------------------
+setFetchKonGen8()
+{
 
+}
+//-----------------------------------------------------------------------------------------------------------------------------
+void setFetchAscii8()
+{
+/*
+ Since the size of the mapper is 8Kb, the memory banks are:
+
+	Bank 1: 4000h - 5FFFh
+	Bank 2: 6000h - 7FFFh
+	Bank 3: 8000h - 9FFFh
+	Bank 4: A000h - BFFFh
+
+And the address to change banks:
+
+	Bank 1: 6000h - 67FFh (6000h used)
+	Bank 2: 6800h - 6FFFh (6800h used)
+	Bank 3: 7000h - 77FFh (7000h used)
+	Bank 4: 7800h - 7FFFh (7800h used)
+*/
+// bank 1 ---------------------------------------------------------------------------
+		CZetMapArea(	0x4000, 0x5fff, 0, &RAM[2][0x0000] );
+		CZetMapArea(	0x4000, 0x5fff, 1, &RAM[2][0x0000] );
+		CZetMapArea(	0x4000, 0x5fff, 2, &RAM[2][0x0000] );
+// bank 2 ---------------------------------------------------------------------------
+		CZetMapArea(	0x6000, 0x7fff, 0, &RAM[3][0x0000] );
+		CZetMapArea(	0x6000, 0x7fff, 1, NULL );
+		CZetMapArea(	0x6000, 0x7fff, 2, &RAM[3][0x0000] );
+// bank 3 ---------------------------------------------------------------------------
+		CZetMapArea(	0x8000, 0x9fff, 0, &RAM[4][0x0000] );
+		CZetMapArea(	0x8000, 0x9fff, 1, &RAM[4][0x0000] );
+		CZetMapArea(	0x8000, 0x9fff, 2, &RAM[4][0x0000] );
+// bank 4 ---------------------------------------------------------------------------
+		CZetMapArea(	0xA000, 0xbfff, 0, &RAM[5][0x0000] );
+		CZetMapArea(	0xA000, 0xbfff, 1, &RAM[5][0x0000] );
+		CZetMapArea(	0xA000, 0xbfff, 2, &RAM[5][0x0000] );
+// end ------------------------------------------------------------------------------
+}
+//-----------------------------------------------------------------------------------------------------------------------------
+void setFetchAscii16()
+{
+/*
+ Since the size of the mapper is 16Kb, the memory banks are:
+
+	Bank 1: 4000h - 7FFFh
+	Bank 2: 8000h - BFFFh
+
+And the address to change banks:
+
+	Bank 1: 6000h - 67FFh (6000h used)
+	Bank 2: 7000h - 77FFh (7000h and 77FFh used)
+*/
+// bank 1 ---------------------------------------------------------------------------
+		CZetMapArea(	0x4000, 0x5fff, 0, &RAM[2][0x0000] );
+		CZetMapArea(	0x6000, 0x7fff, 0, &RAM[3][0x0000] );
+
+		CZetMapArea(	0x4000, 0x5fff, 1, &RAM[2][0x0000] );
+		CZetMapArea(	0x6000, 0x7fff, 1, NULL );
+//		CZetMapArea(	0x6000, 0x67ff, 1, NULL );
+//		CZetMapArea(	0x6800, 0x6fff, 1, &RAM[3][0x0800] );
+//		CZetMapArea(	0x7000, 0x77ff, 1, NULL );
+//		CZetMapArea(	0x7800, 0x7fff, 1, &RAM[3][0x1800] );
+
+		CZetMapArea(	0x4000, 0x5fff, 2, &RAM[2][0x0000] );
+		CZetMapArea(	0x6000, 0x7fff, 2, &RAM[3][0x0000] );
+// bank 2 ---------------------------------------------------------------------------
+		CZetMapArea(	0x8000, 0x9fff, 0, &RAM[4][0x0000] );
+		CZetMapArea(	0xa000, 0xbfff, 0, &RAM[5][0x0000] );
+		CZetMapArea(	0x8000, 0x9fff, 1, &RAM[4][0x0000] );
+		CZetMapArea(	0xa000, 0xbfff, 1, &RAM[5][0x0000] );
+		CZetMapArea(	0x8000, 0x9fff, 2, &RAM[4][0x0000] );
+		CZetMapArea(	0xa000, 0xbfff, 2, &RAM[5][0x0000] );
+}
+//-----------------------------------------------------------------------------------------------------------------------------
+void setFetchKonami4SCC()
+{
+/*
+ Since the size of the mapper is 8Kb, the memory banks are:
+
+	Bank 1: 4000h - 5FFFh
+	Bank 2: 6000h - 7FFFh
+	Bank 3: 8000h - 9FFFh
+	Bank 4: A000h - BFFFh
+
+And the address to change banks:
+
+	Bank 1: 5000h - 57FFh (5000h used)
+	Bank 2: 7000h - 77FFh (7000h used)
+	Bank 3: 9000h - 97FFh (9000h used)
+	Bank 4: B000h - B7FFh (B000h used)
+
+*/
+// bank 1 ---------------------------------------------------------------------------
+		CZetMapArea(	0x4000, 0x5fff, 0, &RAM[2][0x0000] );
+		CZetMapArea(	0x4000, 0x4fff, 1, &RAM[2][0x0000] );
+		CZetMapArea(	0x5000, 0x57ff, 1, NULL );
+		CZetMapArea(	0x5800, 0x5fff, 1, &RAM[2][0x1800] );
+		CZetMapArea(	0x4000, 0x5fff, 2, &RAM[2][0x0000] );
+// bank 2 ---------------------------------------------------------------------------
+		CZetMapArea(	0x6000, 0x7fff, 0, &RAM[3][0x0000] );
+		CZetMapArea(	0x6000, 0x6fff, 1, &RAM[3][0x0000] );
+		CZetMapArea(	0x7000, 0x77ff, 1, NULL );
+		CZetMapArea(	0x7800, 0x7fff, 1, &RAM[3][0x1800] );
+		CZetMapArea(	0x6000, 0x7fff, 2, &RAM[3][0x0000] );
+// bank 3 ---------------------------------------------------------------------------
+		CZetMapArea(	0x8000, 0x9fff, 0, &RAM[4][0x0000] );
+		CZetMapArea(	0x8000, 0x8fff, 1, &RAM[4][0x0000] );
+		CZetMapArea(	0x9000, 0x97ff, 1, NULL );
+		CZetMapArea(	0x9800, 0x9fff, 1, &RAM[4][0x1800] );
+		CZetMapArea(	0x8000, 0x9fff, 2, &RAM[4][0x0000] );
+// bank 4 ---------------------------------------------------------------------------
+		CZetMapArea(	0xa000, 0xbfff, 0, &RAM[5][0x0000] );
+		CZetMapArea(	0xa000, 0xafff, 1, &RAM[5][0x0000] );
+		CZetMapArea(	0xb000, 0xb7ff, 1, NULL );
+		CZetMapArea(	0xb800, 0xbfff, 1, &RAM[5][0x1800] );
+		CZetMapArea(	0xA000, 0xbfff, 2, &RAM[5][0x0000] );
+// end ------------------------------------------------------------------------------
+}
+//-----------------------------------------------------------------------------------------------------------------------------
+void setFetchKonami4()
+{
+/*
+ Since the size of the mapper is 8Kb, the memory banks are:
+
+	Bank 1: 4000h - 5FFFh
+	Bank 2: 6000h - 7FFFh
+	Bank 3: 8000h - 9FFFh
+	Bank 4: A000h - BFFFh
+
+And the address to change banks:
+
+	Bank 1: <none>
+	Bank 2: 6000h - 7FFFh (6000h used)
+	Bank 3: 8000h - 9FFFh (8000h used)
+	Bank 4: A000h - BFFFh (A000h used)
+*/
+// bank 1 ---------------------------------------------------------------------------
+		CZetMapArea(	0x4000, 0x5fff, 0, &RAM[2][0x0000] );
+		CZetMapArea(	0x4000, 0x5fff, 1, &RAM[2][0x0000] );
+		CZetMapArea(	0x4000, 0x5fff, 2, &RAM[2][0x0000] );
+// bank 2 ---------------------------------------------------------------------------
+		CZetMapArea(	0x6000, 0x7fff, 0, &RAM[3][0x0000] );
+		CZetMapArea(	0x6000, 0x7fff, 1, NULL );
+		CZetMapArea(	0x6000, 0x7fff, 2, &RAM[3][0x0000] );
+// bank 3 ---------------------------------------------------------------------------
+		CZetMapArea(	0x8000, 0x9fff, 0, &RAM[4][0x0000] );
+		CZetMapArea(	0x8000, 0x9fff, 1, NULL );
+		CZetMapArea(	0x8000, 0x9fff, 2, &RAM[4][0x0000] );
+// bank 4 ---------------------------------------------------------------------------
+		CZetMapArea(	0xA000, 0xbfff, 0, &RAM[5][0x0000] );
+		CZetMapArea(	0xA000, 0xbfff, 1, NULL );
+		CZetMapArea(	0xA000, 0xbfff, 2, &RAM[5][0x0000] );
+// end ------------------------------------------------------------------------------
+}
+//-----------------------------------------------------------------------------------------------------------------------------
+void setFetch(UINT32 I,UINT32 J)
+{
+	CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 0, &RAM[I][0x0000] ); // working with zet
+	CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 0, &RAM[(I+1)][0x0000] ); // working with zet
+
+	if(WriteMode[J])
+	{
+		CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 1, &RAM[I][0x0000] ); 
+		CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 1, &RAM[(I+1)][0x0000] );
+	}
+	else
+	{
+		CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 1, NULL);
+		CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 1, NULL);
+	}
+
+	CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 2, &RAM[I][0x0000] ); // working with zet
+	CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 2, &RAM[(I+1)][0x0000] ); // working with zet
+}
+//-----------------------------------------------------------------------------------------------------------------------------
 static void SetSlot(UINT8 nSlot)
 {
 	UINT8 I, J;
@@ -649,19 +839,16 @@ static void SetSlot(UINT8 nSlot)
 			PSL[J] = nSlot & 3;
 			RAM[I] = MemMap[PSL[J]][I];
 			RAM[I + 1] = MemMap[PSL[J]][I + 1];
-
-			CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 0, &RAM[I][0x0000] ); // working with zet
-			CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 0, &RAM[(I+1)][0x0000] ); // working with zet
-
-			CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 1, &RAM[I][0x0000] ); // working with zet
-			CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 1, &RAM[(I+1)][0x0000] ); // working with zet
-
-			CZetMapArea(	(0x2000*I), (0x2000*I)+0x1fff, 2, &RAM[I][0x0000] ); // working with zet
-			CZetMapArea(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, 2, &RAM[(I+1)][0x0000] ); // working with zet
-
 			WriteMode[J] = (PSL[J] == RAMSLOT) && (MemMap[RAMSLOT][I] != EmptyRAM);
+			if(J==0 || J==3)
+			setFetch(I,J);
 			nSlot >>= 2;
 		}
+//		setFetchAscii8();
+		setFetchAscii16();
+//		setFetchKonami4();
+//		setFetchKonami4SCC();
+//		setFetchKonGen8();
 	}
 }
 
@@ -674,23 +861,11 @@ static void PageMap(INT32 CartSlot, const char *cMap)
 			case 'e': // empty page
 				{
 					MemMap[CartSlot][i] = EmptyRAM;
-//					CZetMapArea((0x8000*i)+0x0000, (0x8000*i)+0x7fff, 2, EmptyRAM);
-//					CZetMapArea((0x4000*i)+0x0000, (0x4000*i)+0x3fff, 2, EmptyRAM);
-//					if(CartSlot==BIOSSLOT) //mauvais !!!!
-//						CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &MemMap[BIOSSLOT][0] );
 				}
 				break;
 		    default: // map page num.
 				{
 					MemMap[CartSlot][i] = ROMData[CartSlot] + ((cMap[i << 1] - '0') * 0x2000);
-//					if(CartSlot==BIOSSLOT) // mauvais !!!
-//						CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &MemMap[BIOSSLOT][0] );
-// derek : 8k *8
-//					CZetMapArea(	(0x8000*i)+0x0000, (0x8000*i)+0x7fff, 2, ROMData[CartSlot] + ((cMap[i << 1] - '0') * 0x2000)	);
-
-//					CZetMapArea(	(0x4000*i)+0x0000, (0x4000*i)+0x3fff, 2, ROMData[CartSlot] + ((cMap[i << 1] - '0') * 0x2000)	);
-//					CZetMapArea(	(0x4000*i)+0x0000, (0x4000*i)+0x3fff, 2, ROMData[CartSlot] + ((cMap[i << 1] - '0') * 0x2000)	);
-					//bprintf(0, _T("pg %X @ %X\n"), i, ((cMap[i << 1] - '0') * 0x2000));
 				}
 		}
 	}
@@ -884,6 +1059,15 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20)
 		ROMType[nSlot] = GuessROM(ROMData[nSlot], 0x2000 * (ROMMask[nSlot] + 1));
 	}
 
+if(ROMType[nSlot] == MAP_KONGEN16)
+	while(1);
+
+//	ROMType[nSlot] = MAP_KONAMI4; // gradius pengadv 1942k valisk
+//	ROMType[nSlot] = MAP_KONAMI5; // salamander
+//	ROMType[nSlot] = MAP_KONGEN8; // 
+//	ROMType[nSlot] = MAP_ASCII8; // valis 1942 xanadu
+	ROMType[nSlot] = MAP_ASCII16; // golvellious toobin craze
+
 	if (ROMType[nSlot] != MAP_DOOLY) { // set-up non-megarom mirroring & mapping
 		switch (Len)
 		{
@@ -1070,15 +1254,31 @@ static INT32 DrvDoReset()
 
 	Kana = 0;
 	KanaByte = 0;
-/*
+
 char toto[100];
 char *titi = &toto[0];
 titi=itoa(CurRomSizeA);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SizeA            ",4,20);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20);
-*/
-	msxinit(CurRomSizeA);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SizeA            ",96,50);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,120,50);
 
+	msxinit(CurRomSizeA);
+setFetch(0,0);
+setFetch(1,0);
+//setFetchAscii8();
+//setFetchKonami4SCC();
+setFetchKonGen8();
+/*
+setFetch(2,1);
+setFetch(3,1);
+
+setFetch(4,2);
+setFetch(5,2);
+
+setFetch(6,3);
+setFetch(7,3);
+*/
+//setFetchAscii16();
+//setFetchKonami4();
 	ppi8255_init(1); // there is no reset, so use this.
 #ifdef RAZE
 	z80_reset();
@@ -1134,21 +1334,29 @@ static INT32 MemIndex()
 
 static void __fastcall msx_write(UINT16 address, UINT8 data)
 {
-/*	VBT : rien sur write !
-	int i = address >> 13;
-	CZetMapArea(i*0x1000, (i*0x1000)+0x1fff, 2, RAM[address >> 13]);
-*/
-//	unsigned int i = address >> 13;
-//	CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &RAM[i][0x0000] ); // working with zet
-
 	if (WriteMode[address >> 14]) {
+/*
+		if(address==65535 && data==240)
+		{
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"msx_write std           ",4,10);
+		}
+*/
 		RAM[address >> 13][address & 0x1fff] = data;
 		return;
 	}
 
 	if ((address > 0x3fff) && (address < 0xc000))
 	{
+/*
+		if(address==48896 && data==255)
+		{
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"Mapper_write           ",4,10);
+		}*/
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"msx_write mapper           ",4,10);
+
 		Mapper_write(address, data);
+
+//		setFetch();
 	}
 }
 
@@ -1163,14 +1371,13 @@ static UINT8 __fastcall msx_read_ori(UINT16 address)
 
 static UINT8 __fastcall msx_read(UINT16 address)
 {
-//	unsigned int i = address >> 13;
-//	CZetMapArea(	(0x8000*i), (0x8000*i)+0x7fff, 2, RAM[address >> 13][address & 0x1fff] );
-//	CZetMapArea(	(0x8000*(0>>1)), (0x4000*(0>>1))+0x7fff, 2, RAM[address >> 13][address & 0x1fff] );
-// zz	CZetMapArea(	(0x2000*(i>>1)), (0x2000*(i>>1))+0x1fff, 2, RAM[address >> 13][address & 0x1fff] );
-//	ZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &RAM[i][0x0000] ); // working with zet
-//	CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &RAM[i][0x0000] ); // working with zet
-//	ZetMapArea(	(0x2000*(i+1)), (0x2000*(i+1))+0x1fff, 2, &RAM[i][0x2000] );
-	return (RAM[address >> 13][address & 0x1fff]);
+	UINT8 d = 0;
+	if (Mapper_read(address, &d)) {
+		return d;
+	}
+
+	UINT8 Page = address >> 13; // pg. num
+	return (RAM[Page][address & 0x1fff]);
 }
 
 static INT32 DrvSyncDAC()
@@ -1239,7 +1446,7 @@ static INT32 DrvInit()
 //			bprintf(0, _T("Loaded secondary tape/rom, size: %d.\n"), CurRomSizeB);
 		}
 #endif
-		 msxinit(ri.nLen); //(in DrvDoReset()! -dink)
+//		 msxinit(ri.nLen); //(in DrvDoReset()! -dink) ne pas décommenter !!!
 	}
 
 #ifdef RAZE
@@ -1259,7 +1466,7 @@ static INT32 DrvInit()
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0x3fff, 0, maincpu);
-	CZetMapArea(0x0000, 0x3fff, 2, maincpu);
+    CZetMapArea(0x0000, 0x3fff, 2, maincpu);
 
 /*
 	for (INT32 i = 0; i < 4; i++) 
@@ -1271,7 +1478,6 @@ static INT32 DrvInit()
 		CZetMapArea(	(0x2000*(i+1)), (0x2000*(i+1))+0x1fff, 2, &MemMap[BIOSSLOT][i+1] ); // working with zet
 	}*/
 
-
 //	CZetMapArea(0x4000, 0x5fff, 0, game);
 //	CZetMapArea(0x4000, 0x5fff, 2, game);
 //	PageMap(BIOSSLOT, "0:1:2:3:e:e:e:e");
@@ -1282,6 +1488,7 @@ static INT32 DrvInit()
 	CZetSetWriteHandler(msx_write);
 	CZetSetReadHandler(msx_read);
 	CZetClose();
+
 #endif
 	AY8910Init(0, 3579545/2, nBurnSoundRate, ay8910portAread, NULL, ay8910portAwrite, ay8910portBwrite);
 //	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
@@ -1352,6 +1559,8 @@ static INT32 DrvExit()
 
 static INT32 DrvFrame()
 {
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"                          ",4,10);
+
 	static UINT8 lastnmi = 0;
 /*
 	if (DrvReset) {
@@ -1494,7 +1703,6 @@ static INT32 DrvFrame()
 //	if (pBurnDraw) {
 		TMS9928ADrawMSX();
 //	}
-//while(1);
 	if(nSoundBufferPos>=RING_BUF_SIZE/2.5)
 	{
 		nSoundBufferPos=0;
@@ -1504,193 +1712,7 @@ static INT32 DrvFrame()
 
 	return 0;
 }
-/*
-static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
-{
-	struct BurnArea ba;
 
-	if (pnMin) {
-		*pnMin = 0x029708;
-	}
-
-	if (nAction & ACB_VOLATILE) {
-		memset(&ba, 0, sizeof(ba));
-		ba.Data	  = AllRam;
-		ba.nLen	  = RamEnd - AllRam;
-		ba.szName = "All Ram";
-		BurnAcb(&ba);
-
-		ZetScan(nAction);
-		AY8910Scan(nAction, pnMin);
-		K051649Scan(nAction, pnMin);
-		DACScan(nAction,pnMin);
-		TMS9928AScan(nAction, pnMin);
-		ppi8255_scan();
-
-		SCAN_VAR(RAMMapper);
-		SCAN_VAR(ROMMapper);
-		SCAN_VAR(WriteMode);
-		SCAN_VAR(PSL);
-		SCAN_VAR(PSLReg);
-		SCAN_VAR(SCCReg);
-
-		SCAN_VAR(dooly_prot);
-		SCAN_VAR(crossblaim_selected_bank);
-		SCAN_VAR(rtype_selected_bank);
-
-		SCAN_VAR(CASPos);
-		SCAN_VAR(CASAutoLoadPos);
-		SCAN_VAR(CASAutoLoadTicker);
-		SCAN_VAR(CASFrameCounter);
-	}
-
-	if (nAction & ACB_WRITE) {
-		if (RAMMask) { // re-map ram
-			for (INT32 i = 0; i < 4; i++) {
-				RAMMapper[i] &= RAMMask;
-				MemMap[RAMSLOT][i * 2] = RAMData + RAMMapper[i] * 0x4000;
-				MemMap[RAMSLOT][i * 2 + 1] = MemMap[RAMSLOT][i * 2] + 0x2000;
-			}
-		}
-
-		for (INT32 i = 0; i < MAXSLOTS; i++)
-			if (ROMData[i] && ROMMask[i]) {
-				MapMegaROM(i, ROMMapper[i][0], ROMMapper[i][1], ROMMapper[i][2], ROMMapper[i][3]);
-				crossblaim_do_bank(ROMData[i]);
-				rtype_do_bank(ROMData[i]);
-			}
-
-		for (INT32 i = 0; i < 4; i++) {
-			RAM[2 * i] = MemMap[PSL[i]][2 * i];
-			RAM[2 * i + 1] = MemMap[PSL[i]][2 * i + 1];
-		}
-	}
-
-	return 0;
-}
-
-INT32 MSXGetZipName(char** pszName, UINT32 i)
-{
-	static char szFilename[MAX_PATH];
-	char* pszGameName = NULL;
-
-	if (pszName == NULL) {
-		return 1;
-	}
-
-	if (i == 0) {
-		pszGameName = BurnDrvGetTextA(DRV_NAME);
-	} else {
-		if (i == 1 && BurnDrvGetTextA(DRV_BOARDROM)) {
-			pszGameName = BurnDrvGetTextA(DRV_BOARDROM);
-		} else {
-			pszGameName = BurnDrvGetTextA(DRV_PARENT);
-		}
-	}
-
-	if (pszGameName == NULL) {
-		*pszName = NULL;
-		return 1;
-	}
-   // remove msx_
-	for (UINT32 j = 0; j < strlen(pszGameName); j++) {
-		szFilename[j] = pszGameName[j + 4];
-	}
-
-	*pszName = szFilename;
-
-	return 0;
-}
-*/
-/*
-// MSX1 BIOS
-static struct BurnRomInfo msx_msxRomDesc[] = {
-    { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios
-    { "msxj.rom",    0x8000, 0x071135e0, BRF_BIOS | BRF_OPT }, // 0x81 - japanese bios
-    { "kanji.rom",   0x40000, 0x1f6406fb, BRF_BIOS | BRF_OPT }, // 0x82 - kanji support
-};
-
-STD_ROM_PICK(msx_msx)
-STD_ROM_FN(msx_msx)
-
-struct BurnDriver BurnDrvmsx_msx = {
-	"msx_msx", NULL, NULL, NULL, "1982",
-	"MSX1 System BIOS\0", "BIOS only", "MSX", "MSX",
-	NULL, NULL, NULL, NULL,
-	BDF_BOARDROM, 0, HARDWARE_MSX, GBF_BIOS, 0,
-	MSXGetZipName, msx_msxRomInfo, msx_msxRomName, NULL, NULL, MSXInputInfo, MSXDIPInfo,
-	DrvInit, DrvExit, DrvFrame, TMS9928ADraw, DrvScan, NULL, TMS9928A_PALETTE_SIZE,
-	272, 228, 4, 3
-};
-*/
-static INT32 SwapSlashDrvInit()
-{
-	SwapSlash = 1;
-	return DrvInit();
-}
-
-static INT32 SwapButton2DrvInit()
-{
-	SwapButton2 = 1;
-	return DrvInit();
-}
-
-static INT32 SwapRamDrvInit()
-{
-	SwapRamslot = 1;
-	return DrvInit();
-}
-
-static INT32 BasicDrvInit()
-{
-	msx_basicmode = 1;
-	return DrvInit();
-}
-#ifdef CASSETTE
-static INT32 CasBloadDrvInit()
-{
-	msx_basicmode = 1;
-	CASMode = CAS_BLOAD;
-	return DrvInit();
-}
-
-static INT32 CasRunSwapButton2DrvInit()
-{
-	msx_basicmode = 1;
-	SwapButton2 = 1;
-	CASMode = CAS_RUN;
-	return DrvInit();
-}
-
-static INT32 CasRunDrvInit()
-{
-	msx_basicmode = 1;
-	CASMode = CAS_RUN;
-	return DrvInit();
-}
-
-static INT32 CasCloadDrvInit()
-{
-	msx_basicmode = 1;
-	CASMode = CAS_CLOAD;
-	return DrvInit();
-}
-
-static INT32 CasCloadRRDrvInit()
-{ // special for perez the mouse :)
-	msx_basicmode = 1;
-	CASMode = CAS_CLOADRR;
-	return DrvInit();
-}
-
-static INT32 VoidrunnerDrvInit()
-{
-	msx_basicmode = 1;
-	VBlankKludge = 1;
-	CASMode = CAS_RUN;
-	return DrvInit();
-}
-#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
 {

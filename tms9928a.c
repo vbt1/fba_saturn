@@ -932,6 +932,8 @@ static void TMS9928AScanline_INT(INT32 vpos)
 		{
 		case 0:             /* MODE 0 */
 			{
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 0 not supported    ",16,150);
+
 				UINT16 addr = tms.nametbl + ( ( y & 0xF8 ) << 2 );
 
 //				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr+=2 )
@@ -965,6 +967,8 @@ static void TMS9928AScanline_INT(INT32 vpos)
 
 		case 1:             /* MODE 1 */
 			{
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 1 supported    ",16,150);
+
 				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 40 );
 				UINT32 tab[4];
 
@@ -996,6 +1000,8 @@ static void TMS9928AScanline_INT(INT32 vpos)
 
 		case 2:             /* MODE 2 */
 			{
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 2 supported    ",16,150);
+
 				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 32 );
 
 //				for ( UINT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )
@@ -1058,7 +1064,7 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 1+2 not suppo
 
 		case 4:             /* MODE 3 */
 			{
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 3 not supported    ",16,150);
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 3 not supported    ",16,150);
 				UINT16 addr = tms.nametbl + ( ( y >> 3 ) * 32 );
 
 //				for ( INT32 x = TMS9928A_HORZ_DISPLAY_START; x < TMS9928A_HORZ_DISPLAY_START + 256; x+= 8, addr++ )

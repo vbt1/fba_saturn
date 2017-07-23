@@ -347,7 +347,8 @@ STD_ROM_FN(msx_msx)
 // 1942 (Jpn)
 
 static struct BurnRomInfo MSX_1942RomDesc[] = {
-	{ "1942.rom",	0x2000, 0xa27787af, BRF_PRG | BRF_ESS },
+//	{ "1942.rom",	0x2000, 0xa27787af, BRF_PRG | BRF_ESS },
+	{ "1942.rom",	0x20000, 0xa27787af, BRF_PRG | BRF_ESS },
     { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios
     { "msxj.rom",    0x8000, 0x071135e0, BRF_BIOS | BRF_OPT }, // 0x81 - japanese bios
 };

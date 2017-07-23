@@ -323,10 +323,11 @@ char *itoa2(i)
 
 
 
-/*
+
 int vbt = 0;
+int vbt2=0;
 	   unsigned char toto[150];
-	   unsigned char *titi;*/
+	   unsigned char *titi;
 INT32 Cz80_Exec(cz80_struc* CPU)
 {
 
@@ -353,12 +354,12 @@ INT32 Cz80_Exec(cz80_struc* CPU)
 /*
 	titi = &toto[0];
  
-if(vbt >=1020 && vbt<=1020+200)
+if(vbt >=0x2CED00 && vbt<=0x2CED00+200)
 	{
-FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"pc                         ",4,10+vbt-1020);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"pc                         ",4,vbt2);
 
 	}
-	*/
+*/	
 	goto Cz80_Try_Int;
 
 Cz80_Exec:
@@ -366,18 +367,31 @@ Cz80_Exec:
         union16 *data = pzHL;
         Opcode = READ_OP();
 /*
-if(vbt >=1020 && vbt<=1020+200)
+//if(vbt >=0x2CED0) // && vbt<=0x2CED00+200)
+	if(vbt >=4000000) // && vbt<=0x2CED00+200)
 	{
-	titi=itoa2(zRealPC);
-FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,40,10+vbt-1020);	
-titi=itoa2(Opcode);
-FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,80,10+vbt-1020);
+		vbt2+=10;
+			titi=itoa2(zRealPC);
+		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,4,vbt2);	
+		titi=itoa2(Opcode);
+		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"         ",34,vbt2);
+		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,34,vbt2);
+		titi=itoa2(vbt);
+		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,64,vbt2);
+		if((zRealPC>32110 && zRealPC!=62439 && zRealPC!=64923)  ||vbt>850000)
+		{
+//			while(1);
+		}
 
+		if (vbt2>200)
+		{
+			vbt2=0;
+		}
 
 	}
-if(vbt<=1020+200)
-vbt+=10;
- */
+
+	vbt++;
+*/
 // 	   unsigned int *test=(unsigned int*)0x00200000;
 /*
 	   sprintf(test,"op%08x v%04d",Opcode,vbt++);
