@@ -4373,7 +4373,8 @@ EndFile
 ;					Source MSX\PARODIUE.ROM
 ;					Source MSX\PICOPICO.ROM
 ;					Source MSX\TET8K.ROM
-					Source MSX\GRADIUS.ROM
+;					Source MSX\GRADIUS.ROM
+					Source MSX\GRADIUS2.ROM
 ;					Source MSX\VALIS.ROM
 ;					Source MSX\VALISK.ROM
 ;					Source MSX\SLAYDOKK.ROM
