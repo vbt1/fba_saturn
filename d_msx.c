@@ -393,14 +393,6 @@ static void Mapper_write(UINT16 address, UINT8 data)
 	UINT8 Page = address >> 14; // pg. num
 	UINT8 PSlot = PSL[Page];
 
-char toto[100];
-char *titi = &toto[0];
-titi=itoa(PSlot);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pSlot            ",96,20);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,120,20);
-
-
-
 	if (PSlot >= MAXSLOTS) return;
 
 	if (!ROMData[PSlot] && (address == 0x9000))
@@ -514,36 +506,12 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,120,20
 			if (data != ROMMapper[PSlot][Page])
 			{
 				RAM[Page + 2] = MemMap[PSlot][Page + 2] = ROMData[PSlot] + (data << 13);
-//				setFetch(Page + 2,(Page >> 1) + 1);
-/*
-				if(Page==0)
-				{
-		z80_map_read(	0x4000, 0x5fff, &RAM[2][0x0000] );
-		z80_map_write(	0x4000, 0x5fff, &RAM[2][0x0000] );
-		z80_map_fetch(	0x4000, 0x5fff, &RAM[2][0x0000] );
-
-				}
-				else if(Page==1)
-				{
-		z80_map_read(	0x6000, 0x7fff, &RAM[3][0x0000] );
-		z80_map_write(	0x6000, 0x7fff, NULL );
-		z80_map_fetch(	0x6000, 0x7fff, &RAM[3][0x0000] );
-				}
-				else if(Page==2)
-				{
-		z80_map_read(	0x8000, 0x9fff, &RAM[4][0x0000] );
-		z80_map_write(	0x8000, 0x9fff, NULL );
-		z80_map_fetch(	0x8000, 0x9fff, &RAM[4][0x0000] );
-				}
-				else if(Page==3)
-				{
-		z80_map_read(	0xa000, 0xbfff, &RAM[5][0x0000] );
-		z80_map_write(	0xa000, 0xbfff, NULL );
-		z80_map_fetch(	0xa000, 0xbfff, &RAM[5][0x0000] );
-				}
-*/
+				setFetch(Page + 2,(Page >> 1) + 1);
 				ROMMapper[PSlot][Page] = data;
-				setFetchKonami4();
+
+//				z80_add_write(0x4000, 0xbfff, 1, (void *)&msx_write);
+//				z80_add_read(0x4000,  0xbfff, 1, (void *)&msx_read);
+//				setFetchKonami4();
 
 			}
 			return;
@@ -874,38 +842,21 @@ And the address to change banks:
 
 // bank 2 ---------------------------------------------------------------------------
 		z80_map_read(	0x6000, 0x7fff, &RAM[3][0x0000] );
-		z80_map_write(	0x6000, 0x7fff, NULL );
 		z80_map_fetch(	0x6000, 0x7fff, &RAM[3][0x0000] );
 // bank 3 ---------------------------------------------------------------------------
 		z80_map_read(	0x8000, 0x9fff, &RAM[4][0x0000] );
-		z80_map_write(	0x8000, 0x9fff, NULL );
 		z80_map_fetch(	0x8000, 0x9fff, &RAM[4][0x0000] );
 // bank 4 ---------------------------------------------------------------------------
 		z80_map_read(	0xa000, 0xbfff, &RAM[5][0x0000] );
-		z80_map_write(	0xa000, 0xbfff, NULL );
 		z80_map_fetch(	0xa000, 0xbfff, &RAM[5][0x0000] );
 // end ------------------------------------------------------------------------------
-/*
-		z80_map_read(	0x2000, 0x3fff, &RAM[1][0x0000]);
-		z80_map_write(	0x2000, 0x3fff, &RAM[1][0x0000] );
-		z80_map_fetch(	0x2000, 0x3fff, &RAM[1][0x0000] );
-
-		z80_map_fetch(	0xc000, 0xdfff, &RAM[6][0x0000] );
-		z80_map_fetch(	0xe000, 0xffff, &RAM[7][0x0000] );
-*/
-/*
 		z80_map_read(	0xc000, 0xdfff, &RAM[6][0x0000]);
-		z80_map_write(	0xc000, 0xdfff, NULL );
+		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
 		z80_map_fetch(	0xc000, 0xdfff, &RAM[6][0x0000] );
 
 		z80_map_read(	0xe000, 0xffff, &RAM[7][0x0000]);
-		z80_map_write(	0xe000, 0xffff, NULL );
+		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
 		z80_map_fetch(	0xe000, 0xffff, &RAM[7][0x0000] );
-*/
-
-// à garder !!!!!!
-	z80_add_write(0x4000, 0xbfff, 1, (void *)&msx_write);
-	z80_add_read(0x4000,  0xbfff, 1, (void *)&msx_read);
 #endif
 }
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -931,7 +882,7 @@ void setFetch(UINT32 I,UINT32 J)
 #else
 	z80_map_read(	(0x2000*I), (0x2000*I)+0x1fff, &RAM[I][0x0000] ); // working with zet
 	z80_map_read(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, &RAM[(I+1)][0x0000] ); // working with zet
-
+/*
 	if(WriteMode[J])
 	{
 		z80_map_write(	(0x2000*I), (0x2000*I)+0x1fff, &RAM[I][0x0000] ); 
@@ -942,7 +893,7 @@ void setFetch(UINT32 I,UINT32 J)
 		z80_map_write(	(0x2000*I), (0x2000*I)+0x1fff, NULL);
 		z80_map_write(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, NULL);
 	}
-
+*/
 	z80_map_fetch(	(0x2000*I), (0x2000*I)+0x1fff, &RAM[I][0x0000] ); // working with zet
 	z80_map_fetch(	(0x2000*(I+1)), (0x2000*(I+1))+0x1fff, &RAM[(I+1)][0x0000] ); // working with zet
 #endif
@@ -960,13 +911,15 @@ static void SetSlot(UINT8 nSlot)
 			RAM[I] = MemMap[PSL[J]][I];
 			RAM[I + 1] = MemMap[PSL[J]][I + 1];
 			WriteMode[J] = (PSL[J] == RAMSLOT) && (MemMap[RAMSLOT][I] != EmptyRAM);
-			if(J==0 || J==3)
+//			if(J==0) // || J==3)
 			setFetch(I,J);
 			nSlot >>= 2;
 		}
 //		setFetchAscii8();
 //		setFetchAscii16();
-		setFetchKonami4();
+//		setFetch(0,0);
+//		setFetch(6,3);
+//		setFetchKonami4();
 //		setFetchKonami4SCC();
 //		setFetchKonGen8();
 	}
@@ -1375,17 +1328,29 @@ static INT32 DrvDoReset()
 	Kana = 0;
 	KanaByte = 0;
 
-char toto[100];
-char *titi = &toto[0];
-titi=itoa(CurRomSizeA);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SizeA            ",96,50);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,120,50);
-
 	msxinit(CurRomSizeA);
+
+	for (UINT8 J = 0; J < 4; J++)	
+	{
+		UINT8 I = J << 1;
+		setFetch(I,J);
+	}
+
+	switch (ROMType[CARTSLOTA])
+	{
+		case MAP_KONAMI4:
+			setFetchKonami4();
+			break;
+	}
+
+/*
 setFetch(0,0);
 setFetch(1,0);
+setFetch(6,3);
+*/
 //setFetchAscii8();
-setFetchKonami4();
+//setFetchKonami4();
+
 //setFetchKonami4SCC();
 //setFetchKonGen8();
 /*
@@ -1398,8 +1363,7 @@ setFetch(5,2);
 setFetch(6,3);
 setFetch(7,3);
 */
-//setFetchAscii16();
-//setFetchKonami4();
+
 	ppi8255_init(1); // there is no reset, so use this.
 #ifdef RAZE
 	z80_reset();
@@ -1787,7 +1751,7 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
 #endif
 //
-		TMS9928AScanline(i);
+//		TMS9928AScanline(i);
 
 		// Render Sound Segment
 		volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
@@ -1805,8 +1769,8 @@ static INT32 DrvFrame()
 #ifndef RAZE
 	CZetClose();
 #endif
-//	TMS9928AInterrupt();
-//	TMS9928ADraw();
+	TMS9928AInterrupt();
+	TMS9928ADraw();
 
 	// Make sure the buffer is entirely filled.
 	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
@@ -1826,7 +1790,7 @@ static INT32 DrvFrame()
 //	}
 
 //	if (pBurnDraw) {
-		TMS9928ADrawMSX();
+//		TMS9928ADrawMSX();
 //	}
 	if(nSoundBufferPos>=RING_BUF_SIZE/2.5)
 	{
