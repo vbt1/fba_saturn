@@ -503,16 +503,21 @@ static void draw_mode2(unsigned char *bitmap,unsigned char *vmem)
 
 						vbt = (unsigned char *)&bitmap[(y * 8 + yy) * 128 + x];
 
+#ifndef USE_LUT
 						bg = colour & 15;
 						tab[0]=bg|bg<<4;
+#else
+						tab = &color_2bpp_lut[colour<<2];
+#endif
 
 	 					if(pattern!=0)
 						{
+#ifndef USE_LUT
 							fg = colour /16;
 							tab[1] = fg|(*tab&0xf0);
 							tab[2] = colour;
 							tab[3] = fg|(colour&0xf0);
-
+#endif
 							vbt[0] = tab[(pattern>>6)&3]; 
 							vbt[1] = tab[(pattern>>4)&3]; 
 							vbt[2] = tab[(pattern>>2)&3]; 
