@@ -581,7 +581,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 					{
 						RAM[Page + 2] = pgPtr;
 						RAM[Page + 3] = pgPtr + 0x2000;
-						setFetchAscii16();
+						setFetch(Page + 2,(Page >> 1) + 1);
 					}
 				}
 				return;
@@ -753,11 +753,7 @@ And the address to change banks:
 		z80_map_read(	0xe000, 0xffff, &RAM[7][0x0000]);
 		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
 		z80_map_fetch(	0xe000, 0xffff, &RAM[7][0x0000] ); 
-
 #endif
-
-
-
 }
 //-----------------------------------------------------------------------------------------------------------------------------
 void setFetchAscii16()
@@ -793,6 +789,34 @@ And the address to change banks:
 		CZetMapArea(	0xa000, 0xbfff, 1, &RAM[5][0x0000] );
 		CZetMapArea(	0x8000, 0x9fff, 2, &RAM[4][0x0000] );
 		CZetMapArea(	0xa000, 0xbfff, 2, &RAM[5][0x0000] );
+#else
+// bank 1 ---------------------------------------------------------------------------
+		z80_map_read(	0x4000, 0x5fff, &RAM[2][0x0000] );
+		z80_map_write(	0x4000, 0x5fff, &RAM[2][0x0000] );
+		z80_map_fetch(	0x4000, 0x5fff, &RAM[2][0x0000] );
+// bank 2 ---------------------------------------------------------------------------
+		z80_map_read(	0x6000, 0x7fff, &RAM[3][0x0000] );
+		z80_map_write(	0x6000, 0x67ff, NULL );
+		z80_map_write(	0x6800, 0x6fff, &RAM[3][0x0800] );
+		z80_map_write(	0x7000, 0x77ff, NULL );
+		z80_map_write(	0x7800, 0x7fff, &RAM[3][0x1800] );
+		z80_map_fetch(	0x6000, 0x7fff, &RAM[3][0x0000] );
+// bank 3 ---------------------------------------------------------------------------
+		z80_map_read(	0x8000, 0x9fff, &RAM[4][0x0000] );
+		z80_map_write(	0x8000, 0x9fff, &RAM[4][0x0000] );
+		z80_map_fetch(	0x8000, 0x9fff, &RAM[4][0x0000] );
+// bank 4 ---------------------------------------------------------------------------
+		z80_map_read(	0xA000, 0xbfff, &RAM[5][0x0000] );
+		z80_map_write(	0xA000, 0xbfff, &RAM[5][0x0000] );
+		z80_map_fetch(	0xA000, 0xbfff, &RAM[5][0x0000] );
+// end ------------------------------------------------------------------------------
+		z80_map_read(	0xc000, 0xdfff, &RAM[6][0x0000]);
+		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
+		z80_map_fetch(	0xc000, 0xdfff, &RAM[6][0x0000] );
+
+		z80_map_read(	0xe000, 0xffff, &RAM[7][0x0000]);
+		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
+		z80_map_fetch(	0xe000, 0xffff, &RAM[7][0x0000] ); 
 #endif
 }
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -1211,8 +1235,8 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20)
 //	ROMType[nSlot] = MAP_KONAMI4; // gradius pengadv 1942k valisk
 //	ROMType[nSlot] = MAP_KONAMI5; // salamander
 //	ROMType[nSlot] = MAP_KONGEN8; // craze
-	ROMType[nSlot] = MAP_ASCII8; // valis 1942 xanadu
-//	ROMType[nSlot] = MAP_ASCII16; // golvellious toobin craze
+//	ROMType[nSlot] = MAP_ASCII8; // valis 1942 xanadu
+	ROMType[nSlot] = MAP_ASCII16; // golvellious toobin craze
 
 	if (ROMType[nSlot] != MAP_DOOLY) { // set-up non-megarom mirroring & mapping
 		switch (Len)
@@ -1437,7 +1461,7 @@ static INT32 DrvDoReset()
 
 		case MAP_KONGEN8:
 			setFetchKonGen8();
-	z80_add_write(0x8000, 0xbfff, 1, (void *)&msx_write);
+	z80_add_write(0x8000, 0xffff, 1, (void *)&msx_write);
 
 /*
 	Bank 1: 5000h - 57FFh (5000h used)
@@ -1455,6 +1479,15 @@ static INT32 DrvDoReset()
 	Bank 2: 6800h - 6FFFh (6800h used)
 	Bank 3: 7000h - 77FFh (7000h used)
 	Bank 4: 7800h - 7FFFh (7800h used)
+*/
+			break;
+
+		case MAP_ASCII16:
+			setFetchAscii16();
+	z80_add_write(0x6000, 0xffff, 1, (void *)&msx_write);
+/*
+	Bank 1: 6000h - 67FFh (6000h used)
+	Bank 2: 7000h - 77FFh (7000h and 77FFh used)
 */
 			break;
 	}

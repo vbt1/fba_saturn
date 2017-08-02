@@ -4360,7 +4360,7 @@ EndFile
 
 			Directory MSX
 				File 1942.ROM;1
-					Source MSX\1942.ROM
+;					Source MSX\1942.ROM
 ;					Source MSX\1942K.ROM
 ;					Source MSX\ARKANOID.ROM
 ;				Source MSX\PENGADV.ROM
@@ -4380,7 +4380,7 @@ EndFile
 ;					Source MSX\VALISK.ROM
 ;					Source MSX\SLAYDOKK.ROM
 ;					Source MSX\SLAYDOK.ROM
-;					Source MSX\GOLVEL.ROM
+					Source MSX\GOLVEL.ROM
 ;					Source MSX\TOOBIN.ROM
 ;					Source MSX\XANADU.ROM
 
