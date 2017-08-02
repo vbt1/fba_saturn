@@ -77,17 +77,19 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void load_rom()
 {
-//	memset (AllRam, 0, RamEnd - AllRam);
-
-	BurnLoadRom(game + 0x0000, 0, 1);
-//	set_memory_map(mapper);
+	struct BurnRomInfo ri;
+	memset (AllRam, 0, RamEnd - AllRam);
+	memset(game, 0xff, MAX_MSX_CARTSIZE);
+	ri.nLen		 = GetFileSize(file_id);
+	GFS_Load(file_id, 0, game, ri.nLen);
+	CurRomSizeA = ri.nLen;
 	
 	DrvDoReset();
 #ifdef RAZE	
-//	z80_set_reg(Z80_REG_IR,0x00);
-//	z80_set_reg(Z80_REG_PC,0x0000);
-//	z80_set_reg(Z80_REG_SP,0x00);
-//	z80_set_reg(Z80_REG_IRQVector,0xff);
+	z80_set_reg(Z80_REG_IR,0x00);
+	z80_set_reg(Z80_REG_PC,0x0000);
+	z80_set_reg(Z80_REG_SP,0x00);
+	z80_set_reg(Z80_REG_IRQVector,0xff);
 #endif	
 	PCM_MeStop(pcm);
 	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
@@ -111,8 +113,8 @@ static void load_rom()
 
 		if((pltriggerE[0] & PER_DGT_S)!=0)
 		{
-//			load_rom();
-//			DrvDoReset();
+			load_rom();
+			DrvDoReset();
 		}
 
 		for(i=10;i<12;i++)
@@ -461,7 +463,6 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			if (data != ROMMapper[PSlot][Page])
 			{
 				RAM[Page + 2] = MemMap[PSlot][Page + 2] = ROMData[PSlot] + (data << 13);
-//				setFetchKonGen8();
 				setFetch(Page + 2,(Page >> 1) + 1);
 				ROMMapper[PSlot][Page] = data;
 			}
@@ -495,13 +496,11 @@ static void Mapper_write(UINT16 address, UINT8 data)
 			{
 				RAM[Page + 2] = MemMap[PSlot][Page + 2] = ROMData[PSlot] + (data << 13);
 				setFetch(Page + 2,(Page >> 1) + 1);
-//				setFetchKonami4SCC();
 				ROMMapper[PSlot][Page] = data;
 			}
 			return;
 
 		case MAP_KONAMI4:
-//		while(1);
 			if ((address < 0x6000) || (address > 0xa000) || (address & 0x1fff)) break;
 			Page = (address - 0x4000) >> 13;
 
@@ -692,6 +691,50 @@ setFetchKonGen8()
 #endif
 }
 //-----------------------------------------------------------------------------------------------------------------------------
+void setFetchRType()
+{
+	#ifndef RAZE
+// bank 1 ---------------------------------------------------------------------------
+		CZetMapArea(	0x4000, 0x5fff, 0, &RAM[2][0x0000] );
+		CZetMapArea(	0x4000, 0x5fff, 1, NULL );
+		CZetMapArea(	0x4000, 0x5fff, 2, &RAM[2][0x0000] );
+// bank 2 ---------------------------------------------------------------------------
+		CZetMapArea(	0x6000, 0x7fff, 0, &RAM[3][0x0000] );
+		CZetMapArea(	0x6000, 0x7fff, 1, NULL );
+		CZetMapArea(	0x6000, 0x7fff, 2, &RAM[3][0x0000] );
+// bank 3 ---------------------------------------------------------------------------
+		CZetMapArea(	0x8000, 0x9fff, 0, &RAM[4][0x0000] );
+		CZetMapArea(	0x8000, 0x9fff, 1, NULL );
+		CZetMapArea(	0x8000, 0x9fff, 2, &RAM[4][0x0000] );
+// bank 4 ---------------------------------------------------------------------------
+		CZetMapArea(	0xA000, 0xbfff, 0, &RAM[5][0x0000] );
+		CZetMapArea(	0xA000, 0xbfff, 1, NULL );
+		CZetMapArea(	0xA000, 0xbfff, 2, &RAM[5][0x0000] );
+// end ------------------------------------------------------------------------------
+#else
+// bank 1 ---------------------------------------------------------------------------
+		z80_map_read(	0x4000, 0x5fff, &RAM[2][0x0000] );
+		z80_map_fetch(	0x4000, 0x5fff, &RAM[2][0x0000] );
+// bank 2 ---------------------------------------------------------------------------
+		z80_map_read(	0x6000, 0x7fff, &RAM[3][0x0000] );
+		z80_map_fetch(	0x6000, 0x7fff, &RAM[3][0x0000] );
+// bank 3 ---------------------------------------------------------------------------
+		z80_map_read(	0x8000, 0x9fff, &RAM[4][0x0000] );
+		z80_map_fetch(	0x8000, 0x9fff, &RAM[4][0x0000] );
+// bank 4 ---------------------------------------------------------------------------
+		z80_map_read(	0xa000, 0xbfff, &RAM[5][0x0000] );
+		z80_map_fetch(	0xa000, 0xbfff, &RAM[5][0x0000] );
+// end ------------------------------------------------------------------------------
+		z80_map_read(	0xc000, 0xdfff, &RAM[6][0x0000]);
+		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
+		z80_map_fetch(	0xc000, 0xdfff, &RAM[6][0x0000] );
+
+		z80_map_read(	0xe000, 0xffff, &RAM[7][0x0000]);
+		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
+		z80_map_fetch(	0xe000, 0xffff, &RAM[7][0x0000] );
+#endif
+}
+//-----------------------------------------------------------------------------------------------------------------------------
 void setFetchAscii8()
 {
 /*
@@ -745,7 +788,6 @@ And the address to change banks:
 		z80_map_write(	0xA000, 0xbfff, &RAM[5][0x0000] );
 		z80_map_fetch(	0xA000, 0xbfff, &RAM[5][0x0000] );
 // end ------------------------------------------------------------------------------
-
 		z80_map_read(	0xc000, 0xdfff, &RAM[6][0x0000]);
 		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
 		z80_map_fetch(	0xc000, 0xdfff, &RAM[6][0x0000] );
@@ -1229,14 +1271,12 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20)
 		ROMType[nSlot] = GuessROM(ROMData[nSlot], 0x2000 * (ROMMask[nSlot] + 1));
 	}
 
-//if(ROMType[nSlot] == MAP_ASCII16)
-//	while(1);
-
 //	ROMType[nSlot] = MAP_KONAMI4; // gradius pengadv 1942k valisk
 //	ROMType[nSlot] = MAP_KONAMI5; // salamander
 //	ROMType[nSlot] = MAP_KONGEN8; // craze
 //	ROMType[nSlot] = MAP_ASCII8; // valis 1942 xanadu
-	ROMType[nSlot] = MAP_ASCII16; // golvellious toobin craze
+//	ROMType[nSlot] = MAP_ASCII16; // golvellious toobin craze
+ROMType[nSlot] = MAP_RTYPE;
 
 	if (ROMType[nSlot] != MAP_DOOLY) { // set-up non-megarom mirroring & mapping
 		switch (Len)
@@ -1437,81 +1477,44 @@ static INT32 DrvDoReset()
 	{
 		case MAP_KONAMI4:
 			setFetchKonami4();
-	z80_add_write(0x6000, 0xbfff, 1, (void *)&msx_write_konami4);
-/*
-	Bank 2: 6000h - 7FFFh (6000h used)
-	Bank 3: 8000h - 9FFFh (8000h used)
-	Bank 4: A000h - BFFFh (A000h used)
-*/
-			break;
-		case MAP_KONAMI5:
-			setFetchKonami4SCC();
-	z80_add_write(0x5000, 0x57ff, 1, (void *)&msx_write);
-	z80_add_write(0x7000, 0x77ff, 1, (void *)&msx_write);
-	z80_add_write(0x9000, 0x97ff, 1, (void *)&msx_write);
-	z80_add_write(0xb000, 0xb7ff, 1, (void *)&msx_write);
-/*
-	Bank 1: 5000h - 57FFh (5000h used)
-	Bank 2: 7000h - 77FFh (7000h used)
-	Bank 3: 9000h - 97FFh (9000h used)
-	Bank 4: B000h - B7FFh (B000h used)
-*/
+			z80_add_write(0x6000, 0xbfff, 1, (void *)&msx_write_konami4);
 			break;
 
+		case MAP_KONAMI5:
+			setFetchKonami4SCC();
+/*
+			z80_add_write(0x5000, 0x57ff, 1, (void *)&msx_write);
+			z80_add_write(0x7000, 0x77ff, 1, (void *)&msx_write);
+			z80_add_write(0x9000, 0x97ff, 1, (void *)&msx_write);
+			z80_add_write(0xb000, 0xb7ff, 1, (void *)&msx_write);
+	*/
+			z80_add_write(0x5000, 0xffff, 1, (void *)&msx_write);
+			break;
+
+		case MAP_RTYPE:
+			setFetchRType();
+			z80_add_write(0x4000, 0xffff, 1, (void *)&msx_write);
+			break;
 
 		case MAP_KONGEN8:
 			setFetchKonGen8();
-	z80_add_write(0x8000, 0xffff, 1, (void *)&msx_write);
+			z80_add_write(0x8000, 0xffff, 1, (void *)&msx_write);
+			break;
 
-/*
-	Bank 1: 5000h - 57FFh (5000h used)
-	Bank 2: 7000h - 77FFh (7000h used)
-	Bank 3: 9000h - 97FFh (9000h used)
-	Bank 4: B000h - B7FFh (B000h used)
-*/
+		case MAP_KONGEN16:
+			
 			break;
 
 		case MAP_ASCII8:
 			setFetchAscii8();
-	z80_add_write(0x6000, 0xffff, 1, (void *)&msx_write);
-/*
-	Bank 1: 6000h - 67FFh (6000h used)
-	Bank 2: 6800h - 6FFFh (6800h used)
-	Bank 3: 7000h - 77FFh (7000h used)
-	Bank 4: 7800h - 7FFFh (7800h used)
-*/
+			z80_add_write(0x6000, 0xffff, 1, (void *)&msx_write);
 			break;
 
 		case MAP_ASCII16:
 			setFetchAscii16();
-	z80_add_write(0x6000, 0xffff, 1, (void *)&msx_write);
-/*
-	Bank 1: 6000h - 67FFh (6000h used)
-	Bank 2: 7000h - 77FFh (7000h and 77FFh used)
-*/
+			z80_add_write(0x6000, 0xffff, 1, (void *)&msx_write);
 			break;
 	}
-
-/*
-setFetch(0,0);
-setFetch(1,0);
-setFetch(6,3);
-*/
-//setFetchAscii8();
-//setFetchKonami4();
-
-//setFetchKonami4SCC();
-//setFetchKonGen8();
-/*
-setFetch(2,1);
-setFetch(3,1);
-
-setFetch(4,2);
-setFetch(5,2);
-
-setFetch(6,3);
-setFetch(7,3);
-*/
 
 	ppi8255_init(1); // there is no reset, so use this.
 #ifdef RAZE
@@ -1680,13 +1683,11 @@ static INT32 DrvInit()
 		BurnDrvGetRomInfo(&ri, 0);
 		ri.nLen = GetFileSize(2);
 
-		if (ri.nLen > MAX_MSX_CARTSIZE) {
+//		if (ri.nLen > MAX_MSX_CARTSIZE) {
 //			bprintf(0, _T("Bad MSX1 ROMSize! exiting.. (> %dk) \n"), MAX_MSX_CARTSIZE / 1024);
-			return 1;
-		}
+//			return 1;
+//		}
 		memset(game, 0xff, MAX_MSX_CARTSIZE);
-
-//		if (BurnLoadRom(game + 0x00000, 0, 1)) return 1;
 		GFS_Load(2, 0, game, ri.nLen);
 		CurRomSizeA = ri.nLen;
 #ifdef CASSETTE
@@ -1709,37 +1710,16 @@ static INT32 DrvInit()
 
  	z80_map_fetch (0x0000, 0x3fff, maincpu); 
 	z80_map_read  (0x0000, 0x3fff, maincpu);
-
-//	z80_add_write(0x4000, 0xbfff, 1, (void *)&msx_write);
-//	z80_add_read(0x4000,  0xbfff, 1, (void *)&msx_read);
 	z80_end_memmap();   
 
 	z80_set_in((unsigned char (*)(unsigned short))&msx_read_port);
 	z80_set_out((void (*)(unsigned short, unsigned char))&msx_write_port);
 
 #else
-//ZetInit(0);
-//CZetInit(1);
-
-//xx	
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0x3fff, 0, maincpu);
     CZetMapArea(0x0000, 0x3fff, 2, maincpu);
-
-/*
-	for (INT32 i = 0; i < 4; i++) 
-	{
-		CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 0, &MemMap[BIOSSLOT][i] ); // working with zet
-		CZetMapArea(	(0x2000*(i+1)), (0x2000*(i+1))+0x1fff, 0, &MemMap[BIOSSLOT][i+1] ); // working with zet
-
-		CZetMapArea(	(0x2000*i), (0x2000*i)+0x1fff, 2, &MemMap[BIOSSLOT][i] ); // working with zet
-		CZetMapArea(	(0x2000*(i+1)), (0x2000*(i+1))+0x1fff, 2, &MemMap[BIOSSLOT][i+1] ); // working with zet
-	}*/
-
-//	CZetMapArea(0x4000, 0x5fff, 0, game);
-//	CZetMapArea(0x4000, 0x5fff, 2, game);
-//	PageMap(BIOSSLOT, "0:1:2:3:e:e:e:e");
 
 	CZetSetOutHandler(msx_write_port);
 	CZetSetInHandler(msx_read_port);
@@ -2089,8 +2069,8 @@ void initPosition(void)
 
 //	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	drawWindow(32,192,192,14,52);
-//	nBurnFunction = update_input1;
+	nBurnFunction = update_input1;
 	drawWindow(0,192,192,0,64);
-//	SetVblank2();
+	SetVblank2();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

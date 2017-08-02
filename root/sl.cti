@@ -4360,30 +4360,79 @@ EndFile
 
 			Directory MSX
 				File 1942.ROM;1
-;					Source MSX\1942.ROM
-;					Source MSX\1942K.ROM
-;					Source MSX\ARKANOID.ROM
-;				Source MSX\PENGADV.ROM
-;				Source MSX\PENGUIK1.ROM
-;				Source MSX\ROBOCOP.ROM
-;				Source MSX\SALAMAND.ROM
-;				Source MSX\SALAMANK.ROM
-;				Source MSX\MRMOLE.ROM
-;				Source MSX\CRAZE.ROM
-;				Source MSX\CYBORGZ.ROM
-;					Source MSX\PARODIUE.ROM
-;					Source MSX\PICOPICO.ROM
-;					Source MSX\TET8K.ROM
-;					Source MSX\GRADIUS.ROM
-;					Source MSX\GRADIUS2.ROM
-;					Source MSX\VALIS.ROM
-;					Source MSX\VALISK.ROM
-;					Source MSX\SLAYDOKK.ROM
-;					Source MSX\SLAYDOK.ROM
+					Source MSX\1942.ROM
+				EndFile
+				File 1942K.ROM;1
+					Source MSX\1942K.ROM
+				EndFile
+				File ARKANOID.ROM;1
+					Source MSX\ARKANOID.ROM
+				EndFile
+				File PENGADV.ROM;1
+					Source MSX\PENGADV.ROM
+				EndFile
+				File PENGUIK1.ROM;1
+					Source MSX\PENGUIK1.ROM
+				EndFile
+				File ROBOCOP.ROM;1
+					Source MSX\ROBOCOP.ROM
+				EndFile
+				File SALAMAND.ROM;1
+					Source MSX\SALAMAND.ROM
+				EndFile
+				File SALAMANK.ROM;1
+					Source MSX\SALAMANK.ROM
+				EndFile
+				File MRMOLE.ROM;1
+					Source MSX\MRMOLE.ROM
+				EndFile
+				File CRAZE.ROM;1
+					Source MSX\CRAZE.ROM
+				EndFile
+				File CYBORGZ.ROM;1
+					Source MSX\CYBORGZ.ROM
+				EndFile
+				File PARODIUE.ROM;1
+					Source MSX\PARODIUE.ROM
+				EndFile
+				File PICOPICO.ROM;1
+					Source MSX\PICOPICO.ROM
+				EndFile
+				File TET8K.ROM;1
+					Source MSX\TET8K.ROM
+				EndFile
+				File GRADIUS.ROM;1
+					Source MSX\GRADIUS.ROM
+				EndFile
+				File GRADIUS2.ROM;1
+					Source MSX\GRADIUS2.ROM
+				EndFile
+				File GRADIUS3.ROM;1
+					Source MSX\GRADIUS3.ROM
+				EndFile
+				File VALIS.ROM;1
+					Source MSX\VALIS.ROM
+				EndFile
+				File VALISK.ROM;1
+					Source MSX\VALISK.ROM
+				EndFile
+				File SLAYDOKK.ROM;1
+					Source MSX\SLAYDOKK.ROM
+				EndFile
+				File SLAYDOK.ROM;1
+					Source MSX\SLAYDOK.ROM
+				EndFile
+				File GOLVEL.ROM;1
 					Source MSX\GOLVEL.ROM
-;					Source MSX\TOOBIN.ROM
-;					Source MSX\XANADU.ROM
-
+				EndFile
+				File TOOBIN.ROM;1
+					Source MSX\TOOBIN.ROM
+				EndFile
+				File RTYPE.ROM;1
+					Source MSX\RTYPE.ROM
+				EndFile
+				File XANADU.ROM;1
+					Source MSX\XANADU.ROM
 				EndFile
 
 				File MSX.ROM;1

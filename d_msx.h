@@ -84,6 +84,7 @@ static UINT8 DrvReset;
 static UINT8 DrvNMI = 0;
 
 static struct BurnInputInfo MSXInputList[] = {
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"},
 	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"},
 	{"P1 Right",	BIT_DIGITAL,	DrvJoy1 + 3,	"p1 right"},
