@@ -118,6 +118,58 @@ static void load_rom()
 
 	z80_add_read(0x0000, 0xffff, 1, (void *)NULL);
 	z80_add_write(0x0000, 0xffff, 1, (void *)NULL);
+
+
+
+			z80_add_write(0x6000, 0xbfff, 1, (void *)NULL);
+			z80_add_write(0x5000, 0xbfff, 1, (void *)NULL);
+			z80_add_write(0x4000, 0xbfff, 1, (void *)NULL);
+			z80_add_write(0x4000, 0xffff, 1, (void *)NULL);
+			z80_add_write(0x6000, 0xffff, 1, (void *)NULL);
+			z80_add_write(0x6000, 0xffff, 1, (void *)NULL);
+//kongen8 start
+		z80_add_write(0x4000, 0xbfff, 1, (void *)NULL);
+		z80_add_write(0x4000, 0xffff, 1, (void *)NULL);
+//kongen8 end
+
+//konami4 start
+		z80_add_write(0x6000, 0xbfff, 1, (void *)NULL);
+		z80_map_write(	0x4000, 0x5fff,  (void *)NULL);
+//konami4 end
+
+//konami5 start
+		z80_map_write(	0x4000, 0x4fff,  (void *)NULL);
+		z80_map_write(	0x5800, 0x5fff,  (void *)NULL);
+		z80_map_write(	0x6000, 0x6fff,  (void *)NULL);
+		z80_map_write(	0x7800, 0x7fff,  (void *)NULL);
+		z80_map_write(	0x8000, 0x8fff,  (void *)NULL);
+		z80_map_write(	0x9800, 0x9fff,  (void *)NULL);
+		z80_map_write(	0xa000, 0xafff,  (void *)NULL);
+		z80_map_write(	0xb800, 0xbfff,  (void *)NULL);
+
+		z80_add_write(0x5000, 0xbfff, 1, (void *)NULL);
+//konami5 end
+
+//ascii8 start
+		z80_map_write(	0x4000, 0x5fff,  (void *)NULL);
+		z80_map_write(	0x6000, 0x7fff,  (void *)NULL);
+		z80_map_write(	0x8000, 0x9fff,  (void *)NULL);
+		z80_map_write(	0xA000, 0xbfff,  (void *)NULL);
+
+		z80_add_write(0x6000, 0xbfff, 1, (void *)NULL);
+		z80_add_write(0x6000, 0xffff, 1, (void *)NULL);
+//ascii8 end
+
+//ascii8 start
+		z80_map_write(	0x6000, 0x67ff, (void *)NULL);
+		z80_map_write(	0x7000, 0x77ff, (void *)NULL);
+		z80_map_write(	0x7800, 0x7fff, (void *)NULL);
+		z80_map_write(	0x8000, 0x9fff, (void *)NULL);
+		z80_map_write(	0xA000, 0xbfff, (void *)NULL);
+//ascii16 end
+
+		z80_map_write(	0xc000, 0xdfff, (void *)NULL);
+		z80_map_write(	0xe000, 0xffff, (void *)NULL);
 	z80_map_fetch(	0x4000, 0xffff, NULL);
 
 	BurnDrvGetRomInfo(&ri, 0);
@@ -180,7 +232,7 @@ static void load_rom()
 
 					case PER_DGT_TL:
 					if (file_id>2)	file_id--;
-					else				file_id=file_max;
+					else				file_id=file_max+1;
 						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
 						(Uint8 *)"            ",26,200);
 						FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,
@@ -725,12 +777,17 @@ setFetchKonGen8()
 		z80_map_fetch(	0xa000, 0xbfff, &RAM[5][0x0000] );
 // end ------------------------------------------------------------------------------
 		z80_map_read(	0xc000, 0xdfff, &RAM[6][0x0000]);
-//		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
 		z80_map_fetch(	0xc000, 0xdfff, &RAM[6][0x0000] );
 
 		z80_map_read(	0xe000, 0xffff, &RAM[7][0x0000]);
-//		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
 		z80_map_fetch(	0xe000, 0xffff, &RAM[7][0x0000] );
+
+	if(WriteMode[3])
+	{
+		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
+		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
+	}
+
 #endif
 }
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -832,12 +889,16 @@ And the address to change banks:
 		z80_map_fetch(	0xA000, 0xbfff, &RAM[5][0x0000] );
 // end ------------------------------------------------------------------------------
 		z80_map_read(	0xc000, 0xdfff, &RAM[6][0x0000]);
-		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
 		z80_map_fetch(	0xc000, 0xdfff, &RAM[6][0x0000] );
 
 		z80_map_read(	0xe000, 0xffff, &RAM[7][0x0000]);
-		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
 		z80_map_fetch(	0xe000, 0xffff, &RAM[7][0x0000] ); 
+
+	if(WriteMode[3])
+	{
+		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
+		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
+	}
 #endif
 }
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -1033,12 +1094,16 @@ And the address to change banks:
 		z80_map_fetch(	0xa000, 0xbfff, &RAM[5][0x0000] );
 // end ------------------------------------------------------------------------------
 		z80_map_read(	0xc000, 0xdfff, &RAM[6][0x0000]);
-		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
 		z80_map_fetch(	0xc000, 0xdfff, &RAM[6][0x0000] );
 
 		z80_map_read(	0xe000, 0xffff, &RAM[7][0x0000]);
-		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
 		z80_map_fetch(	0xe000, 0xffff, &RAM[7][0x0000] );
+
+//	if(WriteMode[3])
+	{
+		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
+		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
+	}
 #endif
 }
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -1320,6 +1385,7 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20)
 	if (strcmp(filename, "1942K.ROM") == 0 
 		|| strcmp(filename, "ROBOCOP.ROM") == 0
 		|| strcmp(filename, "VALISK.ROM") == 0
+		|| strcmp(filename, "SLAYDOKK.ROM") == 0
 		)
 		ROMType[nSlot] = MAP_KONAMI4;
 	if (strcmp(filename, "SALAMAND.ROM") == 0 
@@ -1543,8 +1609,11 @@ static INT32 DrvDoReset()
 	{
 		case MAP_KONAMI4:
 			setFetchKonami4();
-			z80_add_write(0x6000, 0xbfff, 1, (void *)&msx_write_konami4);
-			break;
+//			if(WriteMode[3])
+					z80_add_write(0x6000, 0xbfff, 1, (void *)&msx_write);
+//			else
+//					z80_add_write(0x6000, 0xffff, 1, (void *)&msx_write_konami4);
+//			break;
 
 		case MAP_KONAMI5:
 			setFetchKonami4SCC();
@@ -1554,7 +1623,7 @@ static INT32 DrvDoReset()
 			z80_add_write(0x9000, 0x97ff, 1, (void *)&msx_write);
 			z80_add_write(0xb000, 0xb7ff, 1, (void *)&msx_write);
 	*/
-			z80_add_write(0x5000, 0xffff, 1, (void *)&msx_write);
+			z80_add_write(0x5000, 0xbfff, 1, (void *)&msx_write);
 			break;
 
 		case MAP_RTYPE:
@@ -1564,7 +1633,10 @@ static INT32 DrvDoReset()
 
 		case MAP_KONGEN8:
 			setFetchKonGen8();
-			z80_add_write(0x4000, 0xffff, 1, (void *)&msx_write);
+			if(WriteMode[3])
+					z80_add_write(0x4000, 0xbfff, 1, (void *)&msx_write);
+			else
+					z80_add_write(0x4000, 0xffff, 1, (void *)&msx_write);
 			break;
 
 		case MAP_KONGEN16:
@@ -1573,8 +1645,10 @@ static INT32 DrvDoReset()
 
 		case MAP_ASCII8:
 			setFetchAscii8();
-//			z80_add_write(0x6000, 0x7fff, 1, (void *)&msx_write);
-			z80_add_write(0x6000, 0xffff, 1, (void *)&msx_write);
+			if(WriteMode[3])
+					z80_add_write(0x6000, 0xbfff, 1, (void *)&msx_write);
+			else
+					z80_add_write(0x6000, 0xffff, 1, (void *)&msx_write);
 			break;
 
 		case MAP_ASCII16:
@@ -2106,6 +2180,7 @@ void initPosition(void)
 //	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 //	pTransDraw	= (ss_vram+0x1100);
 	file_id			= 2; // bubble bobble
+	file_max        -=2;
 //	file_max		= getNbFiles();
 
 //	SaturnInitMem();

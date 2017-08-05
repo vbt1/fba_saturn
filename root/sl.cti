@@ -4410,9 +4410,6 @@ EndFile
 				File PARODIUE.ROM;1
 					Source MSX\PARODIUE.ROM
 				EndFile
-				File PICOPICO.ROM;1
-					Source MSX\PICOPICO.ROM
-				EndFile
 				File PENGADV.ROM;1
 					Source MSX\PENGADV.ROM
 				EndFile
@@ -4425,23 +4422,14 @@ EndFile
 				File SALAMAND.ROM;1
 					Source MSX\SALAMAND.ROM
 				EndFile
-				File SLAYDOKK.ROM;1
-					Source MSX\SLAYDOKK.ROM
-				EndFile
 				File TET8K.ROM;1
 					Source MSX\TET8K.ROM
 				EndFile
 				File THREEYED.ROM;1
 					Source MSX\THREEYED.ROM
 				EndFile
-				File TOOBIN.ROM;1
-					Source MSX\TOOBIN.ROM
-				EndFile
 				File VALIS.ROM;1
 					Source MSX\VALIS.ROM
-				EndFile
-				File VALISK.ROM;1
-					Source MSX\VALISK.ROM
 				EndFile
 				File XANADU.ROM;1
 					Source MSX\XANADU.ROM
