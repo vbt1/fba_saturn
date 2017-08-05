@@ -33,8 +33,11 @@ Bits 	Description
 static void __fastcall msx_write_konami4(UINT16 address, UINT8 data);
 #endif
 
-static void __fastcall msx_write(UINT16 address, UINT8 data);
 static UINT8 __fastcall msx_read(UINT16 address);
+static void __fastcall msx_write(UINT16 address, UINT8 data);
+
+static UINT8 __fastcall msx_read_port(UINT16 port);
+static void __fastcall msx_write_port(UINT16 port, UINT8 data);
 
 #define INT_DIGITS 19
 char *itoa(i)
@@ -78,19 +81,59 @@ int ovlInit(char *szShortName)
 static void load_rom()
 {
 	struct BurnRomInfo ri;
-	memset (AllRam, 0, RamEnd - AllRam);
-	memset(game, 0xff, MAX_MSX_CARTSIZE);
-	ri.nLen		 = GetFileSize(file_id);
-	GFS_Load(file_id, 0, game, ri.nLen);
-	CurRomSizeA = ri.nLen;
-	
-	DrvDoReset();
+
 #ifdef RAZE	
 	z80_set_reg(Z80_REG_IR,0x00);
 	z80_set_reg(Z80_REG_PC,0x0000);
 	z80_set_reg(Z80_REG_SP,0x00);
 	z80_set_reg(Z80_REG_IRQVector,0xff);
 #endif	
+
+		DrvDips[0] = 0x10;
+		memset (AllRam, 0, RamEnd - AllRam);
+		memset(game, 0xff, MAX_MSX_CARTSIZE);
+
+		if (BurnLoadRom(maincpu, 2 + BiosmodeJapan, 1)) return 1; // BIOS
+#ifdef KANJI
+//		use_kanji = (BurnLoadRom(kanji_rom, 0x82, 1) == 0);
+		use_kanji = (BurnLoadRom(kanji_rom, 3, 1) == 0);
+#endif
+//		if (use_kanji)
+//			bprintf(0, _T("Kanji ROM loaded.\n"));
+
+
+//		BurnDrvGetRomInfo(&ri, 0);
+//		ri.nLen = GetFileSize(2);
+
+//		if (ri.nLen > MAX_MSX_CARTSIZE) {
+//			bprintf(0, _T("Bad MSX1 ROMSize! exiting.. (> %dk) \n"), MAX_MSX_CARTSIZE / 1024);
+//			return 1;
+//		}
+//		GFS_Load(2, 0, game, ri.nLen);
+//		CurRomSizeA = ri.nLen;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	z80_set_in((unsigned char (*)(unsigned short))NULL);
+	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
+
+	z80_add_read(0x0000, 0xffff, 1, (void *)NULL);
+	z80_add_write(0x0000, 0xffff, 1, (void *)NULL);
+	z80_map_fetch(	0x4000, 0xffff, NULL);
+
+	BurnDrvGetRomInfo(&ri, 0);
+	ri.nLen		 = GetFileSize(file_id);
+	GFS_Load(file_id, 0, game, ri.nLen);
+	CurRomSizeA = ri.nLen;
+
+	z80_init_memmap();
+
+ 	z80_map_fetch (0x0000, 0x3fff, maincpu); 
+	z80_map_read  (0x0000, 0x3fff, maincpu);
+	z80_end_memmap();   
+
+	z80_set_in((unsigned char (*)(unsigned short))&msx_read_port);
+	z80_set_out((void (*)(unsigned short, unsigned char))&msx_write_port);
+
 	PCM_MeStop(pcm);
 	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
 	nSoundBufferPos=0;
@@ -682,11 +725,11 @@ setFetchKonGen8()
 		z80_map_fetch(	0xa000, 0xbfff, &RAM[5][0x0000] );
 // end ------------------------------------------------------------------------------
 		z80_map_read(	0xc000, 0xdfff, &RAM[6][0x0000]);
-		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
+//		z80_map_write(	0xc000, 0xdfff, &RAM[6][0x0000]);
 		z80_map_fetch(	0xc000, 0xdfff, &RAM[6][0x0000] );
 
 		z80_map_read(	0xe000, 0xffff, &RAM[7][0x0000]);
-		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
+//		z80_map_write(	0xe000, 0xffff, &RAM[7][0x0000]);
 		z80_map_fetch(	0xe000, 0xffff, &RAM[7][0x0000] );
 #endif
 }
@@ -1050,17 +1093,9 @@ static void SetSlot(UINT8 nSlot)
 			RAM[I] = MemMap[PSL[J]][I];
 			RAM[I + 1] = MemMap[PSL[J]][I + 1];
 			WriteMode[J] = (PSL[J] == RAMSLOT) && (MemMap[RAMSLOT][I] != EmptyRAM);
-//			if(J==0) // || J==3)
 			setFetch(I,J);
 			nSlot >>= 2;
 		}
-//		setFetchAscii8();
-//		setFetchAscii16();
-//		setFetch(0,0);
-//		setFetch(6,3);
-//		setFetchKonami4();
-//		setFetchKonami4SCC();
-//		setFetchKonGen8();
 	}
 }
 
@@ -1271,12 +1306,43 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20)
 		ROMType[nSlot] = GuessROM(ROMData[nSlot], 0x2000 * (ROMMask[nSlot] + 1));
 	}
 
+	UINT8 filename[12];
+
+	strcpy(filename,GFS_IdToName(file_id));	
+	if (strcmp(filename, "VALIS.ROM") == 0
+		|| strcmp(filename, "1942.ROM") == 0
+		|| strcmp(filename, "HYDLIDE3.ROM") == 0
+		|| strcmp(filename, "XANADU.ROM") == 0
+		)
+		ROMType[nSlot] = MAP_ASCII8;
+	if (strcmp(filename, "GOLVEL.ROM") == 0 || strcmp(filename, "CRAZE.ROM") == 0)
+		ROMType[nSlot] = MAP_ASCII16;
+	if (strcmp(filename, "1942K.ROM") == 0 
+		|| strcmp(filename, "ROBOCOP.ROM") == 0
+		|| strcmp(filename, "VALISK.ROM") == 0
+		)
+		ROMType[nSlot] = MAP_KONAMI4;
+	if (strcmp(filename, "SALAMAND.ROM") == 0 
+		|| strcmp(filename, "SALAMANK.ROM") == 0
+		|| strcmp(filename, "MRMOLE.ROM") == 0
+//		|| strcmp(filename, "GRADIUS2.ROM") == 0
+		|| strcmp(filename, "GRADIUS3.ROM") == 0
+		)
+		ROMType[nSlot] = MAP_KONAMI5;
+/*
+<derek> invasion of the zombie monsters
+<derek> chick fighter ;)
+<derek> The Goonies
+<gamezfan> Goonies :)
+*/
+
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"golvelious        ",4,10);
 //	ROMType[nSlot] = MAP_KONAMI4; // gradius pengadv 1942k valisk
 //	ROMType[nSlot] = MAP_KONAMI5; // salamander
 //	ROMType[nSlot] = MAP_KONGEN8; // craze
 //	ROMType[nSlot] = MAP_ASCII8; // valis 1942 xanadu
 //	ROMType[nSlot] = MAP_ASCII16; // golvellious toobin craze
-ROMType[nSlot] = MAP_RTYPE;
+// ROMType[nSlot] = MAP_RTYPE;
 
 	if (ROMType[nSlot] != MAP_DOOLY) { // set-up non-megarom mirroring & mapping
 		switch (Len)
@@ -1498,7 +1564,7 @@ static INT32 DrvDoReset()
 
 		case MAP_KONGEN8:
 			setFetchKonGen8();
-			z80_add_write(0x8000, 0xffff, 1, (void *)&msx_write);
+			z80_add_write(0x4000, 0xffff, 1, (void *)&msx_write);
 			break;
 
 		case MAP_KONGEN16:
@@ -1507,6 +1573,7 @@ static INT32 DrvDoReset()
 
 		case MAP_ASCII8:
 			setFetchAscii8();
+//			z80_add_write(0x6000, 0x7fff, 1, (void *)&msx_write);
 			z80_add_write(0x6000, 0xffff, 1, (void *)&msx_write);
 			break;
 
@@ -1680,6 +1747,8 @@ static INT32 DrvInit()
 #endif
 //		if (use_kanji)
 //			bprintf(0, _T("Kanji ROM loaded.\n"));
+		memset(game, 0xff, MAX_MSX_CARTSIZE);
+
 		BurnDrvGetRomInfo(&ri, 0);
 		ri.nLen = GetFileSize(2);
 
@@ -1687,9 +1756,9 @@ static INT32 DrvInit()
 //			bprintf(0, _T("Bad MSX1 ROMSize! exiting.. (> %dk) \n"), MAX_MSX_CARTSIZE / 1024);
 //			return 1;
 //		}
-		memset(game, 0xff, MAX_MSX_CARTSIZE);
 		GFS_Load(2, 0, game, ri.nLen);
 		CurRomSizeA = ri.nLen;
+
 #ifdef CASSETTE
 		BurnDrvGetRomInfo(&ri, 1);
 
