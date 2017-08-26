@@ -112,41 +112,38 @@ static void ppi8255_write_port(ppi8255 *chip, INT32 port, INT32 chipnum)
 		ppi8255_get_handshake_signals(chip, &write_data);
 
 	chip->output[port] = write_data;
-	
-	if (chipnum == 0 && port == 0) {
-		if (PPI0PortWriteA) PPI0PortWriteA(write_data);
-	}
-	
-	if (chipnum == 0 && port == 1) {
-		if (PPI0PortWriteB) PPI0PortWriteB(write_data);
-	}
-	
-	if (chipnum == 0 && port == 2) {
-		if (PPI0PortWriteC) PPI0PortWriteC(write_data);
-	}
-	
-	if (chipnum == 1 && port == 0) {
-		if (PPI1PortWriteA) PPI1PortWriteA(write_data);
-	}
-	
-	if (chipnum == 1 && port == 1) {
-		if (PPI1PortWriteB) PPI1PortWriteB(write_data);
-	}
-	
-	if (chipnum == 1 && port == 2) {
-		if (PPI1PortWriteC) PPI1PortWriteC(write_data);
-	}
-	
-	if (chipnum == 2 && port == 0) {
-		if (PPI2PortWriteA) PPI2PortWriteA(write_data);
-	}
-	
-	if (chipnum == 2 && port == 1) {
-		if (PPI2PortWriteB) PPI2PortWriteB(write_data);
-	}
-	
-	if (chipnum == 2 && port == 2) {
-		if (PPI2PortWriteC) PPI2PortWriteC(write_data);
+
+	unsigned char value = chipnum << 2 | port;
+
+	switch (value)
+	{
+		case 0 :
+			if (PPI0PortWriteA) PPI0PortWriteA(write_data);
+			return;
+		case 1 :
+			if (PPI0PortWriteB) PPI0PortWriteB(write_data);
+			return;
+		case 2 :
+			if (PPI0PortWriteC) PPI0PortWriteC(write_data);
+			return;
+		case 4 :
+			if (PPI1PortWriteA) PPI1PortWriteA(write_data);
+			return;
+		case 5 :
+			if (PPI1PortWriteB) PPI1PortWriteB(write_data);
+			return;
+		case 6 :
+			if (PPI1PortWriteC) PPI1PortWriteC(write_data);
+			return;
+		case 8 :
+			if (PPI2PortWriteA) PPI2PortWriteA(write_data);
+			return;
+		case 9 :
+			if (PPI2PortWriteB) PPI2PortWriteB(write_data);
+			return;
+		case 10 :
+			if (PPI2PortWriteC) PPI2PortWriteC(write_data);
+			return;
 	}
 }
 
@@ -190,43 +187,39 @@ static UINT8 ppi8255_read_port(ppi8255 *chip, INT32 port, INT32 chipnum)
 
 	if (chip->in_mask[port])
 	{
-		if (chipnum == 0 && port == 0) {
-			ppi8255_input(chip, port, (PPI0PortReadA) ? PPI0PortReadA() : 0, chipnum);
-		}
-		
-		if (chipnum == 0 && port == 1) {
-			ppi8255_input(chip, port, (PPI0PortReadB) ? PPI0PortReadB() : 0, chipnum);
-		}
-		
-		if (chipnum == 0 && port == 2) {
-			ppi8255_input(chip, port, (PPI0PortReadC) ? PPI0PortReadC() : 0, chipnum);
-		}
-		
-		if (chipnum == 1 && port == 0) {
-			ppi8255_input(chip, port, (PPI1PortReadA) ? PPI1PortReadA() : 0, chipnum);
-		}
-		
-		if (chipnum == 1 && port == 1) {
-			ppi8255_input(chip, port, (PPI1PortReadB) ? PPI1PortReadB() : 0, chipnum);
-		}
-		
-		if (chipnum == 1 && port == 2) {
-			ppi8255_input(chip, port, (PPI1PortReadC) ? PPI1PortReadC() : 0, chipnum);
-		}
-		
-		if (chipnum == 2 && port == 0) {
-			ppi8255_input(chip, port, (PPI2PortReadA) ? PPI2PortReadA() : 0, chipnum);
-		}
-		
-		if (chipnum == 2 && port == 1) {
-			ppi8255_input(chip, port, (PPI2PortReadB) ? PPI2PortReadB() : 0, chipnum);
-		}
-		
-		if (chipnum == 2 && port == 2) {
-			ppi8255_input(chip, port, (PPI2PortReadC) ? PPI2PortReadC() : 0, chipnum);
-		}
+		unsigned char value = chipnum << 2 | port;
 
-		result |= chip->read[port] & chip->in_mask[port];
+		switch (value)
+		{
+			case 0 :
+				ppi8255_input(chip, port, (PPI0PortReadA) ? PPI0PortReadA() : 0, chipnum);
+				break;
+			case 1 :
+				ppi8255_input(chip, port, (PPI0PortReadB) ? PPI0PortReadB() : 0, chipnum);
+				break;
+			case 2 :
+				ppi8255_input(chip, port, (PPI0PortReadC) ? PPI0PortReadC() : 0, chipnum);
+				break;
+			case 4 :
+				ppi8255_input(chip, port, (PPI1PortReadA) ? PPI1PortReadA() : 0, chipnum);
+				break;
+			case 5 :
+				ppi8255_input(chip, port, (PPI1PortReadB) ? PPI1PortReadB() : 0, chipnum);
+				break;
+			case 6 :
+				ppi8255_input(chip, port, (PPI1PortReadC) ? PPI1PortReadC() : 0, chipnum);
+				break;
+			case 8 :
+				ppi8255_input(chip, port, (PPI2PortReadA) ? PPI2PortReadA() : 0, chipnum);
+				break;
+			case 9 :
+				ppi8255_input(chip, port, (PPI2PortReadB) ? PPI2PortReadB() : 0, chipnum);
+				break;
+			case 10 :
+				ppi8255_input(chip, port, (PPI2PortReadC) ? PPI2PortReadC() : 0, chipnum);
+				break;
+		}
+		result = chip->read[port] & chip->in_mask[port];
 	}
 	result |= chip->latch[port] & chip->out_mask[port];
 
@@ -237,17 +230,21 @@ static UINT8 ppi8255_read_port(ppi8255 *chip, INT32 port, INT32 chipnum)
 	return result;
 }
 
-UINT8 ppi8255_r(INT32 which, INT32 offset)
+UINT8 ppi8255_r(UINT32 which, UINT32 offset)
 {
 #if defined FBA_DEBUG
 	if (!DebugDev_8255PPIInitted) bprintf(PRINT_ERROR, _T("ppi8255_r called without init\n"));
 	if (which > nNumChips) bprintf(PRINT_ERROR, _T("ppi8255_r called with invalid chip %x\n"), which);
 #endif
 
+
+	if (offset > 3)
+	{
+		return 0xff;
+	}
+
 	ppi8255 *chip = &chips[which];
 	UINT8 result = 0;
-
-	offset %= 4;
 
 	switch(offset)
 	{
@@ -268,7 +265,6 @@ UINT8 ppi8255_r(INT32 which, INT32 offset)
 static void set_mode(INT32 which, INT32 data, INT32 call_handlers)
 {
 	ppi8255 *chip = &chips[which];
-	INT32 i;
 
 	/* parse out mode */
 	chip->groupA_mode = (data >> 5) & 3;
@@ -345,70 +341,73 @@ static void set_mode(INT32 which, INT32 data, INT32 call_handlers)
 
 	if (call_handlers)
 	{
-		for (i = 0; i < 3; i++)
+		for (UINT32 i = 0; i < 3; i++)
 			ppi8255_write_port(chip, i, which);
 	}
 }
 
-void ppi8255_w(INT32 which, INT32 offset, UINT8 data)
+void ppi8255_w(UINT32 which, UINT32 offset, UINT8 data)
 {
 #if defined FBA_DEBUG
 	if (!DebugDev_8255PPIInitted) bprintf(PRINT_ERROR, _T("ppi8255_w called without init\n"));
 	if (which > nNumChips) bprintf(PRINT_ERROR, _T("ppi8255_w called with invalid chip %x\n"), which);
 #endif
 
+	if (offset > 3)
+	{
+		return;
+	}
+
 	ppi8255	*chip = &chips[which];
 	
-	offset %= 4;
-	
-  	switch( offset )
+	if(offset!=3)
   	{
-	  	case 0: /* Port A write */
-		case 1: /* Port B write */
-  		case 2: /* Port C write */
-			chip->latch[offset] = data;
-			ppi8255_write_port(chip, offset, which);
+//	  	case 0: /* Port A write */
+//		case 1: /* Port B write */
+//  		case 2: /* Port C write */
+		chip->latch[offset] = data;
+		ppi8255_write_port(chip, offset, which);
 
-			switch(offset)
+		switch(offset)
+		{
+			case 0:
+			if (!chip->portA_dir && (chip->groupA_mode != 0))
 			{
-				case 0:
-					if (!chip->portA_dir && (chip->groupA_mode != 0))
-					{
-						chip->obf_a = 1;
-						ppi8255_write_port(chip, 2, which);
-					}
-					break;
-
-				case 1:
-					if (!chip->portB_dir && (chip->groupB_mode != 0))
-					{
-						chip->obf_b = 1;
-						ppi8255_write_port(chip, 2, which);
-					}
-					break;
-			}
-		  	break;
-
-		case 3: /* Control word */
-			if (data & 0x80)
-			{
-				set_mode(which, data & 0x7f, 1);
-			}
-			else
-			{
-	  			/* bit set/reset */
-	  			INT32 bit;
-
-	  			bit = (data >> 1) & 0x07;
-
-	  			if (data & 1)
-					chip->latch[2] |= (1<<bit);		/* set bit */
-	  			else
-					chip->latch[2] &= ~(1<<bit);	/* reset bit */
-
+				chip->obf_a = 1;
 				ppi8255_write_port(chip, 2, which);
 			}
-			break;
+			return;
+
+			case 1:
+			if (!chip->portB_dir && (chip->groupB_mode != 0))
+			{
+				chip->obf_b = 1;
+				ppi8255_write_port(chip, 2, which);
+			}
+			return;
+		}
+	}
+	else
+	{
+//		case 3: /* Control word */
+		if (data & 0x80)
+		{
+			set_mode(which, data & 0x7f, 1);
+		}
+		else
+		{
+			/* bit set/reset */
+			UINT32 bit;
+
+			bit = (data >> 1) & 0x07;
+
+			if (data & 1)
+				chip->latch[2] |= (1<<bit);		/* set bit */
+			else
+				chip->latch[2] &= ~(1<<bit);	/* reset bit */
+
+			ppi8255_write_port(chip, 2, which);
+		}
 	}
 }
 

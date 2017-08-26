@@ -15,6 +15,8 @@ CCFLAGS2 = -mno-fsrra -maccumulate-outgoing-args -m2 -std=gnu99 -Wfatal-errors -
 #CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O0 -fomit-frame-pointer -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -m2 -mrenesas  -std=gnu99 -Wfatal-errors -Os -D_SH -DMODEL_S -c
+# pour asm 
+#CCOVLFLAGS = -S -fverbose-asm -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
 CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
 #LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles  -nostdlib
@@ -225,9 +227,9 @@ OVLMSX                 = root/d_msx.coff
 OVLMSX1               = root/d_msx.bin
 MPOVLMSXFILE    = $(OVLMSX:.coff=.maps)
 LDOVLMSXFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMSXFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-#SRCOVLMSX         = d_msx.c czet.c cz80/cz80.c tms9928a.c snd/k051649.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
+#SRCOVLMSX         = d_msx.c czet.c cz80/cz80.c tms9928a.c snd/k051649.c snd/ay8910.c 8255ppi.c saturn/ovl.c
 #SRCOVLMSX         = d_msx.c z80_intf.c z80/z80.c z80/z80daisy.c tms9928a.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
-SRCOVLMSX         = d_msx.c tms9928a.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
+SRCOVLMSX         = d_msx.c tms9928a.c snd/k051649.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
 OBJOVLMSX         = $(SRCOVLMSX:.c=.o)
 
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c

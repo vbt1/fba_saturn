@@ -61,17 +61,18 @@ static k051649_state Chips[1]; // ok?
 static k051649_state *info;
 
 /* build a table to divide by the number of voices */
-static void make_mixer_table(INT32 voices)
+static void make_mixer_table(INT32 voices, INT16 *SCCMixerTable)
 {
 	INT32 count = voices * 256;
 	INT32 i;
 	INT32 gain = 8;
 
 	/* allocate memory */
-	info->mixer_table = (INT16 *)malloc(512 * voices * sizeof(INT16));
+	info->mixer_table = (INT16 *)SCCMixerTable;
 
 	/* find the middle of the table */
-	info->mixer_lookup = info->mixer_table + (256 * voices);
+	info->mixer_lookup = &SCCMixerTable[0x500];
+		;//info->mixer_table + (256 * voices);
 
 	/* fill in the table - 16 bit case */
 	for (i = 0; i < count; i++)
@@ -98,9 +99,12 @@ void K051649Update(INT16 *pBuf, INT32 samples)
 	double gain = info->gain;
 
 	/* zap the contents of the mixer buffer */
-	memset(info->mixer_buffer, 0, samples * sizeof(INT16));
+//	memset(info->mixer_buffer, 0, samples * sizeof(INT16));
+// vbt : remettre ?
+//	memset4_fast(info->mixer_buffer, 0, samples * sizeof(INT16));
 
-	for (j=0; j<5; j++) {
+	for (j=0; j<5; j++) 
+	{
 		v=voice[j].volume;
 		f=voice[j].frequency;
 		k=voice[j].key;
@@ -133,36 +137,177 @@ void K051649Update(INT16 *pBuf, INT32 samples)
 
 	/* mix it down */
 	mix = info->mixer_buffer;
-	for (i = 0; i < samples; i++) {
+	for (i = 0; i < samples; i++) 
+	{
 		INT32 output = info->mixer_lookup[*mix++];
 		
-		output = BURN_SND_CLIP(output);
+		output = BURN_SND_CLIP(*pBuf+output);
 		output = (INT32)(output * gain);		
 		output = BURN_SND_CLIP(output);
 		
-		INT32 nLeftSample = 0, nRightSample = 0;
+//		INT32 nLeftSample = 0; //, nRightSample = 0;
 		
-		if ((info->output_dir & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
-			nLeftSample += output;
-		}
-		if ((info->output_dir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
-			nRightSample += output;
-		}
+//		if ((info->output_dir & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
+//			nLeftSample += output;
+//		}
+//		if ((info->output_dir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
+//			nRightSample += output;
+//		}
 
-		pBuf[0] += nLeftSample;
-		pBuf[1] += nRightSample;
-		pBuf += 2;
+//		pBuf[0] += nLeftSample;
+		*pBuf = output; // vbt remettre
+//		pBuf[1] += nRightSample;
+//		pBuf += 2;
+		++pBuf;
 	}	
 }
 
-void K051649Init(INT32 clock)
+
+void K051649UpdateDirect(INT16 *pBuf, INT32 samples)
+{
+//#if defined FBA_DEBUG
+//	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649Update called without init\n"));
+//#endif
+
+	info = &Chips[0];
+	k051649_sound_channel *voice=info->channel_list;
+//	INT16 *mix;
+	INT32 i,v,f,j,k;
+//	double gain = info->gain;
+//	
+	/* zap the contents of the mixer buffer */
+//	memset(info->mixer_buffer, 0, samples * sizeof(INT16));
+// vbt : remettre ?
+//	memset4_fast(info->mixer_buffer, 0, samples * sizeof(INT16));
+
+	for (j=0; j<5; j++) 
+	{
+		v=voice[j].volume;
+		f=voice[j].frequency;
+		k=voice[j].key;
+
+		signed short *buf = &pBuf[0x8000*j];
+
+		/* SY 20040109: the SCC produces no sound for freq < 9 */
+		if (v && f > 8 && k)
+		{
+			const INT8 *w = voice[j].waveform;			/* 19991207.CAB */
+			INT32 c=voice[j].counter;
+
+//			mix = info->mixer_buffer;
+
+			/* add our contribution */
+			for (i = 0; i < samples; i++)
+			{
+				INT32 offs;
+
+				/* Amuse source:  Cab suggests this method gives greater resolution */
+				/* Sean Young 20010417: the formula is really: f = clock/(16*(f+1))*/
+				//c+=(long)((((float)info->mclock / (float)((f+1) * 16))*(float)(1<<FREQBASEBITS)) / (float)(info->rate / 32));
+				c+=(INT32)((((((float)info->mclock / (float)((f+1) * 16))*(float)(1<<FREQBASEBITS)) / (float)(info->rate / 32)) * nUpdateStep) / 32768);
+				offs = (c >> 16) & 0x1f;
+				//*mix++ += (((w[offs] * v)>>3) * nUpdateStep) >> 15;
+//				*mix++ += ((w[offs] * v)>>3);
+				*buf++ = ((w[offs] * v)>>3);
+			}
+			/* update the counter for this voice */
+			voice[j].counter = c;
+		}
+		else
+		{
+			memset4_fast(buf, 0x00, samples * sizeof(INT16));
+		}
+	}
+/*
+	// mix it down 
+	mix = info->mixer_buffer;
+	for (i = 0; i < samples; i++) 
+	{
+		INT32 output = info->mixer_lookup[*mix++];
+		
+		output = BURN_SND_CLIP(*pBuf+output);
+		output = (INT32)(output * gain);		
+		output = BURN_SND_CLIP(output);
+		
+//		INT32 nLeftSample = 0; //, nRightSample = 0;
+		
+//		if ((info->output_dir & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
+//			nLeftSample += output;
+//		}
+//		if ((info->output_dir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
+//			nRightSample += output;
+//		}
+
+//		pBuf[0] += nLeftSample;
+		*pBuf = output; // vbt remettre
+//		pBuf[1] += nRightSample;
+//		pBuf += 2;
+		++pBuf;
+	}	
+	*/
+}
+
+
+
+
+
+
+/*
+void K051649UpdateVBT(UINT32 samples)
+{
+	info = &Chips[0];
+	k051649_sound_channel *voice=info->channel_list;
+	INT16 *mix;
+	INT32 i,v,f,j,k;
+//	double gain = info->gain;
+
+	// zap the contents of the mixer buffer 
+//	memset(info->mixer_buffer, 0, samples * sizeof(INT16));
+// vbt ne pas enlever !!!!
+	memset4_fast(info->mixer_buffer, 0, samples * sizeof(INT16));
+
+	for (j=0; j<5; j++) 
+	{
+		v=voice[j].volume;
+		f=voice[j].frequency;
+		k=voice[j].key;
+		// SY 20040109: the SCC produces no sound for freq < 9 
+		if (v && f > 8 && k)
+		{
+			const INT8 *w = voice[j].waveform;			// 19991207.CAB 
+			INT32 c=voice[j].counter;
+
+			mix = info->mixer_buffer;
+
+			// add our contribution 
+			for (i = 0; i < samples; i++)
+			{
+				INT32 offs;
+
+				// Amuse source:  Cab suggests this method gives greater resolution 
+				// Sean Young 20010417: the formula is really: f = clock/(16*(f+1))
+				//c+=(long)((((float)info->mclock / (float)((f+1) * 16))*(float)(1<<FREQBASEBITS)) / (float)(info->rate / 32));
+				c+=(INT32)((((((float)info->mclock / (float)((f+1) * 16))*(float)(1<<FREQBASEBITS)) / (float)(info->rate / 32)) * nUpdateStep) / 32768);
+				offs = (c >> 16) & 0x1f;
+				//*mix++ += (((w[offs] * v)>>3) * nUpdateStep) >> 15;
+				*mix++ += ((w[offs] * v)>>3);
+			}
+
+		// update the counter for this voice 
+			voice[j].counter = c;
+		}
+	}
+}
+*/
+
+void K051649Init(INT32 clock, INT16 *SCCMixerBuffer, INT16 *SCCMixerTable)
 {
 //	DebugSnd_K051649Initted = 1;
 
 	info = &Chips[0];
 
 	/* get stream channels */
-	info->rate = clock/16;
+	info->rate = 7680L; ///clock/16; // vbt faux !!!
 	info->mclock = clock;
 	info->gain = 1.00;
 	info->output_dir = BURN_SND_ROUTE_BOTH;
@@ -170,10 +315,10 @@ void K051649Init(INT32 clock)
 	nUpdateStep = (INT32)(((float)info->rate / nBurnSoundRate) * 32768);
 
 	/* allocate a buffer to mix into - 1 second's worth should be more than enough */
-	info->mixer_buffer = (INT16 *)malloc(2 * sizeof(INT16) * info->rate);
+	info->mixer_buffer = (INT16 *)SCCMixerBuffer;
 	
 	/* build the mixer table */
-	make_mixer_table(5);
+	make_mixer_table(5,SCCMixerTable);
 }
 
 void K051649SetRoute(double nVolume, INT32 nRouteDir)
@@ -193,12 +338,12 @@ void K051649Exit()
 	info = &Chips[0];
 
 	if (info->mixer_buffer) {
-		free (info->mixer_buffer);
+//		free (info->mixer_buffer);
 		info->mixer_buffer = NULL;
 	}
 
 	if (info->mixer_table) {
-		free (info->mixer_table);
+//		free (info->mixer_table);
 		info->mixer_table = NULL;
 	}
 	

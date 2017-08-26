@@ -4359,17 +4359,56 @@ EndFile
 			EndDirectory
 
 			Directory MSX
+				File 10YARDFI.ROM;1
+					Source MSX\10YARDFI.ROM
+				EndFile
 				File 1942.ROM;1
 					Source MSX\1942.ROM
 				EndFile
+				File A1SPIRIT.ROM;1
+					Source MSX\A1SPIRIT.ROM
+				EndFile
+;				File ADVENKID.ROM;1
+;					Source MSX\ADVENKID.ROM
+;				EndFile
+				File ANGELO.ROM;1
+					Source MSX\ANGELO.ROM
+				EndFile
 				File ARKANOID.ROM;1
 					Source MSX\ARKANOID.ROM
+				EndFile
+				File CASTLEEX.ROM;1
+					Source MSX\CASTLEEX.ROM
 				EndFile
 				File CRAZE.ROM;1
 					Source MSX\CRAZE.ROM
 				EndFile
 				File CYBORGZ.ROM;1
 					Source MSX\CYBORGZ.ROM
+				EndFile
+;				File DOKIDOKI.ROM;1
+;					Source MSX\DOKIDOKI.ROM
+;				EndFile
+;				File DRAGONQ1.ROM;1
+;					Source MSX\DRAGONQ1.ROM
+;				EndFile
+				File DRAGONQ2.ROM;1
+					Source MSX\DRAGONQ2.ROM
+				EndFile
+				File EGGRLND1.ROM;1
+					Source MSX\EGGRLND1.ROM
+				EndFile
+				File EGGRLND2.ROM;1
+					Source MSX\EGGRLND2.ROM
+				EndFile
+				File F1SPIRIT.ROM;1
+					Source MSX\F1SPIRIT.ROM
+				EndFile
+				File FNTSYZON.ROM;1
+					Source MSX\FNTSYZON.ROM
+				EndFile
+				File GALLFRCE.ROM;1
+					Source MSX\GALLFRCE.ROM
 				EndFile
 				File GOLVEL.ROM;1
 					Source MSX\GOLVEL.ROM
@@ -4386,12 +4425,27 @@ EndFile
 				File GRADIUS3.ROM;1
 					Source MSX\GRADIUS3.ROM
 				EndFile
+				File GULKAVE.ROM;1
+					Source MSX\GULKAVE.ROM
+				EndFile
+;				File HERO.ROM;1
+;					Source MSX\HERO.ROM
+;				EndFile
 				File HYDLIDE3.ROM;1
 					Source MSX\HYDLIDE3.ROM
 				EndFile
-				File KINGVAL1.ROM;1
-					Source MSX\KINGVAL1.ROM
+				File HYPRRALY.ROM;1
+					Source MSX\HYPRRALY.ROM
 				EndFile
+				File IKARATE.ROM;1
+					Source MSX\IKARATE.ROM
+				EndFile
+;				File INDY500.ROM;1
+;					Source MSX\INDY500.ROM
+;				EndFile
+;				File KINGVAL1.ROM;1
+;					Source MSX\KINGVAL1.ROM
+;				EndFile
 				File KINGVAL2.ROM;1
 					Source MSX\KINGVAL2.ROM
 				EndFile
@@ -4404,6 +4458,15 @@ EndFile
 				File KNIGMAR3.ROM;1
 					Source MSX\KNIGMAR3.ROM
 				EndFile
+				File KOBOXING.ROM;1
+					Source MSX\KOBOXING.ROM
+				EndFile
+				File LGNDKAGE.ROM;1
+					Source MSX\LGNDKAGE.ROM
+				EndFile
+				File LASERF.ROM;1
+					Source MSX\LASERF.ROM
+				EndFile
 				File MRMOLE.ROM;1
 					Source MSX\MRMOLE.ROM
 				EndFile
@@ -4413,32 +4476,68 @@ EndFile
 				File PENGADV.ROM;1
 					Source MSX\PENGADV.ROM
 				EndFile
+				File PITFALL.ROM;1
+					Source MSX\PITFALL.ROM
+				EndFile
+				File PIPPOLS.ROM;1
+					Source MSX\PIPPOLS.ROM
+				EndFile
 				File ROADFGHT.ROM;1
 					Source MSX\ROADFGHT.ROM
 				EndFile
 				File ROBOCOP.ROM;1
 					Source MSX\ROBOCOP.ROM
 				EndFile
-				File SALAMAND.ROM;1
-					Source MSX\SALAMAND.ROM
+				File SALAMANK.ROM;1
+					Source MSX\SALAMANK.ROM
+				EndFile
+				File SOFIA.ROM;1
+					Source MSX\SOFIA.ROM
+				EndFile
+				File SPVSSP2.ROM;1
+					Source MSX\SPVSSP2.ROM
+				EndFile
+				File STARSOLD.ROM;1
+					Source MSX\STARSOLD.ROM
+				EndFile
+				File SUPERBB.ROM;1
+					Source MSX\SUPERBB.ROM
+				EndFile
+				File TAKAHASI.ROM;1
+					Source MSX\TAKAHASI.ROM
 				EndFile
 				File TET8K.ROM;1
 					Source MSX\TET8K.ROM
 				EndFile
+				File THEXDER.ROM;1
+					Source MSX\THEXDER.ROM
+				EndFile
 				File THREEYED.ROM;1
 					Source MSX\THREEYED.ROM
+				EndFile
+				File TWINBEE.ROM;1
+					Source MSX\TWINBEE.ROM
 				EndFile
 				File VALIS.ROM;1
 					Source MSX\VALIS.ROM
 				EndFile
+				File VAXOL.ROM;1
+					Source MSX\VAXOL.ROM
+				EndFile
 				File XANADU.ROM;1
 					Source MSX\XANADU.ROM
+				EndFile
+				File ZANAC.ROM;1
+					Source MSX\ZANAC.ROM
 				EndFile
 				File MSX.ROM;1
 					Source MSX\MSX.ROM
 				EndFile
 				File MSXJ.ROM;1
 					Source MSX\MSXJ.ROM
+				EndFile
+				File KANJI.ROM;1
+					Source MSX\KANJI.ROM
 				EndFile
 			EndDirectory
 

@@ -1,95 +1,13 @@
 #include "tms9928a.h"
 #include "burn.h"
-#define		_SPR3_
-#include "sega_spr.h"
-#define COLADDR (FBUF_ADDR-0x400)
-#define COLADDR_SPR	(COLADDR>>3)
-#define nScreenWidth 256
-#define nScreenHeight 192
-#define	RGB( r, g, b )		(0x8000U|((b) << 10)|((g) << 5 )|(r))
 
-//#define USE_LUT 1
-
-//char pattern_lut[256][8];
-//extern unsigned char *pTransDraw;
-extern unsigned short *colAddr;
-extern unsigned short  *ss_map;
-extern unsigned int *shared;
-#ifdef USE_LUT
-//unsigned int *color_2bpp_lut;
-static unsigned int color_2bpp_lut[256*4];
-#endif
+extern UINT32 *shared;
 
 #define SS_SPRAM *(&shared + 5)
 #define SS_FONT	 *(&shared + 3)
-extern SprSpCmd *ss_sprite;
-
-//unsigned int colour_dirty	 =0xffff;
-//unsigned int pattern_dirty =0xffff;
-unsigned int dirty[24*32*8*4];
-unsigned char dirtyc[24*32*8*4];
-//unsigned int dirtys[32];
-
-//unsigned int pattern6[0x400];
-//unsigned int pattern4[0x400];
-
-/* Some defines used in defining the screens */
-#define TMS9928A_TOTAL_HORZ                 342
-#define TMS9928A_TOTAL_VERT_NTSC            262
-#define TMS9928A_TOTAL_VERT_PAL             313
-
-#define TMS9928A_HORZ_DISPLAY_START         (2 + 14 + 8 + 13)
-#define TMS9928A_VERT_DISPLAY_START_PAL     16
-#define TMS9928A_VERT_DISPLAY_START_NTSC    16
-
-static INT32 TMS9928A_palette[16] = {
-	0x000000, 0x000000, 0x21c842, 0x5edc78, 0x5455ed, 0x7d76fc, 0xd4524d, 0x42ebf5,
-	0xfc5554, 0xff7978, 0xd4c154, 0xe6ce80, 0x21b03b, 0xc95bba, 0xcccccc, 0xffffff
-};
-
-typedef struct {
-	UINT8 mode;
-	UINT8 ReadAhead;
-	UINT8 Regs[8];
-	UINT8 StatusReg;
-	UINT8 FifthSprite;
-	UINT8 FirstByte;
-	UINT8 latch;
-	UINT8 INT;
-	INT32 Addr;
-	INT32 colour;
-	INT32 pattern;
-	INT32 nametbl;
-	INT32 spriteattribute;
-	INT32 spritepattern;
-	INT32 colourmask;
-	INT32 patternmask;
-
-//	unsigned char *vMem;
-	unsigned char vMem[0x4000];
-//	unsigned char *dBackMem;
-//	unsigned short *tmpbmp;
-	unsigned char *tmpbmp;
-	INT32 vramsize;
-	INT32 model;
-	INT32 revA;
-
-	INT32 LimitSprites;
-	INT32 top_border;
-	INT32 bottom_border;
-	INT32 vertical_size;
-
-	void (*INTCallback)(INT32);
-} TMS9928A;
-
-static TMS9928A tms;
-
-static INT32 TMS9928A_initted = 0;
-//static unsigned int Palette[16]; // high color support
 
 static void TMS89928aPaletteRecalc()
 {
-//	unsigned short *col =(unsigned short *)COLADDR;
 	for (int i = 0; i < 16; i++) 
 	{
 		colAddr[i] = RGB((TMS9928A_palette[i] >> 19)&31,(TMS9928A_palette[i] >> 11)&31,(TMS9928A_palette[i] >> 3)&31);
@@ -123,12 +41,12 @@ static void change_register(INT32 reg, UINT8 val)
 		case 0:
 		{
 			if (val & 2) {
-				tms.colour = ((tms.Regs[3] & 0x80) * 64) & (tms.vramsize - 1);
-				tms.pattern = ((tms.Regs[4] & 4) * 2048) & (tms.vramsize - 1);
+				tms.colour = ((tms.Regs[3] & 0x80) * 64) & (tms.vramsize);
+				tms.pattern = ((tms.Regs[4] & 4) * 2048) & (tms.vramsize);
 				update_table_masks();
 			} else {
-				tms.colour = (tms.Regs[3] * 64) & (tms.vramsize - 1);
-				tms.pattern = (tms.Regs[4] * 2048) & (tms.vramsize - 1);
+				tms.colour = (tms.Regs[3] * 64) & (tms.vramsize);
+				tms.pattern = (tms.Regs[4] * 2048) & (tms.vramsize);
 			}
 			tms.mode = ( (tms.revA ? (tms.Regs[0] & 2) : 0) | ((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
 		}
@@ -142,16 +60,16 @@ static void change_register(INT32 reg, UINT8 val)
 		break;
 
 		case 2:
-			tms.nametbl = (val * 1024) & (tms.vramsize - 1);
+			tms.nametbl = (val * 1024) & (tms.vramsize);
 		break;
 
 		case 3:
 		{
 			if (tms.Regs[0] & 2) {
-				tms.colour = ((val & 0x80) * 64) & (tms.vramsize - 1);
+				tms.colour = ((val & 0x80) * 64) & (tms.vramsize);
 				update_table_masks();
 			} else {
-				tms.colour = (val * 64) & (tms.vramsize - 1);
+				tms.colour = (val * 64) & (tms.vramsize);
 			}
 		}
 		break;
@@ -159,23 +77,24 @@ static void change_register(INT32 reg, UINT8 val)
 		case 4:
 		{
 			if (tms.Regs[0] & 2) {
-				tms.pattern = ((val & 4) * 2048) & (tms.vramsize - 1);
+				tms.pattern = ((val & 4) * 2048) & (tms.vramsize);
 				update_table_masks();
 			} else {
-				tms.pattern = (val * 2048) & (tms.vramsize - 1);
+				tms.pattern = (val * 2048) & (tms.vramsize);
 			}
 		}
 		break;
 
 		case 5:
-			tms.spriteattribute = (val * 128) & (tms.vramsize - 1);
+			tms.spriteattribute = (val * 128) & (tms.vramsize);
 		break;
 
 		case 6:
-			tms.spritepattern = (val * 2048) & (tms.vramsize - 1);
+			tms.spritepattern = (val * 2048) & (tms.vramsize);
 		break;
 
 		case 7:
+			*(unsigned short *)0x25E00000=colAddr[val & 15];
 			/* The backdrop is updated at TMS9928A_refresh() */
 		break;
 	}
@@ -186,8 +105,10 @@ void TMS9928AReset()
 	for (INT32 i = 0; i < 8; i++)
 		tms.Regs[i] = 0;
 
-	memset(tms.vMem, 0, tms.vramsize);
-//	memset(tms.tmpbmp, 0, tms.tmpbmpsize);
+	memset(tms.vMem, 0, tms.vramsize+1);
+
+	memset(tms.tmpbmp, 0, 256 * 192 * sizeof(char));
+	memset(tms.dirty,0xFF,192*128);
 
 	tms.StatusReg = 0;
 	tms.FifthSprite = 31;
@@ -209,7 +130,7 @@ static void make_lut()
 	{
 		for (int fg=0;fg<16;fg++)
 		{
-			unsigned int *position =	 &color_2bpp_lut[(bg|fg<<4)*4];
+			unsigned int *position =	 &tms.color_2bpp_lut[(bg|fg<<4)*4];
 			position[0] = bg|bg<<4;
 			position[1] = fg|bg<<4;
 			position[2] = bg|fg<<4;
@@ -235,41 +156,20 @@ void TMS9928AInit(INT32 model, INT32 vram, INT32 borderx, INT32 bordery, void (*
 	tms.bottom_border	= ((tms.model == TMS9929) || (tms.model == TMS9929A)) ? 51 : 24;
 	tms.vertical_size   = TMS9928A_TOTAL_VERT_NTSC;
 
-	tms.vramsize = vram;
-//	tms.vMem = (unsigned char*)0x25e60000;//(unsigned char*)malloc(tms.vramsize);
-//	tms.vMem = (unsigned char*)malloc(tms.vramsize);
-
-//	tms.dBackMem = (unsigned char*)malloc(256 * 192);
-
-//	tms.tmpbmp = (unsigned short*)malloc(256 * 192 * sizeof(short));
-//	tms.tmpbmp = (unsigned char*)malloc(256 * 192 * sizeof(char));
-//	tms.tmpbmp = (unsigned char*)0x00200000;
-
+	tms.vramsize = vram -1;
 	unsigned char *ss_vram = (unsigned char *)SS_SPRAM;
 	tms.tmpbmp	= (ss_vram+0x1100+0x10000);
-	memset(tms.tmpbmp, 0, 256 * 192 * sizeof(char));
+
 	TMS89928aPaletteRecalc();
 	TMS9928AReset ();
 	tms.LimitSprites = 1;
-
-
-	memset(dirty,0xFF,192*128);
 }
 
 void TMS9928AExit()
 {
-	if (!TMS9928A_initted) return;
-
-	TMS9928A_initted = 0;
 	TMS9928AReset();
-
-//	GenericTilesExit();
 	tms.INTCallback = NULL;
-//	free (tms.tmpbmp);
 	tms.tmpbmp = NULL;
-//	free (tms.vMem);
-//	tms.vMem=NULL;
-//	free (tms.dBackMem);
 }
 
 void TMS9928APostLoad()
@@ -280,19 +180,28 @@ void TMS9928APostLoad()
 	if (tms.INTCallback) tms.INTCallback(tms.INT);
 }
 
-UINT8 TMS9928AReadVRAM()
+UINT8 SG_TMS9928AReadVRAM()
 {
-	INT32 b = tms.ReadAhead;
+	UINT32 b = tms.ReadAhead;
 	tms.ReadAhead = tms.vMem[tms.Addr];
-	tms.Addr = (tms.Addr + 1) & (tms.vramsize - 1);
+	tms.Addr = (tms.Addr + 1) & (tms.vramsize);
 	tms.latch = 0;
+	return b;
+}
+
+static UINT8 TMS9928AReadVRAM(TMS9928A *tms)
+{
+	UINT32 b = tms->ReadAhead;
+	tms->ReadAhead = tms->vMem[tms->Addr];
+	tms->Addr = (tms->Addr + 1) & (tms->vramsize);
+	tms->latch = 0;
 	return b;
 }
 
 void TMS9928AWriteVRAM(INT32 data)
 {
 	tms.vMem[tms.Addr] = data;
-	tms.Addr = (tms.Addr + 1) & (tms.vramsize - 1);
+	tms.Addr = (tms.Addr + 1) & (tms.vramsize);
 	tms.ReadAhead = data;
 	tms.latch = 0;
 }
@@ -310,19 +219,19 @@ void TMS9928AWriteRegs(INT32 data)
 {
 	if (tms.latch) {
 		/* set high part of read/write address */
-		tms.Addr = ((UINT16)data << 8 | (tms.Addr & 0xff)) & (tms.vramsize - 1);
+		tms.Addr = ((UINT16)data << 8 | (tms.Addr & 0xff)) & (tms.vramsize);
 		if (data & 0x80) {
 			change_register(data & 0x07, tms.FirstByte);
 		} else {
 			if (!(data & 0x40)) {
-				TMS9928AReadVRAM();
+				TMS9928AReadVRAM(&tms);
 			}
 		}
 
 		tms.latch = 0;
 	} else {
 		/* set low part of read/write address */
-		tms.Addr = ((tms.Addr & 0xff00) | data) & (tms.vramsize - 1);
+		tms.Addr = ((tms.Addr & 0xff00) | data) & (tms.vramsize);
 		tms.FirstByte = data;
 		tms.latch = 1;
 	}
@@ -338,16 +247,15 @@ static inline UINT8 readvmem(INT32 vaddr)
 	return tms.vMem[vaddr];
 }
 
-static void draw_mode0(unsigned char *bitmap,unsigned char *vmem)
+static void draw_mode0(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmstmp, unsigned int *v)
 {
 //	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 0     ",16,150);
 	unsigned char *patternptr;
 	unsigned int tab[4];
-	unsigned char *vbt,*dirtycptr;
+	unsigned char *vbt;
 	unsigned int *dirtyptr;
 
-	dirtyptr=(unsigned char *)dirty;
-	dirtycptr=(unsigned char *)dirtyc;
+	dirtyptr=(unsigned char *)tms.dirty;
 
 	for (unsigned int y = 0; y < 24; y++)
 	{
@@ -362,10 +270,9 @@ static void draw_mode0(unsigned char *bitmap,unsigned char *vmem)
 			{
 				unsigned int pattern = *patternptr++;
 
-				if(*dirtyptr!=pattern || *dirtycptr!=colour)
+				if(*dirtyptr!=(pattern | colour << 8))
 				{
-					*dirtyptr=pattern;
-					*dirtycptr=colour;
+					*dirtyptr=(pattern | colour << 8);
 
 					vbt = (unsigned char *)&bitmap[(y * 8 + yy) * 128 + (x*4)];
 
@@ -388,13 +295,12 @@ static void draw_mode0(unsigned char *bitmap,unsigned char *vmem)
 						vbt[0] = vbt[1] = vbt[2] = vbt[3] = *tab;
 				}
 				++dirtyptr;
-				++dirtycptr;
 			}
 		}
 	}
 }
 
-static void draw_mode1(unsigned char *bitmap,unsigned char *vmem)
+static void draw_mode1(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmstmp, unsigned int *v)
 {
 	int pattern,x,y,yy,xx,name,charcode;
 	unsigned char fg,bg,*patternptr;
@@ -428,7 +334,7 @@ static void draw_mode1(unsigned char *bitmap,unsigned char *vmem)
     }
 }
 
-static void draw_mode12(unsigned char *bitmap,unsigned char *vmem)
+static void draw_mode12(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmstmp, unsigned int *v)
 {
 	int pattern,x,y,yy,xx,name,charcode;
 	unsigned char fg,bg,*patternptr;
@@ -461,160 +367,51 @@ static void draw_mode12(unsigned char *bitmap,unsigned char *vmem)
     }
 }
 
-
-
-static void draw_mode2(unsigned char *bitmap,unsigned char *vmem)
+static void draw_mode2(unsigned short *bitmap,unsigned char *vmem, TMS9928A *tms, unsigned int *color_2bpp_lut)
 {
-    unsigned int colour,x,y,yy,pattern,xx,charcode;
-    unsigned char *colourptr,*patternptr;
-#ifndef USE_LUT
-	unsigned int fg,bg;
-	unsigned int tab[4];
-#else
-	unsigned int *tab;
-#endif
-	unsigned char *vbt,*dirtycptr;
-	unsigned int *dirtyptr;
-	dirtyptr=(unsigned int *)dirty;
-	dirtycptr=(unsigned char *)dirtyc;
+	unsigned int *dirtyptr    = (unsigned int *)tms->dirty;
 
-    for (y=0;y<24;y++) 
+	for (unsigned int y=0;y<24;y++) 
 	{
-//		unsigned int y8=(y/8)*256;
-        for (x=0;x<128;x+=4) 
+		unsigned int val = ((y >> 3)<<8);
+
+		for (unsigned int x=0;x<32;x++) 
 		{
-            charcode = (*vmem++)+(y/8)*256;
-//			if(charcode_dirty[x][y]!=charcode|| tms_dirty)
+			unsigned int charcode     = (*vmem++)+val;
+			unsigned short pattern    = (charcode&tms->patternmask)<<3;
+			unsigned short colour     = (charcode&tms->colourmask)<<3;
+			unsigned short *vbt		  = bitmap + (x<<1);
+			unsigned char *patternptr = tms->vMem+tms->pattern+colour;
+			unsigned char *colourptr  = tms->vMem+tms->colour+pattern;
+
+//			unsigned int *vbt = (unsigned int *)bitmap + x;
+
+			for (unsigned int yy=0;yy<8;yy++) 
 			{
-				colour =  (charcode&tms.colourmask);
-				pattern = (charcode&tms.patternmask);
-				patternptr = tms.vMem+tms.pattern+colour*8;
-				colourptr = tms.vMem+tms.colour+pattern*8;
+				colour  = *colourptr++;
+				pattern = *patternptr++;
 
-				for (yy=0;yy<8;yy++) 
+				if(*dirtyptr!=(pattern | colour<<8))
 				{
-					pattern = *patternptr++;
-					colour = *colourptr++;
+// MartinMan : maybe you can combine the two dirty memories into one, and then only do one comparison? (*dirtyboth != (pattern | colour << 8)) 
+					*dirtyptr=(pattern | colour<<8);
 
-					if(*dirtyptr!=pattern || *dirtycptr!=colour)
-					{
-						*dirtyptr=pattern;
-						*dirtycptr=colour;
-
-						vbt = (unsigned char *)&bitmap[(y * 8 + yy) * 128 + x];
-
-#ifndef USE_LUT
-						bg = colour & 15;
-						tab[0]=bg|bg<<4;
-#else
-						tab = &color_2bpp_lut[colour<<2];
-#endif
-
-	 					if(pattern!=0)
-						{
-#ifndef USE_LUT
-							fg = colour /16;
-							tab[1] = fg|(*tab&0xf0);
-							tab[2] = colour;
-							tab[3] = fg|(colour&0xf0);
-#endif
-							vbt[0] = tab[(pattern>>6)&3]; 
-							vbt[1] = tab[(pattern>>4)&3]; 
-							vbt[2] = tab[(pattern>>2)&3]; 
-							vbt[3] = tab[(pattern)&3];
-						}
-						else
-						{
-							vbt[0] = vbt[1] = vbt[2] = vbt[3] = *tab;
-						}
-					}
-					++dirtyptr;
-					++dirtycptr;
-				}
+					unsigned int *tab = &color_2bpp_lut[colour<<2];
+//					*vbt = (tab[(pattern>>4)&3]|tab[(pattern>>6)&3]<<8)<<16|tab[(pattern)&3]|tab[(pattern>>2)&3]<<8;
+					vbt[1] = tab[(pattern)&3]|tab[(pattern>>2)&3]<<8;
+					pattern>>=4;
+					vbt[0] = tab[(pattern)&3]|tab[(pattern>>2)&3]<<8;
+				}				
+				++dirtyptr;
+				vbt+=64;
 			}
         }
-    }
-}
-
-static void draw_mode2_v1(unsigned char *bitmap,unsigned char *vmem)
-{
-    unsigned int colour,x,y,yy,pattern,xx,charcode;
-    unsigned char *colourptr,*patternptr;
-#ifndef USE_LUT
-	unsigned int fg,bg;
-	unsigned int tab[4];
-#else
-	unsigned int *tab;
-#endif
-	unsigned char *vbt,*dirtycptr;
-	unsigned int *dirtyptr;
-
-	dirtyptr=(unsigned int *)dirty;
-	dirtycptr=(unsigned char *)dirtyc;
-
-    for (y=0;y<24;y++) 
-	{
-//		unsigned int y8=(y/8)*256;
-        for (x=0;x<32;x++) 
-		{
-            charcode = (*vmem++)+(y/8)*256;
-//			if(charcode_dirty[x][y]!=charcode|| tms_dirty)
-			{
-				colour =  (charcode&tms.colourmask);
-				pattern = (charcode&tms.patternmask);
-				patternptr = tms.vMem+tms.pattern+colour*8;
-				colourptr = tms.vMem+tms.colour+pattern*8;
-
-				for (yy=0;yy<8;yy++) 
-				{
-
-					pattern = *patternptr++;
-					colour = *colourptr++;
-
-					if(*dirtyptr!=pattern || *dirtycptr!=colour)
-					{
-						*dirtyptr=pattern;
-						*dirtycptr=colour;
-						vbt = (unsigned char *)&bitmap[(y * 8 + yy) * 128 + (x*4)];
-
-#ifndef USE_LUT
-						bg = colour & 15;
-						tab[0]=bg|bg<<4;
-#else
-						
-#endif
-	 					if(pattern!=0)
-						{	  
-#ifndef USE_LUT
-							fg = colour /16;
-							tab[1] = fg|(*tab&0xf0);
-							tab[2] = colour;
-							tab[3] = fg|(colour&0xf0);
-#else
-							tab = &color_2bpp_lut[colour*4];
-#endif
-							vbt[0] = tab[(pattern>>6)&3]; 
-							vbt[1] = tab[(pattern>>4)&3]; 
-							vbt[2] = tab[(pattern>>2)&3]; 
-							vbt[3] = tab[(pattern)&3];
-						}
-						else
-#ifndef USE_LUT
-							vbt[0] = vbt[1] = vbt[2] = vbt[3] = *tab;
-#else
-							vbt[0] = vbt[1] = vbt[2] = vbt[3] = color_2bpp_lut[colour*4];
-#endif
-					}
-					++dirtyptr;
-					++dirtycptr;
-				}
-			}
-        }
+		bitmap+=512;
     }
 }
 
 
-static void draw_mode3(unsigned char *bitmap,unsigned char *vmem)
+static void draw_mode3(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmstmp, unsigned int *v)
 {
     int x,y,yy,yyy,name,charcode;
     unsigned char fg,bg,*patternptr;
@@ -646,7 +443,7 @@ static void draw_mode3(unsigned char *bitmap,unsigned char *vmem)
     }
 }
 
-static void draw_mode23(unsigned char *bitmap,unsigned char *vmem)
+static void draw_mode23(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmstmp, unsigned int *v)
 {
     int x,y,yy,yyy,name,charcode;
     unsigned char fg,bg,*patternptr;
@@ -679,7 +476,7 @@ static void draw_mode23(unsigned char *bitmap,unsigned char *vmem)
     }
 }
 
-static void draw_modebogus(unsigned char *bitmap,unsigned char *vmem)
+static void draw_modebogus(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmstmp)
 {
     unsigned char fg,bg;
     int x,y,n,xx;
@@ -701,22 +498,18 @@ static void draw_modebogus(unsigned char *bitmap,unsigned char *vmem)
     }
 }
 
-static void (*const ModeHandlers[])(unsigned char *bitmap,unsigned char *vmem) = {
+static void (*const ModeHandlers[])(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tms, unsigned int *color_lut) = {
         draw_mode0, draw_mode1, draw_mode2,  draw_mode12,
         draw_mode3, draw_modebogus, draw_mode23,
         draw_modebogus
 };
 
-void draw_sprites(unsigned char *attributeptr,unsigned char *spritepatternptr, SprSpCmd *ss_spritePtr,unsigned int size)
+static void draw_sprites(unsigned char *attributeptr,unsigned char *spritepatternptr, SprSpCmd *ss_spritePtr,unsigned int size)
 {
-	unsigned char *patternptr,c,yy,xx;
 	short x,y;
-	unsigned short line;
 	tms.StatusReg = 0x80;
 
 	unsigned char *ss_vram = (unsigned char *)SS_SPRAM+0x1100;
-	unsigned char tab[4];
-	tab[0]=0x00;
 
     for (unsigned char p=0;p<32;p++) 
 	{
@@ -725,10 +518,9 @@ void draw_sprites(unsigned char *attributeptr,unsigned char *spritepatternptr, S
 		{
 			for (;p<32;++p) 
 			{
-			ss_spritePtr->charSize   = 0;
-			ss_spritePtr->ax			= 0;
-			ss_spritePtr->ay			= 0;
-			ss_spritePtr->control		= 0;
+			ss_spritePtr->charSize  = 0;
+			ss_spritePtr->ax		= 0;
+			ss_spritePtr->ay		= 0;
 			++ss_spritePtr;
 			}
 			break;
@@ -744,80 +536,79 @@ void draw_sprites(unsigned char *attributeptr,unsigned char *spritepatternptr, S
 		if (y <0) 
 		{
 			ss_spritePtr->charSize	= 0;
-			ss_spritePtr->ax			= 0;
-			ss_spritePtr->ay			= 0;
-			ss_spritePtr->control		= 0;
+			ss_spritePtr->ax		= 0;
+			ss_spritePtr->ay		= 0;
 			++ss_spritePtr;
 			attributeptr+=3;
 			continue;
 		}	  
 		x = *attributeptr++;
-        patternptr = spritepatternptr+ ((size == 16) ? *attributeptr & 0xfc : *attributeptr) * 8;
+        unsigned char *patternptr = spritepatternptr+ ((size == 16) ? *attributeptr & 0xfc : *attributeptr) * 8;
         ++attributeptr;
-        c = (*attributeptr& 0x0f);
+
+        unsigned char c = (*attributeptr& 0x0f);
         if (*attributeptr & 0x80) x -= 32;
         ++attributeptr;
 
 		ss_spritePtr->ax				= x;
 		ss_spritePtr->ay				= y;
-//		ss_spritePtr->color			= c;
 //		if(*dirtysptr!=&patternptr[0])
 		{
 //			*dirtysptr = &patternptr[0];
 
 			ss_spritePtr->charSize		= (size==8)? 0x108:0x210;
 			ss_spritePtr->drawMode	= ( COLOR_0| ECD_DISABLE | COMPO_REP);
-			ss_spritePtr->control			= (JUMP_NEXT | FUNC_NORMALSP);
+			ss_spritePtr->control		= 0;
 			ss_spritePtr->charAddr		= 0x220+(p<<4);
 			++ss_spritePtr;
 
-			tab[1]=c;
-			tab[2]=(c<<4);
-			tab[3]=c|tab[2];
+			unsigned int *tab = &tms.color_2bpp_lut[c<<6];
+			unsigned char *vbt = (unsigned char *)&ss_vram[(p<<7)];
+
 			/* draw sprite (not enlarged) */
-			for (yy=0;yy<size;yy++) 
+			for (unsigned char yy=0;yy<size;yy++) 
 			{
-				line = (patternptr[yy]<<8)| + patternptr[yy+16];
+				unsigned short line = (patternptr[0]<<8)| + patternptr[16];
 
 				if(line!=0)
 				{
-					unsigned char *vbt = (unsigned char *)&ss_vram[(yy*(size>>1))+(p<<7)];
-
-					vbt[0]=tab[(line>>14)&3];
-					vbt[1]=tab[(line>>12)&3];
-					vbt[2]=tab[(line>>10)&3];
-					vbt[3]=tab[(line>>8)&3];
 					if(size>8)
 					{
 						vbt[4]=tab[(line>>6)&3];
 						vbt[5]=tab[(line>>4)&3];
 						vbt[6]=tab[(line>>2)&3];
-						vbt[7]=tab[(line>>0)&3];
+						vbt[7]=tab[(line)&3];
 					}
+					line>>=8;
+					vbt[2]=tab[(line>>2)&3];
+					vbt[3]=tab[(line)&3];
+					line>>=4;
+					vbt[0]=tab[(line>>2)&3];
+					vbt[1]=tab[(line)&3];
+
 				}
 				else
 				{
-					unsigned int *vbt = (unsigned int *)&ss_vram[(yy*(size>>1))+(p<<7)];
-					vbt[0]=vbt[1]=0;
+					vbt[0]=vbt[1]=vbt[2]=vbt[3]=0;
+					if(size>8)
+					{
+						vbt[4]=vbt[5]=vbt[6]=vbt[7]=0;
+					}
 				}
+				vbt+=size>>1;
+				++patternptr;
 			} 
 		}
-//		++dirtysptr;
 	}
 	tms.StatusReg |= 0x40;
 }
 
-
-void draw_sprites_large(unsigned char *attributeptr,unsigned char *spritepatternptr, SprSpCmd *ss_spritePtr,unsigned int size)
+static void draw_sprites_large(unsigned char *attributeptr,unsigned char *spritepatternptr, SprSpCmd *ss_spritePtr,unsigned int size)
 {
-	unsigned char *patternptr,c,yy,xx;
 	short x,y;
-	unsigned short line;
 	tms.StatusReg = 0x80;
 
 	unsigned char *ss_vram = (unsigned char *)SS_SPRAM+0x1100;
-	unsigned char tab[4];
-	tab[0]=0x00;
 
     for (unsigned char p=0;p<32;p++) 
 	{
@@ -826,8 +617,7 @@ void draw_sprites_large(unsigned char *attributeptr,unsigned char *spritepattern
 		{
 			for (;p<32;++p) 
 			{
-			ss_spritePtr->charSize   = 0;
-			ss_spritePtr->control		= 0;
+			ss_spritePtr->charSize  = 0;
 			++ss_spritePtr;
 			}
 			break;
@@ -843,30 +633,24 @@ void draw_sprites_large(unsigned char *attributeptr,unsigned char *spritepattern
 		if (y <0) 
 		{
 			ss_spritePtr->charSize	= 0;
-			ss_spritePtr->ax			= 0;
-			ss_spritePtr->ay			= 0;
-			ss_spritePtr->charAddr	= 0;
-			ss_spritePtr->control		= 0;
+			ss_spritePtr->ax		= 0;
+			ss_spritePtr->ay		= 0;
 			++ss_spritePtr;
 			attributeptr+=3;
 			continue;
 		}	  
 		x = *attributeptr++;
-        patternptr = spritepatternptr+ ((size == 16) ? *attributeptr & 0xfc : *attributeptr) * 8;
+        unsigned char *patternptr = spritepatternptr+ ((size == 16) ? *attributeptr & 0xfc : *attributeptr) * 8;
         ++attributeptr;
-        c = (*attributeptr& 0x0f);
+        unsigned char c = (*attributeptr& 0x0f);
         if (*attributeptr & 0x80) x -= 32;
         ++attributeptr;
 
 		ss_spritePtr->ax				= x;
 		ss_spritePtr->ay				= y;
-//		ss_spritePtr->bx				= x+size*2;
-//		ss_spritePtr->by				= y+size*2;
-		ss_spritePtr->cx				= x+size*2;
-		ss_spritePtr->cy				= y+size*2;	 
+		ss_spritePtr->cx				= x+(size<<1);
+		ss_spritePtr->cy				= y+(size<<1);	 
 		ss_spritePtr->control			= (JUMP_NEXT | ZOOM_NOPOINT | FUNC_SCALESP);
-//		ss_spritePtr->color			= c;
-//		if(*dirtysptr!=&patternptr[0])
 		{
 //			*dirtysptr = &patternptr[0];
 
@@ -875,38 +659,42 @@ void draw_sprites_large(unsigned char *attributeptr,unsigned char *spritepattern
 			ss_spritePtr->charAddr		= 0x220+(p<<4);
 			++ss_spritePtr;
 
-			tab[1]=c;
-			tab[2]=(c<<4);
-			tab[3]=c|tab[2];
-			/* draw sprite (not enlarged) */
-			for (yy=0;yy<size;yy++) 
+			unsigned int *tab = &tms.color_2bpp_lut[c<<6];
+			unsigned char *vbt = (unsigned char *)&ss_vram[(p<<7)];
+
+			/* draw sprite (enlarged) */
+			for (unsigned char yy=0;yy<size;yy++) 
 			{
-				line = (patternptr[yy]<<8)| + patternptr[yy+16];
+				unsigned short line = (patternptr[0]<<8)| + patternptr[16];
 
 				if(line!=0)
 				{
-					unsigned char *vbt = (unsigned char *)&ss_vram[(yy*(size>>1))+(p<<7)];
-
-					vbt[0]=tab[(line>>14)&3];
-					vbt[1]=tab[(line>>12)&3];
-					vbt[2]=tab[(line>>10)&3];
-					vbt[3]=tab[(line>>8)&3];
 					if(size>8)
 					{
 						vbt[4]=tab[(line>>6)&3];
 						vbt[5]=tab[(line>>4)&3];
 						vbt[6]=tab[(line>>2)&3];
-						vbt[7]=tab[(line>>0)&3];
+						vbt[7]=tab[(line)&3];
 					}
+					line>>=8;
+					vbt[2]=tab[(line>>2)&3];
+					vbt[3]=tab[(line)&3];
+					line>>=4;
+					vbt[0]=tab[(line>>2)&3];
+					vbt[1]=tab[(line)&3];
 				}
 				else
 				{
-					unsigned int *vbt = (unsigned int *)&ss_vram[(yy*(size>>1))+(p<<7)];
-					vbt[0]=vbt[1]=0;
+					vbt[0]=vbt[1]=vbt[2]=vbt[3]=0;
+					if(size>8)
+					{
+						vbt[4]=vbt[5]=vbt[6]=vbt[7]=0;
+					}
 				}
+				vbt+=size>>1;
+				++patternptr;
 			} 
 		}
-//		++dirtysptr;
 	}
 	tms.StatusReg |= 0x40;
 }
@@ -1256,40 +1044,14 @@ void TMS9928AScanline(INT32 vpos)
 	}
 }
 
-INT32 TMS9928ADrawMSX()
+void TMS9928ADraw()
 {
-//	TMS89928aPaletteRecalc();
-	UINT16 BackColour = tms.Regs[7] & 0xf;
-	*(unsigned short *)0x25E00000=colAddr[BackColour];
-/*
-	{
-		for (INT32 y = 0; y < nScreenHeight; y++)
-		{
-			for (INT32 x = 0; x < nScreenWidth; x++)
-			{
-				pTransDraw[y * nScreenWidth + x] = tms.tmpbmp[y * TMS9928A_TOTAL_HORZ + ((TMS9928A_HORZ_DISPLAY_START/2)+10)+x];
-			}
-		}
-	}
-
-	BurnTransferCopy(Palette);
-*/
-	return 0;
-}
-
-INT32 TMS9928ADraw()
-{
-	int BackColour = tms.Regs[7] & 15;
-
-	if (!BackColour) BackColour=1;
-
-	*(unsigned short *)0x25E00000=colAddr[BackColour];
-
 	if ((tms.Regs[1] & 0x40))
 	{
-		int mode = ((((tms.model == TMS99x8A) || (tms.model == TMS9929A)) ? (tms.Regs[0] & 2) : 0) | ((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
+		unsigned int mode = ( (tms.Regs[0] & 2) | ((tms.Regs[1] & 0x10)>>4) | ((tms.Regs[1] & 8)>>1));
 
-		(*ModeHandlers[mode])(tms.tmpbmp,&tms.vMem[tms.nametbl]);
+		(*ModeHandlers[mode])(tms.tmpbmp,&tms.vMem[tms.nametbl],&tms,tms.color_2bpp_lut);
+//		draw_mode2(tms.tmpbmp,&tms.vMem[tms.nametbl],&tms,tms.color_2bpp_lut);
 
 		if ((tms.Regs[1] & 0x50) == 0x40)
 		{
@@ -1300,15 +1062,14 @@ INT32 TMS9928ADraw()
 					draw_sprites((unsigned char *)tms.vMem + tms.spriteattribute,(unsigned char *)tms.vMem + tms.spritepattern,&ss_sprite[4],size);
 			else
 					draw_sprites_large((unsigned char *)tms.vMem + tms.spriteattribute,(unsigned char *)tms.vMem + tms.spritepattern,&ss_sprite[4],size);
-		}
+
+// a enlever
+//	tms.StatusReg |= 0x40;
+		} 
 	}
-
-//	BurnTransferCopy(Palette);
-
-	return 0;
 }
 
-int TMS9928AInterrupt()
+void TMS9928AInterrupt()
 {
 	int  b = (tms.Regs[1] & 0x20) != 0;
 
@@ -1318,6 +1079,4 @@ int TMS9928AInterrupt()
 		tms.INT = b;
 		if (tms.INTCallback) tms.INTCallback (tms.INT);
 	}
-
-	return b;
 }

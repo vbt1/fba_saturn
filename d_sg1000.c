@@ -256,7 +256,7 @@ static UINT8 __fastcall sg1000_read_port(unsigned short port)
 	switch (port & 0xff)
 	{
 		case 0xbe:
-			return TMS9928AReadVRAM();
+			return SG_TMS9928AReadVRAM();
 
 		case 0xbf:
 			return TMS9928AReadRegs();

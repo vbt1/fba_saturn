@@ -14,15 +14,15 @@
 //#include "dac.h"
 #include "snd/ay8910.h"
 
-#define nBurnSoundLen 128
+#define nBurnSoundLen 128  // div par 2 car utilisation integer
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
-static int DrvFrame();
+static void DrvFrame();
 static int DrvExit();
 static INT32 BasicDrvInit();
 static int DrvInit();
-static INT32 DrvDoReset();
+static void DrvDoReset();
 static void DrvInitSaturn();
 
 extern int file_id;
@@ -54,7 +54,9 @@ typedef	struct	SysDevice	{
 	UINT8	data[1];
 } SysDevice;
 
-static INT16 *pAY8910Buffer[6];
+//static INT16 *pAY8910Buffer[3];
+static UINT16 *SCCMixerBuffer	= NULL;
+static UINT16 *SCCMixerTable	= NULL;
 
 static UINT8 *CZ80Context = NULL;
 static UINT8 *AllMem	= NULL;
@@ -68,8 +70,10 @@ static UINT8 *main_mem	= NULL;
 static UINT8 *kanji_rom = NULL;
 static UINT8 *game_sram = NULL;
 
+#ifdef CASSETTE
 static UINT8 *curtape   = NULL; // pointer(only) to currently inserted tape.
 static INT32 curtapelen = 0;
+#endif
 
 static UINT8 use_kanji     = 0;
 static UINT8 msx_basicmode = 0;
@@ -209,7 +213,7 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 #define MAXMAPPERS  9
 
 //#define MAX_MSX_CARTSIZE 0x200000
-#define MAX_MSX_CARTSIZE 0x80000
+#define MAX_MSX_CARTSIZE 0x100000
 
 // Machine Config
 #define DEFAULT_BIOSSLOT 0
@@ -229,13 +233,13 @@ static INT32 VBlankKludge = 0; // For VoidRunner (joystick selection hangs)
 static INT32 SwapRamslot = 0; // For Toshiba-EMI's Break Out!
 static INT32 SwapButton2 = 0; // Swaps Joy button#2 with 'm', for Xenon and Astro Marine Corps
 static INT32 SwapSlash = 0; // For Square Dancer, swaps the / key with the Japanese Underscore key
-
+#ifdef CASSETTE
 static INT32 CASMode = 0;      // Using .cas file?
 static INT32 CASPos = 0;       // Internal tape position counter
 static INT32 CASFrameCounter = 0; // for autoloading
 static INT32 CASSide = 0; // Tape Side, 0 = A, 1 = B
 static INT32 CASSideLast = 0; // used for detecting side changes
-
+#endif
 static INT32 BIOSSLOT = 0;      // Machine slot configuration
 static INT32 CARTSLOTA = 0;
 static INT32 CARTSLOTB = 0;
@@ -352,6 +356,7 @@ static struct BurnRomInfo MSX_1942RomDesc[] = {
 	{ "1942.rom",	0x20000, 0xa27787af, BRF_PRG | BRF_ESS },
     { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios
     { "msxj.rom",    0x8000, 0x071135e0, BRF_BIOS | BRF_OPT }, // 0x81 - japanese bios
+    { "kanji.rom",   0x40000, 0x1f6406fb, BRF_BIOS | BRF_OPT }, // 0x82 - kanji support
 };
 STD_ROM_PICK(MSX_1942)
 STD_ROM_FN(MSX_1942)

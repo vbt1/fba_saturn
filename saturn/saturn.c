@@ -1186,7 +1186,7 @@ static PcmHn createHandle(PcmCreatePara *para)
 #ifdef _30_HZ
 	PCM_NotifyWriteSize(pcm, SOUNDRATE*2*QUAL);
 #else
-	PCM_NotifyWriteSize(pcm, RING_BUF_SIZE);//SOUNDRATE*2);
+//	PCM_NotifyWriteSize(pcm, RING_BUF_SIZE);//SOUNDRATE*2); // vbt ? revoir !!!!
 #endif
 	return pcm;
 }
@@ -1893,8 +1893,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 		else
