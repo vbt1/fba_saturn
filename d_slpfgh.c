@@ -49,7 +49,7 @@ static INT32 MemIndex()
 	TigerHeliTileRAM	= Next; Next += 0x001000;
 //	Ram03					= Next; Next += 0x000080;
 	RamEnd				= Next;
-	pFMBuffer				= (INT16*)Next; Next += nBurnSoundLen * 6 * sizeof(INT16);
+//	pFMBuffer				= (INT16*)Next; Next += nBurnSoundLen * 6 * sizeof(INT16);
 	TigerHeliPaletteROM	= Next; Next += 0x000300;
 	TigerHeliPalette		= (UINT32*)Next; Next += 0x000100 * sizeof(UINT32);
 	map_offset_lut		= Next; Next += 0x800 * sizeof(UINT16);

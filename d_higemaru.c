@@ -126,7 +126,7 @@ static int MemIndex()
 //	Gfx1           = (unsigned char *)0x00208000;//Next; Next += 0x08000;
 
 	Prom           = Next; Next += 0x00300;
-	pFMBuffer      = (short*)Next; Next += (SOUND_LEN * 6 * sizeof(short));
+//	pFMBuffer      = (short*)Next; Next += (SOUND_LEN * 6 * sizeof(short));
 	MemEnd         = Next;
 
 	return 0;
@@ -257,9 +257,9 @@ static int DrvInit()
 	memset(Mem, 0, nLen);
 	MemIndex();
 
-	for (i = 0; i < 6; i++) {
-		pAY8910Buffer[i] = pFMBuffer + SOUND_LEN * i;
-	}
+//	for (i = 0; i < 6; i++) {
+//		pAY8910Buffer[i] = pFMBuffer + SOUND_LEN * i;
+//	}
 
 	{
 		for (i = 0; i < 4; i++) {
@@ -417,6 +417,7 @@ static void DrvInitSaturn()
 	make_lut();
 	memset(bg_dirtybuffer,1,1024);
 	initSprites(256+8-1,224-1,0,0,8,-16);
+	Set6PCM();
 	drawWindow(0,224,0,2,62); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -435,12 +436,19 @@ static int DrvExit()
 
 	AY8910Exit(0);
 	AY8910Exit(1);
+
+	for(int i=0;i<6;i++)
+	{
+		PCM_MeStop(pcm6[i]);
+		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+	}
+
 	MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
-	for (i = 0; i < 6; i++) {
-		pAY8910Buffer[i] = NULL;
-	}	
+//	for (i = 0; i < 6; i++) {
+//		pAY8910Buffer[i] = NULL;
+//	}	
 	
-	pFMBuffer = NULL;
+//	pFMBuffer = NULL;
 	free (Mem);
 	Mem = NULL;
 
@@ -495,24 +503,27 @@ static void DrvDrawBackground()
 			ss_map[x+1] =  code;
 		}
 	}
-	//DrvDrawSprites ();
+//	DrvDrawSprites ();
 // 	return 0;
 }
 
 
 static int DrvFrame()
 {
-	if (DrvReset) {
-		DrvDoReset();
-	}
-#ifdef CZ80
-	CZetRun(33333);
+//	if (DrvReset) {
+//		DrvDoReset();
+//	}
+  	SPR_RunSlaveSH((PARA_RTN*)DrvDrawBackground, NULL);
 
-	//CZetRaiseIrq(0xd7);
+#ifdef CZ80
+	
+	CZetRun(23333);
+
+	CZetRaiseIrq(0xd7);
 	CZetSetIRQLine(0xd7, 0);
-	CZetRun(33334);
+	CZetRun(23334);
 	CZetSetIRQLine(0xcf, 0);
-	//CZetRaiseIrq(0xcf);
+	CZetRaiseIrq(0xcf);
 
 #else
 #ifdef RAZE
@@ -529,46 +540,82 @@ static int DrvFrame()
 	//		z80_emulate(0);
 #endif
 #endif
-  	SPR_RunSlaveSH((PARA_RTN*)DrvDrawBackground, NULL);
 
-	int nSample;
-   signed short *nSoundBuffer = (signed short *)0x25a20000;
-
-	AY8910Update(0, &pAY8910Buffer[0], SOUND_LEN);
-	AY8910Update(1, &pAY8910Buffer[3], SOUND_LEN);
-	for (unsigned int n = 0; n < SOUND_LEN; n++) {
-		nSample  = pAY8910Buffer[0][n] >> 2;
-		nSample += pAY8910Buffer[1][n] >> 2;
-		nSample += pAY8910Buffer[2][n] >> 2;
-		nSample += pAY8910Buffer[3][n] >> 2;
-		nSample += pAY8910Buffer[4][n] >> 2;
-		nSample += pAY8910Buffer[5][n] >> 2;
-
-		if (nSample < -32768) {
-			nSample = -32768;
-		} else {
-			if (nSample > 32767) {
-				nSample = 32767;
-			}
-		}
-		nSoundBuffer[nSoundBufferPos + n] = nSample;//(nSample>>8);//&0xFF;//pAY8910Buffer[5][n];//nSample;
-	}
-
-//	SPR_RunSlaveSH((PARA_RTN*)DrvDrawBackground, NULL);
-	//cleanSprites();
+	updateSound();
 	DrvDrawSprites();
-//	DrvDrawBackground();
 
-	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
-
-//	if(nSoundBufferPos>=0x4800)
-	if(nSoundBufferPos>=RING_BUF_SIZE/2)
-	{
-		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-		PCM_Task(pcm); // bon emplacement
-		nSoundBufferPos=0;
-	} 
 	SPR_WaitEndSlaveSH();
 //	sc_check();
 	return 0;
 }
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void updateSound()
+{
+	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+nSoundBufferPos;
+
+	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
+	AY8910UpdateDirect(1, &nSoundBuffer1[0x6000], nBurnSoundLen);
+	nSoundBufferPos+=nBurnSoundLen;
+
+	if(nSoundBufferPos>=RING_BUF_SIZE>>1)
+	{
+		for (unsigned int i=0;i<6;i++)
+		{
+			PCM_NotifyWriteSize(pcm6[i], nSoundBufferPos);
+			PCM_Task(pcm6[i]); // bon emplacement
+		}
+		nSoundBufferPos=0;
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static PcmHn createHandle(PcmCreatePara *para)
+{
+	PcmHn pcm;
+
+	pcm = PCM_CreateMemHandle(para);
+	if (pcm == NULL) {
+		return NULL;
+	}
+	return pcm;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void Set6PCM()
+{
+	PcmCreatePara	para[6];
+	PcmInfo 		info[6];
+	PcmStatus	*st;
+	static PcmWork g_movie_work[6];
+
+	for (int i=0; i<6; i++)
+	{
+		PCM_PARA_WORK(&para[i]) = (struct PcmWork *)&g_movie_work[i];
+		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
+		PCM_PARA_RING_SIZE(&para[i]) = RING_BUF_SIZE;
+		PCM_PARA_PCM_ADDR(&para[i]) = PCM_ADDR+(0x4000*(i+1));
+		PCM_PARA_PCM_SIZE(&para[i]) = PCM_SIZE;
+
+		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
+		st = &g_movie_work[i].status;
+		st->need_ci = PCM_ON;
+	 
+		PCM_INFO_FILE_TYPE(&info[i]) = PCM_FILE_TYPE_NO_HEADER;			
+		PCM_INFO_DATA_TYPE(&info[i])=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+		PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+		PCM_INFO_CHANNEL(&info[i]) = 0x01;
+		PCM_INFO_SAMPLING_BIT(&info[i]) = 16;
+
+		PCM_INFO_SAMPLING_RATE(&info[i])	= SOUNDRATE;//30720L;//44100L;
+		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
+		pcm6[i] = createHandle(&para[i]);
+
+		PCM_SetPcmStreamNo(pcm6[i], i);
+
+		PCM_SetInfo(pcm6[i], &info[i]);
+		PCM_ChangePcmPara(pcm6[i]);
+
+		PCM_MeSetLoop(pcm6[i], 0x3FF);//SOUNDRATE*120);
+		PCM_Start(pcm6[i]);
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------

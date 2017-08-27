@@ -55,8 +55,8 @@ static UINT8 *TigerHeliSpriteBuf = NULL;
 static UINT8 *TigerHeliTextRAM = NULL;
 static UINT8 *CZ80Context = NULL;
 static UINT8 *TigerHeliPaletteROM = NULL;
-static INT16 *pFMBuffer = NULL;
-static INT16 *pAY8910Buffer[6];
+//static INT16 *pFMBuffer = NULL;
+//static INT16 *pAY8910Buffer[6];
 static UINT32 *TigerHeliPalette = NULL;
 
 static UINT16 *map_offset_lut = NULL;
