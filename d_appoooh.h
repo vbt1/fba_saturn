@@ -14,10 +14,16 @@ static INT32 DrvFrame();
 static INT32 DrvDraw();
 static void make_lut(void);
 static void DrvInitSaturn();
+static void Set1PCM();
 void dummy();
 
 #include "sn76496.h"
 //#include "msm5205.h"
+
+PcmHn 			pcm1;
+#define	PCM_ADDR	((void*)0x25a20000)
+#define	PCM_SIZE	(4096L*2)				/* 2.. */
+#define SOUNDRATE   7680L
 
 /*static*/ UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};

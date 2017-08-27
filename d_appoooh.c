@@ -899,6 +899,7 @@ static void DrvInitSaturn()
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	Set1PCM();
 	drawWindow(0,224,240,0,64);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -908,6 +909,9 @@ static INT32 DrvExit()
 	CZetExit2();
 
 	MSM5205Exit();
+
+	PCM_MeStop(pcm1);
+	memset(SOUND_BUFFER+0x4000,0x00,RING_BUF_SIZE*8);
 
 	MemEnd = AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
 	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvGfxROM0 = DrvGfxROM1 = NULL;
@@ -956,8 +960,10 @@ static INT32 DrvFrame()
 
 //	CZetOpen(0);
 
-	for (INT32 i = 0; i < nInterleave; i++) {
+	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos);
 
+	for (INT32 i = 0; i < nInterleave; i++) 
+	{
 //	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205Update, NULL);
 
 		CZetRun(cycles);
@@ -965,22 +971,19 @@ static INT32 DrvFrame()
 			CZetNmi();
 //		SPR_WaitEndSlaveSH();
 //	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205Update, NULL);
-		MSM5205Update();
+		MSM5205UpdateDirect(&nSoundBuffer[0x2000]);
 	}
-//	CZetClose();
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame     ",120,60);
 
 	DrvDraw();
 //	SPR_WaitEndSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 
-	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
 	SN76496Update(0, nSoundBuffer, SOUND_LEN);
 	SN76496Update(1, nSoundBuffer, SOUND_LEN);
 
 #if 1
 	SN76496Update(2, nSoundBuffer, SOUND_LEN);
-	MSM5205Render(0, nSoundBuffer, SOUND_LEN);
+//	MSM5205RenderDirect(0, &nSoundBuffer[0x2000], SOUND_LEN);
 #else
 	SN76496MSM5205Update(2, nSoundBuffer, SOUND_LEN);
 #endif
@@ -988,48 +991,58 @@ static INT32 DrvFrame()
 	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
 	{
 		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
+		PCM_NotifyWriteSize(pcm1, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
+		PCM_Task(pcm1);
 		nSoundBufferPos=0;
 	}
 	return 0;
 }
-/*
-static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
+//-------------------------------------------------------------------------------------------------------------------------------------
+static PcmHn createHandle(PcmCreatePara *para)
 {
-	struct BurnArea ba;
-	
-	if (pnMin != NULL) {
-		*pnMin = 0x029702;
+	PcmHn pcm;
+
+	pcm = PCM_CreateMemHandle(para);
+	if (pcm == NULL) {
+		return NULL;
 	}
-
-	if (nAction & ACB_MEMORY_RAM) {
-		memset(&ba, 0, sizeof(ba));
-		ba.Data	  = AllRam;
-		ba.nLen	  = RamEnd-AllRam;
-		ba.szName = "All Ram";
-		BurnAcb(&ba);
-	}
-
-	if (nAction & ACB_DRIVER_DATA) {
-
-		ZetScan(nAction);
-
-		SN76496Scan(nAction, pnMin);
-
-		MSM5205Scan(nAction, pnMin);
-
-		SCAN_VAR(priority);
-		SCAN_VAR(interrupt_enable);
-		SCAN_VAR(flipscreen);
-		SCAN_VAR(DrvZ80Bank0);
-		SCAN_VAR(scroll_x);
-		
-		if (nAction & ACB_WRITE) {
-			ZetOpen(0);
-			bankswitch(DrvZ80Bank0);
-			ZetClose();
-		}
-	}
-	return 0;
+	return pcm;
 }
-*/
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void Set1PCM()
+{
+	PcmCreatePara	para;
+	PcmInfo 		info;
+	PcmStatus	*st;
+	static PcmWork g_movie_work;
+
+	PCM_PARA_WORK(&para) = (struct PcmWork *)&g_movie_work;
+	PCM_PARA_RING_ADDR(&para) = (Sint8 *)PCM_ADDR+0x40000;
+	PCM_PARA_RING_SIZE(&para) = RING_BUF_SIZE;
+	PCM_PARA_PCM_ADDR(&para) = PCM_ADDR+0x4000;
+	PCM_PARA_PCM_SIZE(&para) = PCM_SIZE;
+
+	memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
+	st = &g_movie_work.status;
+	st->need_ci = PCM_ON;
+ 
+	PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+	PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+	PCM_INFO_FILE_SIZE(&info) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+	PCM_INFO_CHANNEL(&info) = 0x01;
+	PCM_INFO_SAMPLING_BIT(&info) = 16;
+
+	PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
+	PCM_INFO_SAMPLE_FILE(&info) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
+	pcm1 = createHandle(&para);
+
+	PCM_SetPcmStreamNo(pcm1, 1);
+
+	PCM_SetInfo(pcm1, &info);
+	PCM_ChangePcmPara(pcm1);
+
+	PCM_MeSetLoop(pcm1, 0x3FF);//SOUNDRATE*120);
+	PCM_Start(pcm1);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------

@@ -143,7 +143,49 @@ static void MSM5205_playmode(INT32 chip, INT32 select)
 
 	if(voice->streampos!=0)
 	{
-		INT16 *buffer = stream[chip];
+//		INT16 *buffer = stream[chip];
+		INT16 *buffer = &nSoundBuffer[0x2000*(chip+1)];
+		buffer += pos;
+		
+		if(voice->signal)
+		{
+			INT32 i = 0;
+
+			INT32 volval = (INT32)((voice->signal * 16) * voice->volume);
+			INT16 val = volval;
+			while (len)
+			{
+				buffer[i] = val;
+				len--; i++;
+			}
+		} else {
+			memset (buffer, 0, sizeof(INT16) * len);
+		}
+	}
+}
+
+/*static*/ void MSM5205StreamUpdateDirect(INT32 chip,INT16 *buffer)
+{
+	voice = &chips[chip];
+
+//	UINT32 len = voice->stream_sync((SOUND_LEN * hz) / 100);
+	UINT32 len = voice->stream_sync((SOUND_LEN * HZ));
+	if (len > (UINT32)SOUND_LEN) len = SOUND_LEN;
+	UINT32 pos = voice->streampos;
+
+	if (pos >= len) return;
+
+	len -= pos;
+	voice->streampos = pos + len;
+	
+	if (pos == 0) {
+		memset (stream[chip], 0, SOUND_LEN * sizeof(INT16));
+	}
+
+	if(voice->streampos!=0)
+	{
+//		INT16 *buffer = stream[chip];
+//		INT16 *buffer = &nSoundBuffer[0x2000*(chip+1)];
 		buffer += pos;
 		
 		if(voice->signal)
@@ -218,6 +260,23 @@ void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 	}
 }
 
+/*
+void MSM5205RenderDirect(INT32 chip, INT16 *buffer, INT32 len)
+{
+	voice = &chips[chip];
+	INT16 *source = stream[chip];
+	MSM5205StreamUpdate(chip);
+	voice->streampos = 0;
+	
+	for (UINT32 i = 0; i < len; i++) 
+	{
+//		int	Temp = buffer[0] + source[i];
+//		if (Temp > 32767) Temp = 32767;
+//		else {if (Temp < -32768) Temp = -32768;}
+		*buffer++ = *source++;
+	}
+}
+*/
 
 
 
@@ -362,6 +421,33 @@ void MSM5205PlaymodeWrite(INT32 chip, INT32 select)
 	voice = &chips[chip];
 	MSM5205_playmode(chip,select);
 }
+
+void MSM5205UpdateDirect(INT32 chip, signed short *buffer)
+{
+/*
+#if defined FBA_DEBUG
+//	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205Update called without init\n"));
+#endif
+*/
+//	for (INT32 chip = 0; chip < MAX_MSM5205; chip++)
+	{
+/*		voice = &chips[chip];
+
+		if (voice->prescaler) 
+		{
+			MSM5205_vclk_callback(chip);
+		} 
+		else */
+		{
+			if (stream[chip]) 
+			{
+				MSM5205StreamUpdateDirect(chip,buffer);
+			}
+		}
+	}
+}
+
+
 
 void MSM5205Update()
 {

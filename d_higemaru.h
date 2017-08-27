@@ -7,10 +7,10 @@
 #include "raze/raze.h"
 //#include "saturn/sc_saturn.h"
 
-#define nBurnSoundLen 160
+#define nBurnSoundLen 128
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
-/*static*/ unsigned char 	bg_dirtybuffer[2048];
+/*static*/// unsigned char 	bg_dirtybuffer[2048];
 UINT16 map_offset_lut[1024];
 /*static*/ unsigned char *Mem = NULL, *MemEnd = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
 /*static*/ //short *pAY8910Buffer[6], *pFMBuffer = NULL;

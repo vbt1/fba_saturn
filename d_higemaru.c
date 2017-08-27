@@ -415,8 +415,9 @@ static void DrvInitSaturn()
 	initPosition();
 	initColors();
 	make_lut();
-	memset(bg_dirtybuffer,1,1024);
+//	memset(bg_dirtybuffer,1,1024);
 	initSprites(256+8-1,224-1,0,0,8,-16);
+	PCM_MeStop(pcm);
 	Set6PCM();
 	drawWindow(0,224,0,2,62); 
 }
