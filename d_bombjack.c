@@ -1143,9 +1143,10 @@ void SoundUpdate2(INT32 *length2)
 //	if(deltaSlave>=RING_BUF_SIZE/2)
 	if(deltaSlave>=RING_BUF_SIZE/2)
 	{
+		PCM_NotifyWriteSize(pcm, deltaSlave);
+		PCM_Task(pcm); // bon emplacement
 //		deltaSlave=0;
 		deltaSlave=0;
-		PCM_Task(pcm); // bon emplacement
 	}
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 
@@ -1200,9 +1201,9 @@ void SoundUpdate(INT16* buffer, INT32 length)
 //	if(deltaSlave>=RING_BUF_SIZE/2)
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)
 	{
-//		deltaSlave=0;
-		nSoundBufferPos=0;
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
+		nSoundBufferPos=0;
 	}
 
 //	deltaSlave+=nBurnSoundLen;

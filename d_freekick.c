@@ -1096,6 +1096,7 @@ static INT32 DrvFrame()
 
 	if(nSoundBufferPos>=0x3C00)
 	{
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}

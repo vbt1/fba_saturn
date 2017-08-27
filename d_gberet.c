@@ -673,8 +673,9 @@ void renderSound(unsigned int *nSoundBufferPos)
 
 	if(nSoundBufferPos[0]>=RING_BUF_SIZE/2)//0x2400)
 	{
-		nSoundBufferPos[0]=0;
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos[0]);
 		PCM_Task(pcm); // bon emplacement
+		nSoundBufferPos[0]=0;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

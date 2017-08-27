@@ -388,7 +388,10 @@ static INT32 SMSFrame(void)
 			nSoundBufferPos+=128;//256; // DOIT etre deux fois la taille copiee
 
 			if(nSoundBufferPos>=SAMPLE)//256*hz)
+			{
+				PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 				nSoundBufferPos=0;
+			}
 			PCM_Task(pcm);
 		}
  #else

@@ -28,6 +28,11 @@ static void DrvInitSaturn();
 extern int file_id;
 extern int file_max;
 
+PcmHn 			pcm8[8];
+#define	PCM_ADDR	((void*)0x25a20000)
+#define	PCM_SIZE	(4096L*2)				/* 2.. */
+#define SOUNDRATE   7680L //
+
 typedef UINT16	trigger_t;
 
 static UINT16 pad_asign[]={

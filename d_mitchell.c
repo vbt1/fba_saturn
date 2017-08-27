@@ -1044,6 +1044,7 @@ static void dummy(void)
  		  
 			if(nSoundBufferPos>=RING_BUF_SIZE/2)
 			{
+				PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 				nSoundBufferPos=0;
 //				PCM_Task(pcm); // bon emplacement
 			}

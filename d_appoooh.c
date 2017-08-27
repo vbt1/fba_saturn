@@ -987,6 +987,7 @@ static INT32 DrvFrame()
 	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
 	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
 	{
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}

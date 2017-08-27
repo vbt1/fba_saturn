@@ -1701,14 +1701,6 @@ static INT32 NinjakunFrame()
 //	updateSound();
 	NinjakunDraw();
 	SPR_WaitEndSlaveSH();
-
-
-//PCM_Task(pcm);
-//	SPR_WaitEndSlaveSH();
-//	if (pBurnDraw) {
-		
-//	}
-
 	return 0;
 }
 
@@ -1899,8 +1891,9 @@ static void nova_draw_sprites(INT32 color_base)
 
 	if(deltaSlave>=RING_BUF_SIZE/2)
 	{
-		deltaSlave=0;
+		PCM_NotifyWriteSize(pcm, deltaSlave);
 		PCM_Task(pcm); // bon emplacement
+		deltaSlave=0;
 	}
 
 	deltaSlave+=SOUND_LEN;

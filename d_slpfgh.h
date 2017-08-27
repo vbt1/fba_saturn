@@ -16,6 +16,7 @@ static void make_lut(void);
 static INT32 tigerhInit();
 static INT32 tigerhExit();
 static INT32 tigerhFrame();
+static void Set6PCM();
 
 typedef int bool;
 static bool bInterruptEnable = 0;
@@ -60,6 +61,11 @@ static UINT32 *TigerHeliPalette = NULL;
 
 static UINT16 *map_offset_lut = NULL;
 static UINT16 *map_offset_lut2 = NULL;
+
+PcmHn 			pcm6[6];
+#define	PCM_ADDR	((void*)0x25a20000)
+#define	PCM_SIZE	(4096L*2)				/* 2.. */
+#define SOUNDRATE   7680L
 // ---------------------------------------------------------------------------
 // Inputs
 

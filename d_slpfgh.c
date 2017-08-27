@@ -737,6 +737,9 @@ static void initLayers()
 	}
 	ss_reg->n0_move_x = 16<<16;
 	ss_reg->n2_move_x = 4;
+
+	Set6PCM();
+
 	drawWindow(0,256,0,2,68);
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
@@ -748,6 +751,12 @@ static INT32 tigerhExit()
 	AY8910Exit(1);
 	AY8910Exit(0);
 
+	for(int i=0;i<6;i++)
+	{
+		PCM_MeStop(pcm6[i]);
+		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+	}
+
 // Deallocate all used memory
 	map_offset_lut = map_offset_lut2 = NULL;
 	CZ80Context = MemEnd = RamStart = RamEnd = NULL;
@@ -756,12 +765,6 @@ static INT32 tigerhExit()
 	Ram01 = RamShared = /*Ram03 =*/ NULL;
 	TigerHeliTileRAM = TigerHeliSpriteRAM = TigerHeliSpriteBuf = TigerHeliTextRAM = NULL;
 	TigerHeliPalette = NULL;
-
-	for (int i = 0; i < 6; i++) {
-		pAY8910Buffer[i] = NULL;
-	}
-//	free (pFMBuffer);
-	pFMBuffer = NULL;
 
 	free(Mem);
 	Mem = NULL;
@@ -937,13 +940,6 @@ static INT32 tigerhInit()
 		CZetClose();
 	}
 
-	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
-	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
-	pAY8910Buffer[2] = pFMBuffer + nBurnSoundLen * 2;
-	pAY8910Buffer[3] = pFMBuffer + nBurnSoundLen * 3;
-	pAY8910Buffer[4] = pFMBuffer + nBurnSoundLen * 4;
-	pAY8910Buffer[5] = pFMBuffer + nBurnSoundLen * 5;
-
 	AY8910Init(0, 1500000, nBurnSoundRate, &tigerhReadPort0, &tigerhReadPort1, NULL, NULL);
 	AY8910Init(1, 1500000, nBurnSoundRate, &tigerhReadPort2, &tigerhReadPort3, NULL, NULL);
 
@@ -1079,7 +1075,8 @@ static INT32 tigerhFrame()
 			TigerHeliBufferSprites();
 			bVBlank = true;
 
-			if (bInterruptEnable) {
+			if (bInterruptEnable) 
+			{
 				CZetSetIRQLine(0xff, CZET_IRQSTATUS_AUTO);
 			}
 		}
@@ -1100,48 +1097,26 @@ static INT32 tigerhFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 
-		if (bSoundCPUEnable) {
+		if (bSoundCPUEnable) 
+		{
 			CZetOpen(nCurrentCPU);
 
-			if ((i & nSoundNMIMask) == 0) {
-				if (bSoundNMIEnable) {
+			if ((i & nSoundNMIMask) == 0) 
+			{
+				if (bSoundNMIEnable) 
+				{
 					CZetNmi();
 				}
 			}
-// 	sprintf(tmp0,"cpu1run      ");
-
 			nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
 			CZetClose();
-		} else {
+		} 
+		else 
+		{
 			nCyclesDone[nCurrentCPU] += nCyclesSegment;
 		}
-
-		{
-			// Render sound segment
-//			if (pBurnSoundOut) 
-/*			{
-				INT32 nSegmentLength = nBurnSoundLen / nInterleave;
-//				INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-//				AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
-				nSoundBufferPos += nSegmentLength;
-			}*/
-		}
-
 	}
-
-	{
-		// Make sure the buffer is entirely filled.
-//		if (pBurnSoundOut) 
-/*		{
-			INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
-//			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			if (nSegmentLength) 
-			{
-//				AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
-			}
-		}*/
-	}
-	draw_sprites();
+//	draw_sprites();
 	INT32 scrollx = (((nTigerHeliTileXPosHi * 256) + nTigerHeliTileXPosLo)) & 0x1ff;
 	INT32 scrolly = (nTigerHeliTileYPosLo + 15) & 0xff;
 	ss_reg->n2_move_y = -scrollx-283;
@@ -1185,49 +1160,23 @@ static INT32 tigerhFrame()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void updateSound()
 {
-	int nSample;
-	int n;
-	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
-	signed short *nSoundBuffer = (signed short *)0x25a20000;
-	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+deltaSlave;
 
-//	soundLenSlave = nBurnSoundLen);
-	AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
-	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
-
-	for (n = 0; n < nBurnSoundLen; n++) 
-	{
-		nSample  = pAY8910Buffer[0][n]; // >> 2;
-		nSample += pAY8910Buffer[1][n]; // >> 2;
-		nSample += pAY8910Buffer[2][n]; // >> 2;
-		nSample += pAY8910Buffer[3][n]; // >> 2;
-		nSample += pAY8910Buffer[4][n]; // >> 2;
-		nSample += pAY8910Buffer[5][n]; // >> 2;
-
-		nSample /=4;
-
-		if (nSample < -32768) 
-		{
-			nSample = -32768;
-		} 
-		else 
-		{
-			if (nSample > 32767) 
-			{
-				nSample = 32767;
-			}
-		}
-		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
-	}
-
-	if(deltaSlave>=RING_BUF_SIZE/2)
-	{
-		deltaSlave=0;
-		PCM_Task(pcm); // bon emplacement
-	}
-
+	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
+	AY8910UpdateDirect(1, &nSoundBuffer1[0x6000], nBurnSoundLen);
 	deltaSlave+=nBurnSoundLen;
 
+	if(deltaSlave>=RING_BUF_SIZE>>1)
+	{
+		for (unsigned int i=0;i<6;i++)
+		{
+			PCM_NotifyWriteSize(pcm6[i], deltaSlave);
+			PCM_Task(pcm6[i]); // bon emplacement
+		}
+		deltaSlave=0;
+	}
+	draw_sprites();
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1257,6 +1206,56 @@ static void make_lut(void)
 		sx = (63-((i) & 0x3f))<<6;//% 32;
 		sy = ((i >> 6)) & 0x3f;
 		map_offset_lut[i] = ((sx) | sy)<<1;
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static PcmHn createHandle(PcmCreatePara *para)
+{
+	PcmHn pcm;
+
+	pcm = PCM_CreateMemHandle(para);
+	if (pcm == NULL) {
+		return NULL;
+	}
+	return pcm;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void Set6PCM()
+{
+	PcmCreatePara	para[6];
+	PcmInfo 		info[6];
+	PcmStatus	*st;
+	static PcmWork g_movie_work[6];
+
+	for (int i=0; i<6; i++)
+	{
+		PCM_PARA_WORK(&para[i]) = (struct PcmWork *)&g_movie_work[i];
+		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
+		PCM_PARA_RING_SIZE(&para[i]) = RING_BUF_SIZE;
+		PCM_PARA_PCM_ADDR(&para[i]) = PCM_ADDR+(0x4000*(i+1));
+		PCM_PARA_PCM_SIZE(&para[i]) = PCM_SIZE;
+
+		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
+		st = &g_movie_work[i].status;
+		st->need_ci = PCM_ON;
+	 
+		PCM_INFO_FILE_TYPE(&info[i]) = PCM_FILE_TYPE_NO_HEADER;			
+		PCM_INFO_DATA_TYPE(&info[i])=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+		PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+		PCM_INFO_CHANNEL(&info[i]) = 0x01;
+		PCM_INFO_SAMPLING_BIT(&info[i]) = 16;
+
+		PCM_INFO_SAMPLING_RATE(&info[i])	= SOUNDRATE;//30720L;//44100L;
+		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
+		pcm6[i] = createHandle(&para[i]);
+
+		PCM_SetPcmStreamNo(pcm6[i], i);
+
+		PCM_SetInfo(pcm6[i], &info[i]);
+		PCM_ChangePcmPara(pcm6[i]);
+
+		PCM_MeSetLoop(pcm6[i], 0x3FF);//SOUNDRATE*120);
+		PCM_Start(pcm6[i]);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

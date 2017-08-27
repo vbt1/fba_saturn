@@ -540,7 +540,6 @@ static void DrvInitSaturn()
 /*static*/ INT32 DrvBpExit()
 {
 //	InpExit();
-		//PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 #ifdef RAZE
 	z80_stop_emulating();
@@ -624,6 +623,7 @@ static void DrvInitSaturn()
 	if(nSoundBufferPos>=0x3C00)//RING_BUF_SIZE)
 //	if(nSoundBufferPos>=(2048L*10))
 	{
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}

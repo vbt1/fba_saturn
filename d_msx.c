@@ -41,11 +41,6 @@ static void __fastcall msx_write_port(UINT16 port, UINT8 data);
 
 static void updateSlaveSound();
 static void updateSlaveSoundSCC();
-
-PcmHn 			pcm8[8];
-#define	PCM_ADDR	((void*)0x25a20000)
-#define	PCM_SIZE	(4096L*2)				/* 2.. */
-#define SOUNDRATE   7680L //
 static void Set8PCM();
 
 #define INT_DIGITS 19
@@ -112,7 +107,7 @@ static void load_rom()
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"                       ",4,110);
 //	xx=0;
 //	yy=0;
-	PCM_MeStop(pcm);
+//	PCM_MeStop(pcm);
 	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
 
 	for(int i=0;i<8;i++)
@@ -195,8 +190,7 @@ static void load_rom()
 
 		if((pltriggerE[0] & PER_DGT_S)!=0)
 		{
-stop=1;
-//			z80_stop_emulating();
+			stop=1;
 			SPR_InitSlaveSH();
 //			TMS9928AExit();
 //			TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt);
@@ -2269,7 +2263,7 @@ static INT32 DrvExit()
 	for(int i=0;i<8;i++)
 	{
 		PCM_MeStop(pcm8[i]);
-		memset(SOUND_BUFFER+(0x8000*(i+1)),0x00,RING_BUF_SIZE*8);
+		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
 
 	TMS9928AExit();
@@ -2553,7 +2547,7 @@ static void Set8PCM()
 	for (int i=0; i<8; i++)
 	{
 		PCM_PARA_WORK(&para[i]) = (struct PcmWork *)&g_movie_work[i];
-		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)SOUND_BUFFER+(0x4000*(i+1));
+		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
 		PCM_PARA_RING_SIZE(&para[i]) = RING_BUF_SIZE;
 		PCM_PARA_PCM_ADDR(&para[i]) = PCM_ADDR+(0x4000*(i+1));
 		PCM_PARA_PCM_SIZE(&para[i]) = PCM_SIZE;

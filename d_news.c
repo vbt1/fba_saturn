@@ -536,8 +536,9 @@ int ovlInit(char *szShortName)
 
 	if(nSoundBufferPos>0x1B00)
 	{
-		nSoundBufferPos=0;
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
+		nSoundBufferPos=0;
 	}
 	SPR_WaitEndSlaveSH();  
 

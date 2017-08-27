@@ -893,6 +893,7 @@ static INT32 DrvFrame()
      DrvDrawPacMan();
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
 	{
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm);
 		nSoundBufferPos=0;
 	}

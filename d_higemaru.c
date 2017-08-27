@@ -564,8 +564,9 @@ static int DrvFrame()
 //	if(nSoundBufferPos>=0x4800)
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)
 	{
-		nSoundBufferPos=0;
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
+		nSoundBufferPos=0;
 	} 
 	SPR_WaitEndSlaveSH();
 //	sc_check();

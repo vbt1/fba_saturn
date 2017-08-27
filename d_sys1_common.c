@@ -1274,6 +1274,7 @@ int System1Frame()
 
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
 	{
+  		PCM_NotifyWriteSize(pcm, nSoundBufferPos);		
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);

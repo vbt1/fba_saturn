@@ -1026,9 +1026,10 @@ static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta, UIN
 	if(deltaSlave>=RING_BUF_SIZE/2)
 //	if(nSoundBufferPos>=RING_BUF_SIZE/2)
 	{
+		PCM_NotifyWriteSize(pcm, deltaSlave);
+		PCM_Task(pcm); // bon emplacement
 		deltaSlave=0;
 //		nSoundBufferPos = 0;
-		PCM_Task(pcm); // bon emplacement
 	}
 
 	deltaSlave+=nBurnSoundLen;
