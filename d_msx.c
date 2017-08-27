@@ -495,6 +495,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 
 	if (PSlot >= MAXSLOTS) return;
 //#ifndef RAZE
+//#ifndef RAZE
 #ifndef RAZE
 	if (!ROMData[PSlot] && (address == 0x9000))
 		SCCReg[PSlot] = (data == 0x3f) ? 1 : 0;
@@ -2397,7 +2398,7 @@ static void DrvFrame()
 static void updateSlaveSound()
 {
 	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a28000+deltaSlave;
+	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+deltaSlave;
 
 	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
 	deltaSlave+=nBurnSoundLen;
@@ -2421,11 +2422,11 @@ static void updateSlaveSound()
 static void updateSlaveSoundSCC()
 {
 	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a28000+deltaSlave;
+	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+deltaSlave;
 
 	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
 #ifdef K051649 
-	K051649UpdateDirect(&nSoundBuffer1[0x18000], nBurnSoundLen);
+	K051649UpdateDirect(&nSoundBuffer1[0x6000], nBurnSoundLen);
 #endif
 	deltaSlave+=nBurnSoundLen;
 
@@ -2552,9 +2553,9 @@ static void Set8PCM()
 	for (int i=0; i<8; i++)
 	{
 		PCM_PARA_WORK(&para[i]) = (struct PcmWork *)&g_movie_work[i];
-		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)SOUND_BUFFER+(0x8000*(i+1));
+		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)SOUND_BUFFER+(0x4000*(i+1));
 		PCM_PARA_RING_SIZE(&para[i]) = RING_BUF_SIZE;
-		PCM_PARA_PCM_ADDR(&para[i]) = PCM_ADDR+(0x8000*(i+1));
+		PCM_PARA_PCM_ADDR(&para[i]) = PCM_ADDR+(0x4000*(i+1));
 		PCM_PARA_PCM_SIZE(&para[i]) = PCM_SIZE;
 
 		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
@@ -2571,7 +2572,7 @@ static void Set8PCM()
 		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
 		pcm8[i] = createHandle(&para[i]);
 
-		PCM_SetPcmStreamNo(pcm8[i], i+1);
+		PCM_SetPcmStreamNo(pcm8[i], i);
 
 		PCM_SetInfo(pcm8[i], &info[i]);
 		PCM_ChangePcmPara(pcm8[i]);

@@ -84,85 +84,6 @@ static void make_mixer_table(INT32 voices, INT16 *SCCMixerTable)
 	}
 }
 
-
-/* generate sound to the mix buffer */
-void K051649Update(INT16 *pBuf, INT32 samples)
-{
-//#if defined FBA_DEBUG
-//	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649Update called without init\n"));
-//#endif
-
-	info = &Chips[0];
-	k051649_sound_channel *voice=info->channel_list;
-	INT16 *mix;
-	INT32 i,v,f,j,k;
-	double gain = info->gain;
-
-	/* zap the contents of the mixer buffer */
-//	memset(info->mixer_buffer, 0, samples * sizeof(INT16));
-// vbt : remettre ?
-//	memset4_fast(info->mixer_buffer, 0, samples * sizeof(INT16));
-
-	for (j=0; j<5; j++) 
-	{
-		v=voice[j].volume;
-		f=voice[j].frequency;
-		k=voice[j].key;
-		/* SY 20040109: the SCC produces no sound for freq < 9 */
-		if (v && f > 8 && k)
-		{
-			const INT8 *w = voice[j].waveform;			/* 19991207.CAB */
-			INT32 c=voice[j].counter;
-
-			mix = info->mixer_buffer;
-
-			/* add our contribution */
-			for (i = 0; i < samples; i++)
-			{
-				INT32 offs;
-
-				/* Amuse source:  Cab suggests this method gives greater resolution */
-				/* Sean Young 20010417: the formula is really: f = clock/(16*(f+1))*/
-				//c+=(long)((((float)info->mclock / (float)((f+1) * 16))*(float)(1<<FREQBASEBITS)) / (float)(info->rate / 32));
-				c+=(INT32)((((((float)info->mclock / (float)((f+1) * 16))*(float)(1<<FREQBASEBITS)) / (float)(info->rate / 32)) * nUpdateStep) / 32768);
-				offs = (c >> 16) & 0x1f;
-				//*mix++ += (((w[offs] * v)>>3) * nUpdateStep) >> 15;
-				*mix++ += ((w[offs] * v)>>3);
-			}
-
-			/* update the counter for this voice */
-			voice[j].counter = c;
-		}
-	}
-
-	/* mix it down */
-	mix = info->mixer_buffer;
-	for (i = 0; i < samples; i++) 
-	{
-		INT32 output = info->mixer_lookup[*mix++];
-		
-		output = BURN_SND_CLIP(*pBuf+output);
-		output = (INT32)(output * gain);		
-		output = BURN_SND_CLIP(output);
-		
-//		INT32 nLeftSample = 0; //, nRightSample = 0;
-		
-//		if ((info->output_dir & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
-//			nLeftSample += output;
-//		}
-//		if ((info->output_dir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
-//			nRightSample += output;
-//		}
-
-//		pBuf[0] += nLeftSample;
-		*pBuf = output; // vbt remettre
-//		pBuf[1] += nRightSample;
-//		pBuf += 2;
-		++pBuf;
-	}	
-}
-
-
 void K051649UpdateDirect(INT16 *pBuf, INT32 samples)
 {
 //#if defined FBA_DEBUG
@@ -186,7 +107,8 @@ void K051649UpdateDirect(INT16 *pBuf, INT32 samples)
 		f=voice[j].frequency;
 		k=voice[j].key;
 
-		signed short *buf = &pBuf[0x8000*j];
+//		signed short *buf = &pBuf[0x4000*j];
+		signed short *buf = &pBuf[0x2000*j];
 
 		/* SY 20040109: the SCC produces no sound for freq < 9 */
 		if (v && f > 8 && k)
@@ -208,14 +130,19 @@ void K051649UpdateDirect(INT16 *pBuf, INT32 samples)
 				offs = (c >> 16) & 0x1f;
 				//*mix++ += (((w[offs] * v)>>3) * nUpdateStep) >> 15;
 //				*mix++ += ((w[offs] * v)>>3);
-				*buf++ = ((w[offs] * v)>>3);
+				*buf++ = ((w[offs] * v) / 8);
 			}
 			/* update the counter for this voice */
 			voice[j].counter = c;
 		}
 		else
 		{
-			memset4_fast(buf, 0x00, samples * sizeof(INT16));
+/*			for (i = 0; i < samples; i++)
+			{
+				INT32 offs;
+				*buf++ = 0;
+			}
+*/			memset4_fast(buf, 0x00, samples * sizeof(INT16));
 		}
 	}
 /*
