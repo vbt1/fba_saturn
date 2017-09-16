@@ -363,7 +363,6 @@ static unsigned char __fastcall appoooh_read(unsigned short address)
 
 inline static INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate)
 {
-
 	return (INT32)((double)CZetTotalCycles() * nSoundRate / (nCyclesTotal));
 }
 
@@ -500,7 +499,7 @@ static void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 	}
 }
 
-static INT32 DrvDraw()
+static void DrvDraw()
 {
 	/* draw sprites */
 	if(priority) {
@@ -522,8 +521,6 @@ static INT32 DrvDraw()
 	}
 	memcpyl((SclSpPriNumRegister *)0x25F800F0, ss_SpPriNum, sizeof(ss_SpPriNum));
 	memcpyl((SclBgPriNumRegister *)0x25F800F8, ss_BgPriNum, sizeof(ss_BgPriNum));
-
-	return 0;
 }
 
 static INT32 DrvDoReset()
@@ -638,10 +635,11 @@ static INT32 DrvCommonInit()
 	CZetClose();
 	
 	SN76489Init(0, 18432000 / 6, 0);
-	SN76489Init(1, 18432000 / 6, 1);
-	SN76489Init(2, 18432000 / 6, 1);
+	SN76489Init(1, 18432000 / 6, 0);
+	SN76489Init(2, 18432000 / 6, 0);
 
-	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1, 0.50);
+//	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1, 0.50);
+	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0, 0.50);
 
 	make_lut();
 	DrvDoReset();
@@ -841,11 +839,6 @@ static void initColors()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
 {
-/*	for (UINT32 i = 0; i<0x400; i++)
-	{
-		charaddr_lut[i] = 0x220+(i<<4);
-	}					   */
-
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
 		UINT32	sx = i & 0x1f;
@@ -856,7 +849,7 @@ static void make_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
-//	SPR_InitSlaveSH();
+	SPR_InitSlaveSH();
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
@@ -898,20 +891,22 @@ static void DrvInitSaturn()
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
-//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-	Set1PCM();
+	Set4PCM();
 	drawWindow(0,224,240,0,64);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
 {
-//	SPR_InitSlaveSH();
+	SPR_InitSlaveSH();
 	CZetExit2();
 
 	MSM5205Exit();
 
-	PCM_MeStop(pcm1);
-	memset(SOUND_BUFFER+0x4000,0x00,RING_BUF_SIZE*8);
+	for(int i=0;i<4;i++)
+	{
+		PCM_MeStop(pcm4[i]);
+		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+	}
 
 	MemEnd = AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
 	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvGfxROM0 = DrvGfxROM1 = NULL;
@@ -931,69 +926,67 @@ static INT32 DrvExit()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*
-void dummy()
+void RenderSlaveSound()
 {
+	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	signed short *nSoundBuffer= (signed short *)(0x25a24000+deltaSlave*(sizeof(signed short)));
 
+	SN76496Update(0, nSoundBuffer+0x2000, SOUND_LEN);
+	SN76496Update(1, nSoundBuffer+0x4000, SOUND_LEN);
+//	SN76496Update(2, nSoundBuffer+0x6000, SOUND_LEN);
+
+	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
 }
-*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvFrame()
 {
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame     ",120,60);
-/*
-	if (DrvReset) {
-		DrvDoReset();
-	}
-*/
 	memset (DrvInputs, 0x00, 3);
 
 	for (INT32 i = 0; i < 8; i++) {
 		DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
 		DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
-
 	}
-	UINT32 nInterleave = SOUND_LEN/2; //(hz==50)?128:100; //100 for 60hz MSM5205CalcInterleave(0, nCyclesTotal);//128
+
+	UINT32 nInterleave = SOUND_LEN; //(hz==50)?128:100; //100 for 60hz MSM5205CalcInterleave(0, nCyclesTotal);//128
 	UINT32 cycles = nCyclesTotal / 60 / nInterleave;
 	CZetNewFrame();
 
-//	CZetOpen(0);
-
-	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos);
+	CZetOpen(0);
+	signed short *nSoundBuffer = (signed short *)(0x25a24000+nSoundBufferPos*(sizeof(signed short)));
 
 	for (INT32 i = 0; i < nInterleave; i++) 
 	{
-//	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205Update, NULL);
+	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205_vclk_callback, 0);
 
 		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
 			CZetNmi();
-//		SPR_WaitEndSlaveSH();
-//	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205Update, NULL);
-		MSM5205UpdateDirect(&nSoundBuffer[0x2000]);
+		SPR_WaitEndSlaveSH();
 	}
+	CZetClose();
 
+	SPR_RunSlaveSH((PARA_RTN*)RenderSlaveSound, 0);
 	DrvDraw();
-//	SPR_WaitEndSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 
-	SN76496Update(0, nSoundBuffer, SOUND_LEN);
-	SN76496Update(1, nSoundBuffer, SOUND_LEN);
+//	SN76496Update(0, nSoundBuffer+0x2000, SOUND_LEN);
+//	SN76496Update(1, nSoundBuffer+0x4000, SOUND_LEN);
+	SN76496Update(2, nSoundBuffer+0x6000, SOUND_LEN);
 
-#if 1
-	SN76496Update(2, nSoundBuffer, SOUND_LEN);
-//	MSM5205RenderDirect(0, &nSoundBuffer[0x2000], SOUND_LEN);
-#else
-	SN76496MSM5205Update(2, nSoundBuffer, SOUND_LEN);
-#endif
+//	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
+	SPR_WaitEndSlaveSH();
+
 	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
+	
+
+		for (unsigned int i=0;i<4;i++)
+		{
+			PCM_NotifyWriteSize(pcm4[i], SOUND_LEN);
+			PCM_Task(pcm4[i]); // bon emplacement
+		}
+
 	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
 	{
-		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-		PCM_NotifyWriteSize(pcm1, nSoundBufferPos);
-		PCM_Task(pcm); // bon emplacement
-		PCM_Task(pcm1);
 		nSoundBufferPos=0;
 	}
 	return 0;
@@ -1010,39 +1003,42 @@ static PcmHn createHandle(PcmCreatePara *para)
 	return pcm;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void Set1PCM()
+static void Set4PCM()
 {
-	PcmCreatePara	para;
-	PcmInfo 		info;
+	PcmCreatePara	para[4];
+	PcmInfo 		info[4];
 	PcmStatus	*st;
-	static PcmWork g_movie_work;
+	static PcmWork g_movie_work[4];
 
-	PCM_PARA_WORK(&para) = (struct PcmWork *)&g_movie_work;
-	PCM_PARA_RING_ADDR(&para) = (Sint8 *)PCM_ADDR+0x40000;
-	PCM_PARA_RING_SIZE(&para) = RING_BUF_SIZE;
-	PCM_PARA_PCM_ADDR(&para) = PCM_ADDR+0x4000;
-	PCM_PARA_PCM_SIZE(&para) = PCM_SIZE;
+	for (int i=0; i<4; i++)
+	{
+		PCM_PARA_WORK(&para[i]) = (struct PcmWork *)&g_movie_work[i];
+		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
+		PCM_PARA_RING_SIZE(&para[i]) = RING_BUF_SIZE;
+		PCM_PARA_PCM_ADDR(&para[i]) = PCM_ADDR+(0x4000*(i+1));
+		PCM_PARA_PCM_SIZE(&para[i]) = PCM_SIZE;
 
-	memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
-	st = &g_movie_work.status;
-	st->need_ci = PCM_ON;
- 
-	PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
-	PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
-	PCM_INFO_FILE_SIZE(&info) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
-	PCM_INFO_CHANNEL(&info) = 0x01;
-	PCM_INFO_SAMPLING_BIT(&info) = 16;
+		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
+		st = &g_movie_work[i].status;
+		st->need_ci = PCM_ON;
+	 
+		PCM_INFO_FILE_TYPE(&info[i]) = PCM_FILE_TYPE_NO_HEADER;			
+		PCM_INFO_DATA_TYPE(&info[i])=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+		PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+		PCM_INFO_CHANNEL(&info[i]) = 0x01;
+		PCM_INFO_SAMPLING_BIT(&info[i]) = 16;
 
-	PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
-	PCM_INFO_SAMPLE_FILE(&info) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
-	pcm1 = createHandle(&para);
+		PCM_INFO_SAMPLING_RATE(&info[i])	= SOUNDRATE;//30720L;//44100L;
+		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
+		pcm4[i] = createHandle(&para[i]);
 
-	PCM_SetPcmStreamNo(pcm1, 1);
+		PCM_SetPcmStreamNo(pcm4[i], i);
 
-	PCM_SetInfo(pcm1, &info);
-	PCM_ChangePcmPara(pcm1);
+		PCM_SetInfo(pcm4[i], &info[i]);
+		PCM_ChangePcmPara(pcm4[i]);
 
-	PCM_MeSetLoop(pcm1, 0x3FF);//SOUNDRATE*120);
-	PCM_Start(pcm1);
+		PCM_MeSetLoop(pcm4[i], 0x3FF);
+		PCM_Start(pcm4[i]);
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

@@ -24,6 +24,8 @@ void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vc
 //void MSM5205SetLeftVolume(INT32 chip, double nLeftVolume);
 //void MSM5205SetRightVolume(INT32 chip, double nRightVolume);
 //void MSM5205SetSeperateVolumes(INT32 chip, INT32 state);
+/*static*/ void MSM5205_vclk_callback(INT32 chip);
+void MSM5205RenderDirectSlave(INT32 chip);
 void MSM5205Reset();
 
 /*
@@ -45,3 +47,5 @@ void MSM5205Scan(INT32 nAction, INT32 *pnMin);
 
 INT32 MSM5205CalcInterleave(INT32 chip, INT32 cpu_speed);
 void MSM5205Update();
+
+extern unsigned int  nSoundBufferPos;

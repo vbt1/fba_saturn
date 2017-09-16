@@ -2,7 +2,7 @@
 #include "msm5205.h"
 #include "math.h"
 #define SOUND_LEN 192
-#define MAX_MSM5205	2
+#define MAX_MSM5205	 2
 static INT32 nNumChips = 0;
 #define HZ 60
 
@@ -95,13 +95,6 @@ static void ComputeTables(INT32 chip)
 				 stepval/2 * nbl2bit[nib][2] +
 				 stepval/4 * nbl2bit[nib][3] +
 				 stepval/8);
-
-//	char toto[100];
-//	char *titi = &toto[0];
-//	titi=itoa(voice->diff_lookup[step*16 + nib]);
-
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,10,nib*10);
-
 		}
 	}
 }
@@ -123,7 +116,8 @@ static void MSM5205_playmode(INT32 chip, INT32 select)
 	}
 }
 
-/*static*/ void MSM5205StreamUpdate(INT32 chip)
+/*static*/ 
+void MSM5205StreamUpdate(INT32 chip)
 {
 	voice = &chips[chip];
 
@@ -143,8 +137,7 @@ static void MSM5205_playmode(INT32 chip, INT32 select)
 
 	if(voice->streampos!=0)
 	{
-//		INT16 *buffer = stream[chip];
-		INT16 *buffer = &nSoundBuffer[0x2000*(chip+1)];
+		INT16 *buffer = stream[chip];
 		buffer += pos;
 		
 		if(voice->signal)
@@ -164,48 +157,7 @@ static void MSM5205_playmode(INT32 chip, INT32 select)
 	}
 }
 
-/*static*/ void MSM5205StreamUpdateDirect(INT32 chip,INT16 *buffer)
-{
-	voice = &chips[chip];
-
-//	UINT32 len = voice->stream_sync((SOUND_LEN * hz) / 100);
-	UINT32 len = voice->stream_sync((SOUND_LEN * HZ));
-	if (len > (UINT32)SOUND_LEN) len = SOUND_LEN;
-	UINT32 pos = voice->streampos;
-
-	if (pos >= len) return;
-
-	len -= pos;
-	voice->streampos = pos + len;
-	
-	if (pos == 0) {
-		memset (stream[chip], 0, SOUND_LEN * sizeof(INT16));
-	}
-
-	if(voice->streampos!=0)
-	{
-//		INT16 *buffer = stream[chip];
-//		INT16 *buffer = &nSoundBuffer[0x2000*(chip+1)];
-		buffer += pos;
-		
-		if(voice->signal)
-		{
-			INT32 i = 0;
-
-			INT32 volval = (INT32)((voice->signal * 16) * voice->volume);
-			INT16 val = volval;
-			while (len)
-			{
-				buffer[i] = val;
-				len--; i++;
-			}
-		} else {
-			memset (buffer, 0, sizeof(INT16) * len);
-		}
-	}
-}
-
-static void MSM5205_vclk_callback(INT32 chip)
+/*static*/ void MSM5205_vclk_callback(INT32 chip)
 {
 	voice = &chips[chip];
 
@@ -228,13 +180,15 @@ static void MSM5205_vclk_callback(INT32 chip)
 		if (voice->step > 48) voice->step = 48;
 		else if (voice->step < 0) voice->step = 0;
 	}
-	/* update when signal changed */
+	// update when signal changed 
 	if( voice->signal != new_signal)
 	{
+//		signed short *nSoundBuffer = (signed short *)(0x25a20000);
 		MSM5205StreamUpdate(chip);
 		voice->signal = new_signal;
 	}
 }
+
 //#define CLIP(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 #define CLIP(A) ((A) < -0x5000 ? -0x5000 : (A) > 0x4fff ? 0x4fff : (A))
 
@@ -248,19 +202,20 @@ void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 {
 	voice = &chips[chip];
 	INT16 *source = stream[chip];
+
 	MSM5205StreamUpdate(chip);
 	voice->streampos = 0;
 	
 	for (INT32 i = 0; i < len; i++) 
 	{
-		int	Temp = buffer[0] + source[i];
+//		int	Temp = buffer[0] + source[i];
+		int	Temp = source[i];
 		if (Temp > 32767) Temp = 32767;
 		else {if (Temp < -32768) Temp = -32768;}
 		*buffer++ = Temp;
 	}
 }
 
-/*
 void MSM5205RenderDirect(INT32 chip, INT16 *buffer, INT32 len)
 {
 	voice = &chips[chip];
@@ -270,19 +225,25 @@ void MSM5205RenderDirect(INT32 chip, INT16 *buffer, INT32 len)
 	
 	for (UINT32 i = 0; i < len; i++) 
 	{
-//		int	Temp = buffer[0] + source[i];
-//		if (Temp > 32767) Temp = 32767;
-//		else {if (Temp < -32768) Temp = -32768;}
 		*buffer++ = *source++;
 	}
 }
-*/
 
+void MSM5205RenderDirectSlave(INT32 chip)
+{
+	unsigned int deltaSlave		= *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	signed short *nSoundBuffer= (signed short *)(0x25a24000+deltaSlave*(sizeof(signed short)));
 
-
-
-
-
+	voice = &chips[chip];
+	INT16 *source = stream[chip];
+	MSM5205StreamUpdate(chip);
+	voice->streampos = 0;
+	
+	for (UINT32 i = 0; i < 128; i++) 
+	{
+		*nSoundBuffer++ = *source++;
+	}
+}
 
 void MSM5205Reset()
 {
@@ -310,7 +271,6 @@ void MSM5205Reset()
 void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd, float nVolume)
 {
 //	DebugSnd_MSM5205Initted = 1;
-	
 	voice = &chips[chip];
 
 	memset (voice, 0, sizeof(_MSM5205_state));
@@ -422,40 +382,13 @@ void MSM5205PlaymodeWrite(INT32 chip, INT32 select)
 	MSM5205_playmode(chip,select);
 }
 
-void MSM5205UpdateDirect(INT32 chip, signed short *buffer)
-{
-/*
-#if defined FBA_DEBUG
-//	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205Update called without init\n"));
-#endif
-*/
-//	for (INT32 chip = 0; chip < MAX_MSM5205; chip++)
-	{
-/*		voice = &chips[chip];
-
-		if (voice->prescaler) 
-		{
-			MSM5205_vclk_callback(chip);
-		} 
-		else */
-		{
-			if (stream[chip]) 
-			{
-				MSM5205StreamUpdateDirect(chip,buffer);
-			}
-		}
-	}
-}
-
-
-
 void MSM5205Update()
 {
-/*
+
 #if defined FBA_DEBUG
 //	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205Update called without init\n"));
 #endif
-*/
+
 	for (INT32 chip = 0; chip < MAX_MSM5205; chip++)
 	{
 		voice = &chips[chip];

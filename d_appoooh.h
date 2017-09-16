@@ -5,22 +5,22 @@
 #include "saturn/ovl.h"
 #include "sn76496.h"
 #include "msm5205.h"
-#define SOUND_LEN 192
+#define SOUND_LEN 128
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvInit();
 static INT32 DrvRobowresInit();
 static INT32 DrvExit();
 static INT32 DrvFrame();
-static INT32 DrvDraw();
+static void DrvDraw();
 static void make_lut(void);
 static void DrvInitSaturn();
-static void Set1PCM();
+static void Set4PCM();
 void dummy();
 
 #include "sn76496.h"
 //#include "msm5205.h"
 
-PcmHn 			pcm1;
+PcmHn 			pcm4[4];
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L
