@@ -8,6 +8,14 @@
 
 #define nBurnSoundLen 128
 
+static UINT16 *name_lut = NULL;
+static UINT32 *bp_lut = NULL;//[0x10000];
+static UINT16 *cram_lut = NULL;//[0x40];
+static UINT16 *map_lut = NULL;
+static UINT8 *CZ80Context = NULL;
+UINT32 ntab;
+UINT32 satb;
+
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvHangonJrInit();
 static INT32 DrvTetrisInit();
@@ -16,6 +24,8 @@ static INT32 DrvExit();
 static INT32 DrvFrame();
 static INT32 DrvDraw();
 static void DrvInitSaturn();
+static void make_lut();
+static void update_bg(int index);
 
 static UINT8 DrvJoy0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -40,8 +50,8 @@ static UINT8 *AllRam;
 static UINT8 *RamEnd;
 static UINT8 *DrvRAM;
 static UINT8 *DrvMainROM;
-static UINT32 *DrvPalette;
-static UINT32 *Palette;
+//static UINT32 *DrvPalette;
+//static UINT32 *Palette;
 static UINT8 *cache_bitmap;
 
 static UINT8 segae_8000bank;
