@@ -232,6 +232,13 @@ LDOVLMSXFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOV
 SRCOVLMSX         = d_msx.c tms9928a.c snd/k051649.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
 OBJOVLMSX         = $(SRCOVLMSX:.c=.o)
 
+OVLSEGAE                 = root/d_segae.coff
+OVLSEGAE1               = root/d_segae.bin
+MPOVLSEGAEFILE    = $(OVLSEGAE:.coff=.maps)
+LDOVLSEGAEFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSEGAEFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+OBJOVLSEGAE         = $(SRCOVLSEGAE:.c=.o)
+
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
@@ -262,7 +269,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLZAXXON) $(OVLZAXXON1) $(OVLVIGIL) $(OVLVIGIL1) \
      $(OVLSLPFGHT) $(OVLSLPFGHT1) $(OVLFREEK) $(OVLFREEK1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
-     $(OVLMSX) $(OVLMSX1)
+     $(OVLMSX) $(OVLMSX1) $(OVLSEGAE) $(OVLSEGAE1)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -438,6 +445,12 @@ $(OVLMSX) : $(OBJOVLMSX) $(MAKEFILE) $(OBJOVLMSX) $(LDOVLMSXFILE)
 
 $(OVLMSX1) : $(OBJOVLMSX) $(MAKEFILE) $(LDOVLMSXFILE)
 	$(CONV) -O binary $(OVLMSX) $(OVLMSX1)
+
+$(OVLSEGAE) : $(OBJOVLSEGAE) $(MAKEFILE) $(OBJOVLSEGAE) $(LDOVLSEGAEFILE)
+	$(CC) $(LDOVLSEGAEFLAGS) $(OBJOVLSEGAE) $(LIBSOVL) -o $@
+
+$(OVLSEGAE1) : $(OBJOVLSEGAE) $(MAKEFILE) $(LDOVLSEGAEFILE)
+	$(CONV) -O binary $(OVLSEGAE) $(OVLSEGAE1)
 
 # suffix
 .SUFFIXES: .asm

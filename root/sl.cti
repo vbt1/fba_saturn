@@ -153,6 +153,10 @@ Track MODE1
 				Source D_MSX.BIN
 			EndFile
 
+			File D_SEGAE.BIN;1
+				Source D_SEGAE.BIN
+			EndFile
+
 			Directory BOMBJA
 				File 01H03T.BIN;1
 					Source BOMBJA\01H03T.BIN

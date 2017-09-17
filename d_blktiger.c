@@ -8,7 +8,7 @@
 #include "d_blktiger.h"
 #include    "machine.h"
 #define RAZE0 1
-//#define SND 1
+#define SND 1
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -1596,7 +1596,7 @@ static INT32 DrvFrame()
 #ifndef RAZE
 	CZetOpen(1);
 //	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"BurnTimerEndFrame           ",4,20);
-#ifdef SND
+#ifdef SND2
 	BurnTimerEndFrame(nCyclesTotal[1]);
 //	if (pBurnSoundOut)
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
@@ -1606,7 +1606,7 @@ static INT32 DrvFrame()
 	CZetClose();
 #endif
 
-#ifdef SND
+#ifdef SND2
 	nSoundBufferPos+=(nBurnSoundLen); // DOIT etre deux fois la taille copiee
 	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
 	{
