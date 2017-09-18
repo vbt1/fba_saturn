@@ -1,5 +1,5 @@
 #include "d_segae.h"
-#define SELECTED_CHIP 0
+#define SELECTED_CHIP 1
 // based on MESS/MAME driver by David Haywood
 
 int ovlInit(char *szShortName)
@@ -125,16 +125,23 @@ static void segae_vdp_setregister ( UINT8 chip, UINT16 cmd )
 	if (regnumber < 11) {
 		segae_vdp_regs[chip][regnumber] = regdata;
 
-		if(chip==SELECTED_CHIP)
+//		if(chip==SELECTED_CHIP)
 		{
 			switch(regnumber)
 			{
 				case 0x02: /* Name Table A Base Address */
-					ntab = (segae_vdp_regs[chip][regnumber] << 10) & 0x3800;
+					ntab[chip] = (segae_vdp_regs[chip][regnumber] << 10) & 0x3800;
 					break;
 
 				case 0x05: /* Sprite Attribute Table Base Address */
-					satb = (segae_vdp_regs[chip][regnumber] << 7) & 0x3F00;
+					satb[chip] = (segae_vdp_regs[chip][regnumber] << 7) & 0x3F00;
+					break;
+
+				case 0x08 :
+						scroll_x[chip] =  ((segae_vdp_regs[chip][regnumber]) ^ 0xff) ;
+					break;
+				case 0x09 :
+//					scroll_y[chip] = (segae_vdp_regs[chip][regnumber]&0xff)<<16;
 					break;
 			}
 		}
@@ -231,7 +238,7 @@ static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 
 	if (segae_vdp_accessmode[chip]==0x03) 
 	{ /* CRAM Access */
-		UINT8 r,g,b, temp;
+		UINT8 temp;
 
 		temp = segae_vdp_cram[chip][segae_vdp_accessaddr[chip]];
 
@@ -241,11 +248,11 @@ static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 
 			UINT8 index = segae_vdp_accessaddr[chip] & 0x1F;
 
-			if(chip==SELECTED_CHIP)
+//			if(chip==SELECTED_CHIP)
 			{
-				colBgAddr[index] = cram_lut[data & 0x3F];
-				if(index >0x0f)
-					colAddr[index&0x0f] =  cram_lut[data & 0x3F];
+				colBgAddr[index+(chip<<8)] = cram_lut[data & 0x3F];
+//				if(index >0x0f)
+//					colAddr[(index&0x0f)+(chip*16)] =  cram_lut[data & 0x3F];
 			}
 		}
 
@@ -261,9 +268,9 @@ static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 		segae_vdp_accessaddr[chip] += 1;
 		segae_vdp_accessaddr[chip] &= 0x3fff;
 
-		if(chip==SELECTED_CHIP)
+//		if(chip==SELECTED_CHIP)
 		{
-			update_bg(index);		
+			update_bg(chip, index);		
 		}
 	}
 }
@@ -749,9 +756,13 @@ static INT32 DrvFrame()
 		nCyclesDone += CZetRun(nCyclesSegment);
 		currentLine = (i - 4) & 0xff;
 
+		ss_scl[currentLine] = scroll_x[0] << 16;
+
 		segae_interrupt();
 		CZetClose();
 	}
+
+	ss_reg->n2_move_x =  scroll_x[1];
 
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
 //	if (pBurnSoundOut)
@@ -830,7 +841,7 @@ static INT32 DrvInit(UINT8 game)
 
 	DrvDoReset();
 	make_lut();
-
+//	drawWindow(0,192,192,2,66);
 	return 0;
 }
 
@@ -856,8 +867,10 @@ static INT32 DrvTetrisInit()
 static void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
+	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
+	SCL_AllocColRam(SCL_NBG2,OFF);
 	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	SCL_AllocColRam(SCL_NBG3,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 //	SCL_SetColRam(SCL_NBG1,0,8,palette);
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
@@ -870,18 +883,10 @@ static void initLayers(void)
 
 	Uint16	CycleTb[]={
 		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
-//#ifdef GG
-#if 0
-		0xffff, 0xff5e, //A1
-		0xffff, 0xffff,	//A0
-		0x0044, 0xeeff,   //B1
-		0xffff, 0xffff  //B0
-#else
-		0xff5e, 0xffff, //A1
+		0xff15, 0xefff, //A1
 		0xffff, 0xffff,	//A0
 		0x04ee, 0xffff,   //B1
 		0xffff, 0xffff  //B0
-#endif
 	};
  	SclConfig	scfg;
 
@@ -903,18 +908,19 @@ static void initLayers(void)
 #endif
 	scfg.datatype	= SCL_CELL;
 // vbt : active le prioritybit en mode 1word
-//	scfg.patnamecontrl =  0x020c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
-	scfg.patnamecontrl =  0x000c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
+	scfg.patnamecontrl =  0x0000;// VRAM A0
 	scfg.plate_addr[0] = ss_map;
 	SCL_SetConfig(SCL_NBG0, &scfg);
+
+
+	scfg.patnamecontrl =  0x0002;// VRAM A0 + 0x10000
+	scfg.plate_addr[0] = ss_map2;
+	SCL_SetConfig(SCL_NBG2, &scfg);
 /********************************************/	
 
 //	SCL_InitConfigTb(&scfg);
-//	scfg.dispenbl 	 = ON;
+	scfg.dispenbl 	 = ON;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
-#ifdef GG
-	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-#endif
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
 	scfg.plate_addr[0] = ss_font;
@@ -937,9 +943,10 @@ static void DrvInitSaturn()
 	nBurnLinescrollSize = 0x340;
 	nSoundBufferPos = 0;//sound position à renommer
 
-	SS_CACHE = cache      =(Uint8  *)SCL_VDP2_VRAM_B1;
-	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_A1;
+ 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
+	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
+	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
+	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -958,9 +965,10 @@ static void DrvInitSaturn()
 	SclProcess = 2; 
 #else
     SS_SET_N0PRIN(5);
-    SS_SET_S0PRIN(6);
+    SS_SET_S0PRIN(4);
 #endif
 	SS_SET_N1PRIN(7);
+	SS_SET_N2PRIN(6);
 
 	initLayers();
 	initColors();
@@ -969,23 +977,23 @@ static void DrvInitSaturn()
 
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 	initSprites(256-1,192-1,0,0,0,0);
-	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+	 initScrolling(ON,SCL_VDP2_VRAM_B0);
 		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
 	drawWindow(0,192,192,2,66);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void update_bg(int index)
+static void update_bg(UINT8 chip, UINT32 index)
 {
 /// 		segae_vdp_vram[chip][ segae_vdp_vrambank[chip]*0x4000 + segae_vdp_accessaddr[chip] ] = data;
 
-	if(index>=ntab)
+	if(index>=ntab[chip])
 	{
 //		if( index<ntab+0x700)
 		{
-			UINT16 temp = *(UINT16 *)&segae_vdp_vram[SELECTED_CHIP][index&~1];
-			unsigned int delta = map_lut[index - ntab];
-			UINT16 *map = &ss_map[delta]; 
+			UINT16 temp = *(UINT16 *)&segae_vdp_vram[chip][index&~1];
+			unsigned int delta = map_lut[index - ntab[chip]];
+			UINT16 *map = (chip==0?&ss_map[delta]:&ss_map2[delta]); 
 
 #ifdef TWO_WORDS
 			map[0] =map[64] =map[0xE00] =map[0xE40] = name_lut[temp];//color + flip + prio
@@ -997,8 +1005,8 @@ static void update_bg(int index)
 	}
 	/* Mark patterns as dirty */
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	UINT32 bp = *(UINT32 *)&segae_vdp_vram[SELECTED_CHIP][index & ~3];
-	UINT32 *pg = (UINT32 *) &cache[0x00000 | (index & ~3)];
+	UINT32 bp = *(UINT32 *)&segae_vdp_vram[chip][index & ~3];
+	UINT32 *pg = (UINT32 *) &cache[(0x00000|(chip<<16)) | (index & ~3)];
 	UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index & ~3)];
 	UINT32 temp1 = bp_lut[bp & 0xFFFF];
 	UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];

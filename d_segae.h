@@ -13,8 +13,6 @@ static UINT32 *bp_lut = NULL;//[0x10000];
 static UINT16 *cram_lut = NULL;//[0x40];
 static UINT16 *map_lut = NULL;
 static UINT8 *CZ80Context = NULL;
-UINT32 ntab;
-UINT32 satb;
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvHangonJrInit();
@@ -25,7 +23,7 @@ static INT32 DrvFrame();
 static INT32 DrvDraw();
 static void DrvInitSaturn();
 static void make_lut();
-static void update_bg(int index);
+static void update_bg(UINT8 chip, UINT32 index);
 
 static UINT8 DrvJoy0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -81,6 +79,10 @@ UINT8 *segae_vdp_cram[CHIPS];			/* Pointer to the VDP's CRAM */
 UINT8 *segae_vdp_regs[CHIPS];			/* Pointer to the VDP's Registers */
 
 UINT8 segae_vdp_vrambank[CHIPS];		/* Current VRAM Bank number (from writes to Port 0xf7) */
+UINT32 ntab[CHIPS];
+UINT32 satb[CHIPS];
+static int scroll_x[CHIPS]={0,0};
+static int scroll_y[CHIPS]={0,0};
 
 static struct BurnInputInfo TransfrmInputList[] = {
 
