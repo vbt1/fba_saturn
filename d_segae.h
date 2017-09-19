@@ -24,6 +24,7 @@ static INT32 DrvDraw();
 static void DrvInitSaturn();
 static void make_lut();
 static void update_bg(UINT8 chip, UINT32 index);
+void SCL_SetLineParamNBG1();
 
 static UINT8 DrvJoy0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};

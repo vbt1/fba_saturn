@@ -1,6 +1,7 @@
 #include "d_segae.h"
 #define SELECTED_CHIP 1
 // based on MESS/MAME driver by David Haywood
+Fixed32	ss_scl1[SCL_MAXLINE];
 
 int ovlInit(char *szShortName)
 {
@@ -385,6 +386,7 @@ static INT32 MemIndex()
 //-----------------------
 static INT32 DrvExit()
 {
+	nBurnFunction = NULL;
 	CZetExit();
 
 	DrvMainROM	 = AllRam = DrvRAM = MemEnd = segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
@@ -757,12 +759,11 @@ static INT32 DrvFrame()
 		currentLine = (i - 4) & 0xff;
 
 		ss_scl[currentLine] = scroll_x[0] << 16;
+		ss_scl1[currentLine] = scroll_x[1] << 16;
 
 		segae_interrupt();
 		CZetClose();
 	}
-
-	ss_reg->n2_move_x =  scroll_x[1];
 
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
 //	if (pBurnSoundOut)
@@ -773,6 +774,7 @@ static INT32 DrvFrame()
 
 //	if (pBurnDraw) 
 //	DrvDraw();
+//	SCL_SetLineParamNBG1();
 
 	nSoundBufferPos+=nBurnSoundLen; // DOIT etre deux fois la taille copiee
 
@@ -791,12 +793,23 @@ static INT32 DrvInit(UINT8 game)
 {
 	DrvInitSaturn();
 
+	if(game==1)
+	{
+		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17,0,240,191);
+		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17,0,240,191);
+	}
+	else
+	{
+		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,0,0,256,191);
+		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,0,0,256,191);
+	}
+
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) 
 	{
-		while(1);
+		return 0;
 	}
 
 	memset(AllMem, 0, nLen);
@@ -838,6 +851,10 @@ static INT32 DrvInit(UINT8 game)
 
 //	GenericTilesInit();
 
+	for (INT32 i = 0; i < 0x40; i++) 
+	{
+		colAddr[i] = colBgAddr[i] = colBgAddr[i+256] = cram_lut[i];
+	}
 
 	DrvDoReset();
 	make_lut();
@@ -868,12 +885,12 @@ static void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
-	SCL_AllocColRam(SCL_NBG2,OFF);
+	SCL_AllocColRam(SCL_NBG1,OFF);
 	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
-	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 //	SCL_SetColRam(SCL_NBG1,0,8,palette);
-	SCL_SetColRam(SCL_NBG1,8,8,palette);
+//	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initLayers(void)
@@ -915,16 +932,16 @@ static void initLayers(void)
 
 	scfg.patnamecontrl =  0x0002;// VRAM A0 + 0x10000
 	scfg.plate_addr[0] = ss_map2;
-	SCL_SetConfig(SCL_NBG2, &scfg);
+	SCL_SetConfig(SCL_NBG1, &scfg);
 /********************************************/	
 
 //	SCL_InitConfigTb(&scfg);
-	scfg.dispenbl 	 = ON;
+	scfg.dispenbl 	 = OFF;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
 	scfg.plate_addr[0] = ss_font;
-	SCL_SetConfig(SCL_NBG1, &scfg);
+	SCL_SetConfig(SCL_NBG2, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -967,8 +984,8 @@ static void DrvInitSaturn()
     SS_SET_N0PRIN(5);
     SS_SET_S0PRIN(4);
 #endif
-	SS_SET_N1PRIN(7);
-	SS_SET_N2PRIN(6);
+	SS_SET_N1PRIN(6);
+	SS_SET_N2PRIN(7);
 
 	initLayers();
 	initColors();
@@ -977,10 +994,28 @@ static void DrvInitSaturn()
 
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 	initSprites(256-1,192-1,0,0,0,0);
-	 initScrolling(ON,SCL_VDP2_VRAM_B0);
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+	initScrolling(ON,SCL_VDP2_VRAM_B0);
+	initScrollingNBG1(ON,SCL_VDP2_VRAM_B0+0x8000);
 
-	drawWindow(0,192,192,2,66);
+	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+	nBurnFunction = SCL_SetLineParamNBG1;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void SCL_SetLineParamNBG1()
+{
+	UINT32 *address		=(UINT32 *)(SCL_VDP2_VRAM_B0+0x8000);	
+	memcpyl((void *)address,(void *)&ss_scl1[0], nBurnLinescrollSize);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void initScrollingNBG1(UINT8 enabled,UINT32 address)
+{
+	UINT16 temp = ss_reg->linecontrl;
+	UINT32	*addr;
+
+	ss_reg->linecontrl = (temp <<8) & 0xff00 | temp;
+	addr = &ss_reg->lineaddr[1];
+	*addr = (address / 2) & 0x0007ffff;
+	SclProcess = 2;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void update_bg(UINT8 chip, UINT32 index)
