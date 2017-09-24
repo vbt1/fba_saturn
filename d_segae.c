@@ -523,9 +523,11 @@ static INT32 DrvFrame()
 		nCyclesDone += CZetRun(nCyclesSegment);
 		currentLine = (i - 4) & 0xff;
 
-		ss_scl[currentLine] = scroll_x[0] << 16;
-		ss_scl1[currentLine] = scroll_x[1] << 16;
-
+		if(currentLine>7)
+		{
+			ss_scl[currentLine] = scroll_x[0] << 16;
+			ss_scl1[currentLine] = scroll_x[1] << 16;
+		}
 		segae_interrupt();
 	}
 	CZetClose();
@@ -743,11 +745,9 @@ static void DrvInitSaturn(UINT8 game)
 	initPosition();
 		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
-//	initSprites(256-1,192-1,0,0,0,0);
-
 	if(game==1)
 	{
-			initSprites(240-1,192-1,0,0,0,0);
+			initSprites(240-1,192-1,16,0,0,0);
 		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17,0,240,191);
 		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17,0,240,191);
 	}
@@ -765,7 +765,7 @@ static void DrvInitSaturn(UINT8 game)
 	nBurnFunction = SCL_SetLineParamNBG1;
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	memset(&ss_vram[0x1100],0,0x10000-0x1100);
+	memset(&ss_vram[0x1100],0,0x12000);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SCL_SetLineParamNBG1()
@@ -813,17 +813,17 @@ static void update_sprites(UINT8 chip, UINT32 index)
 //				ss_spritePtr[x].charAddr	= 0;
 //				ss_spritePtr[x].charSize		= 0;
 //				ss_spritePtr[x].ax	= 0;
-				ss_spritePtr[x].ay	= yp;
+				ss_spritePtr[63-x].ay	= yp;
 			}
 
 			return;
 		}
-
+		unsigned int inv_delta=63-delta;
 		//Actual Y position is +1 
 		yp ++;
 		//Wrap Y coordinate for sprites > 240 
 		if(yp > 240) yp -= 256;
-		ss_spritePtr[delta].ay = yp;
+		ss_spritePtr[inv_delta].ay = yp;
 
 		/* Adjust dimensions for double size sprites */
 		if(segae_vdp_regs[chip][1] & 0x01)
@@ -833,10 +833,10 @@ static void update_sprites(UINT8 chip, UINT32 index)
 		}
 
 		// Clip sprites on left edge 
-		ss_spritePtr[delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
-		ss_spritePtr[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-		ss_spritePtr[delta].charSize    = (width<<5) + height;  //0x100
-		ss_spritePtr[delta].color    = chip*16;
+		ss_spritePtr[inv_delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_spritePtr[inv_delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+		ss_spritePtr[inv_delta].charSize    = (width<<5) + height;  //0x100
+		ss_spritePtr[inv_delta].color    = chip<<4;
 	}
 
 	if(index>=satb[chip]+0x80)
@@ -846,7 +846,9 @@ static void update_sprites(UINT8 chip, UINT32 index)
 		ss_spritePtr = &ss_sprite[3+(chip<<6)];
 
 		UINT8 *st = (UINT8 *)&segae_vdp_vram[chip][satb[chip]];
-		unsigned int delta=((index-(satb[chip]+0x80)))>>1;
+		unsigned int delta=(((index-(satb[chip]+0x80)))>>1);
+		unsigned int inv_delta=63-delta;
+
 //		delta &= 0x1f;
 
 		if((index-satb[chip]) &1)
@@ -858,7 +860,7 @@ static void update_sprites(UINT8 chip, UINT32 index)
 			if(segae_vdp_regs[chip][1] & 0x02) n &= 0x01FE;
 
 //					ss_sprite[delta+3].charAddr   =  0x220; //+(n<<2);
-			ss_spritePtr[delta].charAddr   =  0x220+(0x2000*chip) +(n<<2); // +((64*chip)<<2);
+			ss_spritePtr[inv_delta].charAddr   =  0x220+(0x2000*chip) +(n<<2); // +((64*chip)<<2);
 		}
 		else
 		{
@@ -866,9 +868,7 @@ static void update_sprites(UINT8 chip, UINT32 index)
 			int xp = st[0x80 + (delta << 1)];
 			//X position shift 
 			if(segae_vdp_regs[chip][0] & 0x08) xp -= 8;
-//			ss_spritePtr[delta].ax = xp;
-			ss_spritePtr[delta].ax = xp;
-
+			ss_spritePtr[inv_delta].ax = xp;
 		}
 
 	}
