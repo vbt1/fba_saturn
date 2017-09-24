@@ -9,21 +9,21 @@ int ovlInit(char *szShortName)
 		"hangonjr", "segae", 
 		"Hang-On Jr.", 
 		hangonjrRomInfo, hangonjrRomName, HangonjrInputInfo, HangonjrDIPInfo,
-		DrvHangonJrInit, DrvExit, DrvFrame, DrvDraw
+		DrvHangonJrInit, DrvExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvTetrisse = {
 		"tetrisse", "segae",
 		"Tetris (Japan, System E)",
 		TetrisseRomInfo, TetrisseRomName, TetrisseInputInfo, TetrisseDIPInfo,
-		DrvTetrisInit, DrvExit, DrvFrame, DrvDraw
+		DrvTetrisInit, DrvExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvTransfrm = {
 		"transfrm", "segae",
 		"Transformer",
 		TransfrmRomInfo, TransfrmRomName, TransfrmInputInfo, TransfrmDIPInfo,
-		DrvTransfrmInit, DrvExit, DrvFrame, DrvDraw
+		DrvTransfrmInit, DrvExit, DrvFrame, NULL
 	};
 
 	if (strcmp(nBurnDrvHangonjr.szShortName, szShortName) == 0) 
@@ -40,7 +40,6 @@ int ovlInit(char *szShortName)
 static UINT8 __fastcall systeme_main_read(UINT16 address)
 {
 //	bprintf(0, _T("systeme_main_read adr %X.\n"), address);
-
 	return 0;
 }
 
@@ -135,7 +134,11 @@ static void segae_vdp_setregister ( UINT8 chip, UINT16 cmd )
 					break;
 
 				case 0x05: /* Sprite Attribute Table Base Address */
-					satb[chip] = (segae_vdp_regs[chip][regnumber] << 7) & 0x3F00;
+//					satb[chip] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
+//					if (segae_vdp_vrambank[chip])
+						satb[chip] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
+//					else
+//						satb[chip] = (segae_vdp_regs[chip][regnumber] << 7) & 0x3F00;
 					break;
 
 				case 0x08 :
@@ -252,8 +255,8 @@ static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 //			if(chip==SELECTED_CHIP)
 			{
 				colBgAddr[index+(chip<<8)] = cram_lut[data & 0x3F];
-//				if(index >0x0f)
-//					colAddr[(index&0x0f)+(chip*16)] =  cram_lut[data & 0x3F];
+				if(index >0x0f)
+					colAddr[(index&0x0f)+(chip*16)] =  cram_lut[data & 0x3F];
 			}
 		}
 
@@ -263,15 +266,19 @@ static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 	else 
 	{ /* VRAM Accesses */
 
-		UINT32 index = segae_vdp_vrambank[chip]*0x4000 +(segae_vdp_accessaddr[chip] & 0x3fff);
+		UINT32 index = segae_vdp_vrambank[chip]*0x4000 + (segae_vdp_accessaddr[chip] & 0x3fff);
+//		segae_vdp_vram[chip][ segae_vdp_vrambank[chip]*0x4000 + segae_vdp_accessaddr[chip] ] = data;
 
-		segae_vdp_vram[chip][ segae_vdp_vrambank[chip]*0x4000 + segae_vdp_accessaddr[chip] ] = data;
 		segae_vdp_accessaddr[chip] += 1;
 		segae_vdp_accessaddr[chip] &= 0x3fff;
+//		 index = (segae_vdp_accessaddr[chip] & 0x3fff);
 
 //		if(chip==SELECTED_CHIP)
+		if (segae_vdp_vram[chip][index] != data) 
 		{
+			segae_vdp_vram[chip][index] = data;
 			update_bg(chip, index);		
+			update_sprites(chip, index);		
 		}
 	}
 }
@@ -415,7 +422,7 @@ static INT32 DrvDoReset()
 	
 	return 0;
 }
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 static inline void DrvClearOpposites(UINT8* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x03) == 0x03) {
@@ -425,7 +432,7 @@ static inline void DrvClearOpposites(UINT8* nJoystickInputs)
 		*nJoystickInputs &= ~0x0c;
 	}
 }
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 static inline void DrvMakeInputs()
 {
 	// Reset Inputs
@@ -444,258 +451,7 @@ static inline void DrvMakeInputs()
 	DrvClearOpposites(&DrvInput[0]);
 	DrvClearOpposites(&DrvInput[1]);
 }
-
-static void segae_draw8pix_solid16(UINT8 *dest, UINT8 chip, UINT16 tile, UINT8 line, UINT8 flipx, UINT8 col)
-{
-
-	UINT32 pix8 = *(UINT32 *)&segae_vdp_vram[chip][(32)*tile + (4)*line + (0x4000) * segae_vdp_vrambank[chip]];
-	UINT8  pix, coladd;
-
-	if (!pix8 && !col) return; /*note only the colour 0 of each vdp is transparent NOT colour 16???, fixes sky in HangonJr */
-
-	coladd = 16*col;
-
-	if (flipx)	{
-		pix = ((pix8 >> 0) & 0x01) | ((pix8 >> 7) & 0x02) | ((pix8 >> 14) & 0x04) | ((pix8 >> 21) & 0x08) ; pix+= coladd ; if (pix) dest[0] = pix+ 32*chip;
-		pix = ((pix8 >> 1) & 0x01) | ((pix8 >> 8) & 0x02) | ((pix8 >> 15) & 0x04) | ((pix8 >> 22) & 0x08) ; pix+= coladd ; if (pix) dest[1] = pix+ 32*chip;
-		pix = ((pix8 >> 2) & 0x01) | ((pix8 >> 9) & 0x02) | ((pix8 >> 16) & 0x04) | ((pix8 >> 23) & 0x08) ; pix+= coladd ; if (pix) dest[2] = pix+ 32*chip;
-		pix = ((pix8 >> 3) & 0x01) | ((pix8 >>10) & 0x02) | ((pix8 >> 17) & 0x04) | ((pix8 >> 24) & 0x08) ; pix+= coladd ; if (pix) dest[3] = pix+ 32*chip;
-		pix = ((pix8 >> 4) & 0x01) | ((pix8 >>11) & 0x02) | ((pix8 >> 18) & 0x04) | ((pix8 >> 25) & 0x08) ; pix+= coladd ; if (pix) dest[4] = pix+ 32*chip;
-		pix = ((pix8 >> 5) & 0x01) | ((pix8 >>12) & 0x02) | ((pix8 >> 19) & 0x04) | ((pix8 >> 26) & 0x08) ; pix+= coladd ; if (pix) dest[5] = pix+ 32*chip;
-		pix = ((pix8 >> 6) & 0x01) | ((pix8 >>13) & 0x02) | ((pix8 >> 20) & 0x04) | ((pix8 >> 27) & 0x08) ; pix+= coladd ; if (pix) dest[6] = pix+ 32*chip;
-		pix = ((pix8 >> 7) & 0x01) | ((pix8 >>14) & 0x02) | ((pix8 >> 21) & 0x04) | ((pix8 >> 28) & 0x08) ; pix+= coladd ; if (pix) dest[7] = pix+ 32*chip;
-	} else {
-		pix = ((pix8 >> 7) & 0x01) | ((pix8 >>14) & 0x02) | ((pix8 >> 21) & 0x04) | ((pix8 >> 28) & 0x08) ; pix+= coladd ; if (pix) dest[0] = pix+ 32*chip;
-		pix = ((pix8 >> 6) & 0x01) | ((pix8 >>13) & 0x02) | ((pix8 >> 20) & 0x04) | ((pix8 >> 27) & 0x08) ; pix+= coladd ; if (pix) dest[1] = pix+ 32*chip;
-		pix = ((pix8 >> 5) & 0x01) | ((pix8 >>12) & 0x02) | ((pix8 >> 19) & 0x04) | ((pix8 >> 26) & 0x08) ; pix+= coladd ; if (pix) dest[2] = pix+ 32*chip;
-		pix = ((pix8 >> 4) & 0x01) | ((pix8 >>11) & 0x02) | ((pix8 >> 18) & 0x04) | ((pix8 >> 25) & 0x08) ; pix+= coladd ; if (pix) dest[3] = pix+ 32*chip;
-		pix = ((pix8 >> 3) & 0x01) | ((pix8 >>10) & 0x02) | ((pix8 >> 17) & 0x04) | ((pix8 >> 24) & 0x08) ; pix+= coladd ; if (pix) dest[4] = pix+ 32*chip;
-		pix = ((pix8 >> 2) & 0x01) | ((pix8 >> 9) & 0x02) | ((pix8 >> 16) & 0x04) | ((pix8 >> 23) & 0x08) ; pix+= coladd ; if (pix) dest[5] = pix+ 32*chip;
-		pix = ((pix8 >> 1) & 0x01) | ((pix8 >> 8) & 0x02) | ((pix8 >> 15) & 0x04) | ((pix8 >> 22) & 0x08) ; pix+= coladd ; if (pix) dest[6] = pix+ 32*chip;
-		pix = ((pix8 >> 0) & 0x01) | ((pix8 >> 7) & 0x02) | ((pix8 >> 14) & 0x04) | ((pix8 >> 21) & 0x08) ; pix+= coladd ; if (pix) dest[7] = pix+ 32*chip;
-	}
-}
-
-static void segae_draw8pix(UINT8 *dest, UINT8 chip, UINT16 tile, UINT8 line, UINT8 flipx, UINT8 col)
-{
-
-	UINT32 pix8 = *(UINT32 *)&segae_vdp_vram[chip][(32)*tile + (4)*line + (0x4000) * segae_vdp_vrambank[chip]];
-	UINT8  pix, coladd;
-
-	if (!pix8) return;
-
-	coladd = 16*col+32*chip;
-
-	if (flipx)	{
-		pix = ((pix8 >> 0) & 0x01) | ((pix8 >> 7) & 0x02) | ((pix8 >> 14) & 0x04) | ((pix8 >> 21) & 0x08) ; if (pix) dest[0] = pix+ coladd;
-		pix = ((pix8 >> 1) & 0x01) | ((pix8 >> 8) & 0x02) | ((pix8 >> 15) & 0x04) | ((pix8 >> 22) & 0x08) ; if (pix) dest[1] = pix+ coladd;
-		pix = ((pix8 >> 2) & 0x01) | ((pix8 >> 9) & 0x02) | ((pix8 >> 16) & 0x04) | ((pix8 >> 23) & 0x08) ; if (pix) dest[2] = pix+ coladd;
-		pix = ((pix8 >> 3) & 0x01) | ((pix8 >>10) & 0x02) | ((pix8 >> 17) & 0x04) | ((pix8 >> 24) & 0x08) ; if (pix) dest[3] = pix+ coladd;
-		pix = ((pix8 >> 4) & 0x01) | ((pix8 >>11) & 0x02) | ((pix8 >> 18) & 0x04) | ((pix8 >> 25) & 0x08) ; if (pix) dest[4] = pix+ coladd;
-		pix = ((pix8 >> 5) & 0x01) | ((pix8 >>12) & 0x02) | ((pix8 >> 19) & 0x04) | ((pix8 >> 26) & 0x08) ; if (pix) dest[5] = pix+ coladd;
-		pix = ((pix8 >> 6) & 0x01) | ((pix8 >>13) & 0x02) | ((pix8 >> 20) & 0x04) | ((pix8 >> 27) & 0x08) ; if (pix) dest[6] = pix+ coladd;
-		pix = ((pix8 >> 7) & 0x01) | ((pix8 >>14) & 0x02) | ((pix8 >> 21) & 0x04) | ((pix8 >> 28) & 0x08) ; if (pix) dest[7] = pix+ coladd;
-	} else {
-		pix = ((pix8 >> 7) & 0x01) | ((pix8 >>14) & 0x02) | ((pix8 >> 21) & 0x04) | ((pix8 >> 28) & 0x08) ; if (pix) dest[0] = pix+ coladd;
-		pix = ((pix8 >> 6) & 0x01) | ((pix8 >>13) & 0x02) | ((pix8 >> 20) & 0x04) | ((pix8 >> 27) & 0x08) ; if (pix) dest[1] = pix+ coladd;
-		pix = ((pix8 >> 5) & 0x01) | ((pix8 >>12) & 0x02) | ((pix8 >> 19) & 0x04) | ((pix8 >> 26) & 0x08) ; if (pix) dest[2] = pix+ coladd;
-		pix = ((pix8 >> 4) & 0x01) | ((pix8 >>11) & 0x02) | ((pix8 >> 18) & 0x04) | ((pix8 >> 25) & 0x08) ; if (pix) dest[3] = pix+ coladd;
-		pix = ((pix8 >> 3) & 0x01) | ((pix8 >>10) & 0x02) | ((pix8 >> 17) & 0x04) | ((pix8 >> 24) & 0x08) ; if (pix) dest[4] = pix+ coladd;
-		pix = ((pix8 >> 2) & 0x01) | ((pix8 >> 9) & 0x02) | ((pix8 >> 16) & 0x04) | ((pix8 >> 23) & 0x08) ; if (pix) dest[5] = pix+ coladd;
-		pix = ((pix8 >> 1) & 0x01) | ((pix8 >> 8) & 0x02) | ((pix8 >> 15) & 0x04) | ((pix8 >> 22) & 0x08) ; if (pix) dest[6] = pix+ coladd;
-		pix = ((pix8 >> 0) & 0x01) | ((pix8 >> 7) & 0x02) | ((pix8 >> 14) & 0x04) | ((pix8 >> 21) & 0x08) ; if (pix) dest[7] = pix+ coladd;
-	}
-}
-
-static void segae_draw8pixsprite(UINT8 *dest, UINT8 chip, UINT16 tile, UINT8 line)
-{
-
-	UINT32 pix8 = *(UINT32 *)&segae_vdp_vram[chip][(32)*tile + (4)*line + (0x4000) * segae_vdp_vrambank[chip]];
-	UINT8  pix;
-
-	if (!pix8) return; /*note only the colour 0 of each vdp is transparent NOT colour 16, fixes sky in HangonJr */
-
-	pix = ((pix8 >> 7) & 0x01) | ((pix8 >>14) & 0x02) | ((pix8 >> 21) & 0x04) | ((pix8 >> 28) & 0x08) ; if (pix) dest[0] = pix+16+32*chip;
-	pix = ((pix8 >> 6) & 0x01) | ((pix8 >>13) & 0x02) | ((pix8 >> 20) & 0x04) | ((pix8 >> 27) & 0x08) ; if (pix) dest[1] = pix+16+32*chip;
-	pix = ((pix8 >> 5) & 0x01) | ((pix8 >>12) & 0x02) | ((pix8 >> 19) & 0x04) | ((pix8 >> 26) & 0x08) ; if (pix) dest[2] = pix+16+32*chip;
-	pix = ((pix8 >> 4) & 0x01) | ((pix8 >>11) & 0x02) | ((pix8 >> 18) & 0x04) | ((pix8 >> 25) & 0x08) ; if (pix) dest[3] = pix+16+32*chip;
-	pix = ((pix8 >> 3) & 0x01) | ((pix8 >>10) & 0x02) | ((pix8 >> 17) & 0x04) | ((pix8 >> 24) & 0x08) ; if (pix) dest[4] = pix+16+32*chip;
-	pix = ((pix8 >> 2) & 0x01) | ((pix8 >> 9) & 0x02) | ((pix8 >> 16) & 0x04) | ((pix8 >> 23) & 0x08) ; if (pix) dest[5] = pix+16+32*chip;
-	pix = ((pix8 >> 1) & 0x01) | ((pix8 >> 8) & 0x02) | ((pix8 >> 15) & 0x04) | ((pix8 >> 22) & 0x08) ; if (pix) dest[6] = pix+16+32*chip;
-	pix = ((pix8 >> 0) & 0x01) | ((pix8 >> 7) & 0x02) | ((pix8 >> 14) & 0x04) | ((pix8 >> 21) & 0x08) ; if (pix) dest[7] = pix+16+32*chip;
-
-}
-
-static void segae_drawspriteline(UINT8 *dest, UINT8 chip, UINT8 line)
-{
-	/* todo: figure out what riddle of pythagoras hates about this */
-
-	int nosprites;
-	int loopcount;
-
-	UINT16 spritebase;
-
-	nosprites = 0;
-
-	spritebase =  (segae_vdp_regs[chip][5] & 0x7e) << 7;
-	spritebase += (segae_vdp_vrambank[chip] * 0x4000);
-
-	/*- find out how many sprites there are -*/
-
-	for (loopcount=0;loopcount<64;loopcount++) {
-		UINT8 ypos;
-
-		ypos = segae_vdp_vram[chip][spritebase+loopcount];
-
-		if (ypos==208) {
-			nosprites=loopcount;
-			break;
-		}
-	}
-
-//	if (!strcmp(Machine->gamedrv->name,"ridleofp")) nosprites = 63; /* why, there must be a bug elsewhere i guess ?! */
-
-	/*- draw sprites IN REVERSE ORDER -*/
-
-	for (loopcount = nosprites; loopcount >= 0;loopcount--) {
-		int ypos;
-		UINT8 sheight;
-
-		ypos = segae_vdp_vram[chip][spritebase+loopcount] +1;
-
-		if (segae_vdp_regs[chip][1] & 0x02) sheight=16; else sheight=8;
-
-		if ( (line >= ypos) && (line < ypos+sheight) ) {
-			int xpos;
-			UINT8 sprnum;
-			UINT8 spline;
-
-			spline = line - ypos;
-
-			xpos   = segae_vdp_vram[chip][spritebase+0x80+ (2*loopcount)];
-			sprnum = segae_vdp_vram[chip][spritebase+0x81+ (2*loopcount)];
-
-			if (segae_vdp_regs[chip][6] & 0x04)
-				sprnum += 0x100;
-
-			segae_draw8pixsprite(dest+xpos, chip, sprnum, spline);
-
-		}
-	}
-}
-
-static void segae_drawtilesline(UINT8 *dest, int line, UINT8 chip, UINT8 pri)
-{
-	/* todo: fix vscrolling (or is it something else causing the glitch on the "game over" screen of hangonjr, seems to be ..  */
-
-	UINT8 hscroll;
-	UINT8 vscroll;
-	UINT16 tmbase;
-	UINT8 tilesline, tilesline2;
-	UINT8 coloffset, coloffset2;
-	UINT8 loopcount;
-
-	hscroll = (256-segae_vdp_regs[chip][8]);
-	vscroll = segae_vdp_regs[chip][9];
-	if (vscroll > 224) vscroll %= 224;
-
-	tmbase =  (segae_vdp_regs[chip][2] & 0x0e) << 10;
-	tmbase += (segae_vdp_vrambank[chip] * 0x4000);
-
-	tilesline = (line + vscroll) >> 3;
-	tilesline2= (line + vscroll) % 8;
-
-
-	coloffset = (hscroll >> 3);
-	coloffset2= (hscroll % 8);
-
-	dest -= coloffset2;
-
-	for (loopcount=0;loopcount<33;loopcount++) {
-
-		UINT16 vram_offset, vram_word;
-		UINT16 tile_no;
-		UINT8  palette, priority, flipx, flipy;
-
-		vram_offset = tmbase
-					+ (2 * (32*tilesline + ((coloffset+loopcount)&0x1f) ) );
-		vram_word = segae_vdp_vram[chip][vram_offset] | (segae_vdp_vram[chip][vram_offset+1] << 8);
-
-		tile_no = (vram_word & 0x01ff);
-		flipx =   (vram_word & 0x0200) >> 9;
-		flipy =   (vram_word & 0x0400) >> 10;
-		palette = (vram_word & 0x0800) >> 11;
-		priority= (vram_word & 0x1000) >> 12;
-
-		tilesline2= (line + vscroll) % 8;
-		if (flipy) tilesline2 = 7-tilesline2;
-
-		if (priority == pri) {
-			if (chip == 0) segae_draw8pix_solid16(dest, chip, tile_no,tilesline2,flipx,palette);
-			else segae_draw8pix(dest, chip, tile_no,tilesline2,flipx,palette);
-		}
-		dest+=8;
-	}
-}
-
-static void segae_drawscanline(int line)
-{
-	UINT8* dest;
-/*
-	dest = cache_bitmap + (16+256+16) * line;
-
-	// This should be cleared to bg colour, but which vdp determines that !, neither seems to be right, maybe its always the same col? 
-	memset(dest, 0, 16+256+16);
-
-	if (segae_vdp_regs[0][1] & 0x40) {
-		segae_drawtilesline (dest+16, line, 0,0);
-		segae_drawspriteline(dest+16, 0, line);
-		segae_drawtilesline (dest+16, line, 0,1);
-	}
-
-	{
-		if (segae_vdp_regs[1][1] & 0x40) {
-			segae_drawtilesline (dest+16, line, 1,0);
-			segae_drawspriteline(dest+16, 1, line);
-			segae_drawtilesline (dest+16, line, 1,1);
-		}
-	}
-
-	if (leftcolumnblank) memset(dest+16, 32+16, 8); */
-	
-	/* Clear Leftmost column, there should be a register for this like on the SMS i imagine    */
-							   			  /* on the SMS this is bit 5 of register 0 (according to CMD's SMS docs) for system E this  */
-							   			  /* appears to be incorrect, most games need it blanked 99% of the time so we blank it      */
-
-}
-
-static INT32 DrvDraw()
-{
-/*	if (DrvRecalc) {
-		for (INT32 i = 0; i < 0x40; i++) {
-			DrvPalette[i] = BurnHighCol((Palette[i] >> 16) & 0xff, (Palette[i] >> 8) & 0xff, Palette[i] & 0xff, 0);
-		}
-		DrvRecalc = 0;
-	}*/
-
-/*	BurnTransferCopy(DrvPalette);
-
-	UINT16 *pDst = pTransDraw;
-	UINT8 *pSrc = &cache_bitmap[16];
-
-	for (INT32 y = 0; y < nScreenHeight; y++)
-	{
-		for (INT32 x = 0; x < nScreenWidth; x++)
-		{
-			pDst[x] = pSrc[x];
-		}
-		pDst += nScreenWidth;
-		pSrc += 288;
-	}
-*/
-	return 0;
-}
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void segae_interrupt ()
 {
 	if (currentLine == 0) {
@@ -704,8 +460,18 @@ static void segae_interrupt ()
 
 	if (currentLine <= 192) {
 
-		if (currentLine != 192) segae_drawscanline(currentLine);
+//		if (currentLine != 192) segae_drawscanline(currentLine);
+/*
+		if (segae_vdp_regs[0][1] & 0x40) 
+		{
+			render_obj(0, currentLine);
+		}
 
+		if (segae_vdp_regs[1][1] & 0x40) 
+		{
+			render_obj(1, currentLine);
+		}
+*/
 		if (currentLine == 192)
 			vintpending = 1;
 
@@ -739,20 +505,19 @@ static INT32 DrvFrame()
 	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
 
 //	if (DrvReset) DrvDoReset();
-
 	DrvMakeInputs();
 
 	nCyclesTotal = 10738635 / 2 / 60;
 	nCyclesDone = 0;
 	currentLine = 0;
+	CZetOpen(0);
 
 	CZetNewFrame();
 
-	for (INT32 i = 0; i < nInterleave; i++) {
-		INT32 nNext;
+	for (UINT32 i = 0; i < nInterleave; i++) {
+		UINT32 nNext;
 
 		// Run Z80 #1
-		CZetOpen(0);
 		nNext = (i + 1) * nCyclesTotal / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone;
 		nCyclesDone += CZetRun(nCyclesSegment);
@@ -762,8 +527,8 @@ static INT32 DrvFrame()
 		ss_scl1[currentLine] = scroll_x[1] << 16;
 
 		segae_interrupt();
-		CZetClose();
 	}
+	CZetClose();
 
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
 //	if (pBurnSoundOut)
@@ -772,10 +537,7 @@ static INT32 DrvFrame()
 		SN76496Update(1, nSoundBuffer, nBurnSoundLen);
 	}	
 
-//	if (pBurnDraw) 
-//	DrvDraw();
 //	SCL_SetLineParamNBG1();
-
 	nSoundBufferPos+=nBurnSoundLen; // DOIT etre deux fois la taille copiee
 
 	if(nSoundBufferPos>=0x3C00)//RING_BUF_SIZE)
@@ -791,18 +553,7 @@ static INT32 DrvFrame()
 
 static INT32 DrvInit(UINT8 game)
 {
-	DrvInitSaturn();
-
-	if(game==1)
-	{
-		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17,0,240,191);
-		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17,0,240,191);
-	}
-	else
-	{
-		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,0,0,256,191);
-		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,0,0,256,191);
-	}
+	DrvInitSaturn(game);
 
 	AllMem = NULL;
 	MemIndex();
@@ -952,11 +703,11 @@ static void initPosition(void)
 	ss_reg->n1_move_y = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvInitSaturn()
+static void DrvInitSaturn(UINT8 game)
 {
 	SPR_InitSlaveSH();
 
-	nBurnSprites  = 67;//131;//27;
+	nBurnSprites  = 131;//27;
 	nBurnLinescrollSize = 0x340;
 	nSoundBufferPos = 0;//sound position à renommer
 
@@ -981,24 +732,40 @@ static void DrvInitSaturn()
 	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
 	SclProcess = 2; 
 #else
-    SS_SET_N0PRIN(5);
-    SS_SET_S0PRIN(4);
+    SS_SET_N0PRIN(4);
+    SS_SET_S0PRIN(7);
 #endif
-	SS_SET_N1PRIN(6);
-	SS_SET_N2PRIN(7);
+	SS_SET_N1PRIN(5);
+	SS_SET_N2PRIN(6);
 
 	initLayers();
 	initColors();
 	initPosition();
 		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
-//	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
-	initSprites(256-1,192-1,0,0,0,0);
+//	initSprites(256-1,192-1,0,0,0,0);
+
+	if(game==1)
+	{
+			initSprites(240-1,192-1,0,0,0,0);
+		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17,0,240,191);
+		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17,0,240,191);
+	}
+	else
+	{
+		initSprites(256-1,192-1,0,0,0,0);
+		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,0,0,256,191);
+		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,0,0,256,191);
+	}
+
 	initScrolling(ON,SCL_VDP2_VRAM_B0);
 	initScrollingNBG1(ON,SCL_VDP2_VRAM_B0+0x8000);
 
 	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	nBurnFunction = SCL_SetLineParamNBG1;
+
+	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	memset(&ss_vram[0x1100],0,0x10000-0x1100);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SCL_SetLineParamNBG1()
@@ -1018,13 +785,102 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 	SclProcess = 2;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+static void update_sprites(UINT8 chip, UINT32 index)
+{
+	if(index>=satb[chip])
+		if( index < satb[chip]+0x40)
+	{
+		SprSpCmd *ss_spritePtr;
+		ss_spritePtr = &ss_sprite[3+(chip<<6)];
+
+		// Sprite dimensions 
+		unsigned int height = (segae_vdp_regs[chip][1] & 0x02) ? 16 : 8;
+		unsigned int width  = 8;
+		unsigned int delta=(index-satb[chip]);
+
+	// Pointer to sprite attribute table 
+		UINT8 *st = (UINT8 *)&segae_vdp_vram[chip][satb[chip]];
+		// Sprite Y position 
+		int yp = st[delta];
+
+		if(yp == 208) 
+		{
+
+//			ss_spritePtr[delta].control = CTRL_END;
+			for(int x=delta;x<64;x++)
+			{
+//				ss_spritePtr[x].drawMode = 0;
+//				ss_spritePtr[x].charAddr	= 0;
+//				ss_spritePtr[x].charSize		= 0;
+//				ss_spritePtr[x].ax	= 0;
+				ss_spritePtr[x].ay	= yp;
+			}
+
+			return;
+		}
+
+		//Actual Y position is +1 
+		yp ++;
+		//Wrap Y coordinate for sprites > 240 
+		if(yp > 240) yp -= 256;
+		ss_spritePtr[delta].ay = yp;
+
+		/* Adjust dimensions for double size sprites */
+		if(segae_vdp_regs[chip][1] & 0x01)
+		{
+			width  = 16;
+			height *= 2;
+		}
+
+		// Clip sprites on left edge 
+		ss_spritePtr[delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_spritePtr[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+		ss_spritePtr[delta].charSize    = (width<<5) + height;  //0x100
+		ss_spritePtr[delta].color    = chip*16;
+	}
+
+	if(index>=satb[chip]+0x80)
+		if(index < satb[chip]+0x100)
+	{
+		SprSpCmd *ss_spritePtr;
+		ss_spritePtr = &ss_sprite[3+(chip<<6)];
+
+		UINT8 *st = (UINT8 *)&segae_vdp_vram[chip][satb[chip]];
+		unsigned int delta=((index-(satb[chip]+0x80)))>>1;
+//		delta &= 0x1f;
+
+		if((index-satb[chip]) &1)
+		{
+			int n = st[0x81 + (delta << 1)];
+			//Add MSB of pattern name 
+			if(segae_vdp_regs[chip][6] & 0x04) n |= 0x0100;
+			//Mask LSB for 8x16 sprites 
+			if(segae_vdp_regs[chip][1] & 0x02) n &= 0x01FE;
+
+//					ss_sprite[delta+3].charAddr   =  0x220; //+(n<<2);
+			ss_spritePtr[delta].charAddr   =  0x220+(0x2000*chip) +(n<<2); // +((64*chip)<<2);
+		}
+		else
+		{
+				//Sprite X position 
+			int xp = st[0x80 + (delta << 1)];
+			//X position shift 
+			if(segae_vdp_regs[chip][0] & 0x08) xp -= 8;
+//			ss_spritePtr[delta].ax = xp;
+			ss_spritePtr[delta].ax = xp;
+
+		}
+
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void update_bg(UINT8 chip, UINT32 index)
 {
 /// 		segae_vdp_vram[chip][ segae_vdp_vrambank[chip]*0x4000 + segae_vdp_accessaddr[chip] ] = data;
 
 	if(index>=ntab[chip])
 	{
-//		if( index<ntab+0x700)
+		if( index<ntab+0x700)
 		{
 			UINT16 temp = *(UINT16 *)&segae_vdp_vram[chip][index&~1];
 			unsigned int delta = map_lut[index - ntab[chip]];
@@ -1042,7 +898,7 @@ static void update_bg(UINT8 chip, UINT32 index)
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	UINT32 bp = *(UINT32 *)&segae_vdp_vram[chip][index & ~3];
 	UINT32 *pg = (UINT32 *) &cache[(0x00000|(chip<<16)) | (index & ~3)];
-	UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index & ~3)];
+	UINT32 *sg = (UINT32 *)&ss_vram[0x1100+ (chip<<16) + (index & ~3)];
 	UINT32 temp1 = bp_lut[bp & 0xFFFF];
 	UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
 	*sg= *pg = (temp1<<2 | temp2 );

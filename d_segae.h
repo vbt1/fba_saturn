@@ -20,10 +20,10 @@ static INT32 DrvTetrisInit();
 static INT32 DrvTransfrmInit();
 static INT32 DrvExit();
 static INT32 DrvFrame();
-static INT32 DrvDraw();
-static void DrvInitSaturn();
+static void DrvInitSaturn(UINT8 game);
 static void make_lut();
 static void update_bg(UINT8 chip, UINT32 index);
+static void update_sprites(UINT8 chip, UINT32 index);
 void SCL_SetLineParamNBG1();
 
 static UINT8 DrvJoy0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
