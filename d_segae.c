@@ -145,7 +145,7 @@ static void segae_vdp_setregister ( UINT8 chip, UINT16 cmd )
 						scroll_x[chip] =  ((segae_vdp_regs[chip][regnumber]) ^ 0xff) ;
 					break;
 				case 0x09 :
-//					scroll_y[chip] = (segae_vdp_regs[chip][regnumber]&0xff)<<16;
+						scroll_y[chip] = (segae_vdp_regs[chip][regnumber]&0xff);
 					break;
 			}
 		}
@@ -546,9 +546,12 @@ static INT32 DrvFrame()
 //	if(nSoundBufferPos>=(2048L*10))
 	{
 		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}
+	PCM_Task(pcm); // bon emplacement
+
+	ss_reg->n0_move_y = scroll_y[0]<<16;
+	ss_reg->n1_move_y = scroll_y[1]<<16;
 
 	return 0;
 }
