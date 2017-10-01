@@ -2,6 +2,7 @@
 #define SELECTED_CHIP 1
 // based on MESS/MAME driver by David Haywood
 Fixed32	ss_scl1[SCL_MAXLINE];
+volatile SysPort	*ss_port;
 
 int ovlInit(char *szShortName)
 {
@@ -26,15 +27,25 @@ int ovlInit(char *szShortName)
 		DrvTransfrmInit, DrvExit, DrvFrame, NULL
 	};
 
+	struct BurnDriver nBurnDrvFantzn2 = {
+		"fantzn2", "segae",
+		"Fantasy Zone 2 - The Tears of Opa-Opa",
+		fantzn2RomInfo, fantzn2RomName, TransfrmInputInfo, Fantzn2DIPInfo,
+		DrvFantzn2Init, DrvExit, DrvFrame, NULL
+	};
+
 	if (strcmp(nBurnDrvHangonjr.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvHangonjr,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvTetrisse.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvTetrisse,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvTransfrm.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvTransfrm,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvFantzn2.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvFantzn2,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+	ss_port  = (SysPort *)SS_PORT;
 }
 
 static UINT8 __fastcall systeme_main_read(UINT16 address)
@@ -83,13 +94,71 @@ static UINT8 __fastcall hangonjr_port_f8_read (UINT8 port)
 {
 	UINT8 temp = 0;
 	//bprintf(0, _T("Wheel %.04X  Accel %.04X\n"), scale_wheel(DrvWheel), scale_accel(DrvAccel));
+// à modifier pour gerer la manette
+// if (!wheel_pressed) { if (wheel < 0) wheel++; if (wheel > 0) wheel--; // autocenter }
+//if (left_pressed) wheel--; else if (right_pressed) wheel++;
+	SysDevice	*device;
+
+	if(( device = PER_GetDeviceR( &ss_port[0], 0 )) != NULL )
+	{
+		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"button pushed ",0,180);	
+
+//		pltriggerE[0] = pltrigger[0];
+		pltrigger[0] = PER_GetTrigger( device );
+//		pltriggerE[0] = (pltrigger[0]) ^ (pltriggerE[0]);
+//		pltriggerE[0] = (pltrigger[0]) & (pltriggerE[0]);
+	}
+	else
+	{
+		pltrigger[0] = 0;
+	}
 
 	if (port_fa_last == 0x08)  /* 0000 1000 */ /* Angle */
-		temp = scale_wheel(DrvWheel);
+	{
+		if(pltrigger[0] & PER_DGT_L )
+		{
+			if(DrvWheel>-64)
+				DrvWheel-=4;
+		}
+		else if(pltrigger[0] & PER_DGT_R )
+		{
+			if(DrvWheel<63)
+				DrvWheel+=4;
+		}
+		else
+		{
+			if(DrvWheel>1)
+				DrvWheel-=4;
+			else if(DrvWheel<63)
+				DrvWheel+=4;
+		}
+
+		temp = 0x7f + DrvWheel;
+		temp = scalerange(temp, 0x3f, 0xbe, 0x20, 0xe0);
+	}
 
 	if (port_fa_last == 0x09)  /* 0000 1001 */ /* Accel */
-		temp = scale_accel(DrvAccel);
+	{
+		if(pltrigger[0] & PER_DGT_B )
+		{
+			if(DrvAccel<63)
+				DrvAccel+=4;
+		}
+		else
+		{
+			if(DrvAccel>-64)
+				DrvAccel-=4;
+		}
 
+		temp=DrvAccel;
+
+		if(DrvAccel<8)
+			temp=0x00;
+		else if(DrvAccel>0x30)
+			temp=0xff;
+		else
+			temp=0xff;
+	}
 	return temp;
 }
 
@@ -101,9 +170,14 @@ static inline void __fastcall hangonjr_port_fa_write (UINT8 data)
 
 static void segae_bankswitch (void)
 {
-	//ZetMapMemory(DrvMainROM + 0x10000 + ( rombank * 0x4000), 0x8000, 0xbfff, MAP_ROM);
-	CZetMapArea(0x8000, 0xbfff, 0, DrvMainROM + 0x10000 + ( rombank * 0x4000));
-	CZetMapArea(0x8000, 0xbfff, 2, DrvMainROM + 0x10000 + ( rombank * 0x4000));
+	UINT32 bankloc = 0x10000 + rombank * 0x4000;
+
+	CZetMapArea(0x8000, 0xbfff, 0, DrvMainROM + bankloc);
+	CZetMapArea(0x8000, 0xbfff, 2, DrvMainROM + bankloc);
+
+	if (mc8123_banked) {
+		CZetMapArea2(0x8000, 0xbfff, 2, DrvMainROMFetch + bankloc, DrvMainROM + bankloc); // fetch ops(encrypted), opargs(unencrypted)
+	}
 }
 
 static void __fastcall bank_write(UINT8 data)
@@ -359,7 +433,9 @@ static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
-	DrvMainROM	 	    = (UINT8 *) 0x00200000;//Next; Next += 0x40000;
+	DrvMainROM	 	    = (UINT8 *) 0x00200000;
+	DrvMainROMFetch= (UINT8 *) 0x00280000;
+	mc8123key           = Next; Next += 0x02000;
 	
 	AllRam				= Next;
 	DrvRAM			    = Next; Next += 0x10000;
@@ -404,6 +480,9 @@ static INT32 DrvExit()
 	AllMem = NULL;
 
 	leftcolumnblank = 0;
+	mc8123 = 0;
+	mc8123_banked = 0;
+
 	return 0;
 }
 
@@ -571,14 +650,42 @@ static INT32 DrvInit(UINT8 game)
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
-	if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
-	if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
-	if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;	// ( "rom3.ic4",   0x18000, 0x08000, CRC(d2ba9bc9) SHA1(85cf2a801883bf69f78134fc4d5075134f47dc03) )
+	switch (game) {
+		case 0:
+			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
+			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
+			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;	// ( "rom3.ic4",   0x18000, 0x08000, CRC(d2ba9bc9) SHA1(85cf2a801883bf69f78134fc4d5075134f47dc03) )
+			break;
+		case 1:
+		case 2:
+			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
+			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
+			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;	// ( "rom3.ic4",   0x18000, 0x08000, CRC(d2ba9bc9) SHA1(85cf2a801883bf69f78134fc4d5075134f47dc03) )
+			if (BurnLoadRom(DrvMainROM + 0x20000,  3, 1)) return 1;	// ( "rom2.ic3",   0x20000, 0x08000, CRC(e14da070) SHA1(f8781f65be5246a23c1f492905409775bbf82ea8) )
+			if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1; // ( "rom1.ic2",   0x28000, 0x08000, CRC(3810cbf5) SHA1(c8d5032522c0c903ab3d138f62406a66e14a5c69) )
+			break;
+		case 3: // fantzn2
+			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x20000,  2, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x30000,  3, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x40000,  4, 1)) return 1;
+			if (BurnLoadRom(mc8123key  + 0x00000,  5, 1)) return 1;
+			mc8123_decrypt_rom(0, 0, DrvMainROM, DrvMainROMFetch, mc8123key);
+			mc8123 = 1;
 
-	if(game)
-	{
-		if (BurnLoadRom(DrvMainROM + 0x20000,  3, 1)) return 1;	// ( "rom2.ic3",   0x20000, 0x08000, CRC(e14da070) SHA1(f8781f65be5246a23c1f492905409775bbf82ea8) )
-		if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1; // ( "rom1.ic2",   0x28000, 0x08000, CRC(3810cbf5) SHA1(c8d5032522c0c903ab3d138f62406a66e14a5c69) )
+			break;
+		case 4: // opaopa
+			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x20000,  3, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1;
+			if (BurnLoadRom(mc8123key  + 0x00000,  5, 1)) return 1;
+			mc8123_decrypt_rom(1, 16, DrvMainROM, DrvMainROMFetch, mc8123key);
+			mc8123 = 1;
+			mc8123_banked = 1;
+			break;
 	}
 
 	CZetInit(1);
@@ -616,6 +723,15 @@ static INT32 DrvInit(UINT8 game)
 	make_lut();
 //	drawWindow(0,192,192,2,66);
 	return 0;
+}
+
+static INT32 DrvFantzn2Init()
+{
+	leftcolumnblank = 1;
+//	leftcolumnblank_special = 1;
+//	sprite_bug = 1;
+
+	return DrvInit(3);
 }
 
 static INT32 DrvTransfrmInit()

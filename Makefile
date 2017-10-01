@@ -236,7 +236,7 @@ OVLSEGAE                 = root/d_segae.coff
 OVLSEGAE1               = root/d_segae.bin
 MPOVLSEGAEFILE    = $(OVLSEGAE:.coff=.maps)
 LDOVLSEGAEFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSEGAEFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c sn76496.c saturn/ovl.c
+SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c sn76496.c mc8123.c saturn/ovl.c
 OBJOVLSEGAE         = $(SRCOVLSEGAE:.c=.o)
 
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c

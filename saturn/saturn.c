@@ -347,6 +347,7 @@ wait_vblank();
 	SS_BGMIX = &SclBgColMix;
 	SS_SPRIT = &smsSprite[0];
 	SS_SCL	 = &ls_tbl[0];
+	SS_PORT  = (SysPort *)__port;
 //	SS_SCL1	 = &ls_tbl1[0];
 
 	col[0]=0;

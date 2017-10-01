@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 50
+#define NB_DRV 51
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -124,9 +124,10 @@ void BurnDrvAssignList()
 //	static struct BurnDriver BurnDrvFM = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvMSX_1942 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
-	static struct BurnDriver BurnDrvHangonjr = {"hangonjr", "segae", "Hang-On Jr.", NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
-	static struct BurnDriver BurnDrvTetrisse = {"tetrisse", "segae","Tetris (Japan, System E)", NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
-	static struct BurnDriver BurnDrvTransfrm = {"transfrm", "segae","Transformer", NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvHangonjr = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvTetrisse = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvTransfrm = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvFantzn2  = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -352,6 +353,22 @@ BurnDrvMSX_1942.szShortName="msx";
 BurnDrvMSX_1942.szFullNameA="MSX1 System";
 BurnDrvMSX_1942.szParent=NULL;
 
+BurnDrvHangonjr.szShortName="hangonjr";
+BurnDrvHangonjr.szFullNameA="Hang-On Jr.";
+BurnDrvHangonjr.szParent="segae"	;
+
+BurnDrvTetrisse.szShortName="tetrisse";
+BurnDrvTetrisse.szFullNameA="Tetris (Japan, System E)";
+BurnDrvTetrisse.szParent="segae";
+
+BurnDrvTransfrm.szShortName="transfrm";
+BurnDrvTransfrm.szFullNameA="Transformer";
+BurnDrvTransfrm.szParent="segae";
+
+BurnDrvFantzn2.szShortName="fantzn2";
+BurnDrvFantzn2.szFullNameA="Fantasy Zone 2 - The Tears of Opa-Opa";
+BurnDrvFantzn2.szParent="segae";
+	
 //BurnDrvFM.szShortName="fm";
 //BurnDrvFM.szFullNameA="FM Test Driver";
 //BurnDrvFM.szParent="blktgr";
@@ -368,7 +385,7 @@ pDriver[i++] = &BurnDrvMSX_1942;
 pDriver[i++] = &BurnDrvHangonjr;
 pDriver[i++] = &BurnDrvTetrisse;
 pDriver[i++] = &BurnDrvTransfrm;
-
+pDriver[i++] = &BurnDrvFantzn2;
 //pDriver[i++] = &BurnDrvKungfut;
 //pDriver[i++] = &BurnDrvStinger;
 //pDriver[i++] = &BurnDrvScion;

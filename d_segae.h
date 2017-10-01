@@ -5,6 +5,7 @@
 #include "saturn/ovl.h"
 #include "sn76496.h"
 #include "bitswap.h"
+#include "mc8123.h"
 
 #define nBurnSoundLen 128
 
@@ -15,6 +16,7 @@ static UINT16 *map_lut = NULL;
 static UINT8 *CZ80Context = NULL;
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
+static INT32 DrvFantzn2Init();
 static INT32 DrvHangonJrInit();
 static INT32 DrvTetrisInit();
 static INT32 DrvTransfrmInit();
@@ -49,6 +51,8 @@ static UINT8 *AllRam;
 static UINT8 *RamEnd;
 static UINT8 *DrvRAM;
 static UINT8 *DrvMainROM;
+static UINT8 *DrvMainROMFetch;
+static UINT8 *mc8123key;
 //static UINT32 *DrvPalette;
 //static UINT32 *Palette;
 static UINT8 *cache_bitmap;
@@ -56,6 +60,9 @@ static UINT8 *cache_bitmap;
 static UINT8 segae_8000bank;
 static UINT8 port_fa_last;
 static UINT8 rombank;
+
+static UINT8 mc8123 = 0; // enabled?
+static UINT8 mc8123_banked = 0; // enabled?
 
 static UINT8 hintcount;			/* line interrupt counter, decreased each scanline */
 UINT8 vintpending;
@@ -84,6 +91,30 @@ UINT32 ntab[CHIPS];
 UINT32 satb[CHIPS];
 static int scroll_x[CHIPS]={0,0};
 static int scroll_y[CHIPS]={0,0};
+
+typedef UINT16	trigger_t;
+
+static UINT16 pad_asign[]={
+PER_DGT_U,PER_DGT_D,PER_DGT_R,PER_DGT_L,PER_DGT_A,PER_DGT_B,
+PER_DGT_C,PER_DGT_S,PER_DGT_X,PER_DGT_Y,PER_DGT_TR,PER_DGT_TL,
+};
+
+trigger_t	pltrigger[2],pltriggerE[2];
+
+#define	SZ_PERIPHERAL	20
+typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
+
+typedef	struct	SysPort	{
+	UINT8			id;
+	UINT8			connectable;
+	SysPeripheral	*peripheral;
+} SysPort;
+
+typedef	struct	SysDevice	{
+	UINT8	type;
+	UINT8	size;
+	UINT8	data[1];
+} SysDevice;
 
 static struct BurnInputInfo TransfrmInputList[] = {
 
@@ -223,6 +254,37 @@ static struct BurnDIPInfo TetrisseDIPList[]=
 };
 STDDIPINFO(Tetrisse)
 
+
+static struct BurnDIPInfo Fantzn2DIPList[]=
+{
+	{0x0d, 0xff, 0xff, 0xff, NULL		}, // coinage (missing for now)
+	{0x0e, 0xff, 0xff, 0xfc, NULL		},
+
+	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
+	{0x0e, 0x01, 0x02, 0x02, "Off"		},
+	{0x0e, 0x01, 0x02, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    4, "Lives"		},
+	{0x0e, 0x01, 0x0c, 0x00, "2"		},
+	{0x0e, 0x01, 0x0c, 0x0c, "3"		},
+	{0x0e, 0x01, 0x0c, 0x08, "4"		},
+	{0x0e, 0x01, 0x0c, 0x04, "5"		},
+
+	{0   , 0xfe, 0   ,    4, "Timer"		},
+	{0x0e, 0x01, 0x30, 0x20, "90"		},
+	{0x0e, 0x01, 0x30, 0x30, "80"		},
+	{0x0e, 0x01, 0x30, 0x10, "70"		},
+	{0x0e, 0x01, 0x30, 0x00, "60"		},
+
+	{0   , 0xfe, 0   ,    4, "Difficulty"		},
+	{0x0e, 0x01, 0xc0, 0x80, "Easy"		},
+	{0x0e, 0x01, 0xc0, 0xc0, "Normal"		},
+	{0x0e, 0x01, 0xc0, 0x40, "Hard"		},
+	{0x0e, 0x01, 0xc0, 0x00, "Hardest"		},
+};
+
+STDDIPINFO(Fantzn2)
+
 //-----------------------
 
 // Hang-On Jr.
@@ -264,4 +326,18 @@ static struct BurnRomInfo TransfrmRomDesc[] = {
 STD_ROM_PICK(Transfrm)
 STD_ROM_FN(Transfrm)
 
+// Fantasy Zone II - The Tears of Opa-Opa (MC-8123, 317-0057)
+
+static struct BurnRomInfo fantzn2RomDesc[] = {
+	{ "epr11416.ic7",	0x08000, 0x76db7b7b, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu (encr)
+	{ "epr11415.ic5",	0x10000, 0x57b45681, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "epr11413.ic3",	0x10000, 0xa231dc85, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "epr11414.ic4",	0x10000, 0x6f7a9f5f, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "epr11412.ic2",	0x10000, 0xb14db5af, 1 | BRF_PRG | BRF_ESS }, //  4
+
+	{ "3170057.key",	0x02000, 0xee43d0f0, 2 | BRF_GRA },           //  5 key
+};
+
+STD_ROM_PICK(fantzn2)
+STD_ROM_FN(fantzn2)
 #endif
