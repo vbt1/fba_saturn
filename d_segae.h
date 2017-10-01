@@ -17,6 +17,7 @@ static UINT8 *CZ80Context = NULL;
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvFantzn2Init();
+static INT32 DrvOpaopaInit();
 static INT32 DrvHangonJrInit();
 static INT32 DrvTetrisInit();
 static INT32 DrvTransfrmInit();
@@ -131,42 +132,70 @@ static struct BurnInputInfo TransfrmInputList[] = {
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
 	{"Service",		BIT_DIGITAL,	DrvJoy0 + 3,	"service"},
+	{"Service Mode",		BIT_DIGITAL,	DrvJoy0 + 2,	"diag"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDip + 1,	"dip"},
 };
 STDINPUTINFO(Transfrm)
 
+static struct BurnInputInfo Segae2pInputList[] = {
+	{"P1 Coin",		BIT_DIGITAL,	DrvJoy0 + 0,	"p1 coin"},
+	{"P1 Start",		BIT_DIGITAL,	DrvJoy0 + 6,	"p1 start"},
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"},
+	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 right"},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"},
+
+	{"P2 Coin",		BIT_DIGITAL,	DrvJoy0 + 1,	"p2 coin"},
+	{"P2 Start",		BIT_DIGITAL,	DrvJoy0 + 7,	"p2 start"},
+	{"P2 Up",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 up"},
+	{"P2 Down",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 down"},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 left"},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 right"},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p2 fire 2"},
+
+	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Service",		BIT_DIGITAL,	DrvJoy0 + 3,	"service"},
+	{"Service Mode",		BIT_DIGITAL,	DrvJoy0 + 2,	"diag"},
+	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDip + 1,	"dip"},
+};
+
+STDINPUTINFO(Segae2p)
 
 static struct BurnDIPInfo TransfrmDIPList[]=
 {
-	{0x0c, 0xff, 0xff, 0xff, NULL		},
-	{0x0d, 0xff, 0xff, 0xfc, NULL		},
+	{0x0d, 0xff, 0xff, 0xff, NULL		},
+	{0x0e, 0xff, 0xff, 0xfc, NULL		},
 
 	{0   , 0xfe, 0   ,    2, "1 Player Only"		},
-	{0x0d, 0x01, 0x01, 0x00, "Off"		},
-	{0x0d, 0x01, 0x01, 0x01, "On"		},
+	{0x0e, 0x01, 0x01, 0x00, "Off"		},
+	{0x0e, 0x01, 0x01, 0x01, "On"		},
 
 	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
-	{0x0d, 0x01, 0x02, 0x02, "Off"		},
-	{0x0d, 0x01, 0x02, 0x00, "On"		},
+	{0x0e, 0x01, 0x02, 0x02, "Off"		},
+	{0x0e, 0x01, 0x02, 0x00, "On"		},
 
 	{0   , 0xfe, 0   ,    4, "Lives"		},
-	{0x0d, 0x01, 0x0c, 0x0c, "3"		},
-	{0x0d, 0x01, 0x0c, 0x08, "4"		},
-	{0x0d, 0x01, 0x0c, 0x04, "5"		},
-	{0x0d, 0x01, 0x0c, 0x00, "Infinite (Cheat)"		},
+	{0x0e, 0x01, 0x0c, 0x0c, "3"		},
+	{0x0e, 0x01, 0x0c, 0x08, "4"		},
+	{0x0e, 0x01, 0x0c, 0x04, "5"		},
+	{0x0e, 0x01, 0x0c, 0x00, "Infinite (Cheat)"		},
 
 	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
-	{0x0d, 0x01, 0x30, 0x20, "10k, 30k, 50k and 70k"		},
-	{0x0d, 0x01, 0x30, 0x30, "20k, 60k, 100k and 140k"		},
-	{0x0d, 0x01, 0x30, 0x10, "30k, 80k, 130k and 180k"		},
-	{0x0d, 0x01, 0x30, 0x00, "50k, 150k and 250k"		},
+	{0x0e, 0x01, 0x30, 0x20, "10k, 30k, 50k and 70k"		},
+	{0x0e, 0x01, 0x30, 0x30, "20k, 60k, 100k and 140k"		},
+	{0x0e, 0x01, 0x30, 0x10, "30k, 80k, 130k and 180k"		},
+	{0x0e, 0x01, 0x30, 0x00, "50k, 150k and 250k"		},
 
 	{0   , 0xfe, 0   ,    4, "Difficulty"		},
-	{0x0d, 0x01, 0xc0, 0x40, "Easy"		},
-	{0x0d, 0x01, 0xc0, 0xc0, "Medium"		},
-	{0x0d, 0x01, 0xc0, 0x80, "Hard"		},
-	{0x0d, 0x01, 0xc0, 0x00, "Hardest"		},
+	{0x0e, 0x01, 0xc0, 0x40, "Easy"		},
+	{0x0e, 0x01, 0xc0, 0xc0, "Medium"		},
+	{0x0e, 0x01, 0xc0, 0x80, "Hard"		},
+	{0x0e, 0x01, 0xc0, 0x00, "Hardest"		},
 };
 
 STDDIPINFO(Transfrm)
@@ -285,6 +314,36 @@ static struct BurnDIPInfo Fantzn2DIPList[]=
 
 STDDIPINFO(Fantzn2)
 
+static struct BurnDIPInfo OpaopaDIPList[]=
+{
+	{0x13, 0xff, 0xff, 0xff, NULL		}, // coinage defs.
+	{0x14, 0xff, 0xff, 0xfc, NULL		},
+
+	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
+	{0x14, 0x01, 0x02, 0x02, "Off"		},
+	{0x14, 0x01, 0x02, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    4, "Lives"		},
+	{0x14, 0x01, 0x0c, 0x00, "2"		},
+	{0x14, 0x01, 0x0c, 0x0c, "3"		},
+	{0x14, 0x01, 0x0c, 0x08, "4"		},
+	{0x14, 0x01, 0x0c, 0x04, "5"		},
+
+	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
+	{0x14, 0x01, 0x30, 0x20, "25k, 45k and 70k"		},
+	{0x14, 0x01, 0x30, 0x30, "40k, 60k and 90k"		},
+	{0x14, 0x01, 0x30, 0x10, "50k and 90k"		},
+	{0x14, 0x01, 0x30, 0x00, "None"		},
+
+	{0   , 0xfe, 0   ,    4, "Difficulty"		},
+	{0x14, 0x01, 0xc0, 0x80, "Easy"		},
+	{0x14, 0x01, 0xc0, 0xc0, "Normal"		},
+	{0x14, 0x01, 0xc0, 0x40, "Hard"		},
+	{0x14, 0x01, 0xc0, 0x00, "Hardest"		},
+};
+
+STDDIPINFO(Opaopa)
+
 //-----------------------
 
 // Hang-On Jr.
@@ -317,14 +376,28 @@ STD_ROM_FN(Tetrisse)
 static struct BurnRomInfo TransfrmRomDesc[] = {
 
 	{ "ic7.top", 0x8000, 0xccf1d123, BRF_ESS | BRF_PRG }, // 0 maincpu
-	{ "epr-7347.ic5", 0x8000, 0xdf0f639f, BRF_ESS | BRF_PRG }, // 1
-	{ "epr-7348.ic4", 0x8000, 0x0f38ea96, BRF_ESS | BRF_PRG }, // 2
+	{ "epr7347.ic5", 0x8000, 0xdf0f639f, BRF_ESS | BRF_PRG }, // 1
+	{ "epr7348.ic4", 0x8000, 0x0f38ea96, BRF_ESS | BRF_PRG }, // 2
 	{ "ic3.top", 0x8000, 0x9d485df6, BRF_ESS | BRF_PRG }, // 3
-	{ "epr-7350.ic2", 0x8000, 0x0052165d, BRF_ESS | BRF_PRG }, // 4
+	{ "epr7350.ic2", 0x8000, 0x0052165d, BRF_ESS | BRF_PRG }, // 4
 };
 
 STD_ROM_PICK(Transfrm)
 STD_ROM_FN(Transfrm)
+
+//  Astro Flash
+
+static struct BurnRomInfo AstroflRomDesc[] = {
+
+	{ "epr7723.ic7", 0x8000, 0x66061137, BRF_ESS | BRF_PRG }, // 0 maincpu
+	{ "epr7347.ic5", 0x8000, 0xdf0f639f, BRF_ESS | BRF_PRG }, // 1
+	{ "epr7348.ic4", 0x8000, 0x0f38ea96, BRF_ESS | BRF_PRG }, // 2
+	{ "epr7349.ic3", 0x8000, 0xf8c352d5, BRF_ESS | BRF_PRG }, // 3
+	{ "epr7350.ic2", 0x8000, 0x0052165d, BRF_ESS | BRF_PRG }, // 4
+};
+
+STD_ROM_PICK(Astrofl)
+STD_ROM_FN(Astrofl)
 
 // Fantasy Zone II - The Tears of Opa-Opa (MC-8123, 317-0057)
 
@@ -340,4 +413,20 @@ static struct BurnRomInfo fantzn2RomDesc[] = {
 
 STD_ROM_PICK(fantzn2)
 STD_ROM_FN(fantzn2)
+
+// Opa Opa (MC-8123, 317-0042)
+
+static struct BurnRomInfo opaopaRomDesc[] = {
+	{ "epr11054.ic7",	0x8000, 0x024b1244, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu  (encr)
+	{ "epr11053.ic5",	0x8000, 0x6bc41d6e, 1 | BRF_PRG | BRF_ESS }, //  1          ""
+	{ "epr11052.ic4",	0x8000, 0x395c1d0a, 1 | BRF_PRG | BRF_ESS }, //  2          ""
+	{ "epr11051.ic3",	0x8000, 0x4ca132a2, 1 | BRF_PRG | BRF_ESS }, //  3          ""
+	{ "epr11050.ic2",	0x8000, 0xa165e2ef, 1 | BRF_PRG | BRF_ESS }, //  4          ""
+
+	{ "3170042.key",	0x2000, 0xd6312538, 2 | BRF_GRA },           //  5 key
+};
+
+STD_ROM_PICK(opaopa)
+STD_ROM_FN(opaopa)
+
 #endif

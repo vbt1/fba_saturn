@@ -27,11 +27,25 @@ int ovlInit(char *szShortName)
 		DrvTransfrmInit, DrvExit, DrvFrame, NULL
 	};
 
+	struct BurnDriver nBurnDrvAstrofl = {
+		"astrofl", "segae",
+		"Astro Flash (Japan)",
+		TransfrmRomInfo, TransfrmRomName, TransfrmInputInfo, TransfrmDIPInfo,
+		DrvTransfrmInit, DrvExit, DrvFrame, NULL
+	};
+
 	struct BurnDriver nBurnDrvFantzn2 = {
 		"fantzn2", "segae",
 		"Fantasy Zone 2 - The Tears of Opa-Opa",
 		fantzn2RomInfo, fantzn2RomName, TransfrmInputInfo, Fantzn2DIPInfo,
 		DrvFantzn2Init, DrvExit, DrvFrame, NULL
+	};
+
+	struct BurnDriver nBurnDrvOpaopa = {
+		"opaopa", "segae",
+		"Opa Opa (MC-8123, 317-0042)",
+		opaopaRomInfo, opaopaRomName, Segae2pInputInfo, OpaopaDIPInfo,
+		DrvOpaopaInit, DrvExit, DrvFrame, NULL
 	};
 
 	if (strcmp(nBurnDrvHangonjr.szShortName, szShortName) == 0) 
@@ -42,6 +56,10 @@ int ovlInit(char *szShortName)
 	memcpy(shared,&nBurnDrvTransfrm,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvFantzn2.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvFantzn2,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvAstrofl.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvAstrofl,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvOpaopa.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvOpaopa,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -340,7 +358,7 @@ static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 	else 
 	{ /* VRAM Accesses */
 
-		UINT32 index = segae_vdp_vrambank[chip]*0x4000 + (segae_vdp_accessaddr[chip] & 0x3fff);
+		UINT32 index = segae_vdp_vrambank[chip]*0x4000 + (segae_vdp_accessaddr[chip]); // & 0x3fff);
 //		segae_vdp_vram[chip][ segae_vdp_vrambank[chip]*0x4000 + segae_vdp_accessaddr[chip] ] = data;
 
 		segae_vdp_accessaddr[chip] += 1;
@@ -483,6 +501,9 @@ static INT32 DrvExit()
 	mc8123 = 0;
 	mc8123_banked = 0;
 
+ 	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
+ 	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
+
 	return 0;
 }
 
@@ -577,12 +598,10 @@ static void segae_interrupt ()
 	}
 }
 
-
 static INT32 DrvFrame()
 {
-	INT32 nInterleave = 262;
-	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
-
+	UINT32 nInterleave = 262;
+//	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
 //	if (DrvReset) DrvDoReset();
 	DrvMakeInputs();
 
@@ -646,7 +665,6 @@ static INT32 DrvInit(UINT8 game)
 	{
 		return 0;
 	}
-
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
@@ -657,7 +675,7 @@ static INT32 DrvInit(UINT8 game)
 			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;	// ( "rom3.ic4",   0x18000, 0x08000, CRC(d2ba9bc9) SHA1(85cf2a801883bf69f78134fc4d5075134f47dc03) )
 			break;
 		case 1:
-		case 2:
+		case 2: // transfrm
 			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
 			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
 			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;	// ( "rom3.ic4",   0x18000, 0x08000, CRC(d2ba9bc9) SHA1(85cf2a801883bf69f78134fc4d5075134f47dc03) )
@@ -673,7 +691,6 @@ static INT32 DrvInit(UINT8 game)
 			if (BurnLoadRom(mc8123key  + 0x00000,  5, 1)) return 1;
 			mc8123_decrypt_rom(0, 0, DrvMainROM, DrvMainROMFetch, mc8123key);
 			mc8123 = 1;
-
 			break;
 		case 4: // opaopa
 			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
@@ -693,6 +710,10 @@ static INT32 DrvInit(UINT8 game)
 //	CZetMapMemory(DrvMainROM, 0x0000, 0x7fff, MAP_ROM);
 	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM + 0x0000);
 	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM + 0x0000);
+
+	if (mc8123) {
+		CZetMapArea2(0x0000, 0x7fff, 2, DrvMainROMFetch, DrvMainROM);
+	}
 
 //	CZetMapMemory(DrvRAM, 0xc000, 0xffff, MAP_RAM);
 	CZetMapArea(0xc000, 0xffff, 0, DrvRAM);
@@ -727,16 +748,23 @@ static INT32 DrvInit(UINT8 game)
 
 static INT32 DrvFantzn2Init()
 {
-	leftcolumnblank = 1;
+//	leftcolumnblank = 1;
 //	leftcolumnblank_special = 1;
 //	sprite_bug = 1;
 
 	return DrvInit(3);
 }
 
+static INT32 DrvOpaopaInit()
+{
+//	leftcolumnblank = 1;
+
+	return DrvInit(4);
+}
+
 static INT32 DrvTransfrmInit()
 {
-	leftcolumnblank = 1;
+//	leftcolumnblank = 1;
 
 	return DrvInit(2);
 }
@@ -761,7 +789,7 @@ static void initColors()
 	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
-//	SCL_SetColRam(SCL_NBG1,0,8,palette);
+//	SCL_SetColRam(SCL_NBG0,0,8,palette); // à enlever
 //	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -799,6 +827,7 @@ static void initLayers(void)
 // vbt : active le prioritybit en mode 1word
 	scfg.patnamecontrl =  0x0000;// VRAM A0
 	scfg.plate_addr[0] = ss_map;
+//	SCL_SetConfig(SCL_NBG0, &scfg);
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
 
@@ -809,6 +838,7 @@ static void initLayers(void)
 
 //	SCL_InitConfigTb(&scfg);
 	scfg.dispenbl 	 = OFF;
+//	scfg.dispenbl 	 = ON;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
@@ -870,6 +900,12 @@ static void DrvInitSaturn(UINT8 game)
 		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17,0,240,191);
 		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17,0,240,191);
 	}
+	else if(game==3)
+	{
+			initSprites(248-1,192-1,8,0,0,0);
+		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,9,0,248,191);
+		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,9,0,248,191);
+	}
 	else
 	{
 		initSprites(256-1,192-1,0,0,0,0);
@@ -885,6 +921,7 @@ static void DrvInitSaturn(UINT8 game)
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	memset(&ss_vram[0x1100],0,0x12000);
+	memset((UINT8 *)SCL_VDP2_VRAM_A0,0x00,0x20000);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SCL_SetLineParamNBG1()
@@ -1009,6 +1046,9 @@ static void update_bg(UINT8 chip, UINT32 index)
 			map[0] =map[64] =map[0xE00] =map[0xE40] = name_lut[temp];//color + flip + prio
 			map[1] =map[65] =map[0xE01] =map[0xE41] = ((temp >> 8) & 0xFF) | ((temp  & 0x01) <<8) + 0x3000; //tilenum c00 1800
 #else
+//			if(chip==0)
+//			map[0] =map[32] =map[0x700] =map[0x720] =0;
+//			else
 			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
 #endif
 		}
@@ -1020,6 +1060,8 @@ static void update_bg(UINT8 chip, UINT32 index)
 	UINT32 *sg = (UINT32 *)&ss_vram[0x1100+ (chip<<16) + (index & ~3)];
 	UINT32 temp1 = bp_lut[bp & 0xFFFF];
 	UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
+//	if(index<=256)
+//		temp1 = temp2=0x00;
 	*sg= *pg = (temp1<<2 | temp2 );
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

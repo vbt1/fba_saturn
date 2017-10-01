@@ -3662,6 +3662,63 @@ EndFile
 				EndFile
 			EndDirectory
 
+			Directory TRANSFRM
+				File IC3.TOP;1
+					Source TRANSFRM\IC3.TOP
+				EndFile
+				File IC7.TOP;1
+					Source TRANSFRM\IC7.TOP
+				EndFile
+				File EPR7347.IC5;1
+					Source TRANSFRM\EPR7347.IC5
+				EndFile
+				File EPR7348.IC4;1
+					Source TRANSFRM\EPR7348.IC4
+				EndFile
+				File EPR7350.IC2;1
+					Source TRANSFRM\EPR7350.IC2
+				EndFile
+			EndDirectory
+
+			Directory ASTROFL
+				File EPR7349.IC3;1
+					Source ASTROFL\EPR7349.IC3
+				EndFile
+				File EPR7723.IC7;1
+					Source ASTROFL\EPR7723.IC7
+				EndFile
+				File EPR7347.IC5;1
+					Source TRANSFRM\EPR7347.IC5
+				EndFile
+				File EPR7348.IC4;1
+					Source TRANSFRM\EPR7348.IC4
+				EndFile
+				File EPR7350.IC2;1
+					Source TRANSFRM\EPR7350.IC2
+				EndFile
+			EndDirectory
+
+			Directory OPAOPA
+				File EPR11054.IC7;1
+					Source OPAOPA\EPR11054.IC7
+				EndFile
+				File EPR11053.IC5;1
+					Source OPAOPA\EPR11053.IC5
+				EndFile
+				File EPR11052.IC4;1
+					Source OPAOPA\EPR11052.IC4
+				EndFile
+				File EPR11051.IC3;1
+					Source OPAOPA\EPR11051.IC3
+				EndFile
+				File EPR11050.IC2;1
+					Source OPAOPA\EPR11050.IC2
+				EndFile
+				File 3170042.KEY;1
+					Source OPAOPA\3170042.KEY
+				EndFile
+			EndDirectory
+
 			Directory APPOOOH
 				File EPR5895.BIN;1
 					Source APPOOOH\EPR5895.BIN
