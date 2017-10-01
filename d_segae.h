@@ -21,6 +21,7 @@ static INT32 DrvOpaopaInit();
 static INT32 DrvHangonJrInit();
 static INT32 DrvTetrisInit();
 static INT32 DrvTransfrmInit();
+static INT32 DrvSlapshtrInit();
 static INT32 DrvExit();
 static INT32 DrvFrame();
 static void DrvInitSaturn(UINT8 game);
@@ -428,5 +429,18 @@ static struct BurnRomInfo opaopaRomDesc[] = {
 
 STD_ROM_PICK(opaopa)
 STD_ROM_FN(opaopa)
+
+//  Slap Shooter
+
+static struct BurnRomInfo slapshtrRomDesc[] = {
+
+	{ "epr7351.ic7", 0x8000, 0x894adb04, BRF_ESS | BRF_PRG }, // 0 maincpu
+	{ "epr7352.ic5", 0x8000, 0x61c938b6, BRF_ESS | BRF_PRG }, // 1
+	{ "epr7353.ic4", 0x8000, 0x8ee2951a, BRF_ESS | BRF_PRG }, // 2
+	{ "epr7354.ic3", 0x8000, 0x41482aa0, BRF_ESS | BRF_PRG }, // 3
+	{ "epr7355.ic2", 0x8000, 0xc67e1aef, BRF_ESS | BRF_PRG }, // 4
+};
+STD_ROM_PICK(slapshtr)
+STD_ROM_FN(slapshtr)
 
 #endif

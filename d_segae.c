@@ -48,6 +48,13 @@ int ovlInit(char *szShortName)
 		DrvOpaopaInit, DrvExit, DrvFrame, NULL
 	};
 
+	struct BurnDriver nBurnDrvSlapshtr = {
+		"slapshtr", "segae",
+		"Slap Shooter",
+		slapshtrRomInfo, slapshtrRomName, TransfrmInputInfo, TransfrmDIPInfo,
+		DrvSlapshtrInit, DrvExit, DrvFrame, NULL
+	};
+
 	if (strcmp(nBurnDrvHangonjr.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvHangonjr,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvTetrisse.szShortName, szShortName) == 0) 
@@ -60,6 +67,8 @@ int ovlInit(char *szShortName)
 	memcpy(shared,&nBurnDrvAstrofl,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvOpaopa.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvOpaopa,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvSlapshtr.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvSlapshtr,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -769,10 +778,14 @@ static INT32 DrvTransfrmInit()
 	return DrvInit(2);
 }
 
+static INT32 DrvSlapshtrInit()
+{
+	return DrvInit(2);
+}
+
 static INT32 DrvHangonJrInit()
 {
-	leftcolumnblank = 1;
-
+//	leftcolumnblank = 1;
 	return DrvInit(1);
 }
 

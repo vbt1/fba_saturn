@@ -3719,6 +3719,24 @@ EndFile
 				EndFile
 			EndDirectory
 
+			Directory SLAPSHTR
+				File EPR7351.IC7;1
+					Source SLAPSHTR\EPR7351.IC7
+				EndFile
+				File EPR7352.IC5;1
+					Source SLAPSHTR\EPR7352.IC5
+				EndFile
+				File EPR7353.IC4;1
+					Source SLAPSHTR\EPR7353.IC4
+				EndFile
+				File EPR7354.IC3;1
+					Source SLAPSHTR\EPR7354.IC3
+				EndFile
+				File EPR7355.IC2;1
+					Source SLAPSHTR\EPR7355.IC2
+				EndFile
+			EndDirectory
+
 			Directory APPOOOH
 				File EPR5895.BIN;1
 					Source APPOOOH\EPR5895.BIN
