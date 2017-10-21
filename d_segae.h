@@ -22,6 +22,7 @@ static INT32 DrvHangonJrInit();
 static INT32 DrvTetrisInit();
 static INT32 DrvTransfrmInit();
 static INT32 DrvSlapshtrInit();
+static INT32 DrvAstroflInit();
 static INT32 DrvExit();
 static INT32 DrvFrame();
 static void DrvInitSaturn(UINT8 game);

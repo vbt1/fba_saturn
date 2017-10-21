@@ -30,8 +30,8 @@ int ovlInit(char *szShortName)
 	struct BurnDriver nBurnDrvAstrofl = {
 		"astrofl", "segae",
 		"Astro Flash (Japan)",
-		TransfrmRomInfo, TransfrmRomName, TransfrmInputInfo, TransfrmDIPInfo,
-		DrvTransfrmInit, DrvExit, DrvFrame, NULL
+		AstroflRomInfo, AstroflRomName, TransfrmInputInfo, TransfrmDIPInfo,
+		DrvAstroflInit, DrvExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvFantzn2 = {
@@ -251,6 +251,20 @@ static void segae_vdp_setregister ( UINT8 chip, UINT16 cmd )
 			}
 		}
 
+		if (regnumber == 1 && chip == 1) {
+			if ((segae_vdp_regs[chip][0x1]&0x20) && vintpending) {
+				CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			} else {
+				CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+			}
+		}
+		if (regnumber == 0 && chip == 1) {
+			if ((segae_vdp_regs[chip][0x0]&0x10) && hintpending) { // dink
+				CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+			} else {
+				CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+			}
+		}
 
 	} else {
 		/* Illegal, there aren't this many registers! */
@@ -326,6 +340,8 @@ static UINT8 segae_vdp_reg_r ( UINT8 chip )
 	temp |= (vintpending << 7);
 	temp |= (hintpending << 6);
 
+	CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
+
 	hintpending = vintpending = 0;
 
 	return temp;
@@ -364,7 +380,8 @@ static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 		segae_vdp_accessaddr[chip] += 1;
 		segae_vdp_accessaddr[chip] &= 0x1f;
 	} 
-	else 
+//	else 
+	else if (segae_vdp_accessmode[chip]==0x01)
 	{ /* VRAM Accesses */
 
 		UINT32 index = segae_vdp_vrambank[chip]*0x4000 + (segae_vdp_accessaddr[chip]); // & 0x3fff);
@@ -417,10 +434,10 @@ static UINT8 __fastcall systeme_main_in(UINT16 port)
 
 		case 0xe0: return 0xff - DrvInput[0];
 		case 0xe1: return 0xff - DrvInput[1];
-//		case 0xe2: return input_r(port); // AM_RANGE(0xe2, 0xe2) AM_READ_PORT( "e2" )
-		case 0xf2: return DrvDip[0];//input_r(port); // AM_RANGE(0xf2, 0xf2) AM_READ_PORT( "f2" ) /* DSW0 */
-		case 0xf3: return DrvDip[1];//input_r(port); // AM_RANGE(0xf3, 0xf3) AM_READ_PORT( "f3" ) /* DSW1 */
-		case 0xf8: return hangonjr_port_f8_read(port); // m_maincpu->space(AS_IO).install_read_handler(0xf8, 0xf8, read8_delegate(FUNC(systeme_state::hangonjr_port_f8_read), this));
+		case 0xe2: return 0xff - DrvInput[2];
+		case 0xf2: return DrvDip[0];
+		case 0xf3: return DrvDip[1];
+		case 0xf8: return hangonjr_port_f8_read(port);
 	}	
 	////bprintf(PRINT_NORMAL, _T("IO Read %x\n"), a);
 	return 0;
@@ -431,29 +448,114 @@ static void __fastcall systeme_main_out(UINT16 port, UINT8 data)
 	switch (port & 0xff)
 	{
 		case 0x7b: SN76496Write(0, data);
-		break;
+		return;
 
 		case 0x7f: SN76496Write(1, data);
-		break;
+		return;
 
 		case 0xba: segae_vdp_data_w(0, data);
-		break;
+		return;
 
 		case 0xbb: segae_vdp_reg_w(0, data);
-		break;
+		return;
 
 		case 0xbe: segae_vdp_data_w(1, data);
-		break;
+		return;
 
 		case 0xbf:	segae_vdp_reg_w(1, data);
-		break;
+		return;
 
 		case 0xf7:	bank_write(data);
-		break;
+		return;
 
 		case 0xfa:	hangonjr_port_fa_write(data);
-		break;
+		return;
 	}
+}
+
+static void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],const INT32 opcode_swap_select[64],
+		const UINT8 data_xor[64],const INT32 data_swap_select[64])
+{
+	INT32 A;
+	static const UINT8 swaptable[24][4] =
+	{
+		{ 6,4,2,0 }, { 4,6,2,0 }, { 2,4,6,0 }, { 0,4,2,6 },
+		{ 6,2,4,0 }, { 6,0,2,4 }, { 6,4,0,2 }, { 2,6,4,0 },
+		{ 4,2,6,0 }, { 4,6,0,2 }, { 6,0,4,2 }, { 0,6,4,2 },
+		{ 4,0,6,2 }, { 0,4,6,2 }, { 6,2,0,4 }, { 2,6,0,4 },
+		{ 0,6,2,4 }, { 2,0,6,4 }, { 0,2,6,4 }, { 4,2,0,6 },
+		{ 2,4,0,6 }, { 4,0,2,6 }, { 2,0,4,6 }, { 0,2,4,6 },
+	};
+
+
+	UINT8 *rom = pDest;
+	UINT8 *decrypted = pDestDec;
+
+	for (A = 0x0000;A < 0x8000;A++)
+	{
+		INT32 row;
+		UINT8 src;
+		const UINT8 *tbl;
+
+
+		src = rom[A];
+
+		/* pick the translation table from bits 0, 3, 6, 9, 12 and 14 of the address */
+		row = (A & 1) + (((A >> 3) & 1) << 1) + (((A >> 6) & 1) << 2)
+				+ (((A >> 9) & 1) << 3) + (((A >> 12) & 1) << 4) + (((A >> 14) & 1) << 5);
+
+		/* decode the opcodes */
+		tbl = swaptable[opcode_swap_select[row]];
+		decrypted[A] = BITSWAP08(src,7,tbl[0],5,tbl[1],3,tbl[2],1,tbl[3]) ^ opcode_xor[row];
+
+		/* decode the data */
+		tbl = swaptable[data_swap_select[row]];
+		rom[A] = BITSWAP08(src,7,tbl[0],5,tbl[1],3,tbl[2],1,tbl[3]) ^ data_xor[row];
+	}
+	
+	memcpy(pDestDec + 0x8000, pDest + 0x8000, 0x4000);
+}
+
+static void astrofl_decode(void)
+{
+	static const UINT8 opcode_xor[64] =
+	{
+		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
+		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
+		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,
+		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
+		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
+		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,
+	};
+
+	static const UINT8 data_xor[64] =
+	{
+		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
+		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
+		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,
+		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
+		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
+		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,
+	};
+
+	static const INT32 opcode_swap_select[64] =
+	{
+		0,0,1,1,1,2,2,3,3,4,4,4,5,5,6,6,
+		6,7,7,8,8,9,9,9,10,10,11,11,11,12,12,13,
+
+		8,8,9,9,9,10,10,11,11,12,12,12,13,13,14,14,
+		14,15,15,16,16,17,17,17,18,18,19,19,19,20,20,21,
+	};
+
+	static const INT32 data_swap_select[64] =
+	{
+		0,0,1,1,2,2,2,3,3,4,4,5,5,5,6,6,
+		7,7,7,8,8,9,9,10,10,10,11,11,12,12,12,13,
+
+		8,8,9,9,10,10,10,11,11,12,12,13,13,13,14,14,
+		15,15,15,16,16,17,17,18,18,18,19,19,20,20,20,21,
+	};
+	sega_decode_2(DrvMainROM, DrvMainROMFetch, opcode_xor,opcode_swap_select,data_xor,data_swap_select);
 }
 
 static INT32 MemIndex()
@@ -520,6 +622,7 @@ static INT32 DrvDoReset()
 {
 	memset (DrvRAM, 0, RamEnd - DrvRAM);
 
+	rombank = 0;
 	hintcount = 0;
 	vintpending = 0;
 	hintpending = 0;
@@ -712,6 +815,15 @@ static INT32 DrvInit(UINT8 game)
 			mc8123 = 1;
 			mc8123_banked = 1;
 			break;
+		case 5: // astrofl
+			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x20000,  3, 1)) return 1;
+			if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1;
+			mc8123 = 1;
+			astrofl_decode();
+			break;
 	}
 
 	CZetInit(1);
@@ -720,14 +832,14 @@ static INT32 DrvInit(UINT8 game)
 	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM + 0x0000);
 	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM + 0x0000);
 
-	if (mc8123) {
-		CZetMapArea2(0x0000, 0x7fff, 2, DrvMainROMFetch, DrvMainROM);
-	}
-
 //	CZetMapMemory(DrvRAM, 0xc000, 0xffff, MAP_RAM);
 	CZetMapArea(0xc000, 0xffff, 0, DrvRAM);
 	CZetMapArea(0xc000, 0xffff, 1, DrvRAM);
 	CZetMapArea(0xc000, 0xffff, 2, DrvRAM);
+
+	if (mc8123) {
+		CZetMapArea2(0x0000, 0x7fff, 2, DrvMainROMFetch, DrvMainROM);
+	}
 
 	CZetSetWriteHandler(systeme_main_write);
 	CZetSetReadHandler(systeme_main_read);
@@ -776,6 +888,13 @@ static INT32 DrvTransfrmInit()
 //	leftcolumnblank = 1;
 
 	return DrvInit(2);
+}
+
+static INT32 DrvAstroflInit()
+{
+//	leftcolumnblank = 1;
+
+	return DrvInit(5);
 }
 
 static INT32 DrvSlapshtrInit()
@@ -897,10 +1016,10 @@ static void DrvInitSaturn(UINT8 game)
 	SclProcess = 2; 
 #else
     SS_SET_N0PRIN(4);
-    SS_SET_S0PRIN(7);
+    SS_SET_S0PRIN(5);
 #endif
-	SS_SET_N1PRIN(5);
-	SS_SET_N2PRIN(6);
+	SS_SET_N1PRIN(6);
+	SS_SET_N2PRIN(7);
 
 	initLayers();
 	initColors();
@@ -1062,14 +1181,14 @@ static void update_bg(UINT8 chip, UINT32 index)
 //			if(chip==0)
 //			map[0] =map[32] =map[0x700] =map[0x720] =0;
 //			else
-			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
+			map[0] =map[32] =/*map[0x700] =map[0x720] =*/name_lut[temp];
 #endif
 		}
 	}
 	/* Mark patterns as dirty */
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	UINT32 bp = *(UINT32 *)&segae_vdp_vram[chip][index & ~3];
-	UINT32 *pg = (UINT32 *) &cache[(0x00000|(chip<<16)) | (index & ~3)];
+	UINT32 *pg = (UINT32 *) &cache[(chip<<16) + (index & ~3)];
 	UINT32 *sg = (UINT32 *)&ss_vram[0x1100+ (chip<<16) + (index & ~3)];
 	UINT32 temp1 = bp_lut[bp & 0xFFFF];
 	UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
