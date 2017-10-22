@@ -1,5 +1,6 @@
 #include "d_segae.h"
 #define SELECTED_CHIP 1
+//#define TWO_WORDS 1
 // based on MESS/MAME driver by David Haywood
 Fixed32	ss_scl1[SCL_MAXLINE];
 volatile SysPort	*ss_port;
@@ -85,8 +86,17 @@ static void __fastcall systeme_main_write(UINT16 address, UINT8 data)
 {
 	if(address >= 0x8000 && address <= 0xbfff)
 	{
-		segae_vdp_vram [1-segae_8000bank][(address - 0x8000) + (0x4000-(segae_vdp_vrambank[1-segae_8000bank] * 0x4000))] = data;
+		UINT32 index = (address - 0x8000) + (0x4000-(segae_vdp_vrambank[1-segae_8000bank] * 0x4000));
+		UINT8 chip = 1-segae_8000bank;
 
+//		segae_vdp_vram [1-segae_8000bank][index] = data;
+
+		if (segae_vdp_vram[chip][index] != data) 
+		{
+			segae_vdp_vram[chip][index] = data;
+			update_bg(chip, index);		
+			update_sprites(chip, index);		
+		}
 		return;
 	}
 }
@@ -128,7 +138,7 @@ static UINT8 __fastcall hangonjr_port_f8_read (UINT8 port)
 
 	if(( device = PER_GetDeviceR( &ss_port[0], 0 )) != NULL )
 	{
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"button pushed ",0,180);	
+//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"button pushed ",0,180);	
 
 //		pltriggerE[0] = pltrigger[0];
 		pltrigger[0] = PER_GetTrigger( device );
@@ -232,6 +242,9 @@ static void segae_vdp_setregister ( UINT8 chip, UINT16 cmd )
 			{
 				case 0x02: /* Name Table A Base Address */
 					ntab[chip] = (segae_vdp_regs[chip][regnumber] << 10) & 0x3800;
+//					ntab[chip] = (segae_vdp_regs[chip][regnumber] & 0x0e) << 10;
+//					ntab[chip] += (segae_vdp_vrambank[chip] * 0x4000);
+//					ntab[chip] = 0x3800;
 					break;
 
 				case 0x05: /* Sprite Attribute Table Base Address */
@@ -386,18 +399,15 @@ static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 
 		UINT32 index = segae_vdp_vrambank[chip]*0x4000 + (segae_vdp_accessaddr[chip]); // & 0x3fff);
 //		segae_vdp_vram[chip][ segae_vdp_vrambank[chip]*0x4000 + segae_vdp_accessaddr[chip] ] = data;
-
-		segae_vdp_accessaddr[chip] += 1;
-		segae_vdp_accessaddr[chip] &= 0x3fff;
-//		 index = (segae_vdp_accessaddr[chip] & 0x3fff);
-
-//		if(chip==SELECTED_CHIP)
 		if (segae_vdp_vram[chip][index] != data) 
 		{
 			segae_vdp_vram[chip][index] = data;
 			update_bg(chip, index);		
 			update_sprites(chip, index);		
 		}
+
+		segae_vdp_accessaddr[chip] += 1;
+		segae_vdp_accessaddr[chip] &= 0x3fff;
 	}
 }
 
@@ -735,9 +745,10 @@ static INT32 DrvFrame()
 
 		if(currentLine>7)
 		{
-			ss_scl[currentLine] = scroll_x[0] << 16;
-			ss_scl1[currentLine] = scroll_x[1] << 16;
+			ss_scl[currentLine] = (scroll_x[0]) << 16;
+			ss_scl1[currentLine] = (scroll_x[1]) << 16;
 		}
+
 		segae_interrupt();
 	}
 	CZetClose();
@@ -759,6 +770,14 @@ static INT32 DrvFrame()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm); // bon emplacement
+
+/*
+for(int i=0;i<0x700;i++)
+	{
+update_bg(0, i);
+update_bg(1, i);
+	}
+*/
 
 	ss_reg->n0_move_y = scroll_y[0]<<16;
 	ss_reg->n1_move_y = scroll_y[1]<<16;
@@ -862,6 +881,7 @@ static INT32 DrvInit(UINT8 game)
 	}
 
 	DrvDoReset();
+
 	make_lut();
 //	drawWindow(0,192,192,2,66);
 	return 0;
@@ -1032,7 +1052,7 @@ static void DrvInitSaturn(UINT8 game)
 		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17,0,240,191);
 		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17,0,240,191);
 	}
-	else if(game==3)
+	else if(game==5 || game==3 || game==2)
 	{
 			initSprites(248-1,192-1,8,0,0,0);
 		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,9,0,248,191);
@@ -1054,6 +1074,9 @@ static void DrvInitSaturn(UINT8 game)
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	memset(&ss_vram[0x1100],0,0x12000);
 	memset((UINT8 *)SCL_VDP2_VRAM_A0,0x00,0x20000);
+
+	memset(ss_scl,0xff,192*4);
+	memset(ss_scl1,0xff,192*4);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SCL_SetLineParamNBG1()
@@ -1181,7 +1204,7 @@ static void update_bg(UINT8 chip, UINT32 index)
 //			if(chip==0)
 //			map[0] =map[32] =map[0x700] =map[0x720] =0;
 //			else
-			map[0] =map[32] =/*map[0x700] =map[0x720] =*/name_lut[temp];
+			map[0] =map[32] =map[0x700] =map[0x720] = name_lut[temp];
 #endif
 		}
 	}
