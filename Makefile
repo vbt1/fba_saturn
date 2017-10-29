@@ -220,7 +220,7 @@ OVLFREEK                 = root/d_freek.coff
 OVLFREEK1               = root/d_freek.bin
 MPOVLFREEKFILE    = $(OVLFREEK:.coff=.maps)
 LDOVLFREEKFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFREEKFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLFREEK         = d_freekick.c czet.c cz80/cz80.c sn76496.c 8255ppi.c saturn/ovl.c
+SRCOVLFREEK         = d_freekick.c czet.c cz80/cz80.c sn76496.c mc8123.c 8255ppi.c saturn/ovl.c
 OBJOVLFREEK         = $(SRCOVLFREEK:.c=.o)
 
 OVLMSX                 = root/d_msx.coff

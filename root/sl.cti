@@ -4292,6 +4292,54 @@ EndFile
 
   			EndDirectory
 
+  			Directory OMEGA
+				File TBP24S10.3F;1
+					Source OMEGA\TBP24S10.3F
+				EndFile
+				File TBP24S10.4F;1
+					Source OMEGA\TBP24S10.4F
+				EndFile
+				File TBP24S10.3G;1
+					Source OMEGA\TBP24S10.3G
+				EndFile
+				File TBP24S10.4G;1
+					Source OMEGA\TBP24S10.4G
+				EndFile
+				File TBP24S10.3E;1
+					Source OMEGA\TBP24S10.3E
+				EndFile
+				File TBP24S10.4E;1
+					Source OMEGA\TBP24S10.4E
+				EndFile
+				File 17.M10;1
+					Source OMEGA\17.M10
+				EndFile
+				File 8.N10;1
+					Source OMEGA\8.N10
+				EndFile
+				File OMEGA.KEY;1
+					Source OMEGA\OMEGA.KEY
+				EndFile
+				File 4.F10;1
+					Source OMEGA\4.F10
+				EndFile
+				File 5.H10;1
+					Source OMEGA\5.H10
+				EndFile
+				File 6.J10;1
+					Source OMEGA\6.J10
+				EndFile
+				File 3.D10;1
+					Source OMEGA\3.D10
+				EndFile
+				File 1.A10;1
+					Source OMEGA\1.A10
+				EndFile
+				File 2.C10;1
+					Source OMEGA\2.C10
+				EndFile
+  			EndDirectory
+
   			Directory COUNTRNB
 				File ROM_CPU.BIN;1
 					Source COUNTRNB\ROM_CPU.BIN

@@ -724,7 +724,6 @@ static INT32 DrvFrame()
 {
 	UINT32 nInterleave = 262;
 //	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
-//	if (DrvReset) DrvDoReset();
 	DrvMakeInputs();
 
 	nCyclesTotal = 10738635 / 2 / 60;
@@ -770,14 +769,6 @@ static INT32 DrvFrame()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm); // bon emplacement
-
-/*
-for(int i=0;i<0x700;i++)
-	{
-update_bg(0, i);
-update_bg(1, i);
-	}
-*/
 
 	ss_reg->n0_move_y = scroll_y[0]<<16;
 	ss_reg->n1_move_y = scroll_y[1]<<16;

@@ -40,6 +40,13 @@ int ovlInit(char *szShortName)
 		DrvInit, DrvExit, DrvFrame, DrvDraw
 	};
 
+	struct BurnDriver nBurnDrvOmega = {
+		"omega", "freek",
+		"Omega",
+		omegaRomInfo, omegaRomName, GigasInputInfo, OmegaDIPInfo,
+		DrvInit, DrvExit, DrvFrame, DrvDraw
+	};
+
 	if (strcmp(nBurnDrvPbillrd.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvPbillrd,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvFreekickb1.szShortName, szShortName) == 0) 
@@ -50,6 +57,8 @@ int ovlInit(char *szShortName)
 	memcpy(shared,&nBurnDrvGigasb,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvGigasm2.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvGigasm2,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvOmega.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvOmega,sizeof(struct BurnDriver));
 	
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -458,7 +467,7 @@ UINT8 __fastcall gigas_in(UINT16 address)
 		break;
 		
 		case 0x01:
-			return 0;
+			return DrvDip[2];
 		break;
 	}
 
@@ -483,7 +492,7 @@ static INT32 MemIndex()
 
 //	DrvMainROM	 	= Next; Next += 0x40000;
 	DrvMainROM	 	= Next; Next += 0x40000;
-//	DrvMainROMdec   = Next; Next += 0x20000;
+	DrvMainROMdec   = Next; Next += 0x20000;
 //	DrvMainROMdec   = Next; Next += 0x10000;
 	DrvSndROM		= Next; Next += 0x10000;
 	DrvGfxTMP0		= (UINT8 *)0x00200000;
@@ -647,6 +656,17 @@ static INT32 LoadRoms()
 		}*/
 	}
 
+	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "omega"))
+	{
+		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM + 0x04000,  rom_number++, 1)) return 1;
+
+		if (BurnLoadRom(MC8123Key,  rom_number++, 1)) return 1;
+
+		mc8123_decrypt_rom(0, 1, DrvMainROM, DrvMainROMdec, MC8123Key);
+		use_encrypted = 1;
+	}
+
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "gigasb")) 
 	{
 		if (BurnLoadRom(DrvMainROM + 0x10000,  rom_number++, 1)) return 1;
@@ -807,6 +827,11 @@ static INT32 DrvInit()
 	} else { // gigas*
 		CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
 		CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROM + 0x10000, DrvMainROM);
+
+		if (use_encrypted) {
+			CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
+			CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROMdec, DrvMainROM); // fetch ops(encrypted), opargs(unencrypted)
+		}
 	}
 
 

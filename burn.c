@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 54
+#define NB_DRV 55
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -121,6 +121,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvCountrunb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvGigasb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvGigasm2 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvOmega = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvFM = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvMSX_1942 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
@@ -348,6 +349,10 @@ BurnDrvGigasm2.szShortName="gigasm2b";
 BurnDrvGigasm2.szFullNameA="Gigas Mark II";
 BurnDrvGigasm2.szParent="freek";
 
+BurnDrvOmega.szShortName="omega";
+BurnDrvOmega.szFullNameA="Omega";
+BurnDrvOmega.szParent="freek";
+
 BurnDrvSlapFigh.szShortName="slapfib1";
 BurnDrvSlapFigh.szFullNameA="Slap Fight (bootleg set 1)";
 BurnDrvSlapFigh.szParent="slpfgh";
@@ -428,6 +433,7 @@ pDriver[i++] = &BurnDrvNews;
 pDriver[i++] = &BurnDrvNewsa;
 pDriver[i++] = &BurnDrvNinjakun;
 pDriver[i++] = &BurnDrvNova2001u;
+pDriver[i++] = &BurnDrvOmega;
 pDriver[i++] = &BurnDrvPang;
 pDriver[i++] = &BurnDrvpkunwar;
 pDriver[i++] = &BurnDrvpengo2u;
