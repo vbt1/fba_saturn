@@ -499,7 +499,7 @@ static INT32 MemIndex()
 	DrvGfxTMP1		= (UINT8 *)0x00218000;
 	DrvGfxROM0		= SS_CACHE; // 0x800 * 8 * 8
 	DrvGfxROM1		= (UINT8 *)(ss_vram+0x1100); // 0x200 * 16 * 16
-//	MC8123Key		= Next; Next += 0x02000;
+	MC8123Key		= Next; Next += 0x02000;
 	DrvColPROM		= Next; Next += 0x00600;
 	DrvPalette			= (UINT16*)colBgAddr;//(UINT32*)Next; Next += 0x0400 * sizeof(UINT32); // à faire
 	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
@@ -1052,7 +1052,7 @@ static INT32 DrvExit()
 
 	MemEnd = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
 	DrvVidRAM = DrvSprRAM = DrvColRAM = DrvGfxROM0 = DrvGfxROM1 = DrvGfxTMP0 =DrvGfxTMP1 = DrvColPROM = NULL;
-//	MC8123Key = NULL;
+	MC8123Key = NULL;
 	DrvPalette = map_offset_lut = NULL;
 	free (AllMem);
 	AllMem = NULL;
