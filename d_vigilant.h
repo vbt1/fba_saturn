@@ -9,7 +9,11 @@
 #include "sega_pcm.h"
 #include "saturn/ovl.h"
 
-#define nBurnSoundLen 140 //140 //128//7680/55.0
+PcmHn 			pcm8[8];
+#define	PCM_ADDR	((void*)0x25a20000)
+#define	PCM_SIZE	(4096L*2)				/* 2.. */
+#define SOUNDRATE   7680L //
+#define nBurnSoundLen 128 //140 //128//7680/55.0
 unsigned int vbmap[4][0x1000];
 int bg=-1;
 

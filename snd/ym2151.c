@@ -3,7 +3,6 @@
 *	Yamaha YM2151 driver (version 2.150 final beta)
 *
 ******************************************************************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +32,7 @@
 		FILE * cymfile = NULL;
 	#endif
 #endif
+
 
 /* struct describing a single operator */
 typedef struct{
@@ -176,6 +176,7 @@ typedef struct
 
 } YM2151;
 
+
 #define FREQ_SH			16  /* 16.16 fixed point (frequency calculations) */
 #define EG_SH			16  /* 16.16 fixed point (envelope generator timing) */
 #define LFO_SH			10  /* 22.10 fixed point (LFO calculations)       */
@@ -220,20 +221,20 @@ typedef struct
 *	TL_RES_LEN - sinus resolution (X axis)
 */
 #define TL_TAB_LEN (13*2*TL_RES_LEN)
-/*static*/ signed int tl_tab[TL_TAB_LEN];
+static signed int tl_tab[TL_TAB_LEN];
 
 #define ENV_QUIET		(TL_TAB_LEN>>3)
 
 /* sin waveform table in 'decibel' scale */
-/*static*/ unsigned int sin_tab[SIN_LEN];
+static unsigned int sin_tab[SIN_LEN];
 
 
 /* translate from D1L to volume index (16 D1L levels) */
-/*static*/ UINT32 d1l_tab[16];
+static UINT32 d1l_tab[16];
 
 
 #define RATE_STEPS (8)
-/*static*/ UINT8 eg_inc[19*RATE_STEPS]={
+static UINT8 eg_inc[19*RATE_STEPS]={
 
 /*cycle:0 1  2 3  4 5  6 7*/
 
@@ -266,7 +267,7 @@ typedef struct
 #define O(a) (a*RATE_STEPS)
 
 /*note that there is no O(17) in this table - it's directly in the code */
-/*static*/ UINT8 eg_rate_select[32+64+32]={	/* Envelope Generator rates (32 + 64 rates + 32 RKS) */
+static UINT8 eg_rate_select[32+64+32]={	/* Envelope Generator rates (32 + 64 rates + 32 RKS) */
 /* 32 dummy (infinite time) rates */
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
@@ -313,7 +314,7 @@ O(16),O(16),O(16),O(16),O(16),O(16),O(16),O(16)
 /*mask  2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3, 1,  0,  0,  0,  0,  0 */
 
 #define O(a) (a*1)
-/*static*/ UINT8 eg_rate_shift[32+64+32]={	/* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
+static UINT8 eg_rate_shift[32+64+32]={	/* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
 /* 32 infinite time rates */
 O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
 O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
@@ -366,14 +367,14 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 *	DT2=0 DT2=1 DT2=2 DT2=3
 *	0     600   781   950
 */
-/*static*/ UINT32 dt2_tab[4] = { 0, 384, 500, 608 };
+static UINT32 dt2_tab[4] = { 0, 384, 500, 608 };
 
 /*	DT1 defines offset in Hertz from base note
 *	This table is converted while initialization...
 *	Detune table shown in YM2151 User's Manual is wrong (verified on the real chip)
 */
 
-/*static*/ UINT8 dt1_tab[4*32] = { /* 4*32 DT1 values */
+static UINT8 dt1_tab[4*32] = { /* 4*32 DT1 values */
 /* DT1=0 */
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -391,7 +392,7 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
   8, 8, 9,10,11,12,13,14,16,17,19,20,22,22,22,22
 };
 
-/*static*/ UINT16 phaseinc_rom[768]={
+static UINT16 phaseinc_rom[768]={
 1299,1300,1301,1302,1303,1304,1305,1306,1308,1309,1310,1311,1313,1314,1315,1316,
 1318,1319,1320,1321,1322,1323,1324,1325,1327,1328,1329,1330,1332,1333,1334,1335,
 1337,1338,1339,1340,1341,1342,1343,1344,1346,1347,1348,1349,1351,1352,1353,1354,
@@ -461,7 +462,7 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 		some 0x80 could be 0x81 as well as some 0x00 could be 0x01.
 */
 
-/*static*/ UINT8 lfo_noise_waveform[256] = {
+static UINT8 lfo_noise_waveform[256] = {
 0xFF,0xEE,0xD3,0x80,0x58,0xDA,0x7F,0x94,0x9E,0xE3,0xFA,0x00,0x4D,0xFA,0xFF,0x6A,
 0x7A,0xDE,0x49,0xF6,0x00,0x33,0xBB,0x63,0x91,0x60,0x51,0xFF,0x00,0xD8,0x7F,0xDE,
 0xDC,0x73,0x21,0x85,0xB2,0x9C,0x5D,0x24,0xCD,0x91,0x9E,0x76,0x7F,0x20,0xFB,0xF3,
@@ -484,15 +485,15 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 };
 
 
-/*static*/ YM2151 * YMPSG = NULL;	/* array of YM2151's */
-/*static*/ unsigned int YMNumChips;	/* total # of YM2151's emulated */
+static YM2151 * YMPSG = NULL;	/* array of YM2151's */
+static unsigned int YMNumChips;	/* total # of YM2151's emulated */
 
 
 /* these variables stay here for speedup purposes only */
-/*static*/ YM2151 * PSG;
-/*static*/ signed int chanout[8];
-/*static*/ signed int m2,c1,c2; /* Phase Modulation input for operators 2,3,4 */
-/*static*/ signed int mem;		/* one sample delay memory */
+static YM2151 * PSG;
+static signed int chanout[8];
+static signed int m2,c1,c2; /* Phase Modulation input for operators 2,3,4 */
+static signed int mem;		/* one sample delay memory */
 
 
 /* save output as raw 16-bit sample */
@@ -509,8 +510,8 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 	#undef PI
 #endif
 #define PI 3.14159265358979323846
-	
-/*static*/ void init_tables(void)
+
+static void init_tables(void)
 {
 	signed int i,x,n;
 	double o,m;
@@ -518,8 +519,6 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 	for (x=0; x<TL_RES_LEN; x++)
 	{
 		m = (1<<16) / powf(2, (x+1) * (ENV_STEP/4.0) / 8.0);
-//		m = (1<<16) / powf(2, (x+1) * 0.00390625);
-		
 		m = floorf(m);
 
 		/* we never reach (1<<16) here due to the (x+1) */
@@ -541,10 +540,6 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 			tl_tab[ x*2+0 + i*2*TL_RES_LEN ] =  tl_tab[ x*2+0 ]>>i;
 			tl_tab[ x*2+1 + i*2*TL_RES_LEN ] = -tl_tab[ x*2+0 + i*2*TL_RES_LEN ];
 		}
-
-//			signed short * pBufferx = (signed short *)0x00200000;
-//			pBufferx[x*2] = n; //powf(2, (x+1) * 0.00390625);
-//			pBufferx[x*2+1] = -n;
 	}
 
 	for (i=0; i<SIN_LEN; i++)
@@ -566,18 +561,17 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 		else
 			n = n>>1;
 
-		sin_tab[ i ] = (n*2 + (m>=0.0? 0: 1 )) & 0xffff;
-
-//			unsigned int * pBufferx = (unsigned int *)0x00200000;
-//			pBufferx[i] = (int*)&n)[0]; //powf(2, (x+1) * 0.00390625);
-//			pBufferx[i] = sin_tab[ i ];
+		sin_tab[ i ] = n*2 + (m>=0.0? 0: 1 );
+		/*logerror("sin [0x%4x]= %4i (tl_tab value=%8x)\n", i, sin_tab[i],tl_tab[sin_tab[i]]);*/
 	}
+
 
 	/* calculate d1l_tab table */
 	for (i=0; i<16; i++)
 	{
 		m = (i!=15 ? i : i+16) * (4.0/ENV_STEP);   /* every 3 'dB' except for all bits = 1 = 45+48 'dB' */
 		d1l_tab[i] = m;
+		/*logerror("d1l_tab[%02x]=%08x\n",i,d1l_tab[i] );*/
 	}
 
 #ifdef SAVE_SAMPLE
@@ -596,7 +590,7 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 }
 
 
-/*static*/ void init_chip_tables(YM2151 *chip)
+static void init_chip_tables(YM2151 *chip)
 {
 	int i,j;
 	double mult,pom,phaseinc,Hz;
@@ -656,9 +650,8 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 			chip->freq[768+ j*768 + i ] = chip->freq[768 + 8*768 -1];
 		}
 	}
-	unsigned int *lowram = (unsigned int *)0x00200000;
 
-	mult = 0x10000;//(1<<FREQ_SH);
+	mult = (1<<FREQ_SH);
 	for (j=0; j<4; j++)
 	{
 		for (i=0; i<32; i++)
@@ -671,14 +664,13 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 			/*positive and negative values*/
 			chip->dt1_freq[ (j+0)*32 + i ] = phaseinc * mult;
 			chip->dt1_freq[ (j+4)*32 + i ] = -chip->dt1_freq[ (j+0)*32 + i ];
-//			lowram[i+j*32]=chip->dt1_freq[ (j+0)*32 + i ];
 		}
 	}
-//	while(1);
+
 
 	/* calculate timers' deltas */
 	/* User's Manual pages 15,16  */
-	mult = 0x10000;//(1<<TIMER_SH);
+	mult = (1<<TIMER_SH);
 	for (i=0; i<1024; i++)
 	{
 		/* ASG 980324: changed to compute both tim_A_tab and timer_A_time */
@@ -688,10 +680,7 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 		#else
 			chip->tim_A_tab[i] = pom * (double)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
 		#endif
-//
-// vbt : tim_A_tab correct
 	}
-
 	for (i=0; i<256; i++)
 	{
 		/* ASG 980324: changed to compute both tim_B_tab and timer_B_time */
@@ -701,13 +690,10 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 		#else
 			chip->tim_B_tab[i] = pom * (double)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
 		#endif
-// vbt : tim_B_tab correct
 	}
 
 	/* calculate noise periods table */
 	scaler = ( (double)chip->clock / 64.0 ) / ( (double)chip->sampfreq );
-
-
 	for (i=0; i<32; i++)
 	{
 		j = (i!=31 ? i : 30);				/* rate 30 and 31 are the same */
@@ -715,15 +701,8 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0)
 		j = (65536.0 / (double)(j*32.0));	/* number of samples per one shift of the shift register */
 		/*chip->noise_tab[i] = j * 64;*/	/* number of chip clock cycles per one shift */
 		chip->noise_tab[i] = j * 64 * scaler;
-// vbt : noise_tab correct
 		/*logerror("noise_tab[%02x]=%08x\n", i, chip->noise_tab[i]);*/
-//		char toto[100];
-
-//		sprintf(toto,"i %d noise %d",i, chip->noise_tab[i]);
-//		lowram[i]=chip->noise_tab[i];
-//		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)toto,10,i*10);
 	}
-//	while(1);
 }
 
 #define KEY_ON(op, key_set){									\
@@ -974,45 +953,33 @@ void YM2151WriteReg(int n, int r, int v)
 	case 0x00:
 		switch(r){
 		case 0x01:	/* LFO reset(bit 1), Test Register (other bits) */
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"LFO reset(bit 1), Test Register (other bits)                      ",10,40);
 			chip->test = v;
 			if (v&2) chip->lfo_phase = 0;
 			break;
 
 		case 0x08:
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"PSG is used in KEY_ON macro                                               ",10,40);
-
 			PSG = &YMPSG[n]; /* PSG is used in KEY_ON macro */
 			envelope_KONKOFF(&chip->oper[ (v&7)*4 ], v );
 			break;
 
 		case 0x0f:	/* noise mode enable, noise period */
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"noise mode enable, noise period                                               ",10,40);
-
 			chip->noise = v;
 			chip->noise_f = chip->noise_tab[ v & 0x1f ];
 			break;
 
 		case 0x10:	/* timer A hi */
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"timer A hi                                               ",10,40);
-
 			chip->timer_A_index = (chip->timer_A_index & 0x003) | (v<<2);
 			break;
 
 		case 0x11:	/* timer A low */
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"timer A low                                               ",10,40);
-
 			chip->timer_A_index = (chip->timer_A_index & 0x3fc) | (v & 3);
 			break;
 
 		case 0x12:	/* timer B */
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"timer B                                               ",10,40);
-
 			chip->timer_B_index = v;
 			break;
 
 		case 0x14:	/* CSM, irq flag reset, irq enable, timer start/stop */
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"CSM, irq flag reset, irq enable, timer start/stop                                        ",10,40);
 
 			chip->irq_enable = v;	/* bit 3-timer B, bit 2-timer A, bit 7 - CSM */
 
@@ -1083,8 +1050,6 @@ void YM2151WriteReg(int n, int r, int v)
 			break;
 
 		case 0x18:	/* LFO frequency */
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"LFO frequency                                               ",10,40);
-
 			{
 				chip->lfo_overflow    = ( 1 << ((15-(v>>4))+3) ) * (1<<LFO_SH);
 				chip->lfo_counter_add = 0x10 + (v & 0x0f);
@@ -1092,8 +1057,6 @@ void YM2151WriteReg(int n, int r, int v)
 			break;
 
 		case 0x19:	/* PMD (bit 7==1) or AMD (bit 7==0) */
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"PMD (bit 7==1) or AMD (bit 7==0)                                               ",10,40);
-
 			if (v&0x80)
 				chip->pmd = v & 0x7f;
 			else
@@ -1101,8 +1064,6 @@ void YM2151WriteReg(int n, int r, int v)
 			break;
 
 		case 0x1b:	/* CT2, CT1, LFO waveform */
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"CT2, CT1, LFO waveform                                               ",10,40);
-
 			chip->ct = v >> 6;
 			chip->lfo_wsel = v & 3;
 			if (chip->porthandler) (*chip->porthandler)(0 , chip->ct );
@@ -1276,7 +1237,7 @@ void YM2151WriteReg(int n, int r, int v)
 
 
 #ifdef LOG_CYM_FILE
-/*static*/ void cymfile_callback (int n)
+static void cymfile_callback (int n)
 {
 	if (cymfile)
 		fputc( (unsigned char)0, cymfile );
@@ -1293,7 +1254,7 @@ int YM2151ReadStatus( int n )
 {
 }
 
-/*static*/ void ym2151_postload_refresh(void)
+static void ym2151_postload_refresh(void)
 {
 	int i,j;
 
@@ -1459,7 +1420,7 @@ void YM2151ResetChip(int num)
 
 
 
-/*inline*/ signed int op_calc(YM2151Operator * OP, unsigned int env, signed int pm)
+inline signed int op_calc(YM2151Operator * OP, unsigned int env, signed int pm)
 {
 	UINT32 p;
 
@@ -1472,7 +1433,7 @@ void YM2151ResetChip(int num)
 	return tl_tab[p];
 }
 
-/*inline*/ signed int op_calc1(YM2151Operator * OP, unsigned int env, signed int pm)
+inline signed int op_calc1(YM2151Operator * OP, unsigned int env, signed int pm)
 {
 	UINT32 p;
 	INT32  i;
@@ -1495,8 +1456,8 @@ void YM2151ResetChip(int num)
 
 
 #define volume_calc(OP) ((OP)->tl + ((UINT32)(OP)->volume) + (AM & (OP)->AMmask))
-unsigned int envold[4];
-/*inline*/ void chan_calc(unsigned int chan)
+
+inline void chan_calc(unsigned int chan)
 {
 	YM2151Operator *op;
 	unsigned int env;
@@ -1834,8 +1795,7 @@ inline void advance_eg(void)
 		op = &PSG->oper[0];	/* CH 0 M1 */
 		i = 32;
 		do
-		{ 
-#if 1	  
+		{
 			switch(op->state)
 			{
 			case EG_ATT:	/* attack phase */
@@ -1898,9 +1858,9 @@ inline void advance_eg(void)
 		}while (i);
 	}
 }
-#endif
 
-/*inline*/ void advance(void)
+
+inline void advance(void)
 {
 	YM2151Operator *op;
 	unsigned int i;
@@ -2080,6 +2040,7 @@ inline void advance_eg(void)
 	}
 }
 
+
 /* first macro saves left and right channels to mono file */
 /* second macro saves left and right channels to stereo file */
 #if 1	/*MONO*/
@@ -2116,6 +2077,253 @@ inline void advance_eg(void)
 *	'**buffers' is table of pointers to the buffers: left and right
 *	'length' is the number of samples that should be generated
 */
+
+//void YM2151UpdateOne(int num, INT16 **buffers, INT16* pSoundBuf, int length)
+void YM2151UpdateOne(int num, INT16 *buffers, int length)
+{
+	unsigned int i;
+//	signed int outl,outr;
+//	SAMP *bufL, *bufR;
+
+//	bufL = buffers[0];
+//	bufR = buffers[1];
+
+	PSG = &YMPSG[num];
+
+#ifdef USE_MAME_TIMERS
+		/* ASG 980324 - handled by real timers now */
+#else
+	if (PSG->tim_B)
+	{
+		PSG->tim_B_val -= ( length << TIMER_SH );
+		if (PSG->tim_B_val<=0)
+		{
+			PSG->tim_B_val += PSG->tim_B_tab[ PSG->timer_B_index ];
+			if ( PSG->irq_enable & 0x08 )
+			{
+				int oldstate = PSG->status & 3;
+				PSG->status |= 2;
+				if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
+			}
+		}
+	}
+#endif
+
+	for (i=0; i<length; i++)
+	{
+		advance_eg();
+
+		chanout[0] = 0;
+		chanout[1] = 0;
+		chanout[2] = 0;
+		chanout[3] = 0;
+		chanout[4] = 0;
+		chanout[5] = 0;
+		chanout[6] = 0;
+		chanout[7] = 0;
+
+		chan_calc(0);
+		chan_calc(1);
+		chan_calc(2);
+		chan_calc(3);
+		chan_calc(4);
+		chan_calc(5);
+		chan_calc(6);
+		chan7_calc();
+
+		buffers[0x0000] = chanout[0] & PSG->pan[0];
+		buffers[0x2000] = chanout[1] & PSG->pan[2];
+		buffers[0x4000] = chanout[2] & PSG->pan[4];
+		buffers[0x6000] = chanout[3] & PSG->pan[6];
+		buffers[0x8000] = chanout[4] & PSG->pan[8];
+		buffers[0xa000] = chanout[5] & PSG->pan[10];
+		buffers[0xc000] = chanout[6] & PSG->pan[12];
+		buffers[0xe000] = chanout[7] & PSG->pan[14];
+
+//		outl = chanout[0] & PSG->pan[0];
+//		outr = chanout[0] & PSG->pan[1];
+//		outl += (chanout[1] & PSG->pan[2]);
+//		outr += (chanout[1] & PSG->pan[3]);
+//		outl += (chanout[2] & PSG->pan[4]);
+//		outr += (chanout[2] & PSG->pan[5]);
+//		outl += (chanout[3] & PSG->pan[6]);
+//		outr += (chanout[3] & PSG->pan[7]);
+//		outl += (chanout[4] & PSG->pan[8]);
+//		outr += (chanout[4] & PSG->pan[9]);
+//		outl += (chanout[5] & PSG->pan[10]);
+//		outr += (chanout[5] & PSG->pan[11]);
+//		outl += (chanout[6] & PSG->pan[12]);
+//		outr += (chanout[6] & PSG->pan[13]);
+//		outl += (chanout[7] & PSG->pan[14]);
+//		outr += (chanout[7] & PSG->pan[15]);
+
+//		if (outr > MAXOUT) outr = MAXOUT;
+//			else if (outr < MINOUT) outr = MINOUT;
+//		buffers[0] = ((signed short)outr);
+
+#ifdef USE_MAME_TIMERS
+		/* ASG 980324 - handled by real timers now */
+#else
+		/* calculate timer A */
+		if (PSG->tim_A)
+		{
+			PSG->tim_A_val -= ( 1 << TIMER_SH );
+			if (PSG->tim_A_val <= 0)
+			{
+				PSG->tim_A_val += PSG->tim_A_tab[ PSG->timer_A_index ];
+				if (PSG->irq_enable & 0x04)
+				{
+					int oldstate = PSG->status & 3;
+					PSG->status |= 1;
+					if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
+				}
+				if (PSG->irq_enable & 0x80)
+					PSG->csm_req = 2;	/* request KEY ON / KEY OFF sequence */
+			}
+		}
+#endif
+		advance();
+	}
+}
+
+extern unsigned int  nSoundBufferPos;
+
+void YM2151UpdateOneSlave()
+{
+	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	unsigned short *nSoundBuffer = (unsigned short *)0x25a24000+deltaSlave;
+
+	unsigned int i;
+	unsigned int num=0;
+	unsigned int length = 1; //140/128; //128;
+//	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
+//	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+//	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
+//	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
+	volatile signed short* buffers = (unsigned short *)0x25a24000+deltaSlave;
+
+	PSG = &YMPSG[num];
+
+	if (PSG->tim_B)
+	{
+		PSG->tim_B_val -= ( length << TIMER_SH );
+		if (PSG->tim_B_val<=0)
+		{
+			PSG->tim_B_val += PSG->tim_B_tab[ PSG->timer_B_index ];
+			if ( PSG->irq_enable & 0x08 )
+			{
+				int oldstate = PSG->status & 3;
+				PSG->status |= 2;
+				if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
+			}
+		}
+	}
+
+	for (i=0; i<length; i++)
+	{
+		advance_eg();
+//		slaveRender(&buffers[i]);
+
+  		signed int outl,outr;
+
+		chanout[0] = 0;
+		chanout[1] = 0;
+		chanout[2] = 0;
+		chanout[3] = 0;
+		chanout[4] = 0;
+		chanout[5] = 0;
+		chanout[6] = 0;
+		chanout[7] = 0;
+  	
+		chan_calc(0);
+		chan_calc(1);
+		chan_calc(2);
+		chan_calc(3);
+		chan_calc(4);
+		chan_calc(5);
+		chan_calc(6);
+		chan7_calc();
+
+//		outl += (chanout[1] & PSG->pan[2]);
+//		outr += (chanout[1] & PSG->pan[3]);
+//		outl += (chanout[2] & PSG->pan[4]);
+//		outr += (chanout[2] & PSG->pan[5]);
+//		outl += (chanout[3] & PSG->pan[6]);
+//		outr += (chanout[3] & PSG->pan[7]);
+//		outl += (chanout[4] & PSG->pan[8]);
+//		outr += (chanout[4] & PSG->pan[9]);
+//		outl += (chanout[5] & PSG->pan[10]);
+//		outr += (chanout[5] & PSG->pan[11]);
+//		outl += (chanout[6] & PSG->pan[12]);
+//		outr += (chanout[6] & PSG->pan[13]);
+//		outl += (chanout[7] & PSG->pan[14]);
+//		outr += (chanout[7] & PSG->pan[15]);
+
+//		outl >>= FINAL_SH;
+//		outr >>= FINAL_SH;
+//		if (outl > MAXOUT) outl = MAXOUT;
+//			else if (outl < MINOUT) outl = MINOUT;
+//		if (outr > MAXOUT) outr = MAXOUT;
+//			else if (outr < MINOUT) outr = MINOUT;
+//		((SAMP*)bufL)[i] = (SAMP)outl;
+//		((SAMP*)bufR)[i] = (SAMP)outr;
+
+//		buffers[i] = ((int)(outl) + outr) / 2;
+//		buffers[i] = BURN_SND_CLIP(((signed short)outl + (signed short)outr) / 2);
+
+		for (unsigned int j=0;j<8 ;j++)
+		{
+			outl = chanout[j] & PSG->pan[j<<1];
+			outr = chanout[j] & PSG->pan[(j<<1)+1];
+			
+			buffers[0x2000*j] = BURN_SND_CLIP(((signed short)outl + (signed short)outr) / 2);
+		}
+
+//		buffers[0x4000] = chanout[2] & PSG->pan[4];
+//		buffers[0x6000] = chanout[3] & PSG->pan[6];
+//		buffers[0x8000] = chanout[4] & PSG->pan[8];
+//		buffers[0xa000] = chanout[5] & PSG->pan[10];
+//		buffers[0xc000] = chanout[6] & PSG->pan[12];
+//		buffers[0xe000] = chanout[7] & PSG->pan[14];
+
+//		buffers[i] = ((signed short)outr); //BURN_SND_CLIP( ( ((signed short)outl)/2 + ((signed short)outr)/2   ));
+
+		/* calculate timer A */
+		if (PSG->tim_A)
+		{
+			PSG->tim_A_val -= ( 1 << TIMER_SH );
+			if (PSG->tim_A_val <= 0)
+			{
+				PSG->tim_A_val += PSG->tim_A_tab[ PSG->timer_A_index ];
+				if (PSG->irq_enable & 0x04)
+				{
+					int oldstate = PSG->status & 3;
+					PSG->status |= 1;
+					if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
+				}
+				if (PSG->irq_enable & 0x80)
+					PSG->csm_req = 2;	/* request KEY ON / KEY OFF sequence */
+			}
+		}
+		advance();
+	}
+//	nSoundBufferPos+=length;
+	deltaSlave+=length;
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+}
+
+
+
+void YM2151SetIrqHandler(int n, void(*handler)(int irq))
+{
+	YMPSG[n].irqhandler = handler;
+}
+
+void YM2151SetPortWriteHandler(int n, write8_handler handler)
+{
+	YMPSG[n].porthandler = handler;
+}
+
  
   /*
 int vspfunc(char *format, ...)
@@ -2161,7 +2369,7 @@ void slaveRender(INT16 *buffers)
 //		SAVE_SINGLE_CHANNEL(6)
 		chan7_calc();
 //		SAVE_SINGLE_CHANNEL(7)
- 
+ /*
 		outl = chanout[0] & PSG->pan[0];
 		outr = chanout[0] & PSG->pan[1];
 		outl += (chanout[1] & PSG->pan[2]);
@@ -2178,7 +2386,7 @@ void slaveRender(INT16 *buffers)
 		outr += (chanout[6] & PSG->pan[13]);
 		outl += (chanout[7] & PSG->pan[14]);
 		outr += (chanout[7] & PSG->pan[15]);
-
+*/
 //		outl >>= FINAL_SH;
 //		outr >>= FINAL_SH;
 //		if (outl > MAXOUT) outl = MAXOUT;
@@ -2190,7 +2398,7 @@ void slaveRender(INT16 *buffers)
 
 //		buffers[i] = ((int)(outl) + outr) / 2;
 //		buffers[0] = BURN_SND_CLIP((outl + outr) / 2);
-		buffers[0] = BURN_SND_CLIP((outl + outr) >> 1);
+//		buffers[0] = BURN_SND_CLIP((outl + outr) >> 1);
 //		buffers[0] = BURN_SND_CLIP(outl);
 }
 
@@ -2202,254 +2410,4 @@ void slaveRender(INT16 *buffers)
 
 
 
-
-
-//void YM2151UpdateOne(int num, INT16 **buffers, INT16* pSoundBuf, int length)
-void YM2151UpdateOne(int num, INT16 *buffers, int length)
-{
-	int i;
-//	signed int outl,outr;
-//	SAMP *bufL, *bufR;
-
-//	bufL = buffers[0];
-//	bufR = buffers[1];
-
-	PSG = &YMPSG[num];
-
-#ifdef USE_MAME_TIMERS
-		/* ASG 980324 - handled by real timers now */
-#else
-//FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"a",4,10);
-
-	if (PSG->tim_B)
-	{
-		PSG->tim_B_val -= ( length << TIMER_SH );
-		if (PSG->tim_B_val<=0)
-		{
-			PSG->tim_B_val += PSG->tim_B_tab[ PSG->timer_B_index ];
-			if ( PSG->irq_enable & 0x08 )
-			{
-				int oldstate = PSG->status & 3;
-				PSG->status |= 2;
-				if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
-			}
-		}
-	}
-#endif
-//FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"b",4,10);
-	for (i=0; i<length; ++i)
-	{
-		advance_eg();
-//		slaveRender(&buffers[i]);
-#if 0
-	
-//		if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-//		SPR_WaitEndSlaveSH();
-		SPR_RunSlaveSH((void *)slaveRender, &buffers[i]);
-//		slaveRender(&buffers[i]);
-#else
-		signed int outl,outr;
-
-		chanout[0] = 0;
-		chanout[1] = 0;
-		chanout[2] = 0;
-		chanout[3] = 0;
-		chanout[4] = 0;
-		chanout[5] = 0;
-		chanout[6] = 0;
-		chanout[7] = 0;
-
-		chan_calc(0);
-//		SAVE_SINGLE_CHANNEL(0)
-		chan_calc(1);
-//		SAVE_SINGLE_CHANNEL(1)
-		chan_calc(2);
-//		SAVE_SINGLE_CHANNEL(2)
-		chan_calc(3);
-//		SAVE_SINGLE_CHANNEL(3)
-		chan_calc(4);
-//		SAVE_SINGLE_CHANNEL(4)
-		chan_calc(5);
-//		SAVE_SINGLE_CHANNEL(5)
-		chan_calc(6);
-//		SAVE_SINGLE_CHANNEL(6)
-		chan_calc(7);
-//		SAVE_SINGLE_CHANNEL(7)
-
-//		outl = chanout[0] & PSG->pan[0];
-		outr = chanout[0] & PSG->pan[1];
-//		outl += (chanout[1] & PSG->pan[2]);
-		outr += (chanout[1] & PSG->pan[3]);
-//		outl += (chanout[2] & PSG->pan[4]);
-		outr += (chanout[2] & PSG->pan[5]);
-//		outl += (chanout[3] & PSG->pan[6]);
-		outr += (chanout[3] & PSG->pan[7]);
-//		outl += (chanout[4] & PSG->pan[8]);
-		outr += (chanout[4] & PSG->pan[9]);
-//		outl += (chanout[5] & PSG->pan[10]);
-		outr += (chanout[5] & PSG->pan[11]);
-//		outl += (chanout[6] & PSG->pan[12]);
-		outr += (chanout[6] & PSG->pan[13]);
-//		outl += (chanout[7] & PSG->pan[14]);
-		outr += (chanout[7] & PSG->pan[15]);
-
-		if (outr > MAXOUT) outr = MAXOUT;
-			else if (outr < MINOUT) outr = MINOUT;
-		buffers[0] = ((signed short)outr);
-#endif
-
-#ifdef USE_MAME_TIMERS
-		/* ASG 980324 - handled by real timers now */
-#else
-		/* calculate timer A */
-		if (PSG->tim_A)
-		{
-			PSG->tim_A_val -= ( 1 << TIMER_SH );
-			if (PSG->tim_A_val <= 0)
-			{
-				PSG->tim_A_val += PSG->tim_A_tab[ PSG->timer_A_index ];
-				if (PSG->irq_enable & 0x04)
-				{
-					int oldstate = PSG->status & 3;
-					PSG->status |= 1;
-					if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
-				}
-				if (PSG->irq_enable & 0x80)
-					PSG->csm_req = 2;	/* request KEY ON / KEY OFF sequence */
-			}
-		}
-#endif
-//FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"c",4,10);
-		advance();
-//FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"d",4,10);
-	}
-}
-
-extern unsigned int  nSoundBufferPos;
-
-void YM2151UpdateOneSlave()
-{
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"a",10,10);
-	unsigned int i;
-	unsigned int num=0;
-	unsigned int length = 1; //140/128; //128;
-	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
-//	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
-
-	PSG = &YMPSG[num];
-
-	if (PSG->tim_B)
-	{
-		PSG->tim_B_val -= 0x10000;//( length << TIMER_SH );
-		if (PSG->tim_B_val<=0)
-		{
-			PSG->tim_B_val += PSG->tim_B_tab[ PSG->timer_B_index ];
-			if ( PSG->irq_enable & 0x08 )
-			{
-				int oldstate = PSG->status & 3;
-				PSG->status |= 2;
-				if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
-			}
-		}
-	}
-//  i=0;
-	for (i=0; i<length; ++i)
-	{
-		advance_eg();
-//		slaveRender(&buffers[i]);
-
-  		signed int outl,outr;
-
-		chanout[0] = 0;
-		chanout[1] = 0;
-		chanout[2] = 0;
-		chanout[3] = 0;
-		chanout[4] = 0;
-		chanout[5] = 0;
-		chanout[6] = 0;
-		chanout[7] = 0;
-  	
-		chan_calc(0);
-//		SAVE_SINGLE_CHANNEL(0)
-		chan_calc(1);
-//		SAVE_SINGLE_CHANNEL(1)
-		chan_calc(2);
-//		SAVE_SINGLE_CHANNEL(2)
-		chan_calc(3);
-//		SAVE_SINGLE_CHANNEL(3)
-		chan_calc(4);
-//		SAVE_SINGLE_CHANNEL(4)
-		chan_calc(5);
-//		SAVE_SINGLE_CHANNEL(5)
-		chan_calc(6);
-//		SAVE_SINGLE_CHANNEL(6)
-		chan_calc(7);
-//		SAVE_SINGLE_CHANNEL(7)
- 
-		outl = chanout[0] & PSG->pan[0];
-		outr = chanout[0] & PSG->pan[1];
-		outl += (chanout[1] & PSG->pan[2]);
-		outr += (chanout[1] & PSG->pan[3]);
-		outl += (chanout[2] & PSG->pan[4]);
-		outr += (chanout[2] & PSG->pan[5]);
-		outl += (chanout[3] & PSG->pan[6]);
-		outr += (chanout[3] & PSG->pan[7]);
-		outl += (chanout[4] & PSG->pan[8]);
-		outr += (chanout[4] & PSG->pan[9]);
-		outl += (chanout[5] & PSG->pan[10]);
-		outr += (chanout[5] & PSG->pan[11]);
-		outl += (chanout[6] & PSG->pan[12]);
-		outr += (chanout[6] & PSG->pan[13]);
-		outl += (chanout[7] & PSG->pan[14]);
-		outr += (chanout[7] & PSG->pan[15]);
-
-//		outl >>= FINAL_SH;
-//		outr >>= FINAL_SH;
-		if (outl > MAXOUT) outl = MAXOUT;
-			else if (outl < MINOUT) outl = MINOUT;
-		if (outr > MAXOUT) outr = MAXOUT;
-			else if (outr < MINOUT) outr = MINOUT;
-//		((SAMP*)bufL)[i] = (SAMP)outl;
-//		((SAMP*)bufR)[i] = (SAMP)outr;
-
-//		buffers[i] = ((int)(outl) + outr) / 2;
-		buffers[i] = BURN_SND_CLIP(((signed short)outl + (signed short)outr) / 2);
-//		buffers[i] = ((signed short)outr); //BURN_SND_CLIP( ( ((signed short)outl)/2 + ((signed short)outr)/2   ));
-
-		/* calculate timer A */
-		if (PSG->tim_A)
-		{
-			PSG->tim_A_val -= 0x10000;//( 1 << TIMER_SH );
-			if (PSG->tim_A_val <= 0)
-			{
-				PSG->tim_A_val += PSG->tim_A_tab[ PSG->timer_A_index ];
-				if (PSG->irq_enable & 0x04)
-				{
-					int oldstate = PSG->status & 3;
-					PSG->status |= 1;
-					if ((!oldstate) && (PSG->irqhandler)) (*PSG->irqhandler)(1);
-				}
-				if (PSG->irq_enable & 0x80)
-					PSG->csm_req = 2;	/* request KEY ON / KEY OFF sequence */
-			}
-		}
-		advance();
-	}
-	nSoundBufferPos+=length;
-//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"b",10,10);
-}
-
-
-
-void YM2151SetIrqHandler(int n, void(*handler)(int irq))
-{
-	YMPSG[n].irqhandler = handler;
-}
-
-void YM2151SetPortWriteHandler(int n, write8_handler handler)
-{
-	YMPSG[n].porthandler = handler;
-}
 

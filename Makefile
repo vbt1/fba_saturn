@@ -168,7 +168,7 @@ OVLVIGIL                 = root/d_vigil.coff
 OVLVIGIL1               = root/d_vigil.bin
 MPOVLVIGILFILE    = $(OVLVIGIL:.coff=.maps)
 LDOVLVIGILFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLVIGILFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c snd/dac.c snd/ym2151.c burn_sound_c.c saturn/ovl.c
+SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c snd/dac.c snd/ym2151.c saturn/ovl.c
 #SRCOVLVIGIL         = d_vigilant.c z80_intf.c z80.c z80daisy.c burn_ym2151.c ym2151.c dac.c burn_sound_c.c saturn/ovl.c
 OBJOVLVIGIL         = $(SRCOVLVIGIL:.c=.o)
 

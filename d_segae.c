@@ -207,7 +207,7 @@ static inline void __fastcall hangonjr_port_fa_write (UINT8 data)
 
 static void segae_bankswitch (void)
 {
-	UINT32 bankloc = 0x10000 + rombank * 0x4000;
+	UINT32 bankloc = 0x10000 + (rombank * 0x4000);
 
 	CZetMapArea(0x8000, 0xbfff, 0, DrvMainROM + bankloc);
 	CZetMapArea(0x8000, 0xbfff, 2, DrvMainROM + bankloc);
@@ -821,7 +821,7 @@ static INT32 DrvInit(UINT8 game)
 			if (BurnLoadRom(DrvMainROM + 0x20000,  3, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1;
 			if (BurnLoadRom(mc8123key  + 0x00000,  5, 1)) return 1;
-			mc8123_decrypt_rom(1, 16, DrvMainROM, DrvMainROMFetch, mc8123key);
+			mc8123_decrypt_rom(1, 8, DrvMainROM, DrvMainROMFetch, mc8123key);
 			mc8123 = 1;
 			mc8123_banked = 1;
 			break;

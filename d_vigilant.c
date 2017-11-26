@@ -1,16 +1,19 @@
 #define BMP 1
-//#define SOUND 1
+#define SOUND 1
 #define CZ80 1
 //#define RAZE1 1
 #define RAZE0 1
 #define USE_MAP 1
 #define USE_SPRITES 1
 #define VBTLIB 1
-#define nInterleave 20//140 // dac needs 128 NMIs
-#define nSegmentLength1 nBurnSoundLen / nInterleave
+#define nInterleave 128//140 // dac needs 128 NMIs
+#define nCPUClockspeed 3579645 / 1.5
+#define nSegmentLength nBurnSoundLen / nInterleave
 
 #include "d_vigilant.h"
 void YM2151UpdateOneSlave();
+static void Set8PCM();
+
 UINT32 nBurnCurrentYM2151Register;
 INT16 oldScroll =0;
 
@@ -168,15 +171,15 @@ int ovlInit(char *szShortName)
 		nCyclesDone[1] += z80_emulate(1000);
 #else
 //		ZetSetVector(DrvIrqVector);
-//		CZetSetIRQLine(DrvIrqVector, CZET_IRQSTATUS_ACK);
 		CZetRaiseIrq(DrvIrqVector);
+		CZetSetIRQLine(DrvIrqVector, CZET_IRQSTATUS_ACK);
 		nCyclesDone[1] += CZetRun(1000);
 #endif
 
 	}
 }
 
-/*static*/int DrvDoReset()
+/*static*/INT32 DrvDoReset()
 {
 	for (INT32 i = 0; i < 2; i++) {
 		CZetOpen(i);
@@ -191,7 +194,7 @@ int ovlInit(char *szShortName)
 #endif
 
 		if (i == 1) DrvSetVector(VECTOR_INIT);
-	CZetClose();
+		CZetClose();
 	}
 	
 #ifdef SOUND
@@ -280,7 +283,7 @@ void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
 	
 	if (a >= 0xc800 && a <= 0xcfff) 
 	{
-		int Offset = a & 0x7ff;
+		INT32 Offset = a & 0x7ff;
 	
 		if (DrvPaletteRam[Offset]!=d)
 		{
@@ -456,7 +459,7 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 	}
 }
 
-unsigned char __fastcall VigilanteZ80Read2(unsigned short a)
+unsigned char __fastcall VigilanteZ80Read2(UINT16 a)
 {
 	return 0;
 }
@@ -480,12 +483,10 @@ UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
 		}
 		
 		case 0x80: {
-//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"R SoundLat",10,120);
 			return DrvSoundLatch;
 		}
 		
 		case 0x84: {
-//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"R DrvSamp",10,120);
 			return DrvSamples[DrvSampleAddress];
 		}
 		
@@ -519,9 +520,8 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 #endif
 			return;
 		}
-
+		
 		case 0x80: {
-//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"W Samp80",10,120);
 			DrvSampleAddress = (DrvSampleAddress & 0xff00) | ((d << 0) & 0x00ff);
 			return;
 		}
@@ -551,7 +551,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	}
 }
 
-/*static*/void VigilantYM2151IrqHandler(int Irq)
+/*static*/void VigilantYM2151IrqHandler(INT32 Irq)
 {
 	if (Irq) {
 		DrvSetVector(YM2151_ASSERT);
@@ -566,20 +566,20 @@ static INT32 VigilantSyncDAC()
 	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (6000 / 100.0000))));
 }
 
-/*static*/int DrvInit()
+/*static*/INT32 DrvInit()
 {
 	DrvInitSaturn();
 
 	INT32 nRet = 0, nLen;
-/*static*/int CharPlaneOffsets[4]         = { 0x80000, 0x80004, 0, 4 };
-/*static*/int CharXOffsets[8]             = { 0, 1, 2, 3, 64, 65, 66, 67 };
-/*static*/int CharYOffsets[8]             = { 0, 8, 16, 24, 32, 40, 48, 56 };
-/*static*/int SpritePlaneOffsets[4]       = { 0x200000, 0x200004, 0, 4 };
-/*static*/int SpriteXOffsets[16]          = { 0, 1, 2, 3, 128, 129, 130, 131, 256, 257, 258, 259, 384, 385, 386, 387 };
-/*static*/int SpriteYOffsets[16]          = { 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120 };
-/*static*/int BackTilePlaneOffsets[4]     = { 0, 2, 4, 6 };
-/*static*/int BackTileXOffsets[32]        = { 1, 0, 9, 8, 17, 16, 25, 24, 33, 32, 41, 40, 49, 48, 57, 56, 65, 64, 73, 72, 81, 80, 89, 88, 97, 96, 105, 104, 113, 112, 121, 120 };
-/*static*/int BackTileYOffsets[1]         = { 0 };
+/*static*/INT32 CharPlaneOffsets[4]         = { 0x80000, 0x80004, 0, 4 };
+/*static*/INT32 CharXOffsets[8]             = { 0, 1, 2, 3, 64, 65, 66, 67 };
+/*static*/INT32 CharYOffsets[8]             = { 0, 8, 16, 24, 32, 40, 48, 56 };
+/*static*/INT32 SpritePlaneOffsets[4]       = { 0x200000, 0x200004, 0, 4 };
+/*static*/INT32 SpriteXOffsets[16]          = { 0, 1, 2, 3, 128, 129, 130, 131, 256, 257, 258, 259, 384, 385, 386, 387 };
+/*static*/INT32 SpriteYOffsets[16]          = { 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120 };
+/*static*/INT32 BackTilePlaneOffsets[4]     = { 0, 2, 4, 6 };
+/*static*/INT32 BackTileXOffsets[32]        = { 1, 0, 9, 8, 17, 16, 25, 24, 33, 32, 41, 40, 49, 48, 57, 56, 65, 64, 73, 72, 81, 80, 89, 88, 97, 96, 105, 104, 113, 112, 121, 120 };
+/*static*/INT32 BackTileYOffsets[1]         = { 0 };
 
 	// Allocate and Blank all required memory
 	Mem = NULL;
@@ -707,22 +707,18 @@ static INT32 VigilantSyncDAC()
 //	nCyclesTotal[0] = 3579645 / 55/3;
 //	nCyclesTotal[1] = 3579645 / 55 /1.5;
 
-	nCyclesTotal[0] = 3579645 / 55/1.5;
-	nCyclesTotal[1] = 3579645 / 55 /1.5;
+	nCyclesTotal[0] = nCPUClockspeed / 55;
+	nCyclesTotal[1] = nCPUClockspeed / 55;
 	
-
 #ifdef SOUND
 //	BurnYM2151Init(3579645);
-	YM2151Init(1, 3579645/1.5, nBurnSoundRate);	 //11025);//
+	YM2151Init(1, nCPUClockspeed, nBurnSoundRate);	 //11025);//
 	BurnYM2151SetIrqHandler(&VigilantYM2151IrqHandler);	
-//	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_1, 0.55, BURN_SND_ROUTE_LEFT);
-//	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_2, 0.55, BURN_SND_ROUTE_RIGHT);
+
 //	DACInit(0, 0, 1, VigilantSyncDAC);
 //	DACSetRoute(0, 0.45, BURN_SND_ROUTE_BOTH);
 #endif
-//FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"init cpu done                 ",10,100);
 	DrvDoReset();
-//	FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"reset done                 ",10,100);
 
 	return 0;
 }
@@ -955,9 +951,60 @@ void dummy()
 	}
 
 	PrecalcBgMap();
+	Set8PCM();
 #ifdef SOUND
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 #endif
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static PcmHn createHandle(PcmCreatePara *para)
+{
+	PcmHn pcm;
+
+	pcm = PCM_CreateMemHandle(para);
+	if (pcm == NULL) {
+		return NULL;
+	}
+	return pcm;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void Set8PCM()
+{
+	PcmCreatePara	para[8];
+	PcmInfo 		info[8];
+	PcmStatus	*st;
+	static PcmWork g_movie_work[8];
+
+	for (int i=0; i<8; i++)
+	{
+		PCM_PARA_WORK(&para[i]) = (struct PcmWork *)&g_movie_work[i];
+		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
+		PCM_PARA_RING_SIZE(&para[i]) = RING_BUF_SIZE;
+		PCM_PARA_PCM_ADDR(&para[i]) = PCM_ADDR+(0x4000*(i+1));
+		PCM_PARA_PCM_SIZE(&para[i]) = PCM_SIZE;
+
+		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
+		st = &g_movie_work[i].status;
+		st->need_ci = PCM_ON;
+	 
+		PCM_INFO_FILE_TYPE(&info[i]) = PCM_FILE_TYPE_NO_HEADER;			
+		PCM_INFO_DATA_TYPE(&info[i])=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+		PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+		PCM_INFO_CHANNEL(&info[i]) = 0x01;
+		PCM_INFO_SAMPLING_BIT(&info[i]) = 16;
+
+		PCM_INFO_SAMPLING_RATE(&info[i])	= SOUNDRATE;//30720L;//44100L;
+		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
+		pcm8[i] = createHandle(&para[i]);
+
+		PCM_SetPcmStreamNo(pcm8[i], i);
+
+		PCM_SetInfo(pcm8[i], &info[i]);
+		PCM_ChangePcmPara(pcm8[i]);
+
+		PCM_MeSetLoop(pcm8[i], 0x3FF);//SOUNDRATE*120);
+		PCM_Start(pcm8[i]);
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
@@ -965,6 +1012,11 @@ void dummy()
 	CZetExit2();
 
 #ifdef SOUND
+	for(int i=0;i<8;i++)
+	{
+		PCM_MeStop(pcm8[i]);
+		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+	}
 //	BurnYM2151Exit();
 	BurnYM2151SetIrqHandler(NULL);
 //	BurnYM2151SetPortHandler(NULL);
@@ -1096,18 +1148,19 @@ void dummy()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/int DrvFrame()
+/*static*/INT32 DrvFrame()
 {
 	DrvMakeInputs();
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	CZetNewFrame();
-			
+//	SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
+
 	for (INT32 i = 0; i < nInterleave; ++i) 
 	{
+		SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
 		INT32 nNext;
 		// Run Z80 #1
 #ifdef RAZE0
-//		nCurrentCPU = 0;
 		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[0];
 		nCyclesDone[0] += z80_emulate(nCyclesSegment);
@@ -1127,6 +1180,9 @@ void dummy()
 #endif
 
 #ifdef SOUND
+//	if (i & 1) 
+//	{
+
 		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		{
 	SPR_WaitEndSlaveSH();
@@ -1137,7 +1193,7 @@ void dummy()
     *(volatile Uint8 *)0xfffffe11 = 0x00; // FTCSR clear
     *(volatile Uint16 *)0xfffffe92 |= 0x10; // chache parse all
 		}
-
+//	}
 #ifdef RAZE1
 		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
@@ -1150,25 +1206,28 @@ void dummy()
 		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[1];
 		nCyclesDone[1] += CZetRun(nCyclesSegment);
-//		if (i & 1) 
-//		if (i % 1)
-		if (i % 1) 
+
+		if (i & 1) 
 		{
 			CZetNmi();
 		}
+//		SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
 		CZetClose();
+//		SPR_WaitEndSlaveSH();
 #endif
-
-
-	CZetOpen(1);
-	SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
+//	CZetOpen(1);
+//	unsigned short *nSoundBuffer = (unsigned short *)0x25a24000+nSoundBufferPos;
+//	YM2151UpdateOne(0,nSoundBuffer,nBurnSoundLen);
+//		if (i & 1) 
+//			SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
 #endif
-
-/*	 YM2151UpdateOneSlave();
-	 CZetClose();	 
-*/
+//	 CZetClose();	 
 	}
+//	SPR_WaitEndSlaveSH();
 
+//	SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
+//YM2151UpdateOneSlave();
+//SPR_WaitEndSlaveSH();
 // 	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 //	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
@@ -1194,20 +1253,20 @@ void DrvRenderDrawSound()
 	{
 		DrvRenderBackground();
 	}
-//							SPR_WaitEndSlaveSH();
 
 #ifdef SOUND
-		if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x2400)
+	if(nSoundBufferPos>=RING_BUF_SIZE/2)
+	{
+		for (unsigned int i=0;i<8;i++)
 		{
-//			memcpy((short *)0x25a20000,(short *)0x00200000,nSoundBufferPos*sizeof(short));
-			PCM_Task(pcm); // bon emplacement
-			nSoundBufferPos=0;
+			PCM_NotifyWriteSize(pcm8[i], nSoundBufferPos);
+			PCM_Task(pcm8[i]); // bon emplacement
 		}
+		nSoundBufferPos=0;
+	}
 #endif	
 //	SPR_WaitEndSlaveSH();
 }
-
-
 
 #undef VECTOR_INIT
 #undef YM2151_ASSERT
