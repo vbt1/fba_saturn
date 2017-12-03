@@ -20,7 +20,7 @@ int bg=-1;
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 int DrvInit();
 int DrvExit();
-int DrvFrame();
+void DrvFrame();
 
 /*static*/unsigned char DrvInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/unsigned char DrvInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};

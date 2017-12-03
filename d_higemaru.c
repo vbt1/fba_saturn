@@ -183,42 +183,6 @@ for (i = 0; i < 0x80; i+=4)
 	//colAddr[0x000] = RGB(10,10,10);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*inline*/ static int readbit(const UINT8 *src, int bitnum)
-{
-	return src[bitnum / 8] & (0x80 >> (bitnum % 8));
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-static void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
-{
-	int c;
-//	wait_vblank();
-	for (c = 0; c < num; c++) {
-		int plane, x, y;
-	
-		UINT8 *dp = pDest + (c * (xSize/2) * ySize);
-		memset(dp, 0, (xSize/2) * ySize);
-	
-		for (plane = 0; plane < numPlanes; plane++) {
-			int planebit = 1 << (numPlanes - 1 - plane);
-			int planeoffs = (c * modulo) + planeoffsets[plane];
-		
-			for (y = 0; y < ySize; y++) {
-				int yoffs = planeoffs + yoffsets[y];
-				dp = pDest + (c * (xSize/2) * ySize) + (y * (xSize/2));
-			
-				for (x = 0; x < xSize; x+=2) {
-					if (readbit(pSrc, yoffs + xoffsets[x])) dp[x>>1] |= (planebit&0x0f)<<4;
-					if (readbit(pSrc, yoffs + xoffsets[x+1])) dp[x>>1] |= (planebit& 0x0f);
-					//(NewsTiles[i+1]& 0x0f)| ((NewsTiles[i]& 0x0f) <<4)
-				}
-			}
-//			sc_check();
-//			wait_vblank();
-		}
-	}
-//	wait_vblank();
-}
-
 static int DrvGfxDecode()
 {
 	/*static*/ int Planes[4] = { 0x10004, 0x10000, 0x00004, 0x00000 };

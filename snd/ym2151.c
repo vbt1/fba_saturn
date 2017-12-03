@@ -91,7 +91,8 @@ typedef struct
 {
 	YM2151Operator	oper[32];			/* the 32 operators */
 
-	UINT32		pan[16];				/* channels output masks (0xffffffff = enable) */
+//	UINT32		pan[16];				/* channels output masks (0xffffffff = enable) */
+	UINT32		pan[8];				/* channels output masks (0xffffffff = enable) */
 
 	UINT32		eg_cnt;					/* global envelope generator counter */
 	UINT32		eg_timer;				/* global envelope generator counter works at frequency = chipclock/64/3 */
@@ -1082,8 +1083,9 @@ void YM2151WriteReg(int n, int r, int v)
 		switch(r & 0x18){
 		case 0x00:	/* RL enable, Feedback, Connection */
 			op->fb_shift = ((v>>3)&7) ? ((v>>3)&7)+6:0;
-			chip->pan[ (r&7)*2    ] = (v & 0x40) ? ~0 : 0;
-			chip->pan[ (r&7)*2 +1 ] = (v & 0x80) ? ~0 : 0;
+//			chip->pan[ (r&7)*2    ] = (v & 0x40) ? ~0 : 0;
+//			chip->pan[ (r&7)*2 +1 ] = (v & 0x80) ? ~0 : 0;
+			chip->pan[r&7] = (v & 0xC0) ? ~0 : 0;
 			chip->connect[r&7] = v&7;
 			set_connect(op, r&7, v&7);
 			break;
@@ -2132,34 +2134,13 @@ void YM2151UpdateOne(int num, INT16 *buffers, int length)
 		chan7_calc();
 
 		buffers[0x0000] = chanout[0] & PSG->pan[0];
-		buffers[0x2000] = chanout[1] & PSG->pan[2];
-		buffers[0x4000] = chanout[2] & PSG->pan[4];
-		buffers[0x6000] = chanout[3] & PSG->pan[6];
-		buffers[0x8000] = chanout[4] & PSG->pan[8];
-		buffers[0xa000] = chanout[5] & PSG->pan[10];
-		buffers[0xc000] = chanout[6] & PSG->pan[12];
-		buffers[0xe000] = chanout[7] & PSG->pan[14];
-
-//		outl = chanout[0] & PSG->pan[0];
-//		outr = chanout[0] & PSG->pan[1];
-//		outl += (chanout[1] & PSG->pan[2]);
-//		outr += (chanout[1] & PSG->pan[3]);
-//		outl += (chanout[2] & PSG->pan[4]);
-//		outr += (chanout[2] & PSG->pan[5]);
-//		outl += (chanout[3] & PSG->pan[6]);
-//		outr += (chanout[3] & PSG->pan[7]);
-//		outl += (chanout[4] & PSG->pan[8]);
-//		outr += (chanout[4] & PSG->pan[9]);
-//		outl += (chanout[5] & PSG->pan[10]);
-//		outr += (chanout[5] & PSG->pan[11]);
-//		outl += (chanout[6] & PSG->pan[12]);
-//		outr += (chanout[6] & PSG->pan[13]);
-//		outl += (chanout[7] & PSG->pan[14]);
-//		outr += (chanout[7] & PSG->pan[15]);
-
-//		if (outr > MAXOUT) outr = MAXOUT;
-//			else if (outr < MINOUT) outr = MINOUT;
-//		buffers[0] = ((signed short)outr);
+		buffers[0x2000] = chanout[1] & PSG->pan[1];
+		buffers[0x4000] = chanout[2] & PSG->pan[2];
+		buffers[0x6000] = chanout[3] & PSG->pan[3];
+		buffers[0x8000] = chanout[4] & PSG->pan[4];
+		buffers[0xa000] = chanout[5] & PSG->pan[5];
+		buffers[0xc000] = chanout[6] & PSG->pan[6];
+		buffers[0xe000] = chanout[7] & PSG->pan[7];
 
 #ifdef USE_MAME_TIMERS
 		/* ASG 980324 - handled by real timers now */
@@ -2195,7 +2176,7 @@ void YM2151UpdateOneSlave()
 
 	unsigned int i;
 	unsigned int num=0;
-	unsigned int length = 1; //140/128; //128;
+//	unsigned int length = 1; //140/128; //128;
 //	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 //	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
@@ -2206,7 +2187,9 @@ void YM2151UpdateOneSlave()
 
 	if (PSG->tim_B)
 	{
-		PSG->tim_B_val -= ( length << TIMER_SH );
+//		PSG->tim_B_val -= ( length << TIMER_SH );
+		PSG->tim_B_val -= 0x10000;
+		
 		if (PSG->tim_B_val<=0)
 		{
 			PSG->tim_B_val += PSG->tim_B_tab[ PSG->timer_B_index ];
@@ -2219,13 +2202,10 @@ void YM2151UpdateOneSlave()
 		}
 	}
 
-	for (i=0; i<length; i++)
+//	for (i=0; i<length; i++)
 	{
 		advance_eg();
 //		slaveRender(&buffers[i]);
-
-  		signed int outl,outr;
-
 		chanout[0] = 0;
 		chanout[1] = 0;
 		chanout[2] = 0;
@@ -2244,54 +2224,20 @@ void YM2151UpdateOneSlave()
 		chan_calc(6);
 		chan7_calc();
 
-//		outl += (chanout[1] & PSG->pan[2]);
-//		outr += (chanout[1] & PSG->pan[3]);
-//		outl += (chanout[2] & PSG->pan[4]);
-//		outr += (chanout[2] & PSG->pan[5]);
-//		outl += (chanout[3] & PSG->pan[6]);
-//		outr += (chanout[3] & PSG->pan[7]);
-//		outl += (chanout[4] & PSG->pan[8]);
-//		outr += (chanout[4] & PSG->pan[9]);
-//		outl += (chanout[5] & PSG->pan[10]);
-//		outr += (chanout[5] & PSG->pan[11]);
-//		outl += (chanout[6] & PSG->pan[12]);
-//		outr += (chanout[6] & PSG->pan[13]);
-//		outl += (chanout[7] & PSG->pan[14]);
-//		outr += (chanout[7] & PSG->pan[15]);
-
-//		outl >>= FINAL_SH;
-//		outr >>= FINAL_SH;
-//		if (outl > MAXOUT) outl = MAXOUT;
-//			else if (outl < MINOUT) outl = MINOUT;
-//		if (outr > MAXOUT) outr = MAXOUT;
-//			else if (outr < MINOUT) outr = MINOUT;
-//		((SAMP*)bufL)[i] = (SAMP)outl;
-//		((SAMP*)bufR)[i] = (SAMP)outr;
-
-//		buffers[i] = ((int)(outl) + outr) / 2;
-//		buffers[i] = BURN_SND_CLIP(((signed short)outl + (signed short)outr) / 2);
-
-		for (unsigned int j=0;j<8 ;j++)
-		{
-			outl = chanout[j] & PSG->pan[j<<1];
-			outr = chanout[j] & PSG->pan[(j<<1)+1];
-			
-			buffers[0x2000*j] = BURN_SND_CLIP(((signed short)outl + (signed short)outr) / 2);
-		}
-
-//		buffers[0x4000] = chanout[2] & PSG->pan[4];
-//		buffers[0x6000] = chanout[3] & PSG->pan[6];
-//		buffers[0x8000] = chanout[4] & PSG->pan[8];
-//		buffers[0xa000] = chanout[5] & PSG->pan[10];
-//		buffers[0xc000] = chanout[6] & PSG->pan[12];
-//		buffers[0xe000] = chanout[7] & PSG->pan[14];
-
-//		buffers[i] = ((signed short)outr); //BURN_SND_CLIP( ( ((signed short)outl)/2 + ((signed short)outr)/2   ));
+		buffers[0x0000] = chanout[0] & PSG->pan[0];
+		buffers[0x2000] = chanout[1] & PSG->pan[1];
+		buffers[0x4000] = chanout[2] & PSG->pan[2];
+		buffers[0x6000] = chanout[3] & PSG->pan[3];
+		buffers[0x8000] = chanout[4] & PSG->pan[4];
+		buffers[0xa000] = chanout[5] & PSG->pan[5];
+		buffers[0xc000] = chanout[6] & PSG->pan[6];
+		buffers[0xe000] = chanout[7] & PSG->pan[7];
 
 		/* calculate timer A */
 		if (PSG->tim_A)
 		{
-			PSG->tim_A_val -= ( 1 << TIMER_SH );
+//			PSG->tim_A_val -= ( 1 << TIMER_SH );
+			PSG->tim_A_val -=0x10000;
 			if (PSG->tim_A_val <= 0)
 			{
 				PSG->tim_A_val += PSG->tim_A_tab[ PSG->timer_A_index ];
@@ -2307,12 +2253,8 @@ void YM2151UpdateOneSlave()
 		}
 		advance();
 	}
-//	nSoundBufferPos+=length;
-	deltaSlave+=length;
-	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = ++deltaSlave;
 }
-
-
 
 void YM2151SetIrqHandler(int n, void(*handler)(int irq))
 {
@@ -2323,91 +2265,3 @@ void YM2151SetPortWriteHandler(int n, write8_handler handler)
 {
 	YMPSG[n].porthandler = handler;
 }
-
- 
-  /*
-int vspfunc(char *format, ...)
-{
-   va_list aptr;
-   int ret;
-
-   va_start(aptr, format);
-   ret = vsprintf(buffer, format, aptr);
-   va_end(aptr);
-
-   return(ret);
-}
-*/ 
-void slaveRender(INT16 *buffers)
-{
-//		INT16 *buffers;
-//		INT16 buffer;
-		signed int outl,outr;
-
-		chanout[0] = 0;
-		chanout[1] = 0;
-		chanout[2] = 0;
-		chanout[3] = 0;
-		chanout[4] = 0;
-		chanout[5] = 0;
-		chanout[6] = 0;
-		chanout[7] = 0;
-  	
-		chan_calc(0);
-//		SAVE_SINGLE_CHANNEL(0)
-		chan_calc(1);
-//		SAVE_SINGLE_CHANNEL(1)
-		chan_calc(2);
-//		SAVE_SINGLE_CHANNEL(2)
-		chan_calc(3);
-//		SAVE_SINGLE_CHANNEL(3)
-		chan_calc(4);
-//		SAVE_SINGLE_CHANNEL(4)
-		chan_calc(5);
-//		SAVE_SINGLE_CHANNEL(5)
-		chan_calc(6);
-//		SAVE_SINGLE_CHANNEL(6)
-		chan7_calc();
-//		SAVE_SINGLE_CHANNEL(7)
- /*
-		outl = chanout[0] & PSG->pan[0];
-		outr = chanout[0] & PSG->pan[1];
-		outl += (chanout[1] & PSG->pan[2]);
-		outr += (chanout[1] & PSG->pan[3]);
-		outl += (chanout[2] & PSG->pan[4]);
-		outr += (chanout[2] & PSG->pan[5]);
-		outl += (chanout[3] & PSG->pan[6]);
-		outr += (chanout[3] & PSG->pan[7]);
-		outl += (chanout[4] & PSG->pan[8]);
-		outr += (chanout[4] & PSG->pan[9]);
-		outl += (chanout[5] & PSG->pan[10]);
-		outr += (chanout[5] & PSG->pan[11]);
-		outl += (chanout[6] & PSG->pan[12]);
-		outr += (chanout[6] & PSG->pan[13]);
-		outl += (chanout[7] & PSG->pan[14]);
-		outr += (chanout[7] & PSG->pan[15]);
-*/
-//		outl >>= FINAL_SH;
-//		outr >>= FINAL_SH;
-//		if (outl > MAXOUT) outl = MAXOUT;
-//			else if (outl < MINOUT) outl = MINOUT;
-//		if (outr > MAXOUT) outr = MAXOUT;
-//			else if (outr < MINOUT) outr = MINOUT;
-//		((SAMP*)bufL)[i] = (SAMP)outl;
-//		((SAMP*)bufR)[i] = (SAMP)outr;
-
-//		buffers[i] = ((int)(outl) + outr) / 2;
-//		buffers[0] = BURN_SND_CLIP((outl + outr) / 2);
-//		buffers[0] = BURN_SND_CLIP((outl + outr) >> 1);
-//		buffers[0] = BURN_SND_CLIP(outl);
-}
-
-
-
-
-
-
-
-
-
-

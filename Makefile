@@ -50,7 +50,7 @@ OVLNEWS                 = root/d_news.coff
 OVLNEWS1               = root/d_news.bin
 MPOVLNEWSFILE    = $(OVLNEWS:.coff=.maps)
 LDOVLNEWSFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNEWSFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLNEWS         = d_news.c czet.c cz80/cz80.c msm6295.c burn_sound_c.c
+SRCOVLNEWS         = d_news.c czet.c cz80/cz80.c msm6295.c burn_sound_c.c saturn/ovl.c
 OBJOVLNEWS         = $(SRCOVLNEWS:.c=.o)
 
 OVLGBERET                 = root/d_gberet.coff
@@ -71,21 +71,21 @@ OVLPKUNW                 = root/d_pkunw.coff
 OVLPKUNW1               = root/d_pkunw.bin
 MPOVLPKUNWFILE    = $(OVLPKUNW:.coff=.maps)
 LDOVLPKUNWFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPKUNWFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLPKUNW         = d_pkunwar.c czet.c cz80/cz80.c snd/ay8910.c
+SRCOVLPKUNW         = d_pkunwar.c czet.c cz80/cz80.c snd/ay8910.c saturn/ovl.c
 OBJOVLPKUNW         = $(SRCOVLPKUNW:.c=.o)
 
 OVLMITCH                 = root/d_mitch.coff
 OVLMITCH1               = root/d_mitch.bin
 MPOVLMITCHFILE    = $(OVLMITCH:.coff=.maps)
 LDOVLMITCHFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMITCHFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c msm6295.c burn_sound_c.c eeprom.c
+SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c msm6295.c burn_sound_c.c eeprom.c saturn/ovl.c
 OBJOVLMITCH         = $(SRCOVLMITCH:.c=.o)
 
 OVLGNG                 = root/d_gng.coff
 OVLGNG1               = root/d_gng.bin
 MPOVLGNGFILE    = $(OVLGNG:.coff=.maps)
 LDOVLGNGFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGNGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLGNG         = m6809_intf.c m6809.c  d_gng.c 
+SRCOVLGNG         = m6809_intf.c m6809.c  d_gng.c saturn/ovl.c
 OBJOVLGNG         = $(SRCOVLGNG:.c=.o)
 
 OVLSYS1                 = root/d_sys1.coff
@@ -206,7 +206,7 @@ OVLWIZ                = root/d_wiz.coff
 OVLWIZ1              = root/d_wiz.bin
 MPOVLWIZFILE    = $(OVLWIZ:.coff=.maps)
 LDOVLWIZFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLWIZFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLWIZ         = d_wiz.c czet.c cz80/cz80.c snd/ay8910.c
+SRCOVLWIZ         = d_wiz.c czet.c cz80/cz80.c snd/ay8910.c saturn/ovl.c
 OBJOVLWIZ         = $(SRCOVLWIZ:.c=.o)
 
 OVLSLPFGHT                = root/d_slpfgh.coff
