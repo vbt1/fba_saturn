@@ -2,7 +2,7 @@
 #include "../burn_sound.h"
 
 #define DAC_NUM		(1)	// Maximum DAC chips
-#define nBurnSoundLen 140
+#define nBurnSoundLen 128
 typedef struct //dac_info
 {
 	INT16	Output;
@@ -20,7 +20,7 @@ static INT16 UnsignedVolTable[256];
 static INT16 SignedVolTable[256];
 
 static INT16 *lBuffer = NULL;
-static INT16 *rBuffer = NULL;
+//static INT16 *rBuffer = NULL;
 
 static INT32 NumChips;
 
@@ -45,14 +45,14 @@ titi=itoa(length);
 		}
 		memset (lBuffer, 0, nBurnSoundLen * sizeof(INT16));
 	}
-	if (rBuffer == NULL) {	// delay buffer allocation for cases when fps is not 60
+/*	if (rBuffer == NULL) {	// delay buffer allocation for cases when fps is not 60
 		if((rBuffer = (INT16*)malloc(nBurnSoundLen * sizeof(INT16)))==NULL)
 		{
 			while(1);
 		}
 		memset (rBuffer, 0, nBurnSoundLen * sizeof(INT16));
 	}
-
+*/
         ptr = &dac_table[chip];
         if (ptr->Initialized == 0) return;
 
@@ -61,34 +61,35 @@ titi=itoa(length);
         if (length <= 0) return;
 
         INT16 *lbuf = lBuffer + ptr->nCurrentPosition;
-	INT16 *rbuf = rBuffer + ptr->nCurrentPosition;
+//	INT16 *rbuf = rBuffer + ptr->nCurrentPosition;
 
 //	INT16 lOut = ((ptr->OutputDir & BURN_SND_ROUTE_LEFT ) == BURN_SND_ROUTE_LEFT ) ? ptr->Output : 0;
 //        INT16 rOut = ((ptr->OutputDir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) ? ptr->Output : 0;
 	INT16 lOut = ptr->Output;
-        INT16 rOut = ptr->Output;
+//        INT16 rOut = ptr->Output;
 
         ptr->nCurrentPosition += length;
 
-        if (rOut && lOut) {
+//        if (rOut && lOut) {
+        if (lOut) {
 //		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"a",4,10);
 			
                 while (length--) {
 //                      *lbuf++ = *lbuf + lOut;
 //			*rbuf++ = *rbuf + rOut;
                         *lbuf++ = BURN_SND_CLIP(*lbuf + lOut);
-			*rbuf++ = BURN_SND_CLIP(*rbuf + rOut);
+	//		*rbuf++ = BURN_SND_CLIP(*rbuf + rOut);
                 }
 //		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"b",4,10);
 
-        } else if (lOut) {
+ //       } else if (lOut) {
 //		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"c",4,10);
-			
-                while (length--) *lbuf++ = BURN_SND_CLIP(*lbuf + lOut);
+//			
+//                while (length--) *lbuf++ = BURN_SND_CLIP(*lbuf + lOut);
 //		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"d",4,10);
-        } else if (rOut) {            
+//        } else if (rOut) {            
 //		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"e",4,10);
-                while (length--) *rbuf++ = BURN_SND_CLIP(*rbuf + rOut);
+//                while (length--) *rbuf++ = BURN_SND_CLIP(*rbuf + rOut);
 //		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"f",4,10);
         }
 }
@@ -107,25 +108,27 @@ void DACUpdate(INT16* Buffer, INT32 Length)
 
 //	UpdateStream(0, nBurnSoundLen);
 	INT16 *lbuf = lBuffer;
-	INT16 *rbuf = rBuffer;
+//	INT16 *rbuf = rBuffer;
 
 	if (bAddSignal) {
 		while (Length--) {
-			Buffer[0] = BURN_SND_CLIP((rbuf[0] + lbuf[0])/2 + Buffer[0]);
+//			Buffer[0] = BURN_SND_CLIP((rbuf[0] + lbuf[0])/2 + Buffer[0]);
+			Buffer[0] = BURN_SND_CLIP(lbuf[0] + Buffer[0]);
 			Buffer++;
 			lbuf[0] = 0; // clear buffer
-			rbuf[0] = 0; // clear buffer
+//			rbuf[0] = 0; // clear buffer
 			lbuf++;
-			rbuf++;
+//			rbuf++;
 		}
 	} else {
 		while (Length--) {
-			Buffer[0] = BURN_SND_CLIP((rbuf[0] + lbuf[0])/2);
+//			Buffer[0] = BURN_SND_CLIP((rbuf[0] + lbuf[0])/2);
+			Buffer[0] = lbuf[0];
 			Buffer++;
 			lbuf[0] = 0; // clear buffer
-			rbuf[0] = 0; // clear buffer
+//			rbuf[0] = 0; // clear buffer
 			lbuf++;
-			rbuf++;
+//			rbuf++;
 		}
 	}
 
@@ -254,7 +257,7 @@ void DACExit()
 //	DebugSnd_DACInitted = 0;
 
 	free (lBuffer);
-	free (rBuffer);
+//	free (rBuffer);
 }
    /*
 INT32 DACScan(INT32 nAction,INT32 *pnMin)

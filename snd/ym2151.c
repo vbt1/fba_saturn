@@ -515,7 +515,8 @@ static signed int mem;		/* one sample delay memory */
 static void init_tables(void)
 {
 	signed int i,x,n;
-	double o,m;
+//	double o,m;
+	float o,m;
 
 	for (x=0; x<TL_RES_LEN; x++)
 	{
@@ -594,10 +595,13 @@ static void init_tables(void)
 static void init_chip_tables(YM2151 *chip)
 {
 	int i,j;
-	double mult,pom,phaseinc,Hz;
-	double scaler;
+//	double mult,pom,phaseinc,Hz;
+	float mult,pom,phaseinc,Hz;
+//	double scaler;
+	float scaler;
 
-	scaler = ( (double)chip->clock / 64.0 ) / ( (double)chip->sampfreq );
+//	scaler = ( (double)chip->clock / 64.0 ) / ( (double)chip->sampfreq );
+	scaler = ( (float)chip->clock / 64.0 ) / ( (float)chip->sampfreq );
 	/*logerror("scaler    = %20.15f\n", scaler);*/
 
 
@@ -657,10 +661,12 @@ static void init_chip_tables(YM2151 *chip)
 	{
 		for (i=0; i<32; i++)
 		{
-			Hz = ( (double)dt1_tab[j*32+i] * ((double)chip->clock/64.0) ) / (double)(1<<20);
+//			Hz = ( (double)dt1_tab[j*32+i] * ((double)chip->clock/64.0) ) / (double)(1<<20);
+			Hz = ( (float)dt1_tab[j*32+i] * ((float)chip->clock/64.0) ) / (float)(1<<20);
 
 			/*calculate phase increment*/
-			phaseinc = (Hz*SIN_LEN) / (double)chip->sampfreq;
+//			phaseinc = (Hz*SIN_LEN) / (double)chip->sampfreq;
+			phaseinc = (Hz*SIN_LEN) / (float)chip->sampfreq;
 
 			/*positive and negative values*/
 			chip->dt1_freq[ (j+0)*32 + i ] = phaseinc * mult;
@@ -675,31 +681,37 @@ static void init_chip_tables(YM2151 *chip)
 	for (i=0; i<1024; i++)
 	{
 		/* ASG 980324: changed to compute both tim_A_tab and timer_A_time */
-		pom= ( 64.0  *  (1024.0-i) / (double)chip->clock );
+//		pom= ( 64.0  *  (1024.0-i) / (double)chip->clock );
+		pom= ( 64.0  *  (1024.0-i) / (float)chip->clock );
 		#ifdef USE_MAME_TIMERS
 			chip->timer_A_time[i] = pom;
 		#else
-			chip->tim_A_tab[i] = pom * (double)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
+//			chip->tim_A_tab[i] = pom * (double)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
+			chip->tim_A_tab[i] = pom * (float)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
 		#endif
 	}
 	for (i=0; i<256; i++)
 	{
 		/* ASG 980324: changed to compute both tim_B_tab and timer_B_time */
-		pom= ( 1024.0 * (256.0-i)  / (double)chip->clock );
+//		pom= ( 1024.0 * (256.0-i)  / (double)chip->clock );
+		pom= ( 1024.0 * (256.0-i)  / (float)chip->clock );
 		#ifdef USE_MAME_TIMERS
 			chip->timer_B_time[i] = pom;
 		#else
-			chip->tim_B_tab[i] = pom * (double)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
+//			chip->tim_B_tab[i] = pom * (double)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
+			chip->tim_B_tab[i] = pom * (float)chip->sampfreq * mult;  /* number of samples that timer period takes (fixed point) */
 		#endif
 	}
 
 	/* calculate noise periods table */
-	scaler = ( (double)chip->clock / 64.0 ) / ( (double)chip->sampfreq );
+//	scaler = ( (double)chip->clock / 64.0 ) / ( (double)chip->sampfreq );
+	scaler = ( (float)chip->clock / 64.0 ) / ( (float)chip->sampfreq );
 	for (i=0; i<32; i++)
 	{
 		j = (i!=31 ? i : 30);				/* rate 30 and 31 are the same */
 		j = 32-j;
-		j = (65536.0 / (double)(j*32.0));	/* number of samples per one shift of the shift register */
+//		j = (65536.0 / (double)(j*32.0));	/* number of samples per one shift of the shift register */
+		j = (65536.0 / (float)(j*32.0));	/* number of samples per one shift of the shift register */
 		/*chip->noise_tab[i] = j * 64;*/	/* number of chip clock cycles per one shift */
 		chip->noise_tab[i] = j * 64 * scaler;
 		/*logerror("noise_tab[%02x]=%08x\n", i, chip->noise_tab[i]);*/
@@ -1085,6 +1097,7 @@ void YM2151WriteReg(int n, int r, int v)
 			op->fb_shift = ((v>>3)&7) ? ((v>>3)&7)+6:0;
 //			chip->pan[ (r&7)*2    ] = (v & 0x40) ? ~0 : 0;
 //			chip->pan[ (r&7)*2 +1 ] = (v & 0x80) ? ~0 : 0;
+//			(-(x & 0xC0) >> 8) <= version tumu
 			chip->pan[r&7] = (v & 0xC0) ? ~0 : 0;
 			chip->connect[r&7] = v&7;
 			set_connect(op, r&7, v&7);
@@ -2171,8 +2184,8 @@ extern unsigned int  nSoundBufferPos;
 
 void YM2151UpdateOneSlave()
 {
-	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	unsigned short *nSoundBuffer = (unsigned short *)0x25a24000+deltaSlave;
+//	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+//	volatile signed short *nSoundBuffer = (unsigned short *)0x25a24000+deltaSlave;
 
 	unsigned int i;
 	unsigned int num=0;
@@ -2181,14 +2194,15 @@ void YM2151UpdateOneSlave()
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 //	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
 //	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
-	volatile signed short* buffers = (unsigned short *)0x25a24000+deltaSlave;
+//	volatile signed short* buffers = (unsigned short *)0x25a24000+deltaSlave;
 
 	PSG = &YMPSG[num];
 
 	if (PSG->tim_B)
 	{
 //		PSG->tim_B_val -= ( length << TIMER_SH );
-		PSG->tim_B_val -= 0x10000;
+		PSG->tim_B_val -= ( 1 << TIMER_SH );
+//		PSG->tim_B_val -= 0x10000;
 		
 		if (PSG->tim_B_val<=0)
 		{
@@ -2203,9 +2217,10 @@ void YM2151UpdateOneSlave()
 	}
 
 //	for (i=0; i<length; i++)
+//	for (i=0; i<4; i++)
 	{
-		advance_eg();
-//		slaveRender(&buffers[i]);
+/*		advance_eg();
+
 		chanout[0] = 0;
 		chanout[1] = 0;
 		chanout[2] = 0;
@@ -2224,15 +2239,15 @@ void YM2151UpdateOneSlave()
 		chan_calc(6);
 		chan7_calc();
 
-		buffers[0x0000] = chanout[0] & PSG->pan[0];
-		buffers[0x2000] = chanout[1] & PSG->pan[1];
-		buffers[0x4000] = chanout[2] & PSG->pan[2];
-		buffers[0x6000] = chanout[3] & PSG->pan[3];
-		buffers[0x8000] = chanout[4] & PSG->pan[4];
-		buffers[0xa000] = chanout[5] & PSG->pan[5];
-		buffers[0xc000] = chanout[6] & PSG->pan[6];
-		buffers[0xe000] = chanout[7] & PSG->pan[7];
-
+		nSoundBuffer[0x0000] = chanout[0] & PSG->pan[0];
+		nSoundBuffer[0x2000] = chanout[1] & PSG->pan[1];
+		nSoundBuffer[0x4000] = chanout[2] & PSG->pan[2];
+		nSoundBuffer[0x6000] = chanout[3] & PSG->pan[3];
+		nSoundBuffer[0x8000] = chanout[4] & PSG->pan[4];
+		nSoundBuffer[0xa000] = chanout[5] & PSG->pan[5];
+		nSoundBuffer[0xc000] = chanout[6] & PSG->pan[6];
+		nSoundBuffer[0xe000] = chanout[7] & PSG->pan[7];
+*/
 		/* calculate timer A */
 		if (PSG->tim_A)
 		{
@@ -2251,9 +2266,11 @@ void YM2151UpdateOneSlave()
 					PSG->csm_req = 2;	/* request KEY ON / KEY OFF sequence */
 			}
 		}
-		advance();
+//		advance();
 	}
-	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = ++deltaSlave;
+//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = ++deltaSlave;
+//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave+4;
+	nSoundBufferPos++;
 }
 
 void YM2151SetIrqHandler(int n, void(*handler)(int irq))

@@ -1,5 +1,5 @@
 #define BMP 1
-//#define SOUND 1
+#define SOUND 1
 #define CZ80 1
 //#define RAZE1 1
 #define RAZE0 1
@@ -7,7 +7,7 @@
 #define USE_SPRITES 1
 #define VBTLIB 1
 #define nInterleave 128//140 // dac needs 128 NMIs
-#define nCPUClockspeed 3579645 / 1.6
+#define nCPUClockspeed 3579645 / 1.5
 #define nSegmentLength nBurnSoundLen / nInterleave
 
 #include "d_vigilant.h"
@@ -141,7 +141,7 @@ int ovlInit(char *szShortName)
 #ifdef SOUND
 //	BurnYM2151Reset();
 	YM2151ResetChip(0);
-//	DACReset();
+	DACReset();
 #endif
 	
 	DrvRomBank = 0;
@@ -475,7 +475,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		
 		case 0x82: {
 #ifdef SOUND
-//			DACSignedWrite(0, d);
+			DACSignedWrite(0, d);
 #endif
 			DrvSampleAddress = (DrvSampleAddress + 1) & 0xffff;
 			return;
@@ -656,6 +656,7 @@ static INT32 VigilantSyncDAC()
 	BurnYM2151SetIrqHandler(&VigilantYM2151IrqHandler);	
 
 //	DACInit(0, 0, 1, VigilantSyncDAC);
+	DACInit(0, 0, 0, VigilantSyncDAC);
 //	DACSetRoute(0, 0.45, BURN_SND_ROUTE_BOTH);
 #endif
 	DrvDoReset();
@@ -961,7 +962,7 @@ static void Set8PCM()
 	BurnYM2151SetIrqHandler(NULL);
 //	BurnYM2151SetPortHandler(NULL);
 	YM2151Shutdown();
-//	DACExit();
+	DACExit();
 #endif
 
 	CZ80Context = NULL;
@@ -1067,11 +1068,10 @@ static void Set8PCM()
 	DrvMakeInputs();
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	CZetNewFrame();
-//	SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
 
 	for (UINT32 i = 0; i < nInterleave; ++i) 
 	{
-		SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
+//		SPR_RunSlaveSH((void *)YM2151UpdateOneSlave,NULL);
 //		YM2151UpdateOneSlave();
 		UINT32 nNext;
 		// Run Z80 #1
@@ -1097,8 +1097,7 @@ static void Set8PCM()
 #ifdef SOUND
 //	if (i & 1) 
 //	{
-	
-		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+/*		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		{
 	SPR_WaitEndSlaveSH();
 
@@ -1108,7 +1107,7 @@ static void Set8PCM()
     *(volatile Uint8 *)0xfffffe11 = 0x00; // FTCSR clear
     *(volatile Uint16 *)0xfffffe92 |= 0x10; // chache parse all
 		}
-		
+*/
 //	}
 
 
@@ -1141,6 +1140,11 @@ static void Set8PCM()
 		}
 		CZetClose();
 //		SPR_WaitEndSlaveSH();
+		CZetOpen(1);
+		YM2151UpdateOneSlave();
+		CZetClose();
+
+
 #endif
 //	CZetOpen(1);
 //	unsigned short *nSoundBuffer = (unsigned short *)0x25a24000+nSoundBufferPos;
@@ -1163,10 +1167,11 @@ static void Set8PCM()
 	CZetOpen(1);
 	YM2151UpdateOne(0,buffers, 14);
 	CZetClose();	
-//	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
-//	signed short* buffers = pBurnSoundOut + nSoundBufferPos - nBurnSoundLen;
-//	DACUpdate(buffers, nBurnSoundLen);
-	nSoundBufferPos += 14;*/	 
+*/
+	volatile signed short *	pBurnSoundOut = (signed short *)0x25a24000;
+	signed short* buffers = pBurnSoundOut + nSoundBufferPos;
+	DACUpdate(buffers, nBurnSoundLen);
+//	nSoundBufferPos += nBurnSoundLen;
 	DrvRenderDrawSound();
 }
 
@@ -1184,7 +1189,8 @@ void DrvRenderDrawSound()
 #ifdef SOUND
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)
 	{
-		for (unsigned int i=0;i<8;i++)
+		int i=0;
+//		for (unsigned int i=0;i<8;i++)
 		{
 			PCM_NotifyWriteSize(pcm8[i], nSoundBufferPos);
 			PCM_Task(pcm8[i]); // bon emplacement
