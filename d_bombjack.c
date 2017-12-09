@@ -12,8 +12,8 @@ int ovlInit(char *szShortName)
 	struct BurnDriver nBurnDrvBombjack = {
 		"bombja", NULL,
 		"Bomb Jack (set 1)",
-		BombjackRomInfo,BombjackRomName, DrvInputInfo,BjDIPInfo,
-		BjInit,BjExit,BjFrame,NULL
+		BombjackRomInfo,BombjackRomName, BombjackInputInfo,BombjackDIPInfo,
+		DrvInit,DrvExit,DrvFrame,NULL
 	};
 
 	memcpy(shared,&nBurnDrvBombjack,sizeof(struct BurnDriver));
@@ -171,80 +171,27 @@ static void DrvInitSaturn()
 	drawWindow(0,240,0,6,66); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-
-static INT32 DrvDoReset()
+UINT8 __fastcall bombjack_main_read(UINT16 address)
 {
-	bombjackIRQ = 0;
-	latch = 0;
-	for (INT32 i = 0; i < 2; i++) {
-		CZetOpen(i);
-		CZetReset();
-		CZetClose();
+	switch (address)
+	{
+		case 0xb000:
+		case 0xb001:
+		case 0xb002:
+			return DrvInputs[address & 3];
+
+		case 0xb003:
+			return 0; // watchdog?
+
+		case 0xb004:
+		case 0xb005:
+			return DrvDips[address & 1];
 	}
 
-#ifdef RAZE
-	z80_reset();
-#endif
-
-	for (INT32 i = 0; i < 3; i++) {
-		AY8910Reset(i);
-	}
 	return 0;
 }
 
 
-UINT8 __fastcall BjMemRead(UINT16 addr)
-{
-	UINT8 inputs=0;
-	
-	if (addr==0xb000) {
-		if (DrvJoy1[5])
-			inputs|=0x01;
-		if (DrvJoy1[4])
-			inputs|=0x02;
-		if (DrvJoy1[2])
-			inputs|=0x04;
-		if (DrvJoy1[3])
-			inputs|=0x08;
-		if (DrvJoy1[6])
-			inputs|=0x10;
-		return inputs;
-	}
-	if (addr==0xb001) {
-		if (DrvJoy2[5])
-			inputs|=0x01;
-		if (DrvJoy2[4])
-			inputs|=0x02;
-		if (DrvJoy2[2])
-			inputs|=0x04;
-		if (DrvJoy2[3])
-			inputs|=0x08;
-		if (DrvJoy2[6])
-			inputs|=0x10;
-		return inputs;
-	}
-	if (addr==0xb002) {
-		if (DrvJoy1[0])
-			inputs|=0x01;
-		if (DrvJoy1[1])
-			inputs|=0x04;
-		if (DrvJoy2[0])
-			inputs|=0x02;
-		if (DrvJoy2[1])
-			inputs|=0x08;
-		return inputs;
-	}
-	if (addr==0xb004) {
-		return BjDip[0]; // Dip Sw(1)
-	}
-	if (addr==0xb005) {
-		return BjDip[1]; // Dip Sw(2)
-	}
-
-	if (addr >= 0x9820 && addr <= 0x987f) return BjSprRam[addr - 0x9820];
-
-	return 0;
-}
 #ifdef RAZE
 void __fastcall BjMemWrite_9000(UINT16 addr,UINT8 val)
 {
@@ -253,7 +200,7 @@ void __fastcall BjMemWrite_9000(UINT16 addr,UINT8 val)
 	if (BjVidRam[addr]!=val)
 	{
 		BjVidRam[addr]=val;
-		UINT32 code = val + 16 * (BjColRam[addr] & 0x10);
+		UINT32 code = val + ((BjColRam[addr] & 0x10) << 4);
 		UINT32 color = BjColRam[addr] & 0x0f;
 
 		UINT32 offs = map_offset_lut[addr];
@@ -268,7 +215,7 @@ void __fastcall BjMemWrite_9400(UINT16 addr,UINT8 val)
 	if (BjColRam[addr]!=val)
 	{
 		BjColRam[addr]=val;
-		UINT32 code = BjVidRam[addr] + 16 * (val & 0x10);
+		UINT32 code = BjVidRam[addr] + ((val & 0x10) << 4);
 
 		UINT32 offs = map_offset_lut[addr];
 		ss_map[offs] = (val & 0x0f) << 12 | code;
@@ -285,87 +232,75 @@ void __fastcall BjMemWrite_9820(UINT16 addr,UINT8 val)
 	BjSprRam[addr - 0x9820] = val;
 }
 
-void __fastcall BjMemWrite_b000(UINT16 addr,UINT8 val)
+void __fastcall BjMemWrite_b000(UINT16 addr,UINT8 data)
 {
 	if (addr==0xb000)
 	{
-		bombjackIRQ = val;
+		nmi_mask = data & 1;
 	}
-	BjRam[addr]=val;
+	BjRam[addr]=data;
 }
 
-void __fastcall BjMemWrite_b800(UINT16 addr,UINT8 val)
+void __fastcall BjMemWrite_b800(UINT16 addr,UINT8 data)
 {
-	latch=val;
+	soundlatch=data;
 }
 #endif
-void __fastcall BjMemWrite(UINT16 addr,UINT8 val)
+void __fastcall BjMemWrite(UINT16 addr,UINT8 data)
 {
-	if (addr >= 0x9820 && addr <= 0x987f) { BjSprRam[addr - 0x9820] = val; return; }
+	if (addr >= 0x9820 && addr <= 0x987f) { BjSprRam[addr - 0x9820] = data; return; }
 
 	if(addr==0xb800)
 	{
-		latch=val;
+		soundlatch=data;
 		return;
 	}
 	
 	if (addr==0xb000)
 	{
-		bombjackIRQ = val;
+		nmi_mask = data & 1;
 	}
-	BjRam[addr]=val;
+	BjRam[addr]=data;
 }
 
-UINT8 __fastcall SndMemRead(UINT16 a)
+UINT8 __fastcall bombjack_sound_read(UINT16 address)
 {
-	if (a==0xFF00)
+	switch (address)
 	{
-		return 0x7f;
+		case 0x6000:
+		{
+			UINT8 ret = soundlatch;
+			soundlatch = 0;
+			return ret;
+		}
 	}
-	if(a==0x6000)
-	{
-		INT32 res;
-		res = latch;
-		latch = 0;
-		return res;
-	}
+
 	return 0;
 }
 
-
-
-void __fastcall SndPortWrite(UINT16 a, UINT8 d)
+void __fastcall bombjack_sound_write_port(UINT16 port, UINT8 data)
 {
-	a &= 0xff;
-	switch (a) {
-		case 0x00: {
-			AY8910Write(0, 0, d);
-			return;
-				   }
-		case 0x01: {
-			AY8910Write(0, 1, d);
-			return;
-				   }
-		case 0x10: {
-			AY8910Write(1, 0, d);
-			return;
-				   }
-		case 0x11: {
-			AY8910Write(1, 1, d);
-			return;
-				   }
-		case 0x80: {
-			AY8910Write(2, 0, d);
-			return;
-				   }
-		case 0x81: {
-			AY8910Write(2, 1, d);
-			return;
-				   }
+	switch (port & 0xff)
+	{
+		case 0x00:
+		case 0x01:
+			AY8910Write(0, port & 1, data);
+		return;
+
+		case 0x10:
+		case 0x11:
+			AY8910Write(1, port & 1, data);
+		return;
+
+		case 0x80:
+		case 0x81:
+			AY8910Write(2, port & 1, data);
+		return;
 	}
 }
 
-static INT32 BjZInit()
+
+static INT32 DrvZInit()
 {
 	// Init the z80
 	CZetInit(2);
@@ -399,7 +334,7 @@ static INT32 BjZInit()
 	z80_end_memmap();
 
 	z80_add_read(0x9820, 0x987f, 1, (void *)&BjMemRead_9820);
-	z80_add_read(0xb000, 0xb005, 1, (void *)&BjMemRead);
+	z80_add_read(0xb000, 0xb005, 1, (void *)&bombjack_main_read);
 
 	z80_add_write(0x9000,0x93ff, 1, (void *)&BjMemWrite_9000);
 	z80_add_write(0x9400,0x97ff, 1, (void *)&BjMemWrite_9400);
@@ -439,7 +374,7 @@ static INT32 BjZInit()
 	//	CZetMapArea    (0xb800,0xb800,0,BjRam+0xb800);
 	//	CZetMapArea    (0xb800,0xb800,1,BjRam+0xb800);
 
-	CZetSetReadHandler(BjMemRead);
+	CZetSetReadHandler(bombjack_main_read);
 	CZetSetWriteHandler(BjMemWrite);
 	CZetClose();
 #endif
@@ -456,8 +391,8 @@ static INT32 BjZInit()
 
 	//	CZetMapArea    (0x6000,0x6000,0,BjRam+0xb800);
 	//	CZetMapArea    (0x6000,0x6000,1,BjRam+0xb800);
-	CZetSetReadHandler(SndMemRead);
-	CZetSetOutHandler(SndPortWrite);
+	CZetSetReadHandler(bombjack_sound_read);
+	CZetSetOutHandler(bombjack_sound_write_port);
 	CZetClose();
 
 	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
@@ -750,6 +685,26 @@ static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 of
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+static INT32 DrvDoReset()
+{
+	nmi_mask = 0;
+	soundlatch = 0;
+	for (INT32 i = 0; i < 2; i++) {
+		CZetOpen(i);
+		CZetReset();
+		CZetClose();
+	}
+
+#ifdef RAZE
+	z80_reset();
+#endif
+
+	for (INT32 i = 0; i < 3; i++) {
+		AY8910Reset(i);
+	}
+	return 0;
+}
+
 static INT32 MemIndex()
 {
 	UINT8 *Next; Next = Mem;
@@ -782,7 +737,7 @@ static INT32 MemIndex()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 BjInit()
+static INT32 DrvInit()
 {
 	DrvInitSaturn();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvInitSaturn             ",10,70);
@@ -798,19 +753,12 @@ static INT32 BjInit()
 	
 	INT32 RomOffset = 0;
 
-	if (BjIsBombjackt) {
-		for (INT32 i = 0; i < 3; i++) {
-			BurnLoadRom(BjRom + (0x4000 * i), i, 1);
-		}
-		
-		RomOffset = 3;
-	} else {
-		for (INT32 i = 0; i < 5; i++) {
-			BurnLoadRom(BjRom + (0x2000 * i), i, 1);
-		}
-		
-		RomOffset = 5;
+	for (INT32 i = 0; i < 5; i++) {
+		BurnLoadRom(BjRom + (0x2000 * i), i, 1);
 	}
+		
+	RomOffset = 5;
+
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"rom1                  ",10,70);
 
 	for (INT32 i = 0; i < 3; i++) {
@@ -829,7 +777,7 @@ static INT32 BjInit()
 	BurnLoadRom(SndRom, RomOffset + 10, 1); // load Sound CPU
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"rom2                  ",10,70);
 	// Set memory access & Init
-	BjZInit();
+	DrvZInit();
 
 	DecodeTiles4Bpp(text,512,0,0x1000,0x2000);
 	DecodeTiles16_4Bpp(sprites,1024,0x7000,0x5000,0x3000);
@@ -840,14 +788,7 @@ static INT32 BjInit()
 	return 0;
 }
 
-static INT32 BjtInit()
-{
-	BjIsBombjackt = 1;
-	
-	return BjInit();
-}
-
-static INT32 BjExit()
+static INT32 DrvExit()
 {	 
 	nBurnFunction = NULL;
 	SPR_InitSlaveSH();
@@ -884,8 +825,6 @@ static INT32 BjExit()
 //	GenericTilesExit();
 	free(Mem);
 	Mem = NULL;
-	
-	BjIsBombjackt = 0;
 	
 	return 0;
 }
@@ -936,7 +875,7 @@ static void BjRenderBgLayer(UINT32 BgSel)
 }
 
 
-static void BjDrawSprites()
+static void draw_sprites()
 {
 	INT32 offs;
 	UINT32 delta=3;
@@ -991,12 +930,19 @@ static void BjDrawSprites()
 	}
 }
 
-static INT32 BjFrame()
+static INT32 DrvFrame()
 {
-/*	if (DrvReset) 
-	{	// Reset machine
-		DrvDoReset();
-	}	  */
+	{
+		DrvInputs[0] = 0x00;
+		DrvInputs[1] = 0x00;
+		DrvInputs[1] = 0x00;
+
+		for (INT32 i = 0; i < 8; i++) {
+			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
+			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
+			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
+		}
+	}
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BjFrame                  ",10,70);
 
 	INT32 nInterleave = 10;
@@ -1018,26 +964,15 @@ static INT32 BjFrame()
 		nNext = (i + 1) * nCyclesTotal[0];// / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[0];
 		nCyclesDone[0] += z80_emulate(nCyclesSegment);
-		if (i == 1) 
-		{
-			if(bombjackIRQ)
-			{
-				z80_cause_NMI();
-			}
-		}
+
+		if (nmi_mask && i == (nInterleave - 1)) z80_cause_NMI();
 #else
 		// Run Z80 #1
 		CZetOpen(0);
 		nNext = (i + 1) * nCyclesTotal[0];// / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[0];
 		nCyclesDone[0] += CZetRun(nCyclesSegment);
-		if (i == 1) 
-		{
-			if(bombjackIRQ)
-			{
-				CZetNmi();
-			}
-		}
+		if (nmi_mask && i == (nInterleave - 1)) CZetNmi();
 		CZetClose();
 #endif
 
@@ -1047,6 +982,7 @@ static INT32 BjFrame()
 		nCyclesSegment = nNext - nCyclesDone[1];
 		nCyclesSegment = CZetRun(nCyclesSegment);
 		nCyclesDone[1] += nCyclesSegment;
+		if (i == (nInterleave - 1)) CZetNmi();
 		CZetClose();
 
 		// Render Sound Segment
@@ -1075,18 +1011,15 @@ static INT32 BjFrame()
 	}
 #endif
 //	SPR_RunSlaveSH((PARA_RTN*)BjDrawSprites, NULL);
-	CZetOpen(1);
-	CZetNmi();
-	CZetClose();
-
 //	CalcAll();
+
 	if(BgSel!=BjRam[0x9e00])
 	{
 		BgSel=BjRam[0x9e00];
 		BjRenderBgLayer(BgSel);
 	}
 	//BjRenderFgLayer();
-	BjDrawSprites();
+	draw_sprites();
 //	 SPR_WaitEndSlaveSH();
 	return 0;
 }
