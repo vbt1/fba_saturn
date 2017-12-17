@@ -13,7 +13,7 @@ PcmHn 			pcm8[8];
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L //
-#define nBurnSoundLen 128 //140 //128//7680/55.0
+#define nBurnSoundLen 140 //128//7680/55.0
 unsigned int vbmap[4][0x1000];
 int bg=-1;
 
@@ -21,6 +21,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 int DrvInit();
 int DrvExit();
 void DrvFrame();
+void CZetRunSlave(int *nCycles);
 
 /*static*/unsigned char DrvInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/unsigned char DrvInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};

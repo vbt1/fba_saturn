@@ -2,11 +2,11 @@
 #include "../burn_sound.h"
 
 #define DAC_NUM		(1)	// Maximum DAC chips
-#define nBurnSoundLen 128
+#define nBurnSoundLen 140
 typedef struct //dac_info
 {
 	INT16	Output;
-	double 	nVolume;
+//	double 	nVolume;
 	INT32 	nCurrentPosition;
 	INT32	Initialized;
 	INT32	OutputDir;
@@ -198,7 +198,7 @@ void DACInit(INT32 Num, UINT32 Clock, INT32 bAdd, INT32 (*pSyncCB)())
 	memset (ptr, 0, sizeof(dac_info));
 
 	ptr->Initialized = 1;
-	ptr->nVolume = 1.00;
+//	ptr->nVolume = 1.00;
 	ptr->OutputDir = BURN_SND_ROUTE_BOTH;
 	ptr->pSyncCallback = pSyncCB;
 
@@ -217,7 +217,7 @@ void DACSetRoute(INT32 Chip, double nVolume, INT32 nRouteDir)
 	dac_info *ptr;
 
 	ptr = &dac_table[Chip];
-	ptr->nVolume = nVolume;
+//	ptr->nVolume = nVolume;
 	ptr->OutputDir = nRouteDir;
 }
 

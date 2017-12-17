@@ -3,6 +3,8 @@
 *	Yamaha YM2151 driver (version 2.150 final beta)
 *
 ******************************************************************************/
+#define RUN_YM2151 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -222,20 +224,20 @@ typedef struct
 *	TL_RES_LEN - sinus resolution (X axis)
 */
 #define TL_TAB_LEN (13*2*TL_RES_LEN)
-static signed int tl_tab[TL_TAB_LEN];
+/*static*/ signed int tl_tab[TL_TAB_LEN];
 
 #define ENV_QUIET		(TL_TAB_LEN>>3)
 
 /* sin waveform table in 'decibel' scale */
-static unsigned int sin_tab[SIN_LEN];
+/*static*/ unsigned int sin_tab[SIN_LEN];
 
 
 /* translate from D1L to volume index (16 D1L levels) */
-static UINT32 d1l_tab[16];
+/*static*/ UINT32 d1l_tab[16];
 
 
 #define RATE_STEPS (8)
-static UINT8 eg_inc[19*RATE_STEPS]={
+/*static*/ UINT8 eg_inc[19*RATE_STEPS]={
 
 /*cycle:0 1  2 3  4 5  6 7*/
 
@@ -268,7 +270,7 @@ static UINT8 eg_inc[19*RATE_STEPS]={
 #define O(a) (a*RATE_STEPS)
 
 /*note that there is no O(17) in this table - it's directly in the code */
-static UINT8 eg_rate_select[32+64+32]={	/* Envelope Generator rates (32 + 64 rates + 32 RKS) */
+/*static*/ UINT8 eg_rate_select[32+64+32]={	/* Envelope Generator rates (32 + 64 rates + 32 RKS) */
 /* 32 dummy (infinite time) rates */
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
@@ -315,7 +317,7 @@ O(16),O(16),O(16),O(16),O(16),O(16),O(16),O(16)
 /*mask  2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3, 1,  0,  0,  0,  0,  0 */
 
 #define O(a) (a*1)
-static UINT8 eg_rate_shift[32+64+32]={	/* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
+/*static*/ UINT8 eg_rate_shift[32+64+32]={	/* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
 /* 32 infinite time rates */
 O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
 O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
@@ -463,7 +465,7 @@ static UINT16 phaseinc_rom[768]={
 		some 0x80 could be 0x81 as well as some 0x00 could be 0x01.
 */
 
-static UINT8 lfo_noise_waveform[256] = {
+/*static*/ UINT8 lfo_noise_waveform[256] = {
 0xFF,0xEE,0xD3,0x80,0x58,0xDA,0x7F,0x94,0x9E,0xE3,0xFA,0x00,0x4D,0xFA,0xFF,0x6A,
 0x7A,0xDE,0x49,0xF6,0x00,0x33,0xBB,0x63,0x91,0x60,0x51,0xFF,0x00,0xD8,0x7F,0xDE,
 0xDC,0x73,0x21,0x85,0xB2,0x9C,0x5D,0x24,0xCD,0x91,0x9E,0x76,0x7F,0x20,0xFB,0xF3,
@@ -486,15 +488,15 @@ static UINT8 lfo_noise_waveform[256] = {
 };
 
 
-static YM2151 * YMPSG = NULL;	/* array of YM2151's */
+/*static*/ YM2151 * YMPSG = NULL;	/* array of YM2151's */
 static unsigned int YMNumChips;	/* total # of YM2151's emulated */
 
 
 /* these variables stay here for speedup purposes only */
-static YM2151 * PSG;
-static signed int chanout[8];
-static signed int m2,c1,c2; /* Phase Modulation input for operators 2,3,4 */
-static signed int mem;		/* one sample delay memory */
+/*static*/ YM2151 * PSG;
+/*static*/ signed int chanout[8];
+/*static*/ signed int m2,c1,c2; /* Phase Modulation input for operators 2,3,4 */
+/*static*/ signed int mem;		/* one sample delay memory */
 
 
 /* save output as raw 16-bit sample */
@@ -2185,10 +2187,11 @@ extern unsigned int  nSoundBufferPos;
 void YM2151UpdateOneSlave()
 {
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-//	volatile signed short *nSoundBuffer = (unsigned short *)0x25a24000+deltaSlave;
+	volatile signed short *nSoundBuffer = (unsigned short *)0x25a24000+nSoundBufferPos;
 
-	unsigned int i;
-	unsigned int num=0;
+unsigned int length = 1; // 2 si 128  interleave,4 si 64 interleave, etc
+//	unsigned int i;
+//	unsigned int num=0;
 //	unsigned int length = 1; //140/128; //128;
 //	volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
@@ -2196,12 +2199,12 @@ void YM2151UpdateOneSlave()
 //	volatile signed short* buffers = pBurnSoundOut + nSoundBufferPos;
 //	volatile signed short* buffers = (unsigned short *)0x25a24000+deltaSlave;
 
-	PSG = &YMPSG[num];
+	PSG = &YMPSG[0];
 
 	if (PSG->tim_B)
 	{
-//		PSG->tim_B_val -= ( length << TIMER_SH );
-		PSG->tim_B_val -= ( 1 << TIMER_SH );
+		PSG->tim_B_val -= ( length << TIMER_SH );
+//		PSG->tim_B_val -= ( 1 << TIMER_SH );
 //		PSG->tim_B_val -= 0x10000;
 		
 		if (PSG->tim_B_val<=0)
@@ -2216,10 +2219,10 @@ void YM2151UpdateOneSlave()
 		}
 	}
 
-//	for (i=0; i<length; i++)
-//	for (i=0; i<4; i++)
+	for (unsigned int i=0; i<length; i++)
 	{
-/*		advance_eg();
+#ifdef RUN_YM2151
+		advance_eg();
 
 		chanout[0] = 0;
 		chanout[1] = 0;
@@ -2247,11 +2250,12 @@ void YM2151UpdateOneSlave()
 		nSoundBuffer[0xa000] = chanout[5] & PSG->pan[5];
 		nSoundBuffer[0xc000] = chanout[6] & PSG->pan[6];
 		nSoundBuffer[0xe000] = chanout[7] & PSG->pan[7];
-*/
+#endif
+		*nSoundBuffer++;
+
 		/* calculate timer A */
 		if (PSG->tim_A)
 		{
-//			PSG->tim_A_val -= ( 1 << TIMER_SH );
 			PSG->tim_A_val -=0x10000;
 			if (PSG->tim_A_val <= 0)
 			{
@@ -2266,11 +2270,11 @@ void YM2151UpdateOneSlave()
 					PSG->csm_req = 2;	/* request KEY ON / KEY OFF sequence */
 			}
 		}
-//		advance();
+#ifdef RUN_YM2151
+		advance();
+#endif
 	}
-//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = ++deltaSlave;
-//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave+4;
-	nSoundBufferPos++;
+	nSoundBufferPos+=length;
 }
 
 void YM2151SetIrqHandler(int n, void(*handler)(int irq))

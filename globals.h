@@ -16,4 +16,6 @@ extern unsigned int  nSoundBufferPos;
 #define SS_BGMIX *(&shared + 13)
 #define SS_SCL *(&shared + 14)
 //#define SS_SCL1 *(&shared + 15)
-#define SS_PORT *(&shared + 15)
+#define SS_Z80CY *(&shared + 15)
+#define SS_PORT *(&shared + 16)
+//#define SS_Z80CY (unsigned int*)0x00200000

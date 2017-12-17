@@ -1,5 +1,6 @@
 // Z80 (Zed Eight-Ty) Interface
 #include "burnint.h"
+#include "globals.h"
 //#define ACB_DRIVER_DATA	 (64)
 
 /*static*/ cz80_struc* CZetCPUContext = NULL;
@@ -154,6 +155,72 @@ int CZetRun(int nCycles)
 	lastCZetCPUContext->nCyclesSegment = 0;
 
 	return nCycles;
+}
+
+#define INT_DIGITS 19
+static char *itoa(i)
+     int i;
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
+
+void CZetRunSlave(int *nCycles)
+{
+
+//unsigned int nCyc = *(unsigned int*)0x00200000;//OPEN_CSH_VAR(SS_Z80CY);
+
+	if (nCycles[0] <= 0) {
+//		*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = nCyc;
+//		*(unsigned int*)0x00200000 = nCyc;		
+		return;
+	}
+
+/*
+char toto[100];
+char *titi = &toto[0];
+//nCycles[0]=332;
+
+titi=itoa(nCycles[0]);*/
+unsigned int nCyc = *(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+
+/*
+FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"         ",20,100);
+FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"         ",20,110);
+
+FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)titi,20,100);
+titi=itoa(nCyc);
+FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)titi,20,110);
+*/
+
+	lastCZetCPUContext->nCyclesTotal += nCycles[0];
+	lastCZetCPUContext->nCyclesSegment = nCycles[0];
+	lastCZetCPUContext->nCyclesLeft = nCycles[0];
+
+	nCyc += Cz80_Exec(lastCZetCPUContext);
+
+	lastCZetCPUContext->nCyclesTotal -= lastCZetCPUContext->nCyclesLeft;
+	lastCZetCPUContext->nCyclesLeft = 0;
+	lastCZetCPUContext->nCyclesSegment = 0;
+
+//	*(unsigned int*)0x00200000 = nCyc;
+	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = nCyc;
 }
 
 void CZetRunAdjust(int nCycles)

@@ -7,7 +7,7 @@ extern Uint32 *shared;
 //static int nBurnSoundLen;
 //static Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
 extern unsigned int  nSoundBufferPos;
-static SclNorscl *ss_reg = NULL;
+/*static*/ SclNorscl *ss_reg = NULL;
 /*static*/ SclSysreg	*ss_regs = NULL;
 /*static*/ SclDataset	*ss_regd = NULL;
 /*static*/ SclSpPriNumRegister  *ss_SpPriNum = NULL;
@@ -50,8 +50,9 @@ static unsigned char *cache = NULL;
 #define SS_BGMIX *(&shared + 13)
 #define SS_SCL *(&shared + 14)
 //#define SS_SCL1 *(&shared + 15)
-#define SS_PORT *(&shared + 15)
-
+#define SS_Z80CY *(&shared + 15)
+#define SS_PORT *(&shared + 16)
+//#define SS_Z80CY (unsigned int*)0x00200000
 #endif
 
 #define SS_SET_N0PRIN(/* 3 bits */ n0prin) \
