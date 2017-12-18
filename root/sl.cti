@@ -157,6 +157,10 @@ Track MODE1
 				Source D_SEGAE.BIN
 			EndFile
 
+			File D_SOLOMN.BIN;1
+				Source D_SOLOMN.BIN
+			EndFile
+
 			Directory BOMBJA
 				File 01H03T.BIN;1
 					Source BOMBJA\01H03T.BIN
@@ -4482,6 +4486,45 @@ EndFile
 				EndFile
 				File SFR05.BIN;1
 					Source SLAPFIB1\SFR05.BIN
+				EndFile
+			EndDirectory
+
+			Directory SOLOMN
+				File 6.3F;1
+					Source SOLOMON\6.3F
+				EndFile
+				File 7.3H;1
+					Source SOLOMON\7.3H
+				EndFile
+				File 8.3JK;1
+					Source SOLOMON\8.3JK
+				EndFile
+				File 1.3JK;1
+					Source SOLOMON\1.3JK
+				EndFile
+				File 12.3T;1
+					Source SOLOMON\12.3T
+				EndFile
+				File 11.3R;1
+					Source SOLOMON\11.3R
+				EndFile
+				File 10.3P;1
+					Source SOLOMON\10.3P
+				EndFile
+				File 9.3M;1
+					Source SOLOMON\9.3M
+				EndFile
+				File 2.5LM;1
+					Source SOLOMON\2.5LM
+				EndFile
+				File 3.6LM;1
+					Source SOLOMON\3.6LM
+				EndFile
+				File 4.7LM;1
+					Source SOLOMON\4.7LM
+				EndFile
+				File 5.8LM;1
+					Source SOLOMON\5.8LM
 				EndFile
 			EndDirectory
 
