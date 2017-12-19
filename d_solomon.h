@@ -7,9 +7,13 @@
 
 #define nBurnSoundLen 128
 
+int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
+
 INT32 SolomonInit();
 INT32 SolomonExit();
 INT32 SolomonFrame();
+static void DrvInitSaturn();
+static void make_lut(void);
 
 /*static*/ UINT8 SolomonInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 SolomonInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -32,11 +36,12 @@ INT32 SolomonFrame();
 /*static*/ UINT8 *SolomonBgVideoRam   = NULL;
 /*static*/ UINT8 *SolomonSpriteRam    = NULL;
 /*static*/ UINT8 *SolomonPaletteRam   = NULL;
-/*static*/ UINT32 *SolomonPalette     = NULL;
+/*static*/ //UINT32 *SolomonPalette     = NULL;
 /*static*/ UINT8 *SolomonBgTiles      = NULL;
 /*static*/ UINT8 *SolomonFgTiles      = NULL;
 /*static*/ UINT8 *SolomonSprites      = NULL;
 /*static*/ UINT8 *SolomonTempRom      = NULL;
+INT16* map_offset_lut      = NULL;
 
 /*static*/ INT32 SolomonIrqFire = 0;
 
@@ -45,7 +50,6 @@ INT32 SolomonFrame();
 /*static*/ INT32 SolomonSoundLatch = 0;
 /*static*/ INT16* pFMBuffer;
 /*static*/ INT16* pAY8910Buffer[9];
-
 
 /*static*/ INT32 nCyclesDone[2], nCyclesTotal[2];
 /*static*/ INT32 nCyclesSegment;

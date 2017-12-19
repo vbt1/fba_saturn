@@ -4489,7 +4489,7 @@ EndFile
 				EndFile
 			EndDirectory
 
-			Directory SOLOMN
+			Directory SOLOMON
 				File 6.3F;1
 					Source SOLOMON\6.3F
 				EndFile
