@@ -1,4 +1,6 @@
 #include "d_solomon.h"
+#define nInterleave 2
+#define RAZE0 1
 
 int ovlInit(char *szShortName)
 {
@@ -45,6 +47,10 @@ INT32 SolomonDoReset()
 	SolomonFlipScreen = 0;
 	SolomonSoundLatch = 0;
 
+#ifdef RAZE0	 
+	z80_reset();
+#endif
+
 	for (INT32 i = 0; i < 2; i++) {
 		CZetOpen(i);
 		CZetReset();
@@ -83,7 +89,6 @@ UINT8 __fastcall SolomonRead1(UINT16 a)
 			return SolomonDip[1];
 		}
 	}
-
 	return 0;
 }
 
@@ -102,32 +107,75 @@ void __fastcall SolomonWrite1(UINT16 a, UINT8 d)
 
 		case 0xe800: {
 			SolomonSoundLatch = d;
+#ifndef RAZE0
 			CZetClose();
+#endif
 			CZetOpen(1);
 			CZetNmi();
 			CZetClose();
+#ifndef RAZE0
 			CZetOpen(0);
+#endif
 			return;
 		}
 	}
+}
 
-	if(a>=0xdc00 && a<=0xdfff)
+#ifdef RAZE0
+
+void __fastcall SolomonWrite1_0xd000(UINT16 a, UINT8 d)
+{
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Write1_0xd000                     ",20,100);
+	if(RamStart[a]!=d)
 	{
-//		if(RamStart[a]!=d)
-		{
-			RamStart[a]=d;
-			a &= 0x3ff;
-
-			UINT32 x			= map_offset_lut[a];
-			UINT32 Attr		= SolomonBgColourRam[a];
-			UINT32 Code		= d + (Attr & 0x07) << 8;
-			UINT8 Colour		= (Attr & 0x70) >> 4;
-
-			ss_map[x] = Colour|8;
-			ss_map[x+1] = Code;
-		}
+		RamStart[a]=d;
+		unsigned int i = map_offset_lut[a&0x3ff];
+		ss_map2[i] =  (d & 0x70) >> 4;
+		ss_map2[i+1] = 0x800|SolomonVideoRam[a&0x3ff] + ((d & 0x07)<<8);
 	}
 }
+
+void __fastcall SolomonWrite1_0xd400(UINT16 a, UINT8 d)
+{
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Write1_0xd400                     ",20,100);
+	if(RamStart[a]!=d)
+	{
+		RamStart[a]=d;
+		a&=0x3ff;
+		unsigned int i = map_offset_lut[a];
+		ss_map2[i+1] = 0x800|d + ((SolomonColourRam[a] & 0x07)<<8);
+	}
+}
+
+void __fastcall SolomonWrite1_0xd800(UINT16 a, UINT8 d)
+{
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Write1_0xd800                     ",20,100);
+	if(RamStart[a]!=d)
+	{
+		RamStart[a]=d;
+
+		UINT32 Colour = (d & 0x70) >> 4;
+		UINT32 FlipX = (d & 0x80) >> 1;
+		UINT32 FlipY = (d & 0x08) / 8;
+
+		unsigned int i = map_offset_lut[a&0x3ff];
+		ss_map[i] = 8 | Colour | FlipX << 8 | FlipY << 16;
+		ss_map[i+1] = SolomonBgVideoRam[a&0x3ff] + ((d & 0x07)<<8);
+	}
+}
+
+void __fastcall SolomonWrite1_0xdc00(UINT16 a, UINT8 d)
+{
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Write1_0xdc00                     ",20,100);
+	if(RamStart[a]!=d)
+	{
+		RamStart[a]=d;
+		a&=0x3ff;
+		unsigned int i = map_offset_lut[a];
+		ss_map[i+1] = d + ((SolomonBgColourRam[a] & 0x07)<<8);
+	}
+}
+#endif
 
 UINT8 __fastcall SolomonRead2(UINT16 a)
 {
@@ -190,11 +238,11 @@ static INT32 SolomonMemIndex()
 	SolomonZ80Ram2         = Next; Next += 0x00800;
 	SolomonColourRam       = Next; Next += 0x00400;
 	SolomonVideoRam        = Next; Next += 0x00400;
+
 	SolomonBgColourRam     = Next; Next += 0x00400;
 	SolomonBgVideoRam      = Next; Next += 0x00400;
 	SolomonSpriteRam       = Next; Next += 0x00080;
 	SolomonPaletteRam      = Next; Next += 0x00200;
-
 	RamEnd                 = Next;
 
 //	SolomonBgTiles         = Next; Next += 2048 * 8 * 8;
@@ -283,9 +331,9 @@ INT32 SolomonInit()
 
 	// Setup the Z80 emulation
 	CZetInit(2);
+
+#ifndef RAZE0
 	CZetOpen(0);
-	CZetSetReadHandler(SolomonRead1);
-	CZetSetWriteHandler(SolomonWrite1);
 	CZetMapArea(0x0000, 0xbfff, 0, SolomonZ80Rom1         );
 	CZetMapArea(0x0000, 0xbfff, 2, SolomonZ80Rom1         );
 	CZetMapArea(0xc000, 0xcfff, 0, SolomonZ80Ram1         );
@@ -311,7 +359,48 @@ INT32 SolomonInit()
 	CZetMapArea(0xe400, 0xe5ff, 2, SolomonPaletteRam      );
 	CZetMapArea(0xf000, 0xffff, 0, SolomonZ80Rom1 + 0xf000);
 	CZetMapArea(0xf000, 0xffff, 2, SolomonZ80Rom1 + 0xf000);
+	CZetSetReadHandler(SolomonRead1);
+	CZetSetWriteHandler(SolomonWrite1);
+
 	CZetClose();
+#else
+	z80_init_memmap();
+ 	z80_map_read  (0x0000, 0xbfff, SolomonZ80Rom1);
+ 	z80_map_fetch (0x0000, 0xbfff, SolomonZ80Rom1);
+ 	z80_map_read  (0xc000, 0xcfff, SolomonZ80Ram1);
+ 	z80_map_write (0xc000, 0xcfff, SolomonZ80Ram1);
+ 	z80_map_fetch (0xc000, 0xcfff, SolomonZ80Ram1);
+ 	z80_map_read  (0xd000, 0xd3ff, SolomonColourRam);
+// 	z80_map_write (0xd000, 0xd3ff, SolomonColourRam);
+ 	z80_map_fetch (0xd000, 0xd3ff, SolomonColourRam);
+ 	z80_map_read  (0xd400, 0xd7ff, SolomonVideoRam);
+// 	z80_map_write (0xd400, 0xd7ff, SolomonVideoRam);
+ 	z80_map_fetch (0xd400, 0xd7ff, SolomonVideoRam);
+ 	z80_map_read  (0xd800, 0xdbff, SolomonBgColourRam);
+// 	z80_map_write (0xd800, 0xdbff, SolomonBgColourRam);
+ 	z80_map_fetch (0xd800, 0xdbff, SolomonBgColourRam);
+ 	z80_map_read  (0xdc00, 0xdfff, SolomonBgVideoRam);
+// 	z80_map_write (0xdc00, 0xdfff, SolomonBgVideoRam);
+ 	z80_map_fetch (0xdc00, 0xdfff, SolomonBgVideoRam);
+ 	z80_map_read  (0xe000, 0xe07f, SolomonSpriteRam);
+ 	z80_map_write (0xe000, 0xe07f, SolomonSpriteRam);
+ 	z80_map_fetch (0xe000, 0xe07f, SolomonSpriteRam);
+ 	z80_map_read  (0xe400, 0xe5ff, SolomonPaletteRam);
+ 	z80_map_write (0xe400, 0xe5ff, SolomonPaletteRam);
+ 	z80_map_fetch (0xe400, 0xe5ff, SolomonPaletteRam);
+	z80_map_read(0xf000, 0xffff, SolomonZ80Rom1 + 0xf000);
+	z80_map_fetch(0xf000, 0xffff, SolomonZ80Rom1 + 0xf000);
+
+	z80_end_memmap();
+
+	z80_add_read(0xe600, 0xe60f, 1, (void *)&SolomonRead1);
+	z80_add_write(0xd000, 0xd3ff, 1, (void *)&SolomonWrite1_0xd000);
+	z80_add_write(0xd400, 0xd7ff, 1, (void *)&SolomonWrite1_0xd400);
+	z80_add_write(0xd800, 0xdbff, 1, (void *)&SolomonWrite1_0xd800);
+	z80_add_write(0xdc00, 0xdfff,  1, (void *)&SolomonWrite1_0xdc00);
+	z80_add_write(0xe600, 0xe60f, 1, (void *)&SolomonWrite1);
+	z80_add_write(0xe800, 0xe80f, 1, (void *)&SolomonWrite1);
+#endif
 
 //	CZetInit(1);
 	CZetOpen(1);
@@ -349,6 +438,8 @@ INT32 SolomonInit()
 
 INT32 SolomonExit()
 {
+	nBurnFunction = NULL;
+
 	CZetExit();
 
 	for (INT32 i = 0; i < 3; i++) {
@@ -360,28 +451,6 @@ INT32 SolomonExit()
 	BurnFree(Mem);
 
 	return 0;
-}
-
-void SolomonRenderLayer()
-{
-	for (UINT32 Offs = 0; Offs < 0x400; Offs++) 
-	{
- 
-		UINT32 Attr, Code, Colour, FlipX, FlipY;
-
-		Attr = SolomonBgColourRam[Offs];
-		Code = SolomonBgVideoRam[Offs] + 256 * (Attr & 0x07);
-		Colour = (Attr & 0x70) >> 4;
-		FlipX = (Attr & 0x80) >> 1;
-		FlipY = (Attr & 0x08) / 8;
-
-		unsigned int i = map_offset_lut[Offs];
-		ss_map[i] = 8 | Colour | FlipX << 8 | FlipY << 16;
-		ss_map[i+1] = Code;
-
-		ss_map2[i] =  (SolomonColourRam[Offs] & 0x70) >> 4;
-		ss_map2[i+1] = 0x800|SolomonVideoRam[Offs] + 256 * (SolomonColourRam[Offs] & 0x07);
-	}
 }
 
 void SolomonRenderSpriteLayer()
@@ -430,17 +499,12 @@ void SolomonCalcPalette()
 
 inline void SolomonDraw()
 {
-	SolomonCalcPalette();
-	SolomonRenderLayer();
+//	SolomonCalcPalette();
 	SolomonRenderSpriteLayer();
 }
 
 INT32 SolomonFrame()
 {
-	INT32 nInterleave = 2;
-	INT32 nSoundBufferPos = 0;
-
-//	if (SolomonReset) SolomonDoReset();
 	SolomonMakeInputs();
 
 	nCyclesTotal[0] = 4000000 / 60;
@@ -452,16 +516,22 @@ INT32 SolomonFrame()
 	for (INT32 i = 0; i < nInterleave; i++) 
 	{
 		INT32 nCurrentCPU, nNext;
+		nCurrentCPU = 0;
 
 		// Run Z80 #1
-		nCurrentCPU = 0;
+#ifndef RAZE0
 		CZetOpen(nCurrentCPU);
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
 		if (i == 1) if(SolomonIrqFire) CZetNmi();
 		CZetClose();
-
+#else
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+		nCyclesDone[nCurrentCPU] += z80_emulate(nCyclesSegment);
+		if (i == 1) if(SolomonIrqFire) z80_cause_NMI();
+#endif
 		// Run Z80 #2
 		nCurrentCPU = 1;
 		CZetOpen(nCurrentCPU);
@@ -471,23 +541,10 @@ INT32 SolomonFrame()
 		nCyclesDone[nCurrentCPU] += nCyclesSegment;
 		CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 		CZetClose();
-
-		// Render Sound Segment
-		{
-//			signed short *nSoundBuffer = (signed short *)0x25a20000;
-
-//			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
-//			INT16* pSoundBuf = nSoundBuffer + (nSoundBufferPos << 1);
-//			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
-//			AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
-//			nSoundBufferPos += nSegmentLength;
-		}
 	}
-
-//	updateSound();
-
 	SolomonDraw();
 	SPR_WaitEndSlaveSH();
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"                     ",20,100);
 
 	return 0;
 }
@@ -496,7 +553,6 @@ INT32 SolomonFrame()
 /*static*/ void updateSound()
 {
 	int nSample;
-	int n;
 	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
@@ -505,7 +561,7 @@ INT32 SolomonFrame()
 	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
 	AY8910Update(2, &pAY8910Buffer[6], nBurnSoundLen);
 
-	for (n = 0; n < nBurnSoundLen; n++) 
+	for (unsigned int n = 0; n < nBurnSoundLen; n++) 
 	{
 		nSample  = pAY8910Buffer[0][n]; // >> 2;
 		nSample += pAY8910Buffer[1][n]; // >> 2;
@@ -676,6 +732,8 @@ static void DrvInitSaturn()
 	initColors();
 	initSprites(256-1,240-1,0,0,0,0);
 
+	memset(ss_map,0,0x20000);
+
 	for (unsigned int i = 3; i <nBurnSprites; i++) 
 	{
 		ss_sprite[i].control   = ( JUMP_NEXT | FUNC_NORMALSP);
@@ -685,7 +743,7 @@ static void DrvInitSaturn()
 		ss_sprite[i].ay    =  -32;
 	}
 
-//	nBurnFunction = CalcAll;
+	nBurnFunction = SolomonCalcPalette;
 	drawWindow(0,240,0,0,64); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
