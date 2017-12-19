@@ -208,6 +208,7 @@ static INT32 SolomonMemIndex()
 
 	pFMBuffer					= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 	map_offset_lut			= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
+	cram_lut					= (UINT16*)Next; Next += 4096 * sizeof(UINT16);
 //	SolomonPalette         = (UINT32*)Next; Next += 0x00200 * sizeof(UINT32);
 
 	MemEnd                 = Next;
@@ -339,11 +340,6 @@ INT32 SolomonInit()
 	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(2, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-//	AY8910SetAllRoutes(0, 0.12, BURN_SND_ROUTE_BOTH);
-//	AY8910SetAllRoutes(1, 0.12, BURN_SND_ROUTE_BOTH);
-//	AY8910SetAllRoutes(2, 0.12, BURN_SND_ROUTE_BOTH);
-
-//	GenericTilesInit();
 
 	// Reset the driver
 	SolomonDoReset();
@@ -371,126 +367,41 @@ void SolomonRenderLayer()
 	for (UINT32 Offs = 0; Offs < 0x400; Offs++) 
 	{
  
-		INT32 Attr, Code, Colour, FlipX, FlipY;
+		UINT32 Attr, Code, Colour, FlipX, FlipY;
 
 		Attr = SolomonBgColourRam[Offs];
 		Code = SolomonBgVideoRam[Offs] + 256 * (Attr & 0x07);
 		Colour = (Attr & 0x70) >> 4;
-		FlipX = Attr & 0x80;
-//		FlipY = Attr & 0x08;
+		FlipX = (Attr & 0x80) >> 1;
+		FlipY = (Attr & 0x08) / 8;
 
 		unsigned int i = map_offset_lut[Offs];
-		ss_map[i] = 8 | Colour | FlipX << 7;
+		ss_map[i] = 8 | Colour | FlipX << 8 | FlipY << 16;
 		ss_map[i+1] = Code;
 
-		Code = SolomonVideoRam[Offs] + 256 * (SolomonColourRam[Offs] & 0x07);
-		Colour = (SolomonColourRam[Offs] & 0x70) >> 4;
-
-		ss_map2[i] = Colour;
-		ss_map2[i+1] = 0x800|Code;
-	}
-}
-
-void SolomonRenderFgLayer()
-{
-	for (INT32 Offs = 0x400 - 1; Offs >= 0; Offs--) 
-	{
-//		INT32 sx, sy, 
-		INT32 Code, Colour;
-
-//		sx = (Offs % 32);
-//		sy = (Offs / 32);
-
-//		UINT32 sx		= Offs & 0x1f;
-//		UINT32 sy		= ((Offs<<1) & (~0x3f));
-
-		Code = SolomonVideoRam[Offs] + 256 * (SolomonColourRam[Offs] & 0x07);
-		Colour = (SolomonColourRam[Offs] & 0x70) >> 4;
-
-/*		if (SolomonFlipScreen) {
-			sx = 31 - sx;
-			sy = 31 - sy;
-		}*/
-
-//		ss_map2[sx|sy] = Colour << 12 | Code;
-		unsigned int i = map_offset_lut[Offs]; //(sx|sy)<<1;
-		ss_map2[i] = Colour;
-		ss_map2[i+1] = 0x800|Code;
-//		ss_map2[sx|sy] = Offs;
-
-//		sx *= 8;
-//		sy *= 8;
-//		sy -= 16;
-/*
-		if (sx >= 0 && sx < 247 && sy >= 0 && sy < 215) {
-			if (!SolomonFlipScreen) {
-				Render8x8Tile_Mask(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonFgTiles);
-			} else {
-				Render8x8Tile_Mask_FlipXY(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonFgTiles);
-			}
-		} else {
-			if (!SolomonFlipScreen) {
-				Render8x8Tile_Mask_Clip(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonFgTiles);
-			} else {
-				Render8x8Tile_Mask_FlipXY_Clip(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonFgTiles);
-			}
-		}
-*/
+		ss_map2[i] =  (SolomonColourRam[Offs] & 0x70) >> 4;
+		ss_map2[i+1] = 0x800|SolomonVideoRam[Offs] + 256 * (SolomonColourRam[Offs] & 0x07);
 	}
 }
 
 void SolomonRenderSpriteLayer()
 {
-	for (INT32 Offs = 0x80 - 4; Offs >= 0; Offs -= 4) {
-		INT32 sx, sy, Attr, Code, Colour, FlipX, FlipY;
+	UINT8 delta=3;
 
-		sx = SolomonSpriteRam[Offs + 3];
-		sy = 241 - SolomonSpriteRam[Offs + 2];
+	for (INT32 Offs = 0x80 - 4; Offs >= 0; Offs -= 4) 
+	{
+		UINT32 Attr, Code;
+
 		Attr = SolomonSpriteRam[Offs + 1];
 		Code = SolomonSpriteRam[Offs] + 16 * (Attr & 0x10);
-		Colour = (Attr & 0x0e) >> 1;
-		FlipX = Attr & 0x40;
-		FlipY = Attr & 0x80;
+//		Colour = (Attr & 0x0e) >> 1;
 
-		if (SolomonFlipScreen & 1) {
-			sx = 240 - sx;
-			sy = 240 - sy;
-			FlipX = !FlipX;
-			FlipY = !FlipY;
-		}
-
-		sy -= 16;
-/*
-		if (sx >= 0 && sx < 239 && sy >= 0 && sy < 207) {
-			if (!FlipY) {
-				if (!FlipX) {
-					Render16x16Tile_Mask(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonSprites);
-				} else {
-					Render16x16Tile_Mask_FlipX(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonSprites);
-				}
-			} else {
-				if (!FlipX) {
-					Render16x16Tile_Mask_FlipY(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonSprites);
-				} else {
-					Render16x16Tile_Mask_FlipXY(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonSprites);
-				}
-			}
-		} else {
-			if (!FlipY) {
-				if (!FlipX) {
-					Render16x16Tile_Mask_Clip(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonSprites);
-				} else {
-					Render16x16Tile_Mask_FlipX_Clip(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonSprites);
-				}
-			} else {
-				if (!FlipX) {
-					Render16x16Tile_Mask_FlipY_Clip(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonSprites);
-				} else {
-					Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, Code, sx, sy, Colour, 4, 0, 0, SolomonSprites);
-				}
-			}
-		}
-*/
+		ss_sprite[delta].charAddr = 0x220+(Code<<4);
+		ss_sprite[delta].control    = (Attr & 0xC0) >> 2;
+		ss_sprite[delta].ay    = 224 - SolomonSpriteRam[Offs + 2];
+		ss_sprite[delta].ax    =  SolomonSpriteRam[Offs + 3];
+		ss_sprite[delta].color=  (Attr & 0x0e)*8;
+		delta++;
 	}
 }
 
@@ -509,22 +420,19 @@ inline static UINT32 CalcCol(UINT16 nColour)
 	return BurnHighCol(r, g, b, 0);
 }
 
-INT32 SolomonCalcPalette()
+void SolomonCalcPalette()
 {
-	unsigned int delta=0;
-
 	for (INT32 i = 0; i < 0x200; i++) 
 	{
-		colBgAddr[0x100 | (i / 2)] = colBgAddr[i / 2] = CalcCol(SolomonPaletteRam[i & ~1] | (SolomonPaletteRam[i | 1] << 8));
+		colBgAddr[0x100 | (i / 2)] = colBgAddr[i / 2] = cram_lut[SolomonPaletteRam[i & ~1] | (SolomonPaletteRam[i | 1] << 8)];
 	}
-
-	return 0;
 }
 
 inline void SolomonDraw()
 {
 	SolomonCalcPalette();
 	SolomonRenderLayer();
+	SolomonRenderSpriteLayer();
 }
 
 INT32 SolomonFrame()
@@ -538,6 +446,8 @@ INT32 SolomonFrame()
 	nCyclesTotal[0] = 4000000 / 60;
 	nCyclesTotal[1] = 3072000 / 60;
 	nCyclesDone[0] = nCyclesDone[1] = 0;
+
+ 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 
 	for (INT32 i = 0; i < nInterleave; i++) 
 	{
@@ -577,6 +487,7 @@ INT32 SolomonFrame()
 //	updateSound();
 
 	SolomonDraw();
+	SPR_WaitEndSlaveSH();
 
 	return 0;
 }
@@ -712,8 +623,6 @@ static void initColors()
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_AllocColRam(SCL_NBG2,ON);
 	SCL_AllocColRam(SCL_NBG3,OFF);
-	colAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
-//	SCL_SetColRamOffset(SCL_NBG2,0,OFF);
 	ss_regs->dispenbl &= 0xfbff;
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_NBG0,OFF);
@@ -730,18 +639,10 @@ static void make_lut(void)
 		map_offset_lut[i] = (sx| sy)<<1;
 	}
 
-/*	
-	for (UINT32 i = 0; i < 256;i++) 
-	{
-		INT32 sy = (i % 16) <<5;//<<6
-		INT32 sx = (15 - (i / 16));//<<1;
-		mapbg_offset_lut[i] = (sx| sy);//<<1;
-	}
-
 	for (UINT32 i = 0; i < 4096; i++) 
 	{
 		cram_lut[i] = CalcCol(i);
-	}*/
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
@@ -749,7 +650,7 @@ static void DrvInitSaturn()
 	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
-	nBurnSprites  = 24+4;//27;
+	nBurnSprites  = 32+4;//27;
 
 	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
 	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
@@ -760,8 +661,6 @@ static void DrvInitSaturn()
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-//	ss_reg->n1_move_x = -8<<16;
-//	ss_reg->n2_move_x = 8;
 	ss_reg->n1_move_y =  16 <<16;
 	ss_reg->n2_move_y =  16;
 
@@ -775,14 +674,16 @@ static void DrvInitSaturn()
 
 	initLayers();
 	initColors();
-	initSprites(256-1,240-1,0,0,7,0);
+	initSprites(256-1,240-1,0,0,0,0);
 
-    ss_sprite[nBurnSprites-1].control			= CTRL_END;
-    ss_sprite[nBurnSprites-1].link				= 0;        
-    ss_sprite[nBurnSprites-1].drawMode	= 0;                
-    ss_sprite[nBurnSprites-1].color			= 0;                
-    ss_sprite[nBurnSprites-1].charAddr		= 0;                
-    ss_sprite[nBurnSprites-1].charSize		= 0;
+	for (unsigned int i = 3; i <nBurnSprites; i++) 
+	{
+		ss_sprite[i].control   = ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_sprite[i].charSize  = 0x210;
+		ss_sprite[i].drawMode  = ( ECD_DISABLE | COMPO_REP);
+		ss_sprite[i].ax    = -48;
+		ss_sprite[i].ay    =  -32;
+	}
 
 //	nBurnFunction = CalcAll;
 	drawWindow(0,240,0,0,64); 

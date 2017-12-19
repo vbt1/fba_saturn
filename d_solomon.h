@@ -12,6 +12,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 INT32 SolomonInit();
 INT32 SolomonExit();
 INT32 SolomonFrame();
+void updateSound();
 static void DrvInitSaturn();
 static void make_lut(void);
 
@@ -41,7 +42,8 @@ static void make_lut(void);
 /*static*/ UINT8 *SolomonFgTiles      = NULL;
 /*static*/ UINT8 *SolomonSprites      = NULL;
 /*static*/ UINT8 *SolomonTempRom      = NULL;
-INT16* map_offset_lut      = NULL;
+UINT16* map_offset_lut      = NULL;
+UINT16 *cram_lut = NULL;
 
 /*static*/ INT32 SolomonIrqFire = 0;
 
