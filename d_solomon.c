@@ -240,6 +240,7 @@ static INT32 SolomonMemIndex()
 
 	SolomonZ80Rom1         = Next; Next += 0x10000;
 	SolomonZ80Rom2         = Next; Next += 0x04000;
+	CZ80Context					= Next; Next += (0x1080*2);
 
 	RamStart               = Next;
 	Next += 0x0B800;// vbt pour alignement
@@ -272,13 +273,6 @@ static INT32 SolomonMemIndex()
 
 	return 0;
 }
-
-static INT32 TilePlaneOffsets[4]   = { 0, 1, 2, 3 };
-static INT32 TileXOffsets[8]       = { 0, 4, 8, 12, 16, 20, 24, 28 };
-static INT32 TileYOffsets[8]       = { 0, 32, 64, 96, 128, 160, 192, 224 };
-static INT32 SpritePlaneOffsets[4] = { 0, 131072, 262144, 393216 };
-static INT32 SpriteXOffsets[16]    = { 0, 1, 2, 3, 4, 5, 6, 7, 64, 65, 66, 67, 68, 69, 70, 71 };
-static INT32 SpriteYOffsets[16]    = { 0, 8, 16, 24, 32, 40, 48, 56, 128, 136, 144, 152, 160, 168, 176, 184 };
 
 INT32 SolomonInit()
 {
@@ -339,7 +333,8 @@ INT32 SolomonInit()
 	GfxDecode4Bpp(512, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x100, SolomonTempRom, SolomonSprites);
 
 	// Setup the Z80 emulation
-	CZetInit(2);
+//	CZetInit(2);
+	CZetInit2(2,CZ80Context);
 
 #ifndef RAZE0
 	CZetOpen(0);
@@ -448,16 +443,40 @@ INT32 SolomonInit()
 INT32 SolomonExit()
 {
 	nBurnFunction = NULL;
+	SPR_InitSlaveSH();
+
+	z80_stop_emulating();
+	z80_add_read(0xe600, 0xe60f, 1, (void *)NULL);
+	z80_add_write(0xd000, 0xd3ff, 1, (void *)NULL);
+	z80_add_write(0xd400, 0xd7ff, 1, (void *)NULL);
+	z80_add_write(0xd800, 0xdbff, 1, (void *)NULL);
+	z80_add_write(0xdc00, 0xdfff,  1, (void *)NULL);
+	z80_add_write(0xe600, 0xe60f, 1, (void *)NULL);
+	z80_add_write(0xe800, 0xe80f, 1, (void *)NULL);
 
 	CZetExit();
 
 	for (INT32 i = 0; i < 3; i++) {
 		AY8910Exit(i);
 	}
+	MemEnd = RamStart = RamEnd = SolomonZ80Rom1 = SolomonZ80Rom2 = NULL;
+	SolomonZ80Ram1 = SolomonZ80Ram2 = SolomonColourRam = SolomonVideoRam = NULL;
+	SolomonBgColourRam = SolomonBgVideoRam = SolomonSpriteRam = NULL;
+	SolomonPaletteRam = SolomonBgTiles = SolomonFgTiles = SolomonSprites = NULL;
+	CZ80Context = SolomonTempRom = NULL;
+	map_offset_lut = cram_lut = NULL;
 
-//	GenericTilesExit();
+	for (int i = 0; i < 9; i++) {
+		pAY8910Buffer[i] = NULL;
+	}
+	pFMBuffer = NULL;
 
-	BurnFree(Mem);
+	free(Mem);
+	Mem = NULL;
+
+	SolomonIrqFire = 0;
+	SolomonFlipScreen = 0;
+	SolomonSoundLatch = 0;
 
 	return 0;
 }
@@ -524,9 +543,7 @@ INT32 SolomonFrame()
 
 	for (INT32 i = 0; i < nInterleave; i++) 
 	{
-		INT32 nCurrentCPU, nNext;
-		nCurrentCPU = 0;
-
+		INT32 nNext;
 		// Run Z80 #1
 #ifndef RAZE0
 		CZetOpen(nCurrentCPU);
@@ -562,15 +579,12 @@ INT32 SolomonFrame()
 		nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
 		CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 //		CZetClose();
-#endif
 
-	#ifdef CZET_SLAVE
 		CZetOpen(1);
 //		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 //		nCyclesSegment = nNext - nCyclesDone[1];
 		nCyclesSegment = 25600;
 		SPR_RunSlaveSH((PARA_RTN*)CZetRunSlave,&nCyclesSegment);
-//		CZetRunSlave(&nCyclesSegment);
 		nCyclesDone[1] += nCyclesSegment;
 #endif
 	}
