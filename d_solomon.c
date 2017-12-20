@@ -1,6 +1,7 @@
 #include "d_solomon.h"
 #define nInterleave 2
 #define RAZE0 1
+#define CZET_SLAVE 1
 
 int ovlInit(char *szShortName)
 {
@@ -109,11 +110,19 @@ void __fastcall SolomonWrite1(UINT16 a, UINT8 d)
 			SolomonSoundLatch = d;
 #ifndef RAZE0
 			CZetClose();
-#endif
 			CZetOpen(1);
-			CZetNmi();
-			CZetClose();
+#endif
+
+#ifdef CZET_SLAVE
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			SPR_WaitEndSlaveSH();
+		}
+#endif
+		CZetNmi();
+
 #ifndef RAZE0
+			CZetClose();
 			CZetOpen(0);
 #endif
 			return;
@@ -510,8 +519,8 @@ INT32 SolomonFrame()
 	nCyclesTotal[0] = 4000000 / 60;
 	nCyclesTotal[1] = 3072000 / 60;
 	nCyclesDone[0] = nCyclesDone[1] = 0;
-
- 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
+	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
+// 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 
 	for (INT32 i = 0; i < nInterleave; i++) 
 	{
@@ -527,11 +536,14 @@ INT32 SolomonFrame()
 		if (i == 1) if(SolomonIrqFire) CZetNmi();
 		CZetClose();
 #else
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesDone[nCurrentCPU] += z80_emulate(nCyclesSegment);
+		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[0];
+		nCyclesDone[0] += z80_emulate(nCyclesSegment);
+
 		if (i == 1) if(SolomonIrqFire) z80_cause_NMI();
 #endif
+
+#ifndef CZET_SLAVE
 		// Run Z80 #2
 		nCurrentCPU = 1;
 		CZetOpen(nCurrentCPU);
@@ -541,9 +553,31 @@ INT32 SolomonFrame()
 		nCyclesDone[nCurrentCPU] += nCyclesSegment;
 		CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 		CZetClose();
+#else
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			SPR_WaitEndSlaveSH();
+		}
+
+		nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+		CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
+//		CZetClose();
+#endif
+
+	#ifdef CZET_SLAVE
+		CZetOpen(1);
+//		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
+//		nCyclesSegment = nNext - nCyclesDone[1];
+		nCyclesSegment = 25600;
+		SPR_RunSlaveSH((PARA_RTN*)CZetRunSlave,&nCyclesSegment);
+//		CZetRunSlave(&nCyclesSegment);
+		nCyclesDone[1] += nCyclesSegment;
+#endif
 	}
 	SolomonDraw();
-	SPR_WaitEndSlaveSH();
+
+	updateSound();
+//	SPR_WaitEndSlaveSH();
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"                     ",20,100);
 
 	return 0;
@@ -616,14 +650,6 @@ INT32 SolomonFrame()
 		0xffff, 0xffff  //B1
 	};
 
-/*
-    Uint16	CycleTb[]={
-		0xf2ff, 0xffff, //A0
-		0xfff0, 0x45ef,	//A1
-		0x1fff, 0xffff,   //B0
-		0xffff, 0xffff  //B1
-	};
-*/
 /*
 voir page 58 vdp2
 voir plutot p355 vdp2
@@ -701,10 +727,15 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void dummy()
+{
+
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites  = 32+4;//27;
 

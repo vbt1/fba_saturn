@@ -13,6 +13,7 @@ INT32 SolomonInit();
 INT32 SolomonExit();
 INT32 SolomonFrame();
 void updateSound();
+void CZetRunSlave(int *nCycles);
 static void DrvInitSaturn();
 static void make_lut(void);
 
