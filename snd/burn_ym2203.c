@@ -45,7 +45,7 @@ static INT32 YM2203StreamCallbackDummy(INT32 a)
 // ----------------------------------------------------------------------------
 // Execute YM2203 for part of a frame
 
-static void AY8910RenderNew(INT32 nSegmentLength)
+static void AY8910Render(INT32 nSegmentLength)
 {
 #if defined FBA_DEBUG
 	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("BurnYM2203 AY8910Render called without init\n"));
@@ -57,15 +57,15 @@ static void AY8910RenderNew(INT32 nSegmentLength)
 
 	nSegmentLength -= nAY8910Position;
 
-	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+nSoundBufferPos;
+	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a26000+nSoundBufferPos;
 
-	AY8910UpdateDirect(0, &nSoundBuffer1[0], nSegmentLength);
+	AY8910UpdateDirect(0, &nSoundBuffer1[0x0000], nSegmentLength);
 	if (nNumChips > 1) 
 		AY8910UpdateDirect(1, &nSoundBuffer1[0x6000], nSegmentLength);
 	nAY8910Position += nSegmentLength;
 }
 
-static void AY8910Render(INT32 nSegmentLength)
+static void AY8910RenderOld(INT32 nSegmentLength)
 {
 #if defined FBA_DEBUG
 	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("BurnYM2203 AY8910Render called without init\n"));
@@ -139,13 +139,13 @@ static void YM2203Render(INT32 nSegmentLength)
 // Update the sound buffer
 /*static*/ void YM2203UpdateNormal(INT16* pSoundBuf, INT32 nSegmentEnd)
 {
-FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"YM2203UpdateNormal            ",4,10);
+//FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"YM2203UpdateNormal            ",4,10);
 #if defined FBA_DEBUG
 	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("YM2203UpdateNormal called without init\n"));
 #endif
 
 	INT32 nSegmentLength = nSegmentEnd;
-	INT32 i;
+//	INT32 i;
 
 	if (nSegmentEnd < nAY8910Position) {
 		nSegmentEnd = nAY8910Position;
@@ -158,36 +158,36 @@ FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"YM2203U
 		nSegmentLength = nBurnSoundLen;
 	}
 
-	YM2203Render(nSegmentEnd);
+//	YM2203Render(nSegmentEnd);
 	AY8910Render(nSegmentEnd);
 
-
-	pYM2203Buffer[0] = pBuffer + 4 + 0 * 4096;
-	pYM2203Buffer[1] = pBuffer + 4 + 1 * 4096;
-	pYM2203Buffer[2] = pBuffer + 4 + 2 * 4096;
-	pYM2203Buffer[3] = pBuffer + 4 + 3 * 4096;
-	if (nNumChips > 1) 
-	{
-		pYM2203Buffer[4] = pBuffer + 4 + 4 * 4096;
-		pYM2203Buffer[5] = pBuffer + 4 + 5 * 4096;
-		pYM2203Buffer[6] = pBuffer + 4 + 6 * 4096;
-		pYM2203Buffer[7] = pBuffer + 4 + 7 * 4096;
-	}
 #if 1
-	for (INT32 n = nFractionalPosition; n < nSegmentLength; n++) 
-	{
-		INT32 nLeftSample = 0, nRightSample = 0;
+//	pYM2203Buffer[0] = pBuffer + 4 + 0 * 4096;
+//	pYM2203Buffer[1] = pBuffer + 4 + 1 * 4096;
+//	pYM2203Buffer[2] = pBuffer + 4 + 2 * 4096;
+//	pYM2203Buffer[3] = pBuffer + 4 + 3 * 4096;
+//	if (nNumChips > 1) 
+//	{
+//		pYM2203Buffer[4] = pBuffer + 4 + 4 * 4096;
+//		pYM2203Buffer[5] = pBuffer + 4 + 5 * 4096;
+//		pYM2203Buffer[6] = pBuffer + 4 + 6 * 4096;
+//		pYM2203Buffer[7] = pBuffer + 4 + 7 * 4096;
+//	}
+#if 1
+//	for (INT32 n = nFractionalPosition; n < nSegmentLength; n++) 
+//	{
+//		INT32 nLeftSample = 0, nRightSample = 0;
 
-		nLeftSample += (INT32)pYM2203Buffer[1][n];
-		nLeftSample += (INT32)pYM2203Buffer[2][n];
-		nLeftSample += (INT32)pYM2203Buffer[3][n];
-		nLeftSample += (INT32)pYM2203Buffer[0][n];
-		nLeftSample += (INT32)pYM2203Buffer[5][n];
-		nLeftSample += (INT32)pYM2203Buffer[6][n];
-		nLeftSample += (INT32)pYM2203Buffer[7][n];
-		nLeftSample += (INT32)pYM2203Buffer[4][n];
+//		nLeftSample += (INT32)pYM2203Buffer[1][n];
+//		nLeftSample += (INT32)pYM2203Buffer[2][n];
+//		nLeftSample += (INT32)pYM2203Buffer[3][n];
+//		nLeftSample += (INT32)pYM2203Buffer[0][n];
+//		nLeftSample += (INT32)pYM2203Buffer[5][n];
+//		nLeftSample += (INT32)pYM2203Buffer[6][n];
+//		nLeftSample += (INT32)pYM2203Buffer[7][n];
+//		nLeftSample += (INT32)pYM2203Buffer[4][n];
 		
-		nLeftSample = BURN_SND_CLIP(nLeftSample);
+//		nLeftSample = BURN_SND_CLIP(nLeftSample);
 			
 //		if (bYM2203AddSignal) 
 //		{
@@ -195,9 +195,9 @@ FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"YM2203U
 //		} 
 //		else 
 //		{
-			pSoundBuf[n] = nLeftSample;
+//			pSoundBuf[n] = nLeftSample;
 //		}
-	}
+//	}
 
 #endif
 	nFractionalPosition = nSegmentLength;
@@ -205,18 +205,18 @@ FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"YM2203U
 	if (nSegmentEnd >= nBurnSoundLen) {
 		INT32 nExtraSamples = nSegmentEnd - nBurnSoundLen;
 
-		for (i = 0; i < nExtraSamples; i++) {
-			pYM2203Buffer[0][i] = pYM2203Buffer[0][nBurnSoundLen + i];
-			pYM2203Buffer[1][i] = pYM2203Buffer[1][nBurnSoundLen + i];
-			pYM2203Buffer[2][i] = pYM2203Buffer[2][nBurnSoundLen + i];
-			pYM2203Buffer[3][i] = pYM2203Buffer[3][nBurnSoundLen + i];
-			if (nNumChips > 1) {
-				pYM2203Buffer[4][i] = pYM2203Buffer[4][nBurnSoundLen + i];
-				pYM2203Buffer[5][i] = pYM2203Buffer[5][nBurnSoundLen + i];
-				pYM2203Buffer[6][i] = pYM2203Buffer[6][nBurnSoundLen + i];
-				pYM2203Buffer[7][i] = pYM2203Buffer[7][nBurnSoundLen + i];
-			}
-		}
+//		for (i = 0; i < nExtraSamples; i++) {
+//			pYM2203Buffer[0][i] = pYM2203Buffer[0][nBurnSoundLen + i];
+//			pYM2203Buffer[1][i] = pYM2203Buffer[1][nBurnSoundLen + i];
+//			pYM2203Buffer[2][i] = pYM2203Buffer[2][nBurnSoundLen + i];
+//			pYM2203Buffer[3][i] = pYM2203Buffer[3][nBurnSoundLen + i];
+//			if (nNumChips > 1) {
+//				pYM2203Buffer[4][i] = pYM2203Buffer[4][nBurnSoundLen + i];
+//				pYM2203Buffer[5][i] = pYM2203Buffer[5][nBurnSoundLen + i];
+//				pYM2203Buffer[6][i] = pYM2203Buffer[6][nBurnSoundLen + i];
+//				pYM2203Buffer[7][i] = pYM2203Buffer[7][nBurnSoundLen + i];
+//			}
+//		}
 		nFractionalPosition = 0;
 
 		nYM2203Position = nExtraSamples;
@@ -224,6 +224,9 @@ FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"YM2203U
 
 		dTime += 100.0 / nBurnFPS;
 	}
+#endif
+
+
 #endif
 }
 
