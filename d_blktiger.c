@@ -210,15 +210,15 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 
 		case 0x04:
 			if (data & 0x20) {
-//				CZetClose();
-//#ifndef RAZE
+				CZetClose();
+#ifndef RAZE
 				CZetOpen(1);
 				CZetReset();
-//				CZetClose();
-//#else
-//				z80_reset();
-//#endif
-//				CZetOpen(0);
+				CZetClose();
+#else
+				z80_reset();
+#endif
+				CZetOpen(0);
 			}
 
 			*flipscreen  =  data & 0x40;
@@ -579,7 +579,7 @@ static INT32 DrvInit()
 
 		DrvGfxDecode();
 	}
-//	Set6PCM();
+	Set7PCM();
 	drawWindow(0,224,240,0,64);
 #ifndef RAZE
 	CZetInit(2);
@@ -686,7 +686,8 @@ static INT32 DrvFrame()
 
 	CZetNewFrame();
 
-	UINT32 nInterleave = 100; //20;
+//	UINT32 nInterleave = 100;
+	UINT32 nInterleave = 20;
 	nCyclesTotal[0] = 3000000 / 60; ///2;
 	nCyclesTotal[1] = nYM2203Clockspeed / 60; ///2;
 	UINT32 nCyclesDone = 0;
@@ -698,10 +699,10 @@ static INT32 DrvFrame()
 		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone;
 		nCyclesDone += z80_emulate(nCyclesSegment);
-		if (i == 98) z80_raise_IRQ(0);
-		if (i == 99) z80_lower_IRQ();
-//		if (i == 18) z80_raise_IRQ(0);
-//		if (i == 19) z80_lower_IRQ();
+//		if (i == 98) z80_raise_IRQ(0);
+//		if (i == 99) z80_lower_IRQ();
+		if (i == 18) z80_raise_IRQ(0);
+		if (i == 19) z80_lower_IRQ();
 #endif
 
 #ifdef SND
@@ -714,27 +715,28 @@ static INT32 DrvFrame()
 #ifdef SND
 	CZetOpen(1);
 	BurnTimerEndFrame(nCyclesTotal[1]);
-	signed short *nSoundBuffer = (signed short *)0x25a20000+nSoundBufferPos; //*(sizeof(signed short)));
+	signed short *nSoundBuffer = (signed short *)0x25a24000+nSoundBufferPos; //*(sizeof(signed short)));
 	YM2203UpdateNormal(nSoundBuffer, nBurnSoundLen);
 //	updateAY8910Sound();
 	CZetClose();
 
-	nSoundBufferPos+=nBurnSoundLen; // DOIT etre deux fois la taille copiee
+	nSoundBufferPos+=(nBurnSoundLen); // DOIT etre deux fois la taille copiee
 
-	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
+	if(nSoundBufferPos>=0x1000)//RING_BUF_SIZE)
 	{
-		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
+/*		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
-/*
-		for (unsigned int i=0;i<6;i++)
+*/
+
+		for (unsigned int i=0;i<7;i++)
 		{
-			PCM_NotifyWriteSize(pcm6[i], nSoundBufferPos);
-			PCM_Task(pcm6[i]); // bon emplacement
+			PCM_NotifyWriteSize(pcm7[i], nSoundBufferPos);
+			PCM_Task(pcm7[i]); // bon emplacement
 		}
-		nSoundBufferPos=0;*/
+
+		nSoundBufferPos=0;
 	}
 #endif
-
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
@@ -868,14 +870,14 @@ static PcmHn createHandle(PcmCreatePara *para)
 	return pcm;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void Set6PCM()
+static void Set7PCM()
 {
-	PcmCreatePara	para[6];
-	PcmInfo 		info[6];
+	PcmCreatePara	para[7];
+	PcmInfo 		info[7];
 	PcmStatus	*st;
-	static PcmWork g_movie_work[6];
+	static PcmWork g_movie_work[7];
 
-	for (int i=0; i<6; i++)
+	for (int i=0; i<7; i++)
 	{
 		PCM_PARA_WORK(&para[i]) = (struct PcmWork *)&g_movie_work[i];
 		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
@@ -895,15 +897,15 @@ static void Set6PCM()
 
 		PCM_INFO_SAMPLING_RATE(&info[i])	= SOUNDRATE;//30720L;//44100L;
 		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
-		pcm6[i] = createHandle(&para[i]);
+		pcm7[i] = createHandle(&para[i]);
 
-		PCM_SetPcmStreamNo(pcm6[i], i);
+		PCM_SetPcmStreamNo(pcm7[i], i);
 
-		PCM_SetInfo(pcm6[i], &info[i]);
-		PCM_ChangePcmPara(pcm6[i]);
+		PCM_SetInfo(pcm7[i], &info[i]);
+		PCM_ChangePcmPara(pcm7[i]);
 
-		PCM_MeSetLoop(pcm6[i], 0x3FF);//SOUNDRATE*120);
-		PCM_Start(pcm6[i]);
+		PCM_MeSetLoop(pcm7[i], 0x3FF);//SOUNDRATE*120);
+		PCM_Start(pcm7[i]);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
