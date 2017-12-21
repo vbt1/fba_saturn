@@ -102,7 +102,8 @@ void DACUpdate(INT16* Buffer, INT32 Length)
 
 	dac_info *ptr;
 
-	for (INT32 i = 0; i < NumChips; i++) {
+	for (INT32 i = 0; i < NumChips; i++) 
+	{
 		UpdateStream(i, nBurnSoundLen);
 	}
 

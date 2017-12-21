@@ -4,10 +4,9 @@
 //#define RAZE1 1
 #define RAZE0 1
 #define USE_MAP 1
-#define USE_SPRITES 1
-#define VBTLIB 1
+#define CZET_SLAVE 1
 #define nInterleave 256//140 // dac needs 128 NMIs
-#define nCPUClockspeed 3579645 
+#define nCPUClockspeed 3579645
 #define nSegmentLength nBurnSoundLen / nInterleave
 
 #include "d_vigilant.h"
@@ -93,36 +92,22 @@ int ovlInit(char *szShortName)
 			break;
 		}
 	}
-	
+/*	
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 	{
 		SPR_WaitEndSlaveSH();
 	}
 	nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
-
-	if (DrvIrqVector == 0xff) {
-
-#ifdef RAZE1
-		z80_lower_IRQ();
-		nCyclesDone[1] += z80_emulate(1);
-#else
+	CZetOpen(1);
+*/
+	if (DrvIrqVector == 0xff) 
+	{
 		CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
-//		CZetLowerIrq();
-#endif
-
-	} else {
-
-#ifdef RAZE1
-//		z80_cause_NMI();
-		z80_raise_IRQ(DrvIrqVector);
-		nCyclesDone[1] += z80_emulate(1000);
-#else
-//		ZetSetVector(DrvIrqVector);
-//		CZetRaiseIrq(DrvIrqVector);
+	}
+	else 
+	{
 		CZetSetIRQLine(DrvIrqVector, CZET_IRQSTATUS_ACK);
 		nCyclesDone[1] += CZetRun(1000);
-#endif
-
 	}
 }
 
@@ -136,12 +121,8 @@ int ovlInit(char *szShortName)
 		 z80_reset();
 #endif
 
-#ifdef RAZE1
-		 z80_reset();
-#endif
-
 		if (i == 1) DrvSetVector(VECTOR_INIT);
-//		CZetClose();
+		CZetClose();
 	}
 	
 #ifdef SOUND
@@ -175,11 +156,12 @@ void __fastcall VigilanteZ80Write1_c020(UINT16 a, UINT8 d)
 
 void __fastcall VigilanteZ80Write1_c800(UINT16 a, UINT8 d)
 {
-	unsigned short Offset = a & 0x7ff;
+	unsigned int Offset = a & 0x7ff;
 
 	if (DrvPaletteRam[Offset]!=d)
 	{
 		unsigned short Bank = Offset & 0x400;
+
 		unsigned char r, g, b;
 		DrvPaletteRam[Offset] = d;
 		Offset &= 0xff;
@@ -218,63 +200,6 @@ void __fastcall VigilanteZ80Write1_d000(UINT16 a, UINT8 d)
 			}
 			map[1] = map[0x2001] = Tile;
 		}
-}
-
-#else
-void __fastcall VigilanteZ80Write1(UINT16 a, UINT8 d)
-{
-	if (a >= 0xc020 && a <= 0xc0df) {
-		DrvSpriteRam[a - 0xc020] = d;
-		return;
-	}
-	
-	if (a >= 0xc800 && a <= 0xcfff) 
-	{
-		INT32 Offset = a & 0x7ff;
-	
-		if (DrvPaletteRam[Offset]!=d)
-		{
-			int Bank = Offset & 0x400;
-			int r, g, b;
-			DrvPaletteRam[Offset] = d;
-			
-			Offset &= 0xff;
-			r = (DrvPaletteRam[Bank + Offset + 0x000] ) & 0x1f;//0x1c;
-			g = (DrvPaletteRam[Bank + Offset + 0x100] ) & 0x1f;//0x1c;
-			b = (DrvPaletteRam[Bank + Offset + 0x200] ) & 0x1f;//0x1c;
-		// 16 palettes	
-			colAddr[(Bank >> 2) + Offset] = RGB(r,g,b);
-		}
-		return;
-	}
-
-	if (a >= 0xd000 && a <= 0xdfff) 
-	{
-		a&=0xfff;
-		if(DrvVideoRam[a]!=d)
-		{
-			DrvVideoRam[a]=d;
-			a&=~1;
-			unsigned char Attr = DrvVideoRam[a + 1];
-			unsigned int Colour = Attr & 0x0f;
-			unsigned int Tile = DrvVideoRam[a + 0] | ((Attr & 0xf0) << 4);
-
-			UINT16 *map = &ss_map[a]; 
-
-			if( Colour >= 4) // pas de transp
-			{
-				if(a > 768)
-					map[0] = map[0x2000] = Colour + (((Colour & 0x0c) == 0x0c) ?0x2000:0x0000);
-				else
-					map[0] = map[0x2000] = Colour + 0x2000;	
-			}
-			else	  // transparence
-			{
-				map[0] = map[0x2000] = Colour + 0x1000;
-			}
-			map[1] = map[0x2001] = Tile;
-		}
-	}
 }
 #endif
 
@@ -319,19 +244,14 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 		case 0x00: {
 			DrvSoundLatch = d;
 
-#ifndef RAZE0
-			CZetClose();
-#endif
-
-#ifdef SOUND
-			CZetOpen(1);
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+	{
+//		SPR_WaitEndSlaveSH();
+	}
+//	nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+//	CZetOpen(1);
 			DrvSetVector(Z80_ASSERT);
-			CZetClose();
-#endif
 
-#ifndef RAZE0
-	CZetOpen(0);
-#endif
 			return;
 		}
 		
@@ -500,6 +420,13 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 
 /*static*/void VigilantYM2151IrqHandler(INT32 Irq)
 {
+/*	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+	{
+		SPR_WaitEndSlaveSH();
+	}
+	nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+	CZetOpen(1);
+*/
 	if (Irq) {
 		DrvSetVector(YM2151_ASSERT);
 	} else {
@@ -510,7 +437,16 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 static INT32 VigilantSyncDAC()
 {
 //	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (nBurnFPS / 100.0000))));
+#ifdef CZET_SLAVE
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+//			SPR_WaitEndSlaveSH();
+		}
+//		nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+//		CZetOpen(1);
+#endif
 	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / (nCPUClockspeed / 60)));
+//	return (INT32)(float)(nBurnSoundLen * (ZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (nBurnFPS / 100.0000))));
 }
 
 /*static*/INT32 DrvInit()
@@ -599,44 +535,9 @@ static INT32 VigilantSyncDAC()
 	z80_map_write (0xe000, 0xefff, DrvZ80Ram1);
 	z80_map_fetch (0xe000, 0xefff, DrvZ80Ram1);
 	z80_end_memmap();
-#else
-	CZetOpen(0);
-	CZetSetReadHandler(VigilanteZ80Read1);
-	CZetSetWriteHandler(VigilanteZ80Write1);
-	CZetSetInHandler(VigilanteZ80PortRead1);
-	CZetSetOutHandler(VigilanteZ80PortWrite1);
-	
-	// read 0 // write 1 // fetch 2
-	CZetMapArea(0x0000, 0x7fff, 0, DrvZ80Rom1             );
-	CZetMapArea(0x0000, 0x7fff, 2, DrvZ80Rom1             );
-	CZetMapArea(0x8000, 0xbfff, 0, DrvZ80Rom1 + 0x10000   );
-	CZetMapArea(0x8000, 0xbfff, 2, DrvZ80Rom1 + 0x10000   );
-	CZetMapArea(0xc800, 0xcfff, 0, DrvPaletteRam          );
-	CZetMapArea(0xc800, 0xcfff, 2, DrvPaletteRam          );
-	CZetMapArea(0xd000, 0xdfff, 0, DrvVideoRam            );
-//	CZetMapArea(0xd000, 0xdfff, 1, DrvVideoRam            );
-	CZetMapArea(0xd000, 0xdfff, 2, DrvVideoRam            );
-	CZetMapArea(0xe000, 0xefff, 0, DrvZ80Ram1             );
-	CZetMapArea(0xe000, 0xefff, 1, DrvZ80Ram1             );
-	CZetMapArea(0xe000, 0xefff, 2, DrvZ80Ram1             );
-	CZetMemEnd();
-	CZetClose();
 #endif
 	
-#ifdef RAZE1
-	z80_init_memmap();
-	z80_add_read(0x0000, 0xffff, 1, (void *)&VigilanteZ80Read2); 
-	z80_add_write(0x0000, 0xffff, 1, (void *)&VigilanteZ80Write2);
-	z80_set_in((void (*)(unsigned short int, unsigned char))&VigilanteZ80PortRead2);
-	z80_set_out((void (*)(unsigned short int, unsigned char))&VigilanteZ80PortWrite2);	
-
-	z80_map_read  (0x0000, 0xbfff, DrvZ80Rom2);
-	z80_map_fetch (0x0000, 0xbfff, DrvZ80Rom2);
-	z80_map_read  (0xf000, 0xffff, DrvZ80Ram2);
-	z80_map_write (0xf000, 0xffff, DrvZ80Ram2); //ajout
-	z80_map_fetch (0xf000, 0xffff, DrvZ80Ram2);
-	z80_end_memmap();
-#else
+#ifndef RAZE1
 	CZetOpen(1);
 	CZetSetReadHandler(VigilanteZ80Read2);
 	CZetSetWriteHandler(VigilanteZ80Write2);
@@ -651,8 +552,6 @@ static INT32 VigilantSyncDAC()
 //	CZetClose();
 #endif
 
-//	nCyclesTotal[0] = 3579645 / 55/3;
-//	nCyclesTotal[1] = 3579645 / 55 /1.5;
 	nCyclesTotal[0] = nCPUClockspeed / 55;
 	nCyclesTotal[1] = nCPUClockspeed / 55;
 	
@@ -670,7 +569,115 @@ static INT32 VigilantSyncDAC()
 	return 0;
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/void DrvFrame()
+{
+	DrvMakeInputs();
+	nCyclesDone[0] = nCyclesDone[1] = /*SS_Z80CY =*/ 0;
 
+#if CZET_SLAVE
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			SPR_WaitEndSlaveSH();
+		}
+	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
+#endif
+	CZetNewFrame();
+
+	for (UINT32 i = 0; i < nInterleave; ++i) 
+	{
+//		SPR_RunSlaveSH((PARA_RTN*)YM2151UpdateOneSlave,NULL);
+		UINT32 nCyclesSegment;
+		// Run Z80 #1
+#ifdef RAZE0
+//		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
+//		nCyclesSegment = nNext - nCyclesDone[0];
+		nCyclesSegment = nCyclesTotal[0] / nInterleave;
+		nCyclesDone[0] += z80_emulate(nCyclesSegment);
+		if (i == (nInterleave - 1)) 
+		{
+			z80_raise_IRQ(0);
+			z80_emulate(1);
+		}
+#endif
+
+#if CZET_SLAVE
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			SPR_WaitEndSlaveSH();
+		}
+//		nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+/*
+		if (i & 1) 
+		{
+			CZetNmi();
+		}
+*/
+//		CZetClose();
+		CZetOpen(1);
+		YM2151UpdateOneSlave();
+		CZetClose();
+
+		#if CZET_SLAVE
+		nCyclesSegment = nCyclesTotal[1] / nInterleave;
+		CZetOpen(1);
+//		SPR_RunSlaveSH((PARA_RTN*)CZetRunSlave,&nCyclesSegment);
+CZetRunSlave(&nCyclesSegment);
+//		nCyclesDone[1]+=nCyclesSegment;
+nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+		if (i & 1) 
+		{
+			CZetNmi();
+		}
+#endif
+//		CZetOpen(1);
+//		YM2151UpdateOneSlave();
+//		CZetClose();
+
+//		CZetOpen(1);
+//		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
+//		nCyclesSegment = 254;//nNext - nCyclesDone[1];
+/*
+		nCyclesSegment = nCyclesTotal[1] / nInterleave;
+
+//		SPR_RunSlaveSH((PARA_RTN*)CZetRunSlave,&nCyclesSegment);
+CZetRunSlave(&nCyclesSegment);
+		nCyclesDone[1]+=nCyclesSegment;
+*/
+#endif
+	}
+#ifdef SOUND
+	volatile signed short *	pBurnSoundOut = (signed short *)0x25a24000;
+	signed short* buffers = pBurnSoundOut + (nSoundBufferPos/2);
+	DACUpdate(buffers, nBurnSoundLen);
+#endif
+	DrvRenderDrawSound();
+}
+
+void DrvRenderDrawSound()
+{
+//		SPR_RunSlaveSH((PARA_RTN*)DrvDrawSprites, NULL);	
+	
+	DrvDrawForeground();
+	DrvDrawSprites();
+	if (!DrvRearDisable) 
+	{
+		DrvRenderBackground();
+	}
+
+#ifdef SOUND
+	if(nSoundBufferPos>=RING_BUF_SIZE/2)
+	{
+		unsigned int i=0;
+		for (i=0;i<8;i++)
+		{
+			PCM_NotifyWriteSize(pcm8[i], nSoundBufferPos);
+			PCM_Task(pcm8[i]); // bon emplacement
+		}
+		nSoundBufferPos=0;
+	}
+#endif	
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void initColors()
 {
@@ -870,10 +877,9 @@ void dummy()
 	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
 
     /* Enable line and vertical cell scroll for NBG0 */
-#ifdef VBTLIB
 	(*(Uint16 *)0x25F8009A) = 0x0003; 
 	(*(Uint16 *)0x25F80020) = 0x0303;
-#endif
+
 	initLayers();
 	initColors();
 	initSprites(352-1,224-1,0,0,0,0);
@@ -999,7 +1005,7 @@ static void Set8PCM()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/inline void DrvRenderBackground()
+/*static*/void DrvRenderBackground()
 {
 	int Scroll = 0x17a - (DrvRearHorizScrollLo + DrvRearHorizScrollHi);
 	if (Scroll > 0) Scroll -= 2048;
@@ -1031,7 +1037,7 @@ static void Set8PCM()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ inline void DrvDrawForeground()
+/*static*/ void DrvDrawForeground()
 {
 	INT16 Scroll = ((DrvHorizScrollLo + DrvHorizScrollHi)& 0x1ff) +128;
 	if(oldScroll!=Scroll)
@@ -1043,15 +1049,16 @@ static void Set8PCM()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/inline void DrvDrawSprites()
+/*static*/void DrvDrawSprites()
 {
-	UINT8 j=3;
+	SprSpCmd *ss_spritePtr;
+	ss_spritePtr = &ss_sprite[3];
 
-	for (UINT8 i = 0; i < 0xc0; i += 8) 
+	for (UINT32 i = 0; i < 0xc0; i += 8) 
 	{
-		int Code, sx, sy, h;
+		int sx, sy, h;
 
-		Code = DrvSpriteRam[i + 4] | ((DrvSpriteRam[i + 5] & 0x0f) << 8);
+		UINT32 Code = DrvSpriteRam[i + 4] | ((DrvSpriteRam[i + 5] & 0x0f) << 8);
 		sx = (DrvSpriteRam[i + 6] | ((DrvSpriteRam[i + 7] & 0x01) << 8));
 		sy = 384 - (DrvSpriteRam[i + 2] | ((DrvSpriteRam[i + 3] & 0x01) << 8));
 		h = 1 << ((DrvSpriteRam[i + 5] & 0x30) >> 4);
@@ -1059,121 +1066,14 @@ static void Set8PCM()
 
 		Code &= ~(h - 1);
 
-		ss_sprite[j].ax = sx-128;
-		ss_sprite[j].ay = sy;
-		ss_sprite[j].color         = (DrvSpriteRam[i + 0] & 0x0f)<<4;
-		ss_sprite[j].control      = (DrvSpriteRam[i + 5] & 0xC0)>>2;
-		ss_sprite[j].charSize   = 0x200|(h<<4);  //0x100 16*16
-		ss_sprite[j].charAddr  = 0x220+(Code<<4);
-		++j;
+		ss_spritePtr->ax = sx-128;
+		ss_spritePtr->ay = sy;
+		ss_spritePtr->color         = (DrvSpriteRam[i + 0] & 0x0f)<<4;
+		ss_spritePtr->control      = (DrvSpriteRam[i + 5] & 0xC0)>>2;
+		ss_spritePtr->charSize   = 0x200|(h<<4);  //0x100 16*16
+		ss_spritePtr->charAddr  = 0x220+(Code<<4);
+		*ss_spritePtr++;
 	}
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/void DrvFrame()
-{
-	DrvMakeInputs();
-	nCyclesDone[0] = nCyclesDone[1] = /*SS_Z80CY =*/ 0;
-//	*(unsigned int*)0x00200000 = 0;
-	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
-	CZetNewFrame();
-
-	for (UINT32 i = 0; i < nInterleave; ++i) 
-	{
-		UINT32 nNext;
-#if 1
-		CZetOpen(1);
-		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[1];
-//		nCyclesDone[1] += CZetRun(nCyclesSegment);
-
-		CZetRunSlave(&nCyclesSegment);
-		nCyclesDone[1]+=nCyclesSegment;
-#endif
-		// Run Z80 #1
-#ifdef RAZE0
-		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[0];
-		nCyclesDone[0] += z80_emulate(nCyclesSegment);
-		if (i == (nInterleave - 1)) 
-		{
-			z80_raise_IRQ(0);
-			z80_emulate(1);
-		}
-#else
-		UINT8 nCurrentCPU = 0;
-		CZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
-		if (i == (nInterleave - 1)) CZetRaiseIrq(0);
-		CZetClose();
-#endif
-
-#ifdef SOUND
-
-#ifdef RAZE1
-		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[1];
-		nCyclesDone[1] += z80_emulate(nCyclesSegment);
-
-		if (i & 1) {
-			z80_cause_NMI();
-		}
-#else
-		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			SPR_WaitEndSlaveSH();
-		}
-// à remettre si utilisation du slave sur cpu1
-		nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
-
-		if (i & 1) 
-		{
-			CZetNmi();
-		}
-		CZetClose();
-
-if(nInterleave<128)
-		{
-		CZetOpen(1);
-		YM2151UpdateOneSlave();
-		CZetClose();
-		}
-#endif
-
-#endif
-	}
-#ifdef SOUND
-	volatile signed short *	pBurnSoundOut = (signed short *)0x25a24000;
-	signed short* buffers = pBurnSoundOut + nSoundBufferPos;
-//	DACUpdate(buffers, nBurnSoundLen);
-#endif
-	DrvRenderDrawSound();
-}
-
-void DrvRenderDrawSound()
-{
-//		SPR_RunSlaveSH((PARA_RTN*)DrvDrawSprites, NULL);	
-	
-	DrvDrawForeground();
-	DrvDrawSprites();
-	if (!DrvRearDisable) 
-	{
-		DrvRenderBackground();
-	}
-
-#ifdef SOUND
-	if(nSoundBufferPos>=RING_BUF_SIZE/2)
-	{
-		unsigned int i=0;
-		for (i=0;i<8;i++)
-		{
-			PCM_NotifyWriteSize(pcm8[i], nSoundBufferPos);
-			PCM_Task(pcm8[i]); // bon emplacement
-		}
-		nSoundBufferPos=0;
-	}
-#endif	
 }
 
 #undef VECTOR_INIT

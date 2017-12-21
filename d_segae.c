@@ -575,7 +575,8 @@ static INT32 MemIndex()
 	DrvMainROM	 	    = (UINT8 *) 0x00200000;
 	DrvMainROMFetch= (UINT8 *) 0x00280000;
 	mc8123key           = Next; Next += 0x02000;
-	
+	CZ80Context			= Next; Next += (0x1080*2);
+
 	AllRam				= Next;
 	DrvRAM			    = Next; Next += 0x10000;
 
@@ -609,9 +610,9 @@ static INT32 MemIndex()
 static INT32 DrvExit()
 {
 	nBurnFunction = NULL;
-	CZetExit();
+	CZetExit2();
 
-	DrvMainROM	 = AllRam = DrvRAM = MemEnd = segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
+	CZ80Context = DrvMainROM	 = AllRam = DrvRAM = MemEnd = segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
 	segae_vdp_cram[0] = segae_vdp_regs[0] = segae_vdp_cram[1] = segae_vdp_regs[1] = NULL;
 	name_lut = cram_lut = map_lut = NULL;
 	bp_lut = NULL;
@@ -836,7 +837,7 @@ static INT32 DrvInit(UINT8 game)
 			break;
 	}
 
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 //	CZetMapMemory(DrvMainROM, 0x0000, 0x7fff, MAP_ROM);
 	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM + 0x0000);

@@ -9,7 +9,9 @@
 
 extern void BurnYM2203UpdateRequest();
 
-int BurnYM2203Init(int num, int nClockFrequency, FM_IRQHANDLER IRQCallback, int (*StreamCallback)(int), double (*GetTimeCallback)(), int bAddSignal);
+//int BurnYM2203Init(int num, int nClockFrequency, FM_IRQHANDLER IRQCallback, int (*StreamCallback)(int), double (*GetTimeCallback)(), int bAddSignal);
+INT32 BurnYM2203Init(INT32 num, INT16 *addr, INT32 nClockFrequency, FM_IRQHANDLER IRQCallback, INT32 (*StreamCallback)(INT32), double (*GetTimeCallback)(), INT32 bAddSignal);
+
 void BurnYM2203SetRoute(int nChip, int nIndex, double nVolume, int nRouteDir);
 void BurnYM2203SetLeftVolume(int nChip, int nIndex, double nLeftVolume);
 void BurnYM2203SetRightVolume(int nChip, int nIndex, double nRightVolume);

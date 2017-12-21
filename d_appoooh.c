@@ -145,6 +145,7 @@ static INT32 MemIndex()
 	DrvSoundROM	    = Next; Next += 0x0a000;
 //	DrvSoundROM	= (UINT8*)0x2F6000;
 	CZ80Context		= Next; Next += 0x1080;
+	MSM5205Context = (UINT16*)Next; Next += 0x2000;
 	DrvPalette        = (UINT16*)colBgAddr;
 	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 
@@ -502,6 +503,7 @@ static INT32 DrvDoReset()
 	CZetReset();
 	bankswitch(0);
 	CZetClose();
+	memset((Uint8 *)ss_map  ,0,0x2000);
 
 	return 0;
 }
@@ -604,9 +606,10 @@ static INT32 DrvCommonInit()
 	SN76489Init(2, 18432000 / 6, 0);
 
 //	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1, 0.50);
-	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0, 0.50);
-
+	memset(MSM5205Context,0x00,0x1000);
+	MSM5205Init(0, MSM5205Context, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0, 0.50);
 	make_lut();
+
 	DrvDoReset();
 	return 0;
 }
@@ -694,7 +697,6 @@ static INT32 DrvRobowresInit()
 {
 	nSoundBufferPos=0;
 	DrvInitSaturn();
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 	game_select = 1;
 	AllMem = NULL;
 	MemIndex();
@@ -723,7 +725,7 @@ static INT32 DrvInit()
 {
 	nSoundBufferPos=0;
 	DrvInitSaturn();
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 	game_select = 0;
 	AllMem = NULL;
 	MemIndex();
@@ -744,7 +746,7 @@ static INT32 DrvInit()
 	DrvPaletteInit();
 	DrvGfxDecode();
 	DrvCommonInit();
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
 
 	return 0;
 }
@@ -856,6 +858,7 @@ static void DrvInitSaturn()
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
+//	PCM_MeStop(pcm);
 	Set4PCM();
 	drawWindow(0,224,240,0,64);
 }
@@ -877,7 +880,7 @@ static INT32 DrvExit()
 	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvGfxROM0 = DrvGfxROM1 = NULL;
 	DrvGfxROM2 = DrvGfxROM3 = DrvGfxTMP0 = DrvGfxTMP1 = DrvColPROM = DrvMainROM = NULL;
 	DrvSoundROM = DrvFetch = CZ80Context = NULL;
-	DrvPalette = map_offset_lut = charaddr_lut = NULL;
+	MSM5205Context = DrvPalette = map_offset_lut = charaddr_lut = NULL;
 
 	free (AllMem);
 	AllMem = NULL;
@@ -927,7 +930,11 @@ static INT32 DrvFrame()
 		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
 			CZetNmi();
-		SPR_WaitEndSlaveSH();
+
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			SPR_WaitEndSlaveSH();
+		}
 	}
 	CZetClose();
 
@@ -939,7 +946,10 @@ static INT32 DrvFrame()
 	SN76496Update(2, nSoundBuffer+0x6000, SOUND_LEN);
 
 //	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
-	SPR_WaitEndSlaveSH();
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+	{
+		SPR_WaitEndSlaveSH();
+	}
 
 	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
 	

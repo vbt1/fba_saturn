@@ -2187,8 +2187,8 @@ extern unsigned int  nSoundBufferPos;
 void YM2151UpdateOneSlave()
 {
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	volatile signed short *nSoundBuffer = (unsigned short *)0x25a24000+nSoundBufferPos;
 
+volatile signed short *nSoundBuffer = (unsigned short *)0x25a24000+nSoundBufferPos;
 unsigned int length = 1; // 2 si 128  interleave,4 si 64 interleave, etc
 //	unsigned int i;
 //	unsigned int num=0;
@@ -2223,7 +2223,8 @@ unsigned int length = 1; // 2 si 128  interleave,4 si 64 interleave, etc
 	{
 #ifdef RUN_YM2151
 		advance_eg();
-
+		if(i<128)
+		{
 		chanout[0] = 0;
 		chanout[1] = 0;
 		chanout[2] = 0;
@@ -2242,6 +2243,7 @@ unsigned int length = 1; // 2 si 128  interleave,4 si 64 interleave, etc
 		chan_calc(6);
 		chan7_calc();
 
+
 		nSoundBuffer[0x0000] = chanout[0] & PSG->pan[0];
 		nSoundBuffer[0x2000] = chanout[1] & PSG->pan[1];
 		nSoundBuffer[0x4000] = chanout[2] & PSG->pan[2];
@@ -2250,8 +2252,10 @@ unsigned int length = 1; // 2 si 128  interleave,4 si 64 interleave, etc
 		nSoundBuffer[0xa000] = chanout[5] & PSG->pan[5];
 		nSoundBuffer[0xc000] = chanout[6] & PSG->pan[6];
 		nSoundBuffer[0xe000] = chanout[7] & PSG->pan[7];
-#endif
+
 		*nSoundBuffer++;
+}
+#endif
 
 		/* calculate timer A */
 		if (PSG->tim_A)

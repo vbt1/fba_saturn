@@ -6,6 +6,8 @@
 #include "raze/raze.h"
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
+//INT32 BurnTimerUpdate(INT32 *nCycles);
+INT32 BurnTimerUpdate(INT32 nCycles);
 static INT32 DrvInit();
 static INT32 DrvFMInit();
 static INT32 DrvFMFrame();
@@ -14,6 +16,9 @@ static INT32 DrvFrame();
 static INT32 DrvDraw();
 static void make_lut(void);
 static void DrvInitSaturn();
+static void draw_sprites();
+static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+
 
 #define nBurnSoundLen 128
 #define VDP2_BASE           0x25e00000
@@ -33,7 +38,7 @@ static void DrvInitSaturn();
 /*static*/ UINT16 *bg_map_lut2x1 = NULL;//[0x2000];
 /*static*/ UINT16 *bg_map_lut2x2 = NULL;//[0x2000];
 /*static*/ UINT16 *bg_map_lut = NULL;
-
+/*static*/ INT16 *ym_buffer = NULL;
 
 static UINT8 *AllMem = NULL;
 static UINT8 *MemEnd = NULL;

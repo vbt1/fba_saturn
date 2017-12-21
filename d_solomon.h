@@ -22,7 +22,7 @@ static void make_lut(void);
 /*static*/ UINT8 SolomonInputPort2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 SolomonDip[2]        = {0, 0};
 /*static*/ UINT8 SolomonInput[3]      = {0x00, 0x00, 0x00};
-/*static*/ //UINT8 SolomonReset         = 0;
+/*static*/ UINT8 SolomonReset         = 0;
 
 /*static*/ UINT8 *Mem                 = NULL;
 /*static*/ UINT8 *MemEnd              = NULL;
@@ -43,6 +43,7 @@ static void make_lut(void);
 /*static*/ UINT8 *SolomonFgTiles      = NULL;
 /*static*/ UINT8 *SolomonSprites      = NULL;
 /*static*/ UINT8 *SolomonTempRom      = NULL;
+/*static*/ UINT8 *CZ80Context = NULL;
 UINT16* map_offset_lut      = NULL;
 UINT16 *cram_lut = NULL;
 

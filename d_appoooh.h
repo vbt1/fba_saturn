@@ -34,6 +34,7 @@ PcmHn 			pcm4[4];
 /*static*/ UINT8 DrvReset=0;
 ///*static*/ UINT8 DrvRecalc;
 
+/*static*/ INT16 *MSM5205Context = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT8 *AllMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;

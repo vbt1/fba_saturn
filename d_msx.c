@@ -2077,7 +2077,7 @@ static INT32 DrvInit()
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
-
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"after malloc     ",4,80);
 	{
 		struct BurnRomInfo ri;
 
@@ -2092,6 +2092,7 @@ static INT32 DrvInit()
 //		bprintf(0, _T("BIOS mode: %S\n"), (BiosmodeJapan) ? "Japanese" : "Normal");
 //		bprintf(0, _T("%S"), (SwapJoyports) ? "Joystick Ports: Swapped.\n" : "");
 //		if (BurnLoadRom(maincpu, 0x80 + BiosmodeJapan, 1)) return 1; // BIOS
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 
 		if (BurnLoadRom(maincpu, 1 + BiosmodeJapan, 1)) return 1; // BIOS
 #ifdef KANJI
@@ -2099,6 +2100,7 @@ static INT32 DrvInit()
 		use_kanji = (BurnLoadRom(kanji_rom, 3, 1) == 0);
 		use_kanji = 1;
 #endif
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"after bios        ",4,80);
 
 		memset(game, 0xff, MAX_MSX_CARTSIZE);
 
@@ -2159,8 +2161,11 @@ static INT32 DrvInit()
 	PPI0PortReadB	= msx_ppi8255_portB_read;
 	PPI0PortWriteA	= msx_ppi8255_portA_write;
 	PPI0PortWriteC	= msx_ppi8255_portC_write;
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"after init        ",4,80);
 
 	DrvDoReset();
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"after reset        ",4,80);
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
 
 	return 0;
 }

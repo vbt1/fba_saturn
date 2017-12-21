@@ -183,14 +183,11 @@ static char *itoa(i)
 
 void CZetRunSlave(int *nCycles)
 {
-
-//unsigned int nCyc = *(unsigned int*)0x00200000;//OPEN_CSH_VAR(SS_Z80CY);
-
 	if (nCycles[0] <= 0) {
-//		*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = nCyc;
-//		*(unsigned int*)0x00200000 = nCyc;		
 		return;
 	}
+
+unsigned int nCyc = *(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
 
 /*
 char toto[100];
@@ -198,16 +195,12 @@ char *titi = &toto[0];
 //nCycles[0]=332;
 
 titi=itoa(nCycles[0]);
-*/
-unsigned int nCyc = *(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+FNT_Print256_2bpp((volatile Uint8 *)0x25e60000,(Uint8 *)"         ",20,100);
+FNT_Print256_2bpp((volatile Uint8 *)0x25e60000,(Uint8 *)"         ",20,110);
 
-/*
-FNT_Print256_2bpp((volatile Uint8 *)0x25e40000,(Uint8 *)"         ",20,100);
-FNT_Print256_2bpp((volatile Uint8 *)0x25e40000,(Uint8 *)"         ",20,110);
-
-FNT_Print256_2bpp((volatile Uint8 *)0x25e40000,(Uint8 *)titi,20,100);
+FNT_Print256_2bpp((volatile Uint8 *)0x25e60000,(Uint8 *)titi,20,100);
 titi=itoa(nCyc);
-FNT_Print256_2bpp((volatile Uint8 *)0x25e40000,(Uint8 *)titi,20,110);
+FNT_Print256_2bpp((volatile Uint8 *)0x25e60000,(Uint8 *)titi,20,110);
 */
 	lastCZetCPUContext = &CZetCPUContext[1];
 	nOpenedCPU = 1;

@@ -62,7 +62,7 @@ unsigned char *CZ80Context          = NULL;
 /*static*/int DrvSampleAddress;
 
 /*static*/int nCyclesDone[2], nCyclesTotal[2];
-/*static*/int nCyclesSegment;
+/*static*///int nCyclesSegment;
 
 /*static*/unsigned char DrvHasYM2203 = 0;
 /*static*/unsigned char DrvKikcubicDraw = 0;

@@ -454,7 +454,7 @@ INT32 SolomonExit()
 	z80_add_write(0xe600, 0xe60f, 1, (void *)NULL);
 	z80_add_write(0xe800, 0xe80f, 1, (void *)NULL);
 
-	CZetExit();
+	CZetExit2();
 
 	for (INT32 i = 0; i < 3; i++) {
 		AY8910Exit(i);
@@ -477,7 +477,7 @@ INT32 SolomonExit()
 	SolomonIrqFire = 0;
 	SolomonFlipScreen = 0;
 	SolomonSoundLatch = 0;
-
+	SolomonReset = 0;
 	return 0;
 }
 
@@ -495,7 +495,7 @@ void SolomonRenderSpriteLayer()
 
 		ss_sprite[delta].charAddr = 0x220+(Code<<4);
 		ss_sprite[delta].control    = (Attr & 0xC0) >> 2;
-		ss_sprite[delta].ay    = 224 - SolomonSpriteRam[Offs + 2];
+		ss_sprite[delta].ay    = 225 - SolomonSpriteRam[Offs + 2];
 		ss_sprite[delta].ax    =  SolomonSpriteRam[Offs + 3];
 		ss_sprite[delta].color=  (Attr & 0x0e)*8;
 		delta++;

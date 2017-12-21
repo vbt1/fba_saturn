@@ -34,5 +34,6 @@ INT32 BurnTimerAttachTlcs90(INT32 nClockspeed);
 INT32 BurnTimerAttachH6280(INT32 nClockspeed);
 void BurnTimerScan(INT32 nAction, INT32* pnMin);
 INT32 BurnTimerUpdate(INT32 nCycles);
+//INT32 BurnTimerUpdate(INT32 *nCycles);
 void BurnTimerUpdateEnd();
 void BurnTimerEndFrame(INT32 nCycles);

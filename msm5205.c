@@ -3,32 +3,8 @@
 #include "math.h"
 #define SOUND_LEN 192
 #define MAX_MSM5205	 2
-static INT32 nNumChips = 0;
+/*static*/ INT32 nNumChips = 0;
 #define HZ 60
-
-#define INT_DIGITS 19
-char *itoa(i)
-     int i;
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}
 
 typedef struct 
 {
@@ -58,19 +34,19 @@ typedef struct
 } _MSM5205_state;
 
 INT16 *stream[MAX_MSM5205];
-static _MSM5205_state chips[MAX_MSM5205];
-static _MSM5205_state *voice;
+/*static*/ _MSM5205_state chips[MAX_MSM5205];
+/*static*/ _MSM5205_state *voice;
 
-static void MSM5205_playmode(INT32 chip, INT32 select);
+/*static*/ void MSM5205_playmode(INT32 chip, INT32 select);
 
-static const INT32 index_shift[8] = { -1, -1, -1, -1, 2, 4, 6, 8 };
+/*static const*/ INT32 index_shift[8] = { -1, -1, -1, -1, 2, 4, 6, 8 };
 
-static void ComputeTables(INT32 chip)
+/*static*/ void ComputeTables(UINT32 chip)
 {
 	voice = &chips[chip];
 
 	/* nibble to bit map */
-	static const INT32 nbl2bit[16][4] =
+	/*static const*/ INT8 nbl2bit[16][4] =
 	{
 		{ 1, 0, 0, 0}, { 1, 0, 0, 1}, { 1, 0, 1, 0}, { 1, 0, 1, 1},
 		{ 1, 1, 0, 0}, { 1, 1, 0, 1}, { 1, 1, 1, 0}, { 1, 1, 1, 1},
@@ -78,19 +54,20 @@ static void ComputeTables(INT32 chip)
 		{-1, 1, 0, 0}, {-1, 1, 0, 1}, {-1, 1, 1, 0}, {-1, 1, 1, 1}
 	};
 
-	INT32 step, nib;
-
 	/* loop over all possible steps */
-	for (step = 0; step <= 48; step++)
+	INT32 d[49] = {
+		16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97,
+		107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 
+		449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552
+	};
+	for (UINT8 step = 0; step <= 48; step++)
 	{
-		/* compute the step value */
-//		INT32 stepval = (INT32)(floor (16.0 * powf (11.0 / 10.0, (double)step)));
-		INT32 stepval = (INT32)(floorf (16.0 * powf (11.0 / 10.0, (double)step)));
+		INT32 stepval = d[step];
 
 		/* loop over all nibbles and compute the difference */
-		for (nib = 0; nib < 16; nib++)
+		for (UINT32 nib = 0; nib < 16; nib++)
 		{
-			voice->diff_lookup[step*16 + nib] = nbl2bit[nib][0] *
+			voice->diff_lookup[(step*16) + nib] = nbl2bit[nib][0] *
 				(stepval   * nbl2bit[nib][1] +
 				 stepval/2 * nbl2bit[nib][2] +
 				 stepval/4 * nbl2bit[nib][3] +
@@ -99,9 +76,9 @@ static void ComputeTables(INT32 chip)
 	}
 }
 
-static void MSM5205_playmode(INT32 chip, INT32 select)
+/*static*/ void MSM5205_playmode(INT32 chip, INT32 select)
 {
-	static const INT32 prescaler_table[2][4] = { {96,48,64,0}, {160, 40, 80, 20} };
+	/*static const*/ INT32 prescaler_table[2][4] = { {96,48,64,0}, {160, 40, 80, 20} };
 	INT32 prescaler = prescaler_table[(select >> 3) & 1][select & 3];
 	INT32 bitwidth = (select & 4) ? 4 : 3;
 
@@ -268,9 +245,10 @@ void MSM5205Reset()
 	}
 }
 
-void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd, float nVolume)
+void MSM5205Init(INT32 chip, INT16 *addr, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd, float nVolume)
 {
 //	DebugSnd_MSM5205Initted = 1;
+
 	voice = &chips[chip];
 
 	memset (voice, 0, sizeof(_MSM5205_state));
@@ -284,20 +262,8 @@ void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vc
 	voice->volume	= nVolume;
 //	voice->output_dir = BURN_SND_ROUTE_BOTH;
 	
-//	voice->left_volume = 1.00;
-//	voice->right_volume = 1.00;
-//	voice->use_seperate_vols = 0;
-	
-//	float FPSRatio = (float)(6000 - hz*100) / 6000;
-	float FPSRatio = (float)(60 - HZ) / 60;
-	INT32 nSoundLen = SOUND_LEN + (INT32)((float)SOUND_LEN * FPSRatio) + 1;
-	if((stream[chip]		= (INT16*)malloc(nSoundLen * sizeof(INT16))) == NULL)
-	{
-		while(1);
-	}
-
+	stream[chip]		= (INT16*)addr;
 	ComputeTables (chip);
-	
 	nNumChips = chip;
 }
 
@@ -315,7 +281,8 @@ void MSM5205Exit()
 
 		memset (voice, 0, sizeof(_MSM5205_state));
 
-		free (stream[chip]);
+//		free (stream[chip]);
+		stream[chip] = NULL;
 	}
 	
 //	DebugSnd_MSM5205Initted = 0;
@@ -412,8 +379,8 @@ INT32 MSM5205CalcInterleave(INT32 chip, INT32 cpu_speed)
 	if (chip > nNumChips) bprintf(PRINT_ERROR, _T("MSM5205CalcInterleave called with invalid chip %x\n"), chip);
 #endif
 */
-	static const INT32 table[2][4] = { {96, 48, 64, 0}, {160, 40, 80, 20} };
-
+/*	static const*/ INT32 table[2][4] = { {96, 48, 64, 0}, {160, 40, 80, 20} };
+/*
 	char toto[100];
 	char *titi = &toto[0];
 	titi=itoa(cpu_speed);
@@ -421,60 +388,29 @@ INT32 MSM5205CalcInterleave(INT32 chip, INT32 cpu_speed)
 	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"speed ",4,20);
 
 	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,80,20);
-
+*/
 	voice = &chips[chip];
-
+/*
 	titi=itoa(voice->select);
 	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"select ",4,30);
 
 	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,80,30);
-
+*/
 	if ((voice->select & 3) == 3) {
 		return 133;  // (usually...)
 	}
-
+/*
 	titi=itoa(HZ);
 	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"hz ",4,40);
 
 	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,80,40);
-
+*/
 	INT32 ret = cpu_speed / (cpu_speed / (voice->clock / table[(voice->select >> 3) & 1][voice->select & 3]));
-
+/*
 	titi=itoa(ret / HZ );
 	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"ret ",4,50);
 
 	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)titi,80,50);
-
+*/
 	return ret / HZ;
 }
-/*
-void MSM5205Scan(INT32 nAction, INT32 *pnMin)
-{
-#if defined FBA_DEBUG
-	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205Scan called without init\n"));
-#endif
-
-	if (pnMin != NULL) {
-		*pnMin = 0x029708;
-	}
-
-	if (nAction & ACB_DRIVER_DATA) {
-               for (INT32 chip = 0; chip < MAX_MSM5205; chip++) {
-			voice = &chips[chip];
-
-			SCAN_VAR(voice->data);
-
-			SCAN_VAR(voice->vclk);
-			SCAN_VAR(voice->reset);
-			SCAN_VAR(voice->prescaler);
-			SCAN_VAR(voice->bitwidth);
-			SCAN_VAR(voice->signal);
-			SCAN_VAR(voice->step);
-			SCAN_VAR(voice->volume);
-			SCAN_VAR(voice->clock); // added by dink
-			SCAN_VAR(voice->select);
-			SCAN_VAR(voice->streampos);
-		}
-	}
-}
-*/
