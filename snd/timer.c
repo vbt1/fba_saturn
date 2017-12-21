@@ -4,13 +4,13 @@
 
 #define MAX_TIMER_VALUE ((1 << 30) - 65536)
 
-double dTime;									// Time elapsed since the emulated machine was started
+float dTime;									// Time elapsed since the emulated machine was started
 
 static INT32 nTimerCount[2], nTimerStart[2];
 
 // Callbacks
 static INT32 (*pTimerOverCallback)(INT32, INT32);
-static double (*pTimerTimeCallback)();
+static float (*pTimerTimeCallback)();
 
 static INT32 nCPUClockspeed = 0;
 static INT32 (*pCPUTotalCycles)() = NULL;
@@ -25,7 +25,7 @@ static double BurnTimerTimeCallbackDummy()
 	return 0.0;
 }
 
-double BurnTimerGetTime()
+float BurnTimerGetTime()
 {
 	return dTime + pTimerTimeCallback();
 }
@@ -261,7 +261,7 @@ void BurnTimerReset()
 	nTicksDone = 0;
 }
 
-INT32 BurnTimerInit(INT32 (*pOverCallback)(INT32, INT32), double (*pTimeCallback)())
+INT32 BurnTimerInit(INT32 (*pOverCallback)(INT32, INT32), float (*pTimeCallback)())
 {
 	BurnTimerExit();
 

@@ -9,6 +9,7 @@
 #include    "machine.h"
 #define RAZE0 1
 #define SND 1
+#define nYM2203Clockspeed 3579545 / 2
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -107,16 +108,12 @@ static void DrvRomBankswitch(INT32 bank)
 #ifdef RAZE0
 	z80_map_read  (0x8000, 0xbfff, DrvZ80ROM0 + nBank);
 	z80_map_fetch (0x8000, 0xbfff, DrvZ80ROM0 + nBank);
-#else
-	CZetMapArea(0x8000, 0xbfff, 0, DrvZ80ROM0 + nBank);
-	CZetMapArea(0x8000, 0xbfff, 2, DrvZ80ROM0 + nBank);
 #endif
 }
 
 static void DrvVidRamBankswitch(INT32 bank)
 {
 	*DrvVidBank = (bank & 0x03);
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa((bank & 0x03)),4,100);
 	INT32 nBank = (bank & 3) * 0x1000;
 
 #ifdef RAZE0
@@ -213,29 +210,23 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 
 		case 0x04:
 			if (data & 0x20) {
-				CZetClose();
-#ifndef RAZE
+//				CZetClose();
+//#ifndef RAZE
 				CZetOpen(1);
 				CZetReset();
-				CZetClose();
-#else
-				z80_reset();
-#endif
-				CZetOpen(0);
+//				CZetClose();
+//#else
+//				z80_reset();
+//#endif
+//				CZetOpen(0);
 			}
 
 			*flipscreen  =  data & 0x40;
 			*DrvFgEnable = ~data & 0x80;
-/*
-char toto[100];
-char *titi = &toto[0];
-titi=itoa(~data & 0x80);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"fgenab            ",4,20);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20);
-*/			ss_regs->dispenbl &= 0xfffb;
+
+			ss_regs->dispenbl &= 0xfffb;
 			ss_regs->dispenbl |= (*DrvFgEnable >> 5) & 0x0004;
 			BGON = ss_regs->dispenbl;
-
 		return;
 
 		case 0x06:
@@ -255,13 +246,11 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,20)
 		case 0x0a:
 			*DrvScrolly = (*DrvScrolly & 0xff00) | data;
 			ss_reg->n1_move_x =  (((*DrvScrollx))<<16) ;
-//			ss_reg->n1_move_x =  ((0)<<16) ;
 		return;
 
 		case 0x0b:
 			*DrvScrolly = (*DrvScrolly & 0x00ff) | (data << 8);
 			ss_reg->n1_move_x =  (((*DrvScrollx))<<16) ;
-//			ss_reg->n1_move_x =  ((0)<<16) ;
 		return;
 
 		case 0x0c:
@@ -326,8 +315,6 @@ UINT8 __fastcall blacktiger_in(UINT16 port)
 		case 0x07:
 #ifdef RAZE0
 			return z80_get_reg(Z80_REG_DE)  >> 8;
-#else
-			return CZetDe(-1) >> 8;
 #endif
 	}
 
@@ -469,14 +456,7 @@ static INT32 DrvDoReset(INT32 full_reset)
 	z80_reset();
 	DrvRomBankswitch(1);
 	DrvVidRamBankswitch(1);
-#else
-	CZetOpen(0);
-	CZetReset();
-	DrvRomBankswitch(1);
-	DrvVidRamBankswitch(1);
-	CZetClose();
 #endif
-			FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft raze0     ",24,40);
 
 #ifndef RAZE
 	CZetOpen(1);
@@ -485,13 +465,10 @@ static INT32 DrvDoReset(INT32 full_reset)
 #else
 	z80_reset();
 #endif
-			FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft czet     ",24,40);
 
 #ifdef SND
 	BurnYM2203Reset();
 #endif
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft ym_reset     ",24,40);
-
 	watchdog = 0;
 
 	return 0;
@@ -506,12 +483,8 @@ static INT32 DrvGfxDecode()
 			8*16, 9*16, 10*16, 11*16, 12*16, 13*16, 14*16, 15*16 };
 
 	UINT8 *tmp = (UINT8*)0x00200000; //malloc(0x40000);
-//	if (tmp == NULL) {
-//		return 1;
-//	}
 // texte
 	memcpy (tmp, DrvGfxROM0, 0x08000);
-// 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode1          ",4,90);
 	GfxDecode4Bpp(0x0800, 2,  8,  8, Plane + 2, XOffs, YOffs, 0x080, tmp, DrvGfxROM0);
 
 	for (int i=0;i<0x10000;i++ )
@@ -525,10 +498,7 @@ static INT32 DrvGfxDecode()
 
 //bg
 	memcpy (tmp, DrvGfxROM1, 0x40000);
-// 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode2          ",4,100);
-//	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane + 0, XOffs, YOffs, 0x200, tmp, DrvGfxROM1);
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane + 0, XOffs, YOffs, 0x200, tmp, DrvGfxROM1);
-// 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode3          ",4,110);
 
 	tile16x16toSaturn(0,0x0400, DrvGfxROM1);
 	tile16x16toSaturn(1,0x0400, DrvGfxROM1+0x20000);
@@ -567,14 +537,12 @@ static void DrvFMIRQHandler(INT32 irq, INT32 nStatus)
 
 static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 {
-	return (INT32)CZetTotalCycles() * nSoundRate / 3579545;
+	return (INT32)CZetTotalCycles() * nSoundRate / nYM2203Clockspeed;
 }
 
-//static double DrvGetTime()
 static INT32 DrvGetTime()
 {
-//	return (double)CZetTotalCycles() / 3579545;
-	return (INT32)CZetTotalCycles() / 3579545;
+	return (INT32)CZetTotalCycles() / nYM2203Clockspeed;
 }
 
 static INT32 DrvInit()
@@ -584,8 +552,6 @@ static INT32 DrvInit()
 
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"bef malloc     ",24,40);
-
 #if  1
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
 	{
@@ -593,28 +559,27 @@ static INT32 DrvInit()
 		return 1;
 	}
 #endif
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft malloc     ",24,40);
-
 	memset(AllMem, 0, nLen);
 	MemIndex();
 	make_lut();
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft make_lut     ",24,40);
 
 	{
 		for (INT32 i = 0; i < 5; i++) {
 			if (BurnLoadRom(DrvZ80ROM0 + i * 0x10000, 0  + i, 1)) return 1;
 		}
+
 		if (BurnLoadRom(DrvZ80ROM1, 5, 1)) return 1;
+
 		if (BurnLoadRom(DrvGfxROM0, 6, 1)) return 1;
+
 		for (INT32 i = 0; i < 4; i++) {
 			if (BurnLoadRom(DrvGfxROM1 + i * 0x10000, 7  + i, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM2 + i * 0x10000, 11 + i, 1)) return 1;
 		}
+
 		DrvGfxDecode();
 	}
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft loadrom     ",24,40);
-
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
+//	Set6PCM();
 	drawWindow(0,224,240,0,64);
 #ifndef RAZE
 	CZetInit(2);
@@ -653,42 +618,22 @@ static INT32 DrvInit()
 	CZetSetWriteHandler(blacktiger_sound_write);
 	CZetSetReadHandler(blacktiger_sound_read);
 	CZetClose();
-#else
-	z80_map_fetch (0x0000, 0x7fff, DrvZ80ROM1);
-	z80_map_read  (0x0000, 0x7fff, DrvZ80ROM1);
-	z80_map_fetch (0xc000, 0xc7ff, DrvZ80RAM1);
-	z80_map_read  (0xc000, 0xc7ff, DrvZ80RAM1);
-	z80_map_write (0xc000, 0xc7ff, DrvZ80RAM1);
-
-	z80_add_write(0xe000, 0xe003, 1, (void *)&blacktiger_sound_write);
-	z80_add_read(0xc800, 0xe003, 1, (void *)&blacktiger_sound_read); 
 #endif
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft cpu init     ",24,40);
 
 //	GenericTilesInit();
 #ifdef SND
-	BurnYM2203Init(2, ym_buffer, 3579545, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 7680L);
+	BurnYM2203Init(2, ym_buffer, nYM2203Clockspeed, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
 
-	BurnTimerAttachZet(3579545);
+	BurnTimerAttachZet(nYM2203Clockspeed);
 #endif
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft ym init     ",24,40);
-
-//	BurnYM2203SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
-//	BurnYM2203SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
-//	BurnYM2203SetPSGVolume(0, 0.05);
-//	BurnYM2203SetPSGVolume(1, 0.05);
-//  	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDoReset          ",4,80);
-
 	DrvDoReset(1);
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft reset     ",24,40);
 
 	for (INT32 i = 0; i < 0x400; i++) 
 	{
 		palette_write(i);
 	}
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft palette     ",24,40);
-
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -741,9 +686,9 @@ static INT32 DrvFrame()
 
 	CZetNewFrame();
 
-	UINT32 nInterleave = 20;
+	UINT32 nInterleave = 100; //20;
 	nCyclesTotal[0] = 3000000 / 60; ///2;
-	nCyclesTotal[1] = 3000000 / 60 / 2; ///2;
+	nCyclesTotal[1] = nYM2203Clockspeed / 60; ///2;
 	UINT32 nCyclesDone = 0;
 
 	for (UINT32 i = 0; i < nInterleave; i++) {
@@ -753,50 +698,43 @@ static INT32 DrvFrame()
 		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone;
 		nCyclesDone += z80_emulate(nCyclesSegment);
-//		if (i == 98) z80_raise_IRQ(0);
-//		if (i == 99) z80_lower_IRQ();
-		if (i == 18) z80_raise_IRQ(0);
-		if (i == 19) z80_lower_IRQ();
+		if (i == 98) z80_raise_IRQ(0);
+		if (i == 99) z80_lower_IRQ();
+//		if (i == 18) z80_raise_IRQ(0);
+//		if (i == 19) z80_lower_IRQ();
 #endif
-		// Run Z80 #2
 
 #ifdef SND
+		// Run Z80 #2
 		CZetOpen(1);
 		BurnTimerUpdate(i * (nCyclesTotal[1] / nInterleave));
 		CZetClose();
 #endif
 	}
-#ifndef RAZE
-		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			SPR_WaitEndSlaveSH();
-		}
-	CZetOpen(1);
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"BurnTimerEndFrame           ",4,20);
 #ifdef SND
+	CZetOpen(1);
 	BurnTimerEndFrame(nCyclesTotal[1]);
-//	if (pBurnSoundOut)
-	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"BurnYM2203Update           ",4,20);
-	BurnYM2203Update(nSoundBuffer, nBurnSoundLen);
+	signed short *nSoundBuffer = (signed short *)0x25a20000+nSoundBufferPos; //*(sizeof(signed short)));
+	YM2203UpdateNormal(nSoundBuffer, nBurnSoundLen);
 //	updateAY8910Sound();
 	CZetClose();
-#endif
 
-#ifdef SND
-
-	PCM_NotifyWriteSize(pcm, nBurnSoundLen);
-	PCM_Task(pcm); // bon emplacement
-
-	nSoundBufferPos+=(nBurnSoundLen); // DOIT etre deux fois la taille copiee
+	nSoundBufferPos+=nBurnSoundLen; // DOIT etre deux fois la taille copiee
 
 	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
 	{
-		nSoundBufferPos=0;
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
+		PCM_Task(pcm); // bon emplacement
+/*
+		for (unsigned int i=0;i<6;i++)
+		{
+			PCM_NotifyWriteSize(pcm6[i], nSoundBufferPos);
+			PCM_Task(pcm6[i]); // bon emplacement
+		}
+		nSoundBufferPos=0;*/
 	}
 #endif
 
-#endif
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
@@ -917,6 +855,56 @@ static void initColors()
 	SCL_AllocColRam(SCL_NBG3,OFF);
 
 	SCL_SetColRam(SCL_NBG0,8,8,palette);	 // vbt ? remettre
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static PcmHn createHandle(PcmCreatePara *para)
+{
+	PcmHn pcm;
+
+	pcm = PCM_CreateMemHandle(para);
+	if (pcm == NULL) {
+		return NULL;
+	}
+	return pcm;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void Set6PCM()
+{
+	PcmCreatePara	para[6];
+	PcmInfo 		info[6];
+	PcmStatus	*st;
+	static PcmWork g_movie_work[6];
+
+	for (int i=0; i<6; i++)
+	{
+		PCM_PARA_WORK(&para[i]) = (struct PcmWork *)&g_movie_work[i];
+		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
+		PCM_PARA_RING_SIZE(&para[i]) = RING_BUF_SIZE;
+		PCM_PARA_PCM_ADDR(&para[i]) = PCM_ADDR+(0x4000*(i+1));
+		PCM_PARA_PCM_SIZE(&para[i]) = PCM_SIZE;
+
+		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
+		st = &g_movie_work[i].status;
+		st->need_ci = PCM_ON;
+	 
+		PCM_INFO_FILE_TYPE(&info[i]) = PCM_FILE_TYPE_NO_HEADER;			
+		PCM_INFO_DATA_TYPE(&info[i])=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+		PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+		PCM_INFO_CHANNEL(&info[i]) = 0x01;
+		PCM_INFO_SAMPLING_BIT(&info[i]) = 16;
+
+		PCM_INFO_SAMPLING_RATE(&info[i])	= SOUNDRATE;//30720L;//44100L;
+		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
+		pcm6[i] = createHandle(&para[i]);
+
+		PCM_SetPcmStreamNo(pcm6[i], i);
+
+		PCM_SetInfo(pcm6[i], &info[i]);
+		PCM_ChangePcmPara(pcm6[i]);
+
+		PCM_MeSetLoop(pcm6[i], 0x3FF);//SOUNDRATE*120);
+		PCM_Start(pcm6[i]);
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)

@@ -5,7 +5,7 @@
 #define MAKE_TIMER_TICKS(n, m) ((INT32)(	(n*1.00) * ((TIMER_TICKS_PER_SECOND*1.00) / (m*1.00))))
 #define MAKE_CPU_CYLES(n, m) ((INT32)((n*1.00) * ((m*1.00) / (TIMER_TICKS_PER_SECOND*1.00))))
 
-double BurnTimerGetTime();
+float BurnTimerGetTime();
 
 // Callbacks for various sound chips
 void BurnOPNTimerCallback(INT32 n, INT32 c, INT32 cnt, double stepTime);	// period = cnt * stepTime in s
@@ -16,11 +16,11 @@ void BurnYMFTimerCallback(INT32 n, INT32 c, double period);				// period in us
 void BurnTimerSetRetrig(INT32 c, double period);						// period in  s
 void BurnTimerSetOneshot(INT32 c, double period);						// period in  s
 
-extern double dTime;
+extern float dTime;
 
 void BurnTimerExit();
 void BurnTimerReset();
-INT32 BurnTimerInit(INT32 (*pOverCallback)(INT32, INT32), double (*pTimeCallback)());
+INT32 BurnTimerInit(INT32 (*pOverCallback)(INT32, INT32), float (*pTimeCallback)());
 INT32 BurnTimerAttachSek(INT32 nClockspeed);
 INT32 BurnTimerAttachZet(INT32 nClockspeed);
 INT32 BurnTimerAttachM6809(INT32 nClockspeed);

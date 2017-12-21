@@ -18,9 +18,15 @@ static void make_lut(void);
 static void DrvInitSaturn();
 static void draw_sprites();
 static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
-
+static void Set6PCM();
 
 #define nBurnSoundLen 128
+PcmHn 			pcm6[6];
+#define	PCM_ADDR	((void*)0x25a20000)
+#define	PCM_SIZE	(4096L*2)				/* 2.. */
+#define SOUNDRATE   7680L
+
+
 #define VDP2_BASE           0x25e00000
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
