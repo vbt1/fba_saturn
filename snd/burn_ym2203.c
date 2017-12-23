@@ -200,7 +200,7 @@ static void YM2203Render(INT32 nSegmentLength)
 //	}
 
 #endif
-	nFractionalPosition = nSegmentLength;
+//	nFractionalPosition = nSegmentLength;
 #if 1
 	if (nSegmentEnd >= nBurnSoundLen) {
 		INT32 nExtraSamples = nSegmentEnd - nBurnSoundLen;
@@ -217,12 +217,13 @@ static void YM2203Render(INT32 nSegmentLength)
 //				pYM2203Buffer[7][i] = pYM2203Buffer[7][nBurnSoundLen + i];
 //			}
 //		}
-		nFractionalPosition = 0;
+//		nFractionalPosition = 0;
 
 		nYM2203Position = nExtraSamples;
 		nAY8910Position = nExtraSamples;
 
 		dTime += 100.0 / nBurnFPS;
+//		dTime += 0,016667;
 	}
 #endif
 

@@ -3,7 +3,7 @@
 *	Yamaha YM2151 driver (version 2.150 final beta)
 *
 ******************************************************************************/
-#define RUN_YM2151 1
+//#define RUN_YM2151 1
 
 #include <stdio.h>
 #include <stdlib.h>

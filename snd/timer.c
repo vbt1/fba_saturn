@@ -5,7 +5,9 @@
 #define MAX_TIMER_VALUE ((1 << 30) - 65536)
 
 float dTime;									// Time elapsed since the emulated machine was started
-
+void CZetRunSlave(int *nCycles);
+int CZetTotalCyclesSlave();
+void CZetRunEndSlave();
 static INT32 nTimerCount[2], nTimerStart[2];
 
 // Callbacks
@@ -14,7 +16,7 @@ static float (*pTimerTimeCallback)();
 
 static INT32 nCPUClockspeed = 0;
 static INT32 (*pCPUTotalCycles)() = NULL;
-static INT32 (*pCPURun)(INT32) = NULL;
+static INT32 (*pCPURun)(INT32 *) = NULL;
 static void (*pCPURunEnd)() = NULL;
 
 // ---------------------------------------------------------------------------
@@ -36,11 +38,11 @@ float BurnTimerGetTime()
 
 static INT32 nTicksTotal, nTicksDone, nTicksExtra;
 
-INT32 BurnTimerUpdate(INT32 nCycles)
+INT32 BurnTimerUpdate(INT32 *nCycles)
 {
 	INT32 nIRQStatus = 0;
 
-	nTicksTotal = MAKE_TIMER_TICKS(nCycles, nCPUClockspeed);
+	nTicksTotal = MAKE_TIMER_TICKS(nCycles[0], nCPUClockspeed);
 
 	while (nTicksDone < nTicksTotal) {
 		INT32 nTimer, nCyclesSegment, nTicksSegment;
@@ -55,7 +57,10 @@ INT32 BurnTimerUpdate(INT32 nCycles)
 			nTicksSegment = nTicksTotal;
 		}
 		nCyclesSegment = MAKE_CPU_CYLES(nTicksSegment + nTicksExtra, nCPUClockspeed);
-		pCPURun(nCyclesSegment - pCPUTotalCycles());
+		int nCyc = nCyclesSegment - pCPUTotalCycles();
+//		pCPURun(nCyclesSegment - pCPUTotalCycles());
+		pCPURun(&nCyc);
+
 		nTicksDone = MAKE_TIMER_TICKS(pCPUTotalCycles() + 1, nCPUClockspeed) - 1;
 		nTimer = 0;
 		if (nTicksDone >= nTimerCount[0]) {
@@ -89,7 +94,7 @@ void BurnTimerEndFrame(INT32 nCycles)
 {
 	INT32 nTicks = MAKE_TIMER_TICKS(nCycles, nCPUClockspeed);
 
-	BurnTimerUpdate(nCycles);
+	BurnTimerUpdate(&nCycles);
 
 	if (nTimerCount[0] < MAX_TIMER_VALUE) {
 		nTimerCount[0] -= nTicks;
@@ -276,9 +281,12 @@ INT32 BurnTimerInit(INT32 (*pOverCallback)(INT32, INT32), float (*pTimeCallback)
 INT32 BurnTimerAttachZet(INT32 nClockspeed)
 {
 	nCPUClockspeed = nClockspeed;
-	pCPUTotalCycles = CZetTotalCycles;
-	pCPURun = CZetRun;
-	pCPURunEnd = CZetRunEnd;
+	pCPUTotalCycles = CZetTotalCyclesSlave;
+//	pCPUTotalCycles = CZetTotalCycles;
+//	pCPURun = CZetRun;
+	pCPURun = CZetRunSlave;
+//	pCPURunEnd = CZetRunEnd;
+	pCPURunEnd = CZetRunEndSlave;
 
 	nTicksExtra = MAKE_TIMER_TICKS(1, nCPUClockspeed) - 1;
 
