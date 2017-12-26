@@ -2,7 +2,7 @@
 #include "../burn_sound.h"
 
 #define DAC_NUM		(1)	// Maximum DAC chips
-#define nBurnSoundLen 140
+#define nBurnSoundLen 192
 typedef struct //dac_info
 {
 	INT16	Output;
@@ -14,19 +14,21 @@ typedef struct //dac_info
 }dac_info;
 
 //static struct dac_info dac_table[DAC_NUM];
-static dac_info dac_table[DAC_NUM];
+/*static*/ dac_info dac_table[DAC_NUM];
 
-static INT16 UnsignedVolTable[256];
-static INT16 SignedVolTable[256];
+/*static*/ INT16 UnsignedVolTable[256];
+/*static*/ INT16 SignedVolTable[256];
 
-static INT16 *lBuffer = NULL;
+/*static*/ //INT16 *lBuffer = NULL;
 //static INT16 *rBuffer = NULL;
 
-static INT32 NumChips;
+/*static*/ INT32 NumChips;
 
-static INT32 bAddSignal;
+/*static*/ INT32 bAddSignal;
+//extern INT16 *lBuffer;
+INT16 *lBuffer = NULL;
 
-static void UpdateStream(INT32 chip, INT32 length)
+/*static*/ void UpdateStream(INT32 chip, INT32 length)
 {
 	dac_info *ptr;
 /* char toto[100];
@@ -37,14 +39,12 @@ titi=itoa(length);
 			FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,4,60);
 */
 
-
+/*
 	if (lBuffer == NULL) {	// delay buffer allocation for cases when fps is not 60
-		if((lBuffer = (INT16*)malloc(nBurnSoundLen * sizeof(INT16)))==NULL)
-		{
-			while(1);
-		}
+
+		lBuffer =  (INT16*)dacBuffer;
 		memset (lBuffer, 0, nBurnSoundLen * sizeof(INT16));
-	}
+	}*/
 /*	if (rBuffer == NULL) {	// delay buffer allocation for cases when fps is not 60
 		if((rBuffer = (INT16*)malloc(nBurnSoundLen * sizeof(INT16)))==NULL)
 		{
@@ -257,7 +257,8 @@ void DACExit()
 	
 //	DebugSnd_DACInitted = 0;
 
-	free (lBuffer);
+//	free (lBuffer);
+//	lBuffer = NULL;
 //	free (rBuffer);
 }
    /*

@@ -13,7 +13,7 @@ PcmHn 			pcm8[8];
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L //
-#define nBurnSoundLen 140 //128//7680/55.0
+#define nBurnSoundLen 192 //128//7680/55.0
 unsigned int vbmap[4][0x1000];
 int bg=-1;
 
@@ -48,6 +48,8 @@ void CZetRunSlave(int *nCycles);
 /*static*/unsigned char *DrvTempRom          = NULL;
 /*static*/unsigned int  *DrvPalette          = NULL;
 unsigned char *CZ80Context          = NULL;
+//INT16 *lBuffer = NULL;
+extern INT16 *lBuffer;
 
 /*static*/unsigned char DrvRomBank;
 /*static*/unsigned char DrvSoundLatch;

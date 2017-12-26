@@ -22,7 +22,7 @@
 
 /* --- speedup optimize --- */
 /* busy flag enulation , The definition of FM_GET_TIME_NOW() is necessary. */
-#define FM_BUSY_FLAG_SUPPORT 1
+#define FM_BUSY_FLAG_SUPPORT 0
 
 /* --- external SSG(YM2149/AY-3-8910)emulator interface port */
 /* used by YM2203,YM2608,and YM2610 */

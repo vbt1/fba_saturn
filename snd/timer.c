@@ -277,8 +277,24 @@ INT32 BurnTimerInit(INT32 (*pOverCallback)(INT32, INT32), float (*pTimeCallback)
 
 	return 0;
 }
-
 INT32 BurnTimerAttachZet(INT32 nClockspeed)
+{
+	nCPUClockspeed = nClockspeed;
+	pCPUTotalCycles = CZetTotalCycles;
+//	pCPUTotalCycles = CZetTotalCycles;
+//	pCPURun = CZetRun;
+	pCPURun = CZetRunSlave;
+//	pCPURunEnd = CZetRunEnd;
+	pCPURunEnd = CZetRunEnd;
+
+	nTicksExtra = MAKE_TIMER_TICKS(1, nCPUClockspeed) - 1;
+
+//	bprintf(PRINT_NORMAL, _T("--- timer cpu speed %iHz, one cycle = %i ticks.\n"), nClockspeed, MAKE_TIMER_TICKS(1, nCPUClockspeed));
+
+	return 0;
+}
+
+INT32 BurnTimerAttachZetSlave(INT32 nClockspeed)
 {
 	nCPUClockspeed = nClockspeed;
 	pCPUTotalCycles = CZetTotalCyclesSlave;

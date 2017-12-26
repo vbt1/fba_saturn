@@ -474,7 +474,7 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 					loaded[0] = 0;
 					modified[0] = 1;
 
-//	 heapWalk();
+	 heapWalk();
 
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
@@ -506,7 +506,7 @@ static void display_menu(void)
 //	sc_init();
 //	the_loop = 1;
 
-//	heapWalk();
+	heapWalk();
 
 	unsigned int current_page = 1,m;
 	unsigned char modified = 1;
@@ -2016,7 +2016,7 @@ int vspfunc(char *format, ...)
 */
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-#if 0
+#if 1
 extern UINT32  end;
 extern UINT32  __malloc_free_list;
 extern UINT32  _sbrk(int size);

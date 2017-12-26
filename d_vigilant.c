@@ -6,7 +6,7 @@
 #define USE_MAP 1
 #define CZET_SLAVE 1
 #define nInterleave 256//140 // dac needs 128 NMIs
-#define nCPUClockspeed 3579645
+#define nCPUClockspeed 3579645 
 #define nSegmentLength nBurnSoundLen / nInterleave
 
 #include "d_vigilant.h"
@@ -55,12 +55,12 @@ int ovlInit(char *szShortName)
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	DrvSprites             = &ss_vram[0x1100];//Next; Next += 0x1000 * 16 * 16;
 #ifndef BMP
-	DrvBackTiles           = cache+0x20000;//Next; Next += 0x4000 * 32;
+	DrvBackTiles          = cache+0x20000;//Next; Next += 0x4000 * 32;
 #else
-	DrvBackTiles           = cache+0x30000;//Next; Next += 0x4000 * 32;
+	DrvBackTiles          = cache+0x30000;//Next; Next += 0x4000 * 32;
 #endif
-	MemEnd                 = Next;
-
+	lBuffer					 = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16) * 10;
+	MemEnd                = Next;
 	return 0;
 }
 
@@ -116,6 +116,8 @@ int ovlInit(char *szShortName)
 	for (INT32 i = 0; i < 2; i++) {
 		CZetOpen(i);
 		CZetReset();
+	
+	memset (lBuffer, 0, nBurnSoundLen * sizeof(INT16));
 
 #ifdef RAZE0
 		 z80_reset();
@@ -238,6 +240,12 @@ UINT8 __fastcall VigilanteZ80PortRead1(UINT16 a)
 
 void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 {
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+	{
+		//SPR_WaitEndSlaveSH();
+	}
+//	nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+
 	a &= 0xff;
 	
 	switch (a) {
@@ -245,7 +253,7 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 			DrvSoundLatch = d;
 
 
-	CZetOpen(1);
+//	CZetOpen(1);
 			DrvSetVector(Z80_ASSERT);
 
 			return;
@@ -391,8 +399,6 @@ static char *itoa(i)
 
 void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 {
-
-
 	a &= 0xff;
 	
 	switch (a) {
@@ -431,11 +437,12 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		}
 		
 		case 0x82: {
+#ifdef SOUND
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 	{
 		SPR_WaitEndSlaveSH();
 	}
-#ifdef SOUND
+
 			DACSignedWrite(0, d);
 #endif
 			DrvSampleAddress = (DrvSampleAddress + 1) & 0xffff;
@@ -468,38 +475,36 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		DrvSetVector(YM2151_CLEAR);
 	}
 }
-int aaa = 10;
-static INT32 VigilantSyncDAC()
+//int aaa = 10;
+/*static*/ INT32 VigilantSyncDAC()
 {
-//	return (INT32)(float)(nBurnSoundLen * (CZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (nBurnFPS / 100.0000))));
-#ifdef CZET_SLAVE
-		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//#ifdef CZET_SLAVE
+/*		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		{
 			//SPR_WaitEndSlaveSH();
 		}
 //		nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
 //		CZetOpen(1);
 #endif
-	if(aaa < 200)
+//	if(aaa < 200)
 	{
 		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)itoa(
 			
 		(INT32)(float)	(nBurnSoundLen * (nCyclesDone[1] / ((nCPUClockspeed) / (6000 / 100.0000))))
-		),10,aaa);	
+		),10,20);	
 
 		
 		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)itoa(
 			
 		(INT32)(float)	(nBurnSoundLen * (CZetTotalCycles() / ((nCPUClockspeed) / (6000 / 100.0000))))
-		),80,aaa);	
+		),80,20);	
 		
 		
 		
-		aaa+=10;
-	}
-	return 		(INT32)(float)	(nBurnSoundLen * (nCyclesDone[1] / ((nCPUClockspeed) / (6000 / 100.0000))))
-		;
-//	return (INT32)(float)(nBurnSoundLen * (ZetTotalCycles() / ((nCyclesTotal[1] * 55.0000) / (nBurnFPS / 100.0000))));
+	//	aaa+=10;
+	}*/
+	return 		(INT32)(float)	(nBurnSoundLen * (CZetTotalCycles() / ((nCPUClockspeed) / (600000.00))))
+	;
 }
 
 /*static*/INT32 DrvInit()
@@ -649,8 +654,22 @@ void xxx(int *i)
 //		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
 //		nCyclesSegment = nNext - nCyclesDone[0];
 		int nCyclesSegment = nCyclesTotal[0] / nInterleave;
+
 //		xxx(&i);
 	SPR_RunSlaveSH((PARA_RTN*)xxx,&i);
+/*		nCyclesDone[0] += z80_emulate(nCyclesSegment);
+
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			//SPR_WaitEndSlaveSH();
+		}
+
+		if (i == (nInterleave - 1)) 
+		{
+			z80_raise_IRQ(0);
+			z80_emulate(1);
+		}
+*/
 #endif
 
 #if CZET_SLAVE
@@ -661,21 +680,19 @@ void xxx(int *i)
 			int nCyclesSegment2 = nNext - nCyclesDone[1];
 			nCyclesDone[1] += CZetRun(nCyclesSegment2);
 
+
 		if (i & 1) 
 		{
 			CZetNmi();
 		}
-		CZetOpen(1);
-
+/*
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 	{
 		SPR_WaitEndSlaveSH();
-	}
-
+	}		
+*/
+		CZetOpen(1);
 		YM2151UpdateOneSlave();
-
-
-
 
 #endif
 	}
@@ -1015,7 +1032,7 @@ static void Set8PCM()
 	MemEnd = RamEnd = DrvZ80Rom1 = DrvZ80Rom2 = DrvZ80Ram1 = DrvZ80Ram2 = NULL;
 	DrvVideoRam = DrvSpriteRam = DrvPaletteRam = DrvChars = DrvBackTiles = DrvSprites = NULL;
 	DrvSamples = DrvTempRom = CZ80Context = NULL;
-	DrvPalette = NULL;
+	DrvPalette = lBuffer = NULL;
 
 	if (Mem) {
 		free(Mem);

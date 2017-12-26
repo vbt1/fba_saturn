@@ -9,7 +9,7 @@
 #include    "machine.h"
 #define RAZE0 1
 #define SND 1
-#define nYM2203Clockspeed 3579545 / 2
+#define nYM2203Clockspeed 3579545
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -194,6 +194,10 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 	{
 		case 0x00:
 		{
+/*			if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+			{
+				SPR_WaitEndSlaveSH();
+			}*/
 			*soundlatch = data;
 		}
 		return;
@@ -210,15 +214,19 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 
 		case 0x04:
 			if (data & 0x20) {
-				CZetClose();
+//				CZetClose();
 #ifndef RAZE
+/*			if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+			{
+				SPR_WaitEndSlaveSH();
+			}*/
 				CZetOpen(1);
 				CZetReset();
-				CZetClose();
+//				CZetClose();
 #else
 				z80_reset();
 #endif
-				CZetOpen(0);
+//				CZetOpen(0);
 			}
 
 			*flipscreen  =  data & 0x40;
@@ -461,7 +469,7 @@ static INT32 DrvDoReset(INT32 full_reset)
 #ifndef RAZE
 	CZetOpen(1);
 	CZetReset();
-	CZetClose();
+//	CZetClose();
 #else
 	z80_reset();
 #endif
@@ -534,14 +542,34 @@ static void DrvFMIRQHandler(INT32 irq, INT32 nStatus)
 		CZetSetIRQLine(0,    CZET_IRQSTATUS_NONE);
 	}
 }
-
+//int aaa = 10;
 static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 {
+//	return (INT32)CZetTotalCyclesSlave() * nSoundRate / nYM2203Clockspeed;
+/*	if(aaa < 200)
+	{
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(
+			
+		(INT32)CZetTotalCycles() * 44100 / nYM2203Clockspeed
+		),10,aaa);	
+
+		
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(
+			
+		(INT32)CZetTotalCycles() * nSoundRate / nYM2203Clockspeed
+		),80,aaa);	
+		aaa+=10;
+	}
+	else
+	{
+		aaa=10;
+	}*/
 	return (INT32)CZetTotalCycles() * nSoundRate / nYM2203Clockspeed;
 }
 
 static INT32 DrvGetTime()
 {
+//	return (INT32)CZetTotalCyclesSlave() / nYM2203Clockspeed;
 	return (INT32)CZetTotalCycles() / nYM2203Clockspeed;
 }
 
@@ -623,6 +651,7 @@ static INT32 DrvInit()
 
 //	GenericTilesInit();
 #ifdef SND
+//	BurnYM2203Init(2, ym_buffer, nYM2203Clockspeed, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
 	BurnYM2203Init(2, ym_buffer, nYM2203Clockspeed, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
 
 	BurnTimerAttachZet(nYM2203Clockspeed);
@@ -691,9 +720,30 @@ static INT32 DrvFrame()
 	nCyclesTotal[0] = 3000000 / 60; ///2;
 	nCyclesTotal[1] = nYM2203Clockspeed / 60; ///2;
 	UINT32 nCyclesDone = 0;
+/*	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
+		SPR_RunSlaveSH(CZetNewFrame,NULL);
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			SPR_WaitEndSlaveSH();
+		}*/
 
 	for (UINT32 i = 0; i < nInterleave; i++) {
 		INT32 nNext, nCyclesSegment;
+
+
+#ifdef SND
+		// Run Z80 #2
+//		CZetOpen(1);
+//		INT32 nCycle = i * (nCyclesTotal[1] / nInterleave);
+//		BurnTimerUpdate(&nCycle);
+/*		SPR_RunSlaveSH((PARA_RTN*)BurnTimerUpdate,&nCycle);
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			SPR_WaitEndSlaveSH();
+		}*/
+//		CZetClose();
+#endif
+
 		// Run Z80 #1
 #ifdef RAZE0
 		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
@@ -706,13 +756,23 @@ static INT32 DrvFrame()
 #endif
 
 #ifdef SND
+/*		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			SPR_WaitEndSlaveSH();
+		}*/
 		// Run Z80 #2
-		CZetOpen(1);
-		BurnTimerUpdate(i * (nCyclesTotal[1] / nInterleave));
-		CZetClose();
+//		CZetOpen(1);
+//		INT32 nCycle = i * (nCyclesTotal[1] / nInterleave);
+//		BurnTimerUpdate(&nCycle);
+//		SPR_RunSlaveSH((PARA_RTN*)BurnTimerUpdate,&nCycle);
+//		CZetClose();
 #endif
 	}
 #ifdef SND
+/*	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		{
+			SPR_WaitEndSlaveSH();
+		}*/
 	CZetOpen(1);
 	BurnTimerEndFrame(nCyclesTotal[1]);
 	signed short *nSoundBuffer = (signed short *)0x25a24000+nSoundBufferPos; //*(sizeof(signed short)));

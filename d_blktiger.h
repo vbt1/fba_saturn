@@ -6,8 +6,8 @@
 #include "raze/raze.h"
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
-//INT32 BurnTimerUpdate(INT32 *nCycles);
-INT32 BurnTimerUpdate(INT32 nCycles);
+INT32 BurnTimerUpdate(INT32 *nCycles);
+//INT32 BurnTimerUpdate(INT32 nCycles);
 static INT32 DrvInit();
 static INT32 DrvFMInit();
 static INT32 DrvFMFrame();

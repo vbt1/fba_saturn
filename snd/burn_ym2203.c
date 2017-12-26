@@ -125,13 +125,7 @@ static void YM2203Render(INT32 nSegmentLength)
 
 		YM2203UpdateOne(1, pYM2203Buffer[4], nSegmentLength);
 	}
-/*	
-	if (nNumChips > 2) {
-		pYM2203Buffer[8] = pBuffer + 8 * 4096 + 4 + nYM2203Position;
 
-		YM2203UpdateOne(2, pYM2203Buffer[8], nSegmentLength);
-	}
-  /*/
 	nYM2203Position += nSegmentLength;
 }
 
@@ -239,8 +233,8 @@ void BurnYM2203UpdateRequest()
 #if defined FBA_DEBUG
 	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("BurnYM2203UpdateRequest called without init\n"));
 #endif
-
-	YM2203Render(BurnYM2203StreamCallback(nBurnYM2203SoundRate));
+BurnYM2203StreamCallback(nBurnYM2203SoundRate);
+//	YM2203Render(BurnYM2203StreamCallback(nBurnYM2203SoundRate));
 }
 
 static void BurnAY8910UpdateRequest()
@@ -316,7 +310,8 @@ INT32 BurnYM2203Init(INT32 num, INT16 *addr, INT32 nClockFrequency, FM_IRQHANDLE
 
 	BurnYM2203StreamCallback = StreamCallback;
 	{
-		nBurnYM2203SoundRate = nBurnSoundRate;
+//		nBurnYM2203SoundRate = nBurnSoundRate;
+		nBurnYM2203SoundRate = 7680;
 		BurnYM2203Update = YM2203UpdateNormal;
 	}
 
