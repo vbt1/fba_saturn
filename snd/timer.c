@@ -90,11 +90,11 @@ INT32 BurnTimerUpdate(INT32 *nCycles)
 	return nIRQStatus;
 }
 
-void BurnTimerEndFrame(INT32 nCycles)
+void BurnTimerEndFrame(INT32 *nCycles)
 {
-	INT32 nTicks = MAKE_TIMER_TICKS(nCycles, nCPUClockspeed);
+	INT32 nTicks = MAKE_TIMER_TICKS(nCycles[0], nCPUClockspeed);
 
-	BurnTimerUpdate(&nCycles);
+	BurnTimerUpdate(nCycles);
 
 	if (nTimerCount[0] < MAX_TIMER_VALUE) {
 		nTimerCount[0] -= nTicks;

@@ -4,6 +4,7 @@
 #include "timer.h"
 #define MAX_YM2203	2
 
+//#define YM2203_Render 1
 extern unsigned int  nSoundBufferPos;
 INT32 nBurnFPS = 6000;
 extern float dTime;
@@ -103,6 +104,7 @@ static void AY8910RenderOld(INT32 nSegmentLength)
 	nAY8910Position += nSegmentLength;
 }
 
+#ifdef YM2203_Render
 static void YM2203Render(INT32 nSegmentLength)
 {
 #if defined FBA_DEBUG
@@ -128,7 +130,7 @@ static void YM2203Render(INT32 nSegmentLength)
 
 	nYM2203Position += nSegmentLength;
 }
-
+#endif
 // ----------------------------------------------------------------------------
 // Update the sound buffer
 /*static*/ void YM2203UpdateNormal(INT16* pSoundBuf, INT32 nSegmentEnd)
@@ -152,7 +154,9 @@ static void YM2203Render(INT32 nSegmentLength)
 		nSegmentLength = nBurnSoundLen;
 	}
 
-//	YM2203Render(nSegmentEnd);
+#ifdef YM2203_Render
+	YM2203Render(nSegmentEnd);
+#endif
 	AY8910Render(nSegmentEnd);
 
 #if 1
@@ -233,8 +237,12 @@ void BurnYM2203UpdateRequest()
 #if defined FBA_DEBUG
 	if (!DebugSnd_YM2203Initted) bprintf(PRINT_ERROR, _T("BurnYM2203UpdateRequest called without init\n"));
 #endif
-BurnYM2203StreamCallback(nBurnYM2203SoundRate);
-//	YM2203Render(BurnYM2203StreamCallback(nBurnYM2203SoundRate));
+
+#ifdef YM2203_Render
+	YM2203Render(BurnYM2203StreamCallback(nBurnYM2203SoundRate));
+#else
+	BurnYM2203StreamCallback(nBurnYM2203SoundRate);
+#endif
 }
 
 static void BurnAY8910UpdateRequest()
@@ -310,8 +318,7 @@ INT32 BurnYM2203Init(INT32 num, INT16 *addr, INT32 nClockFrequency, FM_IRQHANDLE
 
 	BurnYM2203StreamCallback = StreamCallback;
 	{
-//		nBurnYM2203SoundRate = nBurnSoundRate;
-		nBurnYM2203SoundRate = 7680;
+		nBurnYM2203SoundRate = nBurnSoundRate;
 		BurnYM2203Update = YM2203UpdateNormal;
 	}
 

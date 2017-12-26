@@ -124,12 +124,6 @@
 
 #define DISABLE_FM 1
 
-
-/* include external DELTA-T unit (when needed) */
-#if (BUILD_YM2608||BUILD_YM2610||BUILD_YM2610B)
-	#include "ymdeltat.h"
-#endif
-
 /* shared function building option */
 #define BUILD_OPN (BUILD_YM2203||BUILD_YM2608||BUILD_YM2610||BUILD_YM2610B||BUILD_YM2612)
 #define BUILD_OPN_PRESCALER (BUILD_YM2203||BUILD_YM2608)
@@ -1438,7 +1432,11 @@ INLINE void chan_calc(FM_OPN *OPN, FM_CH *CH, int chnum)
 
 	*CH->mem_connect = CH->mem_value;	/* restore delayed sample (MEM) value to m2 or c2 */
 
+#ifdef DISABLE_FM
 	eg_out = ENV_QUIET; //volume_calc(&CH->SLOT[SLOT1]);
+#else
+	eg_out = volume_calc(&CH->SLOT[SLOT1]);
+#endif
 	{
 		INT32 out = CH->op1_out[0] + CH->op1_out[1];
 		CH->op1_out[0] = CH->op1_out[1];
@@ -1463,24 +1461,27 @@ INLINE void chan_calc(FM_OPN *OPN, FM_CH *CH, int chnum)
 		}
 	}
 
-	eg_out = ENV_QUIET; //volume_calc(&CH->SLOT[SLOT3]);
+#ifdef DISABLE_FM
+	eg_out = ENV_QUIET;
+#else
+	eg_out = volume_calc(&CH->SLOT[SLOT3]);
 	if( eg_out < ENV_QUIET )		/* SLOT 3 */
 		*CH->connect3 += op_calc(CH->SLOT[SLOT3].phase, eg_out, m2);
-
-	eg_out = ENV_QUIET; //volume_calc(&CH->SLOT[SLOT2]);
+	eg_out = volume_calc(&CH->SLOT[SLOT2]);
 	if( eg_out < ENV_QUIET )		/* SLOT 2 */
 		*CH->connect2 += op_calc(CH->SLOT[SLOT2].phase, eg_out, c1);
-
-	eg_out = ENV_QUIET; //volume_calc(&CH->SLOT[SLOT4]);
+	eg_out = volume_calc(&CH->SLOT[SLOT4]);
 	if( eg_out < ENV_QUIET )		/* SLOT 4 */
 		*CH->connect4 += op_calc(CH->SLOT[SLOT4].phase, eg_out, c2);
-
+#endif
 
 	/* store current MEM */
 	CH->mem_value = mem;
 
 	/* update phase counters AFTER output calculations */
-	if(0)//CH->pms)
+//	if(0)//CH->pms)
+#ifndef DISABLE_FM
+	if(CH->pms)
 	{
 		/* add support for 3 slot mode */
 		if ((OPN->ST.mode & 0xC0) && (chnum == 2))
@@ -1493,6 +1494,7 @@ INLINE void chan_calc(FM_OPN *OPN, FM_CH *CH, int chnum)
 		else update_phase_lfo_channel(OPN, CH);
 	}
 	else	/* no LFO phase modulation */
+#endif
 	{
 		CH->SLOT[SLOT1].phase += CH->SLOT[SLOT1].Incr;
 		CH->SLOT[SLOT2].phase += CH->SLOT[SLOT2].Incr;

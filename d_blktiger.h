@@ -7,6 +7,7 @@
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 INT32 BurnTimerUpdate(INT32 *nCycles);
+void BurnTimerEndFrame(INT32 *nCycles);
 //INT32 BurnTimerUpdate(INT32 nCycles);
 static INT32 DrvInit();
 static INT32 DrvFMInit();
@@ -37,6 +38,7 @@ PcmHn 			pcm7[7];
 #define VDP2_CRAM           (VDP2_BASE+0x100000)
 #define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
 //#define SND 1
+/*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT16 *remap4to16_lut = NULL;//[256];
 /*static*/ UINT16 *remap16_lut = NULL;//[768];
 /*static*/ UINT16 *cram_lut = NULL;//[4096];

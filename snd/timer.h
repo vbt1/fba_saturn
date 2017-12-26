@@ -36,4 +36,4 @@ void BurnTimerScan(INT32 nAction, INT32* pnMin);
 //INT32 BurnTimerUpdate(INT32 nCycles);
 INT32 BurnTimerUpdate(INT32 *nCycles);
 void BurnTimerUpdateEnd();
-void BurnTimerEndFrame(INT32 nCycles);
+void BurnTimerEndFrame(INT32 *nCycles);

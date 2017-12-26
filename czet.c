@@ -264,8 +264,6 @@ void CZetRunAdjust(int nCycles)
 
 void CZetRunEnd()
 {
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"CZetRunEnd                 ",4,70);
-
 	lastCZetCPUContext->nCyclesTotal -= lastCZetCPUContext->nCyclesLeft;
 	lastCZetCPUContext->nCyclesSegment -= lastCZetCPUContext->nCyclesLeft;
 //	lastCZetCPUContext->nCyclesTotal += lastCZetCPUContext->nCyclesLeft;

@@ -439,6 +439,7 @@ static INT32 MemIndex()
 //	coin_lockout	= Next; Next += 0x000001;
 
 	RamEnd			= Next;
+	CZ80Context		= Next; Next += (0x1080*2);
 	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
 	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
 	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
@@ -458,7 +459,6 @@ static INT32 DrvDoReset(INT32 full_reset)
 	if (full_reset) {
 		memset (AllRam, 0, RamEnd - AllRam);
 	}
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft full_reset     ",24,40);
 
 #ifdef RAZE0
 	z80_reset();
@@ -610,9 +610,9 @@ static INT32 DrvInit()
 	Set7PCM();
 	drawWindow(0,224,240,0,64);
 #ifndef RAZE
-	CZetInit(2);
+	CZetInit2(2,CZ80Context);
 #else
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 #endif
 
 
@@ -635,7 +635,6 @@ static INT32 DrvInit()
 	z80_set_out(blacktiger_out);
 #endif
 
-//	CZetInit(1);
 #ifndef RAZE
 	CZetOpen(1);
 	CZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM1);
@@ -647,13 +646,8 @@ static INT32 DrvInit()
 	CZetSetReadHandler(blacktiger_sound_read);
 	CZetClose();
 #endif
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"aft cpu init     ",24,40);
-
-//	GenericTilesInit();
 #ifdef SND
-//	BurnYM2203Init(2, ym_buffer, nYM2203Clockspeed, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
 	BurnYM2203Init(2, ym_buffer, nYM2203Clockspeed, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
-
 	BurnTimerAttachZet(nYM2203Clockspeed);
 #endif
 	DrvDoReset(1);
@@ -668,12 +662,19 @@ static INT32 DrvInit()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static INT32 DrvExit()
 {
+	SPR_InitSlaveSH();
 #ifdef SND
 	BurnYM2203Exit();
 #endif
-	CZetExit();
+	CZetExit2();
 
-	DrvZ80ROM0 = DrvZ80ROM1 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
+	for(int i=0;i<7;i++)
+	{
+		PCM_MeStop(pcm7[i]);
+		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+	}
+
+	CZ80Context = DrvZ80ROM0 = DrvZ80ROM1 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
 	DrvZ80RAM0	 = DrvZ80RAM1 = DrvPalRAM = DrvTxRAM = DrvBgRAM = DrvSprRAM = DrvSprBuf = NULL;
 /*	DrvScreenLayout =*/ DrvBgEnable = DrvFgEnable = DrvSprEnable = DrvVidBank = DrvRomBank	= NULL;
 	DrvPalette = DrvScrollx	= DrvScrolly = NULL;
@@ -727,16 +728,18 @@ static INT32 DrvFrame()
 			SPR_WaitEndSlaveSH();
 		}*/
 
+	CZetOpen(1);
+//	BurnTimerEndFrame(&nCyclesTotal[1]);
+	SPR_RunSlaveSH(BurnTimerEndFrame,&nCyclesTotal[1]);
+	INT32 nNext, nCyclesSegment;
+
 	for (UINT32 i = 0; i < nInterleave; i++) {
-		INT32 nNext, nCyclesSegment;
-
-
 #ifdef SND
 		// Run Z80 #2
-//		CZetOpen(1);
-//		INT32 nCycle = i * (nCyclesTotal[1] / nInterleave);
-//		BurnTimerUpdate(&nCycle);
-/*		SPR_RunSlaveSH((PARA_RTN*)BurnTimerUpdate,&nCycle);
+/*		CZetOpen(1);
+		INT32 nCycle = i * (nCyclesTotal[1] / nInterleave);
+		BurnTimerUpdate(&nCycle);
+		SPR_RunSlaveSH((PARA_RTN*)BurnTimerUpdate,&nCycle);
 		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		{
 			SPR_WaitEndSlaveSH();
@@ -769,15 +772,14 @@ static INT32 DrvFrame()
 #endif
 	}
 #ifdef SND
-/*	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		{
 			SPR_WaitEndSlaveSH();
-		}*/
-	CZetOpen(1);
-	BurnTimerEndFrame(nCyclesTotal[1]);
+		}
+//	CZetOpen(1);
+//	BurnTimerEndFrame(nCyclesTotal[1]);
 	signed short *nSoundBuffer = (signed short *)0x25a24000+nSoundBufferPos; //*(sizeof(signed short)));
 	YM2203UpdateNormal(nSoundBuffer, nBurnSoundLen);
-//	updateAY8910Sound();
 	CZetClose();
 
 	nSoundBufferPos+=(nBurnSoundLen); // DOIT etre deux fois la taille copiee
