@@ -1,5 +1,5 @@
 #include <math.h>
-#include "burnint.h"
+#include "../burnint.h"
 #include "msm6295.h"
 
 #define	true	1
@@ -328,17 +328,17 @@ void MSM6295Exit(int nChip)
 		MSM6295ChannelData[nChip][3-nChannel] = NULL;
 	}
 	if(pBuffer!=NULL)
-		free(pBuffer);
+//		free(pBuffer);
 	pBuffer = NULL;
 }
 
 int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, bool bAddSignal)
 {
-	if (nBurnSoundRate > 0) {
-		if (pBuffer == NULL) {
-			pBuffer = (int*)malloc(nBurnSoundRate * sizeof(int));
-		}
-	}
+//	if (nBurnSoundRate > 0) {
+//		if (pBuffer == NULL) {
+//			pBuffer = (int*)malloc(nBurnSoundRate * sizeof(int));
+//		}
+//	}
 
 	bAdd = bAddSignal;
 

@@ -312,7 +312,7 @@ void __fastcall zaxxon_writeA000(UINT16 address, UINT8 data)
 	DrvSprRAM[address & 0xff] = data;
 }
 
-static void zaxxon_coin_inserted(UINT8 param)
+/*static*/ void zaxxon_coin_inserted(UINT8 param)
 {
 	if (zaxxon_coin_last[param] != DrvJoy4[param])
 	{
@@ -399,7 +399,7 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xe0f0:
-			*interrupt_enable = data & 1;
+			interrupt_enable = data & 1;
 #ifndef RAZE
 			if (~data & 1) 
 			{
@@ -881,11 +881,21 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 /*static*/INT32 DrvExit()
 {
 	SPR_InitSlaveSH();
+	nBurnFunction = NULL;
+	nBurnLinescrollSize = 1;
+	nSoundBufferPos = 0;
 #ifndef RAZE
+	CZetOpen(0);
+	CZetSetWriteHandler(NULL);
+	CZetSetReadHandler(NULL);
+	CZetSetInHandler(NULL);
+	CZetSetOutHandler(NULL);
+	CZetClose();
 	CZetExit2();
 #else
 	z80_stop_emulating();
 #endif
+	DMA_ScuInit();
 //	DMA_CpuAllStop();
 
 //	nBurnFunction = NULL;
@@ -896,12 +906,13 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = DrvZ80ROM2 = NULL;
 	DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =DrvGfxROM3 = NULL;
 	DrvColPROM = DrvZ80RAM = DrvZ80RAM2 = DrvSprRAM = DrvVidRAM = DrvColRAM = NULL;
-	zaxxon_bg_pixmap = 	interrupt_enable	= zaxxon_fg_color = zaxxon_bg_color= NULL;
-	zaxxon_bg_enable = congo_color_bank= congo_fg_bank = congo_custom = NULL;
-/*	zaxxon_flipscreen =*/ zaxxon_coin_enable = soundlatch = NULL;
+	zaxxon_bg_pixmap = 	zaxxon_fg_color = zaxxon_bg_color= NULL;
+	zaxxon_bg_enable = /*congo_color_bank= congo_fg_bank = congo_custom =*/ NULL;
+/*	zaxxon_flipscreen =*/ zaxxon_coin_enable = /*soundlatch =*/ NULL;
 	zaxxon_coin_status = zaxxon_coin_last = sound_state = NULL;
 	zaxxon_bg_scroll = 0;
 	zaxxon_flipscreen = 0;
+	interrupt_enable = 0;
 //	free (AllMem);
 	AllMem = NULL;
 
@@ -917,7 +928,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	SaturnMem = NULL;
 
 //	DrvPalette = 	Palette = NULL;
-	futspy_sprite = 0;
+//	futspy_sprite = 0;
 	hardware_type = 0;
 	zaxxon_bg_scroll_x2=0;
 	DrvReset = 0;
@@ -1088,7 +1099,7 @@ int find_minimum_x(UINT8 value)
 #ifndef RAZE
 	CZetOpen(0);
 	CZetRun(38016);//(3041250 / 60);
-	if (*interrupt_enable) 
+	if (interrupt_enable) 
  	{
 		CZetRaiseIrq(0);
 //		CZetRun(1);
@@ -1096,7 +1107,7 @@ int find_minimum_x(UINT8 value)
 	CZetClose();
 #else
 	z80_emulate(3041250 / 60);
-	if (*interrupt_enable) 
+	if (interrupt_enable) 
 	{	
 		z80_raise_IRQ(0);
 //		z80_emulate(0);
@@ -1251,7 +1262,7 @@ void szaxxon_decode()
 
 	return nRet;
 }
-
+#if 0
 void futspy_decode()
 {
 	/*static*/const UINT8 convtable[32][4] =
@@ -1349,6 +1360,7 @@ void nprinces_decode()
 
 	return DrvInit();
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 // el piratero : utilise dma_scu et retester !
 void copyBitmap()
@@ -1470,22 +1482,22 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	DrvVidRAM		= Next; Next += 0x000400;
 	DrvColRAM		= Next; Next += 0x000400;
 
-	interrupt_enable	= Next; Next += 0x000001;
+//	interrupt_enable	= Next; Next += 0x000001;
 
 	zaxxon_fg_color		= Next; Next += 0x000001;
 	zaxxon_bg_color		= Next; Next += 0x000001;
 	zaxxon_bg_enable	= Next; Next += 0x000001;
-	congo_color_bank	= Next; Next += 0x000001;
-	congo_fg_bank		= Next; Next += 0x000001;
-	congo_custom		= Next; Next += 0x000004;
+//	congo_color_bank	= Next; Next += 0x000001;
+//	congo_fg_bank		= Next; Next += 0x000001;
+//	congo_custom		= Next; Next += 0x000004;
 //	zaxxon_flipscreen	= Next; Next += 0x000001;
 	zaxxon_coin_enable	= Next; Next += 0x000004;
 	zaxxon_coin_status	= Next; Next += 0x000004;
 	zaxxon_coin_last	= Next; Next += 0x000004;
 
-	zaxxon_bg_scroll	= (UINT32*)Next; Next += 0x000001 * sizeof(INT32);
+//	zaxxon_bg_scroll	= (UINT32*)Next; Next += 0x000001 * sizeof(INT32);
 
-	soundlatch		= Next; Next += 0x000001;
+//	soundlatch		= Next; Next += 0x000001;
 
 	sound_state		= Next; Next += 0x000003;
 
@@ -1509,7 +1521,7 @@ void DrvInitSaturn()
 	ss_OtherPri     = (SclOtherPriRegister *)SS_OTHR;
 	ss_BgColMix		= (SclBgColMixRegister *)SS_BGMIX;
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-	ss_scl			= (Fixed32 *)SS_SCL;
+//	ss_scl			= (Fixed32 *)SS_SCL;
 
 	nBurnSprites = 36;
 

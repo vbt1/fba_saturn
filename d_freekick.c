@@ -64,7 +64,7 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 
-static INT32 DrvDoReset()
+/*static*/ INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 	coin = 0;
@@ -84,7 +84,7 @@ static INT32 DrvDoReset()
 	return 0;
 }
 
-static void pbillrd_draw_sprite(INT32 offs)
+/*static*/ void pbillrd_draw_sprite(INT32 offs)
 {
 	INT32 sx = DrvSprRAM[offs + 3];
 	INT32 sy = 224 - DrvSprRAM[offs + 2];
@@ -161,7 +161,7 @@ void freekick_draw_sprite(INT32 offs)
 	}
 }
 
-static void gigas_draw_sprite(INT32 offs)
+/*static*/ void gigas_draw_sprite(INT32 offs)
 {
 	INT32 sx = 224 - DrvSprRAM[offs + 3];
 	INT32 sy = 240 - DrvSprRAM[offs + 2];
@@ -184,7 +184,7 @@ static void gigas_draw_sprite(INT32 offs)
 	}
 }
 
-static INT32 DrvDraw()
+/*static*/ INT32 DrvDraw()
 {
 	// Draw tiles
 	for (INT32 offs = 0x3ff; offs >= 0; offs--)
@@ -204,7 +204,7 @@ static INT32 DrvDraw()
 	return 0;
 }
 
-static void __fastcall freekick_write(UINT16 address, UINT8 data)
+/*static*/ void __fastcall freekick_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -304,7 +304,7 @@ UINT8 __fastcall freekick_read(UINT16 address)
 	return 0;
 }
 
-static void pbillrd_setbank(UINT8 banknum)
+/*static*/ void pbillrd_setbank(UINT8 banknum)
 {
 	DrvZ80Bank0 = banknum; // for savestates
 
@@ -319,7 +319,7 @@ static void pbillrd_setbank(UINT8 banknum)
 //	}
 }
 
-static void __fastcall gigas_write(UINT16 address, UINT8 data)
+/*static*/ void __fastcall gigas_write(UINT16 address, UINT8 data)
 {
 //	AM_RANGE(0xe000, 0xe000) AM_WRITENOP
 //	AM_RANGE(0xe002, 0xe003) AM_WRITE(coin_w)
@@ -425,32 +425,32 @@ void __fastcall freekick_out(UINT16 address, UINT8 data)
 	}
 }
 
-static UINT8 freekick_ppiread_1_c()
+/*static*/ UINT8 freekick_ppiread_1_c()
 {
 	return DrvSndROM[romaddr & 0x7fff];
 }
 
-static void freekick_ppi_write_1_a(UINT8 data)
+/*static*/ void freekick_ppi_write_1_a(UINT8 data)
 {
 	romaddr = (romaddr & 0xff00) | data;
 }
 
-static void freekick_ppi_write_1_b(UINT8 data)
+/*static*/ void freekick_ppi_write_1_b(UINT8 data)
 {
 	romaddr = (romaddr & 0x00ff) | (data << 8);
 }
 
-static UINT8 freekick_ppiread_2_a()
+/*static*/ UINT8 freekick_ppiread_2_a()
 {
 	return DrvDip[0];
 }
 
-static UINT8 freekick_ppiread_2_b()
+/*static*/ UINT8 freekick_ppiread_2_b()
 {
 	return DrvDip[1];
 }
 
-static UINT8 freekick_ppiread_2_c()
+/*static*/ UINT8 freekick_ppiread_2_c()
 {
 	return DrvDip[2];
 }
@@ -485,7 +485,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 }
 
 
-static INT32 MemIndex()
+/*static*/ INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
@@ -502,8 +502,8 @@ static INT32 MemIndex()
 	MC8123Key		= Next; Next += 0x02000;
 	DrvColPROM		= Next; Next += 0x00600;
 	DrvPalette			= (UINT16*)colBgAddr;//(UINT32*)Next; Next += 0x0400 * sizeof(UINT32); // à faire
+	CZ80Context		= Next; Next += 0x1080;
 	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
-
 	AllRam			= Next;
 
 	DrvRAM			= Next; Next += 0x02000; // 0x0e000 - 0x0c000
@@ -518,7 +518,7 @@ static INT32 MemIndex()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvGfxDecode()
+/*static*/ void DrvGfxDecode()
 {
 	INT32 Planes0[3] = { RGN_FRAC(0xc000, 2,3), RGN_FRAC(0xc000, 1,3), RGN_FRAC(0xc000, 0,3) };
 	INT32 XOffs0[8]  = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -540,12 +540,12 @@ static void DrvGfxDecode()
 	}
 }
 
-static void DrvPaletteInit()
+/*static*/ void DrvPaletteInit()
 {
-	INT32 len = 0x200;
-	int delta = 0;
+	UINT32 len = 0x200;
+	UINT32 delta = 0;
 
-	for (INT32 i = 0; i < len; i++)
+	for (UINT32 i = 0; i < len; i++)
 	{
 		INT32 bit0,bit1,bit2,bit3,r,g,b;
 
@@ -578,13 +578,13 @@ static void DrvPaletteInit()
 	}
 }
 
-/*static INT32 GigasDecode()
+/* INT32 GigasDecode()
 {
 	mc8123_decrypt_rom(0, 0, DrvMainROM, DrvMainROM + 0x10000, MC8123Key);
 	return 0;
 }*/
 
-static INT32 LoadRoms()
+/*static*/ INT32 LoadRoms()
 {
 	INT32 rom_number = 0;
 
@@ -670,7 +670,7 @@ static INT32 LoadRoms()
 	return 0;
 }
 
-static INT32 DrvFreeKickInit()
+/*static*/ INT32 DrvFreeKickInit()
 {
 	DrvInitSaturn();
 
@@ -694,7 +694,7 @@ static INT32 DrvFreeKickInit()
 
 	DrvGfxDecode();
 
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 //	AM_RANGE(0x0000, 0xcfff) AM_ROM
 	CZetMapArea(0x0000, 0xcfff, 0, DrvMainROM);
@@ -746,7 +746,7 @@ static INT32 DrvFreeKickInit()
 	return 0;
 }
 
-static INT32 DrvInit()
+/*static*/ INT32 DrvInit()
 {
 	DrvInitSaturn();
 
@@ -775,7 +775,7 @@ static INT32 DrvInit()
 	DrvPaletteInit();
 	DrvGfxDecode();
 
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 
 	if (pbillrdmode) {
@@ -875,7 +875,7 @@ static INT32 DrvInit()
 	}	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initLayers()
+/*static*/ void initLayers()
 {
     Uint16	CycleTb[]={
 		0xff56, 0xffff, //A0
@@ -917,7 +917,7 @@ static void initLayers()
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initColors()
+/*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 //	colBgAddr2  = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
@@ -929,7 +929,7 @@ static void initColors()
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut(void)
+/*static*/ void make_lut(void)
 {
 /*	for (UINT32 i = 0; i<0x400; i++)
 	{
@@ -954,7 +954,7 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvInitSaturn()
+/*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 
@@ -1007,17 +1007,19 @@ static void DrvInitSaturn()
 	drawWindow(0,240,240,4,68);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvExit()
+/*static*/ INT32 DrvExit()
 {
+	SPR_InitSlaveSH();
 //	GenericTilesExit();
-	CZetExit();
-//	SN76496Exit();
+	CZetExit2();
 	ppi8255_exit();
+//	SN76496Exit();
 
-	MemEnd = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
+	CZ80Context = MemEnd = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
 	DrvVidRAM = DrvSprRAM = DrvColRAM = DrvGfxROM0 = DrvGfxROM1 = DrvGfxTMP0 =DrvGfxTMP1 = DrvColPROM = NULL;
 	MC8123Key = NULL;
 	DrvPalette = map_offset_lut = NULL;
+	DrawSprite = NULL;
 	free (AllMem);
 	AllMem = NULL;
 
@@ -1030,7 +1032,7 @@ static INT32 DrvExit()
 	return 0;
 }
 
-static INT32 DrvFrame()
+/*static*/ INT32 DrvFrame()
 {
 	if (DrvReset) {
 		DrvDoReset();
@@ -1095,7 +1097,7 @@ static INT32 DrvFrame()
 	return 0;
 }
 
-static INT32 pbillrdInit()
+/*static*/ INT32 pbillrdInit()
 {
 	pbillrdmode = 1;
 

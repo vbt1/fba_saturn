@@ -458,6 +458,7 @@ static INT32 DrvDoReset(INT32 full_reset)
 {
 	if (full_reset) {
 		memset (AllRam, 0, RamEnd - AllRam);
+		memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
 	}
 
 #ifdef RAZE0
@@ -590,7 +591,6 @@ static INT32 DrvInit()
 	memset(AllMem, 0, nLen);
 	MemIndex();
 	make_lut();
-
 	{
 		for (INT32 i = 0; i < 5; i++) {
 			if (BurnLoadRom(DrvZ80ROM0 + i * 0x10000, 0  + i, 1)) return 1;
@@ -604,10 +604,11 @@ static INT32 DrvInit()
 			if (BurnLoadRom(DrvGfxROM1 + i * 0x10000, 7  + i, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM2 + i * 0x10000, 11 + i, 1)) return 1;
 		}
-
 		DrvGfxDecode();
 	}
+	PCM_MeStop(pcm);
 	Set7PCM();
+
 	drawWindow(0,224,240,0,64);
 #ifndef RAZE
 	CZetInit2(2,CZ80Context);
@@ -663,6 +664,15 @@ static INT32 DrvInit()
 static INT32 DrvExit()
 {
 	SPR_InitSlaveSH();
+
+	nSoundBufferPos=0;
+#ifdef RAZE0
+	z80_stop_emulating();
+	z80_add_write(0xc000, 0xdfff, 1, (void *)NULL);
+	z80_set_in((unsigned char (*)(unsigned short))NULL);
+	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
+#endif
+
 #ifdef SND
 	BurnYM2203Exit();
 #endif

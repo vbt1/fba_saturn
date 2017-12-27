@@ -11,62 +11,62 @@ UINT16 *map_offset_lut = NULL;
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ void DrvInitSaturn();
-static INT32 WizInit();
-static INT32 KungfutInit();
-static INT32 StingerInit();
-static INT32 ScionInit();
+/*static*/ INT32 WizInit();
+/*static*/ INT32 KungfutInit();
+/*static*/ INT32 StingerInit();
+/*static*/ INT32 ScionInit();
 
-static INT32 DrvInit(int (*RomLoadCallback)(), int rotated);
-static INT32  DrvExit();
-static INT32  DrvFrame();
-//static INT32  DrvDraw();
+/*static*/ INT32 DrvInit(int (*RomLoadCallback)(), int rotated);
+/*static*/ INT32  DrvExit();
+/*static*/ INT32  DrvFrame();
+///*static*/ INT32  DrvDraw();
 
-static void make_lut(int rotated);
+/*static*/ void make_lut(int rotated);
 INT32 (*DrvDraw)();
 
-static UINT8 *AllMem = NULL;
-static UINT8 *MemEnd = NULL;
-static UINT8 *AllRam = NULL;
-static UINT8 *RamEnd = NULL;
-static UINT8 *DrvZ80ROM0 = NULL;
-static UINT8 *DrvZ80Dec = NULL;
-static UINT8 *DrvZ80ROM1 = NULL;
-static UINT8 *DrvGfxROM0 = NULL;
-static UINT8 *DrvGfxROM0b = NULL;
-static UINT8 *DrvGfxROM1 = NULL;
-static UINT8 *DrvColPROM = NULL;
-static UINT8 *DrvZ80RAM0 = NULL;
-static UINT8 *DrvZ80RAM1 = NULL;
-static UINT8 *DrvVidRAM0 = NULL;
-static UINT8 *DrvVidRAM1 = NULL;
-static UINT8 *DrvColRAM0 = NULL;
-static UINT8 *DrvColRAM1 = NULL;
-static UINT8 *DrvSprRAM0 = NULL;
-static UINT8 *DrvSprRAM1 = NULL;
+/*static*/ UINT8 *AllMem = NULL;
+/*static*/ UINT8 *MemEnd = NULL;
+/*static*/ UINT8 *AllRam = NULL;
+/*static*/ UINT8 *RamEnd = NULL;
+/*static*/ UINT8 *DrvZ80ROM0 = NULL;
+/*static*/ UINT8 *DrvZ80Dec = NULL;
+/*static*/ UINT8 *DrvZ80ROM1 = NULL;
+/*static*/ UINT8 *DrvGfxROM0 = NULL;
+/*static*/ UINT8 *DrvGfxROM0b = NULL;
+/*static*/ UINT8 *DrvGfxROM1 = NULL;
+/*static*/ UINT8 *DrvColPROM = NULL;
+/*static*/ UINT8 *DrvZ80RAM0 = NULL;
+/*static*/ UINT8 *DrvZ80RAM1 = NULL;
+/*static*/ UINT8 *DrvVidRAM0 = NULL;
+/*static*/ UINT8 *DrvVidRAM1 = NULL;
+/*static*/ UINT8 *DrvColRAM0 = NULL;
+/*static*/ UINT8 *DrvColRAM1 = NULL;
+/*static*/ UINT8 *DrvSprRAM0 = NULL;
+/*static*/ UINT8 *DrvSprRAM1 = NULL;
 
-static UINT16 *DrvPalette = NULL;
-//static UINT8 DrvRecalc;
+/*static*/ UINT16 *DrvPalette = NULL;
+///*static*/ UINT8 DrvRecalc;
 
-static UINT8 soundlatch = 0;
-static UINT8 *sprite_bank = NULL;
-static UINT8 *interrupt_enable = NULL;
-static UINT8 *palette_bank = NULL;
-static UINT8 *char_bank_select = NULL;
-static UINT8 *screen_flip = NULL;
-static UINT8 *background_color = NULL;
+/*static*/ UINT8 soundlatch = 0;
+/*static*/ UINT8 *sprite_bank = NULL;
+/*static*/ UINT8 *interrupt_enable = NULL;
+/*static*/ UINT8 *palette_bank = NULL;
+/*static*/ UINT8 *char_bank_select = NULL;
+/*static*/ UINT8 *screen_flip = NULL;
+/*static*/ UINT8 *background_color = NULL;
 
-static INT16* pFMBuffer = NULL;
-static INT16* pAY8910Buffer[9];
+/*static*/ INT16* pFMBuffer = NULL;
+/*static*/ INT16* pAY8910Buffer[9];
 
-static UINT8 DrvInputs[2] = {0,0};
-static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvDips[2] = {0,0};
-static UINT8 DrvReset = 0;
-static UINT8 Wizmode = 0;
-static UINT8 Scionmodeoffset = 0;
+/*static*/ UINT8 DrvInputs[2] = {0,0};
+/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvDips[2] = {0,0};
+/*static*/ UINT8 DrvReset = 0;
+/*static*/ UINT8 Wizmode = 0;
+/*static*/ UINT8 Scionmodeoffset = 0;
 
-static struct BurnInputInfo WizInputList[] = {
+/*static*/ struct BurnInputInfo WizInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 2,	"p1 up"		},
@@ -92,7 +92,7 @@ static struct BurnInputInfo WizInputList[] = {
 
 STDINPUTINFO(Wiz)
 
-static struct BurnInputInfo ScionInputList[] = {
+/*static*/ struct BurnInputInfo ScionInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 up"},
@@ -118,7 +118,7 @@ static struct BurnInputInfo ScionInputList[] = {
 
 STDINPUTINFO(Scion)
 
-static struct BurnInputInfo StingerInputList[] = {
+/*static*/ struct BurnInputInfo StingerInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 up"},
@@ -144,7 +144,7 @@ static struct BurnInputInfo StingerInputList[] = {
 
 STDINPUTINFO(Stinger)
 
-static struct BurnInputInfo KungfutInputList[] = {
+/*static*/ struct BurnInputInfo KungfutInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 start"},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 left"},
@@ -167,7 +167,7 @@ static struct BurnInputInfo KungfutInputList[] = {
 
 STDINPUTINFO(Kungfut)
 
-static struct BurnDIPInfo StingerDIPList[]=
+/*static*/ struct BurnDIPInfo StingerDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xef, NULL		},
 	{0x12, 0xff, 0xff, 0xae, NULL		},
@@ -229,7 +229,7 @@ static struct BurnDIPInfo StingerDIPList[]=
 
 STDDIPINFO(Stinger)
 
-static struct BurnDIPInfo Stinger2DIPList[]=
+/*static*/ struct BurnDIPInfo Stinger2DIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xef, NULL		},
 	{0x12, 0xff, 0xff, 0xa0, NULL		},
@@ -293,7 +293,7 @@ static struct BurnDIPInfo Stinger2DIPList[]=
 
 STDDIPINFO(Stinger2)
 
-static struct BurnDIPInfo ScionDIPList[]=
+/*static*/ struct BurnDIPInfo ScionDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x05, NULL		},
 	{0x12, 0xff, 0xff, 0x00, NULL		},
@@ -354,7 +354,7 @@ static struct BurnDIPInfo ScionDIPList[]=
 
 STDDIPINFO(Scion)
 
-static struct BurnDIPInfo KungfutDIPList[]=
+/*static*/ struct BurnDIPInfo KungfutDIPList[]=
 {
 	{0x0e, 0xff, 0xff, 0x20, NULL		},
 	{0x0f, 0xff, 0xff, 0x0c, NULL		},
@@ -418,7 +418,7 @@ static struct BurnDIPInfo KungfutDIPList[]=
 STDDIPINFO(Kungfut)
 
 
-static struct BurnDIPInfo WizDIPList[]=
+/*static*/ struct BurnDIPInfo WizDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x00, NULL			},
 	{0x12, 0xff, 0xff, 0x10, NULL			},
@@ -468,7 +468,7 @@ static struct BurnDIPInfo WizDIPList[]=
 
 STDDIPINFO(Wiz)
 
-static struct BurnRomInfo wizRomDesc[] = {
+/*static*/ struct BurnRomInfo wizRomDesc[] = {
 	{ "ic07_01.bin",	0x4000, 0xc05f2c78, 1 }, //  0 maincpu
 	{ "ic05_03.bin",	0x4000, 0x7978d879, 1 }, //  1
 	{ "ic06_02.bin",	0x4000, 0x9c406ad2, 1 }, //  2
@@ -493,7 +493,7 @@ STD_ROM_FN(wiz)
 
 // Kung-Fu Taikun
 
-static struct BurnRomInfo kungfutRomDesc[] = {
+/*static*/ struct BurnRomInfo kungfutRomDesc[] = {
 	{ "p1.bin",	0x4000, 0xb1e56960, 1 }, //  0 maincpu
 	{ "p3.bin",	0x4000, 0x6fc346f8, 1 }, //  1
 	{ "p2.bin",	0x4000, 0x042cc9c5, 1 }, //  2
@@ -518,7 +518,7 @@ STD_ROM_FN(kungfut)
 
 // Stinger
 
-static struct BurnRomInfo stingerRomDesc[] = {
+/*static*/ struct BurnRomInfo stingerRomDesc[] = {
 	{ "15j.bin",	0x2000, 0x1a2ca600, 1 }, //  0 maincpu
 	{ "26j.bin",	0x2000, 0x957cd39c, 1 }, //  1
 	{ "38j.bin",	0x2000, 0x404c932e, 1 }, //  2
@@ -545,7 +545,7 @@ STD_ROM_FN(stinger)
 
 // Scion
 
-static struct BurnRomInfo scionRomDesc[] = {
+/*static*/ struct BurnRomInfo scionRomDesc[] = {
 	{ "sc1.bin",	0x2000, 0x8dcad575, 1 }, //  0 maincpu
 	{ "sc2.bin",	0x2000, 0xf608e0ba, 1 }, //  1
 	{ "sc3.bin",	0x2000, 0x915289b9, 1 }, //  2

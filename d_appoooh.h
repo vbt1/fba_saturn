@@ -3,8 +3,8 @@
 
 #include "burnint.h"
 #include "saturn/ovl.h"
-#include "sn76496.h"
-#include "msm5205.h"
+#include "snd/sn76496.h"
+#include "snd/msm5205.h"
 #define SOUND_LEN 128
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvInit();
@@ -16,9 +16,6 @@ static void make_lut(void);
 static void DrvInitSaturn();
 static void Set4PCM();
 void dummy();
-
-#include "sn76496.h"
-//#include "msm5205.h"
 
 PcmHn 			pcm4[4];
 #define	PCM_ADDR	((void*)0x25a20000)

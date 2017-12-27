@@ -1,10 +1,8 @@
-#include "burnint.h"
-#include "burn_sound.h"
+#include "../burnint.h"
+#include "../burn_sound.h"
 #include "namco_snd.h"
 
 #define SOUNDRATE   7680L //
-#define MAX_VOICES 8
-#define MAX_VOLUME 16
 #define INTERNAL_RATE	192000
 #define MIXLEVEL	(1 << (16 - 4 - 4))
 #define OUTPUT_LEVEL(n)		((n) * MIXLEVEL / chip->num_voices)
@@ -14,46 +12,12 @@
 UINT8* NamcoSoundProm = NULL;
 INT16 *p = (INT16*)0x00200000;
 
-typedef struct
-{
-	UINT32 frequency;
-	UINT32 counter;
-	INT32 volume[2];
-	INT32 noise_sw;
-	INT32 noise_state;
-	INT32 noise_seed;
-	UINT32 noise_counter;
-	INT32 noise_hold;
-	INT32 waveform_select;
-} sound_channel;
+/*static*/ UINT8 namco_soundregs[0x40];
+/*static*/ UINT8 *namco_wavedata = NULL;
 
-static UINT8 namco_soundregs[0x40];
-static UINT8 *namco_wavedata = NULL;
+/*static*/ struct namco_sound *chip = NULL;
 
-struct namco_sound
-{
-	sound_channel channel_list[MAX_VOICES];
-	sound_channel *last_channel;
-
-	INT32 wave_size;
-	INT32 num_voices;
-	INT32 sound_enable;
-	INT32 namco_clock;
-	INT32 sample_rate;
-	INT32 f_fracbits;
-	INT32 stereo;
-
-	INT16 *waveform[MAX_VOLUME];
-	
-	INT32 update_step;
-	
-	double gain[2];
-	INT32 output_dir[2];
-};
-
-static struct namco_sound *chip = NULL;
-
-static void update_namco_waveform(INT32 offset, UINT8 data)
+/*static*/ void update_namco_waveform(INT32 offset, UINT8 data)
 {
 	if (chip->wave_size == 1)
 	{
@@ -79,7 +43,7 @@ static void update_namco_waveform(INT32 offset, UINT8 data)
 	}
 }
 
-static inline UINT32 namco_update_one(INT16 *buffer, INT32 length, const INT16 *wave, UINT32 counter, UINT32 freq)
+/*static*/ inline UINT32 namco_update_one(INT16 *buffer, INT32 length, const INT16 *wave, UINT32 counter, UINT32 freq)
 {
 	while (length-- > 0)
 	{
@@ -231,7 +195,7 @@ void NamcoSoundWrite(UINT32 offset, UINT8 data)
 	}
 }
 
-static void namcos1_sound_write(INT32 offset, INT32 data)
+/*static*/ void namcos1_sound_write(INT32 offset, INT32 data)
 {
 	/* verify the offset */
 	if (offset > 63)
@@ -280,7 +244,7 @@ static void namcos1_sound_write(INT32 offset, INT32 data)
 	}
 }
 
-static INT32 build_decoded_waveform()
+/*static*/ INT32 build_decoded_waveform()
 {
 	INT32 size;
 	INT32 offset;
@@ -384,6 +348,7 @@ void NamcoSoundExit()
 	}
 
 //	free(p);
+	memset(p,0x00,0x10000);
 	p = NULL;
 
 //	if (namco_soundregs) {
@@ -395,9 +360,6 @@ void NamcoSoundExit()
 		free(chip);
 		chip = NULL;
 	}
-	
-
-	
 //	DebugSnd_NamcoSndInitted = 0;
 }
 

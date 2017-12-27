@@ -1,5 +1,5 @@
-#include "burnint.h"
-#include "burn_sound.h"
+#include "../burnint.h"
+#include "../burn_sound.h"
 #include "sn76496.h"
 
 #define MAX_SN76496_CHIPS 5

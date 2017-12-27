@@ -1,7 +1,7 @@
 #ifndef _D_BANKP_H_
 #define _D_BANKP_H_
 
-#include "sn76496.h"
+#include "snd/sn76496.h"
 #include "burnint.h"
 #include "saturn/ovl.h"
 #include "raze/raze.h"

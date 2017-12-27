@@ -8,7 +8,7 @@
 
 #include "tms9928a.h"
 #include "8255ppi.h"
-#include "sn76496.h"
+#include "snd/sn76496.h"
 #ifdef RAZE
 #include "raze\raze.h"
 #endif

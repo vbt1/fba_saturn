@@ -3,7 +3,7 @@
 
 #include "burnint.h"
 #include "saturn/ovl.h"
-#include "sn76496.h"
+#include "snd/sn76496.h"
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 int CongoInit();
@@ -15,79 +15,79 @@ int DrvFrame();
 int DrvDraw();
 void make_lut();
 
-static UINT8 *SaturnMem = NULL;
-static UINT8 *bitmap = NULL;
-static UINT8 *ss_map264 = NULL;
-static INT16 *sx_lut = NULL;
-static INT16 *sy_lut = NULL;
-static UINT16 *charaddr_lut = NULL;
-static UINT32 *colpromoffs_lut = NULL;
-static UINT32 *map_lut = NULL;
-//static UINT32 srcxmask[240][256];
-static UINT32 srcxmask[240][256];
-//static UINT32 srcymask[256][240];
+/*static*/ UINT8 *SaturnMem = NULL;
+/*static*/ UINT8 *bitmap = NULL;
+/*static*/ UINT8 *ss_map264 = NULL;
+/*static*/ INT16 *sx_lut = NULL;
+/*static*/ INT16 *sy_lut = NULL;
+/*static*/ UINT16 *charaddr_lut = NULL;
+/*static*/ UINT32 *colpromoffs_lut = NULL;
+/*static*/ UINT32 *map_lut = NULL;
+///*static*/ UINT32 srcxmask[240][256];
+/*static*/ UINT32 srcxmask[240][256];
+///*static*/ UINT32 srcymask[256][240];
 
-//static UINT32 **srcxmask;//[240][256];
-static UINT32  zaxxon_bg_scroll_x2=0;
-//static UINT8 sound_state[3]={0,0,0};
+///*static*/ UINT32 **srcxmask;//[240][256];
+/*static*/ UINT32  zaxxon_bg_scroll_x2=0;
+///*static*/ UINT8 sound_state[3]={0,0,0};
 
-static UINT8 *AllMem = NULL;
-static UINT8 *MemEnd = NULL;
-static UINT8 *AllRam = NULL;
-static UINT8 *RamEnd = NULL;
-static UINT8 *DrvZ80ROM = NULL;
-static UINT8 *DrvZ80DecROM = NULL;
-static UINT8 *DrvZ80ROM2 = NULL;
-static UINT8 *DrvGfxROM0 = NULL;
-static UINT8 *DrvGfxROM1 = NULL;
-static UINT8 *DrvGfxROM2 = NULL;
-static UINT8 *DrvGfxROM3 = NULL;
-static UINT8 *DrvColPROM = NULL;
-static UINT8 *DrvZ80RAM = NULL;
-static UINT8 *DrvZ80RAM2 = NULL;
-static UINT8 *DrvSprRAM = NULL;
-static UINT8 *DrvVidRAM = NULL;
-static UINT8 *DrvColRAM = NULL;
-static UINT8 *CZ80Context = NULL;
+/*static*/ UINT8 *AllMem = NULL;
+/*static*/ UINT8 *MemEnd = NULL;
+/*static*/ UINT8 *AllRam = NULL;
+/*static*/ UINT8 *RamEnd = NULL;
+/*static*/ UINT8 *DrvZ80ROM = NULL;
+/*static*/ UINT8 *DrvZ80DecROM = NULL;
+/*static*/ UINT8 *DrvZ80ROM2 = NULL;
+/*static*/ UINT8 *DrvGfxROM0 = NULL;
+/*static*/ UINT8 *DrvGfxROM1 = NULL;
+/*static*/ UINT8 *DrvGfxROM2 = NULL;
+/*static*/ UINT8 *DrvGfxROM3 = NULL;
+/*static*/ UINT8 *DrvColPROM = NULL;
+/*static*/ UINT8 *DrvZ80RAM = NULL;
+/*static*/ UINT8 *DrvZ80RAM2 = NULL;
+/*static*/ UINT8 *DrvSprRAM = NULL;
+/*static*/ UINT8 *DrvVidRAM = NULL;
+/*static*/ UINT8 *DrvColRAM = NULL;
+/*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ //UINT32  *DrvPalette;
 /*static*/ //UINT32  *Palette;
 
 /*static*/ //UINT8 DrvRecalc;
 
-static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy4[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvDips[2] = {0,0};
-static UINT8 DrvInputs[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvReset = 0;
+/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy4[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvDips[2] = {0,0};
+/*static*/ UINT8 DrvInputs[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvReset = 0;
 
 
-static UINT8 *interrupt_enable = NULL;
+/*static*/ UINT8 interrupt_enable = 0;
 
-static UINT8 *zaxxon_fg_color = NULL;
-static UINT8 *zaxxon_bg_color = NULL;
-static UINT8 *zaxxon_bg_enable = NULL;
-static UINT32  zaxxon_bg_scroll = 0;
-static UINT8 zaxxon_flipscreen = 0;
-static UINT8 *zaxxon_coin_enable = NULL;
-static UINT8 *zaxxon_coin_status = NULL;
-static UINT8 *zaxxon_coin_last = NULL;
+/*static*/ UINT8 *zaxxon_fg_color = NULL;
+/*static*/ UINT8 *zaxxon_bg_color = NULL;
+/*static*/ UINT8 *zaxxon_bg_enable = NULL;
+/*static*/ UINT32  zaxxon_bg_scroll = 0;
+/*static*/ UINT8 zaxxon_flipscreen = 0;
+/*static*/ UINT8 *zaxxon_coin_enable = NULL;
+/*static*/ UINT8 *zaxxon_coin_status = NULL;
+/*static*/ UINT8 *zaxxon_coin_last = NULL;
 
-static UINT8 *congo_color_bank = NULL;
-static UINT8 *congo_fg_bank = NULL;
-static UINT8 *congo_custom = NULL;
+/*static*/ //UINT8 *congo_color_bank = NULL;
+/*static*/// UINT8 *congo_fg_bank = NULL;
+/*static*/// UINT8 *congo_custom = NULL;
 
-static UINT8 *zaxxon_bg_pixmap = NULL;
+/*static*/ UINT8 *zaxxon_bg_pixmap = NULL;
 
-static UINT8 *soundlatch = NULL;
+/*static*/// UINT8 *soundlatch = NULL;
 
-static UINT8 *sound_state = NULL;
+/*static*/ UINT8 *sound_state = NULL;
 
-static INT32 futspy_sprite = 0;
-static INT32 hardware_type = 0;
+/*static*/ INT32 futspy_sprite = 0;
+/*static*/ INT32 hardware_type = 0;
 
-static struct BurnInputInfo ZaxxonInputList[] = {
+/*static*/ struct BurnInputInfo ZaxxonInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 2,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 up"},
@@ -112,7 +112,7 @@ static struct BurnInputInfo ZaxxonInputList[] = {
 
 STDINPUTINFO(Zaxxon)
 
-static struct BurnInputInfo CongoBongoInputList[] = {
+/*static*/ struct BurnInputInfo CongoBongoInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 6,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 3,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 up"},
@@ -138,7 +138,7 @@ static struct BurnInputInfo CongoBongoInputList[] = {
 STDINPUTINFO(CongoBongo)
 
 
-static struct BurnDIPInfo ZaxxonDIPList[]=
+/*static*/ struct BurnDIPInfo ZaxxonDIPList[]=
 {
 	// Default Values
 	{0x10, 0xff, 0xff, 0x7f, NULL		},
@@ -216,7 +216,7 @@ STDDIPINFO(Zaxxon)
 
 // Congo Bongo
 
-static struct BurnRomInfo congoRomDesc[] = {
+/*static*/ struct BurnRomInfo congoRomDesc[] = {
 	{ "congo1.u35",		0x2000, 0x09355b5b, 1 }, //  0 main
 	{ "congo2.u34",		0x2000, 0x1c5e30ae, 1 }, //  1
 	{ "congo3.u33",		0x2000, 0x5ee1132c, 1 }, //  2
@@ -248,7 +248,7 @@ STD_ROM_FN(congo)
 
 // Zaxxon (set 1)
 
-static struct BurnRomInfo zaxxonRomDesc[] = {
+/*static*/ struct BurnRomInfo zaxxonRomDesc[] = {
 	{ "zaxxon3.u27",	0x2000, 0x6e2b4a30, 1 }, //  0 main
 	{ "zaxxon2.u28",	0x2000, 0x1c9ea398, 1 }, //  1
 	{ "zaxxon1.u29",	0x1000, 0x1c123ef9, 1 }, //  2
@@ -276,7 +276,7 @@ static struct BurnRomInfo zaxxonRomDesc[] = {
 STD_ROM_PICK(zaxxon)
 STD_ROM_FN(zaxxon)
 
-static struct BurnRomInfo zaxxonbRomDesc[] = {
+/*static*/ struct BurnRomInfo zaxxonbRomDesc[] = {
 	{ "zaxxonb3.u27",	0x2000, 0x125bca1c, 1 }, //  0 main
 	{ "zaxxonb2.u28",	0x2000, 0xc088df92, 1 }, //  1
 	{ "zaxxonb1.u29",	0x1000, 0xe7bdc417, 1 }, //  2
@@ -306,7 +306,7 @@ STD_ROM_FN(zaxxonb)
 
 // Super Zaxxon
 
-static struct BurnRomInfo szaxxonRomDesc[] = {
+/*static*/ struct BurnRomInfo szaxxonRomDesc[] = {
 	{ "suzaxxon.3",	0x2000, 0xaf7221da, 1 }, //  0 main
 	{ "suzaxxon.2",	0x2000, 0x1b90fb2a, 1 }, //  1
 	{ "suzaxxon.1",	0x1000, 0x07258b4a, 1 }, //  2
@@ -348,7 +348,7 @@ struct BurnDriver BurnDrvCongo = {
 
 // Tip Top
 
-static struct BurnRomInfo tiptopRomDesc[] = {
+/*static*/ struct BurnRomInfo tiptopRomDesc[] = {
 	{ "tiptop1.u35",	0x2000, 0xe19dc77b, 1 }, //  0 main
 	{ "tiptop2.u34",	0x2000, 0x3fcd3b6e, 1 }, //  1
 	{ "tiptop3.u33",	0x2000, 0x1c94250b, 1 }, //  2

@@ -1,5 +1,5 @@
 #include "d_segae.h"
-#define SELECTED_CHIP 1
+//#define SELECTED_CHIP 1
 //#define TWO_WORDS 1
 // based on MESS/MAME driver by David Haywood
 Fixed32	ss_scl1[SCL_MAXLINE];
@@ -76,13 +76,13 @@ int ovlInit(char *szShortName)
 	ss_port  = (SysPort *)SS_PORT;
 }
 
-static UINT8 __fastcall systeme_main_read(UINT16 address)
+/*static*/ UINT8 __fastcall systeme_main_read(UINT16 address)
 {
 //	bprintf(0, _T("systeme_main_read adr %X.\n"), address);
 	return 0;
 }
 
-static void __fastcall systeme_main_write(UINT16 address, UINT8 data)
+/*static*/ void __fastcall systeme_main_write(UINT16 address, UINT8 data)
 {
 	if(address >= 0x8000 && address <= 0xbfff)
 	{
@@ -101,12 +101,12 @@ static void __fastcall systeme_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-static UINT32 scalerange(UINT32 x, UINT32 in_min, UINT32 in_max, UINT32 out_min, UINT32 out_max) {
+/*static*/ UINT32 scalerange(UINT32 x, UINT32 in_min, UINT32 in_max, UINT32 out_min, UINT32 out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 
-static UINT8 scale_wheel(UINT32 PaddlePortnum) {
+/*static*/ UINT8 scale_wheel(UINT32 PaddlePortnum) {
 	UINT8 Temp;
 
 	Temp = 0x7f + (PaddlePortnum >> 4);
@@ -116,7 +116,7 @@ static UINT8 scale_wheel(UINT32 PaddlePortnum) {
 	return Temp;
 }
 
-static UINT8 scale_accel(UINT32 PaddlePortnum) {
+/*static*/ UINT8 scale_accel(UINT32 PaddlePortnum) {
 	UINT8 Temp;
 
 	Temp = PaddlePortnum >> 4;
@@ -127,7 +127,7 @@ static UINT8 scale_accel(UINT32 PaddlePortnum) {
 }
 
 
-static UINT8 __fastcall hangonjr_port_f8_read (UINT8 port)
+/*static*/ UINT8 __fastcall hangonjr_port_f8_read (UINT8 port)
 {
 	UINT8 temp = 0;
 	//bprintf(0, _T("Wheel %.04X  Accel %.04X\n"), scale_wheel(DrvWheel), scale_accel(DrvAccel));
@@ -199,13 +199,13 @@ static UINT8 __fastcall hangonjr_port_f8_read (UINT8 port)
 	return temp;
 }
 
-static inline void __fastcall hangonjr_port_fa_write (UINT8 data)
+/*static*/ inline void __fastcall hangonjr_port_fa_write (UINT8 data)
 {
 	/* Seems to write the same pattern again and again bits ---- xx-x used */
 	port_fa_last = data;
 }
 
-static void segae_bankswitch (void)
+/*static*/ void segae_bankswitch (void)
 {
 	UINT32 bankloc = 0x10000 + (rombank * 0x4000);
 
@@ -217,7 +217,7 @@ static void segae_bankswitch (void)
 	}
 }
 
-static void __fastcall bank_write(UINT8 data)
+/*static*/ void __fastcall bank_write(UINT8 data)
 {
 	segae_vdp_vrambank[0]	= (data & 0x80) >> 7; /* Back  Layer VDP (0) VRAM Bank */
 	segae_vdp_vrambank[1]	= (data & 0x40) >> 6; /* Front Layer VDP (1) VRAM Bank */
@@ -226,7 +226,7 @@ static void __fastcall bank_write(UINT8 data)
 	segae_bankswitch();
 }
 
-static void segae_vdp_setregister ( UINT8 chip, UINT16 cmd )
+/*static*/ void segae_vdp_setregister ( UINT8 chip, UINT16 cmd )
 {
 	UINT8 regnumber;
 	UINT8 regdata;
@@ -284,7 +284,7 @@ static void segae_vdp_setregister ( UINT8 chip, UINT16 cmd )
 	}
 }
 
-static void segae_vdp_processcmd ( UINT8 chip, UINT16 cmd )
+/*static*/ void segae_vdp_processcmd ( UINT8 chip, UINT16 cmd )
 {
 	if ( (cmd & 0xf000) == 0x8000 ) { /*  1 0 0 0 - - - - - - - - - - - -  VDP Register Set */
 		segae_vdp_setregister (chip, cmd);
@@ -305,7 +305,7 @@ static void segae_vdp_processcmd ( UINT8 chip, UINT16 cmd )
 	}
 }
 
-static UINT8 segae_vdp_counter_r (UINT8 chip, UINT8 offset)
+/*static*/ UINT8 segae_vdp_counter_r (UINT8 chip, UINT8 offset)
 {
 	UINT8 temp = 0;
 	UINT16 sline;
@@ -326,7 +326,7 @@ static UINT8 segae_vdp_counter_r (UINT8 chip, UINT8 offset)
 	return temp;
 }
 
-static UINT8 segae_vdp_data_r(UINT8 chip)
+/*static*/ UINT8 segae_vdp_data_r(UINT8 chip)
 {
 	UINT8 temp;
 
@@ -344,7 +344,7 @@ static UINT8 segae_vdp_data_r(UINT8 chip)
 	return temp;
 }
 
-static UINT8 segae_vdp_reg_r ( UINT8 chip )
+/*static*/ UINT8 segae_vdp_reg_r ( UINT8 chip )
 {
 	UINT8 temp;
 
@@ -360,13 +360,13 @@ static UINT8 segae_vdp_reg_r ( UINT8 chip )
 	return temp;
 }
 
-static inline UINT8 pal2bit(UINT8 bits)
+/*static*/ inline UINT8 pal2bit(UINT8 bits)
 {
 	bits &= 3;
 	return (bits << 6) | (bits << 4) | (bits << 2) | bits;
 }
 
-static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
+/*static*/ void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 {
 	segae_vdp_cmdpart[chip] = 0;
 
@@ -411,7 +411,7 @@ static void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 	}
 }
 
-static void segae_vdp_reg_w ( UINT8 chip, UINT8 data )
+/*static*/ void segae_vdp_reg_w ( UINT8 chip, UINT8 data )
 {
 	if (!segae_vdp_cmdpart[chip]) {
 		segae_vdp_cmdpart[chip] = 1;
@@ -423,13 +423,13 @@ static void segae_vdp_reg_w ( UINT8 chip, UINT8 data )
 	}
 }
 
-/*static UINT8 input_r(INT32 offset)
+/* UINT8 input_r(INT32 offset)
 {
 	//bprintf(0, _T("input_r chip %X.\n"), offset);
 	return 0xff;
 }*/
 
-static UINT8 __fastcall systeme_main_in(UINT16 port)
+/*static*/ UINT8 __fastcall systeme_main_in(UINT16 port)
 {
 	port &= 0xff;
 
@@ -453,7 +453,7 @@ static UINT8 __fastcall systeme_main_in(UINT16 port)
 	return 0;
 }
 
-static void __fastcall systeme_main_out(UINT16 port, UINT8 data)
+/*static*/ void __fastcall systeme_main_out(UINT16 port, UINT8 data)
 {
 	switch (port & 0xff)
 	{
@@ -483,11 +483,11 @@ static void __fastcall systeme_main_out(UINT16 port, UINT8 data)
 	}
 }
 
-static void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],const INT32 opcode_swap_select[64],
+/*static*/ void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],const INT32 opcode_swap_select[64],
 		const UINT8 data_xor[64],const INT32 data_swap_select[64])
 {
 	INT32 A;
-	static const UINT8 swaptable[24][4] =
+	/*static*/ const UINT8 swaptable[24][4] =
 	{
 		{ 6,4,2,0 }, { 4,6,2,0 }, { 2,4,6,0 }, { 0,4,2,6 },
 		{ 6,2,4,0 }, { 6,0,2,4 }, { 6,4,0,2 }, { 2,6,4,0 },
@@ -526,9 +526,9 @@ static void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[
 	memcpy(pDestDec + 0x8000, pDest + 0x8000, 0x4000);
 }
 
-static void astrofl_decode(void)
+/*static*/ void astrofl_decode(void)
 {
-	static const UINT8 opcode_xor[64] =
+	/*static*/ const UINT8 opcode_xor[64] =
 	{
 		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
 		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
@@ -538,7 +538,7 @@ static void astrofl_decode(void)
 		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,
 	};
 
-	static const UINT8 data_xor[64] =
+	/*static*/ const UINT8 data_xor[64] =
 	{
 		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
 		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
@@ -548,7 +548,7 @@ static void astrofl_decode(void)
 		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,
 	};
 
-	static const INT32 opcode_swap_select[64] =
+	/*static*/ const INT32 opcode_swap_select[64] =
 	{
 		0,0,1,1,1,2,2,3,3,4,4,4,5,5,6,6,
 		6,7,7,8,8,9,9,9,10,10,11,11,11,12,12,13,
@@ -557,7 +557,7 @@ static void astrofl_decode(void)
 		14,15,15,16,16,17,17,17,18,18,19,19,19,20,20,21,
 	};
 
-	static const INT32 data_swap_select[64] =
+	/*static*/ const INT32 data_swap_select[64] =
 	{
 		0,0,1,1,2,2,2,3,3,4,4,5,5,5,6,6,
 		7,7,7,8,8,9,9,10,10,10,11,11,12,12,12,13,
@@ -568,7 +568,7 @@ static void astrofl_decode(void)
 	sega_decode_2(DrvMainROM, DrvMainROMFetch, opcode_xor,opcode_swap_select,data_xor,data_swap_select);
 }
 
-static INT32 MemIndex()
+/*static*/ INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
@@ -607,21 +607,33 @@ static INT32 MemIndex()
 }
 
 //-----------------------
-static INT32 DrvExit()
+/*static*/ INT32 DrvExit()
 {
 	nBurnFunction = NULL;
+	nBurnLinescrollSize = 1;
+	nSoundBufferPos = 0;
+	CZetOpen(0);
+	CZetSetWriteHandler(NULL);
+	CZetSetReadHandler(NULL);
+	CZetSetInHandler(NULL);
+	CZetSetOutHandler(NULL);
+	CZetClose();
 	CZetExit2();
+	memset(ss_scl,0x00,192*4);
+	memset(ss_scl1,0x00,192*4);
+	SCL_SetLineParamNBG1();
 
-	CZ80Context = DrvMainROM	 = AllRam = DrvRAM = MemEnd = segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
+	CZ80Context = mc8123key = DrvMainROM	=DrvMainROMFetch = AllRam = DrvRAM = RamEnd = MemEnd = NULL;
+	segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
 	segae_vdp_cram[0] = segae_vdp_regs[0] = segae_vdp_cram[1] = segae_vdp_regs[1] = NULL;
 	name_lut = cram_lut = map_lut = NULL;
 	bp_lut = NULL;
 	free(AllMem);
 	AllMem = NULL;
+	ss_port = NULL;
+	nBurnFunction = NULL;
 
-	leftcolumnblank = 0;
-	mc8123 = 0;
-	mc8123_banked = 0;
+	currentLine = mc8123 = 	mc8123_banked = hintcount = vintpending = hintpending = 0;
 
  	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
  	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
@@ -629,7 +641,7 @@ static INT32 DrvExit()
 	return 0;
 }
 
-static INT32 DrvDoReset()
+/*static*/ INT32 DrvDoReset()
 {
 	memset (DrvRAM, 0, RamEnd - DrvRAM);
 
@@ -646,7 +658,7 @@ static INT32 DrvDoReset()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static inline void DrvClearOpposites(UINT8* nJoystickInputs)
+/*static*/ inline void DrvClearOpposites(UINT8* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x03) == 0x03) {
 		*nJoystickInputs &= ~0x03;
@@ -656,7 +668,7 @@ static inline void DrvClearOpposites(UINT8* nJoystickInputs)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static inline void DrvMakeInputs()
+/*static*/ inline void DrvMakeInputs()
 {
 	// Reset Inputs
 	DrvInput[0] = DrvInput[1] = DrvInput[2] = DrvInput[3] = DrvInput[4] = 0x00;
@@ -675,7 +687,7 @@ static inline void DrvMakeInputs()
 	DrvClearOpposites(&DrvInput[1]);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void segae_interrupt ()
+/*static*/ void segae_interrupt ()
 {
 	if (currentLine == 0) {
 		hintcount = segae_vdp_regs[1][10];
@@ -721,7 +733,7 @@ static void segae_interrupt ()
 	}
 }
 
-static INT32 DrvFrame()
+/*static*/ INT32 DrvFrame()
 {
 	UINT32 nInterleave = 262;
 //	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
@@ -777,7 +789,7 @@ static INT32 DrvFrame()
 	return 0;
 }
 
-static INT32 DrvInit(UINT8 game)
+/*static*/ INT32 DrvInit(UINT8 game)
 {
 	DrvInitSaturn(game);
 
@@ -879,7 +891,7 @@ static INT32 DrvInit(UINT8 game)
 	return 0;
 }
 
-static INT32 DrvFantzn2Init()
+/*static*/ INT32 DrvFantzn2Init()
 {
 //	leftcolumnblank = 1;
 //	leftcolumnblank_special = 1;
@@ -888,44 +900,44 @@ static INT32 DrvFantzn2Init()
 	return DrvInit(3);
 }
 
-static INT32 DrvOpaopaInit()
+/*static*/ INT32 DrvOpaopaInit()
 {
 //	leftcolumnblank = 1;
 
 	return DrvInit(4);
 }
 
-static INT32 DrvTransfrmInit()
+/*static*/ INT32 DrvTransfrmInit()
 {
 //	leftcolumnblank = 1;
 
 	return DrvInit(2);
 }
 
-static INT32 DrvAstroflInit()
+/*static*/ INT32 DrvAstroflInit()
 {
 //	leftcolumnblank = 1;
 
 	return DrvInit(5);
 }
 
-static INT32 DrvSlapshtrInit()
+/*static*/ INT32 DrvSlapshtrInit()
 {
 	return DrvInit(2);
 }
 
-static INT32 DrvHangonJrInit()
+/*static*/ INT32 DrvHangonJrInit()
 {
 //	leftcolumnblank = 1;
 	return DrvInit(1);
 }
 
-static INT32 DrvTetrisInit()
+/*static*/ INT32 DrvTetrisInit()
 {
 	return DrvInit(0);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initColors()
+/*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
@@ -937,7 +949,7 @@ static void initColors()
 //	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initLayers(void)
+/*static*/ void initLayers(void)
 {
 //    SclConfig	config;
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
@@ -991,14 +1003,14 @@ static void initLayers(void)
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initPosition(void)
+/*static*/ void initPosition(void)
 {
 	SCL_Open();
 	ss_reg->n1_move_x = 0;
 	ss_reg->n1_move_y = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvInitSaturn(UINT8 game)
+/*static*/ void DrvInitSaturn(UINT8 game)
 {
 	SPR_InitSlaveSH();
 
@@ -1088,7 +1100,7 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 	SclProcess = 2;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void update_sprites(UINT8 chip, UINT32 index)
+/*static*/ void update_sprites(UINT8 chip, UINT32 index)
 {
 	if(index>=satb[chip])
 		if( index < satb[chip]+0x40)
@@ -1177,7 +1189,7 @@ static void update_sprites(UINT8 chip, UINT32 index)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void update_bg(UINT8 chip, UINT32 index)
+/*static*/ void update_bg(UINT8 chip, UINT32 index)
 {
 /// 		segae_vdp_vram[chip][ segae_vdp_vrambank[chip]*0x4000 + segae_vdp_accessaddr[chip] ] = data;
 
@@ -1212,7 +1224,7 @@ static void update_bg(UINT8 chip, UINT32 index)
 	*sg= *pg = (temp1<<2 | temp2 );
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_map_lut()
+/*static*/ void make_map_lut()
 {
 	unsigned int row,column;
 
@@ -1228,7 +1240,7 @@ static void make_map_lut()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_name_lut()
+/*static*/ void make_name_lut()
 {
 	unsigned int i, j;
 	for(j = 0; j < 0x10000; j++)
@@ -1254,7 +1266,7 @@ Bit 08 - 00 : Pattern Index
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_bp_lut(void)
+/*static*/ void make_bp_lut(void)
 {
 //	bp_lut = (UINT32 *)malloc(0x10000*sizeof(UINT32));
     unsigned int i, j;
@@ -1283,7 +1295,7 @@ static void make_bp_lut(void)
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_cram_lut(void)
+/*static*/ void make_cram_lut(void)
 {
     for(unsigned int j = 0; j < 0x40; j++)
     {
@@ -1297,7 +1309,7 @@ static void make_cram_lut(void)
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut()
+/*static*/ void make_lut()
 {
 	make_name_lut();
 	make_bp_lut();

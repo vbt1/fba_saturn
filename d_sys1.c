@@ -8,7 +8,6 @@
 #define USE_RAZE1 1
 #define CPU2_ENABLED 1
 
-
 #include "d_sys1.h"
 #include "d_sys1_common.c"
 

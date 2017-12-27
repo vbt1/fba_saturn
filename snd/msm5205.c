@@ -1,4 +1,4 @@
-#include "burnint.h"
+#include "../burnint.h"
 #include "msm5205.h"
 #include "math.h"
 #define SOUND_LEN 192

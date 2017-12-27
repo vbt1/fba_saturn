@@ -476,7 +476,9 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 #endif	
 	nBurnSprites=128;
 	cleanSprites();
-	Palette=MemEnd=Rom=Gfx0=Gfx1=Prom=NULL;
+	memset(ss_scl,0x00,nBurnLinescrollSize);
+	MemEnd=Rom=Gfx0=Gfx1=Prom=NULL;
+	Palette=NULL;
 	free(Mem);
 	Mem=NULL;
 
@@ -485,6 +487,8 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	nSoundBufferPos = 0;
 	nCyclesDone = 0;
 	DrvReset = 0;
+	nBurnLinescrollSize = 1;
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

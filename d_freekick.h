@@ -3,70 +3,70 @@
 
 #include "burnint.h"
 #include "saturn/ovl.h"
-#include "sn76496.h"
+#include "snd/sn76496.h"
 #include "bitswap.h"
 #include "mc8123.h"
 #include "8255ppi.h"
 
 #define nBurnSoundLen 128
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
-static INT32 DrvInit();
-static INT32 DrvFreeKickInit();
-static INT32 pbillrdInit();
-static INT32 DrvExit();
-static INT32 DrvFrame();
-static INT32 DrvDraw();
-static void DrvInitSaturn();
-static void make_lut(void);
+/*static*/ INT32 DrvInit();
+/*static*/ INT32 DrvFreeKickInit();
+/*static*/ INT32 pbillrdInit();
+/*static*/ INT32 DrvExit();
+/*static*/ INT32 DrvFrame();
+/*static*/ INT32 DrvDraw();
+/*static*/ void DrvInitSaturn();
+/*static*/ void make_lut(void);
 
-static UINT8 DrvJoy1[8];
-static UINT8 DrvJoy2[8];
+/*static*/ UINT8 DrvJoy1[8];
+/*static*/ UINT8 DrvJoy2[8];
 
-static UINT8 DrvInputs[2];
-static UINT8 DrvDip[3];
-static INT16 DrvDial1;
-static INT16 DrvDial2;
-static UINT8 DrvReset;
+/*static*/ UINT8 DrvInputs[2];
+/*static*/ UINT8 DrvDip[3];
+/*static*/ INT16 DrvDial1;
+/*static*/ INT16 DrvDial2;
+/*static*/ UINT8 DrvReset;
 
-//static UINT8 DrvRecalc;
-
-static UINT8 *AllMem;
-static UINT8 *MemEnd;
-static UINT8 *AllRam;
-static UINT8 *RamEnd;
-static UINT8 *DrvRAM;
-static UINT8 *DrvMainROM;
-static UINT8 *DrvMainROMdec;
-static UINT8 *DrvSndROM;
-static UINT8 *DrvVidRAM;
-static UINT8 *DrvSprRAM;
-static UINT8 *DrvColRAM;
-static UINT8 *DrvGfxROM0;
-static UINT8 *DrvGfxROM1;
-static UINT8 *DrvGfxTMP0;
-static UINT8 *DrvGfxTMP1;
-static UINT8 *DrvColPROM;
-static UINT8 *MC8123Key;
-static UINT16 *DrvPalette;
-static UINT8 DrvZ80Bank0;
+///*static*/ UINT8 DrvRecalc;
+/*static*/ UINT8 *CZ80Context = NULL;
+/*static*/ UINT8 *AllMem = NULL;
+/*static*/ UINT8 *MemEnd = NULL;
+/*static*/ UINT8 *AllRam = NULL;
+/*static*/ UINT8 *RamEnd = NULL;
+/*static*/ UINT8 *DrvRAM = NULL;
+/*static*/ UINT8 *DrvMainROM = NULL;
+/*static*/ UINT8 *DrvMainROMdec = NULL;
+/*static*/ UINT8 *DrvSndROM = NULL;
+/*static*/ UINT8 *DrvVidRAM = NULL;
+/*static*/ UINT8 *DrvSprRAM = NULL;
+/*static*/ UINT8 *DrvColRAM = NULL;
+/*static*/ UINT8 *DrvGfxROM0 = NULL;
+/*static*/ UINT8 *DrvGfxROM1 = NULL;
+/*static*/ UINT8 *DrvGfxTMP0 = NULL;
+/*static*/ UINT8 *DrvGfxTMP1 = NULL;
+/*static*/ UINT8 *DrvColPROM = NULL;
+/*static*/ UINT8 *MC8123Key = NULL;
+/*static*/ UINT16 *DrvPalette = NULL;
+/*static*/ UINT8 DrvZ80Bank0 = 0;
 typedef void (*RenderSprite)(INT32);
-static RenderSprite DrawSprite;
+/*static*/ RenderSprite DrawSprite;
 
-static UINT8 nmi_enable;
-static UINT8 flipscreen;
-static UINT8 coin;
-static UINT8 spinner;
-static UINT8 ff_data;
-static UINT16 romaddr;
+/*static*/ UINT8 nmi_enable;
+/*static*/ UINT8 flipscreen;
+/*static*/ UINT8 coin;
+/*static*/ UINT8 spinner;
+/*static*/ UINT8 ff_data;
+/*static*/ UINT16 romaddr;
 
-static UINT8 use_encrypted = 0;
-static UINT8 countrunbmode = 0;
-static UINT8 pbillrdmode = 0;
-static UINT16 *map_offset_lut = NULL;
+/*static*/ UINT8 use_encrypted = 0;
+/*static*/ UINT8 countrunbmode = 0;
+/*static*/ UINT8 pbillrdmode = 0;
+/*static*/ UINT16 *map_offset_lut = NULL;
 
-static void DrvPaletteInit();
+/*static*/ void DrvPaletteInit();
 
-static struct BurnInputInfo PbillrdInputList[] = {
+/*static*/ struct BurnInputInfo PbillrdInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 up"},
@@ -93,7 +93,7 @@ static struct BurnInputInfo PbillrdInputList[] = {
 STDINPUTINFO(Pbillrd)
 
 
-static struct BurnDIPInfo PbillrdDIPList[]=
+/*static*/ struct BurnDIPInfo PbillrdDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x1f, NULL		},
 	{0x12, 0xff, 0xff, 0xff, NULL		},
@@ -163,7 +163,7 @@ static struct BurnDIPInfo PbillrdDIPList[]=
 
 STDDIPINFO(Pbillrd)
 
-static struct BurnInputInfo GigasInputList[] = {
+/*static*/ struct BurnInputInfo GigasInputList[] = {
 
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 start"},
@@ -187,7 +187,7 @@ static struct BurnInputInfo GigasInputList[] = {
 
 STDINPUTINFO(Gigas)
 
-static struct BurnDIPInfo GigasDIPList[]=
+/*static*/ struct BurnDIPInfo GigasDIPList[]=
 {
 	{0x0d, 0xff, 0xff, 0x3f, NULL		},
 	{0x0e, 0xff, 0xff, 0xff, NULL		},
@@ -259,7 +259,7 @@ static struct BurnDIPInfo GigasDIPList[]=
 
 STDDIPINFO(Gigas)
 
-static struct BurnDIPInfo Gigasm2DIPList[]=
+/*static*/ struct BurnDIPInfo Gigasm2DIPList[]=
 {
 	{0x0d, 0xff, 0xff, 0x3f, NULL		},
 	{0x0e, 0xff, 0xff, 0xff, NULL		},
@@ -331,7 +331,7 @@ static struct BurnDIPInfo Gigasm2DIPList[]=
 
 STDDIPINFO(Gigasm2)
 
-static struct BurnDIPInfo OmegaDIPList[]=
+/*static*/ struct BurnDIPInfo OmegaDIPList[]=
 {
 	{0x0d, 0xff, 0xff, 0x06, NULL		},
 	{0x0e, 0xff, 0xff, 0xff, NULL		},
@@ -396,7 +396,7 @@ static struct BurnDIPInfo OmegaDIPList[]=
 
 STDDIPINFO(Omega)
 
-static struct BurnInputInfo FreekckInputList[] = {
+/*static*/ struct BurnInputInfo FreekckInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 up"},
@@ -424,7 +424,7 @@ static struct BurnInputInfo FreekckInputList[] = {
 STDINPUTINFO(Freekck)
 
 
-static struct BurnDIPInfo FreekckDIPList[]=
+/*static*/ struct BurnDIPInfo FreekckDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xbf, NULL		},
 	{0x12, 0xff, 0xff, 0xff, NULL		},
@@ -505,7 +505,7 @@ static struct BurnDIPInfo FreekckDIPList[]=
 
 STDDIPINFO(Freekck)
 
-static struct BurnInputInfo CountrunInputList[] = {
+/*static*/ struct BurnInputInfo CountrunInputList[] = {
 
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 start"},
@@ -534,7 +534,7 @@ static struct BurnInputInfo CountrunInputList[] = {
 STDINPUTINFO(Countrun)
 
 
-static struct BurnDIPInfo CountrunDIPList[]=
+/*static*/ struct BurnDIPInfo CountrunDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xbf, NULL		},
 	{0x12, 0xff, 0xff, 0xff, NULL		},
@@ -618,7 +618,7 @@ STDDIPINFO(Countrun)
 
 // Perfect Billiard
 
-static struct BurnRomInfo pbillrdRomDesc[] = {
+/*static*/ struct BurnRomInfo pbillrdRomDesc[] = {
 	{ "pb.18",	0x4000, 0x9e6275ac, 1 }, //  0 maincpu
 	{ "pb.7",	0x8000, 0xdd438431, 1 }, //  1
 	{ "pb.9",	0x4000, 0x089ce80a, 1 }, //  2
@@ -644,7 +644,7 @@ STD_ROM_FN(pbillrd)
 
 // Free Kick (bootleg set 1)
 
-static struct BurnRomInfo freekickb1RomDesc[] = {
+/*static*/ struct BurnRomInfo freekickb1RomDesc[] = {
 	{ "freekbl8.q7",	0x10000, 0x4208cfe5, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
 
 	{ "11.1e",		0x08000, 0xa6030ba9, 2 | BRF_GRA },           //  1 user1
@@ -674,7 +674,7 @@ STD_ROM_FN(freekickb1)
 
 // Counter Run (bootleg set 1)
 
-static struct BurnRomInfo countrunbRomDesc[] = {
+/*static*/ struct BurnRomInfo countrunbRomDesc[] = {
 	{ "rom_cpu.bin",	0x10000, 0xf65639ae, 1 }, //  0 maincpu
 
 	{ "crun.e1",		0x08000, 0x2c3b6f8f, 2 }, //  1 user1
@@ -700,7 +700,7 @@ STD_ROM_FN(countrunb)
 
 // Gigas (bootleg)
 
-static struct BurnRomInfo gigasbRomDesc[] = {
+/*static*/ struct BurnRomInfo gigasbRomDesc[] = {
 	{ "g7.bin",	0x08000, 0xdaf4e88d, 1 }, //  0 maincpu
 	{ "g8.bin",	0x10000, 0x4ab4c1f1, 1 }, //  1
 
@@ -725,7 +725,7 @@ STD_ROM_FN(gigasb)
 
 // Gigas Mark II (bootleg)
 
-static struct BurnRomInfo gigasm2RomDesc[] = {
+/*static*/ struct BurnRomInfo gigasm2RomDesc[] = {
 	{ "8.rom",	0x08000, 0xc00a4a6c, 1 }, //  0 maincpu
 	{ "7.rom",	0x08000, 0x92bd9045, 1 }, //  1
 	{ "9.rom",	0x08000, 0xa3ef809c, 1 }, //  1
@@ -751,7 +751,7 @@ STD_ROM_FN(gigasm2)
 
 // Omega
 
-static struct BurnRomInfo omegaRomDesc[] = {
+/*static*/ struct BurnRomInfo omegaRomDesc[] = {
 	{ "17.m10",		0x4000, 0xc7de0993, BRF_PRG | BRF_ESS }, //  0 maincpu
 	{ "8.n10",		0x8000, 0x9bb61910, BRF_PRG | BRF_ESS }, //  1
 

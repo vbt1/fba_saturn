@@ -635,6 +635,7 @@ void dummy()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
+	nSoundBufferPos = 0;
 	nBurnSprites  = 35;
 	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
 	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
@@ -972,7 +973,7 @@ spriteCache = NULL;
 	
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	nCyclesTotal[0] = nCyclesTotal[1] = 0;
-	nCyclesSegment = 0;
+//	nCyclesSegment = 0;
 
 	nextSprite=0;
 	flipscreen=0;
@@ -1210,11 +1211,10 @@ int System1Frame()
 #endif
 //		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 //		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesSegment = cpu_lut[i] - nCyclesDone[0];
+		INT32 nCyclesSegment = cpu_lut[i] - nCyclesDone[0];
 #ifdef CZ80
-		nCyclesSegment = CZetRun(nCyclesSegment);
+		nCyclesDone[0] += CZetRun(nCyclesSegment);
 #endif
-		nCyclesDone[0] += nCyclesSegment;
 
 #ifdef CZ80
 		if (i == 9) CZetRaiseIrq(0);

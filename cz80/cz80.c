@@ -324,10 +324,10 @@ char *itoa2(i)
 
 
 
-int vbt = 0;
-int vbt2=0;
-	   unsigned char toto[150];
-	   unsigned char *titi;
+//int vbt = 0;
+//int vbt2=0;
+//	   unsigned char toto[150];
+//	   unsigned char *titi;
 INT32 Cz80_Exec(cz80_struc* CPU)
 {
 

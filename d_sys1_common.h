@@ -2,7 +2,7 @@
 #define _D_SYS1_COMMON_H_
 
 #include "burnint.h"
-#include "sn76496.h"
+#include "snd/sn76496.h"
 #include "bitswap.h"
 #include "mc8123.h"
 #include "raze/raze.h"

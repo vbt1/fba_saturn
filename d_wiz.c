@@ -1,7 +1,7 @@
 // Wiz Todo:
 //
 // stinger: hook-up discrete samples
-// scion: static in audio is normal (no kidding)
+// scion: /*static*/ in audio is normal (no kidding)
 //
 #include "d_wiz.h"
 //#define RAZE0 1
@@ -236,7 +236,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	return 0;
 }
 
-static INT32 DrvDoReset()
+/*static*/ INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 
@@ -263,7 +263,7 @@ static INT32 DrvDoReset()
 	return 0;
 }
 
-static void DrvPaletteInit()
+/*static*/ void DrvPaletteInit()
 {
 	UINT32 delta=0;
 
@@ -293,7 +293,7 @@ static void DrvPaletteInit()
 }
 
 
-static INT32 MemIndex()
+/*static*/ INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
@@ -341,7 +341,7 @@ static INT32 MemIndex()
 	return 0;
 }
 
-static void DrvGfxDecode(UINT32 type, int rotated)
+/*static*/ void DrvGfxDecode(UINT32 type, int rotated)
 {
 	INT32 Plane[3]  = { 0x4000*8, 0x2000*8, 0 };
 //	INT32 XOffs[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7 };
@@ -403,7 +403,7 @@ static void DrvGfxDecode(UINT32 type, int rotated)
 	tmp1 = NULL;
 }
 
-static INT32 WizLoadRoms()
+/*static*/ INT32 WizLoadRoms()
 {
 	if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 	if (BurnLoadRom(DrvZ80ROM0 + 0x04000,  1, 1)) return 1;
@@ -432,7 +432,7 @@ static INT32 WizLoadRoms()
 	return 0;
 }
 
-static INT32 KungfutLoadRoms()
+/*static*/ INT32 KungfutLoadRoms()
 {
 	if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 	if (BurnLoadRom(DrvZ80ROM0 + 0x04000,  1, 1)) return 1;
@@ -457,7 +457,7 @@ static INT32 KungfutLoadRoms()
 	return 0;
 }
 
-static INT32 StingerLoadRoms()
+/*static*/ INT32 StingerLoadRoms()
 {
 	if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 	if (BurnLoadRom(DrvZ80ROM0 + 0x02000,  1, 1)) return 1;
@@ -484,7 +484,7 @@ static INT32 StingerLoadRoms()
 	return 0;
 }
 
-static INT32 ScionLoadRoms()
+/*static*/ INT32 ScionLoadRoms()
 {
 	if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 	if (BurnLoadRom(DrvZ80ROM0 + 0x02000,  1, 1)) return 1;
@@ -511,7 +511,7 @@ static INT32 ScionLoadRoms()
 	return 0;
 }
 
-static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
+/*static*/ INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 {
 	DrvInitSaturn();
 
@@ -643,7 +643,7 @@ static INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initLayers()
+/*static*/ void initLayers()
 {
     Uint16	CycleTb[]={
 		0xff45, 0x6fff, //A0
@@ -707,7 +707,7 @@ static void initLayers()
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut(int rotated)
+/*static*/ void make_lut(int rotated)
 {
 	if (rotated)
 	{
@@ -774,7 +774,7 @@ static void make_lut(int rotated)
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvExit()
+/*static*/ INT32 DrvExit()
 {
 	nSoundBufferPos=0;
 	SPR_InitSlaveSH();
@@ -828,7 +828,7 @@ static INT32 DrvExit()
 	return 0;
 }
 
-static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
+/*static*/ void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 {
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
@@ -864,7 +864,7 @@ static void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 	}
 }
 
-static void draw_foreground(INT16 palbank, INT16 colortype)
+/*static*/ void draw_foreground(INT16 palbank, INT16 colortype)
 {
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
@@ -894,7 +894,7 @@ static void draw_foreground(INT16 palbank, INT16 colortype)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta, UINT8 rotated)
+/*static*/ void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta, UINT8 rotated)
 {
 	for (INT16 offs = 0x1c; offs >= 0; offs -= 4)
 	{
@@ -1019,7 +1019,7 @@ int vspfunc(char *format, ...)
    return(ret);
 }*/
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 WizDraw()
+/*static*/ INT32 WizDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
 	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
@@ -1048,7 +1048,7 @@ static INT32 WizDraw()
 	return 0;
 }
 
-static INT32 ScionDraw()
+/*static*/ INT32 ScionDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
 	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
@@ -1069,7 +1069,7 @@ static INT32 ScionDraw()
 	return 0;
 }
 
-static INT32 StingerDraw()
+/*static*/ INT32 StingerDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
 	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
@@ -1084,7 +1084,7 @@ static INT32 StingerDraw()
 	return 0;
 }
 
-static INT32 KungfutDraw()
+/*static*/ INT32 KungfutDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
 	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
@@ -1098,7 +1098,7 @@ static INT32 KungfutDraw()
 	return 0;
 }
 
-static INT32 DrvFrame()
+/*static*/ INT32 DrvFrame()
 {
 	memset (DrvInputs, 0, 2);
 	for (INT16 i = 0; i < 8; i++) 
@@ -1147,14 +1147,14 @@ static INT32 DrvFrame()
 	return 0;
 }
 
-static INT32 WizInit()
+/*static*/ INT32 WizInit()
 {
 	Wizmode = 1;
 	DrvDraw = WizDraw;
 	return DrvInit(WizLoadRoms,1);
 }
 
-static INT32 KungfutInit()
+/*static*/ INT32 KungfutInit()
 {
 	DrvDraw = KungfutDraw;
 	int result = DrvInit(KungfutLoadRoms,0);
@@ -1164,7 +1164,7 @@ static INT32 KungfutInit()
 	return result;
 }
 
-static void StingerDecode()
+/*static*/ void StingerDecode()
 {
 	INT32 swap_xor_table[4][4] =
 	{
@@ -1193,7 +1193,7 @@ static void StingerDecode()
 	CZetClose();
 }
 
-static INT32 StingerInit()
+/*static*/ INT32 StingerInit()
 {
 	DrvDraw = StingerDraw;
 	INT32 nRet = DrvInit(StingerLoadRoms,1);
@@ -1205,7 +1205,7 @@ static INT32 StingerInit()
 	return nRet;
 }
 
-static INT32 ScionInit()
+/*static*/ INT32 ScionInit()
 {
 	DrvDraw = ScionDraw;
 	Scionmodeoffset = 8*4; // 8 8x8char offset

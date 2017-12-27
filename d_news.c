@@ -198,7 +198,8 @@ int ovlInit(char *szShortName)
 	NewsFgVideoRam     = Next; Next += 0x00800;
 	NewsBgVideoRam     = Next; Next += 0x00800;
 	NewsPaletteRam       = Next; Next += 0x00200;
-
+	CZ80Context				= Next; Next += (0x1080*2);
+	pBuffer						= (int *)Next; Next += nBurnSoundRate * sizeof(int);
 	MemEnd = Next;
 
 	return 0;
@@ -247,8 +248,8 @@ int ovlInit(char *szShortName)
 	nRet = BurnLoadRom(MSM6295ROM, 3, 1); //if (nRet != 0) return 1;
 	// Setup the Z80 emulation
 #ifdef CZ80
-	CZetInit(1);
-//	CZetOpen(0);
+	CZetInit2(1,CZ80Context);
+	CZetOpen(0);
 	CZetMapArea(0x0000, 0x7fff, 0, NewsRom        );
 	CZetMapArea(0x0000, 0x7fff, 2, NewsRom        );
 	CZetMapArea(0x8000, 0x87ff, 0, NewsFgVideoRam );
@@ -394,7 +395,7 @@ int ovlInit(char *szShortName)
 {
 	MSM6295Exit(0);
 #ifdef CZ80
-	CZetExit();
+	CZetExit2();
 #endif
 
 #ifdef RAZE
@@ -410,7 +411,9 @@ int ovlInit(char *szShortName)
 	nSoundBufferPos=0;
 	PCM_Task(pcm);
 
-	MemEnd = RamStart = NewsRom = NewsRam = NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
+	CZ80Context	= MemEnd = RamStart = NewsRom = NewsRam = NULL;
+	NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
+	pBuffer = NULL;
 	free(Mem);
 	Mem = NULL;
 	BgPic = 1;

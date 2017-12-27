@@ -4,7 +4,7 @@
 #include "burnint.h"
 #include "bitswap.h"
 //#include "sn76496.h"
-#include "namco_snd.h"
+#include "snd/namco_snd.h"
 //extern "C" {
 //#include "ay8910.h"
 //}
@@ -14,50 +14,51 @@
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
 /*static*/ INT32 mspacmanInit();
-static INT32 puckmanInit();
+/*static*/ INT32 puckmanInit();
 /*static*/// INT32 pengoInit();
-static INT32 pengouInit();
+/*static*/ INT32 pengouInit();
 /*static*/ //INT32 pengobInit();
-static INT32 DrvExit();
-static INT32 DrvFrame();
-static INT32 DrvDraw();
-static INT32 DrvDrawPacMan();
-static void make_lut(void);
+/*static*/ INT32 DrvExit();
+/*static*/ INT32 DrvFrame();
+/*static*/ INT32 DrvDraw();
+/*static*/ INT32 DrvDrawPacMan();
+/*static*/ void make_lut(void);
 
-static UINT8 *AllMem = NULL;
-static UINT8 *MemEnd = NULL;
-static UINT8 *AllRam = NULL;
-static UINT8 *RamEnd = NULL;
-static UINT8 *PengoStart = NULL;
-static UINT8 *DrvZ80ROM = NULL;
-static UINT8 *DrvQROM = NULL;
-static UINT8 *DrvGfxROM = NULL;
-static UINT8 *DrvZ80RAM = NULL;
-static UINT8 *DrvVidRAM = NULL;
-static UINT8 *DrvColRAM = NULL;
-static UINT8 *DrvSprRAM = NULL;
-static UINT8 *DrvSprRAM2 = NULL;
-static UINT8 *DrvColPROM = NULL;
-static UINT8 *bg_dirtybuffer = NULL;
-static UINT16 *map_offset_lut = NULL;
-static UINT16 *ofst_lut = NULL;
-
+/*static*/ UINT8 *AllMem = NULL;
+/*static*/ UINT8 *MemEnd = NULL;
+/*static*/ UINT8 *AllRam = NULL;
+/*static*/ UINT8 *RamEnd = NULL;
+/*static*/ UINT8 *PengoStart = NULL;
+/*static*/ UINT8 *DrvZ80ROM = NULL;
+/*static*/ UINT8 *DrvQROM = NULL;
+/*static*/ UINT8 *DrvGfxROM = NULL;
+/*static*/ UINT8 *DrvZ80RAM = NULL;
+/*static*/ UINT8 *DrvVidRAM = NULL;
+/*static*/ UINT8 *DrvColRAM = NULL;
+/*static*/ UINT8 *DrvSprRAM = NULL;
+/*static*/ UINT8 *DrvSprRAM2 = NULL;
+/*static*/ UINT8 *DrvColPROM = NULL;
+/*static*/ UINT8 *bg_dirtybuffer = NULL;
+/*static*/ UINT16 *map_offset_lut = NULL;
+/*static*/ UINT16 *ofst_lut = NULL;
+/*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ //INT16 pBurnSoundOut[0x8000];
 ///*static*/ INT16 *pAY8910Buffer[3];
 /*static*/ //UINT32 *Palette = NULL;;
 /*static*/ //UINT8 DrvRecalc = 0;
 
-static UINT8 DrvReset = 0;
-static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvInputs[2] = {0,0};
-static UINT8 DrvDips[4] = {0,0,0,0};
-static INT16 DrvAxis[2] = { 0, 0 };
-static INT16 nAnalogAxis[2] = {0,0};
-static UINT8 nCharAxis[2] = {0,0};
+/*static*/ UINT8 DrvReset = 0;
+/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvInputs[2] = {0,0};
+/*static*/ UINT8 DrvDips[4] = {0,0,0,0};
+/*static*/ INT16 DrvAxis[2] = { 0, 0 };
+/*static*/ INT16 nAnalogAxis[2] = {0,0};
+/*static*/ UINT8 nCharAxis[2] = {0,0};
 
 enum { PACMAN=0, PENGO };
 
+extern struct namco_sound *chip;
 /*static*/ INT32 game_select = 0;
 ///*static*/ INT32 acitya = 0;
 
@@ -70,7 +71,7 @@ enum { PACMAN=0, PENGO };
 /*static*/ UINT8 palettebank = 0;
 /*static*/ UINT8 spritebank = 0;
 /*static*/ UINT8 charbank = 0;
-/*static*/ INT32 nPacBank = 0;
+/*static*/ //INT32 nPacBank = 0;
 /*static*/ UINT32 watchdog = 0;
 //------------------------------------------------------------------------------------------------------
 /*static*/ struct BurnInputInfo DrvInputList[] = {
@@ -203,7 +204,7 @@ STDINPUTINFO(Pengo)
 
 STDDIPINFO(Pengo)
 
-static struct BurnDIPInfo DrvDIPList[]=
+/*static*/ struct BurnDIPInfo DrvDIPList[]=
 {
 	{0x0e, 0xff, 0xff, 0xc9, NULL                     },
 	{0x0f, 0xff, 0xff, 0xff, NULL                     },
@@ -274,7 +275,7 @@ STD_ROM_FN(pengo2u)
 
 // Puck Man (Japan set 1)
 
-static struct BurnRomInfo puckmanRomDesc[] = {
+/*static*/ struct BurnRomInfo puckmanRomDesc[] = {
 	{ "pm1prg1.6e",  0x0800, 0xf36e88ab, 1 | BRF_ESS | BRF_PRG },	//  0 Z80 Code
 	{ "pm1prg2.6k",  0x0800, 0x618bd9b3, 1 | BRF_ESS | BRF_PRG },	//  1
 	{ "pm1prg3.6f",  0x0800, 0x7d177853, 1 | BRF_ESS | BRF_PRG },	//  2

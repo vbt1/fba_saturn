@@ -3,7 +3,7 @@
 #include "m6502.new/m6502_intf.h"
 //#include "m6502.new/m6502.h"
 #include "slapstic.h"
-#include "sn76496.h"
+#include "snd/sn76496.h"
 #include "saturn/ovl.h"
 
 #define SOUND_LEN 256

@@ -340,6 +340,12 @@ static INT32 SMSExit(void)
 #endif
 #ifdef CZ80
 	CZetExit2();
+	CZetOpen(0);
+	CZetSetWriteHandler(NULL);
+	CZetSetReadHandler(NULL);
+	CZetSetInHandler(NULL);
+	CZetSetOutHandler(NULL);
+	CZetClose();
 #endif
 
 	cart.rom = NULL;
