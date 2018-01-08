@@ -266,14 +266,14 @@ int ovlInit(char *szShortName)
 
 		if (regnumber == 1 && chip == 1) {
 			if ((segae_vdp_regs[chip][0x1]&0x20) && vintpending) {
-				CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+				CZetSetIRQLine(0, CZET_IRQSTATUS_HOLD);
 			} else {
 				CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 			}
 		}
 		if (regnumber == 0 && chip == 1) {
 			if ((segae_vdp_regs[chip][0x0]&0x10) && hintpending) { // dink
-				CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
+				CZetSetIRQLine(0, CZET_IRQSTATUS_HOLD);
 			} else {
 				CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 			}
@@ -745,6 +745,9 @@ int ovlInit(char *szShortName)
 	CZetOpen(0);
 
 	CZetNewFrame();
+//
+	
+DrvRAM[0xC222-0xc000]=0x99;
 
 	for (UINT32 i = 0; i < nInterleave; i++) {
 		UINT32 nNext;
@@ -954,12 +957,12 @@ int ovlInit(char *szShortName)
 //    SclConfig	config;
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
 
-	Uint16	CycleTb[]={
-		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
-		0xff15, 0xefff, //A1
-		0xffff, 0xffff,	//A0
-		0x04ee, 0xffff,   //B1
-		0xffff, 0xffff  //B0
+    Uint16	CycleTb[]={
+		0xfff4, 0x5fff, //A0
+		0xffff, 0xffff,	//A1
+		0x01e,0xffff,   //B0
+		0xffff, 0xffff  //B1
+//		0x4eff, 0x1fff, //B1
 	};
  	SclConfig	scfg;
 
@@ -986,6 +989,7 @@ int ovlInit(char *szShortName)
 //	SCL_SetConfig(SCL_NBG0, &scfg);
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
+//	scfg.dispenbl		= OFF;
 
 	scfg.patnamecontrl =  0x0002;// VRAM A0 + 0x10000
 	scfg.plate_addr[0] = ss_map2;
@@ -1053,8 +1057,8 @@ int ovlInit(char *szShortName)
 	if(game==1)
 	{
 			initSprites(240-1,192-1,16,0,0,0);
-		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17,0,240,191);
-		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17,0,240,191);
+		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17+8,0,240+8,191);
+		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17+8,0,240+8,191);
 	}
 	else if(game==5 || game==3 || game==2)
 	{
@@ -1077,7 +1081,10 @@ int ovlInit(char *szShortName)
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	memset(&ss_vram[0x1100],0,0x12000);
-	memset((UINT8 *)SCL_VDP2_VRAM_A0,0x00,0x20000);
+	memset((UINT8 *)SCL_VDP2_VRAM_A0,0x00,0x10000);
+	memset((UINT8 *)SCL_VDP2_VRAM_A1,0x00,0x10000);
+	memset((UINT8 *)ss_map,0x00,0x2000);
+	memset((UINT8 *)ss_map2,0x00,0x2000);
 
 	memset(ss_scl,0xff,192*4);
 	memset(ss_scl1,0xff,192*4);
@@ -1099,6 +1106,7 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 	*addr = (address / 2) & 0x0007ffff;
 	SclProcess = 2;
 }
+#define INV 63
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void update_sprites(UINT8 chip, UINT32 index)
 {
@@ -1113,6 +1121,8 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 		unsigned int width  = 8;
 		unsigned int delta=(index-satb[chip]);
 
+//		UINT8 inv =63;
+
 	// Pointer to sprite attribute table 
 		UINT8 *st = (UINT8 *)&segae_vdp_vram[chip][satb[chip]];
 		// Sprite Y position 
@@ -1120,20 +1130,19 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 
 		if(yp == 208) 
 		{
-
 //			ss_spritePtr[delta].control = CTRL_END;
 			for(int x=delta;x<64;x++)
 			{
-//				ss_spritePtr[x].drawMode = 0;
-//				ss_spritePtr[x].charAddr	= 0;
-//				ss_spritePtr[x].charSize		= 0;
-//				ss_spritePtr[x].ax	= 0;
-				ss_spritePtr[63-x].ay	= yp;
+				ss_spritePtr[INV-x].drawMode = 0;
+//				ss_spritePtr[inv-x].charAddr	= 0;
+				ss_spritePtr[INV-x].charSize		= 0;
+				ss_spritePtr[INV-x].ax	= -16;
+				ss_spritePtr[INV-x].ay	= yp;
 			}
 
 			return;
 		}
-		unsigned int inv_delta=63-delta;
+		unsigned int inv_delta=INV-delta;
 		//Actual Y position is +1 
 		yp ++;
 		//Wrap Y coordinate for sprites > 240 
@@ -1162,7 +1171,7 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 
 		UINT8 *st = (UINT8 *)&segae_vdp_vram[chip][satb[chip]];
 		unsigned int delta=(((index-(satb[chip]+0x80)))>>1);
-		unsigned int inv_delta=63-delta;
+		unsigned int inv_delta=INV-delta;
 
 //		delta &= 0x1f;
 
