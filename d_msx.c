@@ -2576,7 +2576,7 @@ static void Set8PCM()
 		PCM_SetInfo(pcm8[i], &info[i]);
 		PCM_ChangePcmPara(pcm8[i]);
 
-		PCM_MeSetLoop(pcm8[i], 0x3FF);//SOUNDRATE*120);
+		PCM_MeSetLoop(pcm8[i], 0);//SOUNDRATE*120);
 		PCM_Start(pcm8[i]);
 	}
 }

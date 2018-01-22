@@ -1254,7 +1254,7 @@ static void Set6PCM()
 		PCM_SetInfo(pcm6[i], &info[i]);
 		PCM_ChangePcmPara(pcm6[i]);
 
-		PCM_MeSetLoop(pcm6[i], 0x3FF);//SOUNDRATE*120);
+		PCM_MeSetLoop(pcm6[i], 0);//SOUNDRATE*120);
 		PCM_Start(pcm6[i]);
 	}
 }

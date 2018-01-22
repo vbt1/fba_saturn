@@ -784,8 +784,7 @@ static void dummy(void)
 /*static*/ int DrvExit()
 {
 	nBurnFunction = NULL;
-//	SPR_InitSlaveSH();
-
+	SPR_InitSlaveSH();
 #ifdef CZ80
 	CZetExit2();
 //	CZetExit();

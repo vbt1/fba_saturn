@@ -1,7 +1,7 @@
 #include "d_solomon.h"
 #define nInterleave 2
 #define RAZE0 1
-#define CZET_SLAVE 1
+//#define CZET_SLAVE 1
 
 int ovlInit(char *szShortName)
 {
@@ -562,12 +562,12 @@ INT32 SolomonFrame()
 
 #ifndef CZET_SLAVE
 		// Run Z80 #2
-		nCurrentCPU = 1;
-		CZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+//		nCurrentCPU = 1;
+		CZetOpen(1);
+		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[1];
 		nCyclesSegment = CZetRun(nCyclesSegment);
-		nCyclesDone[nCurrentCPU] += nCyclesSegment;
+		nCyclesDone[1] += nCyclesSegment;
 		CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 		CZetClose();
 #else

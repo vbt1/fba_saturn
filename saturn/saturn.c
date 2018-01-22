@@ -201,7 +201,7 @@ static void initSound()
 	PCM_ChangePcmPara(pcm);
 
 //	PCM_MeSetLoop(pcm, 0x1FF);//SOUNDRATE*60);
-	PCM_MeSetLoop(pcm, 0x3FF);//SOUNDRATE*120);
+	PCM_MeSetLoop(pcm, 0);//SOUNDRATE*120);
 
 //	if (pcm == NULL) {
 //		while(1);
@@ -288,7 +288,7 @@ void resetLayers()
 
 	PCM_MeStop(pcm);
 //	PCM_MeReset(pcm);
-	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
+	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*16);
 	nSoundBufferPos=0;
 	PCM_MeStart(pcm);
 }

@@ -389,7 +389,6 @@ static void DrvInitSaturn()
 static int DrvExit()
 {
 	SPR_InitSlaveSH();
-	unsigned int i;
 #ifdef RAZE
 	z80_stop_emulating();
 	z80_add_write(0xd000, 0xd7ff, 1, (void *)NULL);
@@ -402,7 +401,7 @@ static int DrvExit()
 	AY8910Exit(0);
 	AY8910Exit(1);
 
-	for(int i=0;i<6;i++)
+	for(unsigned int i=0;i<6;i++)
 	{
 		PCM_MeStop(pcm6[i]);
 		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
@@ -579,7 +578,7 @@ static void Set6PCM()
 		PCM_SetInfo(pcm6[i], &info[i]);
 		PCM_ChangePcmPara(pcm6[i]);
 
-		PCM_MeSetLoop(pcm6[i], 0x3FF);//SOUNDRATE*120);
+		PCM_MeSetLoop(pcm6[i], 0);//SOUNDRATE*120);
 		PCM_Start(pcm6[i]);
 	}
 }

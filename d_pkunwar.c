@@ -1404,6 +1404,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	free (AllMem);
 	AllMem = NULL;
 	vblank /*= flipscreen */= 0;
+	SPR_InitSlaveSH();
 	return 0;
 }
 

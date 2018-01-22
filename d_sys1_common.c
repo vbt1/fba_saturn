@@ -981,6 +981,8 @@ spriteCache = NULL;
 	DecodeFunction = NULL;
 	MakeInputsFunction = NULL;
 	CollisionFunction = NULL;
+
+	SPR_InitSlaveSH();
 	return 0;
 }
 /*==============================================================================================

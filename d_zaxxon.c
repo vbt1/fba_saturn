@@ -924,6 +924,12 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	sx_lut = NULL;
 	sy_lut = NULL;
 	charaddr_lut = NULL;
+
+	for (int i = 0; i < 240; i++) {
+		srcxmask[i] = NULL;
+	}
+	srcx_buffer = NULL;
+
 	free(SaturnMem);
 	SaturnMem = NULL;
 
@@ -1453,18 +1459,19 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	sx_lut				= Next; Next += 256*sizeof(INT16);
 	sy_lut				= Next; Next += 256*sizeof(INT16);
 	charaddr_lut		= Next; Next += 256*sizeof(UINT16);
+	srcx_buffer		= Next; Next += 256*240*sizeof(UINT32);
 	CZ80Context		= Next; Next += 0x1080;
 
 
 //--------------
-	AllMem						= Next;
-	DrvZ80ROM				= Next; Next += 0x010000;
-	DrvZ80DecROM		= Next; Next += 0x010000;
+	AllMem					= Next;
+	DrvZ80ROM			= Next; Next += 0x010000;
+	DrvZ80DecROM	= Next; Next += 0x010000;
 	DrvZ80ROM2		= Next; Next += 0x010000;
 
 	DrvGfxROM0		= cache;
 
- 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+ 	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
 	DrvGfxROM2		= &ss_vram[0x1100];//Next; Next += 0x020000;
 
 //	DrvGfxROM1		= Next; Next += 0x010000;
@@ -1546,6 +1553,11 @@ void DrvInitSaturn()
 	}
 
 	SaturnInitMem();
+
+	for(unsigned int i = 0;i<240;i++)
+	{
+		srcxmask[i] = srcx_buffer + (256*i);
+	}
 	memset(CZ80Context,0x00,0x1080);
 
 	make_lut();
@@ -1673,11 +1685,7 @@ void make_lut()
 			srcx = x ^ flipmask;
 			srcx += ((vf >> 1) ^ 0xff) + 1;
 			srcx += flipoffs;
-// à retester			srcymask[x][240-y] = (srcx & xmask)+y*256; 
-//			srcxmask[y>>1][x] = (x + offset) & xmask;
-//			srcxmask[y][x] = srcx & xmask;
 			srcxmask[y][x] = srcx & xmask;
-//			srcxmask[y*256+x] = srcx & xmask;
 		}
 	}
 }

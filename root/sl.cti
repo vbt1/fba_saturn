@@ -3916,6 +3916,10 @@ EndFile
 				File BD.6K;1
 					Source BLKTIGER\BD.6K
 				EndFile
+
+				File SFX.ROM;1
+					Source BLKTIGER\SFX.ROM
+				EndFile
 			EndDirectory
 
 			Directory WIZ

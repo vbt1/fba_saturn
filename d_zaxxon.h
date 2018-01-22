@@ -24,7 +24,8 @@ void make_lut();
 /*static*/ UINT32 *colpromoffs_lut = NULL;
 /*static*/ UINT32 *map_lut = NULL;
 ///*static*/ UINT32 srcxmask[240][256];
-/*static*/ UINT32 srcxmask[240][256];
+/*static*/ UINT32 *srcxmask[240]; //[256];
+/*static*/ UINT32 *srcx_buffer = NULL;
 ///*static*/ UINT32 srcymask[256][240];
 
 ///*static*/ UINT32 **srcxmask;//[240][256];

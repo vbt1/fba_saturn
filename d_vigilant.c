@@ -1,5 +1,5 @@
 #define BMP 1
-#define SOUND 1
+//#define SOUND 1
 #define CZ80 1
 //#define RAZE1 1
 #define RAZE0 1
@@ -47,10 +47,11 @@ int ovlInit(char *szShortName)
 	DrvSpriteRam           = Next; Next += 0x00100;
 	DrvPaletteRam          = Next; Next += 0x00800;
 	DrvVideoRam            = Next; Next += 0x01000;
-	DrvPalette             = (UINT32*)Next; Next += (512 + 32) * sizeof(UINT32);
+//	DrvPalette             = (UINT32*)Next; Next += (512 + 32) * sizeof(UINT32);
 
 	RamEnd                 = Next;
-
+	
+	vb_buffer				 = Next; Next += 0x4000 * sizeof(UINT32);
 	DrvChars               = cache;//Next; Next += 0x1000 * 8 * 8;
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	DrvSprites             = &ss_vram[0x1100];//Next; Next += 0x1000 * 16 * 16;
@@ -530,6 +531,11 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	memset(Mem, 0, nLen);
 	MemIndex();
 
+	vbmap[0] = vb_buffer + (0x1000*0);
+	vbmap[1] = vb_buffer + (0x1000*1);
+	vbmap[2] = vb_buffer + (0x1000*2);
+	vbmap[3] = vb_buffer + (0x1000*3);
+
 	DrvTempRom = (UINT8 *)(0x00200000);
 //FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom                 ",10,100);
 	// Load Z80 #1 Program Roms
@@ -1006,13 +1012,14 @@ static void Set8PCM()
 		PCM_SetInfo(pcm8[i], &info[i]);
 		PCM_ChangePcmPara(pcm8[i]);
 
-		PCM_MeSetLoop(pcm8[i], 0x3FF);//SOUNDRATE*120);
+		PCM_MeSetLoop(pcm8[i], 0);//SOUNDRATE*120);
 		PCM_Start(pcm8[i]);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
+	SPR_InitSlaveSH();
 	CZetExit2();
 
 #ifdef SOUND
@@ -1032,7 +1039,9 @@ static void Set8PCM()
 	MemEnd = RamEnd = DrvZ80Rom1 = DrvZ80Rom2 = DrvZ80Ram1 = DrvZ80Ram2 = NULL;
 	DrvVideoRam = DrvSpriteRam = DrvPaletteRam = DrvChars = DrvBackTiles = DrvSprites = NULL;
 	DrvSamples = DrvTempRom = CZ80Context = NULL;
-	DrvPalette = lBuffer = NULL;
+	vbmap[0] = vbmap[1] = vbmap[2] = vbmap[3] = NULL;
+	/*DrvPalette =*/ lBuffer = NULL;
+	vb_buffer = NULL;
 
 	if (Mem) {
 		free(Mem);

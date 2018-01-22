@@ -455,6 +455,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 
 /*static*/ INT32 DrvExit()
 {
+	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
 

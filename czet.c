@@ -447,7 +447,18 @@ int CZetHL(int n)
 
 void CZetSetIRQLine(const int line, const int status)
 {
-	lastCZetCPUContext->nInterruptLatch = line | status;
+	switch (status)
+	{
+/*	case CZET_IRQSTATUS_HOLD:
+		lastCZetCPUContext->nInterruptLatch = line | 1;
+		CZetRun(100);
+		lastCZetCPUContext->nInterruptLatch = 0 | 0;
+//		CZetRun(0);
+		return;*/
+	default:
+		lastCZetCPUContext->nInterruptLatch = line | status;
+		return;
+	}
 }
 
 int CZetNmi()

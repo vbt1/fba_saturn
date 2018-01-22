@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 55
+#define NB_DRV 56
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -130,7 +130,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvTransfrm = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvFantzn2  = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvAstrofl = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvOpaopa = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvOpaopa = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvSlapshtr = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 	static struct BurnDriver BurnDrvSolomon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
@@ -383,9 +383,9 @@ BurnDrvAstrofl.szShortName="astrofl";
 BurnDrvAstrofl.szFullNameA="Astro Flash (Japan)";
 BurnDrvAstrofl.szParent="segae";	
 
-//BurnDrvOpaopa.szShortName="opaopa";
-//BurnDrvOpaopa.szFullNameA="Opa Opa (MC-8123, 317-0042)";
-//BurnDrvOpaopa.szParent="segae";	
+BurnDrvOpaopa.szShortName="opaopa";
+BurnDrvOpaopa.szFullNameA="Opa Opa (MC-8123, 317-0042)";
+BurnDrvOpaopa.szParent="segae";	
 
 BurnDrvSlapshtr.szShortName="slapshtr";
 BurnDrvSlapshtr.szFullNameA="Slap Shooter";
@@ -408,7 +408,7 @@ pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvMSX_1942;
 
-//pDriver[i++] = &BurnDrvOpaopa;
+pDriver[i++] = &BurnDrvOpaopa;
 //pDriver[i++] = &BurnDrvKungfut;
 //pDriver[i++] = &BurnDrvStinger;
 //pDriver[i++] = &BurnDrvScion;

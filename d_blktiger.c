@@ -8,8 +8,75 @@
 #include "d_blktiger.h"
 #include    "machine.h"
 #define RAZE0 1
-#define SND 1
+//#define SND 1
 #define nYM2203Clockspeed 3579545
+
+typedef struct
+{
+	int position;
+	int size;
+	unsigned char loop;
+}SFX;
+
+typedef struct
+{
+	int track_position;
+	int position;
+	int size;
+	unsigned char num;
+}PCM_INFO;
+
+PCM_INFO pcm_info[7];
+
+SFX sfx_list[68]=
+{
+/*001.pcm*/{0,0,0},
+/*002.pcm*/{10290,27654,0},
+/*003.pcm*/{37944,4376,0},
+/*004.pcm*/{42320,6904,0},
+/*005.pcm*/{49224,9786,0},
+/*006.pcm*/{59010,9306,0},
+/*007.pcm*/{68316,7666,0},
+/*008.pcm*/{75982,5368,0},
+/*009.pcm*/{81350,9990,0},
+/*010.pcm*/{91340,5610,0},
+/*011.pcm*/{96950,6440,0},
+/*012.pcm*/{103390,3762,0},
+/*013.pcm*/{107152,10910,0},
+/*014.pcm*/{118062,6230,0},
+/*015.pcm*/{124292,8420,0},
+/*016.pcm*/{132712,6138,0},
+/*017.pcm*/{138850,12274,0},
+/*018.pcm*/{151124,10140,0},
+/*019.pcm*/{161264,7252,0},
+/*020.pcm*/{168516,9980,0},
+/*021.pcm*/{178496,6582,0},
+/*022.pcm*/{185078,5528,0},
+/*023.pcm*/{190606,12284,0},
+/*024.pcm*/{202890,16966,0},
+/*025.pcm*/{219856,19194,0},
+/*026.pcm*/{239050,3068,0},
+/*027.pcm*/{242118,4946,0},
+/*028.pcm*/{247064,3530,0},
+/*029.pcm*/{250594,13038,0},
+/*030.pcm*/{263632,5566,0},
+	{-1,0,0},
+/*032.pcm*/{269198,23024,0},	
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
+/*058.pcm*/{292222,5556,0},	
+/*059.pcm*/{297778,58828,0},	
+/*060.pcm*/{356606,9620,0},	
+/*061.pcm*/{366226,14790,0},	
+/*062.pcm*/{381016,9362,0},	
+/*063.pcm*/{390378,33790,0},	
+/*064.pcm*/{424168,6428,0},	
+/*065.pcm*/{430596,27342,0},	
+/*066.pcm*/{457938,4290,0},	
+/*067.pcm*/{462228,9208,0},	
+};
+
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -198,7 +265,76 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			{
 				SPR_WaitEndSlaveSH();
 			}*/
+//			data=;
 			*soundlatch = data;
+//			if(data==17 || data==27 || data==58)
+			{
+//				char str[20];
+//				sprintf(str, "%03d.PCM", data);
+
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)str,10,40);
+
+//				int fid				= GFS_NameToId((Sint8 *)str);
+//				long fileSize	= GetFileSize(fid);
+				int i;
+				PcmStatus	*st=NULL;
+
+				for(i=0;i<7;i++)
+				{
+					PcmWork		*work = *(PcmWork **)pcm7[i];
+					st = &work->status;
+
+	if(st->play ==PCM_STAT_PLAY_ERR_STOP)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,30+i*10);
+	else if (st->play ==PCM_STAT_PLAY_CREATE)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,30+i*10);
+	else if (st->play ==PCM_STAT_PLAY_PAUSE)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,30+i*10);
+	else if (st->play ==PCM_STAT_PLAY_START)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,30+i*10);
+	else if (st->play ==PCM_STAT_PLAY_HEADER)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,30+i*10);
+	else if (st->play ==PCM_STAT_PLAY_TIME)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,30+i*10);
+	else if (st->play ==PCM_STAT_PLAY_END)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,30+i*10);
+	else
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,30+i*10);
+
+					if (st->play != PCM_STAT_PLAY_TIME) 
+						break;
+				}
+if(i==1)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,40);
+if(i==2)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",10,50);
+if(i==2)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",10,60);
+if(i==2)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",10,70);
+if(i==2)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"5",10,80);
+if(i==2)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"6",10,90);
+if(i==2)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,100);
+
+//				GFS_Load(fid, 0, (UINT8 *)(0x25a20000+(0x4000*i)), fileSize);
+				if(i<7 && data!=255 && sfx_list[data].size!=0)
+				{
+//					*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * (i-1)) &= ~0x60;
+
+//					memcpy((UINT8 *)(0x25a20000+(0x4000*i)),(UINT8*)(0x00200000+sfx_list[data].position),sfx_list[data].size);
+//					PCM_Start(pcm7[i-1]);
+//					PCM_NotifyWriteSize(pcm7[i-1], sfx_list[data].size);
+//					PCM_Task(pcm7[i-1]); // bon emplacement
+					pcm_info[i].position = 0;
+					pcm_info[i].track_position = sfx_list[data].position;
+					pcm_info[i].size = sfx_list[data].size;
+					pcm_info[i].num = data;
+					st->play = PCM_STAT_PLAY_START;
+				}
+			}
 		}
 		return;
 
@@ -402,8 +538,9 @@ static INT32 MemIndex()
 	UINT8 *Next; Next = AllMem;
 
 	DrvZ80ROM0	= Next; Next += 0x050000;
+#ifdef SND
 	DrvZ80ROM1	= Next; Next += 0x008000;
-
+#endif
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	DrvGfxROM0	= SS_CACHE; //Next; Next += 0x020000;
 //	DrvGfxROM1	= SS_CACHE + 0x010000;
@@ -415,17 +552,18 @@ static INT32 MemIndex()
 	AllRam		= Next;
 
 	DrvZ80RAM0	= Next; Next += 0x001e00;
+#ifdef SND
 	DrvZ80RAM1	= Next; Next += 0x000800;
-
+#endif
 	DrvPalRAM	= Next; Next += 0x000800;
-	DrvTxRAM	= Next; Next += 0x000800;
+	DrvTxRAM		= Next; Next += 0x000800;
 	DrvBgRAM	= Next; Next += 0x004000;
 	DrvSprRAM	= Next; Next += 0x001200;
-	DrvSprBuf	= Next; Next += 0x001200;
+	DrvSprBuf		= Next; Next += 0x001200;
 
 	DrvScreenLayout	= Next; Next += 0x000001;
-	DrvBgEnable	= Next; Next += 0x000001;
-	DrvFgEnable	= Next; Next += 0x000001;
+	DrvBgEnable		= Next; Next += 0x000001;
+	DrvFgEnable		= Next; Next += 0x000001;
 	DrvSprEnable	= Next; Next += 0x000001;
 
 	DrvVidBank	= Next; Next += 0x000001;
@@ -609,6 +747,10 @@ static INT32 DrvInit()
 	PCM_MeStop(pcm);
 	Set7PCM();
 
+	int fid				= GFS_NameToId((Sint8 *)"SFX.ROM");
+	long fileSize	= GetFileSize(fid);
+
+	GFS_Load(fid, 0, (UINT8*)0x00200000, fileSize);
 	drawWindow(0,224,240,0,64);
 #ifndef RAZE
 	CZetInit2(2,CZ80Context);
@@ -781,6 +923,43 @@ static INT32 DrvFrame()
 //		CZetClose();
 #endif
 	}
+
+		for (unsigned int i=0;i<7;i++)
+		{
+
+			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
+	//		if(pcm_info[i].num != 0xff)
+			{
+				int size=2048;
+				if(pcm_info[i].position+2048>pcm_info[i].size)
+				{
+					size=pcm_info[i].size-pcm_info[i].position;
+					pcm_info[i].num = 0xff;
+				}
+				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1))),(INT16*)(0x00200000+pcm_info[i].track_position),size);
+				pcm_info[i].track_position+=size;
+				pcm_info[i].position+=size;
+//				PCM_NotifyWriteSize(pcm7[i], size*2);
+//				memcpy((UINT8 *)(0x25a20000+(0x4000*i)),(UINT8*)(0x00200000+pcm_info[i].track_position),pcm_info[i].size);
+				if(pcm_info[i].num == 0xff)
+					size=0x900;
+				PCM_NotifyWriteSize(pcm7[i], size);
+				PCM_Task(pcm7[i]);
+
+//				pcm_info[i].num = 0xff;
+			}
+			else
+			{
+				PCM_Task(pcm7[i]);
+				PcmWork	*work = *(PcmWork **)pcm7[i];
+				PcmStatus *st = &work->status;
+				st->play = PCM_STAT_PLAY_END;
+				memset((INT16 *)(0x25a20000+(0x4000*i)),0x00,4096);
+			}
+
+		}
+
+
 #ifdef SND
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		{
@@ -951,11 +1130,11 @@ static void Set7PCM()
 
 	for (int i=0; i<7; i++)
 	{
-		PCM_PARA_WORK(&para[i]) = (struct PcmWork *)&g_movie_work[i];
-		PCM_PARA_RING_ADDR(&para[i]) = (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
-		PCM_PARA_RING_SIZE(&para[i]) = RING_BUF_SIZE;
-		PCM_PARA_PCM_ADDR(&para[i]) = PCM_ADDR+(0x4000*(i+1));
-		PCM_PARA_PCM_SIZE(&para[i]) = PCM_SIZE;
+		PCM_PARA_WORK(&para[i])			= (struct PcmWork *)&g_movie_work[i];
+		PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
+		PCM_PARA_RING_SIZE(&para[i])		= RING_BUF_SIZE;
+		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(0x4000*(i+1));
+		PCM_PARA_PCM_SIZE(&para[i])		= PCM_SIZE;
 
 		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
 		st = &g_movie_work[i].status;
@@ -975,8 +1154,8 @@ static void Set7PCM()
 
 		PCM_SetInfo(pcm7[i], &info[i]);
 		PCM_ChangePcmPara(pcm7[i]);
-
-		PCM_MeSetLoop(pcm7[i], 0x3FF);//SOUNDRATE*120);
+// VBT : enleve la lecture en boucle !! merci zeromu!!!
+//		*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= ~0x60;
 		PCM_Start(pcm7[i]);
 	}
 }

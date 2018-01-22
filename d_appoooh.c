@@ -606,7 +606,7 @@ static INT32 DrvCommonInit()
 	SN76489Init(2, 18432000 / 6, 0);
 
 //	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1, 0.50);
-	memset(MSM5205Context,0x00,0x1000);
+	memset(MSM5205Context,0x00,0x4000);
 	MSM5205Init(0, MSM5205Context, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0, 0.50);
 	make_lut();
 
@@ -858,7 +858,8 @@ static void DrvInitSaturn()
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
-//	PCM_MeStop(pcm);
+	PCM_Task(pcm);
+	PCM_MeStop(pcm);
 	Set4PCM();
 	drawWindow(0,224,240,0,64);
 }
@@ -953,16 +954,18 @@ static INT32 DrvFrame()
 
 	nSoundBufferPos+=(SOUND_LEN); // DOIT etre deux fois la taille copiee
 	
-
+	if(nSoundBufferPos>=0x1800)
+	{
 		for (unsigned int i=0;i<4;i++)
 		{
-			PCM_NotifyWriteSize(pcm4[i], SOUND_LEN);
+			PCM_NotifyWriteSize(pcm4[i], nSoundBufferPos);
 			PCM_Task(pcm4[i]); // bon emplacement
 		}
 
-	if(nSoundBufferPos>=0x2000)//RING_BUF_SIZE)
-	{
-		nSoundBufferPos=0;
+//		if(nSoundBufferPos>=0x000)//RING_BUF_SIZE)
+//		{
+			nSoundBufferPos=0;
+//		}
 	}
 	return 0;
 }
@@ -1012,7 +1015,7 @@ static void Set4PCM()
 		PCM_SetInfo(pcm4[i], &info[i]);
 		PCM_ChangePcmPara(pcm4[i]);
 
-		PCM_MeSetLoop(pcm4[i], 0x3FF);
+		PCM_MeSetLoop(pcm4[i], 0);
 		PCM_Start(pcm4[i]);
 	}
 }
