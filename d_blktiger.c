@@ -10,6 +10,9 @@
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
 
+void	smpVblIn( void );
+
+
 typedef struct
 {
 	int position;
@@ -25,7 +28,7 @@ typedef struct
 	unsigned char num;
 }PCM_INFO;
 
-PCM_INFO pcm_info[7];
+PCM_INFO pcm_info[14];
 
 SFX sfx_list[68]=
 {
@@ -280,9 +283,9 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 				int i;
 				PcmStatus	*st=NULL;
 
-				for(i=1;i<8;i++)
+				for(i=0;i<14;i++)
 				{
-					PcmWork		*work = *(PcmWork **)pcm8[i];
+					PcmWork		*work = *(PcmWork **)pcm14[i];
 					st = &work->status;
 					st->cnt_loop = 0;
 	if(st->play ==PCM_STAT_PLAY_ERR_STOP)
@@ -302,32 +305,35 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 	else
 			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
 
-					if (st->play != PCM_STAT_PLAY_TIME) 
+					if (st->play != PCM_STAT_PLAY_TIME && i>0) 
 						break;
 				}
-if(i==1)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,40);
-if(i==2)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",10,50);
-if(i==2)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",10,60);
-if(i==2)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",10,70);
-if(i==2)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"5",10,80);
-if(i==2)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"6",10,90);
-if(i==2)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,100);
 
-//				GFS_Load(fid, 0, (UINT8 *)(0x25a20000+(0x4000*i)), fileSize);
-				if(i<8 && data!=255 && data!=48 && sfx_list[data].size!=0)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",10,40);
+if(i==1)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,50);
+if(i==2)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",10,60);
+if(i==3)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",10,70);
+if(i==4)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",10,80);
+if(i==5)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"5",10,90);
+if(i==6)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"6",10,100);
+if(i==7)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,110);
+if(i==8)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"8",10,120);
+
+				if(i<14 && data!=255 && data!=48 && sfx_list[data].size!=0)
 				{
 					pcm_info[i].position = 0;
 					pcm_info[i].track_position = sfx_list[data].position;
 					pcm_info[i].size = sfx_list[data].size*8;
 					pcm_info[i].num = data;
-					PCM_Start(pcm8[i]);
+					PCM_Start(pcm14[i]);
 
 					char toto[50];
 					char *titi=&toto[0];
@@ -746,17 +752,17 @@ static INT32 DrvInit()
 		DrvGfxDecode();
 	}
 	PCM_MeStop(pcm);
-	stmInit();
 
 	int fid				= GFS_NameToId((Sint8 *)"SFX.ROM");
 	long fileSize	= GetFileSize(fid);
 
 	GFS_Load(fid, 0, (UINT8*)0x00200000, fileSize);
 
+	stmInit();
 	stm = stmOpen("048.PCM");
 	STM_ResetTrBuf(stm);
-	
-	Set8PCM();
+
+	Set14PCM();
 
 	drawWindow(0,224,240,0,64);
 #ifndef RAZE
@@ -828,9 +834,9 @@ static INT32 DrvExit()
 #endif
 	CZetExit2();
 
-	for(int i=0;i<8;i++)
+	for(int i=0;i<14;i++)
 	{
-		PCM_MeStop(pcm8[i]);
+		PCM_MeStop(pcm14[i]);
 		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
 
@@ -896,12 +902,16 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 		if (i == 19) z80_lower_IRQ();
 #endif
 	}
-// streaming de la musique
-	STM_ExecServer();
-	PCM_Task(pcm8[0]);
 
-/*		
-		for (unsigned int i=1;i<8;i++)
+// streaming de la musique
+//	PCM_EntryNext(pcm[1]);
+	PCM_NotifyWriteSize(pcm14[0], 4096);
+	STM_ExecServer();
+//	smpStmTask(stm);
+//	PCM_NotifyWriteSize(pcm14[0], 2048);
+	PCM_Task(pcm14[0]);
+
+		for (unsigned int i=1;i<14;i++)
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
 			{
@@ -911,21 +921,23 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 					size=pcm_info[i].size-pcm_info[i].position;
 					pcm_info[i].num = 0xff;
 				}
+//				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
 				if(pcm_info[i].num == 0xff)
 					size=0x900;
-				PCM_NotifyWriteSize(pcm8[i], size);
-				PCM_Task(pcm8[i]);
+				PCM_NotifyWriteSize(pcm14[i], size);
+				PCM_Task(pcm14[i]);
 			}
 			else
 			{
-				PCM_MeStop(pcm8[i]);
+				PCM_MeStop(pcm14[i]);
+//				memset((INT16 *)(0x25a20000+(0x4000*(i+1))),0x00,4096);
 				memset((INT16 *)(0x25a20000+(0x4000*(i+1))),0x00,4096);
 			}
 		}
-*/
+
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
@@ -933,13 +945,13 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void draw_sprites()
 {
+	UINT32 delta	= 3;
+
 	for (INT32 offs = 0x200 - 4; offs >= 0; offs -= 4)
 	{
 		UINT32 attr = DrvSprBuf[offs+1];
 		INT32 sx = DrvSprBuf[offs + 3] - ((attr & 0x10) << 4);
 		INT32 sy = DrvSprBuf[offs + 2];
-
-		UINT32 delta	= ((offs/4)+3);
 
 		if (sy < -15 || sy > 239 || sx < -15 || sx > 255)
 		{
@@ -960,6 +972,7 @@ static void draw_sprites()
 			ss_sprite[delta].color			    = color<<4;//Colour<<4;
 			ss_sprite[delta].charAddr		= 0x220+(code<<4);
 		}
+		delta++;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1059,22 +1072,36 @@ static PcmHn createHandle(PcmCreatePara *para)
 	return pcm;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void Set8PCM()
+static void Set14PCM()
 {
-	PcmCreatePara	para[8];
-	PcmInfo 		info[8];
+	PcmCreatePara	para[14];
+	PcmInfo 		info[14];
 	PcmStatus	*st;
-	static PcmWork g_movie_work[8];
+	static PcmWork g_movie_work[14];
 
 	for (int i=0; i<8; i++)
 	{
 		PCM_PARA_WORK(&para[i])			= (struct PcmWork *)&g_movie_work[i];
-		PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
-		PCM_PARA_RING_SIZE(&para[i])		= RING_BUF_SIZE;
-		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(0x4000*(i+1));
+//		PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
+		if(i==0)
+		{
+//			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x64000;
+			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000;
+			PCM_PARA_RING_SIZE(&para[i])		= 0x20000;
+		}
+		else
+		{
+//			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
+			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x5C000+(0x2000*(i+1));
+			PCM_PARA_RING_SIZE(&para[i])		= RING_BUF_SIZE;
+		}
+//		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(0x4000*(i+1));
+		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(0x2000*(i+1));
 		PCM_PARA_PCM_SIZE(&para[i])		= PCM_SIZE;
 
 		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
+		st = &g_movie_work[i].status;
+		st->need_ci = PCM_ON;
 	 
 		PCM_INFO_FILE_TYPE(&info[i]) = PCM_FILE_TYPE_NO_HEADER;			
 		PCM_INFO_DATA_TYPE(&info[i])=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
@@ -1082,33 +1109,36 @@ static void Set8PCM()
 		PCM_INFO_SAMPLING_BIT(&info[i]) = 16;
 
 		PCM_INFO_SAMPLING_RATE(&info[i])	= SOUNDRATE;//30720L;//44100L;
-//		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
 
 		if(i==0)
 		{
 			STM_ResetTrBuf(stm);
-			pcm8[i] = PCM_CreateStmHandle(&para[i], stm);
+			pcm14[i] = PCM_CreateStmHandle(&para[i], stm);
+			PCM_SetInfo(pcm14[i], &info[i]);
+			PCM_ChangePcmPara(pcm14[i]);	
 		}
 		else
 		{
-			st = &g_movie_work[i].status;
-			st->need_ci = PCM_ON;
-			PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
 			PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
+			PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+			
+			pcm14[i] = createHandle(&para[i]);
 
-			pcm8[i] = createHandle(&para[i]);
-			PCM_SetPcmStreamNo(pcm8[i], i);
+			PCM_SetPcmStreamNo(pcm14[i], i);
+
+			PCM_SetInfo(pcm14[i], &info[i]);
+			PCM_ChangePcmPara(pcm14[i]);	
 		}
-
-		PCM_SetInfo(pcm8[i], &info[i]);
-		PCM_ChangePcmPara(pcm8[i]);
-		PCM_Start(pcm8[i]);
+// VBT : enleve la lecture en boucle !! merci zeromu!!!
+//		*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= ~0x60;
+		PCM_Start(pcm14[i]);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmInit(void)
 {
 	STM_Init(12, 24, stm_work);
+//	STM_Init(1, 2, stm_work);
 
 //	STM_SetErrFunc(errStmFunc, NULL);
 
@@ -1129,12 +1159,36 @@ StmHn stmOpen(char *fname)
 	STM_KEY_FN(&key) = STM_KEY_CN(&key) = STM_KEY_SMMSK(&key) = 
 		STM_KEY_SMVAL(&key) = STM_KEY_CIMSK(&key) = STM_KEY_CIVAL(&key) =
 		STM_KEY_NONE;
-	return STM_OpenFid(grp_hd, fid, &key, STM_LOOP_NOREAD);
+	return STM_OpenFid(grp_hd, fid, &key, STM_LOOP_READ); //STM_LOOP_NOREAD);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmClose(StmHn fp)
 {
 	STM_Close(fp);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+#define VBL_RATE_STM_EXEC_SERVER		(1)
+Sint32 call_stm_exec_server;
+Sint32 cnt_vbl_in = 0;
+Sint32 flag_stm_exec_trans = 0;
+
+void	smpVblIn( void )
+{
+	cnt_vbl_in++;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void smpStmTask(StmHn stm[])
+{
+	if (call_stm_exec_server < cnt_vbl_in / VBL_RATE_STM_EXEC_SERVER) {
+
+		STM_ExecServer();
+
+		if (call_stm_exec_server < 0) {
+			call_stm_exec_server++;
+		} else {
+			call_stm_exec_server = cnt_vbl_in / VBL_RATE_STM_EXEC_SERVER;
+		}
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
@@ -1703,6 +1757,7 @@ static void DrvInitSaturn()
 
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+3;
+	nBurnFunction = smpVblIn;
 
 //3 nbg
 #ifdef BG_BANK
