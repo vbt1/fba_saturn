@@ -19,14 +19,20 @@ static void make_lut(void);
 static void DrvInitSaturn();
 static void draw_sprites();
 static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
-static void Set7PCM();
+static void Set8PCM();
 
 #define nBurnSoundLen 128
-PcmHn 			pcm7[7];
+PcmHn 	pcm8[8];
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L
 
+UINT8   stm_work[STM_WORK_SIZE(12, 24)];
+StmHn stm;
+StmGrpHn grp_hd;
+void stmInit(void);
+void stmClose(StmHn fp);
+StmHn stmOpen(char *fname);
 
 #define VDP2_BASE           0x25e00000
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
@@ -87,7 +93,7 @@ static UINT8 DrvInputs[3] = {0,0,0};
 static UINT8 DrvReset = 0;
 static INT32 watchdog = 0;
 
-static INT32 nCyclesTotal[2];
+//static INT32 nCyclesTotal[2];
 
 static struct BurnInputInfo DrvInputList[] = {
 	{"Coin 1"       	  , BIT_DIGITAL  , DrvJoy1 + 6,	 "p1 coin"  },

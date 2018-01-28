@@ -8,7 +8,6 @@
 #include "d_blktiger.h"
 #include    "machine.h"
 #define RAZE0 1
-//#define SND 1
 #define nYM2203Clockspeed 3579545
 
 typedef struct
@@ -30,7 +29,8 @@ PCM_INFO pcm_info[7];
 
 SFX sfx_list[68]=
 {
-/*001.pcm*/{0,0,0},
+	{0,0,0},
+/*001.pcm*/{0,10290,0},
 /*002.pcm*/{10290,27654,0},
 /*003.pcm*/{37944,4376,0},
 /*004.pcm*/{42320,6904,0},
@@ -63,7 +63,8 @@ SFX sfx_list[68]=
 	{-1,0,0},
 /*032.pcm*/{269198,23024,0},	
 	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
-	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	
+/*048.pcm*/{0,365708,0},
 	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
 /*058.pcm*/{292222,5556,0},	
 /*059.pcm*/{297778,58828,0},	
@@ -279,27 +280,27 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 				int i;
 				PcmStatus	*st=NULL;
 
-				for(i=0;i<7;i++)
+				for(i=1;i<8;i++)
 				{
-					PcmWork		*work = *(PcmWork **)pcm7[i];
+					PcmWork		*work = *(PcmWork **)pcm8[i];
 					st = &work->status;
-
+					st->cnt_loop = 0;
 	if(st->play ==PCM_STAT_PLAY_ERR_STOP)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,30+i*10);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
 	else if (st->play ==PCM_STAT_PLAY_CREATE)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,30+i*10);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40+i*10);
 	else if (st->play ==PCM_STAT_PLAY_PAUSE)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,30+i*10);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,40+i*10);
 	else if (st->play ==PCM_STAT_PLAY_START)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,30+i*10);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,40+i*10);
 	else if (st->play ==PCM_STAT_PLAY_HEADER)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,30+i*10);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,40+i*10);
 	else if (st->play ==PCM_STAT_PLAY_TIME)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,30+i*10);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,40+i*10);
 	else if (st->play ==PCM_STAT_PLAY_END)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,30+i*10);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40+i*10);
 	else
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,30+i*10);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
 
 					if (st->play != PCM_STAT_PLAY_TIME) 
 						break;
@@ -320,19 +321,19 @@ if(i==2)
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,100);
 
 //				GFS_Load(fid, 0, (UINT8 *)(0x25a20000+(0x4000*i)), fileSize);
-				if(i<7 && data!=255 && sfx_list[data].size!=0)
+				if(i<8 && data!=255 && data!=48 && sfx_list[data].size!=0)
 				{
-//					*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * (i-1)) &= ~0x60;
-
-//					memcpy((UINT8 *)(0x25a20000+(0x4000*i)),(UINT8*)(0x00200000+sfx_list[data].position),sfx_list[data].size);
-//					PCM_Start(pcm7[i-1]);
-//					PCM_NotifyWriteSize(pcm7[i-1], sfx_list[data].size);
-//					PCM_Task(pcm7[i-1]); // bon emplacement
 					pcm_info[i].position = 0;
 					pcm_info[i].track_position = sfx_list[data].position;
-					pcm_info[i].size = sfx_list[data].size;
+					pcm_info[i].size = sfx_list[data].size*8;
 					pcm_info[i].num = data;
-					st->play = PCM_STAT_PLAY_START;
+					PCM_Start(pcm8[i]);
+
+					char toto[50];
+					char *titi=&toto[0];
+					titi=itoa(data);
+					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"       ",70,40+i*10);
+					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,70,40+i*10);
 				}
 			}
 		}
@@ -398,8 +399,8 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,100)
 		return;
 
 		case 0x0c:
-			*DrvSprEnable = ~data & 0x02;
-			*DrvBgEnable  = ~data & 0x04;
+			*DrvBgEnable = ~data & 0x02;
+			*DrvSprEnable  = ~data & 0x04;
   /*
 			ss_regs->dispenbl &= 0xfffD;
 			ss_regs->dispenbl |= (*DrvBgEnable >> 1) & 0x0002;
@@ -745,12 +746,18 @@ static INT32 DrvInit()
 		DrvGfxDecode();
 	}
 	PCM_MeStop(pcm);
-	Set7PCM();
+	stmInit();
 
 	int fid				= GFS_NameToId((Sint8 *)"SFX.ROM");
 	long fileSize	= GetFileSize(fid);
 
 	GFS_Load(fid, 0, (UINT8*)0x00200000, fileSize);
+
+	stm = stmOpen("048.PCM");
+	STM_ResetTrBuf(stm);
+	
+	Set8PCM();
+
 	drawWindow(0,224,240,0,64);
 #ifndef RAZE
 	CZetInit2(2,CZ80Context);
@@ -800,6 +807,7 @@ static INT32 DrvInit()
 		palette_write(i);
 	}
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -820,9 +828,9 @@ static INT32 DrvExit()
 #endif
 	CZetExit2();
 
-	for(int i=0;i<7;i++)
+	for(int i=0;i<8;i++)
 	{
-		PCM_MeStop(pcm7[i]);
+		PCM_MeStop(pcm8[i]);
 		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
 
@@ -846,8 +854,8 @@ static INT32 DrvFrame()
 // cheat code level
 //DrvZ80RAM0[0xF3A1-0xe000]=6;
 // cheat code invincible
-//DrvZ80RAM0[0xE905-0xe000]= 0x01;
-//DrvZ80RAM0[0xF424-0xe000]= 0x0F;
+DrvZ80RAM0[0xE905-0xe000]= 0x01;
+DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
 	if (watchdog >= 180) {
 		DrvDoReset(0);
@@ -870,38 +878,16 @@ static INT32 DrvFrame()
 
 //	UINT32 nInterleave = 100;
 	UINT32 nInterleave = 20;
-	nCyclesTotal[0] = 3000000 / 60; ///2;
-	nCyclesTotal[1] = nYM2203Clockspeed / 60; ///2;
+	UINT32 nCyclesTotal = 3000000 / 60; ///2;
 	UINT32 nCyclesDone = 0;
-/*	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
-		SPR_RunSlaveSH(CZetNewFrame,NULL);
-		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			SPR_WaitEndSlaveSH();
-		}*/
 
 	CZetOpen(1);
-//	BurnTimerEndFrame(&nCyclesTotal[1]);
-	SPR_RunSlaveSH(BurnTimerEndFrame,&nCyclesTotal[1]);
 	INT32 nNext, nCyclesSegment;
 
 	for (UINT32 i = 0; i < nInterleave; i++) {
-#ifdef SND
-		// Run Z80 #2
-/*		CZetOpen(1);
-		INT32 nCycle = i * (nCyclesTotal[1] / nInterleave);
-		BurnTimerUpdate(&nCycle);
-		SPR_RunSlaveSH((PARA_RTN*)BurnTimerUpdate,&nCycle);
-		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			SPR_WaitEndSlaveSH();
-		}*/
-//		CZetClose();
-#endif
 
-		// Run Z80 #1
 #ifdef RAZE0
-		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
+		nNext = (i + 1) * nCyclesTotal / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone;
 		nCyclesDone += z80_emulate(nCyclesSegment);
 //		if (i == 98) z80_raise_IRQ(0);
@@ -909,26 +895,15 @@ static INT32 DrvFrame()
 		if (i == 18) z80_raise_IRQ(0);
 		if (i == 19) z80_lower_IRQ();
 #endif
-
-#ifdef SND
-/*		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			SPR_WaitEndSlaveSH();
-		}*/
-		// Run Z80 #2
-//		CZetOpen(1);
-//		INT32 nCycle = i * (nCyclesTotal[1] / nInterleave);
-//		BurnTimerUpdate(&nCycle);
-//		SPR_RunSlaveSH((PARA_RTN*)BurnTimerUpdate,&nCycle);
-//		CZetClose();
-#endif
 	}
+// streaming de la musique
+	STM_ExecServer();
+	PCM_Task(pcm8[0]);
 
-		for (unsigned int i=0;i<7;i++)
+/*		
+		for (unsigned int i=1;i<8;i++)
 		{
-
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
-	//		if(pcm_info[i].num != 0xff)
 			{
 				int size=2048;
 				if(pcm_info[i].position+2048>pcm_info[i].size)
@@ -936,58 +911,21 @@ static INT32 DrvFrame()
 					size=pcm_info[i].size-pcm_info[i].position;
 					pcm_info[i].num = 0xff;
 				}
-				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1))),(INT16*)(0x00200000+pcm_info[i].track_position),size);
+				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
-//				PCM_NotifyWriteSize(pcm7[i], size*2);
-//				memcpy((UINT8 *)(0x25a20000+(0x4000*i)),(UINT8*)(0x00200000+pcm_info[i].track_position),pcm_info[i].size);
 				if(pcm_info[i].num == 0xff)
 					size=0x900;
-				PCM_NotifyWriteSize(pcm7[i], size);
-				PCM_Task(pcm7[i]);
-
-//				pcm_info[i].num = 0xff;
+				PCM_NotifyWriteSize(pcm8[i], size);
+				PCM_Task(pcm8[i]);
 			}
 			else
 			{
-				PCM_Task(pcm7[i]);
-				PcmWork	*work = *(PcmWork **)pcm7[i];
-				PcmStatus *st = &work->status;
-				st->play = PCM_STAT_PLAY_END;
-				memset((INT16 *)(0x25a20000+(0x4000*i)),0x00,4096);
+				PCM_MeStop(pcm8[i]);
+				memset((INT16 *)(0x25a20000+(0x4000*(i+1))),0x00,4096);
 			}
-
 		}
-
-
-#ifdef SND
-	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			SPR_WaitEndSlaveSH();
-		}
-//	CZetOpen(1);
-//	BurnTimerEndFrame(nCyclesTotal[1]);
-	signed short *nSoundBuffer = (signed short *)0x25a24000+nSoundBufferPos; //*(sizeof(signed short)));
-	YM2203UpdateNormal(nSoundBuffer, nBurnSoundLen);
-	CZetClose();
-
-	nSoundBufferPos+=(nBurnSoundLen); // DOIT etre deux fois la taille copiee
-
-	if(nSoundBufferPos>=0x1000)//RING_BUF_SIZE)
-	{
-/*		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-		PCM_Task(pcm); // bon emplacement
 */
-
-		for (unsigned int i=0;i<7;i++)
-		{
-			PCM_NotifyWriteSize(pcm7[i], nSoundBufferPos);
-			PCM_Task(pcm7[i]); // bon emplacement
-		}
-
-		nSoundBufferPos=0;
-	}
-#endif
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
@@ -1121,14 +1059,14 @@ static PcmHn createHandle(PcmCreatePara *para)
 	return pcm;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void Set7PCM()
+static void Set8PCM()
 {
-	PcmCreatePara	para[7];
-	PcmInfo 		info[7];
+	PcmCreatePara	para[8];
+	PcmInfo 		info[8];
 	PcmStatus	*st;
-	static PcmWork g_movie_work[7];
+	static PcmWork g_movie_work[8];
 
-	for (int i=0; i<7; i++)
+	for (int i=0; i<8; i++)
 	{
 		PCM_PARA_WORK(&para[i])			= (struct PcmWork *)&g_movie_work[i];
 		PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
@@ -1137,27 +1075,66 @@ static void Set7PCM()
 		PCM_PARA_PCM_SIZE(&para[i])		= PCM_SIZE;
 
 		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
-		st = &g_movie_work[i].status;
-		st->need_ci = PCM_ON;
 	 
 		PCM_INFO_FILE_TYPE(&info[i]) = PCM_FILE_TYPE_NO_HEADER;			
 		PCM_INFO_DATA_TYPE(&info[i])=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
-		PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
 		PCM_INFO_CHANNEL(&info[i]) = 0x01;
 		PCM_INFO_SAMPLING_BIT(&info[i]) = 16;
 
 		PCM_INFO_SAMPLING_RATE(&info[i])	= SOUNDRATE;//30720L;//44100L;
-		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
-		pcm7[i] = createHandle(&para[i]);
+//		PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
 
-		PCM_SetPcmStreamNo(pcm7[i], i);
+		if(i==0)
+		{
+			STM_ResetTrBuf(stm);
+			pcm8[i] = PCM_CreateStmHandle(&para[i], stm);
+		}
+		else
+		{
+			st = &g_movie_work[i].status;
+			st->need_ci = PCM_ON;
+			PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+			PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
 
-		PCM_SetInfo(pcm7[i], &info[i]);
-		PCM_ChangePcmPara(pcm7[i]);
-// VBT : enleve la lecture en boucle !! merci zeromu!!!
-//		*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= ~0x60;
-		PCM_Start(pcm7[i]);
+			pcm8[i] = createHandle(&para[i]);
+			PCM_SetPcmStreamNo(pcm8[i], i);
+		}
+
+		PCM_SetInfo(pcm8[i], &info[i]);
+		PCM_ChangePcmPara(pcm8[i]);
+		PCM_Start(pcm8[i]);
 	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void stmInit(void)
+{
+	STM_Init(12, 24, stm_work);
+
+//	STM_SetErrFunc(errStmFunc, NULL);
+
+	grp_hd = STM_OpenGrp();
+	if (grp_hd == NULL) {
+		return;
+	}
+	STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
+	STM_SetExecGrp(grp_hd);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+StmHn stmOpen(char *fname)
+{
+    Sint32 fid;
+	StmKey key;
+
+    fid = GFS_NameToId((Sint8 *)fname);
+	STM_KEY_FN(&key) = STM_KEY_CN(&key) = STM_KEY_SMMSK(&key) = 
+		STM_KEY_SMVAL(&key) = STM_KEY_CIMSK(&key) = STM_KEY_CIVAL(&key) =
+		STM_KEY_NONE;
+	return STM_OpenFid(grp_hd, fid, &key, STM_LOOP_NOREAD);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void stmClose(StmHn fp)
+{
+	STM_Close(fp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)

@@ -3920,6 +3920,9 @@ EndFile
 				File SFX.ROM;1
 					Source BLKTIGER\SFX.ROM
 				EndFile
+				File 048.PCM;1
+					Source BLKTIGER\048.PCM
+				EndFile
 			EndDirectory
 
 			Directory WIZ

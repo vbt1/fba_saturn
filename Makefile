@@ -250,18 +250,18 @@ OBJOVLSOLOMN         = $(SRCOVLSOLOMN:.c=.o)
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
+../../SBL6/SEGALIB/LIB/elf/sega_stm.a \
+../../SBL6/SEGALIB/LIB/elf/sega_gfs.a \
 ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a \
 ../../SBL6/SEGALIB/SPR/vbtelf1/spr_slv.o \
 ../../SBL6/SEGALIB/INT/elf/int.o ../../SBL6/SEGALIB/INT/elf/int_trmp.o \
-../../SBL6/SEGALIB/GFS/vbtelf/gfs2.o ../../SBL6/SEGALIB/GFS/vbtelf/gfs_cdb2.o \
-../../SBL6/SEGALIB/GFS/vbtelf/gfs_cdc2.o ../../SBL6/SEGALIB/GFS/vbtelf/gfs_cdf2.o \
-../../SBL6/SEGALIB/GFS/vbtelf/gfs_trn2.o ../../SBL6/SEGALIB/GFS/vbtelf/gfs_buf2.o \
-../../SBL6/SEGALIB/GFS/vbtelf/gfs_dir2.o ../../SBL6/SEGALIB/PCM/vbtelf/pcm_audi2.o \
-../../SBL6/SEGALIB/PCM/vbtelf/pcm_drv2.o ../../SBL6/SEGALIB/PCM/vbtelf/pcm_time2.o \
-../../SBL6/SEGALIB/PCM/vbtelf/pcm_etc2.o ../../SBL6/SEGALIB/PCM/vbtelf/pcm_mp2.o \
-../../SBL6/SEGALIB/PCM/vbtelf/pcm_lib2.o cdc/cdcrep.a
+../../SBL6/SEGALIB/PCM/pcm_lib.o ../../SBL6/SEGALIB/PCM/pcm_stm.o \
+ ../../SBL6/SEGALIB/PCM/pcm_mp.o ../../SBL6/SEGALIB/PCM/pcm_audi.o \
+../../SBL6/SEGALIB/PCM/pcm_drv.o ../../SBL6/SEGALIB/PCM/pcm_time.o \
+../../SBL6/SEGALIB/PCM/pcm_etc.o ../../SBL6/SEGALIB/PCM/pcm_aif.o\
+ cdc/cdcrep.a
 
-LIBSOVL = ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_dma.a
+LIBSOVL = ../../SBL6/SEGALIB/LIB/elf/sega_stm.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_dma.a
 
 all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \

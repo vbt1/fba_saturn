@@ -183,6 +183,7 @@ static void initSound()
 	memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
 	st = &g_movie_work.status;
 	st->need_ci = PCM_ON;
+	st->cnt_loop = 0;
  
 	PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
 	PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
