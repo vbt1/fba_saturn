@@ -12,7 +12,7 @@
 
 void	smpVblIn( void );
 
-//PcmCreatePara	para[14];
+PcmCreatePara	para[14];
 //PcmInfo 		info[14];
 
 typedef struct
@@ -272,7 +272,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			unsigned int i;
 			PcmStatus	*st=NULL;
 
-//			if(sfx_list[data].loop==0)
+			if(sfx_list[data].loop==0)
 			{
 				for(i=0;i<14;i++)
 				{
@@ -320,7 +320,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"8",10,120);
 #endif
 
-				if(i<8 && data!=255 && data!=48 && sfx_list[data].size!=0)
+				if(i<8 && data!=255 && data!=33 && data!=48 && sfx_list[data].size!=0)
 				{
 					pcm_info[i].position = 0;
 					pcm_info[i].track_position = sfx_list[data].position;
@@ -336,25 +336,35 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 #endif
 				}
 			}
-/*			else
+			else
 			{
 				PCM_DestroyStmHandle(pcm14[0]);
 				stmClose(stm);
 				STM_ResetTrBuf(stm);
 				char pcm_file[14];
-				sprintf(pcm_file,"0%s.PCM",itoa(data));
+				if(data==48)
+					sprintf(pcm_file,"048.PCM");
+				if(data==33)
+					sprintf(pcm_file,"033.PCM");
 
+		PcmInfo 		info;
+
+		PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+		PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+		PCM_INFO_CHANNEL(&info) = 0x01;
+		PCM_INFO_SAMPLING_BIT(&info) = 16;
+		PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
 
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
 
-				stm = stmOpen("048.PCM");
+				stm = stmOpen(pcm_file);
+				STM_ResetTrBuf(stm);
 				pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
 				PCM_SetPcmStreamNo(pcm14[0], 0);
-				PCM_SetInfo(pcm14[0], &info[0]);
+				PCM_SetInfo(pcm14[0], &info);
 				PCM_ChangePcmPara(pcm14[0]);
 				PCM_Start(pcm14[0]);
 			}
-*/
 		}
 		return;
 
@@ -1087,7 +1097,7 @@ static PcmHn createHandle(PcmCreatePara *para)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void Set14PCM()
 {
-	PcmCreatePara	para[14];
+//	PcmCreatePara	para[14];
 	PcmInfo 		info[14];
 	PcmStatus	*st;
 	static PcmWork g_movie_work[14];
