@@ -12,6 +12,8 @@
 
 void	smpVblIn( void );
 
+//PcmCreatePara	para[14];
+//PcmInfo 		info[14];
 
 typedef struct
 {
@@ -65,9 +67,10 @@ SFX sfx_list[68]=
 /*030.pcm*/{263632,5566,0},
 	{-1,0,0},
 /*032.pcm*/{269198,23024,0},	
-	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
+/*033.pcm*/{0,2359296,1},
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
 	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	
-/*048.pcm*/{0,365708,0},
+/*048.pcm*/{0,365708,1},
 	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
 /*058.pcm*/{292222,5556,0},	
 /*059.pcm*/{297778,58828,0},	
@@ -265,83 +268,93 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 	{
 		case 0x00:
 		{
-/*			if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-			{
-				SPR_WaitEndSlaveSH();
-			}*/
-//			data=;
 			*soundlatch = data;
-//			if(data==17 || data==27 || data==58)
+			unsigned int i;
+			PcmStatus	*st=NULL;
+
+//			if(sfx_list[data].loop==0)
 			{
-//				char str[20];
-//				sprintf(str, "%03d.PCM", data);
-
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)str,10,40);
-
-//				int fid				= GFS_NameToId((Sint8 *)str);
-//				long fileSize	= GetFileSize(fid);
-				int i;
-				PcmStatus	*st=NULL;
-
 				for(i=0;i<14;i++)
 				{
 					PcmWork		*work = *(PcmWork **)pcm14[i];
 					st = &work->status;
 					st->cnt_loop = 0;
-	if(st->play ==PCM_STAT_PLAY_ERR_STOP)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
-	else if (st->play ==PCM_STAT_PLAY_CREATE)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40+i*10);
-	else if (st->play ==PCM_STAT_PLAY_PAUSE)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,40+i*10);
-	else if (st->play ==PCM_STAT_PLAY_START)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,40+i*10);
-	else if (st->play ==PCM_STAT_PLAY_HEADER)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,40+i*10);
-	else if (st->play ==PCM_STAT_PLAY_TIME)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,40+i*10);
-	else if (st->play ==PCM_STAT_PLAY_END)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40+i*10);
-	else
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
-
+#if DEBUG_PCM
+					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_CREATE)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_PAUSE)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_START)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_HEADER)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_TIME)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_END)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40+i*10);
+					else
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
+#endif
 					if (st->play != PCM_STAT_PLAY_TIME && i>0) 
 						break;
 				}
+ #if DEBUG_PCM
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",10,40);
+				if(i==1)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,50);
+				if(i==2)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",10,60);
+				if(i==3)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",10,70);
+				if(i==4)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",10,80);
+				if(i==5)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"5",10,90);
+				if(i==6)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"6",10,100);
+				if(i==7)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,110);
+				if(i==8)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"8",10,120);
+#endif
 
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",10,40);
-if(i==1)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,50);
-if(i==2)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",10,60);
-if(i==3)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",10,70);
-if(i==4)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",10,80);
-if(i==5)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"5",10,90);
-if(i==6)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"6",10,100);
-if(i==7)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,110);
-if(i==8)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"8",10,120);
-
-				if(i<14 && data!=255 && data!=48 && sfx_list[data].size!=0)
+				if(i<8 && data!=255 && data!=48 && sfx_list[data].size!=0)
 				{
 					pcm_info[i].position = 0;
 					pcm_info[i].track_position = sfx_list[data].position;
 					pcm_info[i].size = sfx_list[data].size*8;
 					pcm_info[i].num = data;
 					PCM_Start(pcm14[i]);
-
+ #if DEBUG_PCM
 					char toto[50];
 					char *titi=&toto[0];
 					titi=itoa(data);
 					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"       ",70,40+i*10);
 					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,70,40+i*10);
+#endif
 				}
 			}
+/*			else
+			{
+				PCM_DestroyStmHandle(pcm14[0]);
+				stmClose(stm);
+				STM_ResetTrBuf(stm);
+				char pcm_file[14];
+				sprintf(pcm_file,"0%s.PCM",itoa(data));
+
+
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
+
+				stm = stmOpen("048.PCM");
+				pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
+				PCM_SetPcmStreamNo(pcm14[0], 0);
+				PCM_SetInfo(pcm14[0], &info[0]);
+				PCM_ChangePcmPara(pcm14[0]);
+				PCM_Start(pcm14[0]);
+			}
+*/
 		}
 		return;
 
@@ -761,7 +774,6 @@ static INT32 DrvInit()
 	stmInit();
 	stm = stmOpen("048.PCM");
 	STM_ResetTrBuf(stm);
-
 	Set14PCM();
 
 	drawWindow(0,224,240,0,64);
@@ -905,13 +917,14 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
 // streaming de la musique
 //	PCM_EntryNext(pcm[1]);
-	PCM_NotifyWriteSize(pcm14[0], 4096);
-	STM_ExecServer();
-//	smpStmTask(stm);
-//	PCM_NotifyWriteSize(pcm14[0], 2048);
-	PCM_Task(pcm14[0]);
+//	PCM_NotifyWriteSize(pcm14[0], 8192);
+//		if(stm!=NULL)
+		{
+			STM_ExecServer();
+			PCM_Task(pcm14[0]);
+		}
 
-		for (unsigned int i=1;i<14;i++)
+		for (unsigned int i=1;i<8;i++)
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
 			{
@@ -922,7 +935,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 					pcm_info[i].num = 0xff;
 				}
 //				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
-				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+				memcpy((INT16 *)(0x25a20000+(0x2000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
 				if(pcm_info[i].num == 0xff)
@@ -934,7 +947,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 			{
 				PCM_MeStop(pcm14[i]);
 //				memset((INT16 *)(0x25a20000+(0x4000*(i+1))),0x00,4096);
-				memset((INT16 *)(0x25a20000+(0x4000*(i+1))),0x00,4096);
+				memset((INT16 *)(0x25a20000+(0x2000*(i+1))),0x00,4096);
 			}
 		}
 
@@ -1114,6 +1127,7 @@ static void Set14PCM()
 		{
 			STM_ResetTrBuf(stm);
 			pcm14[i] = PCM_CreateStmHandle(&para[i], stm);
+			PCM_SetPcmStreamNo(pcm14[i], i);
 			PCM_SetInfo(pcm14[i], &info[i]);
 			PCM_ChangePcmPara(pcm14[i]);	
 		}
@@ -1757,7 +1771,7 @@ static void DrvInitSaturn()
 
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+3;
-	nBurnFunction = smpVblIn;
+//	nBurnFunction = smpVblIn;
 
 //3 nbg
 #ifdef BG_BANK
