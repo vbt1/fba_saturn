@@ -67,9 +67,12 @@ SFX sfx_list[68]=
 /*030.pcm*/{263632,5566,0},
 	{-1,0,0},
 /*032.pcm*/{269198,23024,0},	
-/*033.pcm*/{0,2359296,1},
-	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
-	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	
+/*033.pcm*/{0,1167350,1},
+/*034.pcm*/{0,1176290,1},
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	
+/*044.pcm*/{0,606742,1},	
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	
 /*048.pcm*/{0,365708,1},
 	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
 /*058.pcm*/{292222,5556,0},	
@@ -200,6 +203,14 @@ static void DrvVidRamBankswitch(INT32 bank)
 #endif
 }
 
+void vout(char *string, char *fmt, ...)                                         
+{                                                                               
+   va_list arg_ptr;                                                             
+   va_start(arg_ptr, fmt);                                                      
+   vsprintf(string, fmt, arg_ptr);                                              
+   va_end(arg_ptr);                                                             
+}
+
 void __fastcall blacktiger_write(UINT16 address, UINT8 data)
 {
 	if ((address & 0xf800) == 0xd800) 				  // 	CZetMapArea(0xd800, 0xdfff, 0, DrvPalRAM);
@@ -272,6 +283,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			unsigned int i;
 			PcmStatus	*st=NULL;
 
+		if(data!=255)
 			if(sfx_list[data].loop==0)
 			{
 				for(i=0;i<14;i++)
@@ -340,22 +352,20 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			{
 				PCM_DestroyStmHandle(pcm14[0]);
 				stmClose(stm);
-				STM_ResetTrBuf(stm);
+//				STM_ResetTrBuf(stm);
 				char pcm_file[14];
-				if(data==48)
-					sprintf(pcm_file,"048.PCM");
-				if(data==33)
-					sprintf(pcm_file,"033.PCM");
 
-		PcmInfo 		info;
+				vout(pcm_file, "%03d%s",(int)data,".PCM"); 
+				pcm_file[7]='\0';
+				PcmInfo 		info;
 
-		PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
-		PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
-		PCM_INFO_CHANNEL(&info) = 0x01;
-		PCM_INFO_SAMPLING_BIT(&info) = 16;
-		PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
+				PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+				PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+				PCM_INFO_CHANNEL(&info) = 0x01;
+				PCM_INFO_SAMPLING_BIT(&info) = 16;
+				PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
 
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
 
 				stm = stmOpen(pcm_file);
 				STM_ResetTrBuf(stm);
@@ -932,6 +942,9 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 		{
 			STM_ExecServer();
 			PCM_Task(pcm14[0]);
+			if (STM_IsTrBufFull(stm) == TRUE) {
+				STM_ResetTrBuf(stm);
+			}
 		}
 
 		for (unsigned int i=1;i<8;i++)
