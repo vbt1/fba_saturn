@@ -13,6 +13,7 @@
 void	smpVblIn( void );
 
 PcmCreatePara	para[14];
+unsigned char current_pcm=255;
 //PcmInfo 		info[14];
 
 typedef struct
@@ -286,7 +287,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 		if(data!=255)
 			if(sfx_list[data].loop==0)
 			{
-				for(i=0;i<14;i++)
+				for(i=0;i<8;i++)
 				{
 					PcmWork		*work = *(PcmWork **)pcm14[i];
 					st = &work->status;
@@ -350,30 +351,35 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			}
 			else
 			{
-				PCM_DestroyStmHandle(pcm14[0]);
-				stmClose(stm);
-//				STM_ResetTrBuf(stm);
-				char pcm_file[14];
+				if(	current_pcm != data)
+				{
+					current_pcm = data;
+					PCM_DestroyStmHandle(pcm14[0]);
+					stmClose(stm);
+	//				STM_ResetTrBuf(stm);
 
-				vout(pcm_file, "%03d%s",(int)data,".PCM"); 
-				pcm_file[7]='\0';
-				PcmInfo 		info;
+					char pcm_file[14];
 
-				PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
-				PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
-				PCM_INFO_CHANNEL(&info) = 0x01;
-				PCM_INFO_SAMPLING_BIT(&info) = 16;
-				PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
+					vout(pcm_file, "%03d%s",(int)data,".PCM"); 
+					pcm_file[7]='\0';
+					PcmInfo 		info;
 
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
+					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+					PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+					PCM_INFO_CHANNEL(&info) = 0x01;
+					PCM_INFO_SAMPLING_BIT(&info) = 16;
+					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
 
-				stm = stmOpen(pcm_file);
-				STM_ResetTrBuf(stm);
-				pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
-				PCM_SetPcmStreamNo(pcm14[0], 0);
-				PCM_SetInfo(pcm14[0], &info);
-				PCM_ChangePcmPara(pcm14[0]);
-				PCM_Start(pcm14[0]);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
+
+					stm = stmOpen(pcm_file);
+					STM_ResetTrBuf(stm);
+					pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
+					PCM_SetPcmStreamNo(pcm14[0], 0);
+					PCM_SetInfo(pcm14[0], &info);
+					PCM_ChangePcmPara(pcm14[0]);
+					PCM_Start(pcm14[0]);
+				}
 			}
 		}
 		return;
@@ -951,8 +957,10 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
 			{
-				int size=2048;
-				if(pcm_info[i].position+2048>pcm_info[i].size)
+				int size=4096;
+				memset((INT16 *)(0x25a20000+(0x2000*(i+1)))+pcm_info[i].position,0x00,size);
+
+				if(pcm_info[i].position+size>pcm_info[i].size)
 				{
 					size=pcm_info[i].size-pcm_info[i].position;
 					pcm_info[i].num = 0xff;
@@ -961,8 +969,8 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				memcpy((INT16 *)(0x25a20000+(0x2000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
-				if(pcm_info[i].num == 0xff)
-					size=0x900;
+//				if(pcm_info[i].num == 0xff)
+//					size=0x900;
 				PCM_NotifyWriteSize(pcm14[i], size);
 				PCM_Task(pcm14[i]);
 			}
@@ -973,7 +981,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				memset((INT16 *)(0x25a20000+(0x2000*(i+1))),0x00,4096);
 			}
 		}
-
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"          ",70,60);
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
