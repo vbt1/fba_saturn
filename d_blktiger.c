@@ -9,12 +9,12 @@
 #include    "machine.h"
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
-
-void	smpVblIn( void );
+#define DEBUG_PCM 1
+//void	smpVblIn( void );
 
 PcmCreatePara	para[14];
-unsigned char current_pcm=255;
 //PcmInfo 		info[14];
+unsigned char current_pcm=255;
 
 typedef struct
 {
@@ -292,6 +292,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PcmWork		*work = *(PcmWork **)pcm14[i];
 					st = &work->status;
 					st->cnt_loop = 0;
+	//				st->need_ci = PCM_ON;
 #if DEBUG_PCM
 					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
@@ -339,7 +340,11 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					pcm_info[i].track_position = sfx_list[data].position;
 					pcm_info[i].size = sfx_list[data].size*8;
 					pcm_info[i].num = data;
-					PCM_Start(pcm14[i]);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"  ",10,120);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(i),10,120);
+
+//					PCM_MeStart(pcm14[i]);
+					st->play = PCM_STAT_PLAY_TIME;
  #if DEBUG_PCM
 					char toto[50];
 					char *titi=&toto[0];
@@ -353,12 +358,19 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			{
 				if(	current_pcm != data)
 				{
-					current_pcm = data;
-					PCM_DestroyStmHandle(pcm14[0]);
-					stmClose(stm);
-	//				STM_ResetTrBuf(stm);
 
-					char pcm_file[14];
+					current_pcm = data;
+					PcmWork		*work = *(PcmWork **)pcm14[0];
+					PcmStatus	*st= &work->status;		
+//					PCM_Stop(pcm14[0]);
+					st->play = PCM_STAT_PLAY_END;
+					st->cnt_loop = 0;
+				
+					PCM_DestroyStmHandle(pcm14[0]);
+
+					stmClose(stm);
+
+					char pcm_file[12];
 
 					vout(pcm_file, "%03d%s",(int)data,".PCM"); 
 					pcm_file[7]='\0';
@@ -370,14 +382,35 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PCM_INFO_SAMPLING_BIT(&info) = 16;
 					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
 
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,30);
 
-					stm = stmOpen(pcm_file);
+					if ((stm = stmOpen(pcm_file)) == NULL) 
+					{
+						FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"stream failed",70,70);
+						while(1);
+					}
+
 					STM_ResetTrBuf(stm);
-					pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
+					if ((pcm14[0] = PCM_CreateStmHandle(&para[0], stm)) == NULL) 
+					{
+						FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm failed",70,70);
+						while(1);
+					}
+
 					PCM_SetPcmStreamNo(pcm14[0], 0);
 					PCM_SetInfo(pcm14[0], &info);
+
+					work = *(PcmWork **)pcm14[0];
+					st= &work->status;		
+					st->need_ci = PCM_ON;	
+
 					PCM_ChangePcmPara(pcm14[0]);
+
+	STM_MovePickup(stm, 0);
+
+	PCM_SetVolume(pcm, 7);
+	PCM_SetPan(pcm, 31);
+
 					PCM_Start(pcm14[0]);
 				}
 			}
@@ -893,6 +926,36 @@ static INT32 DrvExit()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void errStmFunc(void *obj, Sint32 ec)
+{
+//	VTV_PRINTF((VTV_s, "S:ErrStm %X %X\n", obj, ec));
+	char texte[50];
+	vout(texte, "ErrStm %X %X",obj, ec); 
+	texte[49]='\0';
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	while(1);
+}
+void errGfsFunc(void *obj, Sint32 ec)
+{
+//	VTV_PRINTF((VTV_s, "S:ErrGfs %X %X\n", obj, ec));
+	char texte[50];
+	vout(texte, "ErrGfs %X %X",obj, ec); 
+	texte[49]='\0';
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	while(1);
+}
+
+void errPcmFunc(void *obj, Sint32 ec)
+{
+//	VTV_PRINTF((VTV_s, "S:ErrPcm %X %X\n", obj, ec));
+	char texte[50];
+	vout(texte, "ErrPcm %X %X",obj, ec); 
+	texte[49]='\0';
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	while(1);
+}
+
+
 static INT32 DrvFrame()
 {
 // cheat code level
@@ -963,25 +1026,35 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				if(pcm_info[i].position+size>pcm_info[i].size)
 				{
 					size=pcm_info[i].size-pcm_info[i].position;
+//					size=0x900;
 					pcm_info[i].num = 0xff;
 				}
 //				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				memcpy((INT16 *)(0x25a20000+(0x2000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
-//				if(pcm_info[i].num == 0xff)
-//					size=0x900;
 				PCM_NotifyWriteSize(pcm14[i], size);
 				PCM_Task(pcm14[i]);
+				if(pcm_info[i].position+size>pcm_info[i].size)
+				{
+					unsigned int 	errChk = 0;
+					PcmWork		*work = *(PcmWork **)pcm14[i];
+					PcmStatus	*st= &work->status;				
+/*					while(SND_StopPcm(i))
+					{
+						if (errChk++ > 512) break;
+					}*/
+					PCM_Stop(pcm14[i]);
+					st->play = PCM_STAT_PLAY_END;
+					st->cnt_loop = 0;
+				}
 			}
 			else
 			{
-				PCM_MeStop(pcm14[i]);
-//				memset((INT16 *)(0x25a20000+(0x4000*(i+1))),0x00,4096);
 				memset((INT16 *)(0x25a20000+(0x2000*(i+1))),0x00,4096);
 			}
 		}
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"          ",70,60);
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"          ",70,60);
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
@@ -1185,7 +1258,7 @@ void stmInit(void)
 	STM_Init(12, 24, stm_work);
 //	STM_Init(1, 2, stm_work);
 
-//	STM_SetErrFunc(errStmFunc, NULL);
+	STM_SetErrFunc(errStmFunc, NULL);
 
 	grp_hd = STM_OpenGrp();
 	if (grp_hd == NULL) {
@@ -1210,30 +1283,6 @@ StmHn stmOpen(char *fname)
 void stmClose(StmHn fp)
 {
 	STM_Close(fp);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-#define VBL_RATE_STM_EXEC_SERVER		(1)
-Sint32 call_stm_exec_server;
-Sint32 cnt_vbl_in = 0;
-Sint32 flag_stm_exec_trans = 0;
-
-void	smpVblIn( void )
-{
-	cnt_vbl_in++;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void smpStmTask(StmHn stm[])
-{
-	if (call_stm_exec_server < cnt_vbl_in / VBL_RATE_STM_EXEC_SERVER) {
-
-		STM_ExecServer();
-
-		if (call_stm_exec_server < 0) {
-			call_stm_exec_server++;
-		} else {
-			call_stm_exec_server = cnt_vbl_in / VBL_RATE_STM_EXEC_SERVER;
-		}
-	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
@@ -1783,6 +1832,8 @@ static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	GFS_SetErrFunc(errGfsFunc, NULL);
+	PCM_SetErrFunc(errPcmFunc, NULL);
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
