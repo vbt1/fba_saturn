@@ -10,11 +10,13 @@
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
 #define DEBUG_PCM 1
+#define PCM_BLOCK_SIZE 0x2000 // 0x2000
 //void	smpVblIn( void );
 
 PcmCreatePara	para[14];
 //PcmInfo 		info[14];
 unsigned char current_pcm=255;
+char *itoa(int i);
 
 typedef struct
 {
@@ -104,9 +106,188 @@ vbt> <Kale_> Ok, have you asked to Arbee?
 <vbt> <smf-> as it running in rom you could probably even do an upfront translation
 */
 
+static void wait_vblank(void)
+{
+     while((TVSTAT & 8) == 0);
+     while((TVSTAT & 8) == 8);
+}
+
+
+#define PCM_IS_LRLRLR(st)	((st)->info.data_type == PCM_DATA_TYPE_LRLRLR)
+#define PCM_IS_RLRLRL(st)	((st)->info.data_type == PCM_DATA_TYPE_RLRLRL)
+#define PCM_IS_LLLRRR(st)	((st)->info.data_type == PCM_DATA_TYPE_LLLRRR)
+#define PCM_IS_RRRLLL(st)	((st)->info.data_type == PCM_DATA_TYPE_RRRLLL)
+#define PCM_IS_ADPCM_SG(st)	((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SG)
+#define PCM_IS_ADPCM_SCT(st) ((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SCT)
+#define PCM_IS_LR_MIX(st) 	(PCM_IS_LRLRLR(st) || PCM_IS_RLRLRL(st))
+#define PCM_IS_LR_BLOCK(st) (PCM_IS_LLLRRR(st) || PCM_IS_RRRLLL(st))
+#define PCM_IS_ADPCM(st) 	(PCM_IS_ADPCM_SG(st) || PCM_IS_ADPCM_SCT(st))
+#define PCM_IS_MONORAL(st)	((st)->info.channel == 0x01)
+#define PCM_IS_8BIT_SAMPLING(st)	((st)->info.sampling_bit <= 0x08)
+#define PCM_SAMPLE2BSIZE(st, sample)	\
+			(PCM_IS_8BIT_SAMPLING(st) ? (sample) : (sample) << 1)
+#define PCM_1CH2NCH(st, a)	(PCM_IS_MONORAL(st) ? (a) : (a) << 1)
+
+static void pcm_AudioMix(PcmHn hn)
+{
+	PcmWork		*work 	= *(PcmWork **)hn;
+	PcmStatus	*st 	= &work->status;
+	Sint32		size_write, size_write_total;
+	Sint32		stock_bsize, 		/* ƒŠƒ“ƒOƒoƒbƒtƒ@‚Ì‘ÝŒÉ [byte] 	*/
+				size_mono, 			/* ‚Pƒ`ƒƒƒ“ƒlƒ‹•ª‚ÌÝŒÉ [byte/1ch] 	*/
+				size_copy; 			/* ƒRƒs[‚·‚éƒTƒCƒY [byte/1ch] 		*/
+	Sint8 		*addr_write1, *addr_write2;
+
+#ifdef _PCMD
+	Sint32 		copy_idx, i;
+#endif
+
+//	_VTV_PRINTF("pcm_AudioMix");
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_AudioMix       ",40,130);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(work->para.pcm_stream_no),100,130);
+
+	if (st->ring_write_offset > st->info.file_size) {
+		/* ƒŠƒ“ƒOƒoƒbƒtƒ@‚É‚Í EOF ˆÈ~‚ÌƒSƒ~‚à‹Ÿ‹‹‚³‚ê‚Ä‚¢‚é */
+//		_VTV_PRINTF("pcm_AudioMix st->info.file_size - st->ring_read_offset");
+		stock_bsize = st->info.file_size - st->ring_read_offset;
+	} else {
+//		_VTV_PRINTF("pcm_AudioMix st->ring_write_offset - st->ring_read_offset");
+		stock_bsize = st->ring_write_offset - st->ring_read_offset;
+	}
+
+	/* ‚Pƒ`ƒƒƒ“ƒlƒ‹•ª‚ÌÝŒÉ [byte/1ch] */
+	if (PCM_IS_MONORAL(st)) {
+		size_mono = stock_bsize;
+	} else {
+		size_mono = stock_bsize >> 1;
+	}
+	if (PCM_IS_8BIT_SAMPLING(st)) {
+//		_VTV_PRINTF("\n8bits!!!");
+		size_mono &= 0xfffffffe;
+		size_mono &= 0xfffffffc;
+	} else {
+		size_mono &= 0xfffffffc;
+	}
+
+	size_mono = MIN(size_mono, 
+		PCM_SAMPLE2BSIZE(st, st->info.sample_file - st->sample_write_file));
+
+	/* ƒI[ƒfƒBƒIƒf[ƒ^‚ªƒ[ƒh‚Å‚«‚é‚©‚ðƒ`ƒFƒbƒN‚·‚é */
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_GetPcmWrite       ",40,140);
+
+	pcm_GetPcmWrite(hn, &addr_write1, &addr_write2, 
+						&size_write, &size_write_total);
+
+	if (size_write_total > st->pcm_bsize) {
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"  ",40,150);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(work->para.pcm_stream_no),40,150);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"cnt_load_miss        ",40,160);
+//		_VTV_PRINTF("\n\nmissed");
+		st->cnt_load_miss++;
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->cnt_load_miss),80,160);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_bsize            ",40,170);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->pcm_bsize),80,170);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"sz_wt_totl            ",40,180);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size_write_total),80,180);
+
+//		VTV_PRINTF((VTV_s, "P:LMis %d\n buf%X < writ%X\n", 
+//			st->cnt_load_miss, st->pcm_bsize, size_write_total));
+//		VTV_PRINTF((VTV_s, " r%X w%X\n", 
+//			(st)->ring_read_offset, (st)->ring_write_offset));
+	}
+	
+
+	/* ƒRƒs[‚·‚éƒTƒCƒY [byte/1ch] */
+	size_copy = MIN(size_mono, size_write_total);
+
+//	sprintf(VTV_s,"\n\n\n\naddress%x\n\nsize_mono %d\nsize_write_total%d\nsize_copy %d",*addr_write1,size_mono,size_write_total,size_copy);
+
+//	_VTV_PRINTF(VTV_s);
+
+
+	if (size_copy == 0) {
+//		sprintf(VTV_s,"\n\n\nsize_copy=0\nstock_bsize=%d\nsize_write_total=%d",stock_bsize,size_write_total);
+//		_VTV_PRINTF(VTV_s);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"sz_cpy == 0             ",40,140);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size_mono),80,140);
+//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size_write_total),80,140);
+
+		return;
+	}
+	else
+//		_VTV_PRINTF("\n\n\n copy works a little");
+
+	/* 94.11.21 ƒ^ƒXƒNŠÖ”Žd—l•ÏX
+	 *	Ä¶ó‘Ô‚ÉŠÖ‚í‚ç‚¸A‚P‰ñ‚Ìƒ^ƒXƒNŠÖ”‚Åˆ—‚·‚é—Ê‚ÍÅ‘å‚S‚‹ƒTƒ“ƒvƒ‹B
+	 *		size_copy = MIN(size_copy, PCM_4KSAMPEL_BYTE(st));
+	 * 95.01.25 ƒ^ƒXƒNŠÖ”Žd—l•ÏX
+	 *	‚P‰ñ‚Ìƒ^ƒXƒN‚Åˆ—‚·‚é—Ê‚ÌãŒÀ‚Íƒ†[ƒU‚ª’²ß‚Å‚«‚éB
+	 */
+	/* ‚P‰ñ‚Ìƒ^ƒXƒN‚Åˆ—‚·‚é—Ê‚ÌãŒÀ[byte/1ch]	*/
+	size_copy = MIN(size_copy, st->onetask_size);
+
+	/* ƒRƒs[î•ñƒe[ƒuƒ‹‚ÌÝ’è */
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_SetMixCopyTbl      ",40,140);
+
+	pcm_SetMixCopyTbl(hn, size_copy);
+
+#ifdef _PCMD
+	copy_idx = st->copy_idx;
+#endif
+
+	/* ƒRƒs[‚ÌŽÀs (í‚ÉACPU ƒvƒƒOƒ‰ƒ€“]‘—) */
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_ExecMixCopyTbl      ",40,140);
+
+	pcm_ExecMixCopyTbl(hn);
+
+#ifdef _PCMD
+
+	#define C24BIT(a)			(0x00ffffff & (Sint32)(a))
+
+//	if (size_copy & 0x3ff) {
+//		_VTV_PRINTF((VTV_s, "P:SizCp%d %X %X\n", 
+//			copy_idx, size_copy, st->sample_write));
+//	}
+//	if (st->sample_write >= 3*64*1024 - 1024 &&
+//		st->sample_write <  3*64*1024 + 1024) {
+//		for (i = copy_idx; i >= 0; i--) {
+//			VTV_PRINTF((VTV_s, "dst %6X %6X\nsrc%8X siz%X\n", 
+//				C24BIT(st->copy_tbl[i].dst1), C24BIT(st->copy_tbl[i].dst2), 
+//				st->copy_tbl[i].src, st->copy_tbl[i].size));
+//		}
+//	}
+#endif
+
+	/* “Ç‚ÝŽæ‚èˆÊ’uXV */
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_RenewRingRead      ",40,140);
+
+	pcm_RenewRingRead(hn, PCM_1CH2NCH(st, size_copy));
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_AudioMix end      ",40,140);
+	return;
+}
+
+
+
+void vbt_pcm_AudioProcess(PcmHn hn)
+{
+	PcmWork		*work 	= *(PcmWork **)hn;
+	PcmStatus	*st 	= &work->status;
+
+	if (PCM_IS_LR_MIX(st)) {
+		/* ‚k‚q¬ÝƒI[ƒfƒBƒIˆ— */
+		pcm_AudioMix(hn);
+	} else if (PCM_IS_LR_BLOCK(st)) {
+		/* ‚k‚qƒuƒƒbƒNƒI[ƒfƒBƒIˆ— */
+		/* pcm_AudioBlock(hn); */
+	}
+}
+
 #define INT_DIGITS 19
-char *itoa(i)
-     int i;
+char *itoa(int i)
 {
   /* Room for INT_DIGITS digits, - and '\0' */
   static char buf[INT_DIGITS + 2];
@@ -292,6 +473,8 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PcmWork		*work = *(PcmWork **)pcm14[i];
 					st = &work->status;
 					st->cnt_loop = 0;
+					st->audio_process_fp = vbt_pcm_AudioProcess;
+
 	//				st->need_ci = PCM_ON;
 #if DEBUG_PCM
 					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
@@ -334,17 +517,13 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"8",10,120);
 #endif
 
-				if(i<8 && data!=255 && data!=33 && data!=48 && sfx_list[data].size!=0)
+				if(i>0 && i<8 && data!=255 && data!=33 && data!=48 && sfx_list[data].size!=0)
 				{
 					pcm_info[i].position = 0;
 					pcm_info[i].track_position = sfx_list[data].position;
 					pcm_info[i].size = sfx_list[data].size*8;
 					pcm_info[i].num = data;
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"  ",10,120);
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(i),10,120);
-
-//					PCM_MeStart(pcm14[i]);
-					st->play = PCM_STAT_PLAY_TIME;
+					PCM_Start(pcm14[i]);
  #if DEBUG_PCM
 					char toto[50];
 					char *titi=&toto[0];
@@ -358,19 +537,11 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			{
 				if(	current_pcm != data)
 				{
-
 					current_pcm = data;
-					PcmWork		*work = *(PcmWork **)pcm14[0];
-					PcmStatus	*st= &work->status;		
-//					PCM_Stop(pcm14[0]);
-					st->play = PCM_STAT_PLAY_END;
-					st->cnt_loop = 0;
-				
 					PCM_DestroyStmHandle(pcm14[0]);
-
 					stmClose(stm);
-
-					char pcm_file[12];
+	//				STM_ResetTrBuf(stm);
+					char pcm_file[14];
 
 					vout(pcm_file, "%03d%s",(int)data,".PCM"); 
 					pcm_file[7]='\0';
@@ -382,35 +553,19 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PCM_INFO_SAMPLING_BIT(&info) = 16;
 					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
 
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,30);
+	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
 
-					if ((stm = stmOpen(pcm_file)) == NULL) 
-					{
-						FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"stream failed",70,70);
-						while(1);
-					}
-
+					stm = stmOpen(pcm_file);
 					STM_ResetTrBuf(stm);
-					if ((pcm14[0] = PCM_CreateStmHandle(&para[0], stm)) == NULL) 
-					{
-						FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm failed",70,70);
-						while(1);
-					}
-
+					pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
 					PCM_SetPcmStreamNo(pcm14[0], 0);
 					PCM_SetInfo(pcm14[0], &info);
+					PcmWork		*work = *(PcmWork **)pcm14[i];
+					st = &work->status;
 
-					work = *(PcmWork **)pcm14[0];
-					st= &work->status;		
-					st->need_ci = PCM_ON;	
+		st->need_ci = PCM_ON;
 
 					PCM_ChangePcmPara(pcm14[0]);
-
-	STM_MovePickup(stm, 0);
-
-	PCM_SetVolume(pcm, 7);
-	PCM_SetPan(pcm, 31);
-
 					PCM_Start(pcm14[0]);
 				}
 			}
@@ -908,7 +1063,7 @@ static INT32 DrvExit()
 	for(int i=0;i<14;i++)
 	{
 		PCM_MeStop(pcm14[i]);
-		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+		memset(SOUND_BUFFER+(PCM_BLOCK_SIZE*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
 
 	CZ80Context = DrvZ80ROM0 = DrvZ80ROM1 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
@@ -932,8 +1087,13 @@ void errStmFunc(void *obj, Sint32 ec)
 	char texte[50];
 	vout(texte, "ErrStm %X %X",obj, ec); 
 	texte[49]='\0';
+	do{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté stm",70,130);
+
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	while(1);
+	wait_vblank();
+
+	}while(1);
 }
 void errGfsFunc(void *obj, Sint32 ec)
 {
@@ -941,8 +1101,13 @@ void errGfsFunc(void *obj, Sint32 ec)
 	char texte[50];
 	vout(texte, "ErrGfs %X %X",obj, ec); 
 	texte[49]='\0';
+	do{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
+
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	while(1);
+	wait_vblank();
+
+	}while(1);
 }
 
 void errPcmFunc(void *obj, Sint32 ec)
@@ -951,8 +1116,13 @@ void errPcmFunc(void *obj, Sint32 ec)
 	char texte[50];
 	vout(texte, "ErrPcm %X %X",obj, ec); 
 	texte[49]='\0';
+	do{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté pcm",70,130);
+
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	while(1);
+	wait_vblank();
+
+	}while(1);
 }
 
 
@@ -1020,41 +1190,37 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
 			{
-				int size=4096;
-				memset((INT16 *)(0x25a20000+(0x2000*(i+1)))+pcm_info[i].position,0x00,size);
-
+				int size=2048;
 				if(pcm_info[i].position+size>pcm_info[i].size)
 				{
 					size=pcm_info[i].size-pcm_info[i].position;
-//					size=0x900;
 					pcm_info[i].num = 0xff;
 				}
 //				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
-				memcpy((INT16 *)(0x25a20000+(0x2000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+				memcpy((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
+				if(pcm_info[i].num == 0xff)
+					size=0x900;
 				PCM_NotifyWriteSize(pcm14[i], size);
 				PCM_Task(pcm14[i]);
-				if(pcm_info[i].position+size>pcm_info[i].size)
-				{
-					unsigned int 	errChk = 0;
-					PcmWork		*work = *(PcmWork **)pcm14[i];
-					PcmStatus	*st= &work->status;				
-/*					while(SND_StopPcm(i))
-					{
-						if (errChk++ > 512) break;
-					}*/
-					PCM_Stop(pcm14[i]);
-					st->play = PCM_STAT_PLAY_END;
-					st->cnt_loop = 0;
-				}
 			}
 			else
 			{
-				memset((INT16 *)(0x25a20000+(0x2000*(i+1))),0x00,4096);
+//				PCM_MeStop(pcm14[i]);
+//					PCM_Task(pcm14[i]);
+				
+									unsigned int 	errChk = 0;
+					PcmWork		*work = *(PcmWork **)pcm14[i];
+					PcmStatus	*st= &work->status;				
+//					while(SND_StopPcm(i))	{if (errChk++ > 512) break;	}
+					PCM_MeStop(pcm14[i]);
+					st->play = PCM_STAT_PLAY_END;
+//				memset((INT16 *)(0x25a20000+(0x4000*(i+1))),0x00,4096);
+//				memset((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1))),0x00,PCM_BLOCK_SIZE);
 			}
 		}
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"          ",70,60);
+
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
@@ -1204,16 +1370,16 @@ static void Set14PCM()
 		{
 //			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x64000;
 			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000;
-			PCM_PARA_RING_SIZE(&para[i])		= 0x20000;
+			PCM_PARA_RING_SIZE(&para[i])		= 0x10000;
 		}
 		else
 		{
 //			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
-			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x5C000+(0x2000*(i+1));
-			PCM_PARA_RING_SIZE(&para[i])		= RING_BUF_SIZE;
+			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x50000+(PCM_BLOCK_SIZE*(i+1));
+			PCM_PARA_RING_SIZE(&para[i])		= RING_BUF_SIZE;//<<1;
 		}
 //		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(0x4000*(i+1));
-		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(0x2000*(i+1));
+		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(PCM_BLOCK_SIZE*(i+1));
 		PCM_PARA_PCM_SIZE(&para[i])		= PCM_SIZE;
 
 		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
@@ -1965,11 +2131,11 @@ typedef struct{
 }SndIniDt; 
 
 #define SND_PRM_MODE(prm)       ((prm).mode)        /* ???????+????????? */
-#define SND_PRM_SADR(prm)       ((prm).sadr)        /* PCM??????¸???i???*/
-#define SND_PRM_SIZE(prm)       ((prm).size)        /* PCM??????¸????   */
-#define SND_PRM_OFSET(prm)      ((prm).ofset)       /* PCM????Ð??J?n???? */
+#define SND_PRM_SADR(prm)       ((prm).sadr)        /* PCM??????????i???*/
+#define SND_PRM_SIZE(prm)       ((prm).size)        /* PCM???????????   */
+#define SND_PRM_OFSET(prm)      ((prm).ofset)       /* PCM???????J?n???? */
 /******** SndPcmChgPrm(PCM??X?p?????[?^) ************************************/
-#define SND_PRM_NUM(prm)        ((prm).num)         /* PCM????Ð????       */
+#define SND_PRM_NUM(prm)        ((prm).num)         /* PCM?????????       */
 #define SND_PRM_LEV(prm)        ((prm).lev)         /* ???c?Level         */
 #define SND_PRM_PAN(prm)        ((prm).pan)         /* ???c?pan           */
 #define SND_PRM_PICH(prm)       ((prm).pich)        /* PICH???              */
@@ -1987,7 +2153,7 @@ typedef struct{
 #define ADR_SND_MEM     ((Uint8 *)0x25a00000)   /* ?T?E???h?????????A?h???X*/
 #define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* ?T?E???h?x?N?^?A?h???X    */
 
-#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ??????????¨?           */
+#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ????????????           */
 #define ADR_ARA_CRNT    (0x08)                /* ?????????CRNT????????*/
 #define ARA_MAP_SIZE        0x2                 /* ????????????          */
 
@@ -2006,17 +2172,17 @@ typedef struct{
 #define ARA_MAP_0           0x0         /* ??????,??????,???J?n????    */
 #define ARA_MAP_4           0x1         /* ?]????????,??????              */
 
-#define ADR_SYS_INFO    (0x00)                  /* ??????ð??????        */
+#define ADR_SYS_INFO    (0x00)                  /* ?????????????        */
 #define ADR_HOST_INT    (0x04)                  /* ?????????????        */
 #define ADR_ARA_CRNT    (0x08)                /* ?????????CRNT????????*/
 #define ADR_SYS_INT_WORK    (0x12)            /* ?????????????????     */
-#define ADR_HARD_CHK_STAT   (0x18)            /* ???????????ð???i?[??    */
+#define ADR_HARD_CHK_STAT   (0x18)            /* ???????????????i?[??    */
 #define ADR_SONG_STAT   (0x80)                  /* song status               */
 #define ADR_PCM         (0xa0)                  /* PCM                       */
 #define ADR_SEQ         (0xb0)                  /* Sequence                  */
 #define ADR_TL_VL       (0x90)                  /* Total volume              */
 #define ADR_TL_HZ_VL    (0x94)                  /* ???g??????Volume        */
-#define ADR_ARA_ADR     (0x08)                  /* ?????????¨?????? */
+#define ADR_ARA_ADR     (0x08)                  /* ???????????????? */
 #define CHG_LONG(x)    (((x) * 2) + (0x4 - ( ((x) * 2) % 4) ))
 
 #define POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data))) /* ???  */
@@ -2092,7 +2258,7 @@ Uint8 *snd_adr_sys_int_work;                 /*??????????????????i?[*/
 Uint32 snd_msk_work_work;                    /* sound priority msk        */
 
 static volatile Uint32 *adr_snd_area_crnt;             /* ?????????CRNT????????*/
-static volatile Uint8 *adr_sys_info_tbl;                 /* ??????ð???????i?[    */
+static volatile Uint8 *adr_sys_info_tbl;                 /* ??????????????i?[    */
 static volatile Uint8 *adr_host_int_work;                /* ????????????????i?[*/
 static volatile Uint8  *adr_com_block;                   /* ???????????????????      */
 static volatile Uint16 *adr_song_stat;                   /* song status               */
@@ -2104,8 +2270,8 @@ static Uint32 intrflag;
 
 typedef struct{
     Uint8 mode;                             /* ???????+?????????         */
-    Uint16 sadr;                            /* PCM??????¸???i???        */
-    Uint16 size;                            /* PCM??????¸????             */
+    Uint16 sadr;                            /* PCM??????????i???        */
+    Uint16 size;                            /* PCM???????????             */
 }SndPcmStartPrm;                            /* PCM?J?n?p?????[?^          */
 typedef Uint8 SndSeqPri;                    /* Priorty level                 */
 
@@ -2120,11 +2286,11 @@ typedef Uint8 SndLev;                       /* Level?f?[?^?^                 */
 typedef Sint8 SndPan;                       /* PAN?f?[?^?^                   */
 typedef Uint8 SndRet;                       /* ???????s???f?[?^?^         */
 typedef Uint8 SndHardPrm;                   /* ???????????????f?[?^?^     */
-typedef Uint16 SndHardStat;                 /* ??????????ð???f?[?^?^      */
-typedef Uint8 SndPcmNum;                    /* PCM????Ð????               */
+typedef Uint16 SndHardStat;                 /* ??????????????f?[?^?^      */
+typedef Uint8 SndPcmNum;                    /* PCM?????????               */
 typedef Uint8 SndEfctIn;                    /* Efect in select               */
 typedef struct{
-    SndPcmNum num;                          /* PCM????Ð????               */
+    SndPcmNum num;                          /* PCM?????????               */
     SndLev lev;                             /* ???c?Level                 */
     SndPan pan;                             /* ???c?pan                   */
     Uint16 pich;                            /* PICH???                      */
@@ -2222,7 +2388,7 @@ void SND_Init2(SndIniDt *sys_ini)
 
     adr_sys_info_tbl = (Uint8 *)(ADR_SND_MEM + PEEK_L(ADR_SYS_TBL +
                                  ADR_SYS_INFO));
-                                                /* ??????ð????????    */
+                                                /* ???????????????    */
     adr_host_int_work = (Uint8 *)(ADR_SND_MEM + PEEK_L(ADR_SYS_TBL +
                                   ADR_HOST_INT));
                                                 /* ???????????????    */
