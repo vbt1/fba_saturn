@@ -11,8 +11,6 @@
 #define nYM2203Clockspeed 3579545
 #define DEBUG_PCM 1
 #define PCM_BLOCK_SIZE 0x2000 // 0x2000
-//void	smpVblIn( void );
-
 PcmCreatePara	para[14];
 //PcmInfo 		info[14];
 unsigned char current_pcm=255;
@@ -523,7 +521,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					pcm_info[i].track_position = sfx_list[data].position;
 					pcm_info[i].size = sfx_list[data].size*8;
 					pcm_info[i].num = data;
-					PCM_Start(pcm14[i]);
+					PCM_MeStart(pcm14[i]);
  #if DEBUG_PCM
 					char toto[50];
 					char *titi=&toto[0];
@@ -538,6 +536,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 				if(	current_pcm != data)
 				{
 					current_pcm = data;
+					PCM_MeStop(pcm14[0]);
 					PCM_DestroyStmHandle(pcm14[0]);
 					stmClose(stm);
 	//				STM_ResetTrBuf(stm);
@@ -558,15 +557,21 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					stm = stmOpen(pcm_file);
 					STM_ResetTrBuf(stm);
 					pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
+
+STM_MovePickup(stm, 0);
+
 					PCM_SetPcmStreamNo(pcm14[0], 0);
 					PCM_SetInfo(pcm14[0], &info);
 					PcmWork		*work = *(PcmWork **)pcm14[i];
 					st = &work->status;
 
-		st->need_ci = PCM_ON;
+//		st->need_ci = PCM_ON;
 
 					PCM_ChangePcmPara(pcm14[0]);
-					PCM_Start(pcm14[0]);
+					PCM_MeStart(pcm14[0]);
+//		st->need_ci = PCM_ON;
+
+//st->play = PCM_STAT_PLAY_TIME;
 				}
 			}
 		}
@@ -1180,12 +1185,15 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 //		if(stm!=NULL)
 		{
 			STM_ExecServer();
+//	smpStmTask(stm);
+
 			PCM_Task(pcm14[0]);
-			if (STM_IsTrBufFull(stm) == TRUE) {
+//			if (STM_IsTrBufFull(stm) == TRUE) 
+			{
 				STM_ResetTrBuf(stm);
 			}
 		}
-
+/*
 		for (unsigned int i=1;i<8;i++)
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
@@ -1220,7 +1228,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 //				memset((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1))),0x00,PCM_BLOCK_SIZE);
 			}
 		}
-
+*/
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
@@ -1370,12 +1378,12 @@ static void Set14PCM()
 		{
 //			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x64000;
 			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000;
-			PCM_PARA_RING_SIZE(&para[i])		= 0x10000;
+			PCM_PARA_RING_SIZE(&para[i])		= 0x20000;
 		}
 		else
 		{
 //			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
-			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x50000+(PCM_BLOCK_SIZE*(i+1));
+			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x60000+(PCM_BLOCK_SIZE*(i+1));
 			PCM_PARA_RING_SIZE(&para[i])		= RING_BUF_SIZE;//<<1;
 		}
 //		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(0x4000*(i+1));
