@@ -259,6 +259,7 @@ LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
  ../../SBL6/SEGALIB/PCM/pcm_mp.o ../../SBL6/SEGALIB/PCM/pcm_audi.o \
 ../../SBL6/SEGALIB/PCM/pcm_drv.o ../../SBL6/SEGALIB/PCM/pcm_time.o \
 ../../SBL6/SEGALIB/PCM/pcm_etc.o ../../SBL6/SEGALIB/PCM/pcm_aif.o\
+../../SBL6/SEGALIB/PCM/pcm_gfs.o \
  cdc/cdcrep.a
 
 LIBSOVL = ../../SBL6/SEGALIB/LIB/elf/sega_stm.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_dma.a

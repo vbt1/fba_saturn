@@ -10,7 +10,7 @@
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
 #define DEBUG_PCM 1
-#define PCM_BLOCK_SIZE 0x2000 // 0x2000
+#define PCM_BLOCK_SIZE 0x4000 // 0x2000
 PcmCreatePara	para[14];
 //PcmInfo 		info[14];
 unsigned char current_pcm=255;
@@ -70,7 +70,8 @@ SFX sfx_list[68]=
 /*032.pcm*/{269198,23024,0},	
 /*033.pcm*/{0,1167350,1},
 /*034.pcm*/{0,1176290,1},
-	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
+/*035.pcm*/	{0,844802,1},	
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
 	{-1,0,0},	{-1,0,0},	{-1,0,0},	
 /*044.pcm*/{0,606742,1},	
 	{-1,0,0},	{-1,0,0},	{-1,0,0},	
@@ -192,12 +193,18 @@ static void pcm_AudioMix(PcmHn hn)
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"sz_wt_totl            ",40,180);
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size_write_total),80,180);
 
+
+
+
+
 //		VTV_PRINTF((VTV_s, "P:LMis %d\n buf%X < writ%X\n", 
 //			st->cnt_load_miss, st->pcm_bsize, size_write_total));
 //		VTV_PRINTF((VTV_s, " r%X w%X\n", 
 //			(st)->ring_read_offset, (st)->ring_write_offset));
 	}
-	
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"file_size              ",40,190);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->info.file_size),80,190);
 
 	/* コピーするサイズ [byte/1ch] */
 	size_copy = MIN(size_mono, size_write_total);
@@ -466,7 +473,12 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 		if(data!=255)
 			if(sfx_list[data].loop==0)
 			{
-				for(i=0;i<8;i++)
+					PcmWork		*work = *(PcmWork **)pcm14[0];
+					st = &work->status;
+					st->cnt_loop = 0;
+					st->audio_process_fp = vbt_pcm_AudioProcess;
+
+/*				for(i=0;i<8;i++)
 				{
 					PcmWork		*work = *(PcmWork **)pcm14[i];
 					st = &work->status;
@@ -530,21 +542,63 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,70,40+i*10);
 #endif
 				}
+*/
 			}
 			else
 			{
+					PcmWork		*work = *(PcmWork **)pcm14[0];
+					st = &work->status;
+
+
+					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_CREATE)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_PAUSE)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_START)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_HEADER)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_TIME)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,40+i*10);
+					else if (st->play ==PCM_STAT_PLAY_END)
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40+i*10);
+					else
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
+
+
+
+
 				if(	current_pcm != data)
 				{
 					current_pcm = data;
-					PCM_MeStop(pcm14[0]);
+
+					st->cnt_loop = 0;
+					st->audio_process_fp = vbt_pcm_AudioProcess;
+
+					st->play = PCM_STAT_PLAY_END;
+//					PCM_MeStop(pcm14[0]);
+					pcm_EndProcess(pcm14[0]);
+//					PCM_GfsReset(pcm14[0]);
+
 					PCM_DestroyStmHandle(pcm14[0]);
 					stmClose(stm);
-	//				STM_ResetTrBuf(stm);
+//					STM_ResetTrBuf(stm);
 					char pcm_file[14];
 
 					vout(pcm_file, "%03d%s",(int)data,".PCM"); 
 					pcm_file[7]='\0';
 					PcmInfo 		info;
+/*
+			PCM_PARA_RING_ADDR(&para[0])	= (Sint8 *)PCM_ADDR+0x40000;
+			PCM_PARA_RING_SIZE(&para[0])		= 0x20000;
+			PCM_PARA_PCM_ADDR(&para[0])	= PCM_ADDR+(PCM_BLOCK_SIZE);
+			PCM_PARA_PCM_SIZE(&para[0])		= PCM_SIZE;
+*/
+/*
+PCM_MeGetPara
+	xxxxx*/
 
 					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
 					PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
@@ -552,23 +606,42 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PCM_INFO_SAMPLING_BIT(&info) = 16;
 					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
 
-	//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
 
-					stm = stmOpen(pcm_file);
+	int fid		= GFS_NameToId(pcm_file);	
+	int fz = GetFileSize(fid);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gfs_size              ",40,200);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(fz),80,200);
+	PCM_INFO_FILE_SIZE(&info) = fz;//SOUNDRATE*2;//0x4000;//214896;
+
+					if((stm = stmOpen(pcm_file))==NULL)
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"stream failed              ",40,210);
+
 					STM_ResetTrBuf(stm);
-					pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
 
-STM_MovePickup(stm, 0);
+					pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
+PCM_MeReset(pcm14[0]);
+//STM_MovePickup(stm, 0);
 
 					PCM_SetPcmStreamNo(pcm14[0], 0);
 					PCM_SetInfo(pcm14[0], &info);
-					PcmWork		*work = *(PcmWork **)pcm14[i];
-					st = &work->status;
 
-//		st->need_ci = PCM_ON;
-
-					PCM_ChangePcmPara(pcm14[0]);
+					work = *(PcmWork **)pcm14[0];
+					st->cnt_loop = 0;
+					st->audio_process_fp = vbt_pcm_AudioProcess;
+					st->need_ci = PCM_OFF;
+/*
+					st->need_ci = PCM_ON;
+					st->ring_read_offset = 0;
+					st->ring_write_offset = 0;
+					st->sample_write = 0;
+					st->sample_pause = 0;*/
+//					PCM_ChangePcmPara(pcm14[0]);
 					PCM_MeStart(pcm14[0]);
+	//						STM_ExecServer();
+
+		/* 再生タスク */
+	//	PCM_Task(pcm14[0]);
 //		st->need_ci = PCM_ON;
 
 //st->play = PCM_STAT_PLAY_TIME;
@@ -590,6 +663,7 @@ STM_MovePickup(stm, 0);
 		case 0x04:
 			if (data & 0x20) {
 //				CZetClose();
+#ifdef SND
 #ifndef RAZE
 /*			if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 			{
@@ -600,6 +674,7 @@ STM_MovePickup(stm, 0);
 //				CZetClose();
 #else
 				z80_reset();
+#endif
 #endif
 //				CZetOpen(0);
 			}
@@ -844,12 +919,14 @@ static INT32 DrvDoReset(INT32 full_reset)
 	DrvVidRamBankswitch(1);
 #endif
 
+#ifdef SND
 #ifndef RAZE
 	CZetOpen(1);
 	CZetReset();
 //	CZetClose();
 #else
 	z80_reset();
+#endif
 #endif
 
 #ifdef SND
@@ -911,7 +988,7 @@ static INT32 DrvGfxDecode()
 	}
 	return 0;
 }
-
+#ifdef SND
 static void DrvFMIRQHandler(INT32 irq, INT32 nStatus)
 {
 	if (nStatus & 1) {
@@ -950,7 +1027,7 @@ static INT32 DrvGetTime()
 //	return (INT32)CZetTotalCyclesSlave() / nYM2203Clockspeed;
 	return (INT32)CZetTotalCycles() / nYM2203Clockspeed;
 }
-
+#endif
 static INT32 DrvInit()
 {
 	DrvInitSaturn();
@@ -1392,7 +1469,8 @@ static void Set14PCM()
 
 		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
 		st = &g_movie_work[i].status;
-		st->need_ci = PCM_ON;
+		st->need_ci = PCM_OFF;
+		st->audio_process_fp = vbt_pcm_AudioProcess;
 	 
 		PCM_INFO_FILE_TYPE(&info[i]) = PCM_FILE_TYPE_NO_HEADER;			
 		PCM_INFO_DATA_TYPE(&info[i])=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
@@ -1407,7 +1485,7 @@ static void Set14PCM()
 			pcm14[i] = PCM_CreateStmHandle(&para[i], stm);
 			PCM_SetPcmStreamNo(pcm14[i], i);
 			PCM_SetInfo(pcm14[i], &info[i]);
-			PCM_ChangePcmPara(pcm14[i]);	
+//			PCM_ChangePcmPara(pcm14[i]);	
 		}
 		else
 		{
@@ -1429,7 +1507,8 @@ static void Set14PCM()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmInit(void)
 {
-	STM_Init(12, 24, stm_work);
+//	STM_Init(12, 24, stm_work);
+	STM_Init(4, 20, stm_work);
 //	STM_Init(1, 2, stm_work);
 
 	STM_SetErrFunc(errStmFunc, NULL);
