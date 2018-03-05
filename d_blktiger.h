@@ -35,6 +35,21 @@ void stmInit(void);
 void stmClose(StmHn fp);
 StmHn stmOpen(char *fname);
 
+#define PCM_IS_LRLRLR(st)	((st)->info.data_type == PCM_DATA_TYPE_LRLRLR)
+#define PCM_IS_RLRLRL(st)	((st)->info.data_type == PCM_DATA_TYPE_RLRLRL)
+#define PCM_IS_LLLRRR(st)	((st)->info.data_type == PCM_DATA_TYPE_LLLRRR)
+#define PCM_IS_RRRLLL(st)	((st)->info.data_type == PCM_DATA_TYPE_RRRLLL)
+#define PCM_IS_ADPCM_SG(st)	((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SG)
+#define PCM_IS_ADPCM_SCT(st) ((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SCT)
+#define PCM_IS_LR_MIX(st) 	(PCM_IS_LRLRLR(st) || PCM_IS_RLRLRL(st))
+#define PCM_IS_LR_BLOCK(st) (PCM_IS_LLLRRR(st) || PCM_IS_RRRLLL(st))
+#define PCM_IS_ADPCM(st) 	(PCM_IS_ADPCM_SG(st) || PCM_IS_ADPCM_SCT(st))
+#define PCM_IS_MONORAL(st)	((st)->info.channel == 0x01)
+#define PCM_IS_8BIT_SAMPLING(st)	((st)->info.sampling_bit <= 0x08)
+#define PCM_SAMPLE2BSIZE(st, sample)	\
+			(PCM_IS_8BIT_SAMPLING(st) ? (sample) : (sample) << 1)
+#define PCM_1CH2NCH(st, a)	(PCM_IS_MONORAL(st) ? (a) : (a) << 1)
+
 #define VDP2_BASE           0x25e00000
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
@@ -44,6 +59,34 @@ StmHn stmOpen(char *fname);
 #define VDP2_VRAM           VDP2_BASE
 #define VDP2_CRAM           (VDP2_BASE+0x100000)
 #define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
+
+void errGfsFunc(void *obj, Sint32 ec);
+void errStmFunc(void *obj, Sint32 ec);
+void errPcmFunc(void *obj, Sint32 ec);
+
+unsigned char current_pcm=255;
+char *itoa(int i);
+
+typedef struct
+{
+	int position;
+	int size;
+	unsigned char loop;
+}SFX;
+
+typedef struct
+{
+	int track_position;
+	int position;
+	int size;
+	unsigned char num;
+}PCM_INFO;
+
+PCM_INFO pcm_info[14];
+
+
+
+
 //#define SND 1
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT16 *remap4to16_lut = NULL;//[256];
