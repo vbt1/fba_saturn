@@ -27,8 +27,8 @@ PcmHn 	pcm14[14];
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L
 
-//UINT8   stm_work[STM_WORK_SIZE(12, 24)];
-UINT8   stm_work[STM_WORK_SIZE(4, 20)];
+UINT8   stm_work[STM_WORK_SIZE(12, 24)];
+//UINT8   stm_work[STM_WORK_SIZE(4, 20)];
 StmHn stm;
 StmGrpHn grp_hd;
 void stmInit(void);

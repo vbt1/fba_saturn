@@ -13,6 +13,13 @@
 #define PCM_BLOCK_SIZE 0x4000 // 0x2000
 PcmCreatePara	para[14];
 //PcmInfo 		info[14];
+#undef pcm_AudioProcess
+#define pcm_AudioProcess vbt_pcm_AudioProcess
+
+void errGfsFunc(void *obj, Sint32 ec);
+void errStmFunc(void *obj, Sint32 ec);
+void errPcmFunc(void *obj, Sint32 ec);
+
 unsigned char current_pcm=255;
 char *itoa(int i);
 
@@ -103,6 +110,21 @@ vbt> <Kale_> Ok, have you asked to Arbee?
 <vbt> <smf-> I might just emulate the games sound program on the 68000
 <vbt> <smf-> I imagine the sh2 would be happier emulating one less z80
 <vbt> <smf-> as it running in rom you could probably even do an upfront translation
+
+<l_oliveira> you're pressing it or not. releasing the key tells the chip to stop producing the sound
+<l_oliveira> the CPU will send key off writes to the chips registers making all channels stop producing sound
+<l_oliveira> on arcade games it's usually 0x0000 or 0xFFFF for stopping
+<l_oliveira> or 0x00 if it's an 8 bit machine
+
+<l_oliveira> some drivers you need to write twice to acknowledge
+<l_oliveira> some games write 0xFF then 0x00 to mute
+<l_oliveira> 0xFF is just to change the register to tell the driver to expect a command next time the value changes
+<l_oliveira> like the CPU keeps pooling the register to see if the value changed and acknowledges only the second change
+<l_oliveira> some registers actually fire an interrupt when there's a write and in that case the CPU doesn't need to keep polling so making double write is meaningless
+<l_oliveira> depends on the arcade board design
+<l_oliveira> I had to deal with that stuff when I modified CAPCOM/Sony Zinc 1 and 2 (PS1 based game boards) sound drivers to run on CPS2, I did create a translator stub code which converts the CPS2 shared RAM command string into the 4 writes on a 8bit port ZN games use to talk with the sound driver
+<l_oliveira> the ZN sound drivers fire up a NMI every time the host writes to the I/O port and the driver acknowledges that a command is sent after the interrupt is fired four times
+<l_oliveira> CPS2 Z80 just keeps pooling  at an fixed address of the shared ram. I re-purposed the NMI code and put my shared ram pooling stub on the main program loop of the Z80. Every time a command comes at the shared ram it emulates the four NMI behavior in software using the Z80 itself
 */
 
 static void wait_vblank(void)
@@ -178,7 +200,7 @@ static void pcm_AudioMix(PcmHn hn)
 						&size_write, &size_write_total);
 
 	if (size_write_total > st->pcm_bsize) {
-
+#ifdef DEBUG_PCM
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"  ",40,150);
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(work->para.pcm_stream_no),40,150);
 
@@ -192,20 +214,17 @@ static void pcm_AudioMix(PcmHn hn)
 
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"sz_wt_totl            ",40,180);
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size_write_total),80,180);
-
-
-
-
+#endif
 
 //		VTV_PRINTF((VTV_s, "P:LMis %d\n buf%X < writ%X\n", 
 //			st->cnt_load_miss, st->pcm_bsize, size_write_total));
 //		VTV_PRINTF((VTV_s, " r%X w%X\n", 
 //			(st)->ring_read_offset, (st)->ring_write_offset));
 	}
-
+#ifdef DEBUG_PCM
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"file_size              ",40,190);
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->info.file_size),80,190);
-
+#endif
 	/* ƒRƒs[‚·‚éƒTƒCƒY [byte/1ch] */
 	size_copy = MIN(size_mono, size_write_total);
 
@@ -245,8 +264,9 @@ static void pcm_AudioMix(PcmHn hn)
 #endif
 
 	/* ƒRƒs[‚ÌŽÀs (í‚ÉACPU ƒvƒƒOƒ‰ƒ€“]‘—) */
+#ifdef DEBUG_PCM
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_ExecMixCopyTbl      ",40,140);
-
+#endif
 	pcm_ExecMixCopyTbl(hn);
 
 #ifdef _PCMD
@@ -268,10 +288,13 @@ static void pcm_AudioMix(PcmHn hn)
 #endif
 
 	/* “Ç‚ÝŽæ‚èˆÊ’uXV */
+#ifdef DEBUG_PCM
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_RenewRingRead      ",40,140);
-
+#endif
 	pcm_RenewRingRead(hn, PCM_1CH2NCH(st, size_copy));
+#ifdef DEBUG_PCM
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_AudioMix end      ",40,140);
+#endif
 	return;
 }
 
@@ -473,20 +496,14 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 		if(data!=255)
 			if(sfx_list[data].loop==0)
 			{
-					PcmWork		*work = *(PcmWork **)pcm14[0];
-					st = &work->status;
-					st->cnt_loop = 0;
-					st->audio_process_fp = vbt_pcm_AudioProcess;
-
-/*				for(i=0;i<8;i++)
+				for(i=0;i<8;i++)
 				{
 					PcmWork		*work = *(PcmWork **)pcm14[i];
 					st = &work->status;
 					st->cnt_loop = 0;
 					st->audio_process_fp = vbt_pcm_AudioProcess;
-
-	//				st->need_ci = PCM_ON;
-#if DEBUG_PCM
+					st->need_ci = PCM_OFF;
+#ifdef DEBUG_PCM
 					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
 					else if (st->play ==PCM_STAT_PLAY_CREATE)
@@ -504,10 +521,10 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					else
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
 #endif
-					if (st->play != PCM_STAT_PLAY_TIME && i>0) 
+					if (st->play == PCM_STAT_PLAY_CREATE && i>0) 
 						break;
 				}
- #if DEBUG_PCM
+ #ifdef DEBUG_PCM
 				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",10,40);
 				if(i==1)
 				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,50);
@@ -527,14 +544,26 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"8",10,120);
 #endif
 
-				if(i>0 && i<8 && data!=255 && data!=33 && data!=48 && sfx_list[data].size!=0)
+//				if(i>0 && i<8 && data!=255 && data!=33 && data!=48 && sfx_list[data].size!=0)
+				if(i<8 && sfx_list[data].size!=0)
 				{
 					pcm_info[i].position = 0;
 					pcm_info[i].track_position = sfx_list[data].position;
 					pcm_info[i].size = sfx_list[data].size*8;
 					pcm_info[i].num = data;
+					PcmInfo 		info;
+
+					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+					PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+					PCM_INFO_CHANNEL(&info) = 0x01;
+					PCM_INFO_SAMPLING_BIT(&info) = 16;
+					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
+					PCM_INFO_FILE_SIZE(&info) = sfx_list[data].size;//SOUNDRATE*2;//0x4000;//214896;
+
+					PCM_SetInfo(pcm14[i], &info);
 					PCM_MeStart(pcm14[i]);
- #if DEBUG_PCM
+
+ #ifdef DEBUG_PCM
 					char toto[50];
 					char *titi=&toto[0];
 					titi=itoa(data);
@@ -542,14 +571,16 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,70,40+i*10);
 #endif
 				}
-*/
+
 			}
 			else
 			{
 					PcmWork		*work = *(PcmWork **)pcm14[0];
 					st = &work->status;
-
-
+					st->cnt_loop = 0;
+					st->audio_process_fp = vbt_pcm_AudioProcess;
+					st->need_ci = PCM_OFF;
+#ifdef DEBUG_PCM
 					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
 					else if (st->play ==PCM_STAT_PLAY_CREATE)
@@ -566,17 +597,10 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40+i*10);
 					else
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
-
-
-
-
+#endif
 				if(	current_pcm != data)
 				{
 					current_pcm = data;
-
-					st->cnt_loop = 0;
-					st->audio_process_fp = vbt_pcm_AudioProcess;
-
 					st->play = PCM_STAT_PLAY_END;
 //					PCM_MeStop(pcm14[0]);
 					pcm_EndProcess(pcm14[0]);
@@ -590,37 +614,26 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					vout(pcm_file, "%03d%s",(int)data,".PCM"); 
 					pcm_file[7]='\0';
 					PcmInfo 		info;
-/*
-			PCM_PARA_RING_ADDR(&para[0])	= (Sint8 *)PCM_ADDR+0x40000;
-			PCM_PARA_RING_SIZE(&para[0])		= 0x20000;
-			PCM_PARA_PCM_ADDR(&para[0])	= PCM_ADDR+(PCM_BLOCK_SIZE);
-			PCM_PARA_PCM_SIZE(&para[0])		= PCM_SIZE;
-*/
-/*
-PCM_MeGetPara
-	xxxxx*/
 
 					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
 					PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
 					PCM_INFO_CHANNEL(&info) = 0x01;
 					PCM_INFO_SAMPLING_BIT(&info) = 16;
 					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
-
+#ifdef DEBUG_PCM
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
-
-	int fid		= GFS_NameToId(pcm_file);	
-	int fz = GetFileSize(fid);
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gfs_size              ",40,200);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(fz),80,200);
-	PCM_INFO_FILE_SIZE(&info) = fz;//SOUNDRATE*2;//0x4000;//214896;
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(sfx_list[data].size),80,200);
+#endif
+	PCM_INFO_FILE_SIZE(&info) = sfx_list[data].size;//SOUNDRATE*2;//0x4000;//214896;
 
 					if((stm = stmOpen(pcm_file))==NULL)
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"stream failed              ",40,210);
+						FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"stream failed              ",40,210);
 
 					STM_ResetTrBuf(stm);
 
 					pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
-PCM_MeReset(pcm14[0]);
+//					PCM_MeReset(pcm14[0]);
 //STM_MovePickup(stm, 0);
 
 					PCM_SetPcmStreamNo(pcm14[0], 0);
@@ -630,19 +643,11 @@ PCM_MeReset(pcm14[0]);
 					st->cnt_loop = 0;
 					st->audio_process_fp = vbt_pcm_AudioProcess;
 					st->need_ci = PCM_OFF;
-/*
-					st->need_ci = PCM_ON;
-					st->ring_read_offset = 0;
-					st->ring_write_offset = 0;
-					st->sample_write = 0;
-					st->sample_pause = 0;*/
-//					PCM_ChangePcmPara(pcm14[0]);
 					PCM_MeStart(pcm14[0]);
 	//						STM_ExecServer();
 
 		/* Ä¶ƒ^ƒXƒN */
 	//	PCM_Task(pcm14[0]);
-//		st->need_ci = PCM_ON;
 
 //st->play = PCM_STAT_PLAY_TIME;
 				}
@@ -718,15 +723,6 @@ PCM_MeReset(pcm14[0]);
 			ss_regs->dispenbl &= 0xfffD;
 			ss_regs->dispenbl |= (*DrvBgEnable >> 1) & 0x0002;
 			BGON = ss_regs->dispenbl;			 */
-/*
-titi=itoa(~data & 0x02);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"spenab            ",4,30);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,30);
-
-titi=itoa(~data & 0x04);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bgenab            ",4,40);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,40,40);
-*/		
 		return;
 
 		case 0x0d:
@@ -891,7 +887,9 @@ static INT32 MemIndex()
 //	coin_lockout	= Next; Next += 0x000001;
 
 	RamEnd			= Next;
+#ifdef CZET
 	CZ80Context		= Next; Next += (0x1080*2);
+#endif
 	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
 	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
 	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
@@ -1073,12 +1071,13 @@ static INT32 DrvInit()
 	Set14PCM();
 
 	drawWindow(0,224,240,0,64);
+#ifdef CZET
 #ifndef RAZE
 	CZetInit2(2,CZ80Context);
 #else
 	CZetInit2(1,CZ80Context);
 #endif
-
+#endif
 
 #ifdef RAZE0
 	z80_map_read(0x0000, 0x7fff, DrvZ80ROM0);
@@ -1099,6 +1098,7 @@ static INT32 DrvInit()
 	z80_set_out(blacktiger_out);
 #endif
 
+#ifdef CZET
 #ifndef RAZE
 	CZetOpen(1);
 	CZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM1);
@@ -1109,6 +1109,7 @@ static INT32 DrvInit()
 	CZetSetWriteHandler(blacktiger_sound_write);
 	CZetSetReadHandler(blacktiger_sound_read);
 	CZetClose();
+#endif
 #endif
 #ifdef SND
 	BurnYM2203Init(2, ym_buffer, nYM2203Clockspeed, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
@@ -1140,8 +1141,9 @@ static INT32 DrvExit()
 #ifdef SND
 	BurnYM2203Exit();
 #endif
+#ifdef CZET
 	CZetExit2();
-
+#endif
 	for(int i=0;i<14;i++)
 	{
 		PCM_MeStop(pcm14[i]);
@@ -1163,51 +1165,6 @@ static INT32 DrvExit()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void errStmFunc(void *obj, Sint32 ec)
-{
-//	VTV_PRINTF((VTV_s, "S:ErrStm %X %X\n", obj, ec));
-	char texte[50];
-	vout(texte, "ErrStm %X %X",obj, ec); 
-	texte[49]='\0';
-	do{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté stm",70,130);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	wait_vblank();
-
-	}while(1);
-}
-void errGfsFunc(void *obj, Sint32 ec)
-{
-//	VTV_PRINTF((VTV_s, "S:ErrGfs %X %X\n", obj, ec));
-	char texte[50];
-	vout(texte, "ErrGfs %X %X",obj, ec); 
-	texte[49]='\0';
-	do{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	wait_vblank();
-
-	}while(1);
-}
-
-void errPcmFunc(void *obj, Sint32 ec)
-{
-//	VTV_PRINTF((VTV_s, "S:ErrPcm %X %X\n", obj, ec));
-	char texte[50];
-	vout(texte, "ErrPcm %X %X",obj, ec); 
-	texte[49]='\0';
-	do{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté pcm",70,130);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	wait_vblank();
-
-	}while(1);
-}
-
-
 static INT32 DrvFrame()
 {
 // cheat code level
@@ -1232,15 +1189,14 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 
 		DrvInputs[0] |= coin_lockout;
 	}
-
-	CZetNewFrame();
-
 //	UINT32 nInterleave = 100;
 	UINT32 nInterleave = 20;
 	UINT32 nCyclesTotal = 3000000 / 60; ///2;
 	UINT32 nCyclesDone = 0;
-
+#ifdef CZET
+	CZetNewFrame();
 	CZetOpen(1);
+#endif
 	INT32 nNext, nCyclesSegment;
 
 	for (UINT32 i = 0; i < nInterleave; i++) {
@@ -1270,13 +1226,13 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				STM_ResetTrBuf(stm);
 			}
 		}
-/*
+
 		for (unsigned int i=1;i<8;i++)
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
 			{
-				int size=2048;
-				if(pcm_info[i].position+size>pcm_info[i].size)
+				int size=4096;
+				if(pcm_info[i].position+(size*2)>pcm_info[i].size)
 				{
 					size=pcm_info[i].size-pcm_info[i].position;
 					pcm_info[i].num = 0xff;
@@ -1285,27 +1241,33 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				memcpy((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
-				if(pcm_info[i].num == 0xff)
-					size=0x900;
+//				if(pcm_info[i].num == 0xff)
+//					size=0x900;
 				PCM_NotifyWriteSize(pcm14[i], size);
-				PCM_Task(pcm14[i]);
+//				PCM_Task(pcm14[i]);
+				PCM_MeTask(pcm14[i]);
 			}
 			else
 			{
+
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"      ",100,40+i*10);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(PCM_HN_CNT_LOOP(pcm14[i])),100,40+i*10);
+
 //				PCM_MeStop(pcm14[i]);
 //					PCM_Task(pcm14[i]);
-				
-									unsigned int 	errChk = 0;
+	//			PCM_Task(pcm14[i]);				
+	//								unsigned int 	errChk = 0;
 					PcmWork		*work = *(PcmWork **)pcm14[i];
 					PcmStatus	*st= &work->status;				
 //					while(SND_StopPcm(i))	{if (errChk++ > 512) break;	}
-					PCM_MeStop(pcm14[i]);
-					st->play = PCM_STAT_PLAY_END;
+//					PCM_MeStop(pcm14[i]);
+				PCM_MeReset(pcm14[i]);
+//					st->play = PCM_STAT_PLAY_END;
 //				memset((INT16 *)(0x25a20000+(0x4000*(i+1))),0x00,4096);
 //				memset((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1))),0x00,PCM_BLOCK_SIZE);
 			}
 		}
-*/
+
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
@@ -1456,6 +1418,8 @@ static void Set14PCM()
 //			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x64000;
 			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000;
 			PCM_PARA_RING_SIZE(&para[i])		= 0x20000;
+
+
 		}
 		else
 		{
@@ -1481,6 +1445,11 @@ static void Set14PCM()
 
 		if(i==0)
 		{
+//			int fid		= GFS_NameToId("048.pcm");	
+//			int fz = GetFileSize(fid);
+			PCM_INFO_FILE_SIZE(&info[i]) = sfx_list[48].size;//SOUNDRATE*2;//0x4000;//214896;
+
+
 			STM_ResetTrBuf(stm);
 			pcm14[i] = PCM_CreateStmHandle(&para[i], stm);
 			PCM_SetPcmStreamNo(pcm14[i], i);
@@ -1500,15 +1469,15 @@ static void Set14PCM()
 			PCM_ChangePcmPara(pcm14[i]);	
 		}
 // VBT : enleve la lecture en boucle !! merci zeromu!!!
-//		*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= ~0x60;
+		*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= ~0x60;
 		PCM_Start(pcm14[i]);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmInit(void)
 {
-//	STM_Init(12, 24, stm_work);
-	STM_Init(4, 20, stm_work);
+	STM_Init(12, 24, stm_work);
+//	STM_Init(4, 20, stm_work);
 //	STM_Init(1, 2, stm_work);
 
 	STM_SetErrFunc(errStmFunc, NULL);
@@ -1536,6 +1505,51 @@ StmHn stmOpen(char *fname)
 void stmClose(StmHn fp)
 {
 	STM_Close(fp);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void errStmFunc(void *obj, Sint32 ec)
+{
+//	VTV_PRINTF((VTV_s, "S:ErrStm %X %X\n", obj, ec));
+	char texte[50];
+	vout(texte, "ErrStm %X %X",obj, ec); 
+	texte[49]='\0';
+	do{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté stm",70,130);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	wait_vblank();
+
+	}while(1);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void errGfsFunc(void *obj, Sint32 ec)
+{
+//	VTV_PRINTF((VTV_s, "S:ErrGfs %X %X\n", obj, ec));
+	char texte[50];
+	vout(texte, "ErrGfs %X %X",obj, ec); 
+	texte[49]='\0';
+	do{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	wait_vblank();
+
+	}while(1);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void errPcmFunc(void *obj, Sint32 ec)
+{
+//	VTV_PRINTF((VTV_s, "S:ErrPcm %X %X\n", obj, ec));
+	char texte[50];
+	vout(texte, "ErrPcm %X %X",obj, ec); 
+	texte[49]='\0';
+	do{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté pcm",70,130);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	wait_vblank();
+
+	}while(1);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
