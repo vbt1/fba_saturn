@@ -231,6 +231,8 @@ void vbt_PCM_MeTask(PcmHn hn)
 
 	/* ヘッダ処理 */
 	if (st->play == PCM_STAT_PLAY_START && st->need_ci != PCM_ON) {
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_HeaderProcess  ",40,210);
+
 		if (pcm_HeaderProcess(hn)) {
 //			_VTV_PRINTF("pcm_HeaderProcess(hn)");
 			return;	/* まだヘッダ分のデータ供給がない */
@@ -239,6 +241,8 @@ void vbt_PCM_MeTask(PcmHn hn)
 
 	/* オーディオ処理 */
 //	(*st->audio_process_fp)(hn);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_AudioProcess  ",40,210);
+
 	vbt_pcm_AudioProcess(hn);
 
 	/* 再生終了処理 */
@@ -249,6 +253,7 @@ void vbt_PCM_MeTask(PcmHn hn)
 			PCM_MeGetTimeTotal(hn, &sample_now);
 			if (sample_now + PCM_HN_STOP_TRG_SAMPLE(hn) > st->sample_write) {
 				/* さあ、再生終了だ！ */
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_EndProcess     ",40,210);
 				pcm_EndProcess(hn);
 			}
 		}
@@ -256,6 +261,8 @@ void vbt_PCM_MeTask(PcmHn hn)
 
 	/* タイマスタート・ＰＣＭ再生スタート処理 */
 	if (st->play == PCM_STAT_PLAY_HEADER) {
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_StartTimer  ",40,210);
+// vbt : redefinir pcm_StartTimer !!!!
 		pcm_StartTimer(hn);
 	}
 	return;
