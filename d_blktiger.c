@@ -9,8 +9,138 @@
 #include    "machine.h"
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
-#define DEBUG_PCM 1
+//#define DEBUG_PCM 1
 #define PCM_BLOCK_SIZE 0x4000 // 0x2000
+
+#define PCM_SCSP_FREQUENCY					(44100L)
+
+static const Sint8	logtbl[] = {
+/* 0 */		0, 
+/* 1 */		1, 
+/* 2 */		2, 2, 
+/* 4 */		3, 3, 3, 3, 
+/* 8 */		4, 4, 4, 4, 4, 4, 4, 4, 
+/* 16 */	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
+/* 32 */	6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
+			6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
+/* 64 */	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+/* 128 */	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
+	};
+
+/* 1,3,4,5,10 bit mask */
+#define PCM_MSK1(a)				((a)&0x0001)
+#define PCM_MSK3(a)				((a)&0x0007)
+#define PCM_MSK4(a)				((a)&0x000F)
+#define PCM_MSK5(a)				((a)&0x001F)
+#define PCM_MSK10(a)			((a)&0x03FF)
+
+/* ƒIƒNƒ^[ƒu’l‚ÌŒvZ */
+#define PCM_CALC_OCT(smpling_rate) 											\
+		((Sint32)logtbl[PCM_SCSP_FREQUENCY / ((smpling_rate) + 1)])
+
+/* ƒVƒtƒgŠî€ü”g”‚ÌŒvZ */
+#define PCM_CALC_SHIFT_FREQ(oct)											\
+		(PCM_SCSP_FREQUENCY >> (oct))
+
+/* ‚e‚m‚r‚ÌŒvZ */
+#define PCM_CALC_FNS(smpling_rate, shift_freq)								\
+		((((smpling_rate) - (shift_freq)) << 10) / (shift_freq))
+#define PCM_SOUND_BASE_ADDR		(0x25A00000)
+#define PCM_SYS_IF_TBL			(PCM_SOUND_BASE_ADDR + 0x400)
+#define PCM_SYS_IF_WORK			(PCM_SOUND_BASE_ADDR + 0x480)
+#define PCM_HOST_IF_WORK		(PCM_SOUND_BASE_ADDR + *(Uint32 *)(PCM_SYS_IF_TBL + 4))
+#define PCM_CMD_BLK(n)			(PCM_HOST_IF_WORK + 0x10 * (n))
+#define PCM_PLAY_ADDRESS(n)		(*(Uint8 *)(PCM_HOST_IF_WORK + 0xA0 + 2 * (n)))
+#define PCM_COMMAND_START_PCM				(0x85)
+#define SYS_GETSYSCK \
+        (*(volatile Uint32*)0x6000324)
+#define PCM_IS_26MHZ		(SYS_GETSYSCK == 0)
+#define PCM_IS_PAL			(*(volatile Uint16 *)0x25f80004 & 0x0001)
+#define PCM_CLK_CPU_NTSC26	(26874100L)
+#define PCM_CLK_CPU_NTSC28	(28636400L)
+#define PCM_CLK_CPU_PAL26	(26687500L)
+#define PCM_CLK_CPU_PAL28	(28437500L)
+#define PCM_CLK_CPU_NTSC	(PCM_IS_26MHZ ? PCM_CLK_CPU_NTSC26 : PCM_CLK_CPU_NTSC28)
+#define PCM_CLK_CPU_PAL		(PCM_IS_26MHZ ? PCM_CLK_CPU_PAL26 : PCM_CLK_CPU_PAL28)
+#define PCM_CLK_CPU			(PCM_IS_PAL ? PCM_CLK_CPU_PAL : PCM_CLK_CPU_NTSC)
+#define PCM_ROUND_SHIFT_R(a, n)		((((a) >> ((n) - 1)) + 1) >> 1)
+#define PCM_CLOCK_SCALE		(PCM_ROUND_SHIFT_R(PCM_CLK_CPU, 7 + 8))
+#define PCM_IS_16BIT_SAMPLING(st)	(((st)->info.sampling_bit <= 0x10) && \
+									((st)->info.sampling_bit > 0x08))
+#define PCM_SET_STMNO(para)													\
+		((Uint8)PCM_MSK3((para)->pcm_stream_no))
+#define PCM_SET_LEVEL_PAN(para)												\
+		((Uint8)((PCM_MSK3((para)->pcm_level) << 5) | PCM_MSK5((para)->pcm_pan)))
+#define PCM_SET_LEVEL_PAN2(level, pan)										\
+		((Uint8)((PCM_MSK3(level) << 5) | PCM_MSK5(pan)))
+#define PCM_SET_PITCH_WORD(oct, fns)										\
+		((Uint16)((PCM_MSK4(-(oct)) << 11) | PCM_MSK10(fns)))
+#define PCM_SET_PCM_ADDR(para) 	(((Uint32)((para)->pcm_addr)) >> 4)
+#define PCM_SET_PCM_SIZE(para) 	((para)->pcm_size)
+#define SND_PRM_NUM(prm)        ((prm).num)         /* PCM½ÄØ°ÑÄ¶”Ô†       */
+#define SND_PRM_LEV(prm)        ((prm).lev)         /* ÀŞ²Ú¸Ä‰¹Level         */
+#define SND_PRM_PAN(prm)        ((prm).pan)         /* ÀŞ²Ú¸Ä‰¹pan           */
+#define SND_PRM_PICH(prm)       ((prm).pich)        /* PICHÜ°ÄŞ              */
+#define SND_R_EFCT_IN(prm)      ((prm).r_efct_in)   /* Efect in select(‰E)   */
+#define SND_R_EFCT_LEV(prm)     ((prm).r_efct_lev)  /* Efect send Level(‰E)  */
+#define SND_L_EFCT_IN(prm)      ((prm).l_efct_in)   /* Efect in select(¶)   */
+#define SND_L_EFCT_LEV(prm)     ((prm).l_efct_lev)  /* Efect send Level(¶)  */
+#define SND_PRM_TL(prm)     	((prm).lev)  		/* Master Level			 */
+#define SND_PRM_MODE(prm)       ((prm).mode)        /* ½ÃÚµ¥ÓÉ¸Û+»İÌßØİ¸ŞÚ°Ä */
+#define SND_PRM_SADR(prm)       ((prm).sadr)        /* PCM½ÄØ°ÑÊŞ¯Ì§½À°Ä±ÄŞÚ½*/
+#define SND_PRM_SIZE(prm)       ((prm).size)        /* PCM½ÄØ°ÑÊŞ¯Ì§»²½Ş   */
+#define SND_PRM_OFSET(prm)      ((prm).ofset)       /* PCM½ÄØ°ÑÄ¶ŠJnµÌ¾¯Ä */
+#define SND_RET_SET     0                       /* ³íI—¹                     */
+#define SND_RET_NSET    1                       /* ˆÙíI—¹                     */
+#define COM_START_PCM      0x85                 /* PCM start                 */
+#define ADR_COM_DATA    (0x00)                  /* ƒRƒ}ƒ“ƒh                  */
+#define ADR_PRM_DATA    (0x02)                  /* ƒpƒ‰ƒ[ƒ^                */
+#define ADR_HOST_INT    (0x04)                  /* Î½Ä²İÀÌª°½Ü°¸±ÄŞÚ½        */
+#define ADR_SND_MEM     ((Uint8 *)0x25a00000)   /* ƒTƒEƒ“ƒhƒƒ‚ƒŠæ“ªƒAƒhƒŒƒX*/
+#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* ƒTƒEƒ“ƒhƒxƒNƒ^ƒAƒhƒŒƒX    */
+#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ¼½ÃÑ²İÀÌª°½—Ìˆæ           */
+#define SIZE_COM_BLOCK      (0x10)              /* ºÏİÄŞÌŞÛ¯¸»²½Ş          */
+#define MAX_NUM_COM_BLOCK   8                   /* ºÏİÄŞÌŞÛ¯¸”              */
+
+static volatile Uint8  *adr_com_block;
+static volatile Uint8 *adr_host_int_work;                /* Î½Ä²İÀÌª°½Ü°¸æ“ª±ÄŞÚ½Ši”[*/
+
+#define MAX_ADR_COM_DATA                        /* Å‘åºÏİÄŞÃŞ°À±ÄŞÚ½     */\
+    (adr_host_int_work + ADR_COM_DATA + (SIZE_COM_BLOCK * MAX_NUM_COM_BLOCK))
+#define NOW_ADR_COM_DATA                        /* Œ»İºÏİÄŞÃŞ°À±ÄŞÚ½     */\
+    (adr_com_block + ADR_COM_DATA)
+static Uint32 intrflag;
+#define HOST_SET_RETURN(ret)\
+    do{\
+		intrflag=0;\
+        return(ret);\
+    }while(FALSE)
+
+#define POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data)))   /* ÊŞ²Ä  */
+#define POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data))) /* Ü°ÄŞ  */
+
+#define PEEK_L(adr)         (*((volatile Uint32 *)(adr)))                    /* Ûİ¸Ş  */
+
+
+#define SET_COMMAND(set_com)\
+(POKE_W((adr_com_block + ADR_COM_DATA), (Uint16)(set_com) << 8)) /* ƒRƒ}ƒ“ƒhƒZƒbƒg   */
+
+#define SET_PRM(no, set_prm)\
+(POKE_B(adr_com_block + ADR_PRM_DATA + (no), (set_prm))) /* Êß×Ò°ÀƒZƒbƒg      */
+
+void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
+void vbt_pcm_StartTimer(PcmHn hn);
+extern signed int pcm_cnt_vbl_in;
 PcmCreatePara	para[14];
 //PcmInfo 		info[14];
 //#undef pcm_AudioProcess
@@ -195,7 +325,9 @@ static void vbt_pcm_AudioMix(PcmHn hn)
 
 	/* ƒRƒs[î•ñƒe[ƒuƒ‹‚Ìİ’è */
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_SetMixCopyTbl      ",40,140);
-
+#ifdef DEBUG_PCM
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_SetMixCopyTbl     ",40,210);
+#endif
 	pcm_SetMixCopyTbl(hn, size_copy);
 
 	/* ƒRƒs[‚ÌÀs (í‚ÉACPU ƒvƒƒOƒ‰ƒ€“]‘—) */
@@ -263,9 +395,222 @@ void vbt_PCM_MeTask(PcmHn hn)
 	if (st->play == PCM_STAT_PLAY_HEADER) {
 			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_StartTimer  ",40,210);
 // vbt : redefinir pcm_StartTimer !!!!
-		pcm_StartTimer(hn);
+		vbt_pcm_StartTimer(hn);
 	}
 	return;
+}
+
+typedef struct{
+    Uint8 mode;                             /* ½ÃÚµ¥ÓÉ¸Û+»İÌßØİ¸ŞÚ°Ä         */
+    Uint16 sadr;                            /* PCM½ÄØ°ÑÊŞ¯Ì§½À°Ä±ÄŞÚ½        */
+    Uint16 size;                            /* PCM½ÄØ°ÑÊŞ¯Ì§»²½Ş             */
+}SndPcmStartPrm;                            /* PCMŠJnƒpƒ‰ƒ[ƒ^          */
+
+typedef Uint8 SndPcmNum;                    /* PCM½ÄØ°ÑÄ¶”Ô†               */
+typedef Uint8 SndEfctIn;                    /* Efect in select               */
+typedef Uint8 SndLev;                       /* Levelƒf[ƒ^Œ^                 */
+typedef Sint8 SndPan;                       /* PANƒf[ƒ^Œ^                   */
+typedef Uint8 SndRet;                       /* ºÏİÄŞÀsó‘Ôƒf[ƒ^Œ^         */
+typedef Uint8 SndPcmNum;                    /* PCM½ÄØ°ÑÄ¶”Ô†               */
+
+typedef struct{
+    SndPcmNum num;                          /* PCM½ÄØ°ÑÄ¶”Ô†               */
+    SndLev lev;                             /* ÀŞ²Ú¸Ä‰¹Level                 */
+    SndPan pan;                             /* ÀŞ²Ú¸Ä‰¹pan                   */
+    Uint16 pich;                            /* PICHÜ°ÄŞ                      */
+    SndEfctIn r_efct_in;                    /* Efect in select(‰Eo—Í)       */
+    SndLev r_efct_lev;                      /* Efect send Level(‰Eo—Í)      */
+    SndEfctIn l_efct_in;                    /* Efect in select(¶o—Í)       */
+    SndLev l_efct_lev;                      /* Efect send Level(¶o—Í)      */
+}SndPcmChgPrm;                              /* PCM•ÏXƒpƒ‰ƒ[ƒ^           */
+
+static void pcm_Wait(int cnt)
+{
+	while (--cnt > 0) {
+		;
+	}
+}
+
+static Uint16 ChgPan(SndPan pan)
+{
+    return(((pan) < 0) ? (~(pan) + 0x10 + 1) : (pan));
+}
+
+static Uint8 GetComBlockAdr(void)
+{
+    if(*NOW_ADR_COM_DATA)
+	{              /* ˆÈ‘O‚ÌÌŞÛ¯¸‚ªˆø‚«æ‚èÏ‚İ‚Å‚È‚¢‚©?*/
+        /* ŸƒRƒ}ƒ“ƒhƒuƒƒbƒNƒAƒhƒŒƒXİ’èˆ— ********************************/
+//        if(NOW_ADR_COM_DATA >= (MAX_ADR_COM_DATA - SIZE_COM_BLOCK)){
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(NOW_ADR_COM_DATA),10,110);
+
+		if(NOW_ADR_COM_DATA >= (MAX_ADR_COM_DATA - SIZE_COM_BLOCK))
+		{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr1 OFF       ",40,100);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa((MAX_ADR_COM_DATA - SIZE_COM_BLOCK)),60,110);
+// VBT ajout
+		adr_com_block = adr_host_int_work;  /* ÌŞÛ¯¸‚Ìæ“ª‚Ö              */
+
+													/* Å‘å’l‚©?            */
+            return OFF;                             /* ÌŞÛ¯¸‹ó‚«–³‚µ      */
+        }
+		else
+		{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"update adr_com_block                          ",40,110);
+
+            adr_com_block += SIZE_COM_BLOCK;        /* Œ»İºÏİÄŞÌŞÛ¯¸¶³İÄ±¯Ìß*/
+            while(NOW_ADR_COM_DATA < (MAX_ADR_COM_DATA - SIZE_COM_BLOCK))
+			{
+                if(*NOW_ADR_COM_DATA)
+				{
+                    adr_com_block += SIZE_COM_BLOCK;
+                }
+				else
+				{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr1 ON        ",40,110);
+
+                    return ON;                      /* ÌŞÛ¯¸‹ó‚«—L‚è         */
+                }
+            }
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr2 OFF       ",40,110);
+
+            return OFF;                             /* ÌŞÛ¯¸‹ó‚«–³‚µ         */
+        }
+    }
+	else
+	{
+        adr_com_block = adr_host_int_work;  /* ÌŞÛ¯¸‚Ìæ“ª‚Ö              */
+        while(NOW_ADR_COM_DATA < (MAX_ADR_COM_DATA - SIZE_COM_BLOCK))
+		{
+            if(*NOW_ADR_COM_DATA)
+			{
+                adr_com_block += SIZE_COM_BLOCK;
+            }
+			else
+			{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr2 ON        ",40,110);
+
+                return ON;                          /* ÌŞÛ¯¸‹ó‚«—L‚è         */
+            }
+        }
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr3 OFF       ",40,110);
+
+        return OFF;                                 /* ÌŞÛ¯¸‹ó‚«–³‚µ         */
+    }
+}
+
+
+ SndRet vbt_SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm)
+ {
+/* 1994/02/24 Start */
+// vbt variable statique ...
+//    if(intrflag) return(SND_RET_NSET);
+//    intrflag = 1;
+/* 1994/02/24 End */
+    if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
+    SET_PRM(0, SND_PRM_MODE(*sprm) | SND_PRM_NUM(*cprm));
+    SET_PRM(1, (SND_PRM_LEV(*cprm) << 5) | ChgPan(SND_PRM_PAN(*cprm)));
+    SET_PRM(2, SND_PRM_SADR(*sprm) >> 8);
+    SET_PRM(3, SND_PRM_SADR(*sprm));
+    SET_PRM(4, SND_PRM_SIZE(*sprm) >> 8);
+    SET_PRM(5, SND_PRM_SIZE(*sprm));
+    SET_PRM(6, SND_PRM_PICH(*cprm) >> 8);
+    SET_PRM(7, SND_PRM_PICH(*cprm));
+    SET_PRM(8, (SND_R_EFCT_IN(*cprm) << 3) | SND_R_EFCT_LEV(*cprm));
+    SET_PRM(9, (SND_L_EFCT_IN(*cprm) << 3) | SND_L_EFCT_LEV(*cprm));
+    SET_PRM(11, 0);
+    SET_COMMAND(COM_START_PCM);                 /* ƒRƒ}ƒ“ƒhƒZƒbƒg            */
+    HOST_SET_RETURN(SND_RET_SET);
+}
+
+void vbt_PCM_DrvStartPcm(PcmHn hn)
+{
+	PcmWork			*work 	= *(PcmWork **)hn;
+	PcmPara			*para 	= &work->para;
+	PcmStatus		*st 	= &work->status;
+	Sint32			oct, shift_freq, fns;
+	int				imask;
+	SndPcmStartPrm	start_prm;
+	SndPcmChgPrm	chg_prm;
+
+	/* chg_prm ‚Ìİ’è */
+	oct 					= PCM_CALC_OCT(st->info.sampling_rate);
+	shift_freq 				= PCM_CALC_SHIFT_FREQ(oct);
+	fns 					= PCM_CALC_FNS(st->info.sampling_rate, 
+											shift_freq);
+	SND_PRM_NUM(chg_prm)	= (SndPcmNum)para->pcm_stream_no;
+	SND_PRM_LEV(chg_prm)	= para->pcm_level;
+	SND_PRM_PAN(chg_prm)	= para->pcm_pan;
+	SND_PRM_PICH(chg_prm)	= PCM_SET_PITCH_WORD(oct, fns);
+	SND_R_EFCT_IN(chg_prm)	= 0;
+	SND_R_EFCT_LEV(chg_prm)	= 0;
+	SND_L_EFCT_IN(chg_prm)	= 0;
+	SND_L_EFCT_LEV(chg_prm)	= 0;
+
+	/* start_prm ‚Ìİ’è */
+	SND_PRM_MODE(start_prm)		= (PCM_IS_MONORAL(st)        ? 0x00 : 0x80) |
+								  (PCM_IS_16BIT_SAMPLING(st) ? 0x00 : 0x10); 
+	SND_PRM_SADR(start_prm)		= (Uint16)PCM_SET_PCM_ADDR(para);
+	SND_PRM_SIZE(start_prm)		= (Uint16)PCM_SET_PCM_SIZE(para);
+
+    imask = get_imask();
+    set_imask(15);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SND_StartPcm       ",40,210);
+
+	while (vbt_SND_StartPcm(&start_prm, &chg_prm) == SND_RET_NSET) {
+		set_imask(imask);
+		pcm_Wait(100);
+		set_imask(15);
+	}
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_InitPolling       ",40,210);
+
+	pcm_InitPolling(para->pcm_stream_no);
+
+    set_imask(imask);
+}
+
+void vbt_pcm_StartTimer(PcmHn hn)
+{
+	PcmWork		*work 	= *(PcmWork **)hn;
+#if	0
+	/*
+	**¡1995-07-27	‚‹´’q‰„
+	**	g‚Á‚Ä‚È‚¢‚Ì‚Åíœ
+	*/
+	PcmPara		*para 	= &work->para;
+#endif
+	PcmStatus	*st 	= &work->status;
+	int			imask;
+
+	if (st->ring_write_offset < PCM_HN_START_TRG_SIZE(hn)) {
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_StartTimer1  ",40,210);
+
+		return;
+	}
+
+	if (st->sample_write < PCM_HN_START_TRG_SAMPLE(hn)) {
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_StartTimer2  ",40,210);
+
+		return;
+	}
+
+    imask = get_imask();
+    set_imask(15);
+
+	st->clock_scale = PCM_CLOCK_SCALE;
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"PCM_DrvStartPcm  ",40,210);
+
+	vbt_PCM_DrvStartPcm(hn); 	/* PCMÄ¶ŠJn */
+
+	/* ƒ^ƒCƒ}[ƒXƒ^[ƒg */
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_StartClock     ",40,210);
+	pcm_StartClock(hn);
+	st->play = PCM_STAT_PLAY_TIME;
+	st->cnt_4ksample = 0;
+	st->vbl_film_start = st->vbl_pcm_start = pcm_cnt_vbl_in;
+
+    set_imask(imask);
 }
 
 void vbt_pcm_AudioProcess(PcmHn hn)
@@ -275,6 +620,7 @@ void vbt_pcm_AudioProcess(PcmHn hn)
 
 	if (PCM_IS_LR_MIX(st)) {
 		/* ‚k‚q¬İƒI[ƒfƒBƒIˆ— */
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_AudioMix     ",40,210);
 		vbt_pcm_AudioMix(hn);
 	} else if (PCM_IS_LR_BLOCK(st)) {
 		/* ‚k‚qƒuƒƒbƒNƒI[ƒfƒBƒIˆ— */
@@ -317,6 +663,9 @@ int ovlInit(char *szShortName)
 	if (strcmp(nBurnDrvBlktiger.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvBlktiger,sizeof(struct BurnDriver));
 
+
+	adr_host_int_work = (Uint8 *)(ADR_SND_MEM + PEEK_L(ADR_SYS_TBL +  ADR_HOST_INT));	
+	adr_com_block = adr_host_int_work;
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs = (SclSysreg *)SS_REGS;
 	ss_regd = (SclDataset *)SS_REGD;
@@ -1177,7 +1526,8 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 			STM_ExecServer();
 //	smpStmTask(stm);
 
-			vbt_PCM_MeTask(pcm14[0]);
+//			vbt_PCM_MeTask(pcm14[0]);
+			PCM_MeTask(pcm14[0]);
 //			if (STM_IsTrBufFull(stm) == TRUE) 
 			{
 				STM_ResetTrBuf(stm);
@@ -1191,11 +1541,14 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				int size=4096;
 				if(pcm_info[i].position+(size*2)>pcm_info[i].size)
 				{
+					memcpy((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 					size=pcm_info[i].size-pcm_info[i].position;
 					pcm_info[i].num = 0xff;
 				}
+				else
+					memcpyl((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+
 //				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
-				memcpy((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
 //				if(pcm_info[i].num == 0xff)
@@ -1206,10 +1559,10 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 			}
 			else
 			{
-
+#ifdef DEBUG_PCM
 				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"      ",100,40+i*10);
 				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(PCM_HN_CNT_LOOP(pcm14[i])),100,40+i*10);
-
+#endif
 //				PCM_MeStop(pcm14[i]);
 //					PCM_Task(pcm14[i]);
 	//			PCM_Task(pcm14[i]);				
@@ -1466,9 +1819,9 @@ void errStmFunc(void *obj, Sint32 ec)
 	vout(texte, "ErrStm %X %X",obj, ec); 
 	texte[49]='\0';
 	do{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté stm",70,130);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"plante stm                         ",40,130);
 
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,130);
 	wait_vblank();
 
 	}while(1);
@@ -1495,13 +1848,13 @@ void errPcmFunc(void *obj, Sint32 ec)
 	char texte[50];
 	vout(texte, "ErrPcm %X %X",obj, ec); 
 	texte[49]='\0';
-	do{
+//	do{
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté pcm",70,130);
 
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
 	wait_vblank();
 
-	}while(1);
+//	}while(1);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)
