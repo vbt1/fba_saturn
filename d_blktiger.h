@@ -20,50 +20,14 @@ static void DrvInitSaturn();
 static void draw_sprites();
 static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 static void Set14PCM();
-
-#define nBurnSoundLen 128
-PcmHn 	pcm14[14];
-#define	PCM_ADDR	((void*)0x25a20000)
-#define	PCM_SIZE	(4096L*2)				/* 2.. */
-#define SOUNDRATE   7680L
-
-UINT8   stm_work[STM_WORK_SIZE(12, 24)];
-//UINT8   stm_work[STM_WORK_SIZE(4, 20)];
-StmHn stm;
-StmGrpHn grp_hd;
-void stmInit(void);
-void stmClose(StmHn fp);
-StmHn stmOpen(char *fname);
-
-#define PCM_IS_LRLRLR(st)	((st)->info.data_type == PCM_DATA_TYPE_LRLRLR)
-#define PCM_IS_RLRLRL(st)	((st)->info.data_type == PCM_DATA_TYPE_RLRLRL)
-#define PCM_IS_LLLRRR(st)	((st)->info.data_type == PCM_DATA_TYPE_LLLRRR)
-#define PCM_IS_RRRLLL(st)	((st)->info.data_type == PCM_DATA_TYPE_RRRLLL)
-#define PCM_IS_ADPCM_SG(st)	((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SG)
-#define PCM_IS_ADPCM_SCT(st) ((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SCT)
-#define PCM_IS_LR_MIX(st) 	(PCM_IS_LRLRLR(st) || PCM_IS_RLRLRL(st))
-#define PCM_IS_LR_BLOCK(st) (PCM_IS_LLLRRR(st) || PCM_IS_RRRLLL(st))
-#define PCM_IS_ADPCM(st) 	(PCM_IS_ADPCM_SG(st) || PCM_IS_ADPCM_SCT(st))
-#define PCM_IS_MONORAL(st)	((st)->info.channel == 0x01)
-#define PCM_IS_8BIT_SAMPLING(st)	((st)->info.sampling_bit <= 0x08)
-#define PCM_SAMPLE2BSIZE(st, sample)	\
-			(PCM_IS_8BIT_SAMPLING(st) ? (sample) : (sample) << 1)
-#define PCM_1CH2NCH(st, a)	(PCM_IS_MONORAL(st) ? (a) : (a) << 1)
-
-#define VDP2_BASE           0x25e00000
-#define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
-#define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
-#define PLANEADDR1 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x44)) 
-#define PLANEADDR2 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x46)) 
-#define PLSZ    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x3a))
-#define VDP2_VRAM           VDP2_BASE
-#define VDP2_CRAM           (VDP2_BASE+0x100000)
-#define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
-
+void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
 void errGfsFunc(void *obj, Sint32 ec);
 void errStmFunc(void *obj, Sint32 ec);
 void errPcmFunc(void *obj, Sint32 ec);
 
+#define nBurnSoundLen 128
+#define SOUNDRATE   7680L
+//---------------------------------------------------------------------------------------------------------------
 unsigned char current_pcm=255;
 char *itoa(int i);
 
@@ -84,8 +48,71 @@ typedef struct
 
 PCM_INFO pcm_info[14];
 
-
-
+SFX sfx_list[68]=
+{
+	{0,0,0},
+/*001.pcm*/{0,10290,0},
+/*002.pcm*/{10290,27654,0},
+/*003.pcm*/{37944,4376,0},
+/*004.pcm*/{42320,6904,0},
+/*005.pcm*/{49224,9786,0},
+/*006.pcm*/{59010,9306,0},
+/*007.pcm*/{68316,7666,0},
+/*008.pcm*/{75982,5368,0},
+/*009.pcm*/{81350,9990,0},
+/*010.pcm*/{91340,5610,0},
+/*011.pcm*/{96950,6440,0},
+/*012.pcm*/{103390,3762,0},
+/*013.pcm*/{107152,10910,0},
+/*014.pcm*/{118062,6230,0},
+/*015.pcm*/{124292,8420,0},
+/*016.pcm*/{132712,6138,0},
+/*017.pcm*/{138850,12274,0},
+/*018.pcm*/{151124,10140,0},
+/*019.pcm*/{161264,7252,0},
+/*020.pcm*/{168516,9980,0},
+/*021.pcm*/{178496,6582,0},
+/*022.pcm*/{185078,5528,0},
+/*023.pcm*/{190606,12284,0},
+/*024.pcm*/{202890,16966,0},
+/*025.pcm*/{219856,19194,0},
+/*026.pcm*/{239050,3068,0},
+/*027.pcm*/{242118,4946,0},
+/*028.pcm*/{247064,3530,0},
+/*029.pcm*/{250594,13038,0},
+/*030.pcm*/{263632,5566,0},
+	{-1,0,0},
+/*032.pcm*/{269198,23024,0},	
+/*033.pcm*/{0,1167350,1},
+/*034.pcm*/{0,1176290,1},
+/*035.pcm*/	{0,844802,1},	
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	
+/*044.pcm*/{0,606742,1},	
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	
+/*048.pcm*/{0,365708,1},
+	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
+/*058.pcm*/{292222,5556,0},	
+/*059.pcm*/{297778,58828,0},	
+/*060.pcm*/{356606,9620,0},	
+/*061.pcm*/{366226,14790,0},	
+/*062.pcm*/{381016,9362,0},	
+/*063.pcm*/{390378,33790,0},	
+/*064.pcm*/{424168,6428,0},	
+/*065.pcm*/{430596,27342,0},	
+/*066.pcm*/{457938,4290,0},	
+/*067.pcm*/{462228,9208,0},	
+};
+//---------------------------------------------------------------------------------------------------------------
+#define VDP2_BASE           0x25e00000
+#define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
+#define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
+#define PLANEADDR1 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x44)) 
+#define PLANEADDR2 (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x46)) 
+#define PLSZ    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x3a))
+#define VDP2_VRAM           VDP2_BASE
+#define VDP2_CRAM           (VDP2_BASE+0x100000)
+#define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
 
 //#define SND 1
 /*static*/ UINT8 *CZ80Context = NULL;
@@ -98,44 +125,44 @@ PCM_INFO pcm_info[14];
 /*static*/ UINT16 *bg_map_lut = NULL;
 /*static*/ INT16 *ym_buffer = NULL;
 
-static UINT8 *AllMem = NULL;
-static UINT8 *MemEnd = NULL;
-static UINT8 *AllRam = NULL;
-static UINT8 *RamEnd = NULL;
-static UINT8 *DrvZ80ROM0 = NULL;
-static UINT8 *DrvZ80ROM1 = NULL;
-static UINT8 *DrvGfxROM0 = NULL;
-static UINT8 *DrvGfxROM1 = NULL;
-static UINT8 *DrvGfxROM2 = NULL;
-static UINT8 *DrvZ80RAM0 = NULL;
-static UINT8 *DrvZ80RAM1 = NULL;
-static UINT8 *DrvSprRAM = NULL;
-static UINT8 *DrvSprBuf = NULL;
-static UINT8 *DrvPalRAM = NULL;
-static UINT8 *DrvBgRAM = NULL;
-static UINT8 *DrvTxRAM = NULL;
-static UINT16 *DrvPalette = NULL;
+/*static*/ UINT8 *AllMem = NULL;
+/*static*/ UINT8 *MemEnd = NULL;
+/*static*/ UINT8 *AllRam = NULL;
+/*static*/ UINT8 *RamEnd = NULL;
+/*static*/ UINT8 *DrvZ80ROM0 = NULL;
+/*static*/ UINT8 *DrvZ80ROM1 = NULL;
+/*static*/ UINT8 *DrvGfxROM0 = NULL;
+/*static*/ UINT8 *DrvGfxROM1 = NULL;
+/*static*/ UINT8 *DrvGfxROM2 = NULL;
+/*static*/ UINT8 *DrvZ80RAM0 = NULL;
+/*static*/ UINT8 *DrvZ80RAM1 = NULL;
+/*static*/ UINT8 *DrvSprRAM = NULL;
+/*static*/ UINT8 *DrvSprBuf = NULL;
+/*static*/ UINT8 *DrvPalRAM = NULL;
+/*static*/ UINT8 *DrvBgRAM = NULL;
+/*static*/ UINT8 *DrvTxRAM = NULL;
+/*static*/ UINT16 *DrvPalette = NULL;
 
-static UINT8 *DrvScreenLayout = NULL;
-static UINT8 *DrvBgEnable = NULL;
-static UINT8 *DrvFgEnable = NULL;
-static UINT8 *DrvSprEnable = NULL;
-static UINT8 *DrvVidBank = NULL;
-static UINT8 *DrvRomBank = NULL;
+/*static*/ UINT8 *DrvScreenLayout = NULL;
+/*static*/ UINT8 *DrvBgEnable = NULL;
+/*static*/ UINT8 *DrvFgEnable = NULL;
+/*static*/ UINT8 *DrvSprEnable = NULL;
+/*static*/ UINT8 *DrvVidBank = NULL;
+/*static*/ UINT8 *DrvRomBank = NULL;
 
-static UINT8 *soundlatch = NULL;
-static UINT8 *flipscreen = NULL;
-static UINT16 *DrvScrollx = NULL;
-static UINT16 *DrvScrolly = NULL;
-static UINT8 coin_lockout = 0;
+/*static*/ UINT8 *soundlatch = NULL;
+/*static*/ UINT8 *flipscreen = NULL;
+/*static*/ UINT16 *DrvScrollx = NULL;
+/*static*/ UINT16 *DrvScrolly = NULL;
+/*static*/ UINT8 coin_lockout = 0;
 
-static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvDips[3] = {0,0,0};
-static UINT8 DrvInputs[3] = {0,0,0};
-static UINT8 DrvReset = 0;
-static INT32 watchdog = 0;
+/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvDips[3] = {0,0,0};
+/*static*/ UINT8 DrvInputs[3] = {0,0,0};
+/*static*/ UINT8 DrvReset = 0;
+/*static*/ INT32 watchdog = 0;
 
 //static INT32 nCyclesTotal[2];
 
@@ -273,3 +300,240 @@ static struct BurnRomInfo blktigerRomDesc[] = {
 STD_ROM_PICK(blktiger)
 STD_ROM_FN(blktiger)
 #endif
+
+//---------------------------------------------------------------------------------------------------------------
+typedef struct{
+    Uint8 mode;                             /* ｽﾃﾚｵ･ﾓﾉｸﾛ+ｻﾝﾌﾟﾘﾝｸﾞﾚｰﾄ         */
+    Uint16 sadr;                            /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｽﾀｰﾄｱﾄﾞﾚｽ        */
+    Uint16 size;                            /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｻｲｽﾞ             */
+}SndPcmStartPrm;                            /* PCM開始パラメータ          */
+
+typedef Uint8 SndPcmNum;                    /* PCMｽﾄﾘｰﾑ再生番号               */
+typedef Uint8 SndEfctIn;                    /* Efect in select               */
+typedef Uint8 SndLev;                       /* Levelデータ型                 */
+typedef Sint8 SndPan;                       /* PANデータ型                   */
+typedef Uint8 SndRet;                       /* ｺﾏﾝﾄﾞ実行状態データ型         */
+typedef Uint8 SndPcmNum;                    /* PCMｽﾄﾘｰﾑ再生番号               */
+
+typedef struct{
+    SndPcmNum num;                          /* PCMｽﾄﾘｰﾑ再生番号               */
+    SndLev lev;                             /* ﾀﾞｲﾚｸﾄ音Level                 */
+    SndPan pan;                             /* ﾀﾞｲﾚｸﾄ音pan                   */
+    Uint16 pich;                            /* PICHﾜｰﾄﾞ                      */
+    SndEfctIn r_efct_in;                    /* Efect in select(右出力)       */
+    SndLev r_efct_lev;                      /* Efect send Level(右出力)      */
+    SndEfctIn l_efct_in;                    /* Efect in select(左出力)       */
+    SndLev l_efct_lev;                      /* Efect send Level(左出力)      */
+}SndPcmChgPrm;                              /* PCM変更パラメータ           */
+
+void vbt_pcm_StartTimer(PcmHn hn);
+void vbt_PCM_MeTask(PcmHn hn);
+static void vbt_pcm_AudioMix(PcmHn hn);
+SndRet vbt_SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm);
+void vbt_PCM_DrvStartPcm(PcmHn hn);
+void vbt_pcm_AudioProcess(PcmHn hn);
+
+
+static void pcm_Wait(int cnt);
+static Uint8 GetComBlockAdr(void);
+static Uint16 ChgPan(SndPan pan);
+
+PcmHn 	pcm14[14];
+PcmCreatePara	para[14];
+static volatile Uint8  *adr_com_block;
+static volatile Uint8 *adr_host_int_work;                /* ﾎｽﾄｲﾝﾀﾌｪｰｽﾜｰｸ先頭ｱﾄﾞﾚｽ格納*/
+static Uint32 intrflag;
+extern signed int pcm_cnt_vbl_in;
+
+UINT8   stm_work[STM_WORK_SIZE(12, 24)];
+//UINT8   stm_work[STM_WORK_SIZE(4, 20)];
+StmHn stm;
+StmGrpHn grp_hd;
+void stmInit(void);
+void stmClose(StmHn fp);
+StmHn stmOpen(char *fname);
+
+#define PCM_IS_LRLRLR(st)	((st)->info.data_type == PCM_DATA_TYPE_LRLRLR)
+#define PCM_IS_RLRLRL(st)	((st)->info.data_type == PCM_DATA_TYPE_RLRLRL)
+#define PCM_IS_LLLRRR(st)	((st)->info.data_type == PCM_DATA_TYPE_LLLRRR)
+#define PCM_IS_RRRLLL(st)	((st)->info.data_type == PCM_DATA_TYPE_RRRLLL)
+#define PCM_IS_ADPCM_SG(st)	((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SG)
+#define PCM_IS_ADPCM_SCT(st) ((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SCT)
+#define PCM_IS_LR_MIX(st) 	(PCM_IS_LRLRLR(st) || PCM_IS_RLRLRL(st))
+#define PCM_IS_LR_BLOCK(st) (PCM_IS_LLLRRR(st) || PCM_IS_RRRLLL(st))
+#define PCM_IS_ADPCM(st) 	(PCM_IS_ADPCM_SG(st) || PCM_IS_ADPCM_SCT(st))
+#define PCM_IS_MONORAL(st)	((st)->info.channel == 0x01)
+#define PCM_IS_8BIT_SAMPLING(st)	((st)->info.sampling_bit <= 0x08)
+#define PCM_SAMPLE2BSIZE(st, sample)	\
+			(PCM_IS_8BIT_SAMPLING(st) ? (sample) : (sample) << 1)
+#define PCM_1CH2NCH(st, a)	(PCM_IS_MONORAL(st) ? (a) : (a) << 1)
+
+#define PCM_SCSP_FREQUENCY					(44100L)
+
+static const Sint8	logtbl[] = {
+/* 0 */		0, 
+/* 1 */		1, 
+/* 2 */		2, 2, 
+/* 4 */		3, 3, 3, 3, 
+/* 8 */		4, 4, 4, 4, 4, 4, 4, 4, 
+/* 16 */	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
+/* 32 */	6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
+			6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
+/* 64 */	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+/* 128 */	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
+			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
+	};
+
+/* 1,3,4,5,10 bit mask */
+#define PCM_MSK1(a)				((a)&0x0001)
+#define PCM_MSK3(a)				((a)&0x0007)
+#define PCM_MSK4(a)				((a)&0x000F)
+#define PCM_MSK5(a)				((a)&0x001F)
+#define PCM_MSK10(a)			((a)&0x03FF)
+
+/* オクターブ値の計算 */
+#define PCM_CALC_OCT(smpling_rate) 											\
+		((Sint32)logtbl[PCM_SCSP_FREQUENCY / ((smpling_rate) + 1)])
+
+/* シフト基準周波数の計算 */
+#define PCM_CALC_SHIFT_FREQ(oct)											\
+		(PCM_SCSP_FREQUENCY >> (oct))
+
+/* ＦＮＳの計算 */
+#define PCM_CALC_FNS(smpling_rate, shift_freq)								\
+		((((smpling_rate) - (shift_freq)) << 10) / (shift_freq))
+#define PCM_SOUND_BASE_ADDR		(0x25A00000)
+#define PCM_SYS_IF_TBL			(PCM_SOUND_BASE_ADDR + 0x400)
+#define PCM_SYS_IF_WORK			(PCM_SOUND_BASE_ADDR + 0x480)
+#define PCM_HOST_IF_WORK		(PCM_SOUND_BASE_ADDR + *(Uint32 *)(PCM_SYS_IF_TBL + 4))
+#define PCM_CMD_BLK(n)			(PCM_HOST_IF_WORK + 0x10 * (n))
+#define PCM_PLAY_ADDRESS(n)		(*(Uint8 *)(PCM_HOST_IF_WORK + 0xA0 + 2 * (n)))
+#define PCM_COMMAND_START_PCM				(0x85)
+#define SYS_GETSYSCK \
+        (*(volatile Uint32*)0x6000324)
+#define PCM_IS_26MHZ		(SYS_GETSYSCK == 0)
+#define PCM_IS_PAL			(*(volatile Uint16 *)0x25f80004 & 0x0001)
+#define PCM_CLK_CPU_NTSC26	(26874100L)
+#define PCM_CLK_CPU_NTSC28	(28636400L)
+#define PCM_CLK_CPU_PAL26	(26687500L)
+#define PCM_CLK_CPU_PAL28	(28437500L)
+#define PCM_CLK_CPU_NTSC	(PCM_IS_26MHZ ? PCM_CLK_CPU_NTSC26 : PCM_CLK_CPU_NTSC28)
+#define PCM_CLK_CPU_PAL		(PCM_IS_26MHZ ? PCM_CLK_CPU_PAL26 : PCM_CLK_CPU_PAL28)
+#define PCM_CLK_CPU			(PCM_IS_PAL ? PCM_CLK_CPU_PAL : PCM_CLK_CPU_NTSC)
+#define PCM_ROUND_SHIFT_R(a, n)		((((a) >> ((n) - 1)) + 1) >> 1)
+#define PCM_CLOCK_SCALE		(PCM_ROUND_SHIFT_R(PCM_CLK_CPU, 7 + 8))
+#define PCM_IS_16BIT_SAMPLING(st)	(((st)->info.sampling_bit <= 0x10) && \
+									((st)->info.sampling_bit > 0x08))
+#define PCM_SET_STMNO(para)													\
+		((Uint8)PCM_MSK3((para)->pcm_stream_no))
+#define PCM_SET_LEVEL_PAN(para)												\
+		((Uint8)((PCM_MSK3((para)->pcm_level) << 5) | PCM_MSK5((para)->pcm_pan)))
+#define PCM_SET_LEVEL_PAN2(level, pan)										\
+		((Uint8)((PCM_MSK3(level) << 5) | PCM_MSK5(pan)))
+#define PCM_SET_PITCH_WORD(oct, fns)										\
+		((Uint16)((PCM_MSK4(-(oct)) << 11) | PCM_MSK10(fns)))
+#define PCM_SET_PCM_ADDR(para) 	(((Uint32)((para)->pcm_addr)) >> 4)
+#define PCM_SET_PCM_SIZE(para) 	((para)->pcm_size)
+#define SND_PRM_NUM(prm)        ((prm).num)         /* PCMｽﾄﾘｰﾑ再生番号       */
+#define SND_PRM_LEV(prm)        ((prm).lev)         /* ﾀﾞｲﾚｸﾄ音Level         */
+#define SND_PRM_PAN(prm)        ((prm).pan)         /* ﾀﾞｲﾚｸﾄ音pan           */
+#define SND_PRM_PICH(prm)       ((prm).pich)        /* PICHﾜｰﾄﾞ              */
+#define SND_R_EFCT_IN(prm)      ((prm).r_efct_in)   /* Efect in select(右)   */
+#define SND_R_EFCT_LEV(prm)     ((prm).r_efct_lev)  /* Efect send Level(右)  */
+#define SND_L_EFCT_IN(prm)      ((prm).l_efct_in)   /* Efect in select(左)   */
+#define SND_L_EFCT_LEV(prm)     ((prm).l_efct_lev)  /* Efect send Level(左)  */
+#define SND_PRM_TL(prm)     	((prm).lev)  		/* Master Level			 */
+#define SND_PRM_MODE(prm)       ((prm).mode)        /* ｽﾃﾚｵ･ﾓﾉｸﾛ+ｻﾝﾌﾟﾘﾝｸﾞﾚｰﾄ */
+#define SND_PRM_SADR(prm)       ((prm).sadr)        /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｽﾀｰﾄｱﾄﾞﾚｽ*/
+#define SND_PRM_SIZE(prm)       ((prm).size)        /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｻｲｽﾞ   */
+#define SND_PRM_OFSET(prm)      ((prm).ofset)       /* PCMｽﾄﾘｰﾑ再生開始ｵﾌｾｯﾄ */
+#define SND_RET_SET     0                       /* 正常終了                     */
+#define SND_RET_NSET    1                       /* 異常終了                     */
+#define COM_START_PCM      0x85                 /* PCM start                 */
+#define ADR_COM_DATA    (0x00)                  /* コマンド                  */
+#define ADR_PRM_DATA    (0x02)                  /* パラメータ                */
+#define ADR_HOST_INT    (0x04)                  /* ﾎｽﾄｲﾝﾀﾌｪｰｽﾜｰｸｱﾄﾞﾚｽ        */
+#define ADR_SND_MEM     ((Uint8 *)0x25a00000)   /* サウンドメモリ先頭アドレス*/
+#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* サウンドベクタアドレス    */
+#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ｼｽﾃﾑｲﾝﾀﾌｪｰｽ領域           */
+#define SIZE_COM_BLOCK      (0x10)              /* ｺﾏﾝﾄﾞﾌﾞﾛｯｸｻｲｽﾞ          */
+#define MAX_NUM_COM_BLOCK   8                   /* ｺﾏﾝﾄﾞﾌﾞﾛｯｸ数              */
+
+
+#define MAX_ADR_COM_DATA                        /* 最大ｺﾏﾝﾄﾞﾃﾞｰﾀｱﾄﾞﾚｽ     */\
+    (adr_host_int_work + ADR_COM_DATA + (SIZE_COM_BLOCK * MAX_NUM_COM_BLOCK))
+#define NOW_ADR_COM_DATA                        /* 現在ｺﾏﾝﾄﾞﾃﾞｰﾀｱﾄﾞﾚｽ     */\
+    (adr_com_block + ADR_COM_DATA)
+#define HOST_SET_RETURN(ret)\
+    do{\
+		intrflag=0;\
+        return(ret);\
+    }while(FALSE)
+
+#define POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data)))   /* ﾊﾞｲﾄ  */
+#define POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data))) /* ﾜｰﾄﾞ  */
+
+#define PEEK_L(adr)         (*((volatile Uint32 *)(adr)))                    /* ﾛﾝｸﾞ  */
+
+
+#define SET_COMMAND(set_com)\
+(POKE_W((adr_com_block + ADR_COM_DATA), (Uint16)(set_com) << 8)) /* コマンドセット   */
+
+#define SET_PRM(no, set_prm)\
+(POKE_B(adr_com_block + ADR_PRM_DATA + (no), (set_prm))) /* ﾊﾟﾗﾒｰﾀセット      */
+//---------------------------------------------------------------------------------------------------------------
+static void wait_vblank(void)
+{
+     while((TVSTAT & 8) == 0);
+     while((TVSTAT & 8) == 8);
+}
+
+//---------------------------------------------------------------------------------------------------------------
+static void pcm_Wait(int cnt)
+{
+	while (--cnt > 0) {
+		;
+	}
+}
+//---------------------------------------------------------------------------------------------------------------
+static Uint16 ChgPan(SndPan pan)
+{
+    return(((pan) < 0) ? (~(pan) + 0x10 + 1) : (pan));
+}
+//---------------------------------------------------------------------------------------------------------------
+#define INT_DIGITS 19
+char *itoa(int i)
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
+
+//PcmInfo 		info[14];
+//#undef pcm_AudioProcess
+//#define pcm_AudioProcess vbt_pcm_AudioProcess
+//---------------------------------------------------------------------------------------------------------------

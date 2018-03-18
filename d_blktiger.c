@@ -13,196 +13,8 @@
 #define PCM_SFX 1
 //#define PCM_MUSIC 1
 #define PCM_BLOCK_SIZE 0x4000 // 0x2000
-
-#define PCM_SCSP_FREQUENCY					(44100L)
-
-static const Sint8	logtbl[] = {
-/* 0 */		0, 
-/* 1 */		1, 
-/* 2 */		2, 2, 
-/* 4 */		3, 3, 3, 3, 
-/* 8 */		4, 4, 4, 4, 4, 4, 4, 4, 
-/* 16 */	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
-/* 32 */	6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
-			6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
-/* 64 */	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
-			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
-			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
-			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
-/* 128 */	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
-	};
-
-/* 1,3,4,5,10 bit mask */
-#define PCM_MSK1(a)				((a)&0x0001)
-#define PCM_MSK3(a)				((a)&0x0007)
-#define PCM_MSK4(a)				((a)&0x000F)
-#define PCM_MSK5(a)				((a)&0x001F)
-#define PCM_MSK10(a)			((a)&0x03FF)
-
-/* オクターブ値の計算 */
-#define PCM_CALC_OCT(smpling_rate) 											\
-		((Sint32)logtbl[PCM_SCSP_FREQUENCY / ((smpling_rate) + 1)])
-
-/* シフト基準周波数の計算 */
-#define PCM_CALC_SHIFT_FREQ(oct)											\
-		(PCM_SCSP_FREQUENCY >> (oct))
-
-/* ＦＮＳの計算 */
-#define PCM_CALC_FNS(smpling_rate, shift_freq)								\
-		((((smpling_rate) - (shift_freq)) << 10) / (shift_freq))
-#define PCM_SOUND_BASE_ADDR		(0x25A00000)
-#define PCM_SYS_IF_TBL			(PCM_SOUND_BASE_ADDR + 0x400)
-#define PCM_SYS_IF_WORK			(PCM_SOUND_BASE_ADDR + 0x480)
-#define PCM_HOST_IF_WORK		(PCM_SOUND_BASE_ADDR + *(Uint32 *)(PCM_SYS_IF_TBL + 4))
-#define PCM_CMD_BLK(n)			(PCM_HOST_IF_WORK + 0x10 * (n))
-#define PCM_PLAY_ADDRESS(n)		(*(Uint8 *)(PCM_HOST_IF_WORK + 0xA0 + 2 * (n)))
-#define PCM_COMMAND_START_PCM				(0x85)
-#define SYS_GETSYSCK \
-        (*(volatile Uint32*)0x6000324)
-#define PCM_IS_26MHZ		(SYS_GETSYSCK == 0)
-#define PCM_IS_PAL			(*(volatile Uint16 *)0x25f80004 & 0x0001)
-#define PCM_CLK_CPU_NTSC26	(26874100L)
-#define PCM_CLK_CPU_NTSC28	(28636400L)
-#define PCM_CLK_CPU_PAL26	(26687500L)
-#define PCM_CLK_CPU_PAL28	(28437500L)
-#define PCM_CLK_CPU_NTSC	(PCM_IS_26MHZ ? PCM_CLK_CPU_NTSC26 : PCM_CLK_CPU_NTSC28)
-#define PCM_CLK_CPU_PAL		(PCM_IS_26MHZ ? PCM_CLK_CPU_PAL26 : PCM_CLK_CPU_PAL28)
-#define PCM_CLK_CPU			(PCM_IS_PAL ? PCM_CLK_CPU_PAL : PCM_CLK_CPU_NTSC)
-#define PCM_ROUND_SHIFT_R(a, n)		((((a) >> ((n) - 1)) + 1) >> 1)
-#define PCM_CLOCK_SCALE		(PCM_ROUND_SHIFT_R(PCM_CLK_CPU, 7 + 8))
-#define PCM_IS_16BIT_SAMPLING(st)	(((st)->info.sampling_bit <= 0x10) && \
-									((st)->info.sampling_bit > 0x08))
-#define PCM_SET_STMNO(para)													\
-		((Uint8)PCM_MSK3((para)->pcm_stream_no))
-#define PCM_SET_LEVEL_PAN(para)												\
-		((Uint8)((PCM_MSK3((para)->pcm_level) << 5) | PCM_MSK5((para)->pcm_pan)))
-#define PCM_SET_LEVEL_PAN2(level, pan)										\
-		((Uint8)((PCM_MSK3(level) << 5) | PCM_MSK5(pan)))
-#define PCM_SET_PITCH_WORD(oct, fns)										\
-		((Uint16)((PCM_MSK4(-(oct)) << 11) | PCM_MSK10(fns)))
-#define PCM_SET_PCM_ADDR(para) 	(((Uint32)((para)->pcm_addr)) >> 4)
-#define PCM_SET_PCM_SIZE(para) 	((para)->pcm_size)
-#define SND_PRM_NUM(prm)        ((prm).num)         /* PCMｽﾄﾘｰﾑ再生番号       */
-#define SND_PRM_LEV(prm)        ((prm).lev)         /* ﾀﾞｲﾚｸﾄ音Level         */
-#define SND_PRM_PAN(prm)        ((prm).pan)         /* ﾀﾞｲﾚｸﾄ音pan           */
-#define SND_PRM_PICH(prm)       ((prm).pich)        /* PICHﾜｰﾄﾞ              */
-#define SND_R_EFCT_IN(prm)      ((prm).r_efct_in)   /* Efect in select(右)   */
-#define SND_R_EFCT_LEV(prm)     ((prm).r_efct_lev)  /* Efect send Level(右)  */
-#define SND_L_EFCT_IN(prm)      ((prm).l_efct_in)   /* Efect in select(左)   */
-#define SND_L_EFCT_LEV(prm)     ((prm).l_efct_lev)  /* Efect send Level(左)  */
-#define SND_PRM_TL(prm)     	((prm).lev)  		/* Master Level			 */
-#define SND_PRM_MODE(prm)       ((prm).mode)        /* ｽﾃﾚｵ･ﾓﾉｸﾛ+ｻﾝﾌﾟﾘﾝｸﾞﾚｰﾄ */
-#define SND_PRM_SADR(prm)       ((prm).sadr)        /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｽﾀｰﾄｱﾄﾞﾚｽ*/
-#define SND_PRM_SIZE(prm)       ((prm).size)        /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｻｲｽﾞ   */
-#define SND_PRM_OFSET(prm)      ((prm).ofset)       /* PCMｽﾄﾘｰﾑ再生開始ｵﾌｾｯﾄ */
-#define SND_RET_SET     0                       /* 正常終了                     */
-#define SND_RET_NSET    1                       /* 異常終了                     */
-#define COM_START_PCM      0x85                 /* PCM start                 */
-#define ADR_COM_DATA    (0x00)                  /* コマンド                  */
-#define ADR_PRM_DATA    (0x02)                  /* パラメータ                */
-#define ADR_HOST_INT    (0x04)                  /* ﾎｽﾄｲﾝﾀﾌｪｰｽﾜｰｸｱﾄﾞﾚｽ        */
-#define ADR_SND_MEM     ((Uint8 *)0x25a00000)   /* サウンドメモリ先頭アドレス*/
-#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* サウンドベクタアドレス    */
-#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ｼｽﾃﾑｲﾝﾀﾌｪｰｽ領域           */
-#define SIZE_COM_BLOCK      (0x10)              /* ｺﾏﾝﾄﾞﾌﾞﾛｯｸｻｲｽﾞ          */
-#define MAX_NUM_COM_BLOCK   8                   /* ｺﾏﾝﾄﾞﾌﾞﾛｯｸ数              */
-
-static volatile Uint8  *adr_com_block;
-static volatile Uint8 *adr_host_int_work;                /* ﾎｽﾄｲﾝﾀﾌｪｰｽﾜｰｸ先頭ｱﾄﾞﾚｽ格納*/
-
-#define MAX_ADR_COM_DATA                        /* 最大ｺﾏﾝﾄﾞﾃﾞｰﾀｱﾄﾞﾚｽ     */\
-    (adr_host_int_work + ADR_COM_DATA + (SIZE_COM_BLOCK * MAX_NUM_COM_BLOCK))
-#define NOW_ADR_COM_DATA                        /* 現在ｺﾏﾝﾄﾞﾃﾞｰﾀｱﾄﾞﾚｽ     */\
-    (adr_com_block + ADR_COM_DATA)
-static Uint32 intrflag;
-#define HOST_SET_RETURN(ret)\
-    do{\
-		intrflag=0;\
-        return(ret);\
-    }while(FALSE)
-
-#define POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data)))   /* ﾊﾞｲﾄ  */
-#define POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data))) /* ﾜｰﾄﾞ  */
-
-#define PEEK_L(adr)         (*((volatile Uint32 *)(adr)))                    /* ﾛﾝｸﾞ  */
-
-
-#define SET_COMMAND(set_com)\
-(POKE_W((adr_com_block + ADR_COM_DATA), (Uint16)(set_com) << 8)) /* コマンドセット   */
-
-#define SET_PRM(no, set_prm)\
-(POKE_B(adr_com_block + ADR_PRM_DATA + (no), (set_prm))) /* ﾊﾟﾗﾒｰﾀセット      */
-
-void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
-void vbt_pcm_StartTimer(PcmHn hn);
-extern signed int pcm_cnt_vbl_in;
-PcmCreatePara	para[14];
-//PcmInfo 		info[14];
-//#undef pcm_AudioProcess
-//#define pcm_AudioProcess vbt_pcm_AudioProcess
-
-SFX sfx_list[68]=
-{
-	{0,0,0},
-/*001.pcm*/{0,10290,0},
-/*002.pcm*/{10290,27654,0},
-/*003.pcm*/{37944,4376,0},
-/*004.pcm*/{42320,6904,0},
-/*005.pcm*/{49224,9786,0},
-/*006.pcm*/{59010,9306,0},
-/*007.pcm*/{68316,7666,0},
-/*008.pcm*/{75982,5368,0},
-/*009.pcm*/{81350,9990,0},
-/*010.pcm*/{91340,5610,0},
-/*011.pcm*/{96950,6440,0},
-/*012.pcm*/{103390,3762,0},
-/*013.pcm*/{107152,10910,0},
-/*014.pcm*/{118062,6230,0},
-/*015.pcm*/{124292,8420,0},
-/*016.pcm*/{132712,6138,0},
-/*017.pcm*/{138850,12274,0},
-/*018.pcm*/{151124,10140,0},
-/*019.pcm*/{161264,7252,0},
-/*020.pcm*/{168516,9980,0},
-/*021.pcm*/{178496,6582,0},
-/*022.pcm*/{185078,5528,0},
-/*023.pcm*/{190606,12284,0},
-/*024.pcm*/{202890,16966,0},
-/*025.pcm*/{219856,19194,0},
-/*026.pcm*/{239050,3068,0},
-/*027.pcm*/{242118,4946,0},
-/*028.pcm*/{247064,3530,0},
-/*029.pcm*/{250594,13038,0},
-/*030.pcm*/{263632,5566,0},
-	{-1,0,0},
-/*032.pcm*/{269198,23024,0},	
-/*033.pcm*/{0,1167350,1},
-/*034.pcm*/{0,1176290,1},
-/*035.pcm*/	{0,844802,1},	
-	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
-	{-1,0,0},	{-1,0,0},	{-1,0,0},	
-/*044.pcm*/{0,606742,1},	
-	{-1,0,0},	{-1,0,0},	{-1,0,0},	
-/*048.pcm*/{0,365708,1},
-	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},	{-1,0,0},
-/*058.pcm*/{292222,5556,0},	
-/*059.pcm*/{297778,58828,0},	
-/*060.pcm*/{356606,9620,0},	
-/*061.pcm*/{366226,14790,0},	
-/*062.pcm*/{381016,9362,0},	
-/*063.pcm*/{390378,33790,0},	
-/*064.pcm*/{424168,6428,0},	
-/*065.pcm*/{430596,27342,0},	
-/*066.pcm*/{457938,4290,0},	
-/*067.pcm*/{462228,9208,0},	
-};
+#define	PCM_ADDR	((void*)0x25a20000)
+#define	PCM_SIZE	(4096L*2)				/* 2.. */
 
 /*
 <vbt1> where and when you update the nbg map
@@ -234,121 +46,7 @@ vbt> <Kale_> Ok, have you asked to Arbee?
 <l_oliveira> the ZN sound drivers fire up a NMI every time the host writes to the I/O port and the driver acknowledges that a command is sent after the interrupt is fired four times
 <l_oliveira> CPS2 Z80 just keeps pooling  at an fixed address of the shared ram. I re-purposed the NMI code and put my shared ram pooling stub on the main program loop of the Z80. Every time a command comes at the shared ram it emulates the four NMI behavior in software using the Z80 itself
 */
-
-static void wait_vblank(void)
-{
-     while((TVSTAT & 8) == 0);
-     while((TVSTAT & 8) == 8);
-}
-
-static void vbt_pcm_AudioMix(PcmHn hn)
-{
-	PcmWork		*work 	= *(PcmWork **)hn;
-	PcmStatus	*st 	= &work->status;
-	Sint32		size_write, size_write_total;
-	Sint32		stock_bsize, 		/* リングバッファの総在庫 [byte] 	*/
-				size_mono, 			/* １チャンネル分の在庫 [byte/1ch] 	*/
-				size_copy; 			/* コピーするサイズ [byte/1ch] 		*/
-	Sint8 		*addr_write1, *addr_write2;
-
-#ifdef _PCMD
-	Sint32 		copy_idx, i;
-#endif
-
-//	_VTV_PRINTF("pcm_AudioMix");
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_AudioMix       ",40,130);
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(work->para.pcm_stream_no),100,130);
-
-	if (st->ring_write_offset > st->info.file_size) {
-		/* リングバッファには EOF 以降のゴミも供給されている */
-//		_VTV_PRINTF("pcm_AudioMix st->info.file_size - st->ring_read_offset");
-		stock_bsize = st->info.file_size - st->ring_read_offset;
-	} else {
-//		_VTV_PRINTF("pcm_AudioMix st->ring_write_offset - st->ring_read_offset");
-		stock_bsize = st->ring_write_offset - st->ring_read_offset;
-	}
-
-	/* １チャンネル分の在庫 [byte/1ch] */
-	if (PCM_IS_MONORAL(st)) {
-		size_mono = stock_bsize;
-	} else {
-		size_mono = stock_bsize >> 1;
-	}
-	if (PCM_IS_8BIT_SAMPLING(st)) {
-//		_VTV_PRINTF("\n8bits!!!");
-		size_mono &= 0xfffffffe;
-		size_mono &= 0xfffffffc;
-	} else {
-		size_mono &= 0xfffffffc;
-	}
-
-	size_mono = MIN(size_mono, 
-		PCM_SAMPLE2BSIZE(st, st->info.sample_file - st->sample_write_file));
-
-	/* オーディオデータがロードできるかをチェックする */
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_GetPcmWrite       ",40,140);
-
-	pcm_GetPcmWrite(hn, &addr_write1, &addr_write2, 
-						&size_write, &size_write_total);
-
-	if (size_write_total > st->pcm_bsize) {
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"  ",40,150);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(work->para.pcm_stream_no),40,150);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"cnt_load_miss        ",40,160);
-//		_VTV_PRINTF("\n\nmissed");
-		st->cnt_load_miss++;
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->cnt_load_miss),80,160);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_bsize            ",40,170);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->pcm_bsize),80,170);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"sz_wt_totl            ",40,180);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size_write_total),80,180);
-#endif
-
-//		VTV_PRINTF((VTV_s, "P:LMis %d\n buf%X < writ%X\n", 
-//			st->cnt_load_miss, st->pcm_bsize, size_write_total));
-//		VTV_PRINTF((VTV_s, " r%X w%X\n", 
-//			(st)->ring_read_offset, (st)->ring_write_offset));
-	}
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"file_size              ",40,190);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->info.file_size),80,190);
-#endif
-	size_copy = MIN(size_mono, size_write_total);
-
-
-	if (size_copy == 0) {
-		return;
-	}
-	size_copy = MIN(size_copy, st->onetask_size);
-
-	/* コピー情報テーブルの設定 */
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_SetMixCopyTbl      ",40,140);
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_SetMixCopyTbl     ",40,210);
-#endif
-	pcm_SetMixCopyTbl(hn, size_copy);
-
-	/* コピーの実行 (常に、CPU プログラム転送) */
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_ExecMixCopyTbl      ",40,140);
-#endif
-	pcm_ExecMixCopyTbl(hn);
-
-	/* 読み取り位置更新 */
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_RenewRingRead      ",40,140);
-#endif
-	pcm_RenewRingRead(hn, PCM_1CH2NCH(st, size_copy));
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_AudioMix end      ",40,140);
-#endif
-	return;
-}
-
+//---------------------------------------------------------------------------------------------------------------
 void vbt_PCM_MeTask(PcmHn hn)
 {
 	PcmWork		*work 	= *(PcmWork **)hn;
@@ -401,43 +99,7 @@ void vbt_PCM_MeTask(PcmHn hn)
 	}
 	return;
 }
-
-typedef struct{
-    Uint8 mode;                             /* ｽﾃﾚｵ･ﾓﾉｸﾛ+ｻﾝﾌﾟﾘﾝｸﾞﾚｰﾄ         */
-    Uint16 sadr;                            /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｽﾀｰﾄｱﾄﾞﾚｽ        */
-    Uint16 size;                            /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｻｲｽﾞ             */
-}SndPcmStartPrm;                            /* PCM開始パラメータ          */
-
-typedef Uint8 SndPcmNum;                    /* PCMｽﾄﾘｰﾑ再生番号               */
-typedef Uint8 SndEfctIn;                    /* Efect in select               */
-typedef Uint8 SndLev;                       /* Levelデータ型                 */
-typedef Sint8 SndPan;                       /* PANデータ型                   */
-typedef Uint8 SndRet;                       /* ｺﾏﾝﾄﾞ実行状態データ型         */
-typedef Uint8 SndPcmNum;                    /* PCMｽﾄﾘｰﾑ再生番号               */
-
-typedef struct{
-    SndPcmNum num;                          /* PCMｽﾄﾘｰﾑ再生番号               */
-    SndLev lev;                             /* ﾀﾞｲﾚｸﾄ音Level                 */
-    SndPan pan;                             /* ﾀﾞｲﾚｸﾄ音pan                   */
-    Uint16 pich;                            /* PICHﾜｰﾄﾞ                      */
-    SndEfctIn r_efct_in;                    /* Efect in select(右出力)       */
-    SndLev r_efct_lev;                      /* Efect send Level(右出力)      */
-    SndEfctIn l_efct_in;                    /* Efect in select(左出力)       */
-    SndLev l_efct_lev;                      /* Efect send Level(左出力)      */
-}SndPcmChgPrm;                              /* PCM変更パラメータ           */
-
-static void pcm_Wait(int cnt)
-{
-	while (--cnt > 0) {
-		;
-	}
-}
-
-static Uint16 ChgPan(SndPan pan)
-{
-    return(((pan) < 0) ? (~(pan) + 0x10 + 1) : (pan));
-}
-
+//---------------------------------------------------------------------------------------------------------------
 static Uint8 GetComBlockAdr(void)
 {
     if(*NOW_ADR_COM_DATA)
@@ -501,31 +163,7 @@ static Uint8 GetComBlockAdr(void)
         return OFF;                                 /* ﾌﾞﾛｯｸ空き無し         */
     }
 }
-
-
- SndRet vbt_SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm)
- {
-/* 1994/02/24 Start */
-// vbt variable statique ...
-//    if(intrflag) return(SND_RET_NSET);
-//    intrflag = 1;
-/* 1994/02/24 End */
-    if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
-    SET_PRM(0, SND_PRM_MODE(*sprm) | SND_PRM_NUM(*cprm));
-    SET_PRM(1, (SND_PRM_LEV(*cprm) << 5) | ChgPan(SND_PRM_PAN(*cprm)));
-    SET_PRM(2, SND_PRM_SADR(*sprm) >> 8);
-    SET_PRM(3, SND_PRM_SADR(*sprm));
-    SET_PRM(4, SND_PRM_SIZE(*sprm) >> 8);
-    SET_PRM(5, SND_PRM_SIZE(*sprm));
-    SET_PRM(6, SND_PRM_PICH(*cprm) >> 8);
-    SET_PRM(7, SND_PRM_PICH(*cprm));
-    SET_PRM(8, (SND_R_EFCT_IN(*cprm) << 3) | SND_R_EFCT_LEV(*cprm));
-    SET_PRM(9, (SND_L_EFCT_IN(*cprm) << 3) | SND_L_EFCT_LEV(*cprm));
-    SET_PRM(11, 0);
-    SET_COMMAND(COM_START_PCM);                 /* コマンドセット            */
-    HOST_SET_RETURN(SND_RET_SET);
-}
-
+//---------------------------------------------------------------------------------------------------------------
 void vbt_PCM_DrvStartPcm(PcmHn hn)
 {
 	PcmWork			*work 	= *(PcmWork **)hn;
@@ -571,17 +209,11 @@ void vbt_PCM_DrvStartPcm(PcmHn hn)
 
     set_imask(imask);
 }
-
+//---------------------------------------------------------------------------------------------------------------
 void vbt_pcm_StartTimer(PcmHn hn)
 {
 	PcmWork		*work 	= *(PcmWork **)hn;
-#if	0
-	/*
-	**■1995-07-27	高橋智延
-	**	使ってないので削除
-	*/
-	PcmPara		*para 	= &work->para;
-#endif
+
 	PcmStatus	*st 	= &work->status;
 	int			imask;
 
@@ -614,45 +246,7 @@ void vbt_pcm_StartTimer(PcmHn hn)
 
     set_imask(imask);
 }
-
-void vbt_pcm_AudioProcess(PcmHn hn)
-{
-	PcmWork		*work 	= *(PcmWork **)hn;
-	PcmStatus	*st 	= &work->status;
-
-	if (PCM_IS_LR_MIX(st)) {
-		/* ＬＲ混在オーディオ処理 */
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_AudioMix     ",40,210);
-		vbt_pcm_AudioMix(hn);
-	} else if (PCM_IS_LR_BLOCK(st)) {
-		/* ＬＲブロックオーディオ処理 */
-		/* pcm_AudioBlock(hn); */
-	}
-}
-
-#define INT_DIGITS 19
-char *itoa(int i)
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}
-
+//---------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvBlktiger = {
@@ -2544,3 +2138,150 @@ void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 	ss_map2[ofst] = color | flipx << 7; //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
 	ss_map2[ofst+1] = (code*4)+0x1000; 
 }
+//---------------------------------------------------------------------------------------------------------------
+static void vbt_pcm_AudioMix(PcmHn hn)
+{
+	PcmWork		*work 	= *(PcmWork **)hn;
+	PcmStatus	*st 	= &work->status;
+	Sint32		size_write, size_write_total;
+	Sint32		stock_bsize, 		/* リングバッファの総在庫 [byte] 	*/
+				size_mono, 			/* １チャンネル分の在庫 [byte/1ch] 	*/
+				size_copy; 			/* コピーするサイズ [byte/1ch] 		*/
+	Sint8 		*addr_write1, *addr_write2;
+
+#ifdef _PCMD
+	Sint32 		copy_idx, i;
+#endif
+
+//	_VTV_PRINTF("pcm_AudioMix");
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_AudioMix       ",40,130);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(work->para.pcm_stream_no),100,130);
+
+	if (st->ring_write_offset > st->info.file_size) {
+		/* リングバッファには EOF 以降のゴミも供給されている */
+//		_VTV_PRINTF("pcm_AudioMix st->info.file_size - st->ring_read_offset");
+		stock_bsize = st->info.file_size - st->ring_read_offset;
+	} else {
+//		_VTV_PRINTF("pcm_AudioMix st->ring_write_offset - st->ring_read_offset");
+		stock_bsize = st->ring_write_offset - st->ring_read_offset;
+	}
+
+	/* １チャンネル分の在庫 [byte/1ch] */
+	if (PCM_IS_MONORAL(st)) {
+		size_mono = stock_bsize;
+	} else {
+		size_mono = stock_bsize >> 1;
+	}
+	if (PCM_IS_8BIT_SAMPLING(st)) {
+//		_VTV_PRINTF("\n8bits!!!");
+		size_mono &= 0xfffffffe;
+		size_mono &= 0xfffffffc;
+	} else {
+		size_mono &= 0xfffffffc;
+	}
+
+	size_mono = MIN(size_mono, 
+		PCM_SAMPLE2BSIZE(st, st->info.sample_file - st->sample_write_file));
+
+	/* オーディオデータがロードできるかをチェックする */
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_GetPcmWrite       ",40,140);
+
+	pcm_GetPcmWrite(hn, &addr_write1, &addr_write2, 
+						&size_write, &size_write_total);
+
+	if (size_write_total > st->pcm_bsize) {
+#ifdef DEBUG_PCM
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"  ",40,150);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(work->para.pcm_stream_no),40,150);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"cnt_load_miss        ",40,160);
+//		_VTV_PRINTF("\n\nmissed");
+		st->cnt_load_miss++;
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->cnt_load_miss),100,160);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_bsize            ",40,170);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->pcm_bsize),80,170);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"sz_wt_totl            ",40,180);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size_write_total),80,180);
+#endif
+
+//		VTV_PRINTF((VTV_s, "P:LMis %d\n buf%X < writ%X\n", 
+//			st->cnt_load_miss, st->pcm_bsize, size_write_total));
+//		VTV_PRINTF((VTV_s, " r%X w%X\n", 
+//			(st)->ring_read_offset, (st)->ring_write_offset));
+	}
+#ifdef DEBUG_PCM
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"file_size              ",40,190);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->info.file_size),80,190);
+#endif
+	size_copy = MIN(size_mono, size_write_total);
+
+
+	if (size_copy == 0) {
+		return;
+	}
+	size_copy = MIN(size_copy, st->onetask_size);
+
+	/* コピー情報テーブルの設定 */
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_SetMixCopyTbl      ",40,140);
+#ifdef DEBUG_PCM
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_SetMixCopyTbl     ",40,210);
+#endif
+	pcm_SetMixCopyTbl(hn, size_copy);
+
+	/* コピーの実行 (常に、CPU プログラム転送) */
+#ifdef DEBUG_PCM
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_ExecMixCopyTbl      ",40,140);
+#endif
+	pcm_ExecMixCopyTbl(hn);
+
+	/* 読み取り位置更新 */
+#ifdef DEBUG_PCM
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_RenewRingRead      ",40,140);
+#endif
+	pcm_RenewRingRead(hn, PCM_1CH2NCH(st, size_copy));
+#ifdef DEBUG_PCM
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_AudioMix end      ",40,140);
+#endif
+	return;
+}
+//---------------------------------------------------------------------------------------------------------------
+ SndRet vbt_SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm)
+ {
+/* 1994/02/24 Start */
+// vbt variable statique ...
+//    if(intrflag) return(SND_RET_NSET);
+//    intrflag = 1;
+/* 1994/02/24 End */
+    if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
+    SET_PRM(0, SND_PRM_MODE(*sprm) | SND_PRM_NUM(*cprm));
+    SET_PRM(1, (SND_PRM_LEV(*cprm) << 5) | ChgPan(SND_PRM_PAN(*cprm)));
+    SET_PRM(2, SND_PRM_SADR(*sprm) >> 8);
+    SET_PRM(3, SND_PRM_SADR(*sprm));
+    SET_PRM(4, SND_PRM_SIZE(*sprm) >> 8);
+    SET_PRM(5, SND_PRM_SIZE(*sprm));
+    SET_PRM(6, SND_PRM_PICH(*cprm) >> 8);
+    SET_PRM(7, SND_PRM_PICH(*cprm));
+    SET_PRM(8, (SND_R_EFCT_IN(*cprm) << 3) | SND_R_EFCT_LEV(*cprm));
+    SET_PRM(9, (SND_L_EFCT_IN(*cprm) << 3) | SND_L_EFCT_LEV(*cprm));
+    SET_PRM(11, 0);
+    SET_COMMAND(COM_START_PCM);                 /* コマンドセット            */
+    HOST_SET_RETURN(SND_RET_SET);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void vbt_pcm_AudioProcess(PcmHn hn)
+{
+	PcmWork		*work 	= *(PcmWork **)hn;
+	PcmStatus	*st 	= &work->status;
+
+	if (PCM_IS_LR_MIX(st)) {
+		/* ＬＲ混在オーディオ処理 */
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_AudioMix     ",40,210);
+		vbt_pcm_AudioMix(hn);
+	} else if (PCM_IS_LR_BLOCK(st)) {
+		/* ＬＲブロックオーディオ処理 */
+		/* pcm_AudioBlock(hn); */
+	}
+}
+//---------------------------------------------------------------------------------------------------------------
