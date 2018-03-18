@@ -9,7 +9,9 @@
 #include    "machine.h"
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
-//#define DEBUG_PCM 1
+#define DEBUG_PCM 1
+#define PCM_SFX 1
+//#define PCM_MUSIC 1
 #define PCM_BLOCK_SIZE 0x4000 // 0x2000
 
 #define PCM_SCSP_FREQUENCY					(44100L)
@@ -450,7 +452,7 @@ static Uint8 GetComBlockAdr(void)
 
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa((MAX_ADR_COM_DATA - SIZE_COM_BLOCK)),60,110);
 // VBT ajout
-		adr_com_block = adr_host_int_work;  /* ÌÞÛ¯¸‚Ìæ“ª‚Ö              */
+//		adr_com_block = adr_host_int_work;  /* ÌÞÛ¯¸‚Ìæ“ª‚Ö              */
 
 													/* Å‘å’l‚©?            */
             return OFF;                             /* ÌÞÛ¯¸‹ó‚«–³‚µ      */
@@ -811,45 +813,48 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					st->need_ci = PCM_OFF;
 #ifdef DEBUG_PCM
 					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,20+i*10);
 					else if (st->play ==PCM_STAT_PLAY_CREATE)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40+i*10);
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,20+i*10);
 					else if (st->play ==PCM_STAT_PLAY_PAUSE)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,40+i*10);
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,20+i*10);
 					else if (st->play ==PCM_STAT_PLAY_START)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,40+i*10);
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,20+i*10);
 					else if (st->play ==PCM_STAT_PLAY_HEADER)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,40+i*10);
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,20+i*10);
 					else if (st->play ==PCM_STAT_PLAY_TIME)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,40+i*10);
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,20+i*10);
 					else if (st->play ==PCM_STAT_PLAY_END)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40+i*10);
+							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,20+i*10);
 					else
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
 #endif
 					if (st->play == PCM_STAT_PLAY_CREATE && i>0) 
+//vbt
+//					if ((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0) 
 						break;
 				}
  #ifdef DEBUG_PCM
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",10,40);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",10,20);
 				if(i==1)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,50);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,30);
 				if(i==2)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",10,60);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",10,40);
 				if(i==3)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",10,70);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",10,50);
 				if(i==4)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",10,80);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",10,60);
 				if(i==5)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"5",10,90);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"5",10,70);
 				if(i==6)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"6",10,100);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"6",10,80);
 				if(i==7)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,110);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,90);
 				if(i==8)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"8",10,120);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"8",10,100);
 #endif
 
+#ifdef PCM_SFX
 //				if(i>0 && i<8 && data!=255 && data!=33 && data!=48 && sfx_list[data].size!=0)
 				if(sfx_list[data].size!=0)
 				{
@@ -873,11 +878,11 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					char toto[50];
 					char *titi=&toto[0];
 					titi=itoa(data);
-					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"       ",70,40+i*10);
-					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,70,40+i*10);
+					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"       ",70,20+i*10);
+					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,70,20+i*10);
 #endif
 				}
-
+#endif
 			}
 			else
 			{
@@ -1522,6 +1527,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 //	PCM_EntryNext(pcm[1]);
 //	PCM_NotifyWriteSize(pcm14[0], 8192);
 //		if(stm!=NULL)
+#ifdef PCM_MUSIC
 		{
 			STM_ExecServer();
 //	smpStmTask(stm);
@@ -1533,7 +1539,9 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				STM_ResetTrBuf(stm);
 			}
 		}
+#endif
 
+#ifdef PCM_SFX
 		for (unsigned int i=1;i<8;i++)
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
@@ -1541,14 +1549,16 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				int size=4096;
 				if(pcm_info[i].position+(size*2)>pcm_info[i].size)
 				{
-					memcpy((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+//					memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+					memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 					size=pcm_info[i].size-pcm_info[i].position;
 					pcm_info[i].num = 0xff;
 				}
 				else
-					memcpyl((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+//					memcpyl((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+					memcpyl((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 
-//				memcpy((INT16 *)(0x25a20000+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+//				memcpy((INT16 *)(PCM_ADDR+(0x4000*(i+1)))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
 //				if(pcm_info[i].num == 0xff)
@@ -1572,12 +1582,19 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 //					while(SND_StopPcm(i))	{if (errChk++ > 512) break;	}
 //					PCM_MeStop(pcm14[i]);
 				PCM_MeReset(pcm14[i]);
+//vbt
+//st->play = PCM_STAT_PLAY_END;
+//					PCM_MeStop(pcm14[0]);
+//vbt
+//pcm_EndProcess(pcm14[i]);
+//					memcpyl((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+
 //					st->play = PCM_STAT_PLAY_END;
-//				memset((INT16 *)(0x25a20000+(0x4000*(i+1))),0x00,4096);
-//				memset((INT16 *)(0x25a20000+(PCM_BLOCK_SIZE*(i+1))),0x00,PCM_BLOCK_SIZE);
+				memset((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i)),0x00,PCM_BLOCK_SIZE);
+//				memset((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*(i+1))),0x00,PCM_BLOCK_SIZE);
 			}
 		}
-
+#endif
 	draw_sprites();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
 	return 0;
@@ -1722,7 +1739,7 @@ static void Set14PCM()
 		{
 //			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x64000;
 			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000;
-			PCM_PARA_RING_SIZE(&para[i])		= 0x20000;
+			PCM_PARA_RING_SIZE(&para[i])		= RING_BUF_SIZE; //0x20000;
 
 
 		}
@@ -1733,7 +1750,7 @@ static void Set14PCM()
 			PCM_PARA_RING_SIZE(&para[i])		= RING_BUF_SIZE;//<<1;
 		}
 //		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(0x4000*(i+1));
-		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(PCM_BLOCK_SIZE*(i+1));
+		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(PCM_BLOCK_SIZE*i); //*(i+1));
 		PCM_PARA_PCM_SIZE(&para[i])		= PCM_SIZE;
 
 		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
@@ -2425,7 +2442,7 @@ static void DrvInitSaturn()
 
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+3;
-//	nBurnFunction = smpVblIn;
+//	nBurnFunction = PCM_VblIn;//smpVblIn;
 
 //3 nbg
 #ifdef BG_BANK
