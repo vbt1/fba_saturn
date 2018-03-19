@@ -464,6 +464,7 @@ static const Sint8	logtbl[] = {
 #define ADR_HOST_INT    (0x04)                  /* ﾎｽﾄｲﾝﾀﾌｪｰｽﾜｰｸｱﾄﾞﾚｽ        */
 #define ADR_SND_MEM     ((Uint8 *)0x25a00000)   /* サウンドメモリ先頭アドレス*/
 #define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* サウンドベクタアドレス    */
+//#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ｼｽﾃﾑｲﾝﾀﾌｪｰｽ領域           */
 #define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ｼｽﾃﾑｲﾝﾀﾌｪｰｽ領域           */
 #define SIZE_COM_BLOCK      (0x10)              /* ｺﾏﾝﾄﾞﾌﾞﾛｯｸｻｲｽﾞ          */
 #define MAX_NUM_COM_BLOCK   8                   /* ｺﾏﾝﾄﾞﾌﾞﾛｯｸ数              */
