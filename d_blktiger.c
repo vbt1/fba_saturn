@@ -10,13 +10,20 @@
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
 //#define DEBUG_PCM 1
+//#define PCM_DESTROY 1
 #define PCM_SFX 1
 //#define PCM_MUSIC 1
 #define PCM_BLOCK_SIZE 0x4000 // 0x2000
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
-#define PCM_COPY_SIZE 4096L
+#define PCM_COPY_SIZE (4096L)
 
+#ifdef PCM_DESTROY
+	PcmInfo 		info[14];
+	static PcmWork g_movie_work[14];
+#endif
+
+extern signed int pcm_cnt_vbl_in;
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -53,6 +60,9 @@ void vbt_PCM_MeTask(PcmHn hn)
 	PcmWork		*work 	= *(PcmWork **)hn;
 	PcmStatus	*st 	= &work->status;
 	Sint32		sample_now;
+// vbt ajout
+//	st->audio_process_fp = vbt_pcm_AudioProcess;
+
 // vbt : à remettre ?
 //	st->cnt_task_call++;	/* ƒ^ƒXƒNƒR[ƒ‹ƒJƒEƒ“ƒ^‚ÌƒJƒEƒ“ƒgƒAƒbƒv */
 
@@ -78,7 +88,8 @@ void vbt_PCM_MeTask(PcmHn hn)
 #ifdef DEBUG_PCM
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_AudioProcess  ",40,210);
 #endif
-	vbt_pcm_AudioProcess(hn);
+//	vbt_pcm_AudioProcess(hn);
+	(*st->audio_process_fp)(hn);
 
 	/* Ä¶I—¹ˆ— */
 	if (st->play == PCM_STAT_PLAY_TIME) {
@@ -103,7 +114,7 @@ void vbt_PCM_MeTask(PcmHn hn)
 			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_StartTimer  ",40,210);
 #endif
 // vbt : redefinir pcm_StartTimer !!!!
-		vbt_pcm_StartTimer(hn);
+		pcm_StartTimer(hn);
 	}
 	return;
 }
@@ -186,6 +197,9 @@ void vbt_PCM_DrvStartPcm(PcmHn hn)
 	int				imask;
 	SndPcmStartPrm	start_prm;
 	SndPcmChgPrm	chg_prm;
+//vbt ajout
+//	st->audio_process_fp = vbt_pcm_AudioProcess;
+
 
 	/* chg_prm ‚ÌÝ’è */
 	oct 					= PCM_CALC_OCT(st->info.sampling_rate);
@@ -231,6 +245,9 @@ void vbt_pcm_StartTimer(PcmHn hn)
 	PcmWork		*work 	= *(PcmWork **)hn;
 
 	PcmStatus	*st 	= &work->status;
+// vbt ajout
+//	st->audio_process_fp = vbt_pcm_AudioProcess;
+
 	int			imask;
 
 	if (st->ring_write_offset < PCM_HN_START_TRG_SIZE(hn)) {
@@ -444,7 +461,9 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					else
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
 #endif
-					if (st->play == PCM_STAT_PLAY_CREATE && i>0) 
+//					if (st->play == PCM_STAT_PLAY_CREATE && i>0) 
+				if((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0)
+
 //vbt
 //					if ((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0) 
 						break;
@@ -474,9 +493,18 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 				if(sfx_list[data].size!=0)
 				{
 					pcm_info[i].position = 0;
+					pcm_info[i].ring_position = 0;
 					pcm_info[i].track_position = sfx_list[data].position;
 					pcm_info[i].size = sfx_list[data].size*8;
 					pcm_info[i].num = data;
+#ifdef PCM_DESTROY
+					pcm14[i] = createHandle(&para[i]);
+					PCM_SetPcmStreamNo(pcm14[i], i);
+					PCM_SetInfo(pcm14[i], &info[i]);
+					PCM_ChangePcmPara(pcm14[i]);
+
+					PCM_MeStart(pcm14[i]);
+#else
 					PcmInfo 		info;
 
 					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
@@ -485,11 +513,13 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PCM_INFO_SAMPLING_BIT(&info) = 16;
 					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
 					PCM_INFO_FILE_SIZE(&info) = sfx_list[data].size;//SOUNDRATE*2;//0x4000;//214896;
-
 					PCM_SetInfo(pcm14[i], &info);
-//					PCM_MeStart(pcm14[i]);
-					st->play = PCM_STAT_PLAY_HEADER;
 
+					st->play = PCM_STAT_PLAY_HEADER;
+#endif
+
+// vbt remis pour vérif !!!!
+//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
  #ifdef DEBUG_PCM
 					char toto[50];
 					char *titi=&toto[0];
@@ -530,6 +560,9 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					current_pcm = data;
 					st->play = PCM_STAT_PLAY_END;
 //					PCM_MeStop(pcm14[0]);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_EndProcess pcm0 ",40,20);
+
+
 					pcm_EndProcess(pcm14[0]);
 //					PCM_GfsReset(pcm14[0]);
 
@@ -985,8 +1018,11 @@ static INT32 DrvInit()
 		}
 		DrvGfxDecode();
 	}
+#ifdef PCM_DESTROY	
+	PCM_DestroyMemHandle(pcm);
+#else
 	PCM_MeStop(pcm);
-
+#endif
 	int fid				= GFS_NameToId((Sint8 *)"SFX.ROM");
 	long fileSize	= GetFileSize(fid);
 
@@ -1165,17 +1201,23 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				int size=PCM_COPY_SIZE;
 				if(pcm_info[i].position+(size*2)>pcm_info[i].size)
 				{
-					memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+//					memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+					memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].ring_position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 					size=pcm_info[i].size-pcm_info[i].position;
 					pcm_info[i].num = 0xff;
 				}
 				else
-					memcpyl((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
-
+				{
+//					memcpyl((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+					memcpyl((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].ring_position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+				}
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
+				pcm_info[i].ring_position+=size;
+				if(pcm_info[i].ring_position>=RING_BUF_SIZE)
+					pcm_info[i].ring_position=0;
 
-				if(PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_CREATE)
+//				if(PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_CREATE && PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_END)
 				{
 					PCM_NotifyWriteSize(pcm14[i], size);
 	//				PCM_Task(pcm14[i]);
@@ -1190,8 +1232,13 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 #endif
 //				if(PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_CREATE)
 				{
-					PCM_MeReset(pcm14[i]);
-					memset((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i)),0x00,RING_BUF_SIZE);
+#ifdef PCM_DESTROY	
+	PCM_DestroyMemHandle(pcm14[i]);
+#else
+	vbt_PCM_MeStop(pcm14[i]);
+#endif
+
+//					memset((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i)),0x00,RING_BUF_SIZE);
 				}
 			}
 		}
@@ -1328,14 +1375,17 @@ static PcmHn createHandle(PcmCreatePara *para)
 static void Set14PCM()
 {
 //	PcmCreatePara	para[14];
+#ifndef PCM_DESTROY
 	PcmInfo 		info[14];
-	PcmStatus	*st;
 	static PcmWork g_movie_work[14];
+#endif
+	PcmStatus	*st;
 
 	for (int i=0; i<8; i++)
 	{
 		PCM_PARA_WORK(&para[i])			= (struct PcmWork *)&g_movie_work[i];
 //		PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
+#if 0
 		if(i==0)
 		{
 //			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x64000;
@@ -1345,9 +1395,11 @@ static void Set14PCM()
 
 		}
 		else
+#endif
 		{
 //			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(0x4000*(i+1));
-			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x60000+(PCM_BLOCK_SIZE*(i+1));
+//			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x60000+(PCM_BLOCK_SIZE*i);
+			PCM_PARA_RING_ADDR(&para[i])	= (Sint8 *)PCM_ADDR+0x40000+(PCM_BLOCK_SIZE*i);
 			PCM_PARA_RING_SIZE(&para[i])		= RING_BUF_SIZE;//<<1;
 		}
 //		PCM_PARA_PCM_ADDR(&para[i])	= PCM_ADDR+(0x4000*(i+1));
@@ -1377,22 +1429,27 @@ static void Set14PCM()
 			pcm14[i] = PCM_CreateStmHandle(&para[i], stm);
 			PCM_SetPcmStreamNo(pcm14[i], i);
 			PCM_SetInfo(pcm14[i], &info[i]);
-//			PCM_ChangePcmPara(pcm14[i]);	
+// vbt ajout 
+//			PCM_SetPcmCmdBlockNo(pcm14[i], i);
+//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
+			PCM_ChangePcmPara(pcm14[i]);	
 		}
 		else
 		{
 			PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
-			PCM_INFO_FILE_SIZE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+			PCM_INFO_FILE_SIZE(&info[i]) = PCM_COPY_SIZE;//SOUNDRATE*2;//0x4000;//214896;
 			
 			pcm14[i] = createHandle(&para[i]);
 
 			PCM_SetPcmStreamNo(pcm14[i], i);
 
 			PCM_SetInfo(pcm14[i], &info[i]);
+// vbt : ajout
+//			PCM_SetPcmCmdBlockNo(pcm14[i], i);
+//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
 			PCM_ChangePcmPara(pcm14[i]);	
 		}
 // VBT : enleve la lecture en boucle !! merci zeromu!!!
-		*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= ~0x60;
 		PCM_Start(pcm14[i]);
 	}
 }
@@ -2145,6 +2202,55 @@ void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 	ss_map2[ofst] = color | flipx << 7; //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
 	ss_map2[ofst+1] = (code*4)+0x1000; 
 }
+//---------------------------------------------------------------------------------------------------------------
+/*void vbt_pcm_EndProcess(PcmHn hn)
+{
+	PcmWork		*work 	= *(PcmWork **)hn;
+	PcmStatus	*st 	= &work->status;
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_EndProcess  ",40,20);
+
+	PCM_DrvStopPcm(hn);
+
+	st->play = PCM_STAT_PLAY_END;
+}*/
+//---------------------------------------------------------------------------------------------------------------
+void vbt_PCM_MeStop(PcmHn hn)
+{
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_PCM_MeStop     ",40,20);
+	PcmWork		*work = *(PcmWork **)hn;
+	PcmStatus	*st = &work->status;
+
+	if (st->play == PCM_STAT_PLAY_TIME) {
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_PCM_DrvStop     ",40,20);
+		vbt_PCM_DrvStopPcm(hn); 	/* PCMÄ¶’âŽ~ */
+	}
+	st->play = PCM_STAT_PLAY_END;
+	st->cnt_loop = 0;	/* ’âŽ~‚³‚¹‚é */
+	return;
+}
+
+void vbt_PCM_DrvStopPcm(PcmHn hn)
+{
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_PCM_DrvStopPcm   ",40,30);
+
+	PcmWork		*work 	= *(PcmWork **)hn;
+	PcmPara		*para 	= &work->para;
+	int			imask;
+
+    imask = get_imask();
+    set_imask(15);
+
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)(itoa(para->pcm_stream_no)),80,30);
+
+	while (SND_StopPcm((SndPcmNum)para->pcm_stream_no) == SND_RET_NSET) {
+		set_imask(imask);
+		pcm_Wait(100);
+		set_imask(15);
+	}
+
+    set_imask(imask);
+}
+
 //---------------------------------------------------------------------------------------------------------------
 static void vbt_pcm_AudioMix(PcmHn hn)
 {

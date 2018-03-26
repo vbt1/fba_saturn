@@ -20,6 +20,7 @@ static void DrvInitSaturn();
 static void draw_sprites();
 static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 static void Set14PCM();
+static PcmHn createHandle(PcmCreatePara *para);
 void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
 void errGfsFunc(void *obj, Sint32 ec);
 void errStmFunc(void *obj, Sint32 ec);
@@ -42,6 +43,7 @@ typedef struct
 {
 	int track_position;
 	int position;
+	int ring_position;
 	int size;
 	unsigned char num;
 }PCM_INFO;
@@ -327,6 +329,9 @@ typedef struct{
 }SndPcmChgPrm;                              /* PCM変更パラメータ           */
 
 void vbt_pcm_StartTimer(PcmHn hn);
+void vbt_pcm_EndProcess(PcmHn hn);
+void vbt_PCM_DrvStopPcm(PcmHn hn);
+void vbt_PCM_MeStop(PcmHn hn);
 void vbt_PCM_MeTask(PcmHn hn);
 static void vbt_pcm_AudioMix(PcmHn hn);
 SndRet vbt_SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm);
