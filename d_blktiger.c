@@ -10,20 +10,13 @@
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
 //#define DEBUG_PCM 1
-//#define PCM_DESTROY 1
 #define PCM_SFX 1
-//#define PCM_MUSIC 1
+#define PCM_MUSIC 1
 #define PCM_BLOCK_SIZE 0x4000 // 0x2000
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
-#define PCM_COPY_SIZE (4096L)
+#define PCM_COPY_SIZE (4096L*2)
 
-#ifdef PCM_DESTROY
-	PcmInfo 		info[14];
-	static PcmWork g_movie_work[14];
-#endif
-
-extern signed int pcm_cnt_vbl_in;
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -54,236 +47,6 @@ vbt> <Kale_> Ok, have you asked to Arbee?
 <l_oliveira> the ZN sound drivers fire up a NMI every time the host writes to the I/O port and the driver acknowledges that a command is sent after the interrupt is fired four times
 <l_oliveira> CPS2 Z80 just keeps pooling  at an fixed address of the shared ram. I re-purposed the NMI code and put my shared ram pooling stub on the main program loop of the Z80. Every time a command comes at the shared ram it emulates the four NMI behavior in software using the Z80 itself
 */
-//---------------------------------------------------------------------------------------------------------------
-void vbt_PCM_MeTask(PcmHn hn)
-{
-	PcmWork		*work 	= *(PcmWork **)hn;
-	PcmStatus	*st 	= &work->status;
-	Sint32		sample_now;
-// vbt ajout
-//	st->audio_process_fp = vbt_pcm_AudioProcess;
-
-// vbt : ‡ remettre ?
-//	st->cnt_task_call++;	/* É^ÉXÉNÉRÅ[ÉãÉJÉEÉìÉ^ÇÃÉJÉEÉìÉgÉAÉbÉv */
-
-	/* çƒê∂ÉXÉeÅ[É^ÉXÉ`ÉFÉbÉN */
-	if ((st->play <= PCM_STAT_PLAY_PAUSE)
-	  ||(st->play >= PCM_STAT_PLAY_END)) {
-		return;
-	}
-
-	/* ÉwÉbÉ_èàóù */
-	if (st->play == PCM_STAT_PLAY_START && st->need_ci != PCM_ON) {
-#ifdef DEBUG_PCM
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_HeaderProcess  ",40,210);
-#endif
-		if (pcm_HeaderProcess(hn)) {
-//			_VTV_PRINTF("pcm_HeaderProcess(hn)");
-			return;	/* Ç‹ÇæÉwÉbÉ_ï™ÇÃÉfÅ[É^ãüããÇ™Ç»Ç¢ */
-		}
-	}
-
-	/* ÉIÅ[ÉfÉBÉIèàóù */
-//	(*st->audio_process_fp)(hn);
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_AudioProcess  ",40,210);
-#endif
-//	vbt_pcm_AudioProcess(hn);
-	(*st->audio_process_fp)(hn);
-
-	/* çƒê∂èIóπèàóù */
-	if (st->play == PCM_STAT_PLAY_TIME) {
-		if (PCM_IsRingEmpty(hn)) {
-#ifdef DEBUG_PCM
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"PCM_IsRingEmpty ",40,210);
-#endif
-			PCM_MeGetTimeTotal(hn, &sample_now);
-			if (sample_now + PCM_HN_STOP_TRG_SAMPLE(hn) > st->sample_write) {
-				/* Ç≥Ç†ÅAçƒê∂èIóπÇæÅI */
-#ifdef DEBUG_PCM
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_EndProcess     ",40,210);
-#endif
-				pcm_EndProcess(hn);
-			}
-		}
-	}
-
-	/* É^ÉCÉ}ÉXÉ^Å[ÉgÅEÇoÇbÇlçƒê∂ÉXÉ^Å[Égèàóù */
-	if (st->play == PCM_STAT_PLAY_HEADER) {
-#ifdef DEBUG_PCM
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_StartTimer  ",40,210);
-#endif
-// vbt : redefinir pcm_StartTimer !!!!
-		pcm_StartTimer(hn);
-	}
-	return;
-}
-//---------------------------------------------------------------------------------------------------------------
-static Uint8 GetComBlockAdr(void)
-{
-    if(*NOW_ADR_COM_DATA)
-	{              /* à»ëOÇÃÃﬁ€Ø∏Ç™à¯Ç´éÊÇËçœÇ›Ç≈Ç»Ç¢Ç©?*/
-        /* éüÉRÉ}ÉìÉhÉuÉçÉbÉNÉAÉhÉåÉXê›íËèàóù ********************************/
-//        if(NOW_ADR_COM_DATA >= (MAX_ADR_COM_DATA - SIZE_COM_BLOCK)){
-
-//	char texte[50];
-//	vout(texte, "%06X",(int)NOW_ADR_COM_DATA); 
-//	texte[49]='\0';
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)(itoa(NOW_ADR_COM_DATA)),10,120);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)(itoa(*NOW_ADR_COM_DATA)),10,130);
-
-		if(NOW_ADR_COM_DATA >= (MAX_ADR_COM_DATA - SIZE_COM_BLOCK))
-		{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr1 OFF       ",40,100);
-//	vout(texte, "%06X",(int)(MAX_ADR_COM_DATA - SIZE_COM_BLOCK)); 
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)(itoa(MAX_ADR_COM_DATA - SIZE_COM_BLOCK)),80,120);
-// VBT ajout
-//		adr_com_block = adr_host_int_work;  /* Ãﬁ€Ø∏ÇÃêÊì™Ç÷              */
-
-													/* ç≈ëÂílÇ©?            */
-            return OFF;                             /* Ãﬁ€Ø∏ãÛÇ´ñ≥Çµ      */
-        }
-		else
-		{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"update adr_com_block                          ",40,110);
-
-            adr_com_block += SIZE_COM_BLOCK;        /* åªç›∫œ›ƒﬁÃﬁ€Ø∏∂≥›ƒ±ØÃﬂ*/
-            while(NOW_ADR_COM_DATA < (MAX_ADR_COM_DATA - SIZE_COM_BLOCK))
-			{
-                if(*NOW_ADR_COM_DATA)
-				{
-                    adr_com_block += SIZE_COM_BLOCK;
-                }
-				else
-				{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr1 ON        ",40,110);
-
-                    return ON;                      /* Ãﬁ€Ø∏ãÛÇ´óLÇË         */
-                }
-            }
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr2 OFF       ",40,110);
-
-            return OFF;                             /* Ãﬁ€Ø∏ãÛÇ´ñ≥Çµ         */
-        }
-    }
-	else
-	{
-        adr_com_block = adr_host_int_work;  /* Ãﬁ€Ø∏ÇÃêÊì™Ç÷              */
-        while(NOW_ADR_COM_DATA < (MAX_ADR_COM_DATA - SIZE_COM_BLOCK))
-		{
-            if(*NOW_ADR_COM_DATA)
-			{
-                adr_com_block += SIZE_COM_BLOCK;
-            }
-			else
-			{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr2 ON        ",40,110);
-
-                return ON;                          /* Ãﬁ€Ø∏ãÛÇ´óLÇË         */
-            }
-        }
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GetComBlockAdr3 OFF       ",40,110);
-
-        return OFF;                                 /* Ãﬁ€Ø∏ãÛÇ´ñ≥Çµ         */
-    }
-}
-//---------------------------------------------------------------------------------------------------------------
-void vbt_PCM_DrvStartPcm(PcmHn hn)
-{
-	PcmWork			*work 	= *(PcmWork **)hn;
-	PcmPara			*para 	= &work->para;
-	PcmStatus		*st 	= &work->status;
-	Sint32			oct, shift_freq, fns;
-	int				imask;
-	SndPcmStartPrm	start_prm;
-	SndPcmChgPrm	chg_prm;
-//vbt ajout
-//	st->audio_process_fp = vbt_pcm_AudioProcess;
-
-
-	/* chg_prm ÇÃê›íË */
-	oct 					= PCM_CALC_OCT(st->info.sampling_rate);
-	shift_freq 				= PCM_CALC_SHIFT_FREQ(oct);
-	fns 					= PCM_CALC_FNS(st->info.sampling_rate, 
-											shift_freq);
-	SND_PRM_NUM(chg_prm)	= (SndPcmNum)para->pcm_stream_no;
-	SND_PRM_LEV(chg_prm)	= para->pcm_level;
-	SND_PRM_PAN(chg_prm)	= para->pcm_pan;
-	SND_PRM_PICH(chg_prm)	= PCM_SET_PITCH_WORD(oct, fns);
-	SND_R_EFCT_IN(chg_prm)	= 0;
-	SND_R_EFCT_LEV(chg_prm)	= 0;
-	SND_L_EFCT_IN(chg_prm)	= 0;
-	SND_L_EFCT_LEV(chg_prm)	= 0;
-
-	/* start_prm ÇÃê›íË */
-	SND_PRM_MODE(start_prm)		= (PCM_IS_MONORAL(st)        ? 0x00 : 0x80) |
-								  (PCM_IS_16BIT_SAMPLING(st) ? 0x00 : 0x10); 
-	SND_PRM_SADR(start_prm)		= (Uint16)PCM_SET_PCM_ADDR(para);
-	SND_PRM_SIZE(start_prm)		= (Uint16)PCM_SET_PCM_SIZE(para);
-
-    imask = get_imask();
-    set_imask(15);
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SND_StartPcm       ",40,210);
-#endif
-	while (vbt_SND_StartPcm(&start_prm, &chg_prm) == SND_RET_NSET) {
-		set_imask(imask);
-//		pcm_Wait(100);
-		pcm_Wait(512);
-		set_imask(15);
-	}
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_InitPolling       ",40,210);
-#endif
-	pcm_InitPolling(para->pcm_stream_no);
-
-    set_imask(imask);
-}
-//---------------------------------------------------------------------------------------------------------------
-void vbt_pcm_StartTimer(PcmHn hn)
-{
-	PcmWork		*work 	= *(PcmWork **)hn;
-
-	PcmStatus	*st 	= &work->status;
-// vbt ajout
-//	st->audio_process_fp = vbt_pcm_AudioProcess;
-
-	int			imask;
-
-	if (st->ring_write_offset < PCM_HN_START_TRG_SIZE(hn)) {
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_StartTimer1  ",40,210);
-#endif
-		return;
-	}
-
-	if (st->sample_write < PCM_HN_START_TRG_SAMPLE(hn)) {
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_StartTimer2  ",40,210);
-#endif
-		return;
-	}
-
-    imask = get_imask();
-    set_imask(15);
-
-	st->clock_scale = PCM_CLOCK_SCALE;
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"PCM_DrvStartPcm  ",40,210);
-#endif
-	vbt_PCM_DrvStartPcm(hn); 	/* PCMçƒê∂äJén */
-
-	/* É^ÉCÉ}Å[ÉXÉ^Å[Ég */
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_StartClock     ",40,210);
-#endif
-	pcm_StartClock(hn);
-	st->play = PCM_STAT_PLAY_TIME;
-	st->cnt_4ksample = 0;
-	st->vbl_film_start = st->vbl_pcm_start = pcm_cnt_vbl_in;
-
-    set_imask(imask);
-}
 //---------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
 {
@@ -497,14 +260,6 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					pcm_info[i].track_position = sfx_list[data].position;
 					pcm_info[i].size = sfx_list[data].size*8;
 					pcm_info[i].num = data;
-#ifdef PCM_DESTROY
-					pcm14[i] = createHandle(&para[i]);
-					PCM_SetPcmStreamNo(pcm14[i], i);
-					PCM_SetInfo(pcm14[i], &info[i]);
-					PCM_ChangePcmPara(pcm14[i]);
-
-					PCM_MeStart(pcm14[i]);
-#else
 					PcmInfo 		info;
 
 					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
@@ -512,11 +267,11 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PCM_INFO_CHANNEL(&info) = 0x01;
 					PCM_INFO_SAMPLING_BIT(&info) = 16;
 					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
-					PCM_INFO_FILE_SIZE(&info) = sfx_list[data].size;//SOUNDRATE*2;//0x4000;//214896;
+					PCM_INFO_FILE_SIZE(&info) = pcm_info[i].size; //sfx_list[data].size;//SOUNDRATE*2;//0x4000;//214896;
 					PCM_SetInfo(pcm14[i], &info);
 
+//					PCM_SetInfo(pcm14[i], &info[i]);
 					st->play = PCM_STAT_PLAY_HEADER;
-#endif
 
 // vbt remis pour vÈrif !!!!
 //			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
@@ -558,9 +313,9 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 				if(	current_pcm != data)
 				{
 					current_pcm = data;
-					st->play = PCM_STAT_PLAY_END;
-//					PCM_MeStop(pcm14[0]);
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_EndProcess pcm0 ",40,20);
+//					st->play = PCM_STAT_PLAY_END;
+					PCM_MeStop(pcm14[0]);
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_EndProcess pcm0 ",40,20);
 
 
 					pcm_EndProcess(pcm14[0]);
@@ -1018,11 +773,8 @@ static INT32 DrvInit()
 		}
 		DrvGfxDecode();
 	}
-#ifdef PCM_DESTROY	
-	PCM_DestroyMemHandle(pcm);
-#else
 	PCM_MeStop(pcm);
-#endif
+
 	int fid				= GFS_NameToId((Sint8 *)"SFX.ROM");
 	long fileSize	= GetFileSize(fid);
 
@@ -1215,14 +967,15 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 				pcm_info[i].position+=size;
 				pcm_info[i].ring_position+=size;
 				if(pcm_info[i].ring_position>=RING_BUF_SIZE)
-					pcm_info[i].ring_position=0;
-
-//				if(PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_CREATE && PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_END)
 				{
-					PCM_NotifyWriteSize(pcm14[i], size);
-	//				PCM_Task(pcm14[i]);
-					vbt_PCM_MeTask(pcm14[i]);
+					pcm_info[i].ring_position=0;
 				}
+	//				if(PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_CREATE && PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_END)
+					{
+						PCM_NotifyWriteSize(pcm14[i], size);
+						PCM_Task(pcm14[i]);
+//						vbt_PCM_MeTask(pcm14[i]);
+					}
 			}
 			else
 			{
@@ -1232,11 +985,7 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 #endif
 //				if(PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_CREATE)
 				{
-#ifdef PCM_DESTROY	
-	PCM_DestroyMemHandle(pcm14[i]);
-#else
-	vbt_PCM_MeStop(pcm14[i]);
-#endif
+					PCM_MeStop(pcm14[i]);
 
 //					memset((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i)),0x00,RING_BUF_SIZE);
 				}
@@ -1375,10 +1124,8 @@ static PcmHn createHandle(PcmCreatePara *para)
 static void Set14PCM()
 {
 //	PcmCreatePara	para[14];
-#ifndef PCM_DESTROY
 	PcmInfo 		info[14];
 	static PcmWork g_movie_work[14];
-#endif
 	PcmStatus	*st;
 
 	for (int i=0; i<8; i++)
@@ -2201,200 +1948,5 @@ void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 	ofst = bg_map_lut[offs];
 	ss_map2[ofst] = color | flipx << 7; //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
 	ss_map2[ofst+1] = (code*4)+0x1000; 
-}
-//---------------------------------------------------------------------------------------------------------------
-/*void vbt_pcm_EndProcess(PcmHn hn)
-{
-	PcmWork		*work 	= *(PcmWork **)hn;
-	PcmStatus	*st 	= &work->status;
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_EndProcess  ",40,20);
-
-	PCM_DrvStopPcm(hn);
-
-	st->play = PCM_STAT_PLAY_END;
-}*/
-//---------------------------------------------------------------------------------------------------------------
-void vbt_PCM_MeStop(PcmHn hn)
-{
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_PCM_MeStop     ",40,20);
-	PcmWork		*work = *(PcmWork **)hn;
-	PcmStatus	*st = &work->status;
-
-	if (st->play == PCM_STAT_PLAY_TIME) {
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_PCM_DrvStop     ",40,20);
-		vbt_PCM_DrvStopPcm(hn); 	/* PCMçƒê∂í‚é~ */
-	}
-	st->play = PCM_STAT_PLAY_END;
-	st->cnt_loop = 0;	/* í‚é~Ç≥ÇπÇÈ */
-	return;
-}
-
-void vbt_PCM_DrvStopPcm(PcmHn hn)
-{
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_PCM_DrvStopPcm   ",40,30);
-
-	PcmWork		*work 	= *(PcmWork **)hn;
-	PcmPara		*para 	= &work->para;
-	int			imask;
-
-    imask = get_imask();
-    set_imask(15);
-
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)(itoa(para->pcm_stream_no)),80,30);
-
-	while (SND_StopPcm((SndPcmNum)para->pcm_stream_no) == SND_RET_NSET) {
-		set_imask(imask);
-		pcm_Wait(100);
-		set_imask(15);
-	}
-
-    set_imask(imask);
-}
-
-//---------------------------------------------------------------------------------------------------------------
-static void vbt_pcm_AudioMix(PcmHn hn)
-{
-	PcmWork		*work 	= *(PcmWork **)hn;
-	PcmStatus	*st 	= &work->status;
-	Sint32		size_write, size_write_total;
-	Sint32		stock_bsize, 		/* ÉäÉìÉOÉoÉbÉtÉ@ÇÃëçç›å… [byte] 	*/
-				size_mono, 			/* ÇPÉ`ÉÉÉìÉlÉãï™ÇÃç›å… [byte/1ch] 	*/
-				size_copy; 			/* ÉRÉsÅ[Ç∑ÇÈÉTÉCÉY [byte/1ch] 		*/
-	Sint8 		*addr_write1, *addr_write2;
-
-#ifdef _PCMD
-	Sint32 		copy_idx, i;
-#endif
-
-//	_VTV_PRINTF("pcm_AudioMix");
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_AudioMix       ",40,130);
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(work->para.pcm_stream_no),100,130);
-
-	if (st->ring_write_offset > st->info.file_size) {
-		/* ÉäÉìÉOÉoÉbÉtÉ@Ç…ÇÕ EOF à»ç~ÇÃÉSÉ~Ç‡ãüããÇ≥ÇÍÇƒÇ¢ÇÈ */
-//		_VTV_PRINTF("pcm_AudioMix st->info.file_size - st->ring_read_offset");
-		stock_bsize = st->info.file_size - st->ring_read_offset;
-	} else {
-//		_VTV_PRINTF("pcm_AudioMix st->ring_write_offset - st->ring_read_offset");
-		stock_bsize = st->ring_write_offset - st->ring_read_offset;
-	}
-
-	/* ÇPÉ`ÉÉÉìÉlÉãï™ÇÃç›å… [byte/1ch] */
-	if (PCM_IS_MONORAL(st)) {
-		size_mono = stock_bsize;
-	} else {
-		size_mono = stock_bsize >> 1;
-	}
-	if (PCM_IS_8BIT_SAMPLING(st)) {
-//		_VTV_PRINTF("\n8bits!!!");
-		size_mono &= 0xfffffffe;
-		size_mono &= 0xfffffffc;
-	} else {
-		size_mono &= 0xfffffffc;
-	}
-
-	size_mono = MIN(size_mono, 
-		PCM_SAMPLE2BSIZE(st, st->info.sample_file - st->sample_write_file));
-
-	/* ÉIÅ[ÉfÉBÉIÉfÅ[É^Ç™ÉçÅ[ÉhÇ≈Ç´ÇÈÇ©ÇÉ`ÉFÉbÉNÇ∑ÇÈ */
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_GetPcmWrite       ",40,140);
-
-	pcm_GetPcmWrite(hn, &addr_write1, &addr_write2, 
-						&size_write, &size_write_total);
-
-	if (size_write_total > st->pcm_bsize) {
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"  ",40,150);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(work->para.pcm_stream_no),40,150);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"cnt_load_miss        ",40,160);
-//		_VTV_PRINTF("\n\nmissed");
-		st->cnt_load_miss++;
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->cnt_load_miss),100,160);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_bsize            ",40,170);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->pcm_bsize),80,170);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"sz_wt_totl            ",40,180);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(size_write_total),80,180);
-#endif
-
-//		VTV_PRINTF((VTV_s, "P:LMis %d\n buf%X < writ%X\n", 
-//			st->cnt_load_miss, st->pcm_bsize, size_write_total));
-//		VTV_PRINTF((VTV_s, " r%X w%X\n", 
-//			(st)->ring_read_offset, (st)->ring_write_offset));
-	}
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"file_size              ",40,190);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(st->info.file_size),80,190);
-#endif
-	size_copy = MIN(size_mono, size_write_total);
-
-
-	if (size_copy == 0) {
-		return;
-	}
-	size_copy = MIN(size_copy, st->onetask_size);
-
-	/* ÉRÉsÅ[èÓïÒÉeÅ[ÉuÉãÇÃê›íË */
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_SetMixCopyTbl      ",40,140);
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_SetMixCopyTbl     ",40,210);
-#endif
-	pcm_SetMixCopyTbl(hn, size_copy);
-
-	/* ÉRÉsÅ[ÇÃé¿çs (èÌÇ…ÅACPU ÉvÉçÉOÉâÉÄì]ëó) */
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_ExecMixCopyTbl      ",40,140);
-#endif
-	pcm_ExecMixCopyTbl(hn);
-
-	/* ì«Ç›éÊÇËà íuçXêV */
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_RenewRingRead      ",40,140);
-#endif
-	pcm_RenewRingRead(hn, PCM_1CH2NCH(st, size_copy));
-#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_AudioMix end      ",40,140);
-#endif
-	return;
-}
-//---------------------------------------------------------------------------------------------------------------
- SndRet vbt_SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm)
- {
-/* 1994/02/24 Start */
-// vbt variable statique ...
-//    if(intrflag) return(SND_RET_NSET);
-//    intrflag = 1;
-/* 1994/02/24 End */
-    if(GetComBlockAdr() == OFF) HOST_SET_RETURN(SND_RET_NSET);
-    SET_PRM(0, SND_PRM_MODE(*sprm) | SND_PRM_NUM(*cprm));
-    SET_PRM(1, (SND_PRM_LEV(*cprm) << 5) | ChgPan(SND_PRM_PAN(*cprm)));
-    SET_PRM(2, SND_PRM_SADR(*sprm) >> 8);
-    SET_PRM(3, SND_PRM_SADR(*sprm));
-    SET_PRM(4, SND_PRM_SIZE(*sprm) >> 8);
-    SET_PRM(5, SND_PRM_SIZE(*sprm));
-    SET_PRM(6, SND_PRM_PICH(*cprm) >> 8);
-    SET_PRM(7, SND_PRM_PICH(*cprm));
-    SET_PRM(8, (SND_R_EFCT_IN(*cprm) << 3) | SND_R_EFCT_LEV(*cprm));
-    SET_PRM(9, (SND_L_EFCT_IN(*cprm) << 3) | SND_L_EFCT_LEV(*cprm));
-    SET_PRM(11, 0);
-    SET_COMMAND(COM_START_PCM);                 /* ÉRÉ}ÉìÉhÉZÉbÉg            */
-    HOST_SET_RETURN(SND_RET_SET);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void vbt_pcm_AudioProcess(PcmHn hn)
-{
-	PcmWork		*work 	= *(PcmWork **)hn;
-	PcmStatus	*st 	= &work->status;
-
-	if (PCM_IS_LR_MIX(st)) {
-		/* ÇkÇqç¨ç›ÉIÅ[ÉfÉBÉIèàóù */
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"vbt_pcm_AudioMix     ",40,210);
-		vbt_pcm_AudioMix(hn);
-	} else if (PCM_IS_LR_BLOCK(st)) {
-		/* ÇkÇqÉuÉçÉbÉNÉIÅ[ÉfÉBÉIèàóù */
-		/* pcm_AudioBlock(hn); */
-	}
 }
 //---------------------------------------------------------------------------------------------------------------
