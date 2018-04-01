@@ -197,7 +197,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			PcmStatus	*st=NULL;
 
 		if(data!=255)
-			if(sfx_list[data].loop==0)
+			if(sfx_list[data].loop==0 && data!=48)
 			{
 				for(i=0;i<8;i++)
 				{
@@ -252,7 +252,6 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 #endif
 
 #ifdef PCM_SFX
-//				if(i>0 && i<8 && data!=255 && data!=33 && data!=48 && sfx_list[data].size!=0)
 				if(sfx_list[data].size!=0)
 				{
 					pcm_info[i].position = 0;
@@ -289,7 +288,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			{
 					PcmWork		*work = *(PcmWork **)pcm14[0];
 					st = &work->status;
-					st->cnt_loop = 0;
+					st->cnt_loop = sfx_list[data].loop;
 //					st->audio_process_fp = vbt_pcm_AudioProcess;
 					st->need_ci = PCM_OFF;
 #ifdef DEBUG_PCM
@@ -335,11 +334,11 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PCM_INFO_CHANNEL(&info) = 0x01;
 					PCM_INFO_SAMPLING_BIT(&info) = 16;
 					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
-#ifdef DEBUG_PCM
+//#ifdef DEBUG_PCM
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gfs_size              ",40,200);
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(sfx_list[data].size),80,200);
-#endif
+//#endif
 	PCM_INFO_FILE_SIZE(&info) = sfx_list[data].size;//SOUNDRATE*2;//0x4000;//214896;
 
 					if((stm = stmOpen(pcm_file))==NULL)
@@ -1178,7 +1177,7 @@ static void Set14PCM()
 			PCM_SetInfo(pcm14[i], &info[i]);
 // vbt ajout 
 //			PCM_SetPcmCmdBlockNo(pcm14[i], i);
-//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
+			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
 			PCM_ChangePcmPara(pcm14[i]);	
 		}
 		else
@@ -1193,7 +1192,7 @@ static void Set14PCM()
 			PCM_SetInfo(pcm14[i], &info[i]);
 // vbt : ajout
 //			PCM_SetPcmCmdBlockNo(pcm14[i], i);
-//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
+			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
 			PCM_ChangePcmPara(pcm14[i]);	
 		}
 // VBT : enleve la lecture en boucle !! merci zeromu!!!

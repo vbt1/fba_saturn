@@ -3929,11 +3929,56 @@ EndFile
 				File 035.PCM;1
 					Source BLKTIGER\035.PCM
 				EndFile
+				File 036.PCM;1
+					Source BLKTIGER\036.PCM
+				EndFile
+				File 037.PCM;1
+					Source BLKTIGER\037.PCM
+				EndFile
+				File 038.PCM;1
+					Source BLKTIGER\038.PCM
+				EndFile
+				File 039.PCM;1
+					Source BLKTIGER\039.PCM
+				EndFile
+				File 040.PCM;1
+					Source BLKTIGER\040.PCM
+				EndFile
+				File 041.PCM;1
+					Source BLKTIGER\041.PCM
+				EndFile
+				File 042.PCM;1
+					Source BLKTIGER\042.PCM
+				EndFile
+				File 043.PCM;1
+					Source BLKTIGER\043.PCM
+				EndFile
 				File 044.PCM;1
 					Source BLKTIGER\044.PCM
 				EndFile
+				File 045.PCM;1
+					Source BLKTIGER\045.PCM
+				EndFile
+				File 046.PCM;1
+					Source BLKTIGER\046.PCM
+				EndFile
+				File 047.PCM;1
+					Source BLKTIGER\047.PCM
+				EndFile
 				File 048.PCM;1
 					Source BLKTIGER\048.PCM
+				EndFile
+				File 049.PCM;1
+					Source BLKTIGER\049.PCM
+				EndFile
+				File 050.PCM;1
+					Source BLKTIGER\050.PCM
+				EndFile
+				File 051.PCM;1
+					Source BLKTIGER\051.PCM
+				EndFile
+				File 052.PCM;1
+					Source BLKTIGER\052.PCM
 				EndFile
 			EndDirectory
 
