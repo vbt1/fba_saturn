@@ -681,8 +681,9 @@ static INT32 DrvGfxDecode()
 	memcpy (tmp, DrvGfxROM1, 0x40000);
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane + 0, XOffs, YOffs, 0x200, tmp, DrvGfxROM1);
 
-	tile16x16toSaturn(0,0x0400, DrvGfxROM1);
-	tile16x16toSaturn(1,0x0400, DrvGfxROM1+0x20000);
+//	tile16x16toSaturn(0,0x0400, DrvGfxROM1);
+//	tile16x16toSaturn(1,0x0400, DrvGfxROM1+0x20000);
+	tile16x16toSaturn(1,0x0800, DrvGfxROM1);
 	
  	for (int i=0;i<0x40000;i++ )
 	{
@@ -891,7 +892,7 @@ static INT32 DrvFrame()
 // cheat code invincible
 DrvZ80RAM0[0xE905-0xe000]= 0x01;
 DrvZ80RAM0[0xF424-0xe000]= 0x0F;
-
+*(Uint16 *)0x25E00000 = colBgAddr[0];
 	if (watchdog >= 180) {
 		DrvDoReset(0);
 	}
@@ -1947,9 +1948,10 @@ void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 	UINT32 flipx = attr & 0x80;
 
 	ofst = bg_map_lut[offs];
-	if(color==0)
-	ss_map2[ofst] = (color | flipx << 7) | 0x3000; //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
-	else
+//	if(color==0)
+//	ss_map2[ofst] = (color | flipx << 7) | 0x3000; //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
+//	else
+//	ss_map2[ofst] = (color | flipx << 7); //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
 	ss_map2[ofst] = (color | flipx << 7); //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
 	ss_map2[ofst+1] = (code*4)+0x1000; 
 
