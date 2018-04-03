@@ -170,6 +170,10 @@ static void initSound()
 {
 	sndInit();
 	PCM_MeInit();
+//	Sint8		*input_addr;
+//	Sint8		*buf;
+//	ADP_DecMono(input_addr, buf);
+//	PCM_DeclareUseAdpcm();
 	PcmCreatePara	para;
 	PcmInfo 		info;
 	PcmStatus	*st;

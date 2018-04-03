@@ -3965,6 +3965,9 @@ EndFile
 				File 047.PCM;1
 					Source BLKTIGER\047.PCM
 				EndFile
+				File 048.ADP;1
+					Source BLKTIGER\048.ADP
+				EndFile
 				File 048.PCM;1
 					Source BLKTIGER\048.PCM
 				EndFile

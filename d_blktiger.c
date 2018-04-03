@@ -84,7 +84,10 @@ static void palette_write(INT32 offset)
 // bg 0x000-0xff
 // sprites 0x200-0x2ff
 		unsigned short position = remap16_lut[offset];
+
 		DrvPalette[position] = cram_lut[data];//RGB(r>>3, g>>3, b>>3);
+//		if(position==0)
+//					DrvPalette[position] = RGB(0,0,0);
 	}
 
 }
@@ -207,6 +210,8 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 //					st->audio_process_fp = vbt_pcm_AudioProcess;
 					st->need_ci = PCM_OFF;
 #ifdef DEBUG_PCM
+if(i==0)
+{
 					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,20+i*10);
 					else if (st->play ==PCM_STAT_PLAY_CREATE)
@@ -223,6 +228,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,20+i*10);
 					else
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
+}
 #endif
 //					if (st->play == PCM_STAT_PLAY_CREATE && i>0) 
 				if((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0)
@@ -231,7 +237,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 //					if ((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0) 
 						break;
 				}
- #ifdef DEBUG_PCM
+ #ifdef DEBUG_PCM1
 				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",10,20);
 				if(i==1)
 				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,30);
@@ -275,11 +281,14 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 // vbt remis pour vérif !!!!
 //			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
  #ifdef DEBUG_PCM
+if(i==0)
+{
 					char toto[50];
 					char *titi=&toto[0];
 					titi=itoa(data);
 					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"       ",70,20+i*10);
 					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,70,20+i*10);
+}
 #endif
 				}
 #endif
@@ -288,10 +297,11 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 			{
 					PcmWork		*work = *(PcmWork **)pcm14[0];
 					st = &work->status;
-					st->cnt_loop = sfx_list[data].loop;
-//					st->audio_process_fp = vbt_pcm_AudioProcess;
+//					st->cnt_loop = sfx_list[data].loop;
 					st->need_ci = PCM_OFF;
 #ifdef DEBUG_PCM
+if(i==0)
+{
 					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
 					else if (st->play ==PCM_STAT_PLAY_CREATE)
@@ -308,6 +318,7 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40+i*10);
 					else
 							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
+}
 #endif
 				if(	current_pcm != data)
 				{
@@ -336,8 +347,8 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
 //#ifdef DEBUG_PCM
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gfs_size              ",40,200);
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(sfx_list[data].size),80,200);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gfs_size              ",40,200);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(sfx_list[data].size),80,200);
 //#endif
 	PCM_INFO_FILE_SIZE(&info) = sfx_list[data].size;//SOUNDRATE*2;//0x4000;//214896;
 
@@ -354,15 +365,10 @@ void __fastcall blacktiger_out(UINT16 port, UINT8 data)
 					PCM_SetInfo(pcm14[0], &info);
 
 					work = *(PcmWork **)pcm14[0];
-					st->cnt_loop = 0;
-//					st->audio_process_fp = vbt_pcm_AudioProcess;
+//					st->cnt_loop = sfx_list[data].loop;
 					st->need_ci = PCM_OFF;
-					PCM_MeStart(pcm14[0]);
-	//						STM_ExecServer();
-
-		/* Ä¶ƒ^ƒXƒN */
-	//	PCM_Task(pcm14[0]);
-
+					STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
+					PCM_Start(pcm14[0]);
 //st->play = PCM_STAT_PLAY_TIME;
 				}
 			}
@@ -835,7 +841,6 @@ static INT32 DrvInit()
 	{
 		palette_write(i);
 	}
-	SCL_SetColRam(SCL_NBG0,8,8,palette);
 
 	return 0;
 }
@@ -882,7 +887,7 @@ static INT32 DrvExit()
 static INT32 DrvFrame()
 {
 // cheat code level
-//DrvZ80RAM0[0xF3A1-0xe000]=6;
+//DrvZ80RAM0[0xF3A1-0xe000]=4; // niveau 4 pour transparence
 // cheat code invincible
 DrvZ80RAM0[0xE905-0xe000]= 0x01;
 DrvZ80RAM0[0xF424-0xe000]= 0x0F;
@@ -978,12 +983,14 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 			}
 			else
 			{
-#ifdef DEBUG_PCM
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"      ",100,40+i*10);
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(PCM_HN_CNT_LOOP(pcm14[i])),100,40+i*10);
-#endif
+//#ifdef DEBUG_PCM
+//				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"      ",100,40+i*10);
+//				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(PCM_HN_CNT_LOOP(pcm14[i])),100,40+i*10);
+//#endif
 //				if(PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_CREATE)
 				{
+if(i==0)
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)" stopping pcm 0 !!!!     ",100,80);
 					PCM_MeStop(pcm14[i]);
 
 //					memset((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i)),0x00,RING_BUF_SIZE);
@@ -1099,13 +1106,13 @@ static void initLayers()
 static void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
+	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_SPR,OFF);
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
-
+	SCL_SetColRamOffset(SCL_NBG0, 3,OFF);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);	 // vbt ? remettre
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1177,7 +1184,7 @@ static void Set14PCM()
 			PCM_SetInfo(pcm14[i], &info[i]);
 // vbt ajout 
 //			PCM_SetPcmCmdBlockNo(pcm14[i], i);
-			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
+//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
 			PCM_ChangePcmPara(pcm14[i]);	
 		}
 		else
@@ -1192,7 +1199,7 @@ static void Set14PCM()
 			PCM_SetInfo(pcm14[i], &info[i]);
 // vbt : ajout
 //			PCM_SetPcmCmdBlockNo(pcm14[i], i);
-			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
+//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
 			PCM_ChangePcmPara(pcm14[i]);	
 		}
 // VBT : enleve la lecture en boucle !! merci zeromu!!!
@@ -1849,19 +1856,14 @@ static void DrvInitSaturn()
 //	nBurnFunction = PCM_VblIn;//smpVblIn;
 
 //3 nbg
-#ifdef BG_BANK
-	SS_SET_N0PRIN(5);
-#else
-	SS_SET_N0PRIN(7);
-#endif
-	SS_SET_N1PRIN(5);
-	SS_SET_N2PRIN(7);
-	SS_SET_S0PRIN(6);
+	SS_SET_N0PRIN(7); // window
+	SS_SET_N1PRIN(4); // bg
+	SS_SET_N2PRIN(6); // fg
+	SS_SET_S0PRIN(4); // sp
 
-//	SS_SET_N2SPRM(2);  // 1 for special priority
-//	ss_regs->specialcode=0x000e; // sfcode, upper 8bits, function b, lower 8bits function a
-//	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
-
+	SS_SET_N1SPRM(1);  // 1 for special priority
+	ss_regs->specialcode=0x000e; // sfcode, upper 8bits, function b, lower 8bits function a
+	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
 
 	initLayers();
 	initColors();
@@ -1945,7 +1947,17 @@ void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 	UINT32 flipx = attr & 0x80;
 
 	ofst = bg_map_lut[offs];
-	ss_map2[ofst] = color | flipx << 7; //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
+	if(color==0)
+	ss_map2[ofst] = (color | flipx << 7) | 0x3000; //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
+	else
+	ss_map2[ofst] = (color | flipx << 7); //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
 	ss_map2[ofst+1] = (code*4)+0x1000; 
+
+/*
+01:51:39<derek>	m_bg_tilemap8x4->set_transmask(0, 0xffff, 0x8000);  // split type 0 is totally transparent in front half 
+01:51:40<derek>	m_bg_tilemap8x4->set_transmask(1, 0xfff0, 0x800f);  // split type 1 has pens 4-15 transparent in front half 
+01:51:41<derek>	m_bg_tilemap8x4->set_transmask(2, 0xff00, 0x80ff);  // split type 1 has pens 8-15 transparent in front half 
+01:51:42<derek>	m_bg_tilemap8x4->set_transmask(3, 0xf000, 0x8fff);  // split type 1 has pens 12-15 transparent in front half 
+*/
 }
 //---------------------------------------------------------------------------------------------------------------
