@@ -4,6 +4,7 @@
 //#define SWITCH 1
 #include "d_mitchell.h"
 
+#define PCM_MUSIC 1
 #define nInterleave  32
 #define nBurnSoundLen 192
 #define nSegmentLength nBurnSoundLen / nInterleave
@@ -49,6 +50,14 @@ int ovlInit(char *szShortName)
 	if ((*nJoystickInputs & 0xc0) == 0xc0) {
 		*nJoystickInputs &= ~0xc0;
 	}
+}
+
+void vout(char *string, char *fmt, ...)                                         
+{                                                                               
+   va_list arg_ptr;                                                             
+   va_start(arg_ptr, fmt);                                                      
+   vsprintf(string, fmt, arg_ptr);                                              
+   va_end(arg_ptr);                                                             
 }
 
 /*static*/ void DrvMakeInputs()
@@ -385,11 +394,50 @@ int ovlInit(char *szShortName)
 		
 		case 0x03: {
 //			BurnYM2413Write(1, d);
+if(current_pcm!=d && (d==40||d==32||d==33||d==38))
+			{
+				current_pcm = d;
+				PCM_MeStop(pcmStream);
+				pcm_EndProcess(pcmStream);
+				PCM_DestroyStmHandle(pcmStream);
+				stmClose(stm);
+				char pcm_file[14];
+
+				vout(pcm_file, "%03d%s",(int)d,".PCM"); 
+				pcm_file[7]='\0';
+				PcmInfo info;
+
+				PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+				PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+				PCM_INFO_CHANNEL(&info) = 0x01;
+				PCM_INFO_SAMPLING_BIT(&info) = 16;
+				PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
+				PCM_INFO_FILE_SIZE(&info) = sfx_list[d].size;//SOUNDRATE*2;//0x4000;//214896;
+				
+				stm = stmOpen(pcm_file);
+				STM_ResetTrBuf(stm);
+
+				pcmStream = PCM_CreateStmHandle(&paraStream, stm);
+
+				PCM_SetPcmStreamNo(pcmStream, 1);
+				PCM_SetInfo(pcmStream, &info);
+
+				PcmWork		*work = *(PcmWork **)pcmStream;
+				PcmStatus	*st = &work->status;
+				st->need_ci = PCM_OFF;
+				STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
+				PCM_Start(pcmStream);
+			}
+
 			return;
 		}
 		
 		case 0x04: {
 //			BurnYM2413Write(0, d);
+/*if(d==0x40)
+			{
+while(1);
+			}*/
 			return;
 		}
 		
@@ -595,6 +643,11 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 
 	DrvDoReset();
 
+	stmInit();
+	stm = stmOpen("040.PCM");
+	STM_ResetTrBuf(stm);
+	SetStreamPCM();
+	PCM_Start(pcmStream);
 	return 0;
 }
 
@@ -753,7 +806,7 @@ static void dummy(void)
 	SprSpCmd *ss_spritePtr;
 	int i = 3;
 	
-	for (i = 3; i <131; i++) 
+	for (i = 3; i <nBurnSprites; i++) 
 	{
 		ss_spritePtr				= &ss_sprite[i];
 		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
@@ -773,6 +826,7 @@ static void dummy(void)
 	SS_SET_N0PRIN(6);
 	}
 	SPR_InitSlaveSH();
+
 //	initScrolling(OFF);
 //	drawWindow(0,0,0,0,0);
 //	drawWindow(0,240,0,2,66);
@@ -1002,17 +1056,27 @@ static void dummy(void)
 
 */
 	}
-			signed short *nSoundBuffer = (signed short *)0x25a20000;
-			MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nBurnSoundLen);
-			nSoundBufferPos+=nBurnSoundLen;
- 		  
-			if(nSoundBufferPos>=RING_BUF_SIZE/2)
-			{
-				PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-				nSoundBufferPos=0;
+#ifdef PCM_MUSIC
+	STM_ExecServer();
+
+	PCM_MeTask(pcmStream);
+//			if (STM_IsTrBufFull(stm) == TRUE) 
+	{
+		STM_ResetTrBuf(stm);
+	}
+#endif
+
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
+	MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nBurnSoundLen);
+	nSoundBufferPos+=nBurnSoundLen;
+  
+	if(nSoundBufferPos>=RING_BUF_SIZE/2)
+	{
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
+		nSoundBufferPos=0;
 //				PCM_Task(pcm); // bon emplacement
-			}
-			PCM_Task(pcm); 
+	}
+	PCM_Task(pcm); 
 
 #ifndef LOOP
 //	DrvRenderSpriteLayer();
@@ -1022,3 +1086,69 @@ static void dummy(void)
 #endif
 	return 0;
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void SetStreamPCM()
+{
+	PcmInfo 		info;
+	static PcmWork g_movie_work;
+	PcmStatus	*st;
+
+	PCM_PARA_WORK(&paraStream)			= (struct PcmWork *)&g_movie_work;
+
+	PCM_PARA_RING_ADDR(&paraStream)	= (Sint8 *)PCM_ADDR+0x40000+PCM_BLOCK_SIZE;
+	PCM_PARA_RING_SIZE(&paraStream)		= RING_BUF_SIZE;
+
+	PCM_PARA_PCM_ADDR(&paraStream)	= PCM_ADDR+PCM_BLOCK_SIZE;
+	PCM_PARA_PCM_SIZE(&paraStream)		= PCM_SIZE;
+
+	memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
+	st = &g_movie_work.status;
+	st->need_ci = PCM_OFF;
+
+	PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+	PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+	PCM_INFO_CHANNEL(&info) = 0x01;
+	PCM_INFO_SAMPLING_BIT(&info) = 16;
+
+	PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
+
+	PCM_INFO_FILE_SIZE(&info) = sfx_list[40].size;//SOUNDRATE*2;//0x4000;//214896;
+
+	STM_ResetTrBuf(stm);
+	pcmStream = PCM_CreateStmHandle(&paraStream, stm);
+	PCM_SetPcmStreamNo(pcmStream, 1);
+	PCM_SetInfo(pcmStream, &info);
+	PCM_ChangePcmPara(pcmStream);	
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void stmInit(void)
+{
+	STM_Init(12, 24, stm_work);
+//	STM_SetErrFunc(errStmFunc, NULL);
+
+	grp_hd = STM_OpenGrp();
+	if (grp_hd == NULL) {
+		return;
+	}
+	STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
+	STM_SetExecGrp(grp_hd);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+StmHn stmOpen(char *fname)
+{
+    Sint32 fid;
+	StmKey key;
+
+    fid = GFS_NameToId((Sint8 *)fname);
+	STM_KEY_FN(&key) = STM_KEY_CN(&key) = STM_KEY_SMMSK(&key) = 
+		STM_KEY_SMVAL(&key) = STM_KEY_CIMSK(&key) = STM_KEY_CIVAL(&key) =
+		STM_KEY_NONE;
+	return STM_OpenFid(grp_hd, fid, &key, STM_LOOP_READ); //STM_LOOP_NOREAD);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void stmClose(StmHn fp)
+{
+	STM_Close(fp);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+

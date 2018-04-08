@@ -503,6 +503,18 @@ Track MODE1
 				File PANG11.BIN;1
 					Source PANG\PANG11.BIN
 				EndFile
+				File 032.PCM;1
+					Source PANG\032.PCM
+				EndFile
+				File 033.PCM;1
+					Source PANG\033.PCM
+				EndFile
+				File 038.PCM;1
+					Source PANG\038.PCM
+				EndFile
+				File 040.PCM;1
+					Source PANG\040.PCM
+				EndFile
 		File    SDDRVS.TSK;1
 			Source .\SDDRVS.TSK
 		EndFile

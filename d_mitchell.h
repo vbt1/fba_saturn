@@ -25,6 +25,38 @@ static UINT16 *charaddr_lut = NULL; //[0x0800];
 static UINT16 cram_lut[4096];
 ///*static*/ unsigned char 	*bg_dirtybuffer;
 static unsigned char 	color_dirty = 0;
+static void SetStreamPCM();
+unsigned char current_pcm=255;
+UINT8   stm_work[STM_WORK_SIZE(12, 24)];
+//UINT8   stm_work[STM_WORK_SIZE(4, 20)];
+StmHn stm;
+StmGrpHn grp_hd;
+void stmInit(void);
+void stmClose(StmHn fp);
+StmHn stmOpen(char *fname);
+PcmHn 	pcmStream;
+PcmCreatePara	paraStream;
+
+#define PCM_BLOCK_SIZE 0x4000 // 0x2000
+#define	PCM_ADDR	((void*)0x25a20000)
+#define	PCM_SIZE	(4096L*2)				/* 2.. */
+#define PCM_COPY_SIZE (4096L*2)
+#define nBurnSoundLen 128
+#define SOUNDRATE   7680L
+
+SFX sfx_list[50] = {
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	
+/*032.PCM*/	{0,1075106,0},	// Hurry Up ! (Level 1)	
+/*033.PCM*/	{0,798182,0},	// Hurry Up !! (Level 2)	
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	
+/*038.PCM*/	{0,109804,0},	// Stage Cleared
+	{0,0,0},
+/*040.PCM*/	{0,600804,0},	// Stage 01-03 	(Mt. Fuji)
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+};
 
 static unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
 static unsigned char DrvInputPort1[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
