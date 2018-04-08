@@ -394,7 +394,7 @@ void vout(char *string, char *fmt, ...)
 		
 		case 0x03: {
 //			BurnYM2413Write(1, d);
-if(current_pcm!=d && (d==40||d==32||d==33||d==38))
+if(current_pcm!=d && (d==40||d==32||d==33||d==34||d==35||d==36||d==37||d==38))
 			{
 				current_pcm = d;
 				PCM_MeStop(pcmStream);

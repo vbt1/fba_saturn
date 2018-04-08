@@ -509,6 +509,18 @@ Track MODE1
 				File 033.PCM;1
 					Source PANG\033.PCM
 				EndFile
+				File 034.PCM;1
+					Source PANG\034.PCM
+				EndFile
+				File 035.PCM;1
+					Source PANG\035.PCM
+				EndFile
+				File 036.PCM;1
+					Source PANG\036.PCM
+				EndFile
+				File 037.PCM;1
+					Source PANG\037.PCM
+				EndFile
 				File 038.PCM;1
 					Source PANG\038.PCM
 				EndFile
