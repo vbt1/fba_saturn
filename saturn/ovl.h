@@ -28,6 +28,22 @@ extern unsigned int  nSoundBufferPos;
 
 static unsigned char *cache = NULL;
 
+typedef struct
+{
+	int position;
+	int size;
+	unsigned char loop;
+}SFX;
+
+typedef struct
+{
+	int track_position;
+	int position;
+	int ring_position;
+	int size;
+	unsigned char num;
+}PCM_INFO;
+
 //#define	REGADDR	    0x25F80000
 #define TVMD        (*(Uint16 *)0x25F80000)
 #define TVSTAT      (*(volatile Uint16 *)0x25F80004)

@@ -32,22 +32,6 @@ void errPcmFunc(void *obj, Sint32 ec);
 unsigned char current_pcm=255;
 char *itoa(int i);
 
-typedef struct
-{
-	int position;
-	int size;
-	unsigned char loop;
-}SFX;
-
-typedef struct
-{
-	int track_position;
-	int position;
-	int ring_position;
-	int size;
-	unsigned char num;
-}PCM_INFO;
-
 PCM_INFO pcm_info[14];
 
 SFX sfx_list[68]=
@@ -357,10 +341,6 @@ static Uint16 ChgPan(SndPan pan);
 
 PcmHn 	pcm14[14];
 PcmCreatePara	para[14];
-static volatile Uint8  *adr_com_block;
-static volatile Uint8 *adr_host_int_work;                /* ﾎｽﾄｲﾝﾀﾌｪｰｽﾜｰｸ先頭ｱﾄﾞﾚｽ格納*/
-static Uint32 intrflag;
-extern signed int pcm_cnt_vbl_in;
 
 UINT8   stm_work[STM_WORK_SIZE(12, 24)];
 //UINT8   stm_work[STM_WORK_SIZE(4, 20)];
@@ -369,163 +349,11 @@ StmGrpHn grp_hd;
 void stmInit(void);
 void stmClose(StmHn fp);
 StmHn stmOpen(char *fname);
-
-#define PCM_IS_LRLRLR(st)	((st)->info.data_type == PCM_DATA_TYPE_LRLRLR)
-#define PCM_IS_RLRLRL(st)	((st)->info.data_type == PCM_DATA_TYPE_RLRLRL)
-#define PCM_IS_LLLRRR(st)	((st)->info.data_type == PCM_DATA_TYPE_LLLRRR)
-#define PCM_IS_RRRLLL(st)	((st)->info.data_type == PCM_DATA_TYPE_RRRLLL)
-#define PCM_IS_ADPCM_SG(st)	((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SG)
-#define PCM_IS_ADPCM_SCT(st) ((st)->info.data_type == PCM_DATA_TYPE_ADPCM_SCT)
-#define PCM_IS_LR_MIX(st) 	(PCM_IS_LRLRLR(st) || PCM_IS_RLRLRL(st))
-#define PCM_IS_LR_BLOCK(st) (PCM_IS_LLLRRR(st) || PCM_IS_RRRLLL(st))
-#define PCM_IS_ADPCM(st) 	(PCM_IS_ADPCM_SG(st) || PCM_IS_ADPCM_SCT(st))
-#define PCM_IS_MONORAL(st)	((st)->info.channel == 0x01)
-#define PCM_IS_8BIT_SAMPLING(st)	((st)->info.sampling_bit <= 0x08)
-#define PCM_SAMPLE2BSIZE(st, sample)	\
-			(PCM_IS_8BIT_SAMPLING(st) ? (sample) : (sample) << 1)
-#define PCM_1CH2NCH(st, a)	(PCM_IS_MONORAL(st) ? (a) : (a) << 1)
-
-#define PCM_SCSP_FREQUENCY					(44100L)
-
-static const Sint8	logtbl[] = {
-/* 0 */		0, 
-/* 1 */		1, 
-/* 2 */		2, 2, 
-/* 4 */		3, 3, 3, 3, 
-/* 8 */		4, 4, 4, 4, 4, 4, 4, 4, 
-/* 16 */	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
-/* 32 */	6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
-			6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
-/* 64 */	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
-			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
-			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
-			7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
-/* 128 */	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-			8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
-	};
-
-/* 1,3,4,5,10 bit mask */
-#define PCM_MSK1(a)				((a)&0x0001)
-#define PCM_MSK3(a)				((a)&0x0007)
-#define PCM_MSK4(a)				((a)&0x000F)
-#define PCM_MSK5(a)				((a)&0x001F)
-#define PCM_MSK10(a)			((a)&0x03FF)
-
-/* オクターブ値の計算 */
-#define PCM_CALC_OCT(smpling_rate) 											\
-		((Sint32)logtbl[PCM_SCSP_FREQUENCY / ((smpling_rate) + 1)])
-
-/* シフト基準周波数の計算 */
-#define PCM_CALC_SHIFT_FREQ(oct)											\
-		(PCM_SCSP_FREQUENCY >> (oct))
-
-/* ＦＮＳの計算 */
-#define PCM_CALC_FNS(smpling_rate, shift_freq)								\
-		((((smpling_rate) - (shift_freq)) << 10) / (shift_freq))
-#define PCM_SOUND_BASE_ADDR		(0x25A00000)
-#define PCM_SYS_IF_TBL			(PCM_SOUND_BASE_ADDR + 0x400)
-#define PCM_SYS_IF_WORK			(PCM_SOUND_BASE_ADDR + 0x480)
-#define PCM_HOST_IF_WORK		(PCM_SOUND_BASE_ADDR + *(Uint32 *)(PCM_SYS_IF_TBL + 4))
-#define PCM_CMD_BLK(n)			(PCM_HOST_IF_WORK + 0x10 * (n))
-#define PCM_PLAY_ADDRESS(n)		(*(Uint8 *)(PCM_HOST_IF_WORK + 0xA0 + 2 * (n)))
-#define PCM_COMMAND_START_PCM				(0x85)
-#define SYS_GETSYSCK \
-        (*(volatile Uint32*)0x6000324)
-#define PCM_IS_26MHZ		(SYS_GETSYSCK == 0)
-#define PCM_IS_PAL			(*(volatile Uint16 *)0x25f80004 & 0x0001)
-#define PCM_CLK_CPU_NTSC26	(26874100L)
-#define PCM_CLK_CPU_NTSC28	(28636400L)
-#define PCM_CLK_CPU_PAL26	(26687500L)
-#define PCM_CLK_CPU_PAL28	(28437500L)
-#define PCM_CLK_CPU_NTSC	(PCM_IS_26MHZ ? PCM_CLK_CPU_NTSC26 : PCM_CLK_CPU_NTSC28)
-#define PCM_CLK_CPU_PAL		(PCM_IS_26MHZ ? PCM_CLK_CPU_PAL26 : PCM_CLK_CPU_PAL28)
-#define PCM_CLK_CPU			(PCM_IS_PAL ? PCM_CLK_CPU_PAL : PCM_CLK_CPU_NTSC)
-#define PCM_ROUND_SHIFT_R(a, n)		((((a) >> ((n) - 1)) + 1) >> 1)
-#define PCM_CLOCK_SCALE		(PCM_ROUND_SHIFT_R(PCM_CLK_CPU, 7 + 8))
-#define PCM_IS_16BIT_SAMPLING(st)	(((st)->info.sampling_bit <= 0x10) && \
-									((st)->info.sampling_bit > 0x08))
-#define PCM_SET_STMNO(para)													\
-		((Uint8)PCM_MSK3((para)->pcm_stream_no))
-#define PCM_SET_LEVEL_PAN(para)												\
-		((Uint8)((PCM_MSK3((para)->pcm_level) << 5) | PCM_MSK5((para)->pcm_pan)))
-#define PCM_SET_LEVEL_PAN2(level, pan)										\
-		((Uint8)((PCM_MSK3(level) << 5) | PCM_MSK5(pan)))
-#define PCM_SET_PITCH_WORD(oct, fns)										\
-		((Uint16)((PCM_MSK4(-(oct)) << 11) | PCM_MSK10(fns)))
-#define PCM_SET_PCM_ADDR(para) 	(((Uint32)((para)->pcm_addr)) >> 4)
-#define PCM_SET_PCM_SIZE(para) 	((para)->pcm_size)
-#define SND_PRM_NUM(prm)        ((prm).num)         /* PCMｽﾄﾘｰﾑ再生番号       */
-#define SND_PRM_LEV(prm)        ((prm).lev)         /* ﾀﾞｲﾚｸﾄ音Level         */
-#define SND_PRM_PAN(prm)        ((prm).pan)         /* ﾀﾞｲﾚｸﾄ音pan           */
-#define SND_PRM_PICH(prm)       ((prm).pich)        /* PICHﾜｰﾄﾞ              */
-#define SND_R_EFCT_IN(prm)      ((prm).r_efct_in)   /* Efect in select(右)   */
-#define SND_R_EFCT_LEV(prm)     ((prm).r_efct_lev)  /* Efect send Level(右)  */
-#define SND_L_EFCT_IN(prm)      ((prm).l_efct_in)   /* Efect in select(左)   */
-#define SND_L_EFCT_LEV(prm)     ((prm).l_efct_lev)  /* Efect send Level(左)  */
-#define SND_PRM_TL(prm)     	((prm).lev)  		/* Master Level			 */
-#define SND_PRM_MODE(prm)       ((prm).mode)        /* ｽﾃﾚｵ･ﾓﾉｸﾛ+ｻﾝﾌﾟﾘﾝｸﾞﾚｰﾄ */
-#define SND_PRM_SADR(prm)       ((prm).sadr)        /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｽﾀｰﾄｱﾄﾞﾚｽ*/
-#define SND_PRM_SIZE(prm)       ((prm).size)        /* PCMｽﾄﾘｰﾑﾊﾞｯﾌｧｻｲｽﾞ   */
-#define SND_PRM_OFSET(prm)      ((prm).ofset)       /* PCMｽﾄﾘｰﾑ再生開始ｵﾌｾｯﾄ */
-#define SND_RET_SET     0                       /* 正常終了                     */
-#define SND_RET_NSET    1                       /* 異常終了                     */
-#define COM_START_PCM      0x85                 /* PCM start                 */
-#define ADR_COM_DATA    (0x00)                  /* コマンド                  */
-#define ADR_PRM_DATA    (0x02)                  /* パラメータ                */
-#define ADR_HOST_INT    (0x04)                  /* ﾎｽﾄｲﾝﾀﾌｪｰｽﾜｰｸｱﾄﾞﾚｽ        */
-#define ADR_SND_MEM     ((Uint8 *)0x25a00000)   /* サウンドメモリ先頭アドレス*/
-#define ADR_SND_VECTOR  ((Uint8 *)0x25a00000)   /* サウンドベクタアドレス    */
-//#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ｼｽﾃﾑｲﾝﾀﾌｪｰｽ領域           */
-#define ADR_SYS_TBL     (ADR_SND_MEM + 0x400)   /* ｼｽﾃﾑｲﾝﾀﾌｪｰｽ領域           */
-#define SIZE_COM_BLOCK      (0x10)              /* ｺﾏﾝﾄﾞﾌﾞﾛｯｸｻｲｽﾞ          */
-#define MAX_NUM_COM_BLOCK   8                   /* ｺﾏﾝﾄﾞﾌﾞﾛｯｸ数              */
-
-
-#define MAX_ADR_COM_DATA                        /* 最大ｺﾏﾝﾄﾞﾃﾞｰﾀｱﾄﾞﾚｽ     */\
-    (adr_host_int_work + ADR_COM_DATA + (SIZE_COM_BLOCK * MAX_NUM_COM_BLOCK))
-#define NOW_ADR_COM_DATA                        /* 現在ｺﾏﾝﾄﾞﾃﾞｰﾀｱﾄﾞﾚｽ     */\
-    (adr_com_block + ADR_COM_DATA)
-#define HOST_SET_RETURN(ret)\
-    do{\
-		intrflag=0;\
-        return(ret);\
-    }while(FALSE)
-
-#define POKE_B(adr, data)   (*((volatile Uint8 *)(adr)) = ((Uint8)(data)))   /* ﾊﾞｲﾄ  */
-#define POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data))) /* ﾜｰﾄﾞ  */
-
-#define PEEK_L(adr)         (*((volatile Uint32 *)(adr)))                    /* ﾛﾝｸﾞ  */
-
-
-#define SET_COMMAND(set_com)\
-(POKE_W((adr_com_block + ADR_COM_DATA), (Uint16)(set_com) << 8)) /* コマンドセット   */
-
-#define SET_PRM(no, set_prm)\
-(POKE_B(adr_com_block + ADR_PRM_DATA + (no), (set_prm))) /* ﾊﾟﾗﾒｰﾀセット      */
 //---------------------------------------------------------------------------------------------------------------
 static void wait_vblank(void)
 {
      while((TVSTAT & 8) == 0);
      while((TVSTAT & 8) == 8);
-}
-
-//---------------------------------------------------------------------------------------------------------------
-static void pcm_Wait(int cnt)
-{
-	while (--cnt > 0) {
-		;
-	}
-}
-//---------------------------------------------------------------------------------------------------------------
-static Uint16 ChgPan(SndPan pan)
-{
-    return(((pan) < 0) ? (~(pan) + 0x10 + 1) : (pan));
 }
 //---------------------------------------------------------------------------------------------------------------
 #define INT_DIGITS 19

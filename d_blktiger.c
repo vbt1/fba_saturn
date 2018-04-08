@@ -60,9 +60,6 @@ int ovlInit(char *szShortName)
 	if (strcmp(nBurnDrvBlktiger.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvBlktiger,sizeof(struct BurnDriver));
 
-
-	adr_host_int_work = (Uint8 *)(ADR_SND_MEM + PEEK_L(ADR_SYS_TBL +  ADR_HOST_INT));	
-	adr_com_block = adr_host_int_work;
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs = (SclSysreg *)SS_REGS;
 	ss_regd = (SclDataset *)SS_REGD;
@@ -588,8 +585,8 @@ static INT32 MemIndex()
 	DrvPalRAM	= Next; Next += 0x000800;
 	DrvTxRAM		= Next; Next += 0x000800;
 	DrvBgRAM	= Next; Next += 0x004000;
-	DrvSprRAM	= Next; Next += 0x001200;
-	DrvSprBuf		= Next; Next += 0x001200;
+	DrvSprRAM	= Next; Next += 0x000200;
+	DrvSprBuf		= Next; Next += 0x000200;
 
 	DrvScreenLayout	= Next; Next += 0x000001;
 	DrvBgEnable		= Next; Next += 0x000001;
@@ -1000,7 +997,7 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)" stopping 
 		}
 #endif
 	draw_sprites();
-	memcpyl (DrvSprBuf, DrvSprRAM, 0x1200);
+	memcpyl (DrvSprBuf, DrvSprRAM, 0x200);
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1942,9 +1939,9 @@ static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned
 void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 {
 	UINT32 ofst;
-	UINT32 attr  = DrvBgRAM[(offs<<1) | 1];
+	UINT32 attr  = DrvBgRAM[(offs<<1) + 1];
 	UINT32 color = (attr >> 3) & 0x0f;
-	UINT32 code  = DrvBgRAM[(offs<<1)] | ((attr & 0x07) << 8); // + ((3-DrvVidBank[0])*0x400);
+	UINT32 code  = DrvBgRAM[(offs<<1)] + ((attr & 0x07) << 8); // + ((3-DrvVidBank[0])*0x400);
 	UINT32 flipx = attr & 0x80;
 
 	ofst = bg_map_lut[offs];
