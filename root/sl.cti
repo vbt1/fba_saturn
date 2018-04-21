@@ -527,6 +527,9 @@ Track MODE1
 				File 040.PCM;1
 					Source PANG\040.PCM
 				EndFile
+				File 041.PCM;1
+					Source PANG\041.PCM
+				EndFile
 		File    SDDRVS.TSK;1
 			Source .\SDDRVS.TSK
 		EndFile

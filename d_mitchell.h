@@ -27,6 +27,8 @@ static UINT16 cram_lut[4096];
 static unsigned char 	color_dirty = 0;
 static void SetStreamPCM();
 unsigned char current_pcm=255;
+char *itoa(int i);
+
 UINT8   stm_work[STM_WORK_SIZE(12, 24)];
 //UINT8   stm_work[STM_WORK_SIZE(4, 20)];
 StmHn stm;
@@ -58,7 +60,8 @@ SFX sfx_list[50] = {
 /*038.PCM*/	{0,109804,0},	// Stage Cleared
 /*039.PCM*/	{0,0,0},	// Ending (All Stages Cleared)
 /*040.PCM*/	{0,600804,0},	// Stage 01-03 	(Mt. Fuji)
-	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+/*041.PCM*/	{0,980870,0},	// Stage 04-06 	(Mt. Keirin (Guilin))
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 };
 
 static unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};

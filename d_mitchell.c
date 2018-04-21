@@ -255,6 +255,57 @@ void vout(char *string, char *fmt, ...)
 		}
 		return;
 	}
+
+	if(a==0xe172)
+	{
+		DrvZ80Ram[a-0xe000]=d;
+				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,130);	
+				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(d),80,130);	
+
+			if(current_pcm!=d && d >=32 && d <=50)
+			{
+				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,140);	
+				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(d),80,140);	
+
+				current_pcm = d;
+				PCM_MeStop(pcmStream);
+				pcm_EndProcess(pcmStream);
+				PCM_DestroyStmHandle(pcmStream);
+				stmClose(stm);
+				char pcm_file[14];
+
+				vout(pcm_file, "%03d%s",(int)d,".PCM"); 
+				pcm_file[7]='\0';
+				PcmInfo info;
+
+				PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+				PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+				PCM_INFO_CHANNEL(&info) = 0x01;
+				PCM_INFO_SAMPLING_BIT(&info) = 16;
+				PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
+				PCM_INFO_FILE_SIZE(&info) = sfx_list[d].size;//SOUNDRATE*2;//0x4000;//214896;
+				
+				stm = stmOpen(pcm_file);
+				STM_ResetTrBuf(stm);
+
+				pcmStream = PCM_CreateStmHandle(&paraStream, stm);
+
+				PCM_SetPcmStreamNo(pcmStream, 1);
+				PCM_SetInfo(pcmStream, &info);
+
+				PcmWork		*work = *(PcmWork **)pcmStream;
+				PcmStatus	*st = &work->status;
+				st->need_ci = PCM_OFF;
+				STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
+				PCM_Start(pcmStream);
+			}
+		return;
+	}
+
+	if (a >= 0xe100 && a <= 0xe1ff) 
+	{
+		DrvZ80Ram[a-0xe000]=d;
+	}
 }
 
 /*static*/ unsigned char __fastcall MitchellZ80PortRead(unsigned short a)
@@ -394,6 +445,7 @@ void vout(char *string, char *fmt, ...)
 		
 		case 0x03: {
 //			BurnYM2413Write(1, d);
+/*   xxxxxxxxxx
 if(current_pcm!=d && (d==40||d==32||d==33||d==34||d==35||d==36||d==37||d==38))
 			{
 				current_pcm = d;
@@ -428,7 +480,7 @@ if(current_pcm!=d && (d==40||d==32||d==33||d==34||d==35||d==36||d==37||d==38))
 				STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
 				PCM_Start(pcmStream);
 			}
-
+*/
 			return;
 		}
 		
@@ -537,7 +589,9 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 #endif
 	CZetMapArea(0xc800, 0xcfff, 2, DrvAttrRam                               );
 	CZetMapArea(0xe000, 0xffff, 0, DrvZ80Ram                                );
-	CZetMapArea(0xe000, 0xffff, 1, DrvZ80Ram                                );
+//	CZetMapArea(0xe000, 0xffff, 1, DrvZ80Ram                                );
+	CZetMapArea(0xe000, 0xe0ff, 1, DrvZ80Ram                               );
+	CZetMapArea(0xe200, 0xffff, 1, DrvZ80Ram+0x200                     );
 	CZetMapArea(0xe000, 0xffff, 2, DrvZ80Ram                                );
 	CZetMemEnd();
 //	CZetClose();
@@ -732,7 +786,7 @@ if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
-	scfg.dispenbl 		 = OFF;		  // VBT à commenter pour ne pas afficher l'écran de texte
+//	scfg.dispenbl 		 = OFF;		  // VBT à commenter pour ne pas afficher l'écran de texte
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 //	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
@@ -773,7 +827,8 @@ static void dummy(void)
 	nBurnLinescrollSize = 0x0;
 //	TVOFF;
 	SS_MAP2    = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT    = ss_font     = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
+//	SS_FONT    = ss_font     = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
+	SS_FONT    = ss_font     = (Uint16 *)SCL_VDP2_VRAM_B0;// remttre null
 	SS_MAP      = ss_map    = (Uint16 *)NULL;
 //	SS_FONT    = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = cache       =(Uint8  *)SCL_VDP2_VRAM_A0;
@@ -798,7 +853,7 @@ static void dummy(void)
 	initLayers();
 	initPosition();
 	initColors();
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"initColors done ",4,80);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"initColors done ",4,80);
 
 	//SCL_InitLineParamTb(&lp);
 	initSprites(352-1,240-1,0,0,-80,-16);
@@ -1151,4 +1206,32 @@ void stmClose(StmHn fp)
 	STM_Close(fp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#define INT_DIGITS 19
+char *itoa(int i)
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
+
+//PcmInfo 		info[14];
+//#undef pcm_AudioProcess
+//#define pcm_AudioProcess vbt_pcm_AudioProcess
+//-------------------------------------------------------------------------------------------------------------------------------------
+
 
