@@ -324,7 +324,6 @@ if(i==0)
 					PCM_MeStop(pcm14[0]);
 //FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_EndProcess pcm0 ",40,20);
 
-
 					pcm_EndProcess(pcm14[0]);
 //					PCM_GfsReset(pcm14[0]);
 
@@ -784,7 +783,7 @@ static INT32 DrvInit()
 	GFS_Load(fid, 0, (UINT8*)0x00200000, fileSize);
 
 	stmInit();
-	stm = stmOpen("048.PCM");
+	stm = stmOpen("000.PCM");
 	STM_ResetTrBuf(stm);
 	Set14PCM();
 
@@ -1173,7 +1172,7 @@ static void Set14PCM()
 		{
 //			int fid		= GFS_NameToId("048.pcm");	
 //			int fz = GetFileSize(fid);
-			PCM_INFO_FILE_SIZE(&info[i]) = sfx_list[48].size;//SOUNDRATE*2;//0x4000;//214896;
+			PCM_INFO_FILE_SIZE(&info[i]) = sfx_list[0].size;//SOUNDRATE*2;//0x4000;//214896;
 
 
 			STM_ResetTrBuf(stm);

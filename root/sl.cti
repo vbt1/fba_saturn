@@ -503,6 +503,9 @@ Track MODE1
 				File PANG11.BIN;1
 					Source PANG\PANG11.BIN
 				EndFile
+				File 000.PCM;1
+					Source PANG\000.PCM
+				EndFile
 				File 032.PCM;1
 					Source PANG\032.PCM
 				EndFile
@@ -3946,6 +3949,10 @@ EndFile
 
 				File SFX.ROM;1
 					Source BLKTIGER\SFX.ROM
+				EndFile
+
+				File 000.PCM;1
+					Source BLKTIGER\000.PCM
 				EndFile
 				File 033.PCM;1
 					Source BLKTIGER\033.PCM
