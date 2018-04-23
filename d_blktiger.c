@@ -661,7 +661,7 @@ static INT32 DrvGfxDecode()
 
 	UINT8 *tmp = (UINT8*)0x00200000; //malloc(0x40000);
 // texte
-	memcpy (tmp, DrvGfxROM0, 0x08000);
+	memcpyl (tmp, DrvGfxROM0, 0x08000);
 	GfxDecode4Bpp(0x0800, 2,  8,  8, Plane + 2, XOffs, YOffs, 0x080, tmp, DrvGfxROM0);
 
 	for (int i=0;i<0x10000;i++ )
@@ -674,7 +674,7 @@ static INT32 DrvGfxDecode()
 	}
 
 //bg
-	memcpy (tmp, DrvGfxROM1, 0x40000);
+	memcpyl (tmp, DrvGfxROM1, 0x40000);
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane + 0, XOffs, YOffs, 0x200, tmp, DrvGfxROM1);
 
 //	tile16x16toSaturn(0,0x0400, DrvGfxROM1);
@@ -690,7 +690,7 @@ static INT32 DrvGfxDecode()
 		else if ((DrvGfxROM1[i]& 0xf0)==0xf0) DrvGfxROM1[i] = DrvGfxROM1[i] & 0x0f;
 	}
 //sprites
-	memcpy (tmp, DrvGfxROM2, 0x40000);
+	memcpyl (tmp, DrvGfxROM2, 0x40000);
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane + 0, XOffs, YOffs, 0x200, tmp, DrvGfxROM2);
 
  	for (int i=0;i<0x40000;i++ )
@@ -1899,7 +1899,7 @@ static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned
 	{
 		unsigned char new_tile[128];
 		UINT8 *dpM = pDest + (c * 128);
-		memcpy(new_tile,dpM,128);
+		memcpyl(new_tile,dpM,128);
 		unsigned int i=0,j=0,k=0;
 
 		for (k=0;k<128;k+=64)

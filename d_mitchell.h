@@ -25,7 +25,13 @@ static UINT16 *charaddr_lut = NULL; //[0x0800];
 static UINT16 cram_lut[4096];
 ///*static*/ unsigned char 	*bg_dirtybuffer;
 static unsigned char 	color_dirty = 0;
+static void wait_vblank(void);
 static void SetStreamPCM();
+
+void errGfsFunc(void *obj, Sint32 ec);
+void errStmFunc(void *obj, Sint32 ec);
+void errPcmFunc(void *obj, Sint32 ec);
+
 unsigned char current_pcm=255;
 char *itoa(int i);
 

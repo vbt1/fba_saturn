@@ -794,7 +794,7 @@ if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
-	scfg.dispenbl 		 = OFF;		  // VBT à decommenter pour ne pas afficher l'écran de texte
+//	scfg.dispenbl 		 = OFF;		  // VBT à decommenter pour ne pas afficher l'écran de texte
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 //	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
@@ -831,12 +831,15 @@ static void dummy(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
+	GFS_SetErrFunc(errGfsFunc, NULL);
+	PCM_SetErrFunc(errPcmFunc, NULL);
+
 	nBurnSprites  = 131;
 	nBurnLinescrollSize = 0x0;
 //	TVOFF;
 	SS_MAP2    = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT    = ss_font     = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
-//	SS_FONT    = ss_font     = (Uint16 *)SCL_VDP2_VRAM_B0;// remttre null
+//	SS_FONT    = ss_font     = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
+	SS_FONT    = ss_font     = (Uint16 *)SCL_VDP2_VRAM_B0;// remttre null
 	SS_MAP      = ss_map    = (Uint16 *)NULL;
 //	SS_FONT    = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = cache       =(Uint8  *)SCL_VDP2_VRAM_A0;
@@ -1187,7 +1190,7 @@ static void SetStreamPCM()
 void stmInit(void)
 {
 	STM_Init(12, 24, stm_work);
-//	STM_SetErrFunc(errStmFunc, NULL);
+	STM_SetErrFunc(errStmFunc, NULL);
 
 	grp_hd = STM_OpenGrp();
 	if (grp_hd == NULL) {
@@ -1213,6 +1216,57 @@ StmHn stmOpen(char *fname)
 void stmClose(StmHn fp)
 {
 	STM_Close(fp);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void errStmFunc(void *obj, Sint32 ec)
+{
+//	VTV_PRINTF((VTV_s, "S:ErrStm %X %X\n", obj, ec));
+	char texte[50];
+	vout(texte, "ErrStm %X %X",obj, ec); 
+	texte[49]='\0';
+	do{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"plante stm                         ",40,130);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,130);
+	wait_vblank();
+
+	}while(1);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void errGfsFunc(void *obj, Sint32 ec)
+{
+//	VTV_PRINTF((VTV_s, "S:ErrGfs %X %X\n", obj, ec));
+	char texte[50];
+	vout(texte, "ErrGfs %X %X",obj, ec); 
+	texte[49]='\0';
+	do{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	wait_vblank();
+
+	}while(1);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void errPcmFunc(void *obj, Sint32 ec)
+{
+//	VTV_PRINTF((VTV_s, "S:ErrPcm %X %X\n", obj, ec));
+	char texte[50];
+	vout(texte, "ErrPcm %X %X",obj, ec); 
+	texte[49]='\0';
+//	do{
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté pcm",70,130);
+
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+	wait_vblank();
+
+//	}while(1);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void wait_vblank(void)
+{
+     while((TVSTAT & 8) == 0);
+     while((TVSTAT & 8) == 8);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #define INT_DIGITS 19
