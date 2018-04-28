@@ -161,6 +161,10 @@ Track MODE1
 				Source D_SOLOMN.BIN
 			EndFile
 
+			File D_SIDARM.BIN;1
+				Source D_SIDARM.BIN
+			EndFile
+
 			Directory BOMBJA
 				File 01H03T.BIN;1
 					Source BOMBJA\01H03T.BIN
@@ -4809,6 +4813,90 @@ EndFile
 				EndFile
 				File KANJI.ROM;1
 					Source MSX\KANJI.ROM
+				EndFile
+			EndDirectory
+
+			Directory SIDARM
+				File 63S081.3J;1
+					Source SIDARM\63S081.3J
+				EndFile
+				File 63S141.11H;1
+					Source SIDARM\63S141.11H
+				EndFile
+				File 63S141.15H;1
+					Source SIDARM\63S141.15H
+				EndFile
+				File 63S141.16H;1
+					Source SIDARM\63S141.16H
+				EndFile
+				File A_04K.ROM;1
+					Source SIDARM\A_04K.ROM
+				EndFile
+				File A_10J.ROM;1
+					Source SIDARM\A_10J.ROM
+				EndFile
+				File A_12E.ROM;1
+					Source SIDARM\A_12E.ROM
+				EndFile
+				File A_14E.ROM;1
+					Source SIDARM\A_14E.ROM
+				EndFile
+				File B_03D.ROM;1
+					Source SIDARM\B_03D.ROM
+				EndFile
+				File B_11A.ROM;1
+					Source SIDARM\B_11A.ROM
+				EndFile
+				File B_11B.ROM;1
+					Source SIDARM\B_11B.ROM
+				EndFile
+				File B_11J.ROM;1
+					Source SIDARM\B_11J.ROM
+				EndFile
+				File B_12A.ROM;1
+					Source SIDARM\B_12A.ROM
+				EndFile
+				File B_12B.ROM;1
+					Source SIDARM\B_12B.ROM
+				EndFile
+				File B_13A.ROM;1
+					Source SIDARM\B_13A.ROM
+				EndFile
+				File B_13B.ROM;1
+					Source SIDARM\B_13B.ROM
+				EndFile
+				File B_13D.ROM;1
+					Source SIDARM\B_13D.ROM
+				EndFile
+				File B_13E.ROM;1
+					Source SIDARM\B_13E.ROM
+				EndFile
+				File B_13F.ROM;1
+					Source SIDARM\B_13F.ROM
+				EndFile
+				File B_13G.ROM;1
+					Source SIDARM\B_13G.ROM
+				EndFile
+				File B_14A.ROM;1
+					Source SIDARM\B_14A.ROM
+				EndFile
+				File B_14B.ROM;1
+					Source SIDARM\B_14B.ROM
+				EndFile
+				File B_14D.ROM;1
+					Source SIDARM\B_14D.ROM
+				EndFile
+				File B_14E.ROM;1
+					Source SIDARM\B_14E.ROM
+				EndFile
+				File B_14F.ROM;1
+					Source SIDARM\B_14F.ROM
+				EndFile
+				File B_14G.ROM;1
+					Source SIDARM\B_14G.ROM
+				EndFile
+				File SA03.BIN;1
+					Source SIDARM\SA03.BIN
 				EndFile
 			EndDirectory
 
