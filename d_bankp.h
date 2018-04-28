@@ -6,18 +6,13 @@
 #include "saturn/ovl.h"
 #include "raze/raze.h"
 #define SOUND_LEN 256
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
-/*static*/ //UINT8 *SaturnMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
 /*static*/ UINT8 *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
 /*static*/ int *Palette = NULL;
 /*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvReset=0, DrvDips=0;
 /*static*/ unsigned char /*scroll_x,*/ priority=0, flipscreen=0, interrupt_enable=0;
-static void make_lut(void);
-static void DrvInitSaturn();
-
 
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);

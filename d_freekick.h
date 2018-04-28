@@ -9,15 +9,12 @@
 #include "8255ppi.h"
 
 #define nBurnSoundLen 128
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ INT32 DrvInit();
 /*static*/ INT32 DrvFreeKickInit();
 /*static*/ INT32 pbillrdInit();
 /*static*/ INT32 DrvExit();
 /*static*/ INT32 DrvFrame();
 /*static*/ INT32 DrvDraw();
-/*static*/ void DrvInitSaturn();
-/*static*/ void make_lut(void);
 
 /*static*/ UINT8 DrvJoy1[8];
 /*static*/ UINT8 DrvJoy2[8];

@@ -5,7 +5,6 @@
 #include "saturn/ovl.h"
 #include "raze/raze.h"
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 INT32 BurnTimerUpdate(INT32 *nCycles);
 void BurnTimerEndFrame(INT32 *nCycles);
 //INT32 BurnTimerUpdate(INT32 nCycles);
@@ -15,8 +14,6 @@ static INT32 DrvFMFrame();
 static INT32 DrvExit();
 static INT32 DrvFrame();
 static INT32 DrvDraw();
-static void make_lut(void);
-static void DrvInitSaturn();
 static void draw_sprites();
 static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 static void Set14PCM();

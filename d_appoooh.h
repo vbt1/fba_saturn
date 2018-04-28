@@ -6,14 +6,11 @@
 #include "snd/sn76496.h"
 #include "snd/msm5205.h"
 #define SOUND_LEN 128
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static INT32 DrvInit();
 static INT32 DrvRobowresInit();
 static INT32 DrvExit();
 static INT32 DrvFrame();
 static void DrvDraw();
-static void make_lut(void);
-static void DrvInitSaturn();
 static void Set4PCM();
 void dummy();
 

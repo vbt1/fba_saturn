@@ -8,7 +8,6 @@
 //#include "saturn/sc_saturn.h"
 
 #define nBurnSoundLen 128
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
 /*static*/// unsigned char 	bg_dirtybuffer[2048];
 UINT16 map_offset_lut[1024];
@@ -24,10 +23,8 @@ static int DrvGfxDecode();
 static int DrvFrame();
 static int DrvExit();
 static int DrvInit();
-static void DrvInitSaturn();
 static void Set6PCM();
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
-void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 
 /*static*/ struct BurnInputInfo DrvInputList[] = {

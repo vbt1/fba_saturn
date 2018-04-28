@@ -12,7 +12,6 @@
 UINT16 *map_offset_lut = NULL;
 UINT16 *mapbg_offset_lut = NULL;
 UINT16 *cram_lut = NULL;
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static UINT32 CalcCol(UINT16 nColour);
 static INT32 DrvInit();
 static INT32 DrvZInit();

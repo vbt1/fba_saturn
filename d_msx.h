@@ -16,14 +16,11 @@
 
 #define nBurnSoundLen 128  // div par 2 car utilisation integer
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
-
 static void DrvFrame();
 static int DrvExit();
 static INT32 BasicDrvInit();
 static int DrvInit();
 static void DrvDoReset();
-static void DrvInitSaturn();
 
 extern int file_id;
 extern int file_max;

@@ -8,15 +8,12 @@
 //#include "saturn/sc_saturn.h"
 //#include "burn_ym2413.h"
 //#include "msm6295.h"
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int DrvFrame();
 /*static*/ int DrvExit();
 /*static*/ int SpangInit();
 /*static*/ int PangInit();
-/*static*/ void DrvInitSaturn();
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 ///*static*/ Uint16 *cram_lut;
-/*static*/ void make_lut(void);
 /*static*/ void DrvCalcPalette();
 /*static*/ //unsigned char 	bg_dirtybuffer[4096];
 static UINT16 map_lut[256];
