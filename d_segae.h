@@ -15,7 +15,6 @@
 /*static*/ UINT16 *map_lut = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ INT32 DrvFantzn2Init();
 /*static*/ INT32 DrvOpaopaInit();
 /*static*/ INT32 DrvHangonJrInit();
@@ -25,8 +24,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ INT32 DrvAstroflInit();
 /*static*/ INT32 DrvExit();
 /*static*/ INT32 DrvFrame();
-/*static*/ void DrvInitSaturn(UINT8 game);
-/*static*/ void make_lut();
+/*static*/ void DrvInitSaturnS(UINT8 game);
 /*static*/ void update_bg(UINT8 chip, UINT32 index);
 /*static*/ void update_sprites(UINT8 chip, UINT32 index);
 void SCL_SetLineParamNBG1();

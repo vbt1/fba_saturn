@@ -6,7 +6,6 @@
 #include "saturn/ovl.h"
 
 #define SOUND_LEN 128
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
 /*static*/ void updateSound();
 /*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8];
@@ -38,7 +37,6 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ INT32 watchdog;
 /*static*/ UINT8 ninjakun_ioctrl;
 
- void DrvInitSaturn();
  void cleanSprites();
 ///*static*/ int flipscreen, vblank;
 /*static*/ int vblank;

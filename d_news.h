@@ -10,9 +10,7 @@
 
 #define SOUND_LEN 192
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ void initColors();
-/*static*/ void DrvInitSaturn();
 /*static*/ int NewsFrame();
 /*static*/ int NewsInit();
 /*static*/ int NewsExit();

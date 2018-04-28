@@ -9,8 +9,6 @@
 
 UINT16 *map_offset_lut = NULL;
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
-/*static*/ void DrvInitSaturn();
 /*static*/ INT32 WizInit();
 /*static*/ INT32 KungfutInit();
 /*static*/ INT32 StingerInit();
@@ -21,7 +19,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ INT32  DrvFrame();
 ///*static*/ INT32  DrvDraw();
 
-/*static*/ void make_lut(int rotated);
+/*static*/ void make_lut_r(int rotated);
 INT32 (*DrvDraw)();
 
 /*static*/ UINT8 *AllMem = NULL;

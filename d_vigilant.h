@@ -18,7 +18,6 @@ PcmHn 			pcm8[8];
 unsigned int *vbmap[4];
 int bg=-1;
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 int DrvInit();
 int DrvExit();
 void DrvFrame();

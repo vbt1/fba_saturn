@@ -19,7 +19,6 @@
 typedef void (*write_func)(unsigned short a, UINT8 d);
 /*static*/ write_func p[36];
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int System1CalcPalette();
 /*static*/ int System1Exit();
 /*static*/ int System1Frame();
@@ -43,13 +42,11 @@ sprite_collision sprites_collision[32];
 /*static*/ void updateCollisions(int *values);
 void memcpyl(void *, void *, int);
 void initScrolling(Uint8 enabled,void *address);
-void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase);
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 void *memset4_fast(void *, long, size_t);
-void DrvInitSaturn();
 
 /*static*/ UINT8 System1InputPort0[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 System1InputPort1[8]    = {0, 0, 0, 0, 0, 0, 0, 0};

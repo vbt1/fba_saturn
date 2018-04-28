@@ -794,7 +794,7 @@ DrvRAM[0xC222-0xc000]=0x99;
 
 /*static*/ INT32 DrvInit(UINT8 game)
 {
-	DrvInitSaturn(game);
+	DrvInitSaturnS(game);
 
 	AllMem = NULL;
 	MemIndex();
@@ -1014,7 +1014,7 @@ DrvRAM[0xC222-0xc000]=0x99;
 	ss_reg->n1_move_y = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn(UINT8 game)
+/*static*/ void DrvInitSaturnS(UINT8 game)
 {
 	SPR_InitSlaveSH();
 
@@ -1318,7 +1318,7 @@ Bit 08 - 00 : Pattern Index
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_lut()
+static void make_lut()
 {
 	make_name_lut();
 	make_bp_lut();

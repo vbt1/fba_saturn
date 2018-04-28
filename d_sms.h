@@ -6,10 +6,8 @@
 #include "sega_int.h"
 #include "raze/raze.h"
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static UINT8 update_input1(void);
 static UINT8 update_input2(void);
-static void make_lut();
 void memcpyl(void *, void *, int);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
 void *memset4_fast(void *, long, size_t);

@@ -525,7 +525,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
-	make_lut(rotated);
+	make_lut_r(rotated);
 
 	{
 		if (RomLoadCallback()) return 1;
@@ -707,7 +707,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_lut(int rotated)
+/*static*/ void make_lut_r(int rotated)
 {
 	if (rotated)
 	{

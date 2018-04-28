@@ -13,7 +13,6 @@
 #include "raze\raze.h"
 #endif
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 static int DrvInit();
 static int DrvExit();
 static int DrvFrame();

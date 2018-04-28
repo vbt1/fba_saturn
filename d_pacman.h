@@ -10,9 +10,6 @@
 //}
 #include "saturn/ovl.h"
 
-
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
-
 /*static*/ INT32 mspacmanInit();
 /*static*/ INT32 puckmanInit();
 /*static*/// INT32 pengoInit();
@@ -22,7 +19,6 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ INT32 DrvFrame();
 /*static*/ INT32 DrvDraw();
 /*static*/ INT32 DrvDrawPacMan();
-/*static*/ void make_lut(void);
 
 /*static*/ UINT8 *AllMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;

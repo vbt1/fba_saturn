@@ -7,15 +7,11 @@
 
 #define nBurnSoundLen 128
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
-
 INT32 SolomonInit();
 INT32 SolomonExit();
 INT32 SolomonFrame();
 void updateSound();
 void CZetRunSlave(int *nCycles);
-static void DrvInitSaturn();
-static void make_lut(void);
 
 /*static*/ UINT8 SolomonInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 SolomonInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};

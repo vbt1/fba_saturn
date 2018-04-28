@@ -10,9 +10,7 @@
 #define	true	1
 #define	false	0
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 void updateSound();
-static void make_lut(void);
 static INT32 tigerhInit();
 static INT32 tigerhExit();
 static INT32 tigerhFrame();

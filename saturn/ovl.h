@@ -7,6 +7,16 @@ extern Uint32 *shared;
 //static int nBurnSoundLen;
 //static Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
 extern unsigned int  nSoundBufferPos;
+
+int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
+void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest);
+void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
+
+static void initLayers();
+static void initColors();
+static void DrvInitSaturn();
+static void make_lut(void);
+
 /*static*/ SclNorscl *ss_reg = NULL;
 /*static*/ SclSysreg	*ss_regs = NULL;
 /*static*/ SclDataset	*ss_regd = NULL;

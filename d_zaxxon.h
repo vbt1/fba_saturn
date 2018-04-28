@@ -5,7 +5,6 @@
 #include "saturn/ovl.h"
 #include "snd/sn76496.h"
 
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 int CongoInit();
 int DrvInit();
 int ZaxxonbInit();
@@ -13,7 +12,6 @@ int sZaxxonInit();
 int DrvExit();
 int DrvFrame();
 int DrvDraw();
-void make_lut();
 
 /*static*/ UINT8 *SaturnMem = NULL;
 /*static*/ UINT8 *bitmap = NULL;
