@@ -26,10 +26,6 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int DrvInit();
 /*static*/ void make_cram_lut(void);
 /*static*/ void DrvCalcPalette();
-void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
-/*static*/ void DrvInitSaturn();
-void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
-void memcpyl(void *, void *, int);
 /*static*/ Uint16 cram_lut[32768*2];
 
 #ifdef CACHE

@@ -25,7 +25,6 @@ static int DrvExit();
 static int DrvInit();
 static void Set6PCM();
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
-void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 
 /*static*/ struct BurnInputInfo DrvInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy3 + 7,	"p1 coin"  },

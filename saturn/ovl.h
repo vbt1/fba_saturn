@@ -10,7 +10,12 @@ extern unsigned int  nSoundBufferPos;
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest);
+void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
+void initScrolling(Uint8 enabled,void *address);
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
+void memcpyl(void *, void *, int);
+void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
+void  FNT_Print256_2bppSel(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
 
 static void initLayers();
 static void initColors();

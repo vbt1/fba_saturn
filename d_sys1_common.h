@@ -40,12 +40,9 @@ sprite_collision sprites_collision[32];
 /*static*/ UINT8 flipscreen=0;
 /*static*/ void make_cram_lut(void);
 /*static*/ void updateCollisions(int *values);
-void memcpyl(void *, void *, int);
-void initScrolling(Uint8 enabled,void *address);
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase);
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase);
-void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 void *memset4_fast(void *, long, size_t);
 
 /*static*/ UINT8 System1InputPort0[8]    = {0, 0, 0, 0, 0, 0, 0, 0};

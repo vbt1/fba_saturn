@@ -17,9 +17,7 @@ void SN76496Update(int Num, short* pSoundBuf, int Length);
 void SN76496Write(int Num, int Data);
 void SN76489Init(int Num, int Clock, int SignalAdd);
 void cleanSprites();
-void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
-void initScrolling(Uint8 enabled,void *address);
 #ifdef CACHE
 /*static*/ unsigned char 	bg_dirtybuffer[2048];
 #endif

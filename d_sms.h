@@ -8,7 +8,6 @@
 
 static UINT8 update_input1(void);
 static UINT8 update_input2(void);
-void memcpyl(void *, void *, int);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
 void *memset4_fast(void *, long, size_t);
 UINT8 SMSJoy1[1]={NULL};
@@ -141,9 +140,6 @@ void PSG_Write(unsigned int data);
 Sint32 getNbFiles();
 Sint32 GetFileSize(int file_id);
 static void load_rom(void);
-static void initScrolling(Uint8 enabled,void *address);
-void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
-void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 
 //INT32 SMSScan(INT32 nAction, INT32 *pnMin);
 /* Return values from the V counter */
