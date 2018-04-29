@@ -11,7 +11,7 @@ int ovlInit(char *szShortName)
 		"sidarm", NULL,
 		"Side Arms - Hyper Dyne (World, 861129)",
 		sidearmsRomInfo, sidearmsRomName, SidearmsInputInfo, SidearmsDIPInfo,
-		SidearmsInit, DrvExit, DrvFrame, SidearmsDraw
+		SidearmsInit, DrvExit, DrvFrame, NULL
 	};
 
 	if (strcmp(nBurnDrvSidearms.szShortName, szShortName) == 0) 
@@ -37,6 +37,14 @@ int ovlInit(char *szShortName)
 	b |= b << 4;
 
 	DrvPalette[offset] = BurnHighCol(r,g,b,0);
+
+	if(offset >=0x300)
+	{
+// fg	 offset 300
+		unsigned short position = remap4to16_lut[offset&0xff];
+		colBgAddr2[position] = BurnHighCol(r,g,b,0);//DrvPalette[offset];
+	}
+
 }
 
 /*static*/ void bankswitch(INT32 data)
@@ -77,7 +85,7 @@ int ovlInit(char *szShortName)
 		{
 			// coin counters data & 0x01, data & 0x02
 			// coin lockout data & 0x04, data & 0x08
-
+#if 0
 			if (data & 0x10) {
 				CZetClose();
 				CZetOpen(1);
@@ -85,7 +93,7 @@ int ovlInit(char *szShortName)
 				CZetClose();
 				CZetOpen(0);
 			}
-
+#endif
 			if (starfield_enable != (data & 0x20)) {
 				starfield_enable = data & 0x20;
 				hflop_74a = 1;
@@ -179,7 +187,7 @@ int ovlInit(char *szShortName)
 		{
 			// coin counters data & 0x01, data & 0x02
 			// coin lockout data & 0x04, data & 0x08
-
+#if 0
 			if (data & 0x10) {
 				CZetClose();
 				CZetOpen(1);
@@ -187,7 +195,7 @@ int ovlInit(char *szShortName)
 				CZetClose();
 				CZetOpen(0);
 			}
-
+#endif
 			character_enable = data & 0x40;
 			flipscreen = data & 0x80;
 		}
@@ -435,6 +443,12 @@ inline /*static*/ double DrvGetTime()
 
 	RamEnd			= Next;
 
+	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
+	map_lut				= Next; Next += 256 * sizeof (UINT16);
+	map_offset_lut	= Next; Next += 4096 * sizeof (UINT16);
+	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
+	charaddr_lut		= Next; Next += 0x800 * sizeof (UINT16);
+
 	MemEnd			= Next;
 
 	return 0;
@@ -454,18 +468,28 @@ inline /*static*/ double DrvGetTime()
 //		return;
 //	}
 	UINT8 *tmp = (UINT8*)0x00200000; 
-
+	memset(tmp,0x00,0x40000);
 	memcpyl (tmp, DrvGfxROM0, 0x04000);
-
+// text
 	GfxDecode4Bpp(0x0400, 2,  8,  8, Plane0, XOffs0, YOffs, 0x080, tmp, DrvGfxROM0);
 
-	memcpyl (tmp, DrvGfxROM1, 0x80000);
+	for (int i=0;i<0x8000;i++ )
+	{
+		if ((DrvGfxROM0[i]& 0x03)     ==0x00)DrvGfxROM0[i] = DrvGfxROM0[i] & 0x30 | 0x3;
+		else if ((DrvGfxROM0[i]& 0x03)==0x03) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x30;
 
-	GfxDecode4Bpp(0x0400, 4, 32, 32, Plane1, XOffs1, YOffs, 0x800, tmp, DrvGfxROM1);
+		if ((DrvGfxROM0[i]& 0x30)       ==0x00)DrvGfxROM0[i] = 0x30 | DrvGfxROM0[i] & 0x03;
+		else if ((DrvGfxROM0[i]& 0x30)==0x30) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x03;
+	}	
+// bg	
+	memcpyl (tmp, DrvGfxROM1, 0x40000);
 
+//	GfxDecode4Bpp(0x0400, 4, 32, 32, Plane1, XOffs1, YOffs, 0x800, tmp, DrvGfxROM1);
+// sprites
 	memcpyl (tmp, DrvGfxROM2, 0x40000);
 
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane2, XOffs0, YOffs, 0x200, tmp, DrvGfxROM2);
+//	tile16x16toSaturn(1,0x0800, DrvGfxROM2);
 
 //	BurnFree (tmp);
 	tmp = NULL;
@@ -478,11 +502,19 @@ inline /*static*/ double DrvGetTime()
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"SidearmsInit       ",24,30);
+
+	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) 
+	{
+		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc failed   ",24,30);
+		return 1;
+	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
-
+	make_lut();
 	{
+		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom     ",24,30);
+
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x08000,  1, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  2, 1)) return 1;
@@ -512,9 +544,11 @@ inline /*static*/ double DrvGetTime()
 		if (BurnLoadRom(DrvGfxROM2 + 0x38000, 21, 1)) return 1;
 
 		if (BurnLoadRom(DrvTileMap + 0x00000, 22, 1)) return 1;
+		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvGfxDecode     ",24,30);
 
 		DrvGfxDecode();
 	}
+		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit              ",24,30);
 
 	CZetInit(1);
 	CZetOpen(0);
@@ -564,7 +598,7 @@ inline /*static*/ double DrvGetTime()
 
 	DrvDoReset(1);
 
-	drawWindow(0,224,240,0,64);
+	drawWindow(0,224,240,0,0);
 	return 0;
 }
 
@@ -855,11 +889,11 @@ inline /*static*/ double DrvGetTime()
 		INT32 code = DrvVidRAM[0x000 + offs] | ((attr & 0xc0) << 2);
 		INT32 color = attr & 0x3f;
 
-		sy = ((offs >> 5) & 0x1f)<<7;
-		sx = (offs & 0x1f)<<1;
-		int x = sy | sx;
+		 sx		= offs & 0x3f;
+		 sy		= ((offs<<1) & (~0x3f));
+		int x = map_offset_lut[offs];
 
-		ss_map[x] = (attr & 0x1f);
+		ss_map[x] = color; //(attr & 0x1f);
 		ss_map[x+1] =code; 
 //		Render8x8Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 2, 3, 0x300, DrvGfxROM0);
 	}
@@ -867,6 +901,8 @@ inline /*static*/ double DrvGetTime()
 
 /*static*/ void draw_sprites_region(INT32 start, INT32 end)
 {
+	UINT32 delta	= (start/32)+3;
+
 	for (INT32 offs = end - 32; offs >= start; offs -= 32)
 	{
 		INT32 sy = DrvSprBuf[offs + 2];
@@ -876,6 +912,18 @@ inline /*static*/ double DrvGetTime()
 		INT32 color = attr & 0xf;
 		INT32 code  = DrvSprBuf[offs] + ((attr << 3) & 0x700);
 		INT32 sx    = DrvSprBuf[offs + 3] + ((attr << 4) & 0x100);
+
+			ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP); // | flipx;
+			ss_sprite[delta].drawMode	= ( ECD_DISABLE | COMPO_REP);
+
+			ss_sprite[delta].ax			= sx;
+			ss_sprite[delta].ay			= sy;
+			ss_sprite[delta].charSize		= 0x210;
+			ss_sprite[delta].color			    = color<<4;//Colour<<4;
+			ss_sprite[delta].charAddr		= 0x220+(code<<4);
+
+			delta++;
+
 
 //		Render16x16Tile_Mask_Clip(pTransDraw, code, sx - 64, sy - 16, color, 4, 0x0f, 0x200, DrvGfxROM2);
 	}
@@ -980,15 +1028,17 @@ inline /*static*/ double DrvGetTime()
 
 /*static*/ INT32 DrvFrame()
 {
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Drvframe   ",24,40);
+
 	watchdog++;
 	if (watchdog > 180 && enable_watchdog) {
 		DrvDoReset(0);
 	}
-
+/*
 	if (DrvReset) {
 		DrvDoReset(1);
 	}
-
+*/
 	CZetNewFrame();
 
 	{
@@ -1020,7 +1070,7 @@ inline /*static*/ double DrvGetTime()
 		if (i == 276) CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 		nSegment = CZetTotalCycles();
 		CZetClose();
-
+#if 0
 		CZetOpen(1);
 		if (is_whizz) {
 			nCyclesDone[1] += CZetRun(nSegment - CZetTotalCycles());
@@ -1037,8 +1087,9 @@ inline /*static*/ double DrvGetTime()
 //			BurnTimerUpdate(nSegment);
 		}
 		CZetClose();
+#endif
 	}
-
+#if 0
 	CZetOpen(1);
 
 	if (is_whizz == 0) {
@@ -1059,11 +1110,11 @@ inline /*static*/ double DrvGetTime()
 	}
 */
 	CZetClose();
-	
+#endif	
 //	if (pBurnDraw) {
 //		BurnDrvRedraw();
 //	}
-
+	SidearmsDraw();
 	memcpy (DrvSprBuf, DrvSprRAM, 0x1000);
 
 	return 0;
@@ -1182,9 +1233,9 @@ static void DrvInitSaturn()
 	SS_SET_N2PRIN(6); // fg
 	SS_SET_S0PRIN(4); // sp
 
-	SS_SET_N1SPRM(1);  // 1 for special priority
-	ss_regs->specialcode=0x000e; // sfcode, upper 8bits, function b, lower 8bits function a
-	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
+//	SS_SET_N1SPRM(1);  // 1 for special priority
+//	ss_regs->specialcode=0x000e; // sfcode, upper 8bits, function b, lower 8bits function a
+//	ss_regs->specialcode_sel=0; // sfsel, bit 0 for nbg0 // 1 sfcs, bit 0 = 1 for funcion code b, 0 for function code a
 
 	initLayers();
 	initColors();
@@ -1192,14 +1243,15 @@ static void DrvInitSaturn()
 
 	SCL_Open();
 //	ss_reg->n1_move_y =  16 <<16;
-	ss_reg->n2_move_y =  16;//(0<<16) ;
+	ss_reg->n2_move_y =  16;
+	ss_reg->n2_move_x =  80;//(0<<16) ;
 //	ss_reg->n2_move_x =  8;//(0<<16) ;
 	SCL_Close();
 
 
 	memset((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x8000);
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
-	memset((Uint8 *)ss_map2,0x11,0x8000);
+//	memset((Uint8 *)ss_map2,0x11,0x8000);
 //	memset((Uint8 *)ss_map3,0,0x2000);
 //	memset((Uint8 *)bg_map_dirty,1,0x4000);
 	SprSpCmd *ss_spritePtr;
@@ -1214,7 +1266,70 @@ static void DrvInitSaturn()
 	}
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void make_lut(void)
+{
+    UINT32 j,mx, my;
 
+	unsigned int i,delta=0;
+
+   	for (i = 0; i < 4096;i++) 
+	{
+		UINT8 r,g,b;
+//	UINT16 data = (DrvPalRAM[offset]) | (DrvPalRAM[offset | 0x400] << 8);
+
+		r = (i >> 4) & 0x0f;
+		g = (i >> 0) & 0x0f;
+		b = (i >> 8) & 0x0f;
+
+		r |= r << 4;
+		g |= g << 4;
+		b |= b << 4;
+		cram_lut[i] = RGB(r>>3, g>>3, b>>3);
+	}
+
+	for (i = 0; i < 256;i++) 
+	{
+		if ((i%4)==0)
+		{
+			remap4to16_lut[i] = delta+3;
+		}
+		else if (((i+1)%4)==0)
+		{
+			remap4to16_lut[i] = delta-3;
+		} 
+		else
+		{
+			remap4to16_lut[i] = delta;
+		}
+		delta++; if ((delta & 3) == 0) delta += 12;
+	}
+
+	j = 0;
+	for (my = 0; my < 64; my++) 
+	{
+		for (mx = 0; mx < 128; mx++) 
+		{
+			map_offset_lut[j] = ((mx)|(my<<7))<<1;
+			j++;
+		}
+	}
+
+	for (UINT32 i = 0; i<0x800; i++)
+	{
+		charaddr_lut[i] = 0x220+(i<<4);
+	}
+
+	for (UINT32 i = 0; i<256; i++)
+	{
+		map_lut[i] = ((i & 0x80)<<7) | i & 0x7f;
+	}
+
+/*	for (int i = 0; i < nInterleave; i++)
+	{
+			cpu_lut[i] = ((i + 1) * nCyclesTotal) / nInterleave;
+	}*/
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
 {

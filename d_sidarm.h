@@ -9,6 +9,12 @@ INT32 DrvExit();
 INT32 DrvFrame();
 INT32 SidearmsDraw();
 
+/*static*/ UINT16 *remap4to16_lut = NULL;
+/*static*/ UINT16 *map_lut = NULL;  //[256];
+/*static*/ UINT16 *map_offset_lut = NULL;  //[2048];
+/*static*/ UINT16 *charaddr_lut = NULL; //[0x0800];
+/*static*/ UINT16 *cram_lut = NULL;  //[4096];
+
 /*static*/ UINT8 *AllMem;
 /*static*/ UINT8 *MemEnd;
 /*static*/ UINT8 *AllRam;
@@ -27,7 +33,7 @@ INT32 SidearmsDraw();
 /*static*/ UINT8 *DrvZ80RAM0;
 /*static*/ UINT8 *DrvZ80RAM1;
 
-/*static*/ UINT32 *DrvPalette;
+/*static*/ UINT16 *DrvPalette;
 /*static*/ UINT8 DrvRecalc;
 
 /*static*/ UINT8 *bgscrollx;
