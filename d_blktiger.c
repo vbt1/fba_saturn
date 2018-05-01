@@ -764,9 +764,9 @@ static INT32 DrvInit()
 		for (INT32 i = 0; i < 5; i++) {
 			if (BurnLoadRom(DrvZ80ROM0 + i * 0x10000, 0  + i, 1)) return 1;
 		}
-
+#ifdef SND
 		if (BurnLoadRom(DrvZ80ROM1, 5, 1)) return 1;
-
+#endif
 		if (BurnLoadRom(DrvGfxROM0, 6, 1)) return 1;
 
 		for (INT32 i = 0; i < 4; i++) {

@@ -414,14 +414,15 @@ inline /*static*/ double DrvGetTime()
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 
 	DrvZ80ROM0		= Next; Next += 0x018000;
+#ifdef SOUND
 	DrvZ80ROM1		= Next; Next += 0x008000;
-
+#endif
 //	DrvGfxROM0		= Next; Next += 0x010000;
 	DrvGfxROM0		= SS_CACHE;
 //	DrvGfxROM1		= Next; Next += 0x100000;
-	DrvGfxROM1		= SS_CACHE + 0x04000;
+	DrvGfxROM1		= (UINT8 *)(SS_CACHE + 0x4000);
 //	DrvGfxROM2		= Next; Next += 0x080000;
-	DrvGfxROM2	= (UINT8 *)(ss_vram+0x1100);
+	DrvGfxROM2	 	= (UINT8 *)(ss_vram+0x1100);
 
 	DrvStarMap		= Next; Next += 0x008000;
 	DrvTileMap		= Next; Next += 0x008000;
@@ -463,12 +464,16 @@ inline /*static*/ double DrvGetTime()
 	INT32 XOffs1[32] = { STEP4(0,1), STEP4(8,1), STEP4(512,1), STEP4(512+8,1), STEP4(1024,1), STEP4(1024+8,1), STEP4(1536,1), STEP4(1536+8,1) };
 	INT32 YOffs[32]  = { STEP32(0,16) };
 
-//	UINT8 *tmp = (UINT8*)BurnMalloc(0x80000);
-//	if (tmp == NULL) {
-//		return;
-//	}
 	UINT8 *tmp = (UINT8*)0x00200000; 
-	memset(tmp,0x00,0x40000);
+	memset(tmp,0x00,0x80000);
+// bg	
+	memcpyl (tmp, DrvGfxROM1, 0x70000);
+
+//	memset(DrvGfxROM1,0x00,0x40000);
+	GfxDecode4Bpp(0x0400, 4, 32, 32, Plane1, XOffs1, YOffs, 0x800, DrvGfxROM1, tmp);
+	tile32x32toSaturn(1,0x0200, tmp);
+	memcpyl (DrvGfxROM1, tmp, 0x70000);
+
 	memcpyl (tmp, DrvGfxROM0, 0x04000);
 // text
 	GfxDecode4Bpp(0x0400, 2,  8,  8, Plane0, XOffs0, YOffs, 0x080, tmp, DrvGfxROM0);
@@ -481,15 +486,21 @@ inline /*static*/ double DrvGetTime()
 		if ((DrvGfxROM0[i]& 0x30)       ==0x00)DrvGfxROM0[i] = 0x30 | DrvGfxROM0[i] & 0x03;
 		else if ((DrvGfxROM0[i]& 0x30)==0x30) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x03;
 	}	
-// bg	
-	memcpyl (tmp, DrvGfxROM1, 0x40000);
-
-//	GfxDecode4Bpp(0x0400, 4, 32, 32, Plane1, XOffs1, YOffs, 0x800, tmp, DrvGfxROM1);
 // sprites
 	memcpyl (tmp, DrvGfxROM2, 0x40000);
 
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane2, XOffs0, YOffs, 0x200, tmp, DrvGfxROM2);
-//	tile16x16toSaturn(1,0x0800, DrvGfxROM2);
+/*
+	for (int i=0;i<0x40000;i++ )
+	{
+		if ((DrvGfxROM2[i]& 0x03)     ==0x00)DrvGfxROM2[i] = DrvGfxROM2[i] & 0x30 | 0x3;
+		else if ((DrvGfxROM2[i]& 0x03)==0x03) DrvGfxROM2[i] = DrvGfxROM2[i] & 0x30;
+
+		if ((DrvGfxROM2[i]& 0x30)       ==0x00)DrvGfxROM2[i] = 0x30 | DrvGfxROM2[i] & 0x03;
+		else if ((DrvGfxROM2[i]& 0x30)==0x30) DrvGfxROM2[i] = DrvGfxROM2[i] & 0x03;
+	}
+*/
+
 
 //	BurnFree (tmp);
 	tmp = NULL;
@@ -529,6 +540,14 @@ inline /*static*/ double DrvGetTime()
 		if (BurnLoadRom(DrvGfxROM1 + 0x08000,  7, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x10000,  8, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x18000,  9, 1)) return 1;
+// vbt modif
+/*
+		if (BurnLoadRom(DrvGfxROM1 + 0x20000, 10, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x28000, 11, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x30000, 12, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x38000, 13, 1)) return 1;
+*/
+
 		if (BurnLoadRom(DrvGfxROM1 + 0x40000, 10, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x48000, 11, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x50000, 12, 1)) return 1;
@@ -819,6 +838,27 @@ inline /*static*/ double DrvGetTime()
 {
 	INT32 scrollx = ((((bgscrollx[1] << 8) + bgscrollx[0]) & 0xfff) + 64) & 0xfff;
 	INT32 scrolly = ((((bgscrolly[1] << 8) + bgscrolly[0]) & 0xfff) + 16) & 0xfff; 
+	UINT16 *map = &ss_map2[0];
+int j =0;
+int i =0;
+int k =0;
+	for ( k=0;k<32 ;k++ )
+	{
+		for ( i=0;i<32 ;i+=2 )
+		{
+			map[i*2] =0;// i>>1; //(attr & 0x1f);
+			map[(i*2)+1] =((j++)*4)+0x800;
+			map[(i+1)*2] = 0;//i>>1; //(attr & 0x1f);
+			map[((i+1)*2)+1] =((j++)*4)+0x800;
+			
+			map[(i+32)*2] = 0;//i>>1; //(attr & 0x1f);
+			map[(((i+32))*2)+1] =((j++)*4)+0x800;
+			map[((i+33))*2] = 0;//i>>1; //(attr & 0x1f);
+			map[(((i+33))*2)+1] =((j++)*4)+0x800;
+		}
+		map+=128;
+	}
+#if 0
 
 	for (INT32 y = 0; y < 256; y += 32) {
 
@@ -874,6 +914,7 @@ inline /*static*/ double DrvGetTime()
 */
 		}
 	}
+#endif
 }
 
 /*static*/ void draw_fg_layer()
@@ -1173,6 +1214,7 @@ static void initLayers()
 	scfg.plate_addr[2] = (Uint32)SS_MAP;
 	scfg.plate_addr[3] = (Uint32)SS_MAP;
 // nbg2 8x8 foreground
+	scfg.dispenbl      = ON;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
  	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
@@ -1239,7 +1281,7 @@ static void DrvInitSaturn()
 
 	initLayers();
 	initColors();
-	initSprites(256-1,224-1,0,0,0,-16);
+	initSprites(352-1,224-1,0,0,-96,0);
 
 	SCL_Open();
 //	ss_reg->n1_move_y =  16 <<16;
@@ -1324,53 +1366,50 @@ static void DrvInitSaturn()
 	{
 		map_lut[i] = ((i & 0x80)<<7) | i & 0x7f;
 	}
-
-/*	for (int i = 0; i < nInterleave; i++)
-	{
-			cpu_lut[i] = ((i + 1) * nCyclesTotal) / nInterleave;
-	}*/
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
+static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
 {
-	unsigned int c;
-	for (c = 0; c < num; c++) 
+	for (unsigned int c = 0; c < num; c++) 
 	{
-		unsigned char new_tile[128];
-		UINT8 *dpM = pDest + (c * 128);
-		memcpyl(new_tile,dpM,128);
-		unsigned int i=0,j=0,k=0;
+		unsigned char old_tile[512];
+		unsigned char reorder_tile[512];
 
-		for (k=0;k<128;k+=64)
+		UINT8 *dpM = pDest + (c * 512);
+		memcpyl(old_tile,dpM,512);
+		UINT8 *dpO = &old_tile[0];
+
+		for (int l=0;l<4;l++) // 4 par 4
 		{
-			dpM = pDest + ((c * 128)+k);
-
-			for (i=0;i<32;i+=4,j+=8)
+			for (int k=0;k<16;k+=4) // 4 par 4
 			{
-				if(reverse)
-				{
-					dpM[i]=new_tile[j];
-					dpM[i+1]=new_tile[j+1];
-					dpM[i+2]=new_tile[j+2];
-					dpM[i+3]=new_tile[j+3];
-					dpM[i+32]=new_tile[j+4];
-					dpM[i+33]=new_tile[j+5];
-					dpM[i+34]=new_tile[j+6];
-					dpM[i+35]=new_tile[j+7];
-				}
-				else
-				{
-					dpM[i+32]=new_tile[j];
-					dpM[i+33]=new_tile[j+1];
-					dpM[i+34]=new_tile[j+2];
-					dpM[i+35]=new_tile[j+3];
-					dpM[i+0]=new_tile[j+4];
-					dpM[i+1]=new_tile[j+5];
-					dpM[i+2]=new_tile[j+6];
-					dpM[i+3]=new_tile[j+7];
-				}
+				memcpy(&dpM[0],&dpO[k],4);
+				memcpy(&dpM[4],&dpO[k+16],4);
+				memcpy(&dpM[8],&dpO[k+32],4);
+				memcpy(&dpM[12],&dpO[k+48],4);
+				memcpy(&dpM[16],&dpO[k+64],4);
+				memcpy(&dpM[20],&dpO[k+80],4);
+				memcpy(&dpM[24],&dpO[k+96],4);
+				memcpy(&dpM[28],&dpO[k+112],4);
+				dpM+=32;
 			}
+			dpO+=128;
 		}
+// reordering
+		dpM = pDest + (c * 512);
+		memcpyl(reorder_tile,dpM,512);
+// 0&1 corrects
+		memcpy(&dpM[2*32],&reorder_tile[4*32],32);
+		memcpy(&dpM[3*32],&reorder_tile[5*32],32);
+
+		memcpy(&dpM[4*32],&reorder_tile[2*32],32);
+		memcpy(&dpM[5*32],&reorder_tile[3*32],32);
+
+		memcpy(&dpM[10*32],&reorder_tile[12*32],32);
+		memcpy(&dpM[11*32],&reorder_tile[13*32],32);
+
+		memcpy(&dpM[12*32],&reorder_tile[10*32],32);
+		memcpy(&dpM[13*32],&reorder_tile[11*32],32);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
