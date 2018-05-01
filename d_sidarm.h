@@ -8,6 +8,7 @@ INT32 SidearmsInit();
 INT32 DrvExit();
 INT32 DrvFrame();
 INT32 SidearmsDraw();
+static char *itoa(i);
 static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 
 /*static*/ UINT16 *remap4to16_lut = NULL;

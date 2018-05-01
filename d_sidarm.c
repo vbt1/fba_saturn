@@ -490,19 +490,15 @@ inline /*static*/ double DrvGetTime()
 	memcpyl (tmp, DrvGfxROM2, 0x40000);
 
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane2, XOffs0, YOffs, 0x200, tmp, DrvGfxROM2);
-/*
-	for (int i=0;i<0x40000;i++ )
+
+	for (UINT32 i=0;i<0x40000;i++ )
 	{
-		if ((DrvGfxROM2[i]& 0x03)     ==0x00)DrvGfxROM2[i] = DrvGfxROM2[i] & 0x30 | 0x3;
-		else if ((DrvGfxROM2[i]& 0x03)==0x03) DrvGfxROM2[i] = DrvGfxROM2[i] & 0x30;
+		if ((DrvGfxROM2[i]& 0x0f)     ==0x00)DrvGfxROM2[i] = DrvGfxROM2[i] & 0xf0 | 0xf;
+		else if ((DrvGfxROM2[i]& 0x0f)==0x0f) DrvGfxROM2[i] = DrvGfxROM2[i] & 0xf0;
 
-		if ((DrvGfxROM2[i]& 0x30)       ==0x00)DrvGfxROM2[i] = 0x30 | DrvGfxROM2[i] & 0x03;
-		else if ((DrvGfxROM2[i]& 0x30)==0x30) DrvGfxROM2[i] = DrvGfxROM2[i] & 0x03;
+		if ((DrvGfxROM2[i]& 0xf0)       ==0x00)DrvGfxROM2[i] = 0xf0 | DrvGfxROM2[i] & 0x0f;
+		else if ((DrvGfxROM2[i]& 0xf0)==0xf0) DrvGfxROM2[i] = DrvGfxROM2[i] & 0x0f;
 	}
-*/
-
-
-//	BurnFree (tmp);
 	tmp = NULL;
 }
 
@@ -513,7 +509,7 @@ inline /*static*/ double DrvGetTime()
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"SidearmsInit       ",24,30);
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"SidearmsInit       ",24,30);
 
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) 
 	{
@@ -524,7 +520,7 @@ inline /*static*/ double DrvGetTime()
 	MemIndex();
 	make_lut();
 	{
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom     ",24,30);
+//		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom     ",24,30);
 
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x08000,  1, 1)) return 1;
@@ -563,11 +559,11 @@ inline /*static*/ double DrvGetTime()
 		if (BurnLoadRom(DrvGfxROM2 + 0x38000, 21, 1)) return 1;
 
 		if (BurnLoadRom(DrvTileMap + 0x00000, 22, 1)) return 1;
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvGfxDecode     ",24,30);
+//		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvGfxDecode     ",24,30);
 
 		DrvGfxDecode();
 	}
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit              ",24,30);
+//		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit              ",24,30);
 
 	CZetInit(1);
 	CZetOpen(0);
@@ -839,24 +835,41 @@ inline /*static*/ double DrvGetTime()
 	INT32 scrollx = ((((bgscrollx[1] << 8) + bgscrollx[0]) & 0xfff) + 64) & 0xfff;
 	INT32 scrolly = ((((bgscrolly[1] << 8) + bgscrolly[0]) & 0xfff) + 16) & 0xfff; 
 	UINT16 *map = &ss_map2[0];
-int j =0;
-int i =0;
-int k =0;
-	for ( k=0;k<32 ;k++ )
+/*
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"scrollx        ",24,40);
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"scrolly        ",24,50);
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrollx),60,40);
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
+*/
+	INT32 offs = 2 * (scrollx >> 5) + 0x100 * (scrolly >> 5);
+
+	for (UINT32 k=0;k<32 ;k++ ) // row
 	{
-		for ( i=0;i<32 ;i+=2 )
+		for (UINT32 i=0;i<32 ;i+=2 ) // colon
 		{
-			map[i*2] =0;// i>>1; //(attr & 0x1f);
-			map[(i*2)+1] =((j++)*4)+0x800;
-			map[(i+1)*2] = 0;//i>>1; //(attr & 0x1f);
-			map[((i+1)*2)+1] =((j++)*4)+0x800;
+			UINT32 offset = offs + i;
+			offset = (offset & 0xf801) | ((offset & 0x0700) >> 7) | ((offset & 0x00fe) << 3);
+
+			UINT8 *pDrvTileMap = &DrvTileMap[offset];
 			
-			map[(i+32)*2] = 0;//i>>1; //(attr & 0x1f);
-			map[(((i+32))*2)+1] =((j++)*4)+0x800;
-			map[((i+33))*2] = 0;//i>>1; //(attr & 0x1f);
-			map[(((i+33))*2)+1] =((j++)*4)+0x800;
+			INT32 attr		= pDrvTileMap[1];
+			INT32 code	= (pDrvTileMap[0] + ((attr & 0x01) * 256))*4;
+			INT32 color	= attr >> 3;
+			INT32 flipx		= attr & 0x02;
+			INT32 flipy		= attr & 0x04;
+
+			map[i*2]					= color;
+			map[(i*2)+1]				= ((code++)*4)+0x800;
+			map[(i+1)*2]				= color;
+			map[((i+1)*2)+1]		= ((code++)*4)+0x800;
+			
+			map[(i+32)*2]			= color;
+			map[(((i+32))*2)+1]	=	((code++)*4)+0x800;
+			map[((i+33))*2]			= color;
+			map[(((i+33))*2)+1]	=	((code++)*4)+0x800;
 		}
-		map+=128;
+		offs += 256;
+		map+= 128;
 	}
 #if 0
 
@@ -989,6 +1002,8 @@ int k =0;
 	if (bglayer_enable) {
 		draw_bg_layer(0);
 	}
+
+	cleanSprites();
 
 	if (sprite_enable) {
 		draw_sprites_region(0x0700, 0x0800);
@@ -1193,17 +1208,18 @@ static void initLayers()
 	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0xC00);
 */
 // pour 2x1
-				scfg.plate_addr[0] = (Uint32)(SS_MAP2);
+/*				scfg.plate_addr[0] = (Uint32)(SS_MAP2);
 				scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x1000);
 				scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
 				scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
+*/
 // pour 2x2
-/*
+
 				scfg.plate_addr[0] = (Uint32)(SS_MAP2);//////
 				scfg.plate_addr[1] = (Uint32)(SS_MAP2);//////
 				scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
 				scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
-*/
+
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
 	scfg.pnamesize     = SCL_PN2WORD; //2word
@@ -1281,7 +1297,7 @@ static void DrvInitSaturn()
 
 	initLayers();
 	initColors();
-	initSprites(352-1,224-1,0,0,-96,0);
+	initSprites(352-1,224-1,0,0,-80,-16); // ne plus modifier
 
 	SCL_Open();
 //	ss_reg->n1_move_y =  16 <<16;
@@ -1307,6 +1323,18 @@ static void DrvInitSaturn()
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void cleanSprites()
+{
+	unsigned int delta;	
+	for (delta=3; delta<nBurnSprites; delta++)
+	{
+		ss_sprite[delta].charSize   = 0;
+		ss_sprite[delta].charAddr   = 0;
+		ss_sprite[delta].ax   = 0;
+		ss_sprite[delta].ay   = 0;
+	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_lut(void)
@@ -1413,3 +1441,26 @@ static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#define INT_DIGITS 19
+static char *itoa(i)
+     int i;
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}
