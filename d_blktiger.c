@@ -1949,7 +1949,7 @@ void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 //	else
 //	ss_map2[ofst] = (color | flipx << 7); //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
 	ss_map2[ofst] = (color | flipx << 7); //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
-	ss_map2[ofst+1] = (code*4)+0x1000; 
+	ss_map2[ofst+1] = (code<<2)+0x1000; 
 
 /*
 01:51:39<derek>	m_bg_tilemap8x4->set_transmask(0, 0xffff, 0x8000);  // split type 0 is totally transparent in front half 

@@ -845,9 +845,9 @@ FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
 
 	for (UINT32 k=0;k<32 ;k++ ) // row
 	{
-		for (UINT32 i=0;i<32 ;i+=2 ) // colon
+		for (UINT32 i=0;i<64 ;i+=4 ) // colon
 		{
-			UINT32 offset = offs + i;
+			UINT32 offset = offs + (i>>1);
 			offset = (offset & 0xf801) | ((offset & 0x0700) >> 7) | ((offset & 0x00fe) << 3);
 
 			UINT8 *pDrvTileMap = &DrvTileMap[offset];
@@ -858,15 +858,60 @@ FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
 			INT32 flipx		= attr & 0x02;
 			INT32 flipy		= attr & 0x04;
 
-			map[i*2]					= color;
-			map[(i*2)+1]				= ((code++)*4)+0x800;
-			map[(i+1)*2]				= color;
-			map[((i+1)*2)+1]		= ((code++)*4)+0x800;
-			
-			map[(i+32)*2]			= color;
-			map[(((i+32))*2)+1]	=	((code++)*4)+0x800;
-			map[((i+33))*2]			= color;
-			map[(((i+33))*2)+1]	=	((code++)*4)+0x800;
+			if(!flipx)
+			{
+				if(!flipy)
+				{
+					map[i+0]	= color;
+					map[i+1]	= ((code++)<<2)+0x800;
+					map[i+2]	= color;
+					map[i+3]	= ((code++)<<2)+0x800;
+					
+					map[i+64]	= color;
+					map[i+65]	=	((code++)<<2)+0x800;
+					map[i+66]	= color;
+					map[i+67]	=	((code++)<<2)+0x800;
+				}
+				else
+				{
+					map[i+64]	= color | 0x8000;
+					map[i+65]	= ((code++)<<2)+0x800;
+					map[i+66]	= color | 0x8000;
+					map[i+67]	= ((code++)<<2)+0x800;
+					
+					map[i+0]	= color | 0x8000;
+					map[i+1]	=	((code++)<<2)+0x800;
+					map[i+2]	= color | 0x8000;
+					map[i+3]	=	((code++)<<2)+0x800;
+				}
+			}
+			else
+			{
+				if(!flipy)
+				{
+					map[i+2]	= color | 0x4000;
+					map[i+3]	= ((code++)<<2)+0x800;
+					map[i+0]	= color | 0x4000;
+					map[i+1]	= ((code++)<<2)+0x800;
+					
+					map[i+66]	= color | 0x4000;
+					map[i+67]	=	((code++)<<2)+0x800;
+					map[i+64]	= color | 0x4000;
+					map[i+65]	=	((code++)<<2)+0x800;
+				}
+				else
+				{
+					map[i+66]	= color | 0xC000;
+					map[i+67]	= ((code++)<<2)+0x800;
+					map[i+64]	= color | 0xC000;
+					map[i+65]	= ((code++)<<2)+0x800;
+					
+					map[i+2]	= color | 0xC000;
+					map[i+3]	=	((code++)<<2)+0x800;
+					map[i+0]	= color | 0xC000;
+					map[i+1]	=	((code++)<<2)+0x800;
+				}
+			}
 		}
 		offs += 256;
 		map+= 128;
