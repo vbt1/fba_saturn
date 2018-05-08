@@ -4,6 +4,7 @@
 #include "d_sidarm.h"
 #define nScreenHeight 224
 #define nScreenWidth 384
+#define nInterleave 278
 
 int ovlInit(char *szShortName)
 {
@@ -468,15 +469,14 @@ inline /*static*/ double DrvGetTime()
 #ifdef SOUND
 	DrvZ80ROM1		= Next; Next += 0x008000;
 #endif
-//	DrvGfxROM0		= Next; Next += 0x010000;
 	DrvGfxROM0		= SS_CACHE;
-//	DrvGfxROM1		= Next; Next += 0x100000;
 	DrvGfxROM1		= (UINT8 *)(SS_CACHE + 0x4000);
-//	DrvGfxROM2		= Next; Next += 0x080000;
 	DrvGfxROM2	 	= (UINT8 *)(ss_vram+0x1100);
 
 	DrvStarMap		= Next; Next += 0x008000;
+//	DrvStarMap		= 0x00200000;
 	DrvTileMap		= Next; Next += 0x008000;
+//	DrvTileMap		= 0x00208000;
 
 //	DrvPalette		= (UINT32*)Next; Next += 0x0400 * sizeof(UINT32);
 	DrvPalette	= (UINT16*)colBgAddr;
@@ -495,12 +495,13 @@ inline /*static*/ double DrvGetTime()
 
 	RamEnd			= Next;
 
-	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
+//	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
+	bgmap_lut	 		= 0x00200000; //Next; Next += 0x008000 * sizeof (UINT16);
 	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
 	map_lut				= Next; Next += 256 * sizeof (UINT16);
 	map_offset_lut	= Next; Next += 4096 * sizeof (UINT16);
 //	cram_lut			= Next; Next += 32768 * sizeof (UINT16);
-	charaddr_lut		= Next; Next += 0x800 * sizeof (UINT16);
+//	charaddr_lut		= Next; Next += 0x800 * sizeof (UINT16);
 
 	MemEnd			= Next;
 
@@ -570,7 +571,6 @@ inline /*static*/ double DrvGetTime()
 	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
-	make_lut();
 	{
 //		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom     ",24,30);
 
@@ -662,8 +662,13 @@ inline /*static*/ double DrvGetTime()
 //	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_3, 0.15, BURN_SND_ROUTE_BOTH);
 
 //	GenericTilesInit();
-
 	DrvDoReset(1);
+	make_lut();
+
+	for (UINT32 i = 0; i < 0x400; i++) 
+	{
+		palette_write(i);
+	}
 
 	drawWindow(0,224,240,0,0);
 	return 0;
@@ -843,7 +848,7 @@ inline /*static*/ double DrvGetTime()
 
 /*static*/ void sidearms_draw_starfield()
 {
-	UINT16 *lineptr = NULL;//pTransDraw;
+	UINT16 *lineptr = (Uint8 *)SS_FONT;//pTransDraw;
 	UINT32 _hcount_191 = starscrollx & 0xff;
 
 	for (INT32 y = 16; y < (16+nScreenHeight); y++)
@@ -886,104 +891,28 @@ inline /*static*/ double DrvGetTime()
 {
 	INT32 scrollx = ((((bgscrollx[1] << 8) + bgscrollx[0]) & 0xfff) + 64) & 0xfff;
 	INT32 scrolly = ((((bgscrolly[1] << 8) + bgscrolly[0]) & 0xfff) + 16) & 0xfff; 
-	UINT16 *map = &ss_map2[0];
-/*
-FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"scrollx        ",24,40);
-FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"scrolly        ",24,50);
-FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrollx),60,40);
-FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
-*/
+	UINT32 *map = (UINT32 *)ss_map2;
+
 	INT32 offs = 2 * (scrollx >> 5) + 0x100 * (scrolly >> 5);
 
 	for (UINT32 k=0;k<32 ;k++ ) // row
 	{
-		for (UINT32 i=0;i<64 ;i+=4 ) // colon
+		for (UINT32 i=0;i<32 ;i+=2 ) // colon
 		{
-			UINT32 offset = offs + (i>>1);
+			UINT32 offset = offs + i;
 			offset = (offset & 0xf801) | ((offset & 0x0700) >> 7) | ((offset & 0x00fe) << 3);
+			UINT32 *pDrvTileMap = ((UINT32 *)bgmap_lut)+(offset<<1);
 
-			UINT8 *pDrvTileMap = &DrvTileMap[offset];
-			
-			INT32 attr		= pDrvTileMap[1];
-			INT32 code	= (pDrvTileMap[0] + ((attr & 0x01) * 256))*4;
-			INT32 color	= attr >> 3;
-			INT32 flipx		= attr & 0x02;
-			INT32 flipy		= attr & 0x04;
-
-			if(!flipx)
-			{
-				if(!flipy)
-				{
-					map[i+0]	= color;
-					map[i+1]	= ((code++)<<2)+0x800;
-					map[i+2]	= color;
-					map[i+3]	= ((code++)<<2)+0x800;
-					
-					map[i+64]	= color;
-					map[i+65]	=	((code++)<<2)+0x800;
-					map[i+66]	= color;
-					map[i+67]	=	((code++)<<2)+0x800;
-				}
-				else
-				{
-					map[i+64]	= color | 0x8000;
-					map[i+65]	= ((code++)<<2)+0x800;
-					map[i+66]	= color | 0x8000;
-					map[i+67]	= ((code++)<<2)+0x800;
-					
-					map[i+0]	= color | 0x8000;
-					map[i+1]	=	((code++)<<2)+0x800;
-					map[i+2]	= color | 0x8000;
-					map[i+3]	=	((code++)<<2)+0x800;
-				}
-			}
-			else
-			{
-				if(!flipy)
-				{
-					map[i+2]	= color | 0x4000;
-					map[i+3]	= ((code++)<<2)+0x800;
-					map[i+0]	= color | 0x4000;
-					map[i+1]	= ((code++)<<2)+0x800;
-					
-					map[i+66]	= color | 0x4000;
-					map[i+67]	=	((code++)<<2)+0x800;
-					map[i+64]	= color | 0x4000;
-					map[i+65]	=	((code++)<<2)+0x800;
-				}
-				else
-				{
-					map[i+66]	= color | 0xC000;
-					map[i+67]	= ((code++)<<2)+0x800;
-					map[i+64]	= color | 0xC000;
-					map[i+65]	= ((code++)<<2)+0x800;
-					
-					map[i+2]	= color | 0xC000;
-					map[i+3]	=	((code++)<<2)+0x800;
-					map[i+0]	= color | 0xC000;
-					map[i+1]	=	((code++)<<2)+0x800;
-				}
-			}
+			map[i+0]	= pDrvTileMap[0];
+			map[i+1]	= pDrvTileMap[1];
+			map[i+32]	= pDrvTileMap[2];
+			map[i+33]	= pDrvTileMap[3];
 		}
 		offs += 256;
-		map+= 128;
+		map+= 64;
 	}
 	ss_reg->n1_move_x =  (((scrollx&0x1f)+16)<<16) ;
 	ss_reg->n1_move_y =  (((scrolly&0x1f))<<16) ;
-}
-
-/*static*/ void draw_fg_layer()
-{
-	for (INT32 offs = 0; offs < 64 * 32; offs++)
-	{
-		INT32 attr = DrvVidRAM[0x800 + offs];
-		INT32 code = DrvVidRAM[0x000 + offs] | ((attr & 0xc0) << 2);
-		INT32 color = attr & 0x3f;
-
-		int x = map_offset_lut[offs];
-		ss_map[x] = color;
-		ss_map[x+1] =code; 
-	}
 }
 
 /*static*/ void draw_sprites_region(INT32 start, INT32 end)
@@ -1019,10 +948,11 @@ FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
 /*static*/ INT32 SidearmsDraw()
 {
 	if (starfield_enable) {
-		sidearms_draw_starfield();
+//		sidearms_draw_starfield();
 	}
 
-	if (bglayer_enable) {
+	if (bglayer_enable) 
+	{
 		draw_bg_layer(0);
 	}
 
@@ -1067,9 +997,9 @@ FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
 		draw_sprites_region(0x0000, 0x0700);
 	}
 
-	if (character_enable) {
-		draw_fg_layer();
-	}
+//	if (character_enable) {
+//		draw_fg_layer();
+//	}
 
 //	BurnTransferCopy(DrvPalette);
 
@@ -1096,9 +1026,9 @@ FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
 		draw_sprites_region(0x0000, 0x1000);
 	}
 
-	if (character_enable) {
-		draw_fg_layer();
-	}
+//	if (character_enable) {
+//		draw_fg_layer();
+//	}
 
 //	BurnTransferCopy(DrvPalette);
 
@@ -1118,7 +1048,7 @@ FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
 		DrvDoReset(1);
 	}
 */
-	CZetNewFrame();
+//	CZetNewFrame();
 
 	{
 		memset (DrvInputs, 0xff, 5);
@@ -1133,7 +1063,7 @@ FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
 	}
 
 	INT32 nSoundBufferPos = 0;
-	INT32 nInterleave = 278;
+//	INT32 nInterleave = 278;
 	INT32 nCyclesTotal[2] =  { 4000000 / 60, 4000000 / 60 };
 	INT32 nCyclesDone[2] = { 0, 0 };
 
@@ -1141,13 +1071,14 @@ FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
 
 	for (INT32 i = 0; i < nInterleave; i++) {
 
-		INT32 nSegment = nCyclesTotal[0] / nInterleave;
+		UINT32 nSegment = nCyclesTotal[0] / nInterleave;
 
 		CZetOpen(0);
 		nCyclesDone[0] += CZetRun(nSegment);
 		if (i == 274) {CZetSetIRQLine(0, CZET_IRQSTATUS_ACK); vblank = 1; }
 		if (i == 276) CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
-		nSegment = CZetTotalCycles();
+
+//		nSegment = CZetTotalCycles();
 		CZetClose();
 #if 0
 		CZetOpen(1);
@@ -1194,7 +1125,7 @@ FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(scrolly),60,50);
 //		BurnDrvRedraw();
 //	}
 	SidearmsDraw();
-	memcpy (DrvSprBuf, DrvSprRAM, 0x1000);
+	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
 
 	return 0;
 }
@@ -1395,22 +1326,6 @@ static void DrvInitSaturn()
 		delta++; if ((delta & 3) == 0) delta += 12;
 	}
 
-	for (i = 0; i < 768;i++) 
-	{
-		if ((i%16)==0)
-		{
-			remap16_lut[i] = i+15;
-		}
-		else if (((i+1)%16)==0)
-		{
-			remap16_lut[i] = i-15;
-		} 
-		else	
-		{
-			remap16_lut[i] = i;
-		}
-	}
-
 	j = 0;
 	for (my = 0; my < 64; my++) 
 	{
@@ -1421,14 +1336,79 @@ static void DrvInitSaturn()
 		}
 	}
 
-	for (UINT32 i = 0; i<0x800; i++)
-	{
-		charaddr_lut[i] = 0x220+(i<<4);
-	}
-
 	for (UINT32 i = 0; i<256; i++)
 	{
 		map_lut[i] = ((i & 0x80)<<7) | i & 0x7f;
+	}
+
+	memset(bgmap_lut,0x00,0x8000);
+	UINT16 *pbgmap_lut = &bgmap_lut[0];
+
+	for(UINT32 i = 0; i < 0x8000; i+=2)
+	{
+		UINT8 *pDrvTileMap = &DrvTileMap[i];
+		
+		INT32 attr		= pDrvTileMap[1];
+		INT32 code	= (pDrvTileMap[0] + ((attr & 0x01) * 256))*4;
+		INT32 color	= attr >> 3;
+		INT32 flipx		= attr & 0x02;
+		INT32 flipy		= attr & 0x04;
+
+		if(!flipx)
+		{
+			if(!flipy)
+			{
+				pbgmap_lut[0]=color;
+				pbgmap_lut[1]=((code++)<<2)+0x800;
+				pbgmap_lut[2]=color;
+				pbgmap_lut[3]=((code++)<<2)+0x800;
+				
+				pbgmap_lut[4]=color;
+				pbgmap_lut[5]=((code++)<<2)+0x800;
+				pbgmap_lut[6]=color;
+				pbgmap_lut[7]=((code++)<<2)+0x800;
+			}
+			else
+			{
+				pbgmap_lut[4]	= color | 0x8000;
+				pbgmap_lut[5]	= ((code++)<<2)+0x800;
+				pbgmap_lut[6]	= color | 0x8000;
+				pbgmap_lut[7]	= ((code++)<<2)+0x800;
+				
+				pbgmap_lut[0]	= color | 0x8000;
+				pbgmap_lut[1]	=	((code++)<<2)+0x800;
+				pbgmap_lut[2]	= color | 0x8000;
+				pbgmap_lut[3]	=	((code++)<<2)+0x800;
+			}
+		}
+		else
+		{
+			if(!flipy)
+			{
+				pbgmap_lut[2]	= color | 0x4000;
+				pbgmap_lut[3]	= ((code++)<<2)+0x800;
+				pbgmap_lut[0]	= color | 0x4000;
+				pbgmap_lut[1]	= ((code++)<<2)+0x800;
+				
+				pbgmap_lut[6]	= color | 0x4000;
+				pbgmap_lut[7]	=	((code++)<<2)+0x800;
+				pbgmap_lut[4]	= color | 0x4000;
+				pbgmap_lut[5]	=	((code++)<<2)+0x800;
+			}
+			else
+			{
+				pbgmap_lut[6]	= color | 0xC000;
+				pbgmap_lut[7]	= ((code++)<<2)+0x800;
+				pbgmap_lut[4]	= color | 0xC000;
+				pbgmap_lut[5]	= ((code++)<<2)+0x800;
+				
+				pbgmap_lut[2]	= color | 0xC000;
+				pbgmap_lut[3]	=	((code++)<<2)+0x800;
+				pbgmap_lut[0]	= color | 0xC000;
+				pbgmap_lut[1]	=	((code++)<<2)+0x800;
+			}
+		}
+		pbgmap_lut+=8;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

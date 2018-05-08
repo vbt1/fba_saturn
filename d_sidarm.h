@@ -11,11 +11,12 @@ INT32 SidearmsDraw();
 static char *itoa(i);
 static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 
-/*static*/ UINT16 *remap16_lut = NULL;
+/*static*/ UINT16 *bgmap_lut = NULL;
+/*static*/ //UINT16 *remap16_lut = NULL;
 /*static*/ UINT16 *remap4to16_lut = NULL;
 /*static*/ UINT16 *map_lut = NULL;  //[256];
 /*static*/ UINT16 *map_offset_lut = NULL;  //[2048];
-/*static*/ UINT16 *charaddr_lut = NULL; //[0x0800];
+/*static*/ //UINT16 *charaddr_lut = NULL; //[0x0800];
 /*static*/ UINT16 cram_lut[4096];
 
 /*static*/ UINT8 *AllMem;
