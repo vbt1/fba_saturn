@@ -207,133 +207,6 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/ void __fastcall turtship_main_write(UINT16 address, UINT8 data)
-{
-	if ((address & 0xf800) == 0xe000) {
-		DrvPalRAM[address & 0x7ff] = data;
-		palette_write(address);
-		return;
-	}
-
-	switch (address)
-	{
-		case 0xe800:
-			soundlatch = data;
-		return;
-
-		case 0xe801:
-			bankswitch(data);
-		return;
-
-		case 0xe802:
-			enable_watchdog = 1;
-			watchdog = 0;
-		return;
-
-		case 0xe804:
-		{
-			// coin counters data & 0x01, data & 0x02
-			// coin lockout data & 0x04, data & 0x08
-#if 0
-			if (data & 0x10) {
-				CZetClose();
-				CZetOpen(1);
-				CZetReset();
-				CZetClose();
-				CZetOpen(0);
-			}
-#endif
-			character_enable = data & 0x40;
-			flipscreen = data & 0x80;
-		}
-		return;
-
-		case 0xe808:
-		case 0xe809:
-			bgscrollx[address & 1] = data;
-		return;
-
-		case 0xe80a:
-		case 0xe80b:
-			bgscrolly[address & 1] = data;
-		return;
-
-		case 0xe80c:
-			sprite_enable = data & 0x01;
-			bglayer_enable = data & 0x02;
-		return;
-	}
-}
-
-/*static*/ UINT8 turtship_input_read(INT32 offset)
-{
-	UINT8 ret = 0;
-	UINT8 ports[5] = { DrvInputs[0], DrvInputs[1], DrvInputs[2], DrvDips[0], DrvDips[1] };
-
-	for (INT32 i = 0; i < 5; i++) {
-		ret |= ((ports[i] >> (offset & 7)) & 1) << i;
-	}
-
-	return ret;
-}
-
-/*static*/ UINT8 __fastcall turtship_main_read(UINT16 address)
-{
-	if ((address & 0xfff8) == 0xe800) {
-		return turtship_input_read(address);
-	}
-
-	return 0;
-}
-
-/*static*/ void __fastcall whizz_main_write(UINT16 address, UINT8 data)
-{
-	switch (address)
-	{
-		case 0xc801:
-			bankswitch(((data >> 5) & 2) | (data >> 7));
-		return;
-
-		case 0xc803:
-		case 0xc805:
-		return;		// nop
-	}
-
-	sidearms_main_write(address, data);
-}
-
-/*static*/ UINT8 __fastcall whizz_main_read(UINT16 address)
-{
-	switch (address)
-	{
-		case 0xc800:
-			return DrvDips[1];
-
-		case 0xc801:
-			return DrvDips[2];
-
-		case 0xc802:
-			return DrvDips[3];
-
-		case 0xc803:
-			return (DrvInputs[0] & ~0x10) | (DrvDips[0] & 0x10);
-
-		case 0xc804:
-			return DrvInputs[1];
-
-		case 0xc805:
-			return DrvInputs[2];
-
-		case 0xc806:
-			return (DrvInputs[3] & 0xef) | ((vblank) ? 0x10 : 0);
-
-		case 0xc807:
-			return DrvInputs[4];
-	}
-
-	return 0;
-}
-
 /*static*/ void __fastcall sidearms_sound_write(UINT16 address, UINT8 data)
 {
 	switch (address)
@@ -365,38 +238,6 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/ void __fastcall whizz_sound_write_port(UINT16 port, UINT8 data)
-{
-	switch (port & 0xff)
-	{
-		case 0x00:
-//			BurnYM2151SelectRegister(data);
-		return;
-
-		case 0x01:
-//			BurnYM2151WriteRegister(data);
-		return;
-
-		case 0x40:
-		return;		// nop
-	}
-}
-
-/*static*/ UINT8 __fastcall whizz_sound_read_port(UINT16 port)
-{
-	switch (port & 0xff)
-	{
-		case 0x00:
-		case 0x01:
-			return 0; //BurnYM2151ReadStatus();
-
-		case 0xc0:
-			return soundlatch;
-	}
-
-	return 0;
-}
-
 //inline /*static*/ //void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //{
 //	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
@@ -412,11 +253,11 @@ int ovlInit(char *szShortName)
 //	return (INT64)(ZetTotalCycles() * nSoundRate / 4000000);
 //}
 
-inline /*static*/ double DrvGetTime()
+inline /*static*/ /*double DrvGetTime()
 {
 	return (double)CZetTotalCycles() / 4000000;
 }
-
+*/
 /*static*/ INT32 DrvDoReset(INT32 clear_mem)
 {
 	if (clear_mem) {
@@ -451,6 +292,8 @@ inline /*static*/ double DrvGetTime()
 	starscrollx = 0;
 	starscrolly = 0;
 	hflop_74a = 1;
+
+	memset4_fast((Uint8 *)DrvGfxROM2+0x42000,0x00,0x3E000);
 
 	for (UINT32 i = 0; i < 0x400; i++) 
 	{
@@ -488,8 +331,9 @@ inline /*static*/ double DrvGetTime()
 	DrvSprRAM		= Next; Next += 0x001000;
 	DrvPalRAM		= Next; Next += 0x000800;
 	DrvZ80RAM0		= Next; Next += 0x002000;
+#ifdef SOUND
 	DrvZ80RAM1		= Next; Next += 0x000800;
-
+#endif
 	bgscrollx		= Next; Next += 0x000002;
 	bgscrolly		= Next; Next += 0x000002;
 
@@ -497,6 +341,7 @@ inline /*static*/ double DrvGetTime()
 
 //	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
 	bgmap_lut	 		= 0x00200000; //Next; Next += 0x008000 * sizeof (UINT16);
+	bgmap_buf		= bgmap_lut + 0x8000;
 	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
 	map_lut				= Next; Next += 256 * sizeof (UINT16);
 	map_offset_lut	= Next; Next += 4096 * sizeof (UINT16);
@@ -518,7 +363,7 @@ inline /*static*/ double DrvGetTime()
 	INT32 YOffs[32]  = { STEP32(0,16) };
 
 	UINT8 *tmp = (UINT8*)0x00200000; 
-	memset(tmp,0x00,0x80000);
+	memset4_fast(tmp,0x00,0x80000);
 // bg	
 	memcpyl (tmp, DrvGfxROM1, 0x70000);
 
@@ -577,9 +422,9 @@ inline /*static*/ double DrvGetTime()
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x08000,  1, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  2, 1)) return 1;
-
+#ifdef SOUND
 		if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  3, 1)) return 1;
-
+#endif
 		if (BurnLoadRom(DrvStarMap + 0x00000,  4, 1)) return 1;
 	
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  5, 1)) return 1;
@@ -669,162 +514,11 @@ inline /*static*/ double DrvGetTime()
 	{
 		palette_write(i);
 	}
+	nBurnFunction = copyBg;
 
 	drawWindow(0,224,240,0,0);
 	return 0;
 }
-
-/*static*/ /*INT32 TurtshipInit()
-{
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
-
-	{
-		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
-		if (BurnLoadRom(DrvZ80ROM0 + 0x08000,  1, 1)) return 1;
-		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  2, 1)) return 1;
-
-		if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  3, 1)) return 1;
-	
-		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  4, 1)) return 1;
-		if (is_turtshipk == 0) memcpy (DrvGfxROM0, DrvGfxROM0 + 0x4000, 0x4000);
-
-		if (BurnLoadRom(DrvGfxROM1 + 0x00000,  5, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1 + 0x10000,  6, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1 + 0x20000,  7, 1)) return 1;
-		memcpy (DrvGfxROM1 + 0x30000, DrvGfxROM1 + 0x10000, 0x10000);
-		if (BurnLoadRom(DrvGfxROM1 + 0x40000,  8, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1 + 0x50000,  9, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1 + 0x60000, 10, 1)) return 1;
-		memcpy (DrvGfxROM1 + 0x70000, DrvGfxROM1 + 0x50000, 0x10000);
-
-		if (BurnLoadRom(DrvGfxROM2 + 0x00000, 11, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM2 + 0x10000, 12, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM2 + 0x20000, 13, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM2 + 0x30000, 14, 1)) return 1;
-
-		if (BurnLoadRom(DrvTileMap + 0x00000, 15, 1)) return 1;
-
-		DrvGfxDecode();
-	}
-
-	CZetInit(1);
-	CZetOpen(0);
-	CZetMapMemory(DrvZ80ROM0,	0x0000, 0x7fff, MAP_ROM);
-	CZetMapMemory(DrvZ80RAM0,	0xc000, 0xcfff, MAP_RAM);
-	CZetMapMemory(DrvSprRAM,		0xd000, 0xdfff, MAP_RAM);
-	CZetMapMemory(DrvPalRAM,		0xe000, 0xe7ff, MAP_ROM);
-	CZetMapMemory(DrvVidRAM,		0xf000, 0xffff, MAP_RAM);
-	CZetSetWriteHandler(turtship_main_write);
-	CZetSetReadHandler(turtship_main_read);
-	CZetClose();
-#ifdef SOUND
-	ZetInit(1);
-	ZetOpen(1);
-	ZetMapMemory(DrvZ80ROM1,	0x0000, 0x7fff, MAP_ROM);
-	ZetMapMemory(DrvZ80RAM1,	0xc000, 0xc7ff, MAP_RAM);
-	ZetSetWriteHandler(sidearms_sound_write);
-	ZetSetReadHandler(sidearms_sound_read);
-	ZetClose();
-#endif
-//	BurnYM2203Init(2,  4000000, &DrvYM2203IRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
-//	BurnTimerAttachZet(4000000);
-//	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   0.25, BURN_SND_ROUTE_BOTH);
-//	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.15, BURN_SND_ROUTE_BOTH);
-//	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_2, 0.15, BURN_SND_ROUTE_BOTH);
-//	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_3, 0.15, BURN_SND_ROUTE_BOTH);
-//	BurnYM2203SetRoute(1, BURN_SND_YM2203_YM2203_ROUTE,   0.25, BURN_SND_ROUTE_BOTH);
-//	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_1, 0.15, BURN_SND_ROUTE_BOTH);
-//	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_2, 0.15, BURN_SND_ROUTE_BOTH);
-//	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_3, 0.15, BURN_SND_ROUTE_BOTH);
-
-//	GenericTilesInit();
-
-	DrvDoReset(1);
-
-	return 0;
-}
-*/
-
-/*static*/ /*INT32 TurtshipkInit()
-{
-	is_turtshipk = 1;
-	return TurtshipInit();
-}
-*/
-/*static*/ /*INT32 WhizzInit()
-{
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
-
-	{
-		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
-		if (BurnLoadRom(DrvZ80ROM0 + 0x08000,  1, 1)) return 1;
-
-		if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  2, 1)) return 1;
-	
-		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  3, 1)) return 1;
-		memcpy (DrvGfxROM0, DrvGfxROM0 + 0x4000, 0x4000);
-
-		if (BurnLoadRom(DrvGfxROM1 + 0x00000,  4, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1 + 0x10000,  5, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1 + 0x20000,  6, 1)) return 1;
-		memcpy (DrvGfxROM1 + 0x30000, DrvGfxROM1 + 0x10000, 0x10000);
-		if (BurnLoadRom(DrvGfxROM1 + 0x40000,  7, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1 + 0x50000,  8, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1 + 0x60000,  9, 1)) return 1;
-		memcpy (DrvGfxROM1 + 0x70000, DrvGfxROM1 + 0x50000, 0x10000);
-
-		if (BurnLoadRom(DrvGfxROM2 + 0x00000, 10, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM2 + 0x10000, 11, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM2 + 0x20000, 12, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM2 + 0x30000, 13, 1)) return 1;
-
-		if (BurnLoadRom(DrvTileMap + 0x00000, 14, 1)) return 1;
-
-		DrvGfxDecode();
-	}
-
-	CZetInit(1);
-	CZetOpen(0);
-	CZetMapMemory(DrvZ80ROM0,	0x0000, 0x7fff, MAP_ROM);
-	CZetMapMemory(DrvPalRAM,		0xc000, 0xc7ff, MAP_ROM);
-	CZetMapMemory(DrvVidRAM,		0xd000, 0xdfff, MAP_RAM);
-	CZetMapMemory(DrvZ80RAM0,	0xe000, 0xefff, MAP_RAM);
-	CZetMapMemory(DrvSprRAM,		0xf000, 0xffff, MAP_RAM);
-	CZetSetWriteHandler(whizz_main_write);
-	CZetSetReadHandler(whizz_main_read);
-	CZetClose();
-#ifdef SOUND
-	ZetInit(1);
-	ZetOpen(1);
-	ZetMapMemory(DrvZ80ROM1,	0x0000, 0x7fff, MAP_ROM);
-	ZetMapMemory(DrvZ80RAM1,	0xf800, 0xffff, MAP_RAM);
-	ZetSetOutHandler(whizz_sound_write_port);
-	ZetSetInHandler(whizz_sound_read_port);
-	ZetClose();
-#endif
-	BurnYM2151Init(4000000);
-	BurnYM2151SetIrqHandler(&DrvYM2151IrqHandler);
-	BurnYM2151SetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
-
-	GenericTilesInit();
-
-	is_whizz = 1;
-
-	DrvDoReset(1);
-
-	return 0;
-}
-*/
 
 /*static*/ INT32 DrvExit()
 {
@@ -840,58 +534,69 @@ inline /*static*/ double DrvGetTime()
 
 	BurnFree (AllMem);
 
-	is_whizz = 0;
-	is_turtshipk = 0;
-
 	return 0;
 }
 
-/*static*/ void sidearms_draw_starfield()
+/*static*/ void sidearms_draw_starfield(int *starfield_enable)
 {
-	UINT16 *lineptr = (Uint8 *)SS_FONT;//pTransDraw;
-	UINT32 _hcount_191 = starscrollx & 0xff;
+//	UINT16 *lineptr = (Uint8 *)SS_FONT;//pTransDraw;
+	UINT8 *lineptr = (Uint8 *)DrvGfxROM2+0x43100;
 
-	for (INT32 y = 16; y < (16+nScreenHeight); y++)
+	memset4_fast(lineptr,0x00,0x15000);
+
+	if(starfield_enable[0])
 	{
-		UINT32 hadd_283 = _hcount_191 & ~0x1f;
-		UINT32 vadd_283 = starscrolly + y;
+		UINT32 _hcount_191 = starscrollx & 0xff;
 
-		INT32 i = (vadd_283<<4) & 0xff0;
-		i |= (hflop_74a^(hadd_283>>8)) << 3;
-		i |= (hadd_283>>5) & 7;
-		UINT32 latch_374 = DrvStarMap[i + 0x3000];
-
-		hadd_283 = _hcount_191 - 1;
-
-		for (INT32 x = 0; x < nScreenWidth; lineptr++, x++)
+		for (INT32 y = 16; y < (16+nScreenHeight); y++)
 		{
-			i = hadd_283;
-			hadd_283 = _hcount_191 + (x & 0xff);
-			vadd_283 = starscrolly + y;
+			UINT32 hadd_283 = _hcount_191 & ~0x1f;
+			UINT32 vadd_283 = starscrolly + y;
 
-			if (!((vadd_283 ^ (x>>3)) & 4)) continue;
-			if ((vadd_283 | (hadd_283>>1)) & 2) continue;
+			INT32 i = (vadd_283<<4) & 0xff0;
+			i |= (hflop_74a^(hadd_283>>8)) << 3;
+			i |= (hadd_283>>5) & 7;
+			UINT32 latch_374 = DrvStarMap[i + 0x3000];
 
-			if ((i & 0x1f)==0x1f)
+			hadd_283 = _hcount_191 - 1;
+
+			for (INT32 x = 0; x < nScreenWidth; lineptr++, x++)
 			{
-				i  = (vadd_283<<4) & 0xff0;
-				i |= (hflop_74a^(hadd_283>>8)) << 3;
-				i |= (hadd_283>>5) & 7;
-				latch_374 = DrvStarMap[i + 0x3000];
+				i = hadd_283;
+				hadd_283 = _hcount_191 + (x & 0xff);
+				vadd_283 = starscrolly + y;
+
+				if (!((vadd_283 ^ (x>>3)) & 4)) continue;
+				if ((vadd_283 | (hadd_283>>1)) & 2) continue;
+
+				if ((i & 0x1f)==0x1f)
+				{
+					i  = (vadd_283<<4) & 0xff0;
+					i |= (hflop_74a^(hadd_283>>8)) << 3;
+					i |= (hadd_283>>5) & 7;
+					latch_374 = DrvStarMap[i + 0x3000];
+				}
+
+				if ((~((latch_374^hadd_283)^1) & 0x1f)) continue;
+
+	//			*lineptr = (UINT16)((latch_374>>5) | 0x378); // numéro de couleur de la palette du bg > 0x300
+				*lineptr = (latch_374>>5) &0xf; // vbt : essai sans offset
 			}
-
-			if ((~((latch_374^hadd_283)^1) & 0x1f)) continue;
-
-			*lineptr = (UINT16)((latch_374>>5) | 0x378);
 		}
 	}
+}
+void copyBg()
+{
+	if(bglayer_enable)
+		memcpyl(ss_map2,bgmap_buf,0x800);
 }
 
 /*static*/ void draw_bg_layer(INT32 type)
 {
 	INT32 scrollx = ((((bgscrollx[1] << 8) + bgscrollx[0]) & 0xfff) + 64) & 0xfff;
 	INT32 scrolly = ((((bgscrolly[1] << 8) + bgscrolly[0]) & 0xfff) + 16) & 0xfff; 
-	UINT32 *map = (UINT32 *)ss_map2;
+//	INT32 *map = (UINT32 *)ss_map2;
+	UINT32 *map = (UINT32 *)bgmap_buf;
 
 	INT32 offs = 2 * (scrollx >> 5) + 0x100 * (scrolly >> 5);
 
@@ -917,7 +622,8 @@ inline /*static*/ double DrvGetTime()
 
 /*static*/ void draw_sprites_region(INT32 start, INT32 end)
 {
-	UINT32 delta	= (start/32)+3;
+	UINT32 delta	= (start/32)+4;
+	SprSpCmd *ss_spritePtr = &ss_sprite[delta];
 
 	for (INT32 offs = end - 32; offs >= start; offs -= 32)
 	{
@@ -927,29 +633,25 @@ inline /*static*/ double DrvGetTime()
 		INT32 attr  = DrvSprBuf[offs + 1];
 		INT32 color = attr & 0xf;
 		INT32 code  = DrvSprBuf[offs] + ((attr << 3) & 0x700);
-		INT32 sx    = DrvSprBuf[offs + 3] + ((attr << 4) & 0x100);
+//		INT32 sx    = DrvSprBuf[offs + 3] + ((attr << 4) & 0x100);
 
-			ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP); // | flipx;
-			ss_sprite[delta].drawMode	= ( ECD_DISABLE | COMPO_REP);
+		ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP); // | flipx;
+		ss_spritePtr->drawMode	= ( ECD_DISABLE | COMPO_REP);
 
-			ss_sprite[delta].ax			= sx;
-			ss_sprite[delta].ay			= sy;
-			ss_sprite[delta].charSize		= 0x210;
-			ss_sprite[delta].color			    = color<<4;//Colour<<4;
-			ss_sprite[delta].charAddr		= 0x220+(code<<4);
-
-			delta++;
-
-
-//		Render16x16Tile_Mask_Clip(pTransDraw, code, sx - 64, sy - 16, color, 4, 0x0f, 0x200, DrvGfxROM2);
+		ss_spritePtr->ax			= DrvSprBuf[offs + 3] + ((attr << 4) & 0x100);
+		ss_spritePtr->ay			= sy;
+//		ss_spritePtr->charSize	= 0x210;
+		ss_spritePtr->color		= color<<4;//Colour<<4;
+		ss_spritePtr->charAddr	= 0x220+(code<<4);
+		ss_spritePtr++;
 	}
 }
 
 /*static*/ INT32 SidearmsDraw()
 {
-	if (starfield_enable) {
+//	if (starfield_enable) {
 //		sidearms_draw_starfield();
-	}
+//	}
 
 	if (bglayer_enable) 
 	{
@@ -964,92 +666,16 @@ inline /*static*/ double DrvGetTime()
 		draw_sprites_region(0x0800, 0x0f00);
 		draw_sprites_region(0x0000, 0x0700);
 	}
-/*
-	if (character_enable) {
-		draw_fg_layer();
-	}
-*/
-//	BurnTransferCopy(DrvPalette);
-
-	return 0;
-}
-
-/*static*/ INT32 TurtshipDraw()
-{
-	if (DrvRecalc) {
-		for (INT32 offs = 0; offs < 0x400; offs++) {
-			palette_write(offs);
-		}
-
-		DrvRecalc = 0;
-	}
-
-	if (bglayer_enable) {
-		draw_bg_layer(1);
-	} else {
-//		BurnTransferClear();
-	}
-
-	if (sprite_enable) {
-		draw_sprites_region(0x0700, 0x0800);
-		draw_sprites_region(0x0e00, 0x1000);
-		draw_sprites_region(0x0800, 0x0f00);
-		draw_sprites_region(0x0000, 0x0700);
-	}
-
-//	if (character_enable) {
-//		draw_fg_layer();
-//	}
-
-//	BurnTransferCopy(DrvPalette);
-
-	return 0;
-}
-
-/*static*/ INT32 DygerDraw()
-{
-	if (DrvRecalc) {
-		for (INT32 offs = 0; offs < 0x400; offs++) {
-			palette_write(offs);
-		}
-
-		DrvRecalc = 0;
-	}
-
-	if (bglayer_enable) {
-		draw_bg_layer(1);
-	} else {
-//		BurnTransferClear();
-	}
-
-	if (sprite_enable) {
-		draw_sprites_region(0x0000, 0x1000);
-	}
-
-//	if (character_enable) {
-//		draw_fg_layer();
-//	}
-
-//	BurnTransferCopy(DrvPalette);
-
 	return 0;
 }
 
 /*static*/ INT32 DrvFrame()
 {
-//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Drvframe   ",24,40);
-
+	SPR_RunSlaveSH((PARA_RTN*)sidearms_draw_starfield,&starfield_enable);
 	watchdog++;
 	if (watchdog > 180 && enable_watchdog) {
 		DrvDoReset(0);
 	}
-/*
-	if (DrvReset) {
-		DrvDoReset(1);
-	}
-*/
-//	CZetNewFrame();
-
 	{
 		memset (DrvInputs, 0xff, 5);
 
@@ -1121,12 +747,10 @@ inline /*static*/ double DrvGetTime()
 */
 	CZetClose();
 #endif	
-//	if (pBurnDraw) {
-//		BurnDrvRedraw();
-//	}
+
 	SidearmsDraw();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
-
+	SPR_WaitEndSlaveSH();
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1236,7 +860,7 @@ static void DrvInitSaturn()
 	ss_scl			= (Fixed32 *)SS_SCL;
 
 	nBurnLinescrollSize = 0;
-	nBurnSprites = 128+3;
+	nBurnSprites = 128+4;
 //	nBurnFunction = PCM_VblIn;//smpVblIn;
 
 //3 nbg
@@ -1258,34 +882,36 @@ static void DrvInitSaturn()
 	ss_reg->n2_move_x =  80;
 	SCL_Close();
 
-
-	memset((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x8000);
+	memset4_fast((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x8000);
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
-//	memset((Uint8 *)ss_map2,0x11,0x8000);
-//	memset((Uint8 *)ss_map3,0,0x2000);
-//	memset((Uint8 *)bg_map_dirty,1,0x4000);
-	SprSpCmd *ss_spritePtr;
-	unsigned int i = 3;
 	
-	for (i = 3; i <nBurnSprites; i++) 
+	SprSpCmd *ss_spritePtr;
+
+	ss_sprite[3].control		= ( JUMP_NEXT | FUNC_NORMALSP);
+	ss_sprite[3].drawMode   = ( COLOR_2 | ECD_DISABLE | COMPO_REP);
+	ss_sprite[3].charSize		= 0x30E0;	
+	ss_sprite[3].charAddr		= 0x8620;	
+	ss_sprite[3].ax				= -32;
+	ss_sprite[3].ay				= 0;
+
+	for (unsigned int i = 4; i <nBurnSprites; i++) 
 	{
-		ss_spritePtr				= &ss_sprite[i];
-		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
-		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
-		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
+		ss_spritePtr						= &ss_sprite[i];
+		ss_spritePtr->control			= ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_spritePtr->drawMode	= ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
+		ss_spritePtr->charSize		= 0x210;
 	}
-	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void cleanSprites()
 {
 	unsigned int delta;	
-	for (delta=3; delta<nBurnSprites; delta++)
+	for (unsigned int delta=4; delta<nBurnSprites; delta++)
 	{
-		ss_sprite[delta].charSize   = 0;
+//		ss_sprite[delta].charSize   = 0;
 		ss_sprite[delta].charAddr   = 0;
-		ss_sprite[delta].ax   = 0;
-		ss_sprite[delta].ay   = 0;
+		ss_sprite[delta].ax   = -1;
+		ss_sprite[delta].ay   = -1;
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

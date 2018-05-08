@@ -794,7 +794,7 @@ if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
-//	scfg.dispenbl 		 = OFF;		  // VBT à decommenter pour ne pas afficher l'écran de texte
+	scfg.dispenbl 		 = OFF;		  // VBT à decommenter pour ne pas afficher l'écran de texte
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 //	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
@@ -838,8 +838,8 @@ static void dummy(void)
 	nBurnLinescrollSize = 0x0;
 //	TVOFF;
 	SS_MAP2    = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
-//	SS_FONT    = ss_font     = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
-	SS_FONT    = ss_font     = (Uint16 *)SCL_VDP2_VRAM_B0;// remttre null
+	SS_FONT    = ss_font     = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
+//	SS_FONT    = ss_font     = (Uint16 *)SCL_VDP2_VRAM_B0;// remttre null
 	SS_MAP      = ss_map    = (Uint16 *)NULL;
 //	SS_FONT    = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = cache       =(Uint8  *)SCL_VDP2_VRAM_A0;
