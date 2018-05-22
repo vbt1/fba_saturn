@@ -98,6 +98,9 @@ typedef struct
 #define SS_SET_S0PRIN(/* 3 bits */ s0prin) \
   (ss_SpPriNum->PriorityNumberSP01 \
    = (ss_SpPriNum->PriorityNumberSP01 & 0xFFF0) | (s0prin))
+#define SS_SET_S1PRIN(/* 3 bits */ s1prin) \
+  (ss_SpPriNum->PriorityNumberSP01 \
+   = (ss_SpPriNum->PriorityNumberSP01 & 0xF0FF) | ((s1prin) << 8))
 #define SS_SET_SPCLMD(/* 1 bit */ spclmd) \
    (ss_OtherPri->SpriteControl \
    = (ss_OtherPri->SpriteControl & 0xFFDF) | ((spclmd) << 5))
