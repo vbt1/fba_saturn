@@ -95,6 +95,15 @@ typedef struct
 #define SS_SET_N2PRIN(/* 3 bits */ n2prin) \
   (ss_BgPriNum->PriorityNumberNBG23 \
    = (ss_BgPriNum->PriorityNumberNBG23 & 0xFF00) | ((n2prin)))
+
+
+#define SS_SET_SPCCEN(/* 1 bit */ spccen) \
+  (ss_OtherPri->ColorMixControl \
+   = (ss_OtherPri->ColorMixControl & 0xFFBF) | ((spccen) << 6))
+#define SCL_SET_S1CCRT(/* 5bits */ s1ccrt) \
+  (SclSpColMix.ColMixRateSP01 \
+   = (SclSpColMix.ColMixRateSP01 & 0x00FF) | ((s1ccrt) << 8))
+
 #define SS_SET_S0PRIN(/* 3 bits */ s0prin) \
   (ss_SpPriNum->PriorityNumberSP01 \
    = (ss_SpPriNum->PriorityNumberSP01 & 0xFFF0) | (s0prin))

@@ -149,6 +149,11 @@ int ovlInit(char *szShortName)
 #endif
 			if (starfield_enable != (data & 0x20)) {
 				starfield_enable = data & 0x20;
+
+				ss_regs->dispenbl &= 0xfffe;
+				ss_regs->dispenbl |= (starfield_enable >> 5) & 0x0001;
+				BGON = ss_regs->dispenbl;
+
 				hflop_74a = 1;
 				starscrollx = starscrolly = 0;
 			}
@@ -189,6 +194,10 @@ int ovlInit(char *szShortName)
 		case 0xc80c:
 			sprite_enable = data & 0x01;
 			bglayer_enable = data & 0x02;
+
+			ss_regs->dispenbl &= 0xfffD;
+			ss_regs->dispenbl |= bglayer_enable;
+			BGON = ss_regs->dispenbl;
 		return;
 	}
 }
@@ -533,6 +542,21 @@ inline /*static*/ /*double DrvGetTime()
 	nBurnFunction = copyBg;
 
 	drawWindow(0,224,240,0,0);
+
+	UINT8 *lineptr = (Uint8 *)0x0280000;
+	UINT8 *lineptr2 = (Uint8 *)SS_FONT;
+
+	for (UINT32 y = 0; y < 256; y++) 
+	{
+		for (UINT32 x = 0; x < 512; x+=2) 
+		{
+			UINT8 c1 = (lineptr[0]&0x0f)<<4;
+			UINT8 c2 = (lineptr[1]&0x0f);
+			lineptr2[0] = c1|c2;
+			lineptr+=2;
+			lineptr2++;
+		}
+	}
 	return 0;
 }
 
@@ -561,80 +585,6 @@ int bitXor(int x, int y)
     return z;
 } 
 
-
-/*static*/ void sidearms_draw_starfield(int *starfield_enable)
-{
-	UINT16 *lineptr = (Uint8 *)SS_FONT;//pTransDraw;
-//	UINT8 *lineptr = (Uint8 *)DrvGfxROM2+0x43100;
-#if 1
-	if(starfield_enable[0])
-	{
-		UINT8 *lineptr2 = (Uint8 *)(0x0280000+(starscrolly*768)+starscrollx);
-
-		for (UINT32 k=0;k<224 ;k++ ) // row
-		{
-			memcpyl(lineptr,lineptr2,176);
-			lineptr2+=768;
-//			lineptr+=384;
-			lineptr+=256;
-		}
-	}
-	else
-	{
-		memset4_fast(lineptr,0x00,0xE000);
-	}
-#else
-	if(starfield_enable[0])
-	{
-		UINT8 stscrolly = starscrolly;
-
-		UINT32 _hcount_191 = starscrollx & 0xff;
-
-		for (INT32 y = 16; y < (16+nScreenHeight); y++)
-		{
-			UINT32 hadd_283 = (_hcount_191 & ~0x1f)>>5;
-			UINT32 vadd_283 = stscrolly + y;
-
-			INT32 i = (vadd_283<<4) & 0xff0;
-//			i |= (hflop_74a^(hadd_283/8)) *8;
-			i |= (1^(hadd_283/8)) *8;
-			i |= hadd_283; // & 7;
-			UINT32 latch_374 = DrvStarMap[i + 0x3000];
-
-			hadd_283 = _hcount_191 - 1;
-
-			for (UINT32 x = 0; x < nScreenWidth; lineptr++, x++)
-			{
-				i = hadd_283;
-				hadd_283 = _hcount_191 + (x & 0xff);
-				vadd_283 = stscrolly + y;
-
-//				if (!((vadd_283 ^ (x>>3)) & 4)) continue;
-				if (!((vadd_283 ^ (x/8)) & 4)) continue;
-				if ((vadd_283 | (hadd_283>>1)) & 2) continue;
-
-
-
-				if ((i & 0x1f)==0x1f)
-				{
-					hadd_283 >>= 5;
-					i  = (vadd_283<<4) & 0xff0;
-//					i |= (hflop_74a^(hadd_283/8)) *8;
-					i |= (1^(hadd_283/8)) *8;
-					i |= hadd_283;// & 7;
-					latch_374 = DrvStarMap[i + 0x3000];
-				}
-
-				if ((~((latch_374^hadd_283)^1) & 0x1f)) continue;
-
-	//			*lineptr = (UINT16)((latch_374>>5) | 0x378); // numéro de couleur de la palette du bg > 0x300
-	
-				*lineptr = (latch_374>>5) &0xf; // vbt : essai sans offset
-			}
-		}
-	}
-#endif
-}
 void copyBg()
 {
 	if(bglayer_enable)
@@ -691,7 +641,9 @@ void copyBg()
 		ss_spritePtr->ax			= DrvSprBuf[offs + 3] + ((attr << 4) & 0x100);
 		ss_spritePtr->ay			= sy;
 //		ss_spritePtr->charSize	= 0x210;
-		ss_spritePtr->color		= color<<4;//Colour<<4;
+//		ss_spritePtr->color		= 0x2000 | color<<4;//Colour<<4;
+// tdd dit 1<<11 et  1 << 13
+		ss_spritePtr->color		= 0x2000 | color<<4;//Colour<<4;
 		ss_spritePtr->charAddr	= 0x220+(code<<4);
 		ss_spritePtr++;
 	}
@@ -699,9 +651,11 @@ void copyBg()
 
 /*static*/ INT32 SidearmsDraw()
 {
-//	if (starfield_enable) {
-//		sidearms_draw_starfield();
-//	}
+	if (starfield_enable)
+	{
+		ss_reg->n0_move_x = starscrollx<<16;
+		ss_reg->n0_move_y = starscrolly<<16;
+	}
 
 	if (bglayer_enable) 
 	{
@@ -721,7 +675,6 @@ void copyBg()
 
 /*static*/ INT32 DrvFrame()
 {
-	SPR_RunSlaveSH((PARA_RTN*)sidearms_draw_starfield,&starfield_enable);
 	watchdog++;
 	if (watchdog > 180 && enable_watchdog) {
 		DrvDoReset(0);
@@ -800,7 +753,6 @@ void copyBg()
 
 	SidearmsDraw();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
-	SPR_WaitEndSlaveSH();
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -852,8 +804,8 @@ static void initLayers()
 	scfg.datatype 	   = SCL_BITMAP;
 	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
-	scfg.dispenbl      = ON;
-//	scfg.dispenbl      = OFF;
+//	scfg.dispenbl      = ON;
+	scfg.dispenbl      = OFF;
 //	scfg.coltype       = SCL_COL_TYPE_256;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
@@ -906,14 +858,15 @@ static void DrvInitSaturn()
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+4;
 //	nBurnFunction = PCM_VblIn;//smpVblIn;
-
+//	SS_SET_SPCCEN(1);
+//	SS_SET_S1CCRT(31);
 //3 nbg
 //	SS_SET_N0PRIN(7); // window
 	SS_SET_N0PRIN(3); // star field
 	SS_SET_N1PRIN(4); // bg
 	SS_SET_N2PRIN(6); // fg
 	SS_SET_S0PRIN(4); // sp0
-//	SS_SET_S1PRIN(3); // sp1
+	SS_SET_S1PRIN(1); // sp1
 
 //	SS_SET_N1SPRM(1);  // 1 for special priority
 //	ss_regs->specialcode=0x000e; // sfcode, upper 8bits, function b, lower 8bits function a
@@ -939,8 +892,8 @@ static void DrvInitSaturn()
 	ss_sprite[3].charSize		= 0x2CE0;	
 	ss_sprite[3].charAddr		= 0x8620;
 	ss_sprite[3].color			= 0x078;	
-	ss_sprite[3].ax				= 64;
-	ss_sprite[3].ay				= 0;
+	ss_sprite[3].ax				= 0;//64
+	ss_sprite[3].ay				= 0;//16
 
 	for (unsigned int i = 4; i <nBurnSprites; i++) 
 	{
@@ -1095,7 +1048,7 @@ static void DrvInitSaturn()
 //			UINT32 _hcount_191 = xx & 0xff;
 			UINT32 _hcount_191 = 0;
 
-			for (INT32 y = 0; y < 256+256; y++)
+			for (INT32 y = 0; y < 256; y++)
 			{
 				UINT32 hadd_283 = _hcount_191 & ~0x1f;
 				UINT32 vadd_283 = 0 + y;
@@ -1107,7 +1060,7 @@ static void DrvInitSaturn()
 
 				hadd_283 = _hcount_191 - 1;
 
-				for (INT32 x = 0; x < 768; lineptr++, x++)
+				for (INT32 x = 0; x < 512; lineptr++, x++)
 				{
 					i = hadd_283;
 					hadd_283 = _hcount_191 + (x & 0xff);
@@ -1130,21 +1083,6 @@ static void DrvInitSaturn()
 					*lineptr = (latch_374>>5) &0xf; // vbt : essai sans offset
 				}
 			}
-		}
-	}
-
-	lineptr = (Uint8 *)0x0280000;
-	UINT8 *lineptr2 = (Uint8 *)0x0280000;
-
-	for (UINT32 y = 0; y < 256+256; y++) 
-	{
-		for (UINT32 x = 0; x < 768; x+=2) 
-		{
-			UINT8 c1 = (lineptr[0]&0x0f)<<4;
-			UINT8 c2 = (lineptr[1]&0x0f);
-			lineptr2= c1|c2;
-			lineptr+=2;
-			lineptr2++;
 		}
 	}
 }

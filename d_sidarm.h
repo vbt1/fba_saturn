@@ -13,6 +13,10 @@ static char *itoa(i);
 void copyBg();
 static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 
+#define VDP2_BASE           0x25e00000
+#define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
+#define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
+
 /*static*/ UINT32 *bgmap_buf = NULL;
 /*static*/ UINT16 *bgmap_lut = NULL;
 /*static*/ //UINT16 *remap16_lut = NULL;
