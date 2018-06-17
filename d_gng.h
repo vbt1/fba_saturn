@@ -28,12 +28,6 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ void DrvCalcPalette();
 /*static*/ Uint16 cram_lut[32768*2];
 
-#ifdef CACHE
-/*static*/ unsigned char 	bg_dirtybuffer[2048];
-/*static*/ unsigned char 	fg_dirtybuffer[2048];
-///*static*/ unsigned char 	bg_dirtybuffer[2048];
-#endif
-
 /*static*/ unsigned char *Mem                 = NULL;
 /*static*/ unsigned char *MemEnd              = NULL;
 /*static*/ unsigned char *RamStart            = NULL;

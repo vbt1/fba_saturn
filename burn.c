@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 57
+#define NB_DRV 58
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -74,7 +74,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvpkunwar = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvPang = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvSpang = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvGnga = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvGnga = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvBlockgal = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvWboyu = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvChplftb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
@@ -196,9 +196,9 @@ BurnDrvSpang.szShortName="spang";
 BurnDrvSpang.szFullNameA="Super Pang (World 900914)";
 BurnDrvSpang.szParent="mitch";
 
-//BurnDrvGnga.szShortName="gnga";
-//BurnDrvGnga.szFullNameA="Ghosts'n Goblins (World? set 2)";
-//BurnDrvGnga.szParent="gng";
+BurnDrvGnga.szShortName="gnga";
+BurnDrvGnga.szFullNameA="Ghosts'n Goblins (World? set 2)";
+BurnDrvGnga.szParent="gng";
 
 BurnDrvBlockgal.szShortName="blockgal";
 BurnDrvBlockgal.szFullNameA="Block Gal (MC-8123B, 317-0029)";
@@ -413,7 +413,7 @@ pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvMSX_1942;
 pDriver[i++] = &BurnDrvSidearms;
-
+pDriver[i++] = &BurnDrvGnga;
 pDriver[i++] = &BurnDrvOpaopa;
 //pDriver[i++] = &BurnDrvKungfut;
 //pDriver[i++] = &BurnDrvStinger;
