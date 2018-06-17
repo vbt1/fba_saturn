@@ -56,15 +56,22 @@ SFX sfx_list[50] = {
 	{0,0,0},	{0,0,0},	
 /*032.PCM*/	{0,1075106,10},	// Hurry Up ! (Level 1)	
 /*033.PCM*/	{0,798182,10},	// Hurry Up !! (Level 2)	
-/*033.PCM*/	{0,201988,10},	// Unused #1
+/*034.PCM*/	{0,201988,10},	// Unused #1
 /*035.PCM*/	{0,171906,10},	// Continue
 /*036.PCM*/	{0,135084,10},	// Game Over
 /*037.PCM*/	{0,452700,10},	// Name Entry	
 /*038.PCM*/	{0,1098041,0},	// Stage Cleared
-/*039.PCM*/	{0,0,10},	// Ending (All Stages Cleared)
+/*039.PCM*/	{0,934598,10},	// Ending (All Stages Cleared)
 /*040.PCM*/	{0,600804,10},	// Stage 01-03 	(Mt. Fuji)
 /*041.PCM*/	{0,980870,10},	// Stage 04-06 	(Mt. Keirin (Guilin))
-	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+/*042.PCM*/	{0,565324,10},	// Stage 07-09 (Emerald Temple (Wat Phra Kaew)) / Stage 40-42 (New York)	
+/*043.PCM*/	{0,910822,10},	// Stage 10-12 (Angkor Wat) / Stage 31-33 (Athens)
+/*044.PCM*/	{0,662400,10},	// Stage 13-15 (Australia (Ayers Rock)) / Stage 37-39 (Kenya (Nairobi))
+/*045.PCM*/	{0,0,0},	// Stage 16-18 (Taj Mahal) / Stage 34-36 (Egypt (Pyramid))
+/*046.PCM*/	{0,0,0},	// Stage 19-21 (Leningrad (St. Petersburg)) / Stage 46-48 (Antarctica)	
+/*047.PCM*/	{0,0,0},	// Stage 22-24 (Paris)
+/*048.PCM*/	{0,0,0}, // Stage 25-27 (London) / Stage 43-45 (Maya)
+/*049.PCM*/	{0,0,0}, // Stage 28-30 (Barcelona) / Stage 49-50 (Easter Island)
 };
 
 static unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
