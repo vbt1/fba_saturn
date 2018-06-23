@@ -67,11 +67,11 @@ SFX sfx_list[50] = {
 /*042.PCM*/	{0,565324,10},	// Stage 07-09 (Emerald Temple (Wat Phra Kaew)) / Stage 40-42 (New York)	
 /*043.PCM*/	{0,910822,10},	// Stage 10-12 (Angkor Wat) / Stage 31-33 (Athens)
 /*044.PCM*/	{0,662400,10},	// Stage 13-15 (Australia (Ayers Rock)) / Stage 37-39 (Kenya (Nairobi))
-/*045.PCM*/	{0,0,0},	// Stage 16-18 (Taj Mahal) / Stage 34-36 (Egypt (Pyramid))
-/*046.PCM*/	{0,0,0},	// Stage 19-21 (Leningrad (St. Petersburg)) / Stage 46-48 (Antarctica)	
-/*047.PCM*/	{0,0,0},	// Stage 22-24 (Paris)
-/*048.PCM*/	{0,0,0}, // Stage 25-27 (London) / Stage 43-45 (Maya)
-/*049.PCM*/	{0,0,0}, // Stage 28-30 (Barcelona) / Stage 49-50 (Easter Island)
+/*045.PCM*/	{0,697030,10},	// Stage 16-18 (Taj Mahal) / Stage 34-36 (Egypt (Pyramid))
+/*046.PCM*/	{0,824102,10},	// Stage 19-21 (Leningrad (St. Petersburg)) / Stage 46-48 (Antarctica)	
+/*047.PCM*/	{0,895460,10},	// Stage 22-24 (Paris)
+/*048.PCM*/	{0,708700,10}, // Stage 25-27 (London) / Stage 43-45 (Maya)
+/*049.PCM*/	{0,752732,10}, // Stage 28-30 (Barcelona) / Stage 49-50 (Easter Island)
 };
 
 static unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};

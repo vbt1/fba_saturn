@@ -549,6 +549,21 @@ Track MODE1
 				File 044.PCM;1
 					Source PANG\044.PCM
 				EndFile
+				File 045.PCM;1
+					Source PANG\045.PCM
+				EndFile
+				File 046.PCM;1
+					Source PANG\046.PCM
+				EndFile
+				File 047.PCM;1
+					Source PANG\047.PCM
+				EndFile
+				File 048.PCM;1
+					Source PANG\048.PCM
+				EndFile
+				File 049.PCM;1
+					Source PANG\049.PCM
+				EndFile
 		File    SDDRVS.TSK;1
 			Source .\SDDRVS.TSK
 		EndFile
