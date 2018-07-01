@@ -29,13 +29,19 @@ int ovlInit(char *szShortName)
 
 	UINT16 data = ((DrvPalRAM[offset + 0x400] * 256) + DrvPalRAM[offset]);
 
-//	DrvPalette[offset] = cram_lut[data];
 
 	if(offset >=0x300)
 	{
 // fg	 offset 300
 		unsigned short position = remap4to16_lut[offset&0xff];
 		colBgAddr2[position] = cram_lut[data];
+		if(offset >=0x378)
+		{
+			DrvPalette[offset] = cram_lut[data];
+//			colBgAddr2[offset+0x100-0x78] = cram_lut[data];
+			colBgAddr2[offset+0x88] = cram_lut[data];
+		}
+
 	}
 	else
 	{
@@ -196,11 +202,11 @@ int ovlInit(char *szShortName)
 	}
 }
 
-int vb=0;
+//int vb=0;
 
 /*static*/ UINT8 __fastcall sidearms_main_read(UINT16 address)
 {
-
+/*  // vbt : level select
 if(vb<1500)
 	vb++;
 else
@@ -208,7 +214,7 @@ else
 	DrvDips[0]=0x7f;
 	DrvDips[1]=0xfc;
 	}
-
+*/
 	switch (address)
 	{
 		case 0xc800:
@@ -312,6 +318,8 @@ inline /*static*/ /*double DrvGetTime()
 	starscrollx = 0;
 	starscrolly = 0;
 	hflop_74a = 1;
+
+	memset4_fast((Uint8 *)DrvGfxROM2+0x42000,0x00,0x3E000);
 
 	for (UINT32 i = 0; i < 0x400; i++) 
 	{
@@ -586,47 +594,6 @@ void copyBg()
 		memcpyl(ss_map2,bgmap_buf,0x800);
 }
 
-/*static*/ void sidearms_draw_starfield(int *starfield_enable)
-{
-	UINT16 *lineptr = (Uint8 *)SS_FONT;//pTransDraw;
-	UINT32 _hcount_191 = starscrollx & 0xff;
-
-	for (INT32 y = 16; y < (16+nScreenHeight); y++)
-	{
-		UINT32 hadd_283 = _hcount_191 & ~0x1f;
-		UINT32 vadd_283 = starscrolly + y;
-
-		INT32 i = (vadd_283<<4) & 0xff0;
-		i |= (hflop_74a^(hadd_283>>8)) << 3;
-		i |= (hadd_283>>5) & 7;
-		UINT32 latch_374 = DrvStarMap[i + 0x3000];
-
-		hadd_283 = _hcount_191 - 1;
-
-		for (INT32 x = 0; x < nScreenWidth; lineptr++, x++)
-		{
-			i = hadd_283;
-			hadd_283 = _hcount_191 + (x & 0xff);
-			vadd_283 = starscrolly + y;
-
-			if (!((vadd_283 ^ (x>>3)) & 4)) continue;
-			if ((vadd_283 | (hadd_283>>1)) & 2) continue;
-
-			if ((i & 0x1f)==0x1f)
-			{
-				i  = (vadd_283<<4) & 0xff0;
-				i |= (hflop_74a^(hadd_283>>8)) << 3;
-				i |= (hadd_283>>5) & 7;
-				latch_374 = DrvStarMap[i + 0x3000];
-			}
-
-			if ((~((latch_374^hadd_283)^1) & 0x1f)) continue;
-
-			*lineptr = (UINT16)((latch_374>>5) | 0x378);
-		}
-	}
-}
-
 /*static*/ void draw_bg_layer(INT32 type)
 {
 	INT32 scrollx = ((((bgscrollx[1] << 8) + bgscrollx[0]) & 0xfff) + 64) & 0xfff;
@@ -871,8 +838,10 @@ static void initColors()
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
-	SCL_SetColRamOffset(SCL_NBG0, 3,OFF);
-	SCL_SetColRam(SCL_NBG0,8,8,palette);	 // vbt ? remettre
+	SCL_AllocColRam(SCL_NBG3,OFF);
+//	SCL_SetColRamOffset(SCL_NBG0, 3,OFF);
+	SCL_AllocColRam(SCL_NBG0,OFF);
+//	SCL_SetColRam(SCL_NBG0,8,8,palette);	 // vbt ? remettre
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
@@ -903,10 +872,11 @@ static void DrvInitSaturn()
 //	nBurnFunction = PCM_VblIn;//smpVblIn;
 
 //3 nbg
-	SS_SET_N0PRIN(7); // window
+//	SS_SET_N0PRIN(7); // window
+	SS_SET_N0PRIN(3); // star field
 	SS_SET_N1PRIN(4); // bg
 	SS_SET_N2PRIN(6); // fg
-	SS_SET_S0PRIN(4); // sp
+	SS_SET_S0PRIN(4); // sp0
 
 //	SS_SET_N1SPRM(1);  // 1 for special priority
 //	ss_regs->specialcode=0x000e; // sfcode, upper 8bits, function b, lower 8bits function a
@@ -946,8 +916,8 @@ static void DrvInitSaturn()
 	{
 		ss_sprite[delta].charSize   = 0;
 		ss_sprite[delta].charAddr   = 0;
-		ss_sprite[delta].ax   = 0;
-		ss_sprite[delta].ay   = 0;
+		ss_sprite[delta].ax   = -1;
+		ss_sprite[delta].ay   = -1;
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
