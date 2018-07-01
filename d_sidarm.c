@@ -143,6 +143,11 @@ int ovlInit(char *szShortName)
 #endif
 			if (starfield_enable != (data & 0x20)) {
 				starfield_enable = data & 0x20;
+
+				ss_regs->dispenbl &= 0xfffe;
+				ss_regs->dispenbl |= (starfield_enable >> 5) & 0x0001;
+				BGON = ss_regs->dispenbl;
+
 				hflop_74a = 1;
 				starscrollx = starscrolly = 0;
 			}
@@ -183,6 +188,10 @@ int ovlInit(char *szShortName)
 		case 0xc80c:
 			sprite_enable = data & 0x01;
 			bglayer_enable = data & 0x02;
+
+			ss_regs->dispenbl &= 0xfffD;
+			ss_regs->dispenbl |= bglayer_enable;
+			BGON = ss_regs->dispenbl;
 		return;
 	}
 }
@@ -264,11 +273,11 @@ else
 //	return (INT64)(ZetTotalCycles() * nSoundRate / 4000000);
 //}
 
-inline /*static*/ double DrvGetTime()
+inline /*static*/ /*double DrvGetTime()
 {
 	return (double)CZetTotalCycles() / 4000000;
 }
-
+*/
 /*static*/ INT32 DrvDoReset(INT32 clear_mem)
 {
 	if (clear_mem) {
@@ -350,7 +359,7 @@ inline /*static*/ double DrvGetTime()
 
 //	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
 	bgmap_lut	 		= 0x00200000; //Next; Next += 0x008000 * sizeof (UINT16);
-	bgmap_buf		= bgmap_lut + 0x8000;
+	bgmap_buf		= bgmap_lut + 0x20000;
 	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
 	map_lut				= Next; Next += 256 * sizeof (UINT16);
 	map_offset_lut	= Next; Next += 4096 * sizeof (UINT16);
@@ -533,8 +542,24 @@ inline /*static*/ double DrvGetTime()
 	{
 		palette_write(i);
 	}
+	nBurnFunction = copyBg;
 
 	drawWindow(0,224,240,0,0);
+
+	UINT8 *lineptr = (Uint8 *)0x0280000;
+	UINT8 *lineptr2 = (Uint8 *)SS_FONT;
+
+	for (UINT32 y = 0; y < 256; y++) 
+	{
+		for (UINT32 x = 0; x < 512; x+=2) 
+		{
+			UINT8 c1 = (lineptr[0]&0x0f)<<4;
+			UINT8 c2 = (lineptr[1]&0x0f);
+			lineptr2[0] = c1|c2;
+			lineptr+=2;
+			lineptr2++;
+		}
+	}
 	return 0;
 }
 
@@ -553,6 +578,12 @@ inline /*static*/ double DrvGetTime()
 	BurnFree (AllMem);
 
 	return 0;
+}
+
+void copyBg()
+{
+	if(bglayer_enable)
+		memcpyl(ss_map2,bgmap_buf,0x800);
 }
 
 /*static*/ void sidearms_draw_starfield(int *starfield_enable)
@@ -600,7 +631,8 @@ inline /*static*/ double DrvGetTime()
 {
 	INT32 scrollx = ((((bgscrollx[1] << 8) + bgscrollx[0]) & 0xfff) + 64) & 0xfff;
 	INT32 scrolly = ((((bgscrolly[1] << 8) + bgscrolly[0]) & 0xfff) + 16) & 0xfff; 
-	UINT32 *map = (UINT32 *)ss_map2;
+//	INT32 *map = (UINT32 *)ss_map2;
+	UINT32 *map = (UINT32 *)bgmap_buf;
 
 	INT32 offs = 2 * (scrollx >> 5) + 0x100 * (scrolly >> 5);
 
@@ -656,8 +688,10 @@ inline /*static*/ double DrvGetTime()
 
 /*static*/ INT32 SidearmsDraw()
 {
-	if (starfield_enable) {
-//		sidearms_draw_starfield();
+	if (starfield_enable)
+	{
+		ss_reg->n0_move_x = starscrollx<<16;
+		ss_reg->n0_move_y = starscrolly<<16;
 	}
 
 	if (bglayer_enable) 
@@ -673,31 +707,15 @@ inline /*static*/ double DrvGetTime()
 		draw_sprites_region(0x0800, 0x0f00);
 		draw_sprites_region(0x0000, 0x0700);
 	}
-/*
-	if (character_enable) {
-		draw_fg_layer();
-	}
-*/
-//	BurnTransferCopy(DrvPalette);
-
 	return 0;
 }
 
 /*static*/ INT32 DrvFrame()
 {
-//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Drvframe   ",24,40);
-
 	watchdog++;
 	if (watchdog > 180 && enable_watchdog) {
 		DrvDoReset(0);
 	}
-/*
-	if (DrvReset) {
-		DrvDoReset(1);
-	}
-*/
-//	CZetNewFrame();
-
 	{
 		memset (DrvInputs, 0xff, 5);
 
@@ -769,12 +787,9 @@ inline /*static*/ double DrvGetTime()
 */
 	CZetClose();
 #endif	
-//	if (pBurnDraw) {
-//		BurnDrvRedraw();
-//	}
+
 	SidearmsDraw();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
-
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -839,9 +854,9 @@ static void initLayers()
 	scfg.datatype 	   = SCL_BITMAP;
 	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
-	scfg.dispenbl      = ON;
-//	scfg.dispenbl      = OFF;
-
+//	scfg.dispenbl      = ON;
+	scfg.dispenbl      = OFF;
+//	scfg.coltype       = SCL_COL_TYPE_256;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
 	SCL_SetCycleTable(CycleTb);
@@ -871,7 +886,7 @@ static void DrvInitSaturn()
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
 // 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1;		   //c
 //	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
+	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
 //SS_FONT = ss_font		=(Uint16 *)NULL;
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
@@ -922,7 +937,6 @@ static void DrvInitSaturn()
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
-	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void cleanSprites()
@@ -1057,6 +1071,54 @@ static void DrvInitSaturn()
 			}
 		}
 		pbgmap_lut+=8;
+	}
+
+	UINT8 *lineptr = (Uint8 *)0x0280000;
+	memset(lineptr,0x00,0x60000);
+
+//	for (INT32 xx = 0; xx < 256; xx++)
+	{
+//		for (INT32 yy = 0; yy < 256; yy++)
+		{
+//			UINT32 _hcount_191 = xx & 0xff;
+			UINT32 _hcount_191 = 0;
+
+			for (INT32 y = 0; y < 256; y++)
+			{
+				UINT32 hadd_283 = _hcount_191 & ~0x1f;
+				UINT32 vadd_283 = 0 + y;
+
+				INT32 i = (vadd_283<<4) & 0xff0;
+				i |= (hflop_74a^(hadd_283>>8)) << 3;
+				i |= (hadd_283>>5) & 7;
+				UINT32 latch_374 = DrvStarMap[i + 0x3000];
+
+				hadd_283 = _hcount_191 - 1;
+
+				for (INT32 x = 0; x < 512; lineptr++, x++)
+				{
+					i = hadd_283;
+					hadd_283 = _hcount_191 + (x & 0xff);
+					vadd_283 = 0 + y;
+
+					if (!((vadd_283 ^ (x>>3)) & 4)) continue;
+					if ((vadd_283 | (hadd_283>>1)) & 2) continue;
+
+					if ((i & 0x1f)==0x1f)
+					{
+						i  = (vadd_283<<4) & 0xff0;
+						i |= (hflop_74a^(hadd_283>>8)) << 3;
+						i |= (hadd_283>>5) & 7;
+						latch_374 = DrvStarMap[i + 0x3000];
+					}
+
+					if ((~((latch_374^hadd_283)^1) & 0x1f)) continue;
+
+		//			*lineptr = (UINT16)((latch_374>>5) | 0x378); // num?ro de couleur de la palette du bg > 0x300
+					*lineptr = (latch_374>>5) &0xf; // vbt : essai sans offset
+				}
+			}
+		}
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
