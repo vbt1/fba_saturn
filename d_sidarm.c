@@ -594,7 +594,7 @@ void copyBg()
 		memcpyl(ss_map2,bgmap_buf,0x800);
 }
 
-/*static*/ void draw_bg_layer(INT32 type)
+/*static*/ void draw_bg_layer()
 {
 	INT32 scrollx = ((((bgscrollx[1] << 8) + bgscrollx[0]) & 0xfff) + 64) & 0xfff;
 	INT32 scrolly = ((((bgscrolly[1] << 8) + bgscrolly[0]) & 0xfff) + 16) & 0xfff; 
@@ -626,34 +626,34 @@ void copyBg()
 /*static*/ void draw_sprites_region(INT32 start, INT32 end)
 {
 	UINT32 delta	= (start/32)+3;
+	SprSpCmd *ss_spritePtr = &ss_sprite[delta];
 
 	for (INT32 offs = end - 32; offs >= start; offs -= 32)
 	{
 		INT32 sy = DrvSprBuf[offs + 2];
 		if (!sy || DrvSprBuf[offs + 5] == 0xc3) continue;
 
-		INT32 attr  = DrvSprBuf[offs + 1];
-		INT32 color = attr & 0xf;
-		INT32 code  = DrvSprBuf[offs] + ((attr << 3) & 0x700);
-		INT32 sx    = DrvSprBuf[offs + 3] + ((attr << 4) & 0x100);
-
-			ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP); // | flipx;
-			ss_sprite[delta].drawMode	= ( ECD_DISABLE | COMPO_REP);
-
-			ss_sprite[delta].ax			= sx;
-			ss_sprite[delta].ay			= sy;
-			ss_sprite[delta].charSize		= 0x210;
-			ss_sprite[delta].color			    = color<<4;//Colour<<4;
-			ss_sprite[delta].charAddr		= 0x220+(code<<4);
-
-			delta++;
-
-
-//		Render16x16Tile_Mask_Clip(pTransDraw, code, sx - 64, sy - 16, color, 4, 0x0f, 0x200, DrvGfxROM2);
+		UINT32 attr  = DrvSprBuf[offs + 1];
+		UINT32 color = attr & 0xf;
+		UINT32 code  = DrvSprBuf[offs] + ((attr << 3) & 0x700);
+//		INT32 sx    = DrvSprBuf[offs + 3] + ((attr << 4) & 0x100);
+//		ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP); // | flipx;
+//		ss_spritePtr->drawMode	= ( ECD_DISABLE | COMPO_REP);
+		ss_spritePtr->ax			= DrvSprBuf[offs + 3] + ((attr << 4) & 0x100);
+		ss_spritePtr->ay			= sy;
+		ss_spritePtr->charSize	= 0x210;
+		ss_spritePtr->color		= color<<4;//Colour<<4;
+		ss_spritePtr->charAddr	= 0x220+(code<<4);
+		ss_spritePtr++;
 	}
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
+void dummy()
+{
 
-/*static*/ INT32 SidearmsDraw()
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ UINT32 SidearmsDraw()
 {
 	if (starfield_enable)
 	{
@@ -663,7 +663,12 @@ void copyBg()
 
 	if (bglayer_enable) 
 	{
-		draw_bg_layer(0);
+//		draw_bg_layer();
+		SPR_RunSlaveSH((PARA_RTN*)draw_bg_layer, NULL);
+	}
+	else
+	{
+		SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 	}
 
 	cleanSprites();
@@ -674,6 +679,8 @@ void copyBg()
 		draw_sprites_region(0x0800, 0x0f00);
 		draw_sprites_region(0x0000, 0x0700);
 	}
+
+	SPR_WaitEndSlaveSH();
 	return 0;
 }
 

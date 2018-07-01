@@ -7,7 +7,7 @@
 INT32 SidearmsInit();
 INT32 DrvExit();
 INT32 DrvFrame();
-INT32 SidearmsDraw();
+UINT32 SidearmsDraw();
 void sidearms_draw_starfield(int *starfield_enable);
 static char *itoa(i);
 void copyBg();
