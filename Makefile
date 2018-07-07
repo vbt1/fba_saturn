@@ -252,6 +252,7 @@ OVLSIDARM1               = root/d_sidarm.bin
 MPOVLSIDARMFILE    = $(OVLSIDARM:.coff=.maps)
 LDOVLSIDARMFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSIDARMFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 SRCOVLSIDARM         = d_SIDARM.c czet.c cz80/cz80.c saturn/ovl.c
+#SRCOVLSIDARM         = d_SIDARM.c saturn/ovl.c
 OBJOVLSIDARM         = $(SRCOVLSIDARM:.c=.o)
 
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
@@ -476,7 +477,7 @@ $(OVLSOLOMN1) : $(OBJOVLSOLOMN) $(MAKEFILE) $(LDOVLSOLOMNFILE)
 	$(CONV) -O binary $(OVLSOLOMN) $(OVLSOLOMN1)
 
 $(OVLSIDARM) : $(OBJOVLSIDARM) $(MAKEFILE) $(OBJOVLSIDARM) $(LDOVLSIDARMFILE)
-	$(CC) $(LDOVLSIDARMFLAGS) $(OBJOVLSIDARM) $(LIBSOVL) -o $@
+	$(CC) $(LDOVLSIDARMFLAGS) $(OBJOVLSIDARM) $(LIBSOVL) raze/raze.o  -o $@
 
 $(OVLSIDARM1) : $(OBJOVLSIDARM) $(MAKEFILE) $(LDOVLSIDARMFILE)
 	$(CONV) -O binary $(OVLSIDARM) $(OVLSIDARM1)

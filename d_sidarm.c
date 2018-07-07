@@ -5,6 +5,9 @@
 #define nScreenHeight 224
 #define nScreenWidth 384
 #define nInterleave 278
+#define nCyclesTotal 4000000 / 60
+#define nSegment (nCyclesTotal / nInterleave)
+#define RAZE 1
 
 int ovlInit(char *szShortName)
 {
@@ -55,9 +58,13 @@ int ovlInit(char *szShortName)
 
 //	ZetMapMemory(DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000), 0x8000, 0xbfff, MAP_ROM);
 //	CZetMapArea(0xc000, 0xcfff, 0, DrvBgRAM + nBank);
-
+#ifdef RAZE
+	z80_map_read(0x8000, 0xbfff, DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000));
+	z80_map_fetch(0x8000, 0xbfff, DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000));
+#else
 	CZetMapArea (0x8000, 0xbfff, 0, DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000));
 	CZetMapArea (0x8000, 0xbfff, 2, DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000));
+#endif
 }
 
 /*static*/ void __fastcall sidearms_main_write(UINT16 address, UINT8 data)
@@ -68,22 +75,6 @@ int ovlInit(char *szShortName)
 		{
 			DrvPalRAM[address & 0x7ff] = data;
 			palette_write(address);
-		}
-		return;
-	}
-
-	if (address >= 0xd000 && address <= 0xd7ff) 
-	{
-		address &= 0x7ff;
-		if(DrvVidRAM[address] != data)
-		{
-			DrvVidRAM[address] = data;
-			UINT32 attr  =	DrvVidRAM[address | 0x800];
-			UINT32 code  = data  | ((attr & 0xc0) << 2);
-
-			UINT32 x = map_offset_lut[address];
-			ss_map[x] = attr & 0x3f;
-			ss_map[x+1] =code; 
 		}
 		return;
 	}
@@ -289,10 +280,13 @@ inline /*static*/ /*double DrvGetTime()
 	if (clear_mem) {
 		memset (AllRam, 0, RamEnd - AllRam);
 	}
-
+#ifdef RAZE
+	z80_reset();
+#else
 	CZetOpen(0);
 	CZetReset();
 	CZetClose();
+#endif
 #ifdef SOUND
 	ZetOpen(1);
 	ZetReset();
@@ -497,7 +491,31 @@ inline /*static*/ /*double DrvGetTime()
 		DrvGfxDecode();
 	}
 //		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit              ",24,30);
+#ifdef RAZE
+  	z80_init_memmap();
 
+	z80_map_fetch(0x0000, 0x7fff, DrvZ80ROM0);
+	z80_map_read(0x0000, 0x7fff, DrvZ80ROM0);
+
+	z80_map_fetch(0xc000, 0xc7ff, DrvPalRAM);
+	z80_map_read(0xc000, 0xc7ff, DrvPalRAM);
+
+	z80_map_fetch(0xd000, 0xdfff, DrvVidRAM);
+	z80_map_read(0xd000, 0xdfff, DrvVidRAM);
+
+	z80_map_fetch(0xe000, 0xefff, DrvZ80RAM0);
+	z80_map_read(0xe000, 0xefff, DrvZ80RAM0);
+	z80_map_write(0xe000, 0xefff, DrvZ80RAM0);
+
+	z80_map_fetch(0xf000, 0xffff, DrvSprRAM);
+	z80_map_read(0xf000, 0xffff, DrvSprRAM);
+	z80_map_write(0xf000, 0xffff, DrvSprRAM);
+
+	z80_add_write(0xc800, 0xdfff, 1, (void *)&sidearms_main_write);
+	z80_add_read(0xc800, 0xc805, 1, (void *)&sidearms_main_read);
+	
+	z80_end_memmap(); 
+#else
 	CZetInit(1);
 	CZetOpen(0);
 
@@ -508,7 +526,6 @@ inline /*static*/ /*double DrvGetTime()
 	CZetMapArea(0xc000, 0xc7ff, 2, DrvPalRAM);
 
 	CZetMapArea(0xd000, 0xdfff, 0, DrvVidRAM);
-//	CZetMapArea(0xd000, 0xdfff, 1, DrvVidRAM);
 	CZetMapArea(0xd000, 0xdfff, 2, DrvVidRAM);
 
 	CZetMapArea(0xe000, 0xefff, 0, DrvZ80RAM0);
@@ -522,6 +539,8 @@ inline /*static*/ /*double DrvGetTime()
 	CZetSetWriteHandler(sidearms_main_write);
 	CZetSetReadHandler(sidearms_main_read);
 	CZetClose();
+#endif
+
 #ifdef SOUND
 	ZetInit(1);
 	ZetOpen(1);
@@ -574,9 +593,11 @@ inline /*static*/ /*double DrvGetTime()
 /*static*/ INT32 DrvExit()
 {
 //	GenericTilesExit();
+#ifdef RAZE
 
+#else
 	CZetExit();
-
+#endif
 //	if (is_whizz) {
 //		BurnYM2151Exit();
 //	} else {
@@ -591,7 +612,11 @@ inline /*static*/ /*double DrvGetTime()
 void copyBg()
 {
 	if(bglayer_enable)
-		memcpyl(ss_map2,bgmap_buf,0x800);
+	{
+		DMA_ScuMemCopy(ss_map2,bgmap_buf,0x800);
+		while(DMA_ScuResult()==2);
+	//		memcpyl(ss_map2,bgmap_buf,0x800);
+	}
 }
 
 /*static*/ void draw_bg_layer()
@@ -701,38 +726,28 @@ void dummy()
 			DrvInputs[4] ^= (DrvJoy5[i] & 1) << i;
 		}
 	}
-
-	INT32 nSoundBufferPos = 0;
-//	INT32 nInterleave = 278;
-	INT32 nCyclesTotal[2] =  { 4000000 / 60, 4000000 / 60 };
-	INT32 nCyclesDone[2] = { 0, 0 };
-
 	vblank = 0;
 
 	for (INT32 i = 0; i < nInterleave; i++) {
-
-		UINT32 nSegment = nCyclesTotal[0] / nInterleave;
-
+#ifdef RAZE
+		z80_emulate(nSegment);
+z80_raise_IRQ(0);
+		if (i == 274) {z80_raise_IRQ(0); vblank = 1; }
+		if (i == 276) z80_lower_IRQ();
+#else
 		CZetOpen(0);
-		nCyclesDone[0] += CZetRun(nSegment);
+		CZetRun(nSegment);
 		if (i == 274) {CZetSetIRQLine(0, CZET_IRQSTATUS_ACK); vblank = 1; }
 		if (i == 276) CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 
-//		nSegment = CZetTotalCycles();
 		CZetClose();
+#endif
 #if 0
 		CZetOpen(1);
 		if (is_whizz) {
 			nCyclesDone[1] += CZetRun(nSegment - CZetTotalCycles());
 			if (i == 274) CZetSetIRQLine(0, CZET_IRQSTATUS_ACK);
 			if (i == 276) CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
-/*
-			if (pBurnSoundOut) {
-				INT32 nSegmentLength = nBurnSoundLen / nInterleave;
-				INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-				BurnYM2151Render(pSoundBuf, nSegmentLength);
-				nSoundBufferPos += nSegmentLength;
-			}*/
 		} else {
 //			BurnTimerUpdate(nSegment);
 		}
@@ -745,20 +760,6 @@ void dummy()
 	if (is_whizz == 0) {
 	//	BurnTimerEndFrame(nCyclesTotal[1]);
 	}
-/*
-	if (pBurnSoundOut) {
-		if (is_whizz) {
-			INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
-			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-	
-			if (nSegmentLength) {
-//				BurnYM2151Render(pSoundBuf, nSegmentLength);
-			}
-		} else {
-//			BurnYM2203Update(pBurnSoundOut, nBurnSoundLen);
-		}
-	}
-*/
 	CZetClose();
 #endif	
 
@@ -854,7 +855,7 @@ static void initColors()
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	DMA_ScuInit();
 //	GFS_SetErrFunc(errGfsFunc, NULL);
 //	PCM_SetErrFunc(errPcmFunc, NULL);
 
