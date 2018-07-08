@@ -5,6 +5,7 @@
 #include "burnint.h"
 #include "eeprom.h"
 #include "saturn/ovl.h"
+#include "saturn/saturn_snd.h"
 //#include "saturn/sc_saturn.h"
 //#include "burn_ym2413.h"
 //#include "msm6295.h"
@@ -21,35 +22,13 @@ static UINT16 *charaddr_lut = NULL; //[0x0800];
 static UINT16 cram_lut[4096];
 ///*static*/ unsigned char 	*bg_dirtybuffer;
 static unsigned char 	color_dirty = 0;
-static void wait_vblank(void);
-static void SetStreamPCM();
-
-void errGfsFunc(void *obj, Sint32 ec);
-void errStmFunc(void *obj, Sint32 ec);
-void errPcmFunc(void *obj, Sint32 ec);
-
+static char *itoa(i);
 unsigned char current_pcm=255;
-char *itoa(int i);
 
-UINT8   stm_work[STM_WORK_SIZE(12, 24)];
-//UINT8   stm_work[STM_WORK_SIZE(4, 20)];
-StmHn stm;
-StmGrpHn grp_hd;
-void stmInit(void);
-void stmClose(StmHn fp);
-StmHn stmOpen(char *fname);
-PcmHn 	pcmStream;
-PcmCreatePara	paraStream;
-
-#define PCM_BLOCK_SIZE 0x4000 // 0x2000
-#define	PCM_ADDR	((void*)0x25a20000)
-#define	PCM_SIZE	(4096L*2)				/* 2.. */
-#define PCM_COPY_SIZE (4096L*2)
 #define nBurnSoundLen 128
-#define SOUNDRATE   7680L
 
 SFX sfx_list[50] = {
-/*000.pcm*/{0,230400,10},
+/*000.pcm*/{0,PCM_000_SIZE,10},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},

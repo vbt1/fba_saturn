@@ -1,3 +1,6 @@
+#include <stdarg.h>
+
+#define TVSTAT      (*(volatile unsigned short *)0x25F80004)
 #define	RGB( r, g, b )		(0x8000U|((b) << 10)|((g) << 5 )|(r))
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*inline*/ /*static*/ int readbit(const unsigned char *src, int bitnum)
@@ -128,7 +131,20 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom)
 		color_prom++;
 	}
 }
-
+//-------------------------------------------------------------------------------------------------------------------------------------
+void vout(char *string, char *fmt, ...)                                         
+{                                                                               
+   va_list arg_ptr;                                                             
+   va_start(arg_ptr, fmt);                                                      
+   vsprintf(string, fmt, arg_ptr);                                              
+   va_end(arg_ptr);                                                             
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void wait_vblank(void)
+{
+     while((TVSTAT & 8) == 0);
+     while((TVSTAT & 8) == 8);
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*int SlaveInWork()
 {

@@ -3,6 +3,7 @@
 
 #include "burnint.h"
 #include "saturn/ovl.h"
+#include "saturn/saturn_snd.h"
 #include "raze/raze.h"
 
 INT32 BurnTimerUpdate(INT32 *nCycles);
@@ -19,9 +20,6 @@ static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned
 static void Set14PCM();
 static PcmHn createHandle(PcmCreatePara *para);
 void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
-void errGfsFunc(void *obj, Sint32 ec);
-void errStmFunc(void *obj, Sint32 ec);
-void errPcmFunc(void *obj, Sint32 ec);
 
 #define nBurnSoundLen 128
 #define SOUNDRATE   7680L
@@ -339,19 +337,6 @@ static Uint16 ChgPan(SndPan pan);
 PcmHn 	pcm14[14];
 PcmCreatePara	para[14];
 
-UINT8   stm_work[STM_WORK_SIZE(12, 24)];
-//UINT8   stm_work[STM_WORK_SIZE(4, 20)];
-StmHn stm;
-StmGrpHn grp_hd;
-void stmInit(void);
-void stmClose(StmHn fp);
-StmHn stmOpen(char *fname);
-//---------------------------------------------------------------------------------------------------------------
-static void wait_vblank(void)
-{
-     while((TVSTAT & 8) == 0);
-     while((TVSTAT & 8) == 8);
-}
 //---------------------------------------------------------------------------------------------------------------
 #define INT_DIGITS 19
 char *itoa(int i)

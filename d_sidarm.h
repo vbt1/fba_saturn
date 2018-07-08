@@ -3,6 +3,7 @@
 
 #include "burnint.h"
 #include "saturn/ovl.h"
+#include "saturn/saturn_snd.h"
 
 INT32 SidearmsInit();
 INT32 DrvExit();
@@ -13,17 +14,30 @@ static char *itoa(i);
 void copyBg();
 static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 
+SFX sfx_list[96] = {
+/*000.pcm*/{0,230400,10},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	
+};
+
+
 #define VDP2_BASE           0x25e00000
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
 
 /*static*/ UINT32 *bgmap_buf = NULL;
 /*static*/ UINT16 *bgmap_lut = NULL;
-/*static*/ //UINT16 *remap16_lut = NULL;
 /*static*/ UINT16 *remap4to16_lut = NULL;
 /*static*/ UINT16 *map_lut = NULL;  //[256];
 /*static*/ UINT16 *map_offset_lut = NULL;  //[2048];
-/*static*/ //UINT16 *charaddr_lut = NULL; //[0x0800];
 /*static*/ UINT16 cram_lut[4096];
 
 /*static*/ UINT8 *AllMem;

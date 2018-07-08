@@ -116,14 +116,6 @@ static void DrvVidRamBankswitch(INT32 bank)
 #endif
 }
 
-void vout(char *string, char *fmt, ...)                                         
-{                                                                               
-   va_list arg_ptr;                                                             
-   va_start(arg_ptr, fmt);                                                      
-   vsprintf(string, fmt, arg_ptr);                                              
-   va_end(arg_ptr);                                                             
-}
-
 void __fastcall blacktiger_write(UINT16 address, UINT8 data)
 {
 	if ((address & 0xf800) == 0xd800) 				  // 	CZetMapArea(0xd800, 0xdfff, 0, DrvPalRAM);
@@ -1202,84 +1194,6 @@ static void Set14PCM()
 // VBT : enleve la lecture en boucle !! merci zeromu!!!
 		PCM_Start(pcm14[i]);
 	}
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void stmInit(void)
-{
-	STM_Init(12, 24, stm_work);
-//	STM_Init(4, 20, stm_work);
-//	STM_Init(1, 2, stm_work);
-
-	STM_SetErrFunc(errStmFunc, NULL);
-
-	grp_hd = STM_OpenGrp();
-	if (grp_hd == NULL) {
-		return;
-	}
-	STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
-	STM_SetExecGrp(grp_hd);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-StmHn stmOpen(char *fname)
-{
-    Sint32 fid;
-	StmKey key;
-
-    fid = GFS_NameToId((Sint8 *)fname);
-	STM_KEY_FN(&key) = STM_KEY_CN(&key) = STM_KEY_SMMSK(&key) = 
-		STM_KEY_SMVAL(&key) = STM_KEY_CIMSK(&key) = STM_KEY_CIVAL(&key) =
-		STM_KEY_NONE;
-	return STM_OpenFid(grp_hd, fid, &key, STM_LOOP_READ); //STM_LOOP_NOREAD);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void stmClose(StmHn fp)
-{
-	STM_Close(fp);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void errStmFunc(void *obj, Sint32 ec)
-{
-//	VTV_PRINTF((VTV_s, "S:ErrStm %X %X\n", obj, ec));
-	char texte[50];
-	vout(texte, "ErrStm %X %X",obj, ec); 
-	texte[49]='\0';
-	do{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"plante stm                         ",40,130);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,130);
-	wait_vblank();
-
-	}while(1);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void errGfsFunc(void *obj, Sint32 ec)
-{
-//	VTV_PRINTF((VTV_s, "S:ErrGfs %X %X\n", obj, ec));
-	char texte[50];
-	vout(texte, "ErrGfs %X %X",obj, ec); 
-	texte[49]='\0';
-	do{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	wait_vblank();
-
-	}while(1);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void errPcmFunc(void *obj, Sint32 ec)
-{
-//	VTV_PRINTF((VTV_s, "S:ErrPcm %X %X\n", obj, ec));
-	char texte[50];
-	vout(texte, "ErrPcm %X %X",obj, ec); 
-	texte[49]='\0';
-//	do{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté pcm",70,130);
-
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	wait_vblank();
-
-//	}while(1);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void make_lut(void)

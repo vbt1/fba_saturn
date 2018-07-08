@@ -7,7 +7,7 @@
 #define nInterleave 278
 #define nCyclesTotal 4000000 / 60
 #define nSegment (nCyclesTotal / nInterleave)
-#define RAZE 1
+//#define RAZE 1
 
 int ovlInit(char *szShortName)
 {
@@ -223,7 +223,7 @@ else
 
 	return 0;
 }
-
+#ifdef SOUND
 /*static*/ void __fastcall sidearms_sound_write(UINT16 address, UINT8 data)
 {
 	switch (address)
@@ -254,7 +254,7 @@ else
 
 	return 0;
 }
-
+#endif
 //inline /*static*/ //void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //{
 //	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
@@ -587,6 +587,13 @@ inline /*static*/ /*double DrvGetTime()
 			lineptr2++;
 		}
 	}
+//-------------------------------------------------
+	stmInit();
+	stm = stmOpen("000.PCM");
+	STM_ResetTrBuf(stm);
+	SetStreamPCM();
+	PCM_Start(pcmStream);
+//-------------------------------------------------
 	return 0;
 }
 
