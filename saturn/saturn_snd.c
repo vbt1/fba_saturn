@@ -1,4 +1,10 @@
 #include "saturn_snd.h"
+
+PcmHn 	pcmStream;
+PcmCreatePara	paraStream;
+unsigned char stm_work[STM_WORK_SIZE(12, 24)];
+StmHn stm;
+StmGrpHn grp_hd;
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmInit(void)
 {

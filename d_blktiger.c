@@ -12,11 +12,14 @@
 //#define DEBUG_PCM 1
 #define PCM_SFX 1
 #define PCM_MUSIC 1
-#define PCM_BLOCK_SIZE 0x4000 // 0x2000
-#define	PCM_ADDR	((void*)0x25a20000)
-#define	PCM_SIZE	(4096L*2)				/* 2.. */
-#define PCM_COPY_SIZE (4096L*2)
 
+void vout2(char *string, char *fmt, ...)                                         
+{                                                                               
+   va_list arg_ptr;                                                             
+   va_start(arg_ptr, fmt);                                                      
+   vsprintf(string, fmt, arg_ptr);                                              
+   va_end(arg_ptr);                                                             
+}
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -324,8 +327,7 @@ if(i==0)
 //					STM_ResetTrBuf(stm);
 					char pcm_file[14];
 
-					vout(pcm_file, "%03d%s",(int)data,".PCM"); 
-					pcm_file[7]='\0';
+					vout2(pcm_file, "%03d%s",data,".PCM"); 
 					PcmInfo 		info;
 
 					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			

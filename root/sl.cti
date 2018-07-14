@@ -4925,6 +4925,9 @@ EndFile
 				File SA03.BIN;1
 					Source SIDARM\SA03.BIN
 				EndFile
+				File 000.PCM;1
+					Source SIDARM\000.PCM
+				EndFile
 			EndDirectory
 
 			Directory FM
