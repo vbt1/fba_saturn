@@ -43,22 +43,6 @@ static void make_lut(void);
 
 static unsigned char *cache = NULL;
 
-typedef struct
-{
-	int position;
-	int size;
-	unsigned char loop;
-}SFX;
-
-typedef struct
-{
-	int track_position;
-	int position;
-	int ring_position;
-	int size;
-	unsigned char num;
-}PCM_INFO;
-
 //#define	REGADDR	    0x25F80000
 #define TVMD        (*(Uint16 *)0x25F80000)
 #define TVSTAT      (*(volatile Uint16 *)0x25F80004)
@@ -100,7 +84,7 @@ typedef struct
 #define SS_SET_SPCCEN(/* 1 bit */ spccen) \
   (ss_OtherPri->ColorMixControl \
    = (ss_OtherPri->ColorMixControl & 0xFFBF) | ((spccen) << 6))
-#define SCL_SET_S1CCRT(/* 5bits */ s1ccrt) \
+#define SS_SET_S1CCRT(/* 5bits */ s1ccrt) \
   (SclSpColMix.ColMixRateSP01 \
    = (SclSpColMix.ColMixRateSP01 & 0x00FF) | ((s1ccrt) << 8))
 

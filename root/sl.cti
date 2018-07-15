@@ -4928,6 +4928,12 @@ EndFile
 				File 000.PCM;1
 					Source SIDARM\000.PCM
 				EndFile
+				File 032.PCM;1
+					Source SIDARM\032.PCM
+				EndFile
+				File 033.PCM;1
+					Source SIDARM\033.PCM
+				EndFile
 			EndDirectory
 
 			Directory FM

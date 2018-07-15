@@ -12,7 +12,7 @@
 #define nCyclesSegment nCyclesTotal / nInterleave
 #define DrvNumColours 0x800 * 2
 #define 	DrvTileMask 0x7fff
-
+/*
 void vout2(char *string, char *fmt, ...)                                         
 {                                                                               
    va_list arg_ptr;                                                             
@@ -20,7 +20,7 @@ void vout2(char *string, char *fmt, ...)
    vsprintf(string, fmt, arg_ptr);                                              
    va_end(arg_ptr);                                                             
 }
-
+*/
 int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvPang = {
@@ -265,7 +265,8 @@ int ovlInit(char *szShortName)
 //			if(current_pcm!=d && (d==0 || (d >=0x20 && d <=0x3D)))
 			if(current_pcm!=d && (d==0 || (d >=0x20 && d <=0x3D)))
 			{
-				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,140);	
+				PlayStreamPCM(d,current_pcm);
+/*				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,140);	
 				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(d),80,140);	
 
 				if(current_pcm!=0x3D)
@@ -303,7 +304,7 @@ int ovlInit(char *szShortName)
 					st->need_ci = PCM_OFF;
 					STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
 					PCM_Start(pcmStream);
-				}
+				}*/
 				current_pcm = d;
 			}
 		return;
@@ -657,7 +658,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 {
 	int nRet = 0, nLen;
 	DrvInitSaturn();
-
+	sfx_list = &sfx_pang[0];
 	PangMemIndex();
 
 	nLen = MemEnd - (unsigned char *)0;
@@ -1153,32 +1154,3 @@ static void dummy(void)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-#define INT_DIGITS 19
-char *itoa(int i)
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}
-
-//PcmInfo 		info[14];
-//#undef pcm_AudioProcess
-//#define pcm_AudioProcess vbt_pcm_AudioProcess
-//-------------------------------------------------------------------------------------------------------------------------------------
-
-

@@ -1,10 +1,19 @@
 #include "saturn_snd.h"
-
+#include <stdarg.h>
 PcmHn 	pcmStream;
 PcmCreatePara	paraStream;
 unsigned char stm_work[STM_WORK_SIZE(12, 24)];
 StmHn stm;
 StmGrpHn grp_hd;
+SFX *sfx_list;
+
+void vout2(char *string, char *fmt, ...)                                         
+{                                                                               
+   va_list arg_ptr;                                                             
+   va_start(arg_ptr, fmt);                                                      
+   vsprintf(string, fmt, arg_ptr);                                              
+   va_end(arg_ptr);                                                             
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmInit(void)
 {
@@ -117,3 +126,73 @@ void SetStreamPCM()
 	PCM_ChangePcmPara(pcmStream);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
+{
+//	if(current_pcm!=d && (d==0 || (d >=0x20 && d <=0x3D)))
+//	{
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,140);	
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"        ",80,150);	
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(d),80,140);	
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(sfx_list[d].size),80,150);	
+
+		if(current_pcm!=0x3D)
+		{
+			PCM_MeStop(pcmStream);
+			pcm_EndProcess(pcmStream);
+			PCM_DestroyStmHandle(pcmStream);
+			stmClose(stm);
+		}
+
+		if(d!=0x3D) // 0x3D stop
+		{
+			char pcm_file[14];
+
+			vout2(pcm_file, "%03d%s",d,".PCM"); 
+			PcmInfo info;
+
+			PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+			PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+			PCM_INFO_CHANNEL(&info) = 0x01;
+			PCM_INFO_SAMPLING_BIT(&info) = 16;
+			PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
+			PCM_INFO_FILE_SIZE(&info) = sfx_list[d].size;//SOUNDRATE*2;//0x4000;//214896;
+			
+			stm = stmOpen(pcm_file);
+			STM_ResetTrBuf(stm);
+
+			pcmStream = PCM_CreateStmHandle(&paraStream, stm);
+
+			PCM_SetPcmStreamNo(pcmStream, 1);
+			PCM_SetInfo(pcmStream, &info);
+
+			PcmWork		*work = *(PcmWork **)pcmStream;
+			PcmStatus	*st = &work->status;
+			st->need_ci = PCM_OFF;
+			STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
+			PCM_Start(pcmStream);
+		}
+//	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+#define INT_DIGITS 19
+char *itoa(int i)
+{
+  /* Room for INT_DIGITS digits, - and '\0' */
+  static char buf[INT_DIGITS + 2];
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
+}

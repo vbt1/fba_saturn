@@ -13,13 +13,14 @@
 #define PCM_SFX 1
 #define PCM_MUSIC 1
 
-void vout2(char *string, char *fmt, ...)                                         
+void vout3(char *string, char *fmt, ...)                                         
 {                                                                               
    va_list arg_ptr;                                                             
    va_start(arg_ptr, fmt);                                                      
    vsprintf(string, fmt, arg_ptr);                                              
    va_end(arg_ptr);                                                             
 }
+
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -327,7 +328,7 @@ if(i==0)
 //					STM_ResetTrBuf(stm);
 					char pcm_file[14];
 
-					vout2(pcm_file, "%03d%s",data,".PCM"); 
+					vout3(pcm_file, "%03d%s",data,".PCM"); 
 					PcmInfo 		info;
 
 					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
@@ -1763,6 +1764,7 @@ static void DrvInitSaturn()
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
+	sfx_list			= &sfx_blktiger[0];
 
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+3;

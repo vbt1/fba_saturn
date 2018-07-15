@@ -19,8 +19,27 @@
 #define SOUND_BUFFER    0x25a20000
 #define SOUNDRATE   7680L
 
+typedef struct
+{
+	int position;
+	int size;
+	unsigned char loop;
+}SFX;
+
+typedef struct
+{
+	int track_position;
+	int position;
+	int ring_position;
+	int size;
+	unsigned char num;
+}PCM_INFO;
+
+
 void SetStreamPCM();
+void PlayStreamPCM(unsigned char d, unsigned char current_pcm);
 void wait_vblank(void);
+char *itoa(int i);
 
 void errGfsFunc(void *obj, Sint32 ec);
 void errStmFunc(void *obj, Sint32 ec);
@@ -28,6 +47,7 @@ void errPcmFunc(void *obj, Sint32 ec);
 
 void stmInit(void);
 void stmClose(StmHn fp);
+
 StmHn stmOpen(char *fname);
 
 extern PcmHn 	pcmStream;
@@ -35,4 +55,6 @@ extern PcmCreatePara	paraStream;
 extern unsigned char stm_work[STM_WORK_SIZE(12, 24)];
 extern StmHn stm;
 extern StmGrpHn grp_hd;
+
+extern SFX *sfx_list;
 #endif

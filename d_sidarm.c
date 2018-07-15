@@ -114,6 +114,11 @@ int ovlInit(char *szShortName)
 	{
 		case 0xc800:
 			soundlatch = data;
+			if(current_pcm!=data && (data==0 || (data >=0x20 && data <=0x3D)))
+			{
+				PlayStreamPCM(data,current_pcm);
+				current_pcm = data;
+			}
 		return;
 
 		case 0xc801:
@@ -772,6 +777,17 @@ z80_raise_IRQ(0);
 
 	SidearmsDraw();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
+
+
+	STM_ExecServer();
+//	smpStmTask(stm);
+
+	PCM_MeTask(pcmStream);
+//	if (STM_IsTrBufFull(stm) == TRUE) 
+	{
+		STM_ResetTrBuf(stm);
+	}
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -881,6 +897,7 @@ static void DrvInitSaturn()
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
+	sfx_list			= &sfx_sidarm[0];
 
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+3;
@@ -1152,26 +1169,3 @@ static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-#define INT_DIGITS 19
-static char *itoa(i)
-     int i;
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}

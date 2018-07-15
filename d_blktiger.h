@@ -29,7 +29,7 @@ char *itoa(int i);
 
 PCM_INFO pcm_info[14];
 
-SFX sfx_list[68]=
+SFX sfx_blktiger[68]=
 {
 /*000.pcm*/{0,230400,10},
 /*001.pcm*/{0,10290,0},
@@ -338,29 +338,6 @@ PcmHn 	pcm14[14];
 PcmCreatePara	para[14];
 
 //---------------------------------------------------------------------------------------------------------------
-#define INT_DIGITS 19
-char *itoa(int i)
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}
-
 //PcmInfo 		info[14];
 //#undef pcm_AudioProcess
 //#define pcm_AudioProcess vbt_pcm_AudioProcess

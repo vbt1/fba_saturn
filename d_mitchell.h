@@ -22,12 +22,11 @@ static UINT16 *charaddr_lut = NULL; //[0x0800];
 static UINT16 cram_lut[4096];
 ///*static*/ unsigned char 	*bg_dirtybuffer;
 static unsigned char 	color_dirty = 0;
-static char *itoa(i);
 unsigned char current_pcm=255;
 
 #define nBurnSoundLen 128
 
-SFX sfx_list[50] = {
+SFX sfx_pang[50] = {
 /*000.pcm*/{0,PCM_000_SIZE,10},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
