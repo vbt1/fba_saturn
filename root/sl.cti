@@ -4934,6 +4934,33 @@ EndFile
 				File 033.PCM;1
 					Source SIDARM\033.PCM
 				EndFile
+				File 034.PCM;1
+					Source SIDARM\034.PCM
+				EndFile
+				File 035.PCM;1
+					Source SIDARM\035.PCM
+				EndFile
+				File 036.PCM;1
+					Source SIDARM\036.PCM
+				EndFile
+				File 037.PCM;1
+					Source SIDARM\037.PCM
+				EndFile
+				File 038.PCM;1
+					Source SIDARM\038.PCM
+				EndFile
+				File 039.PCM;1
+					Source SIDARM\039.PCM
+				EndFile
+				File 040.PCM;1
+					Source SIDARM\040.PCM
+				EndFile
+				File 041.PCM;1
+					Source SIDARM\041.PCM
+				EndFile
+				File 042.PCM;1
+					Source SIDARM\042.PCM
+				EndFile
 			EndDirectory
 
 			Directory FM
