@@ -114,9 +114,10 @@ int ovlInit(char *szShortName)
 	{
 		case 0xc800:
 			soundlatch = data;
-			if(current_pcm!=data && (data==0 || (data >=0x20 && data <=0x3D)))
+			if(current_pcm!=data) 
 			{
-				PlayStreamPCM(data,current_pcm);
+				if (data==0 || (data >=0x20 && data <=0x3D))
+					PlayStreamPCM(data,current_pcm);
 				current_pcm = data;
 			}
 		return;
@@ -597,6 +598,9 @@ inline /*static*/ /*double DrvGetTime()
 	stm = stmOpen("000.PCM");
 	STM_ResetTrBuf(stm);
 	SetStreamPCM();
+
+	GFS_SetErrFunc(errGfsFunc, NULL);
+	PCM_SetErrFunc(errPcmFunc, NULL);	
 	PCM_Start(pcmStream);
 //-------------------------------------------------
 	return 0;
@@ -778,12 +782,13 @@ z80_raise_IRQ(0);
 	SidearmsDraw();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
 
+    signed int stat = STM_ExecServer();
 
-	STM_ExecServer();
-//	smpStmTask(stm);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(stat),80,160);	
 
 	PCM_MeTask(pcmStream);
-//	if (STM_IsTrBufFull(stm) == TRUE) 
+
+	if (STM_IsTrBufFull(stm) == TRUE) 
 	{
 		STM_ResetTrBuf(stm);
 	}
@@ -879,8 +884,6 @@ static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	DMA_ScuInit();
-//	GFS_SetErrFunc(errGfsFunc, NULL);
-//	PCM_SetErrFunc(errPcmFunc, NULL);
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000

@@ -40,6 +40,7 @@ StmHn stmOpen(char *fname)
 		STM_KEY_SMVAL(&key) = STM_KEY_CIMSK(&key) = STM_KEY_CIVAL(&key) =
 		STM_KEY_NONE;
 	return STM_OpenFid(grp_hd, fid, &key, STM_LOOP_READ); //STM_LOOP_NOREAD);
+//	return STM_OpenFid(grp_hd, fid, &key, STM_LOOP_NOREAD);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmClose(StmHn fp)
@@ -83,13 +84,13 @@ void errPcmFunc(void *obj, Sint32 ec)
 	char texte[50];
 	vout(texte, "ErrPcm %X %X",obj, ec); 
 	texte[49]='\0';
-//	do{
+	do{
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté pcm",70,130);
 
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
 	wait_vblank();
 
-//	}while(1);
+	}while(1);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SetStreamPCM()
@@ -155,8 +156,13 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 			PCM_INFO_CHANNEL(&info) = 0x01;
 			PCM_INFO_SAMPLING_BIT(&info) = 16;
 			PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
-			PCM_INFO_FILE_SIZE(&info) = sfx_list[d].size;//SOUNDRATE*2;//0x4000;//214896;
-			
+			PCM_INFO_FILE_SIZE(&info) =sfx_list[d].size;//SOUNDRATE*2;//0x4000;//214896;
+/*
+			PcmWork		*work = *(PcmWork **)pcm14[0];
+			PcmStatus	*st = &work->status;
+			st->cnt_loop = sfx_list[d].loop;*/
+//			PCM_SetLoop(pcmStream, sfx_list[d].loop);
+
 			stm = stmOpen(pcm_file);
 			STM_ResetTrBuf(stm);
 
@@ -168,8 +174,17 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 			PcmWork		*work = *(PcmWork **)pcmStream;
 			PcmStatus	*st = &work->status;
 			st->need_ci = PCM_OFF;
-			STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
+//			STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
+
+			PCM_SetLoadNum(pcmStream, 10);
+			PCM_SetTrModeCd(pcmStream, PCM_TRMODE_SDMA);
+			PCM_Set1TaskSample(pcmStream, 2048);
+
 			PCM_Start(pcmStream);
+		}
+		else
+		{
+			while(1);
 		}
 //	}
 }
