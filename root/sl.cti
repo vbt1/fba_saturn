@@ -165,6 +165,10 @@ Track MODE1
 				Source D_SIDARM.BIN
 			EndFile
 
+			File D_NINKD2.BIN;1
+				Source D_NINKD2.BIN
+			EndFile
+
 			Directory BOMBJA
 				File 01H03T.BIN;1
 					Source BOMBJA\01H03T.BIN
@@ -4841,6 +4845,106 @@ EndFile
 				File KANJI.ROM;1
 					Source MSX\KANJI.ROM
 				EndFile
+			EndDirectory
+
+			Directory ROBOKID
+				File ROBOKID1.18J;1
+					Source ROBOKID\ROBOKID1.18J
+				EndFile
+				File ROBOKID2.18K;1
+					Source ROBOKID\ROBOKID2.18K
+				EndFile
+				File ROBOKID3.15K;1
+					Source ROBOKID\ROBOKID3.15K
+				EndFile
+				File ROBOKID4.12K;1
+					Source ROBOKID\ROBOKID4.12K
+				EndFile
+				File ROBOKID.K7;1
+					Source ROBOKID\ROBOKID.K7
+				EndFile
+				File ROBOKID.B9;1
+					Source ROBOKID\ROBOKID.B9
+				EndFile
+				File ROBOKID.15F;1
+					Source ROBOKID\ROBOKID.15F
+				EndFile
+				File ROBOKID.16F;1
+					Source ROBOKID\ROBOKID.16F
+				EndFile
+				File ROBOKID.17F;1
+					Source ROBOKID\ROBOKID.17F
+				EndFile
+				File ROBOKID.18F;1
+					Source ROBOKID\ROBOKID.18F
+				EndFile
+				File ROBOKID.19C;1
+					Source ROBOKID\ROBOKID.19C
+				EndFile
+				File ROBOKID.20C;1
+					Source ROBOKID\ROBOKID.20C
+				EndFile
+				File ROBOKID.17D;1
+					Source ROBOKID\ROBOKID.17D
+				EndFile
+				File ROBOKID.18D;1
+					Source ROBOKID\ROBOKID.18D
+				EndFile
+				File ROBOKID.19D;1
+					Source ROBOKID\ROBOKID.19D
+				EndFile
+				File ROBOKID.20D;1
+					Source ROBOKID\ROBOKID.20D
+				EndFile
+				File ROBOKID.19F;1
+					Source ROBOKID\ROBOKID.19F
+				EndFile
+				File ROBOKID.12C;1
+					Source ROBOKID\ROBOKID.12C
+				EndFile
+				File ROBOKID.14C;1
+					Source ROBOKID\ROBOKID.14C
+				EndFile
+				File ROBOKID.15C;1
+					Source ROBOKID\ROBOKID.15C
+				EndFile
+				File ROBOKID.16C;1
+					Source ROBOKID\ROBOKID.16C
+				EndFile
+				File ROBOKID.17C;1
+					Source ROBOKID\ROBOKID.17C
+				EndFile
+				File ROBOKID.18C;1
+					Source ROBOKID\ROBOKID.18C
+				EndFile
+				File ROBOKID.15D;1
+					Source ROBOKID\ROBOKID.15D
+				EndFile
+				File ROBOKID.16D;1
+					Source ROBOKID\ROBOKID.16D
+				EndFile
+				File ROBOKID.12A;1
+					Source ROBOKID\ROBOKID.12A
+				EndFile
+				File ROBOKID.14A;1
+					Source ROBOKID\ROBOKID.14A
+				EndFile
+				File ROBOKID.15A;1
+					Source ROBOKID\ROBOKID.15A
+				EndFile
+				File ROBOKID.16A;1
+					Source ROBOKID\ROBOKID.16A
+				EndFile
+				File ROBOKID.17A;1
+					Source ROBOKID\ROBOKID.17A
+				EndFile
+				File ROBOKID.18A;1
+					Source ROBOKID\ROBOKID.18A
+				EndFile
+				File PROM82S.129;1
+					Source ROBOKID\PROM82S.129
+				EndFile
+
 			EndDirectory
 
 			Directory SIDARM

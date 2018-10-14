@@ -5,6 +5,15 @@
  #undef __fastcall
  #define __fastcall
 #endif
+
+#define MAP_READ		1
+#define MAP_WRITE		2
+#define MAP_FETCHOP		4
+#define MAP_FETCHARG		8
+#define MAP_FETCH		(MAP_FETCHOP|MAP_FETCHARG)
+#define MAP_ROM			(MAP_READ|MAP_FETCH)
+#define MAP_RAM			(MAP_ROM|MAP_WRITE)
+
 // #define CZET_IRQSTATUS_NONE 0 //CZ80_IRQSTATUS_NONE
 // #define CZET_IRQSTATUS_AUTO 2//CZ80_IRQSTATUS_AUTO
 // #define CZET_IRQSTATUS_ACK  1//CZ80_IRQSTATUS_ACK
@@ -22,6 +31,7 @@ int CZetOpen(int nCPU);
 void CZetClose();
 int CZetMemCallback(int nStart,int nEnd,int nMode);
 int CZetMemEnd();
+void CZetMapMemory(unsigned char *Mem, int nStart, int nEnd, int nFlags);
 int CZetMapArea(int nStart, int nEnd, int nMode, unsigned char *Mem);
 int CZetMapArea2(int nStart, int nEnd, int nMode, unsigned char *Mem01, unsigned char *Mem02);
 int CZetReset();

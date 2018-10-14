@@ -10,7 +10,7 @@ INT32 DrvExit();
 INT32 DrvFrame();
 UINT32 SidearmsDraw();
 void sidearms_draw_starfield(int *starfield_enable);
-void copyBg();
+void vblIn();
 static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 unsigned char current_pcm=255;
 

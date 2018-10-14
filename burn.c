@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 58
+#define NB_DRV 57
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -74,7 +74,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvpkunwar = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvPang = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvSpang = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
-	static struct BurnDriver BurnDrvGnga = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+//	static struct BurnDriver BurnDrvGnga = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvBlockgal = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvWboyu = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvChplftb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
@@ -130,11 +130,12 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvTransfrm = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvFantzn2  = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvAstrofl = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
-	static struct BurnDriver BurnDrvOpaopa = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+//	static struct BurnDriver BurnDrvOpaopa = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvSlapshtr = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 	static struct BurnDriver BurnDrvSolomon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvSidearms = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvRobokid = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -196,9 +197,9 @@ BurnDrvSpang.szShortName="spang";
 BurnDrvSpang.szFullNameA="Super Pang (World 900914)";
 BurnDrvSpang.szParent="mitch";
 
-BurnDrvGnga.szShortName="gnga";
-BurnDrvGnga.szFullNameA="Ghosts'n Goblins (World? set 2)";
-BurnDrvGnga.szParent="gng";
+//BurnDrvGnga.szShortName="gnga";
+//BurnDrvGnga.szFullNameA="Ghosts'n Goblins (World? set 2)";
+//BurnDrvGnga.szParent="gng";
 
 BurnDrvBlockgal.szShortName="blockgal";
 BurnDrvBlockgal.szFullNameA="Block Gal (MC-8123B, 317-0029)";
@@ -384,9 +385,9 @@ BurnDrvAstrofl.szShortName="astrofl";
 BurnDrvAstrofl.szFullNameA="Astro Flash (Japan)";
 BurnDrvAstrofl.szParent="segae";	
 
-BurnDrvOpaopa.szShortName="opaopa";
-BurnDrvOpaopa.szFullNameA="Opa Opa (MC-8123, 317-0042)";
-BurnDrvOpaopa.szParent="segae";	
+//BurnDrvOpaopa.szShortName="opaopa";
+//BurnDrvOpaopa.szFullNameA="Opa Opa (MC-8123, 317-0042)";
+//BurnDrvOpaopa.szParent="segae";	
 
 BurnDrvSlapshtr.szShortName="slapshtr";
 BurnDrvSlapshtr.szFullNameA="Slap Shooter";
@@ -399,6 +400,10 @@ BurnDrvSolomon.szParent="solomn";
 BurnDrvSidearms.szShortName="sidarm";
 BurnDrvSidearms.szFullNameA="Side Arms - Hyper Dyne (World, 861129)";
 BurnDrvSidearms.szParent=NULL;	
+
+BurnDrvRobokid.szShortName="robokid";
+BurnDrvRobokid.szFullNameA="Atomic Robo-kid (World, Type-2)";
+BurnDrvRobokid.szParent="ninkd2";	
 
 //BurnDrvFM.szShortName="fm";
 //BurnDrvFM.szFullNameA="FM Test Driver";
@@ -413,8 +418,9 @@ pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvMSX_1942;
 pDriver[i++] = &BurnDrvSidearms;
-pDriver[i++] = &BurnDrvGnga;
-pDriver[i++] = &BurnDrvOpaopa;
+pDriver[i++] = &BurnDrvRobokid;
+//pDriver[i++] = &BurnDrvGnga;
+//pDriver[i++] = &BurnDrvOpaopa;
 //pDriver[i++] = &BurnDrvKungfut;
 //pDriver[i++] = &BurnDrvStinger;
 //pDriver[i++] = &BurnDrvScion;

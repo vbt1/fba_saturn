@@ -360,22 +360,37 @@ void CZetExit()
 	nCPUCount = 0;
 }
 
+void CZetMapMemory(unsigned char *Mem, int nStart, int nEnd, int nFlags)
+{
+//	UINT8 cStart = (nStart >> 8);
+	int s = nStart >> CZ80_FETCH_SFT;
+//	UINT8 **pMemMap = ZetCPUContext[nOpenedCPU]->pZetMemMap;
+	int e = (nEnd + CZ80_FETCH_BANK - 1) >> CZ80_FETCH_SFT;
+
+	for (unsigned int i = s; i < e; i++) 
+	{
+		if (nFlags & (1 << 0)) lastCZetCPUContext->Read[i] = Mem - nStart; // READ
+		if (nFlags & (1 << 1)) lastCZetCPUContext->Write[i] = Mem - nStart; // WRITE
+		if (nFlags & (1 << 2)) 	lastCZetCPUContext->Fetch[i] = Mem - nStart; // OP
+		if (nFlags & (1 << 3)) 	lastCZetCPUContext->FetchData[i] = Mem - nStart; // ARG			
+	}
+}
+
 int CZetMapArea(int nStart, int nEnd, int nMode, unsigned char *Mem)
 {
 	int s = nStart >> CZ80_FETCH_SFT;
 	int e = (nEnd + CZ80_FETCH_BANK - 1) >> CZ80_FETCH_SFT;
 
 	// Put this section in the memory map, giving the offset from Z80 memory to PC memory
-	unsigned int i;
-	for (i = s; i < e; i++) {
+	for (unsigned int i = s; i < e; i++) {
 		switch (nMode) {
-			case 0:
+			case 0:  // read
 				lastCZetCPUContext->Read[i] = Mem - nStart;
 				break;
-			case 1:
+			case 1: // write
 				lastCZetCPUContext->Write[i] = Mem - nStart;
 				break;
-			case 2:
+			case 2: // fetch
 				lastCZetCPUContext->Fetch[i] = Mem - nStart;
 				lastCZetCPUContext->FetchData[i] = Mem - nStart;
 				break;

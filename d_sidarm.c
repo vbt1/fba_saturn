@@ -575,7 +575,6 @@ inline /*static*/ /*double DrvGetTime()
 	{
 		palette_write(i);
 	}
-	nBurnFunction = copyBg;
 
 	drawWindow(0,224,240,0,0);
 
@@ -603,6 +602,8 @@ inline /*static*/ /*double DrvGetTime()
 	PCM_SetErrFunc(errPcmFunc, NULL);	
 	PCM_Start(pcmStream);
 //-------------------------------------------------
+	nBurnFunction = vblIn;
+
 	return 0;
 }
 
@@ -625,8 +626,10 @@ inline /*static*/ /*double DrvGetTime()
 	return 0;
 }
 
-void copyBg()
+void vblIn()
 {
+//	playMusic();
+
 	if(bglayer_enable)
 	{
 		DMA_ScuMemCopy(ss_map2,bgmap_buf,0x800);
@@ -781,6 +784,13 @@ z80_raise_IRQ(0);
 
 	SidearmsDraw();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
+playMusic();
+
+	return 0;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void playMusic()
+{
 
     signed int stat = STM_ExecServer();
 
@@ -792,8 +802,6 @@ z80_raise_IRQ(0);
 	{
 		STM_ResetTrBuf(stm);
 	}
-
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initLayers()

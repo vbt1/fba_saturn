@@ -254,6 +254,13 @@ LDOVLSIDARMFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(M
 SRCOVLSIDARM         = d_SIDARM.c czet.c cz80/cz80.c saturn/ovl.c saturn/saturn_snd.c
 OBJOVLSIDARM         = $(SRCOVLSIDARM:.c=.o)
 
+OVLNINKD2                 = root/d_ninkd2.coff
+OVLNINKD21               = root/d_ninkd2.bin
+MPOVLNINKD2FILE    = $(OVLNINKD2:.coff=.maps)
+LDOVLNINKD2FLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNINKD2FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+SRCOVLNINKD2         = d_ninjakd2.c czet.c cz80/cz80.c mc8123.c saturn/ovl.c
+OBJOVLNINKD2         = $(SRCOVLNINKD2:.c=.o)
+
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
@@ -286,7 +293,8 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSLPFGHT) $(OVLSLPFGHT1) $(OVLFREEK) $(OVLFREEK1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
      $(OVLMSX) $(OVLMSX1) $(OVLSEGAE) $(OVLSEGAE1) \
-     $(OVLSOLOMN) $(OVLSOLOMN1) $(OVLSIDARM) $(OVLSIDARM1)
+     $(OVLSOLOMN) $(OVLSOLOMN1) $(OVLSIDARM) $(OVLSIDARM1) \
+     $(OVLNINKD2) $(OVLNINKD21)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -480,6 +488,12 @@ $(OVLSIDARM) : $(OBJOVLSIDARM) $(MAKEFILE) $(OBJOVLSIDARM) $(LDOVLSIDARMFILE)
 
 $(OVLSIDARM1) : $(OBJOVLSIDARM) $(MAKEFILE) $(LDOVLSIDARMFILE)
 	$(CONV) -O binary $(OVLSIDARM) $(OVLSIDARM1)
+
+$(OVLNINKD2) : $(OBJOVLNINKD2) $(MAKEFILE) $(OBJOVLNINKD2) $(LDOVLNINKD2FILE)
+	$(CC) $(LDOVLNINKD2FLAGS) $(OBJOVLNINKD2) $(LIBSOVL) -o $@
+
+$(OVLNINKD21) : $(OBJOVLNINKD2) $(MAKEFILE) $(LDOVLNINKD2FILE)
+	$(CONV) -O binary $(OVLNINKD2) $(OVLNINKD21)
 
 # suffix
 .SUFFIXES: .asm
