@@ -609,11 +609,11 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	DrvZ80ROM1	= Next; Next += 0x020000;
 
 	DrvGfxROM0	= Next; Next += 0x010000;
-	DrvGfxROM1	= Next; Next += 0x080000;
+/*	DrvGfxROM1	= Next; Next += 0x080000;
 	DrvGfxROM2	= Next; Next += 0x100000;
 	DrvGfxROM3	= Next; Next += 0x100000;
 	DrvGfxROM4	= Next; Next += 0x100000;
-
+*/
 	DrvZ80Key	= Next; Next += 0x002000;
 
 	DrvSndROM	= Next; Next += 0x010000;
@@ -856,13 +856,17 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 /*static*/  INT32 RobokidInit()
 {
 	DrvInitSaturn();
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" DrvInitSaturn     ",20,60);
 
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"bef BurnMalloc    ",20,60);
+
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"aft BurnMalloc    ",20,60);
 
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  0, 1)) return 1;

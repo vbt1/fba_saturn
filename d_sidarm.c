@@ -2,8 +2,8 @@
 // Based on MAME driver by Paul Leaman
 
 #include "d_sidarm.h"
-#define nScreenHeight 224
-#define nScreenWidth 384
+//#define nScreenHeight 224
+//#define nScreenWidth 384
 #define nInterleave 278
 #define nCyclesTotal 4000000 / 60
 #define nSegment (nCyclesTotal / nInterleave)
@@ -331,9 +331,10 @@ inline /*static*/ /*double DrvGetTime()
 
 /*static*/ INT32 MemIndex()
 {
-	UINT8 *Next; Next = AllMem;
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-
+	UINT8 *Next; 
+	Next						= AllMem;
+	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
+	CZ80Context			= Next; Next += (0x1080*1);
 	DrvZ80ROM0		= Next; Next += 0x018000;
 #ifdef SOUND
 	DrvZ80ROM1		= Next; Next += 0x008000;
@@ -522,7 +523,7 @@ inline /*static*/ /*double DrvGetTime()
 	
 	z80_end_memmap(); 
 #else
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 
 	CZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM0);
@@ -609,19 +610,55 @@ inline /*static*/ /*double DrvGetTime()
 
 /*static*/ INT32 DrvExit()
 {
+	nBurnFunction = NULL;
+	nBurnLinescrollSize = 1;
+	SPR_InitSlaveSH();
+	nSoundBufferPos=0;
+
 //	GenericTilesExit();
 #ifdef RAZE
 
 #else
-	CZetExit();
+	CZetOpen(0);
+	CZetSetWriteHandler(NULL);
+	CZetSetReadHandler(NULL);
+	CZetSetInHandler(NULL);
+	CZetSetOutHandler(NULL);
+	CZetClose();
+	CZetExit2();
 #endif
 //	if (is_whizz) {
 //		BurnYM2151Exit();
 //	} else {
 //		BurnYM2203Exit();
 //	}
+	STM_ResetTrBuf(stm);
+	PCM_MeStop(pcmStream);
+	PCM_DestroyStmHandle(pcmStream);
+	stmClose(stm);
 
+	bgmap_buf = NULL;
+	bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = DrvPalette = NULL;
+	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM0 = DrvGfxROM0 = DrvGfxROM1= DrvGfxROM2 = NULL;
+	DrvStarMap = DrvTileMap = DrvVidRAM = DrvSprBuf = DrvSprRAM = DrvPalRAM = DrvZ80RAM0 = bgscrollx = bgscrolly = NULL;
 	BurnFree (AllMem);
+	AllMem = NULL;
+
+	enable_watchdog = 0;
+	watchdog = 0;
+	vblank  = 0;
+	flipscreen = 0;
+	soundlatch = 0;
+	character_enable = 0;
+	sprite_enable = 0;
+	bglayer_enable = 0;
+	bank_data = 0;
+
+	starfield_enable = 0;
+	starscrollx = 0;
+	starscrolly = 0;
+	hflop_74a = 0;
+	DrvReset = 0;
 
 	return 0;
 }
@@ -891,7 +928,7 @@ static void initColors()
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	DMA_ScuInit();
+//	DMA_ScuInit();
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000

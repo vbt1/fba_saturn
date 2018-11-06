@@ -56,60 +56,61 @@ SFX sfx_sidarm[96] = {
 /*static*/ UINT16 *map_offset_lut = NULL;  //[2048];
 /*static*/ UINT16 cram_lut[4096];
 
-/*static*/ UINT8 *AllMem;
-/*static*/ UINT8 *MemEnd;
-/*static*/ UINT8 *AllRam;
-/*static*/ UINT8 *RamEnd;
-/*static*/ UINT8 *DrvZ80ROM0;
+/*static*/ UINT8 *CZ80Context = NULL;
+/*static*/ UINT8 *AllMem= NULL;
+/*static*/ UINT8 *MemEnd= NULL;
+/*static*/ UINT8 *AllRam= NULL;
+/*static*/ UINT8 *RamEnd= NULL;
+/*static*/ UINT8 *DrvZ80ROM0= NULL;
 #ifdef SOUND
-/*static*/ UINT8 *DrvZ80ROM1;
+/*static*/ UINT8 *DrvZ80ROM1= NULL;
 #endif
-/*static*/ UINT8 *DrvGfxROM0;
-/*static*/ UINT8 *DrvGfxROM1;
-/*static*/ UINT8 *DrvGfxROM2;
-/*static*/ UINT8 *DrvStarMap;
-/*static*/ UINT8 *DrvTileMap;
-/*static*/ UINT8 *DrvVidRAM;
-/*static*/ UINT8 *DrvSprBuf;
-/*static*/ UINT8 *DrvSprRAM;
-/*static*/ UINT8 *DrvPalRAM;
-/*static*/ UINT8 *DrvZ80RAM0;
+/*static*/ UINT8 *DrvGfxROM0= NULL;
+/*static*/ UINT8 *DrvGfxROM1= NULL;
+/*static*/ UINT8 *DrvGfxROM2= NULL;
+/*static*/ UINT8 *DrvStarMap= NULL;
+/*static*/ UINT8 *DrvTileMap= NULL;
+/*static*/ UINT8 *DrvVidRAM= NULL;
+/*static*/ UINT8 *DrvSprBuf= NULL;
+/*static*/ UINT8 *DrvSprRAM= NULL;
+/*static*/ UINT8 *DrvPalRAM= NULL;
+/*static*/ UINT8 *DrvZ80RAM0= NULL;
 #ifdef SOUND
-/*static*/ UINT8 *DrvZ80RAM1;
+/*static*/ UINT8 *DrvZ80RAM1= NULL;
 #endif
-/*static*/ UINT16 *DrvPalette;
+/*static*/ UINT16 *DrvPalette= NULL;
 /*static*/ //UINT8 DrvRecalc;
 
-/*static*/ UINT8 *bgscrollx;
-/*static*/ UINT8 *bgscrolly;
+/*static*/ UINT8 *bgscrollx= NULL;
+/*static*/ UINT8 *bgscrolly= NULL;
 
-/*static*/ UINT8 flipscreen;
-/*static*/ UINT8 soundlatch;
-/*static*/ UINT8 starfield_enable;
-/*static*/ UINT8 character_enable;
-/*static*/ UINT8 sprite_enable;
-/*static*/ UINT8 bglayer_enable;
-/*static*/ UINT8 bank_data;
+/*static*/ UINT8 flipscreen=0;
+/*static*/ UINT8 soundlatch=0;
+/*static*/ UINT8 starfield_enable=0;
+/*static*/ UINT8 character_enable=0;
+/*static*/ UINT8 sprite_enable=0;
+/*static*/ UINT8 bglayer_enable=0;
+/*static*/ UINT8 bank_data=0;
 
-/*static*/ UINT16 starscrollx;
-/*static*/ UINT16 starscrolly;
+/*static*/ UINT16 starscrollx=0;
+/*static*/ UINT16 starscrolly=0;
 
-/*static*/ INT32 hflop_74a;
+/*static*/ INT32 hflop_74a=0;
 
-/*static*/ INT32 enable_watchdog;
-/*static*/ INT32 watchdog;
-/*static*/ INT32 vblank;
+/*static*/ INT32 enable_watchdog=0;
+/*static*/ INT32 watchdog=0;
+/*static*/ INT32 vblank=0;
 /*static*/ //INT32 is_whizz = 0; // uses ym2151 instead of ym2203
 /*static*/ //INT32 is_turtshipk = 0;
 
-/*static*/ UINT8 DrvJoy1[8];
-/*static*/ UINT8 DrvJoy2[8];
-/*static*/ UINT8 DrvJoy3[8];
-/*static*/ UINT8 DrvJoy4[8];
-/*static*/ UINT8 DrvJoy5[8];
-/*static*/ UINT8 DrvDips[4];
-/*static*/ UINT8 DrvInputs[5];
-/*static*/ UINT8 DrvReset;
+/*static*/ UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy3[8]={0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy4[8]={0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy5[8]={0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvDips[4]={0,0,0,0};
+/*static*/ UINT8 DrvInputs[5]={0,0,0,0,0};
+/*static*/ UINT8 DrvReset=0;
 
 /*static*/ struct BurnInputInfo SidearmsInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},

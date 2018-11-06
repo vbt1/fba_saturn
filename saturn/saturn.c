@@ -301,6 +301,7 @@ void resetLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initSaturn()
 {
+	DMA_ScuInit();
 //	nBurnLinescrollSize = 0x400;//0x400
 //	nBurnSprites = 131;
 //	INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
@@ -1900,8 +1901,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 		else
@@ -1914,8 +1915,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 	}

@@ -11,13 +11,13 @@ CONV = sh-elf-objcopy
 MAKEFILE = Makefile
 
 #CCFLAGS =  -mhitachi -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
-CCFLAGS2 = -mno-fsrra -maccumulate-outgoing-args -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -D_SH -DMODEL_S -c -I.
+CCFLAGS2 = -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -D_SH -DMODEL_S -c -I.
 #CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O0 -fomit-frame-pointer -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -m2 -mrenesas  -std=gnu99 -Wfatal-errors -Os -D_SH -DMODEL_S -c
 # pour asm 
 #CCOVLFLAGS = -S -fverbose-asm -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
-CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
+CCOVLFLAGS = -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
 #LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles  -nostdlib
 
@@ -28,6 +28,7 @@ MPFILE     = $(TARGET:.coff=.maps)
 LDFLAGS = -m2 -O2 -Xlinker -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
 #SRCS       = saturn/iapetus/cd/cd.c  burn.c load.c saturn/font.c saturn/file.c saturn/saturn.c saturn/low.s saturn/sc_saturn_vbt.c
 SRCS       = saturn/iapetus/cd/cd.c  saturn/low.s load.c burn.c saturn/font.c saturn/file.c saturn/saturn.c 
+#OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o saturn/maths.o $(SRCS:.c=.o)
 OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 
 OVLIMG                 = root/img.coff
