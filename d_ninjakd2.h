@@ -34,7 +34,7 @@
 
 /*static*/  UINT16 *pSpriteDraw;
 
-/*static*/  UINT32 *DrvPalette;
+/*static*/  UINT16 *DrvPalette;
 /*static*/  UINT8 DrvRecalc;
 
 /*static*/  UINT8 *soundlatch;

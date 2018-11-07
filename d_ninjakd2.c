@@ -538,7 +538,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 */
 /*static*/  void ninjakd2_sound_init()
 {
-	CZetInit(1);
+//	CZetInit(1);
 	CZetOpen(1);
 
 //	CZetMapMemory(DrvZ80ROM1, 0x0000, 0xbfff, MAP_ROM);
@@ -608,19 +608,19 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	DrvZ80ROM0	= Next; Next += 0x050000;
 	DrvZ80ROM1	= Next; Next += 0x020000;
 
-	DrvGfxROM0	= Next; Next += 0x010000;
+	DrvGfxROM0	 	= (UINT8*)0x00200000;//Next; Next += 0x010000;
 /*	DrvGfxROM1	= Next; Next += 0x080000;
 	DrvGfxROM2	= Next; Next += 0x100000;
 	DrvGfxROM3	= Next; Next += 0x100000;
 	DrvGfxROM4	= Next; Next += 0x100000;
-*/
+
 	DrvZ80Key	= Next; Next += 0x002000;
 
 	DrvSndROM	= Next; Next += 0x010000;
-
-	DrvPalette	= (UINT32*)Next; Next += 0x0400 * sizeof(UINT32);
-
-	AllRam		= Next;
+*/
+//	DrvPalette	= (UINT32*)Next; Next += 0x0400 * sizeof(UINT32);
+	DrvPalette		= (UINT16*)colAddr;
+	AllRam			= Next;
 
 	DrvZ80RAM0	= Next; Next += 0x001a00;
 	DrvZ80RAM1	= Next; Next += 0x000800;
@@ -635,7 +635,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	soundlatch	= Next; Next += 0x000001;
 	flipscreen	= Next; Next += 0x000001;
 
-	pSpriteDraw	= (UINT16*)Next; Next += 256 * 256 * sizeof(UINT16);
+//	pSpriteDraw	= (UINT16*)Next; Next += 256 * 256 * sizeof(UINT16);
 
 	RamEnd		= Next;
 
@@ -652,29 +652,33 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	INT32 YOffs0[16] = { STEP8(0,32), STEP8(64*8,32) };
 	INT32 YOffs1[16] = { STEP16(0,32) };
 
-	UINT8 *tmp = (UINT8*)BurnMalloc(len);
-	if (tmp == NULL) {
-		return 1;
-	}
+//	UINT8 *tmp = (UINT8*)BurnMalloc(len);
+	UINT8 *tmp = (UINT8*)0x00200000; //malloc(0x40000);
 
-	memcpy (tmp, rom, len);
+//	if (tmp == NULL) {
+//		return 1;
+//	}
+
+//	memcpy (tmp, rom, len);
 
 	switch (type)
 	{
 		case 0:
-			GfxDecode4Bpp((len * 2) / ( 8 *  8), 4,  8,  8, Plane, XOffs0, YOffs0, 0x100, tmp, rom);
+			GfxDecode4Bpp((len * 2) / ( 8 *  8), 4,  8,  8, Plane, XOffs0, YOffs0, 0x100, tmp, cache);
 		break;
 
 		case 1:
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs0, YOffs0, 0x400, tmp, rom);
+			tile16x16toSaturn(1,(len * 2) / (16 * 16), DrvGfxROM1);
 		break;
 
 		case 2:
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs1, YOffs1, 0x400, tmp, rom);
+			tile16x16toSaturn(1,(len * 2) / (16 * 16), DrvGfxROM1);
 		break;
 	}
 
-	BurnFree (tmp);
+//	BurnFree (tmp);
 
 	return 0;
 }
@@ -829,7 +833,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		DrvGfxDecode(DrvGfxROM2, 0x40000, 1);
 	}
 
-	CZetInit(1);
+	CZetInit(2);
 	CZetOpen(0);
 	CZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, MAP_ROM);
 	CZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, MAP_ROM);
@@ -842,7 +846,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	CZetSetReadHandler(ninjakd2_main_read);
 	CZetClose();
 
-//	ninjakd2_sound_init();
+	ninjakd2_sound_init();
 //	BurnYM2203SetPSGVolume(0, 0.05);
 //	BurnYM2203SetPSGVolume(1, 0.05);
 
@@ -874,9 +878,11 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		if (BurnLoadRom(DrvZ80ROM0 + 0x30000,  2, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x40000,  3, 1)) return 1;
 		memcpy (DrvZ80ROM0, DrvZ80ROM0 + 0x10000, 0x10000);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"aft DrvZ80ROM0    ",20,60);
 
 		if (BurnLoadRom(DrvZ80ROM1 + 0x10000,  4, 1)) return 1;
 		memcpy (DrvZ80ROM1, DrvZ80ROM1 + 0x10000, 0x10000);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"aft DrvZ80ROM1    ",20,60);
 
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  5, 1)) return 1;
 
@@ -884,7 +890,8 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		if (BurnLoadRom(DrvGfxROM1 + 0x10000,  7, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x20000,  8, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x30000,  9, 1)) return 1;
-
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"aft DrvGfxROM1    ",20,60);
+/*
 		if (BurnLoadRom(DrvGfxROM2 + 0x00000, 10, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM2 + 0x10000, 11, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM2 + 0x20000, 12, 1)) return 1;
@@ -908,15 +915,17 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		if (BurnLoadRom(DrvGfxROM4 + 0x30000, 28, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM4 + 0x40000, 29, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM4 + 0x50000, 30, 1)) return 1;
-
+*/
 		DrvGfxDecode(DrvGfxROM0, 0x08000, 0);
-		DrvGfxDecode(DrvGfxROM1, 0x40000, 2);
-		DrvGfxDecode(DrvGfxROM2, 0x80000, 2);
-		DrvGfxDecode(DrvGfxROM3, 0x80000, 2);
-		DrvGfxDecode(DrvGfxROM4, 0x80000, 2);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"aft DrvGfxDecode    ",20,60);
+
+//		DrvGfxDecode(DrvGfxROM1, 0x40000, 2);
+//		DrvGfxDecode(DrvGfxROM2, 0x80000, 2);
+//		DrvGfxDecode(DrvGfxROM3, 0x80000, 2);
+//		DrvGfxDecode(DrvGfxROM4, 0x80000, 2);
 	}
 
-	CZetInit(1);
+	CZetInit(2);
 	CZetOpen(0);
 	CZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, MAP_ROM);
 	CZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, MAP_ROM);
@@ -930,10 +939,12 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	CZetSetWriteHandler(robokid_main_write);
 	CZetSetReadHandler(ninjakd2_main_read);
 	CZetClose();
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"aft CZetInit1    ",20,60);
 
-//	ninjakd2_sound_init();
+	ninjakd2_sound_init();
 //	BurnYM2203SetPSGVolume(0, 0.03);
 //	BurnYM2203SetPSGVolume(1, 0.03);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"aft CZetInit2    ",20,60);
 
 //	GenericTilesInit();
 
@@ -1025,7 +1036,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	scfg.plate_addr[0] = SCL_VDP2_VRAM_A0;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
-	scfg.plate_addr[0] = SCL_VDP2_VRAM_B0;
+	scfg.plate_addr[0] = (Uint32)ss_map;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
 	scfg.dispenbl 	   = ON;
@@ -1053,9 +1064,9 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
 {
-	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+//	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
-	SCL_AllocColRam(SCL_NBG2,OFF);
+//	SCL_AllocColRam(SCL_NBG2,OFF);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1068,6 +1079,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //	ss_map  = (Uint16 *)SS_MAP;
 //	ss_map2= (Uint16 *)SS_MAP2;
 //	ss_font  = (Uint16 *)SS_FONT;
+	ss_map =(Uint16 *)SCL_VDP2_VRAM_B0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -1092,6 +1104,49 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	drawWindow(0,192,192,2,62);
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 	//*(unsigned int*)OPEN_CSH_VAR(SOUND_LEN) = 128;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+/*static*/ void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
+{
+	unsigned int c;
+	for (c = 0; c < num; c++) 
+	{
+		unsigned char new_tile[128];
+		UINT8 *dpM = pDest + (c * 128);
+		memcpyl(new_tile,dpM,128);
+		unsigned int i=0,j=0,k=0;
+
+		for (k=0;k<128;k+=64)
+		{
+			dpM = pDest + ((c * 128)+k);
+
+			for (i=0;i<32;i+=4,j+=8)
+			{
+				if(reverse)
+				{
+					dpM[i]=new_tile[j];
+					dpM[i+1]=new_tile[j+1];
+					dpM[i+2]=new_tile[j+2];
+					dpM[i+3]=new_tile[j+3];
+					dpM[i+32]=new_tile[j+4];
+					dpM[i+33]=new_tile[j+5];
+					dpM[i+34]=new_tile[j+6];
+					dpM[i+35]=new_tile[j+7];
+				}
+				else
+				{
+					dpM[i+32]=new_tile[j];
+					dpM[i+33]=new_tile[j+1];
+					dpM[i+34]=new_tile[j+2];
+					dpM[i+35]=new_tile[j+3];
+					dpM[i+0]=new_tile[j+4];
+					dpM[i+1]=new_tile[j+5];
+					dpM[i+2]=new_tile[j+6];
+					dpM[i+3]=new_tile[j+7];
+				}
+			}
+		}
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void cleanSprites()
@@ -1244,8 +1299,8 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 {
 	for (INT32 offs = (32 * 4); offs < (32 * 32) - (32 * 4); offs++)
 	{
-		INT32 sx = (offs & 0x1f) * 8;
-		INT32 sy = (offs / 0x20) * 8;
+//		INT32 sx = (offs & 0x1f) * 8;
+//		INT32 sy = (offs / 0x20) * 8;
 
 		INT32 attr  = DrvFgRAM[offs*2+1];
 		INT32 code  = DrvFgRAM[offs*2+0] + ((attr & 0xc0) << 2);
@@ -1253,19 +1308,11 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		INT32 flipy = attr & 0x20;
 		INT32 color = attr & 0x0f;
 
-		if (flipy) {
-			if (flipx) {
-//				Render8x8Tile_Mask_FlipXY_Clip(pTransDraw, code, sx, sy - 32, color, 4, 0xf, color_offset, DrvGfxROM0);
-			} else {
-//				Render8x8Tile_Mask_FlipY_Clip(pTransDraw, code, sx, sy - 32, color, 4, 0xf, color_offset, DrvGfxROM0);
-			}
-		} else {
-			if (flipx) {
-//				Render8x8Tile_Mask_FlipX_Clip(pTransDraw, code, sx, sy - 32, color, 4, 0xf, color_offset, DrvGfxROM0);
-			} else {
-//				Render8x8Tile_Mask_Clip(pTransDraw, code, sx, sy - 32, color, 4, 0xf, color_offset, DrvGfxROM0);
-			}
-		}
+	int offs = (offs & 0x1f) | (offs / 0x20) <<6;
+	code |= (attr & 0x20) << 3;
+//	ss_map[offs] = (attr & 0x0f) <<12 | code & 0xfff;
+	ss_map[offs] = offs-128;
+
 	}
 }
 
@@ -1426,7 +1473,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		DrvCalculatePalette();
 		DrvRecalc = 0;
 	}
-
+/*
 	if (overdraw_enable) {
 		for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
 			if ((pSpriteDraw[i] & 0x00f0) < 0x00e0) pSpriteDraw[i] = 0x000f;
@@ -1449,7 +1496,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	draw_copy_sprites();
 
 	draw_robokid_bg_layer(2, DrvBgRAM2, DrvGfxROM4, 0, 1);
-
+*/
 	draw_fg_layer(0x300);
 
 //	BurnTransferCopy(DrvPalette);
@@ -1503,9 +1550,9 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 /*static*/  INT32 DrvFrame()
 {
-	if (DrvReset) {
-		DrvDoReset();
-	}
+//	if (DrvReset) {
+//		DrvDoReset();
+//	}
 
 	{
 		memset (DrvInputs, 0xff, 3);
@@ -1551,7 +1598,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		nCycleSegment = nCyclesTotal[1] / nInterleave;
 
 		CZetOpen(1);
-	//	nCyclesDone[1] += ZetRun(nCycleSegment);
+		nCyclesDone[1] += CZetRun(nCycleSegment);
 //		BurnTimerUpdate((i + 1) * nCycleSegment);
 		CZetClose();
 	}
@@ -1570,6 +1617,6 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //	if (pBurnDraw) {
 //		BurnDrvRedraw();
 //	}
-
+	RobokidDraw();
 	return 0;
 }

@@ -5,7 +5,7 @@
 //#define OVLADDR  0x060A5000
 #define OVLADDR  0x060B4000
 #define LOWADDR 0x00200000
-#define DEBUG_DRV 1
+//#define DEBUG_DRV 1
 volatile SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
 extern unsigned char play;
