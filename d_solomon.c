@@ -1,7 +1,7 @@
 #include "d_solomon.h"
-#define nInterleave 2
+#define	nCyclesTotal0 4000000 / 60
+#define nCyclesTotal1 3072000 / 60 / 3
 #define RAZE0 1
-//#define CZET_SLAVE 1
 
 int ovlInit(char *szShortName)
 {
@@ -12,7 +12,8 @@ int ovlInit(char *szShortName)
 		SolomonInit, SolomonExit, SolomonFrame, NULL
 	};
 	memcpy(shared,&nBurnDrvSolomon,sizeof(struct BurnDriver));
-	ss_reg          = (SclNorscl *)SS_REG;
+	ss_reg   = (SclNorscl *)SS_REG;
+	ss_regs = (SclSysreg *)SS_REGS;
 }
 
 inline void SolomonClearOpposites(UINT8* nJoystickInputs)
@@ -113,12 +114,6 @@ void __fastcall SolomonWrite1(UINT16 a, UINT8 d)
 			CZetOpen(1);
 #endif
 
-#ifdef CZET_SLAVE
-		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			SPR_WaitEndSlaveSH();
-		}
-#endif
 		CZetNmi();
 
 #ifndef RAZE0
@@ -258,11 +253,6 @@ static INT32 SolomonMemIndex()
 //	SolomonBgTiles         = Next; Next += 2048 * 8 * 8;
 //	SolomonFgTiles         = Next; Next += 2048 * 8 * 8;
 //	SolomonSprites         = Next; Next += 2048 * 8 * 8;
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-
-	SolomonBgTiles			= (UINT8 *)cache;
-	SolomonFgTiles			= (UINT8 *)cache+0x10000;
-	SolomonSprites         = &ss_vram[0x1100];
 
 	pFMBuffer					= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 	map_offset_lut			= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
@@ -297,7 +287,11 @@ INT32 SolomonInit()
 	make_lut();
 
 //	SolomonTempRom = (UINT8 *)BurnMalloc(0x10000);
-	SolomonTempRom = (UINT8 *)0x00200000;
+	UINT8 *SolomonTempRom	= (UINT8 *)0x00200000;
+	UINT8 *ss_vram					= (UINT8 *)SS_SPRAM;
+	UINT8 *SolomonBgTiles		= (UINT8 *)cache;
+	UINT8 *SolomonFgTiles		= (UINT8 *)cache+0x10000;
+	UINT8 *SolomonSprites		= &ss_vram[0x1100];
 
 	// Load Z80 #1 Program Roms
 	nRet = BurnLoadRom(SolomonZ80Rom1, 0, 1); if (nRet != 0) return 1;
@@ -331,7 +325,7 @@ INT32 SolomonInit()
 	nRet = BurnLoadRom(SolomonTempRom + 0xc000, 11, 1); if (nRet != 0) return 1;
 //	SolomonDecodeSprites(SolomonSprites, 2048, 0x0000, 0x4000, 0x8000, 0xc000);
 	GfxDecode4Bpp(512, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x100, SolomonTempRom, SolomonSprites);
-
+	SolomonTempRom = NULL;
 	// Setup the Z80 emulation
 //	CZetInit(2);
 	CZetInit2(2,CZ80Context);
@@ -417,9 +411,6 @@ INT32 SolomonInit()
 	CZetMapArea(0x4000, 0x47ff, 2, SolomonZ80Ram2         );
 	CZetClose();
 
-//	BurnFree(SolomonTempRom);
-	SolomonTempRom = NULL;
-
 	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
 	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
 	pAY8910Buffer[2] = pFMBuffer + nBurnSoundLen * 2;
@@ -462,8 +453,7 @@ INT32 SolomonExit()
 	MemEnd = RamStart = RamEnd = SolomonZ80Rom1 = SolomonZ80Rom2 = NULL;
 	SolomonZ80Ram1 = SolomonZ80Ram2 = SolomonColourRam = SolomonVideoRam = NULL;
 	SolomonBgColourRam = SolomonBgVideoRam = SolomonSpriteRam = NULL;
-	SolomonPaletteRam = SolomonBgTiles = SolomonFgTiles = SolomonSprites = NULL;
-	CZ80Context = SolomonTempRom = NULL;
+	SolomonPaletteRam = CZ80Context = NULL;
 	map_offset_lut = cram_lut = NULL;
 
 	for (int i = 0; i < 9; i++) {
@@ -483,7 +473,7 @@ INT32 SolomonExit()
 
 void SolomonRenderSpriteLayer()
 {
-	UINT8 delta=3;
+	SprSpCmd *ss_spritePtr = &ss_sprite[0];
 
 	for (INT32 Offs = 0x80 - 4; Offs >= 0; Offs -= 4) 
 	{
@@ -491,14 +481,13 @@ void SolomonRenderSpriteLayer()
 
 		Attr = SolomonSpriteRam[Offs + 1];
 		Code = SolomonSpriteRam[Offs] + 16 * (Attr & 0x10);
-//		Colour = (Attr & 0x0e) >> 1;
 
-		ss_sprite[delta].charAddr = 0x220+(Code<<4);
-		ss_sprite[delta].control    = (Attr & 0xC0) >> 2;
-		ss_sprite[delta].ay    = 225 - SolomonSpriteRam[Offs + 2];
-		ss_sprite[delta].ax    =  SolomonSpriteRam[Offs + 3];
-		ss_sprite[delta].color=  (Attr & 0x0e)*8;
-		delta++;
+		ss_spritePtr->charAddr	= 0x220+(Code<<4);
+		ss_spritePtr->control		= (Attr & 0xC0) >> 2;
+		ss_spritePtr->ay			= 225 - SolomonSpriteRam[Offs + 2];
+		ss_spritePtr->ax			=  8 + SolomonSpriteRam[Offs + 3];
+		ss_spritePtr->color		=  (Attr & 0x0e)*8;
+		ss_spritePtr++;
 	}
 }
 
@@ -535,91 +524,65 @@ INT32 SolomonFrame()
 {
 	SolomonMakeInputs();
 
-	nCyclesTotal[0] = 4000000 / 60;
-	nCyclesTotal[1] = 3072000 / 60;
-	nCyclesDone[0] = nCyclesDone[1] = 0;
+	UINT32 nCyclesDone0 = 0, nCyclesDone1 = 0;
 	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
-// 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 
-	for (INT32 i = 0; i < nInterleave; i++) 
-	{
-		INT32 nNext;
-		// Run Z80 #1
-#ifndef RAZE0
-		CZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesDone[nCurrentCPU] += CZetRun(nCyclesSegment);
-		if (i == 1) if(SolomonIrqFire) CZetNmi();
-		CZetClose();
-#else
-		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[0];
-		nCyclesDone[0] += z80_emulate(nCyclesSegment);
+	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 
-		if (i == 1) if(SolomonIrqFire) z80_cause_NMI();
-#endif
+	INT32 nNext;
+//--i = 0--------------------------------------------------------------------------------
+	// Run Z80 #1
+	nCyclesDone0 += z80_emulate(nCyclesTotal0 >> 1);
+	// Run Z80 #2
+	nNext = (nCyclesTotal1 >>1);
+	CZetRunSlave(&nNext);
+//--i = 1--------------------------------------------------------------------------------
+	// Run Z80 #1
+	z80_emulate(nCyclesTotal0 - nCyclesDone0);
+	if(SolomonIrqFire) z80_cause_NMI();
+	CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
+	// Run Z80 #2
+	nCyclesDone1 += *(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+	nNext = nCyclesTotal1 - nCyclesDone1;
+	CZetRunSlave(&nNext);
 
-#ifndef CZET_SLAVE
-		// Run Z80 #2
-//		nCurrentCPU = 1;
-		CZetOpen(1);
-		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[1];
-		nCyclesSegment = CZetRun(nCyclesSegment);
-		nCyclesDone[1] += nCyclesSegment;
-		CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
-		CZetClose();
-#else
-		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			SPR_WaitEndSlaveSH();
-		}
-
-		nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
-		CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
-//		CZetClose();
-
-		CZetOpen(1);
-//		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
-//		nCyclesSegment = nNext - nCyclesDone[1];
-		nCyclesSegment = 25600;
-		SPR_RunSlaveSH((PARA_RTN*)CZetRunSlave,&nCyclesSegment);
-		nCyclesDone[1] += nCyclesSegment;
-#endif
-	}
 	SolomonDraw();
+	SPR_WaitEndSlaveSH();
+	CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 
-	updateSound();
-//	SPR_WaitEndSlaveSH();
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"                     ",20,100);
-
+//	updateSound();
 	return 0;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*
+void AY8910Update1Slave()
+{
+	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
+}
+*/
+//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void updateSound()
 {
 	int nSample;
-	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
-	signed short *nSoundBuffer = (signed short *)0x25a20000;
-	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	signed short *nSoundBuffer		= (signed short *)0x25a20000+nSoundBufferPos;
 
+//	SPR_RunSlaveSH((PARA_RTN*)AY8910Update1Slave, NULL);
 	AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
 	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
 	AY8910Update(2, &pAY8910Buffer[6], nBurnSoundLen);
 
 	for (unsigned int n = 0; n < nBurnSoundLen; n++) 
 	{
-		nSample  = pAY8910Buffer[0][n]; // >> 2;
-		nSample += pAY8910Buffer[1][n]; // >> 2;
-		nSample += pAY8910Buffer[2][n]; // >> 2;
-		nSample += pAY8910Buffer[3][n]; // >> 2;
-		nSample += pAY8910Buffer[4][n]; // >> 2;
-		nSample += pAY8910Buffer[5][n]; // >> 2;
-		nSample += pAY8910Buffer[6][n]; // >> 2;
-		nSample += pAY8910Buffer[7][n]; // >> 2;
-		nSample += pAY8910Buffer[8][n]; // >> 2;
+		nSample  = pAY8910Buffer[0][n]; 
+		nSample += pAY8910Buffer[1][n];
+		nSample += pAY8910Buffer[2][n];
+		nSample += pAY8910Buffer[3][n];
+		nSample += pAY8910Buffer[4][n];
+		nSample += pAY8910Buffer[5][n];
+		nSample += pAY8910Buffer[6][n];
+		nSample += pAY8910Buffer[7][n];
+		nSample += pAY8910Buffer[8][n];
 
 		nSample /=4;
 
@@ -634,23 +597,17 @@ INT32 SolomonFrame()
 				nSample = 32767;
 			}
 		}	
-		nSoundBuffer[deltaSlave + n] = nSample;
-//		nSoundBuffer[nSoundBufferPos + n] = nSample;
+		*nSoundBuffer++ = nSample;
 	}
 
-	if(deltaSlave>=RING_BUF_SIZE/2)
-//	if(nSoundBufferPos>=RING_BUF_SIZE/2)
+	if(nSoundBufferPos>=RING_BUF_SIZE/2)
 	{
-		PCM_NotifyWriteSize(pcm, deltaSlave);
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
-		deltaSlave=0;
-//		nSoundBufferPos = 0;
+		nSoundBufferPos=0;
 	}
 
-	deltaSlave+=nBurnSoundLen;
-//	nSoundBufferPos+=nBurnSoundLen;
-
-	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+	nSoundBufferPos+=nBurnSoundLen;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -749,7 +706,7 @@ void dummy()
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites  = 32+4;//27;
 
@@ -764,7 +721,8 @@ static void DrvInitSaturn()
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_reg->n1_move_y =  16 <<16;
 	ss_reg->n2_move_y =  16;
-
+	ss_reg->n1_move_x =  -8 <<16;
+	ss_reg->n2_move_x =  -8;
 
 //3 nbg
 	SS_SET_S0PRIN(6);
@@ -789,6 +747,6 @@ static void DrvInitSaturn()
 	}
 
 	nBurnFunction = SolomonCalcPalette;
-	drawWindow(0,240,0,0,64); 
+	drawWindow(0,240,0,0,62); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

@@ -136,7 +136,7 @@ int CZetGetActive()
 {
 	return nOpenedCPU;
 }
-
+#if 0
 #define INT_DIGITS 19
 static char *itoa(i)
      int i;
@@ -160,7 +160,7 @@ static char *itoa(i)
   }
   return p;
 }
-
+#endif
 
 int CZetRun(int nCycles)
 {
@@ -215,33 +215,13 @@ void CZetRunSlave(int *nCycles)
 	if (nCycles[0] <= 0) {
 		return;
 	}
+//unsigned int nCyc = *(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
 
-unsigned int nCyc = *(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
+	lastCZetCPUContext->nCyclesTotal += *nCycles;
+	lastCZetCPUContext->nCyclesSegment = *nCycles;
+	lastCZetCPUContext->nCyclesLeft = *nCycles;
 
-/*
-char toto[100];
-char *titi = &toto[0];
-//nCycles[0]=332;
-
-titi=itoa(nCycles[0]);
-FNT_Print256_2bpp((volatile Uint8 *)0x25e60000,(Uint8 *)"         ",20,100);
-FNT_Print256_2bpp((volatile Uint8 *)0x25e60000,(Uint8 *)"         ",20,110);
-
-FNT_Print256_2bpp((volatile Uint8 *)0x25e60000,(Uint8 *)titi,20,100);
-titi=itoa(nCyc);
-FNT_Print256_2bpp((volatile Uint8 *)0x25e60000,(Uint8 *)titi,20,110);
-*/
-	lastCZetCPUContext = &CZetCPUContext[1];
-	nOpenedCPU = 1;
-
-	lastCZetCPUContext->nCyclesTotal += nCycles[0];
-	lastCZetCPUContext->nCyclesSegment = nCycles[0];
-	lastCZetCPUContext->nCyclesLeft = nCycles[0];
-
-	nCyc += Cz80_Exec(lastCZetCPUContext);
-
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"                 ",4,50);
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(nCyc),40,50);
+	unsigned int nCyc = Cz80_Exec(lastCZetCPUContext);
 
 	lastCZetCPUContext->nCyclesTotal -= lastCZetCPUContext->nCyclesLeft;
 	lastCZetCPUContext->nCyclesLeft = 0;
@@ -249,6 +229,7 @@ FNT_Print256_2bpp((volatile Uint8 *)0x25e60000,(Uint8 *)titi,20,110);
 
 //	*(unsigned int*)0x00200000 = nCyc;
 	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = nCyc;
+//	*(volatile Uint8 *)0xfffffe11=0x80;
 }
 
 void CZetRunAdjust(int nCycles)

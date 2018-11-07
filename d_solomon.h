@@ -34,11 +34,6 @@ void CZetRunSlave(int *nCycles);
 /*static*/ UINT8 *SolomonBgVideoRam   = NULL;
 /*static*/ UINT8 *SolomonSpriteRam    = NULL;
 /*static*/ UINT8 *SolomonPaletteRam   = NULL;
-/*static*/ //UINT32 *SolomonPalette     = NULL;
-/*static*/ UINT8 *SolomonBgTiles      = NULL;
-/*static*/ UINT8 *SolomonFgTiles      = NULL;
-/*static*/ UINT8 *SolomonSprites      = NULL;
-/*static*/ UINT8 *SolomonTempRom      = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
 UINT16* map_offset_lut      = NULL;
 UINT16 *cram_lut = NULL;
@@ -50,9 +45,6 @@ UINT16 *cram_lut = NULL;
 /*static*/ INT32 SolomonSoundLatch = 0;
 /*static*/ INT16* pFMBuffer;
 /*static*/ INT16* pAY8910Buffer[9];
-
-/*static*/ INT32 nCyclesDone[2], nCyclesTotal[2];
-/*static*/ INT32 nCyclesSegment;
 
 /*static*/ struct BurnInputInfo SolomonInputList[] =
 {
