@@ -604,12 +604,13 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 /*static*/  INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
+	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 
 	DrvZ80ROM0	= Next; Next += 0x050000;
 	DrvZ80ROM1	= Next; Next += 0x020000;
 
-	DrvGfxROM0	 	= (UINT8*)cache;//Next; Next += 0x010000;
-	DrvGfxROM1		= (UINT8*)cache+0x010000;//Next; Next += 0x080000;
+	DrvGfxROM0	 	= (UINT8 *)cache;// fg //Next; Next += 0x010000;
+	DrvGfxROM1		= (UINT8 *)(ss_vram+0x1100); // sprites //(UINT8*)cache+0x010000;//Next; Next += 0x080000;
 /*	DrvGfxROM2	= Next; Next += 0x100000;
 	DrvGfxROM3	= Next; Next += 0x100000;
 	DrvGfxROM4	= Next; Next += 0x100000;
@@ -659,7 +660,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //		return 1;
 //	}
 
-//	memcpy (tmp, rom, len);
+	memcpy (tmp, rom, len);
 
 	switch (type)
 	{
@@ -669,12 +670,12 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 		case 1:
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs0, YOffs0, 0x400, tmp, rom);
-			tile16x16toSaturn(1,(len * 2) / (16 * 16), DrvGfxROM1);
+//			tile16x16toSaturn(1,(len * 2) / (16 * 16), DrvGfxROM1);
 		break;
 
-		case 2:
+		case 2: // decode pour sprites
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs1, YOffs1, 0x400, tmp, rom);
-			tile16x16toSaturn(1,(len * 2) / (16 * 16), DrvGfxROM1);
+//			tile16x16toSaturn(1,(len * 2) / (16 * 16), DrvGfxROM1);
 		break;
 	}
 
@@ -887,12 +888,21 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  5, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  5, 1)) return 1;
 
+		for (UINT32 i=0;i<0x10000;i++ )
+		{
+			if ((DrvGfxROM0[i]& 0x0f)     ==0x00)DrvGfxROM0[i] = DrvGfxROM0[i] & 0xf0 | 0xf;
+			else if ((DrvGfxROM0[i]& 0x0f)==0x0f) DrvGfxROM0[i] = DrvGfxROM0[i] & 0xf0;
+
+			if ((DrvGfxROM0[i]& 0xf0)       ==0x00)DrvGfxROM0[i] = 0xf0 | DrvGfxROM0[i] & 0x0f;
+			else if ((DrvGfxROM0[i]& 0xf0)==0xf0) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x0f;
+		}
+
 		if (BurnLoadRom(DrvGfxROM1 + 0x00000,  6, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x10000,  7, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x20000,  8, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x30000,  9, 1)) return 1;
-
-		tile16x16toSaturn(1,(0x40000 * 2) / (16 * 16), DrvGfxROM1);
+// pas besoin : sprites
+//		tile16x16toSaturn(1,(0x40000 * 2) / (16 * 16), DrvGfxROM1);
 
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"aft DrvGfxROM1    ",20,60);
 /*
@@ -923,7 +933,16 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //		DrvGfxDecode(DrvGfxROM0, 0x08000, 0); // deja du 4bpp !!!
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"aft DrvGfxDecode    ",20,60);
 
-//		DrvGfxDecode(DrvGfxROM1, 0x40000, 2);
+		DrvGfxDecode(DrvGfxROM1, 0x40000, 2);
+
+		for (UINT32 i=0;i<0x10000;i++ )
+		{
+			if ((DrvGfxROM1[i]& 0x0f)     ==0x00)DrvGfxROM1[i] = DrvGfxROM1[i] & 0xf0 | 0xf;
+			else if ((DrvGfxROM1[i]& 0x0f)==0x0f) DrvGfxROM1[i] = DrvGfxROM1[i] & 0xf0;
+
+			if ((DrvGfxROM1[i]& 0xf0)       ==0x00)DrvGfxROM1[i] = 0xf0 | DrvGfxROM1[i] & 0x0f;
+			else if ((DrvGfxROM1[i]& 0xf0)==0xf0) DrvGfxROM1[i] = DrvGfxROM1[i] & 0x0f;
+		}
 //		DrvGfxDecode(DrvGfxROM2, 0x80000, 2);
 //		DrvGfxDecode(DrvGfxROM3, 0x80000, 2);
 //		DrvGfxDecode(DrvGfxROM4, 0x80000, 2);
@@ -1074,8 +1093,8 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 //	SCL_AllocColRam(SCL_NBG2,OFF);
 SCL_AllocColRam(SCL_NBG3,OFF);
-SCL_AllocColRam(SCL_NBG3,OFF);
-SCL_AllocColRam(SCL_NBG3,OFF);
+SCL_AllocColRam(SCL_SPR,OFF);   // 0x200 pour sprites atomic robokid
+SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1083,7 +1102,7 @@ SCL_AllocColRam(SCL_NBG3,OFF);
 {
 	cleanSprites();
 	SPR_InitSlaveSH();
-	nBurnSprites  = 67;
+	nBurnSprites  = 100;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -1095,9 +1114,9 @@ SCL_AllocColRam(SCL_NBG3,OFF);
 	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
-	SS_SET_S0PRIN(5);
+	SS_SET_S0PRIN(4);
 	SS_SET_N0PRIN(7);
-	SS_SET_N2PRIN(4);
+	SS_SET_N2PRIN(5);
 	SS_SET_N1PRIN(6);
 	initPosition();
 
@@ -1331,6 +1350,9 @@ SCL_AllocColRam(SCL_NBG3,OFF);
 
 	UINT8* sprptr = DrvSprRAM + 11;
 	int sprites_drawn = 0;
+	int delta = 3;
+	
+	cleanSprites();
 
 	while (1)
 	{
@@ -1342,10 +1364,10 @@ SCL_AllocColRam(SCL_NBG3,OFF);
 			int code = sprptr[3] + ((sprptr[2] & 0xc0) << 2) + ((sprptr[2] & 0x08) << 7);
 			int flipx = (sprptr[2] & 0x10) >> 4;
 			int flipy = (sprptr[2] & 0x20) >> 5;
+			int flip = (sprptr[2] & 0x30);
 			int const color = sprptr[4] & 0x0f;
-
 			int const big = (sprptr[2] & 0x04) >> 2;
-
+/*
 			if (*flipscreen)
 			{
 				sx = 240 - 16*big - sx;
@@ -1353,7 +1375,7 @@ SCL_AllocColRam(SCL_NBG3,OFF);
 				flipx ^= 1;
 				flipy ^= 1;
 			}
-
+*/
 			if (big)
 			{
 				code &= ~3;
@@ -1367,19 +1389,15 @@ SCL_AllocColRam(SCL_NBG3,OFF);
 				{
 					int const tile = code ^ (x << big_xshift) ^ (y << big_yshift);
 
-					if (flipy) {
-						if (flipx) {
-//							Render16x16Tile_Mask_FlipXY_Clip(pSpriteDraw, tile, sx + 16*x, (sy + 16*y) - 32, color, 4, 0xf, color_offset, DrvGfxROM1);
-						} else {
-//							Render16x16Tile_Mask_FlipY_Clip(pSpriteDraw, tile, sx + 16*x, (sy + 16*y) - 32, color, 4, 0xf, color_offset, DrvGfxROM1);
-						}
-					} else {
-						if (flipx) {
-//							Render16x16Tile_Mask_FlipX_Clip(pSpriteDraw, tile, sx + 16*x, (sy + 16*y) - 32, color, 4, 0xf, color_offset, DrvGfxROM1);
-						} else {
-//							Render16x16Tile_Mask_Clip(pSpriteDraw, tile, sx + 16*x, (sy + 16*y) - 32, color, 4, 0xf, color_offset, DrvGfxROM1);
-						}
-					}
+					ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP) | flip;
+					ss_sprite[delta].drawMode	= ( ECD_DISABLE | COMPO_REP);
+
+					ss_sprite[delta].ax					= sx + 16*x;
+					ss_sprite[delta].ay					= (sy + 16*y) - 32;
+					ss_sprite[delta].charSize		= 0x210;
+					ss_sprite[delta].color			    = color<<4;//Colour<<4;
+					ss_sprite[delta].charAddr		= 0x220+(tile<<4);
+					delta++;
 
 					++sprites_drawn;
 
@@ -1492,8 +1510,7 @@ SCL_AllocColRam(SCL_NBG3,OFF);
 		}
 	}
 
-	draw_sprites(0x200, 1);
-
+	
 //	if (tilemap_enable[0] == 0)
 //		BurnTransferClear();
 
@@ -1505,6 +1522,8 @@ SCL_AllocColRam(SCL_NBG3,OFF);
 
 	draw_robokid_bg_layer(2, DrvBgRAM2, DrvGfxROM4, 0, 1);
 */
+	draw_sprites(0x200, 1);
+
 	draw_fg_layer(0x300);
 
 //	BurnTransferCopy(DrvPalette);
