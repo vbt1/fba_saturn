@@ -526,22 +526,11 @@ inline /*static*/ /*double DrvGetTime()
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 
-	CZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM0);
-	CZetMapArea(0x0000, 0x7fff, 2, DrvZ80ROM0);
-
-	CZetMapArea(0xc000, 0xc7ff, 0, DrvPalRAM);
-	CZetMapArea(0xc000, 0xc7ff, 2, DrvPalRAM);
-
-	CZetMapArea(0xd000, 0xdfff, 0, DrvVidRAM);
-	CZetMapArea(0xd000, 0xdfff, 2, DrvVidRAM);
-
-	CZetMapArea(0xe000, 0xefff, 0, DrvZ80RAM0);
-	CZetMapArea(0xe000, 0xefff, 1, DrvZ80RAM0);
-	CZetMapArea(0xe000, 0xefff, 2, DrvZ80RAM0);
-
-	CZetMapArea(0xf000, 0xffff, 0, DrvSprRAM);
-	CZetMapArea(0xf000, 0xffff, 1, DrvSprRAM);
-	CZetMapArea(0xf000, 0xffff, 2, DrvSprRAM);
+	CZetMapMemory(DrvZ80ROM0,	0x0000, 0x7fff, MAP_ROM);
+	CZetMapMemory(DrvPalRAM,		0xc000, 0xc7ff, MAP_ROM);
+	CZetMapMemory(DrvVidRAM,		0xd000, 0xdfff, MAP_ROM);
+	CZetMapMemory(DrvZ80RAM0,		0xe000, 0xefff, MAP_RAM);
+	CZetMapMemory(DrvSprRAM,		0xf000,	 0xffff, MAP_RAM);
 
 	CZetSetWriteHandler(sidearms_main_write);
 	CZetSetReadHandler(sidearms_main_read);
