@@ -40,7 +40,19 @@ int ovlInit(char *szShortName)
 	g |= g << 4;
 	b |= b << 4;
 
-	DrvPalette[offset/2] = BurnHighCol(r,g,b,0);
+	if((((offset/2)+1)%16)==0)
+	{
+//		DrvPalette[offset/2]		= DrvPalette[(offset/2)-15];
+		DrvPalette[(offset/2)-15]= BurnHighCol(r,g,b,0);
+	}
+	else if(((offset/2)%16)==0)
+	{
+		DrvPalette[(offset/2)+15]= BurnHighCol(r,g,b,0);
+	}
+	else
+	{
+		DrvPalette[offset/2] = BurnHighCol(r,g,b,0);
+	}
 }
 
 /*static*/  void ninjakd2_bankswitch(INT32 data)
@@ -74,6 +86,23 @@ int ovlInit(char *szShortName)
 
 		case 4:
 			tilemap_enable[sel] = data & 0x01;
+
+//nbg2 fg
+//sel=0 => nbg1
+//sel=1 => nbg0
+//sel=2 => nbg3
+		if(!sel)
+		{
+			ss_regs->dispenbl &= 0xfffd;
+			ss_regs->dispenbl |= ((data & 0x01)<<1) & 0x0002;
+			BGON = ss_regs->dispenbl;
+		}
+		else
+		{
+			ss_regs->dispenbl &= 0xfffe;
+			ss_regs->dispenbl |= (data & 0x01) & 0x0001;
+			BGON = ss_regs->dispenbl;
+		}
 		return;
 	}
 }
@@ -1002,9 +1031,14 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //	BurnYM2203SetPSGVolume(1, 0.03);
 
 //	GenericTilesInit();
-
+//memset(ss_map,0x11,0x10000);
 	DrvDoReset();
 	DrvCalculatePalette();
+
+
+
+
+
 	return 0;
 }
 
@@ -1084,25 +1118,33 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	scfg.charsize      = SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
 	scfg.pnamesize   = SCL_PN1WORD;
 	scfg.flip              = SCL_PN_12BIT; 
-	scfg.platesize     = SCL_PL_SIZE_2X2; // ou 2X2 ?
+	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
 	scfg.patnamecontrl =  0x0000;// VRAM A0 ?~I?t?Z?b?g 
 	scfg.plate_addr[0] = ss_map;
-	SCL_SetConfig(SCL_NBG2, &scfg);
+	scfg.plate_addr[1] = ss_map;
+	SCL_SetConfig(SCL_NBG2, &scfg); // fg
 
 	scfg.pnamesize   = SCL_PN2WORD;
 	scfg.charsize      = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.patnamecontrl =  0x0000;// VRAM A0 +0x10000?~I?t?Z?b?g 
 	scfg.plate_addr[0] = (Uint32)ss_map2;
-	SCL_SetConfig(SCL_NBG1, &scfg);
+	scfg.plate_addr[1] = (Uint32)ss_map2;
+	scfg.plate_addr[2] = (Uint32)ss_map2;
+	scfg.plate_addr[3] = (Uint32)ss_map2;
+
+	SCL_SetConfig(SCL_NBG1, &scfg); // bg0
 
 //	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
 //	scfg.coltype 	   = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 //	scfg.datatype 	   = SCL_BITMAP;
 //	scfg.mapover	       = SCL_OVER_0;
-	scfg.plate_addr[0] = (Uint32)ss_font;
+	scfg.plate_addr[0] = (Uint32)ss_font; // bg1
+	scfg.plate_addr[1] = (Uint32)ss_font;
+	scfg.plate_addr[2] = (Uint32)ss_font;
+	scfg.plate_addr[3] = (Uint32)ss_font;
 
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
@@ -1146,14 +1188,14 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 
 	ss_sprite           = (SprSpCmd *)SS_SPRIT;
 
- 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
-	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
+ 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x000;		    // fg
+	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x1000;			// bg0
+	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	SS_SET_S0PRIN(4);
-	SS_SET_N0PRIN(6);
-	SS_SET_N2PRIN(5);
+	SS_SET_N0PRIN(5);
+	SS_SET_N2PRIN(6);
 	SS_SET_N1PRIN(3);
 	initPosition();
 
@@ -1358,20 +1400,20 @@ INT16 previous_bank[3]={-1,-1,-1};
 
 UINT16* tmp = (UINT16*)0x00200000;
 
-		INT32 sx1 = (0x440 % wide);
-		INT32 sy1 = (0x440 / wide);
+		UINT32 sx1 = (0x440 % wide);
+		UINT32 sy1 = (0x440 / wide);
 
-		INT32 ofst1 = (sx1 & 0x0f) + (sy1 * 16) + ((sx1 & 0x70) * 0x20);
-		INT32 attr1  = ram[ofst1 * 2 + 1];
+		UINT32 ofst1 = (sx1 & 0x0f) + (sy1 * 16) + ((sx1 & 0x70) * 0x20);
+		UINT32 attr1  = ram[ofst1 * 2 + 1];
 
 	if(previous_bank[sel]!=((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5)		)
 	{
-		previous_bank[sel] = 0;//((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5);
+		previous_bank[sel] = ((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5);
 
 		if(!sel)
-		memcpy(DrvGfxROM2,(UINT8*)0x00200000+(previous_bank[sel]<<7),0x20000);
+		memcpy(DrvGfxROM2,(UINT8*)0x00200000+(previous_bank[sel]*128),0x20000);
 		else
-		memcpy(DrvGfxROM3,(UINT8*)0x00270000+(previous_bank[sel]*256),0x40000);
+		memcpy(DrvGfxROM3,(UINT8*)0x00270000+(previous_bank[sel]*128),0x40000);
 //				memcpy(DrvGfxROM3,(UINT8*)0x00270000,0x20000);
 
 //		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"                   ",20,60);
@@ -1391,19 +1433,21 @@ UINT16* tmp = (UINT16*)0x00200000;
 //		INT32 code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
 		INT32 code  = ram[ofst * 2 + 0] + ((attr & 0xc0) << 2);
 
+			int offs2 = (sx | sy <<5)*2;
 
 		if(!sel)
 		{
-			int offs2 = (sx | sy <<5)*2;
+			/*ss_map2[0xE00+offs2] =ss_map2[0xE40+offs2] = ss_map2[0x40+offs2] = ss_map2[0x80+offs2] = ss_map2[0xC0+offs2] =*/ 
 			ss_map2[offs2] = (attr & 0x0f);
+			/*ss_map2[0xE01+offs2] =ss_map2[0xE41+offs2] = ss_map2[0x41+offs2] = ss_map2[0x81+offs2] = ss_map2[0xC1+offs2] =*/ 
 			ss_map2[offs2+1] = (0x400+(code<<2));
 		}
 		else
 		{
-tmp[offs*2] = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5)+ ((attr & 0xc0) << 2); // + ((attr & 0xc0) << 2);
-tmp[(offs*2)+1] = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5)+ ((attr & 0xc0) << 2) + ((attr & 0xc0) << 2);
-code  = ram[ofst * 2 + 0] + /*((attr & 0x10) << 7) + ((attr & 0x20) << 5) +*/ ((attr & 0xc0) << 2);
-			int offs2 = (sx | sy <<5)*2;
+//tmp[offs*2] = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5)+ ((attr & 0xc0) << 2); // + ((attr & 0xc0) << 2);
+//tmp[(offs*2)+1] = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5)+ ((attr & 0xc0) << 2) + ((attr & 0xc0) << 2);
+//code  = ram[ofst * 2 + 0] + /*((attr & 0x10) << 7) + ((attr & 0x20) << 5) +*/ ((attr & 0xc0) << 2);
+//code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
 			ss_font[offs2] = (attr & 0x0f);
 			ss_font[offs2+1] = (0x1400+((code)<<2));
 		}
@@ -1414,21 +1458,23 @@ code  = ram[ofst * 2 + 0] + /*((attr & 0x10) << 7) + ((attr & 0x20) << 5) +*/ ((
 {
 	for (INT32 offs = (32 * 4); offs < (32 * 32) - (32 * 4); offs++)
 	{
-//		INT32 sx = (offs & 0x1f) * 8;
+		UINT32 sx = (offs & 0x1f);
 //		INT32 sy = (offs / 0x20) * 8;
 
-		INT32 attr  = DrvFgRAM[offs*2+1];
-		INT32 code  = DrvFgRAM[offs*2+0] + ((attr & 0xc0) << 2);
-		INT32 flipx = attr & 0x10;
-		INT32 flipy = attr & 0x20;
-		INT32 color = attr & 0x0f;
+		UINT8 attr  = DrvFgRAM[offs*2+1];
+		UINT16 code  = DrvFgRAM[offs*2+0] + ((attr & 0xc0) << 2);
+//		INT32 flipx = attr & 0x10;
+//		INT32 flipy = attr & 0x20;
+//		UINT8 color = attr & 0x0f;
+		UINT16 off2s = sx | (offs / 0x20) <<6;
 
-	int off2s = (offs & 0x1f) | (offs / 0x20) <<6;
-	code |= (attr & 0x20) << 3;
-//	ss_map[offs] = (attr & 0x0f) <<12 | code & 0xfff;
-	ss_map[off2s] = (attr & 0x0f) <<12 | code & 0xfff;
-//	ss_map2[off2s] = 0;//(offs-128)<<2;
-
+//		if(sx>=1)
+		{
+		code |= (attr & 0x20) << 3;
+		ss_map[off2s] = (attr & 0x0f) <<12 | code & 0xfff;
+		}
+	//	else
+	//		ss_map[off2s] = 0x30;
 	}
 }
 
@@ -1618,6 +1664,24 @@ code  = ram[ofst * 2 + 0] + /*((attr & 0x10) << 7) + ((attr & 0x20) << 5) +*/ ((
 	ss_reg->n0_move_y =  scrolly[1]<<16;
 	ss_reg->n1_move_x =  scrollx[0]<<16;
 	ss_reg->n1_move_y =  scrolly[0]<<16;
+
+
+
+	for (INT32 offs = 0; offs < (64 * 32); offs++)
+	{
+		UINT32 sx = (offs & 0x3f);
+
+		UINT8 attr  = DrvFgRAM[offs*2+1];
+		UINT16 code  = DrvFgRAM[offs*2+0] + ((attr & 0xc0) << 2);
+		UINT16 off2s = sx | (offs / 0x40) <<6;
+
+		if((sx<32)&& (offs / 0x40)<28)
+		{
+
+		}
+		else
+			ss_map[off2s] = 0x5;
+	}
 
 
 //	BurnTransferCopy(DrvPalette);

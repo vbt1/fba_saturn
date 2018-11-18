@@ -5,6 +5,11 @@
 #include "saturn/ovl.h"
 #include "saturn/saturn_snd.h"
 
+#define VDP2_BASE           0x25e00000
+#define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
+#define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
+
+
 /*static*/  INT32 RobokidInit();
 /*static*/  INT32 DrvExit();
 /*static*/  INT32 DrvFrame();
