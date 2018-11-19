@@ -966,6 +966,13 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 			if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
 			else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
 		}
+// tile 0xc00 à vider 
+//xxxxxxx
+		for (UINT32 i=0x60000;i<0x60080;i++ )
+		{
+				tmp[i] = 0x00;
+		}
+
 		memset(DrvGfxROM0,0x00,0x80000);
 //DrvGfxROM2
 		tmp = (UINT8*)0x00200000;
@@ -980,6 +987,28 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		DrvGfxDecode((UINT8*)tmp, 0x70000, 3);
 
 		memset(DrvGfxROM0,0x00,0x70000);
+
+//DrvGfxROM4
+		tmp = (UINT8*)0x0060A0000;
+		if (BurnLoadRom(tmp + 0x00000, 25, 1)) return 1;
+		if (BurnLoadRom(tmp + 0x10000, 26, 1)) return 1;
+		if (BurnLoadRom(tmp + 0x20000, 27, 1)) return 1;
+		if (BurnLoadRom(tmp + 0x30000, 28, 1)) return 1;
+		if (BurnLoadRom(tmp + 0x40000, 29, 1)) return 1;
+		if (BurnLoadRom(tmp + 0x50000, 30, 1)) return 1;
+
+		DrvGfxDecode((UINT8*)tmp, 0x60000, 3);
+
+		for (UINT32 i=0;i<0x60000;i++ )
+		{
+			if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
+			else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
+
+			if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
+			else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
+		}
+
+		memset(DrvGfxROM0,0x00,0x60A0000);
 //DrvGfxROM0
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  5, 1)) return 1;
 
@@ -993,13 +1022,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		}
 		memset(DrvGfxROM2,0x00,0x70000);
 
-//		if (BurnLoadRom(DrvGfxROM4 + 0x00000, 25, 1)) return 1;
-//		if (BurnLoadRom(DrvGfxROM4 + 0x10000, 26, 1)) return 1;
-/*		if (BurnLoadRom(DrvGfxROM4 + 0x20000, 27, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM4 + 0x30000, 28, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM4 + 0x40000, 29, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM4 + 0x50000, 30, 1)) return 1;
-*/
+
 //		DrvGfxDecode(DrvGfxROM0, 0x08000, 0); // deja du 4bpp !!!
 
 
@@ -1395,25 +1418,29 @@ INT16 previous_bank[3]={-1,-1,-1};
 	if (tilemap_enable[sel] == 0) return;
 
 	INT32 wide = (width) ? 128 : 32;
-	INT32 xscroll = scrollx[sel] & ((wide * 16) - 1);
-	INT32 yscroll = (scrolly[sel] + 32) & 0x1ff;
+//	INT32 xscroll = scrollx[sel] & ((wide * 16) - 1);
+//	INT32 yscroll = (scrolly[sel] + 32) & 0x1ff;
 
 UINT16* tmp = (UINT16*)0x00200000;
 
-		UINT32 sx1 = (0x440 % wide);
-		UINT32 sy1 = (0x440 / wide);
+		UINT32 sx1 = (64 % wide);
+		UINT32 sy1 = (64 / wide);
 
 		UINT32 ofst1 = (sx1 & 0x0f) + (sy1 * 16) + ((sx1 & 0x70) * 0x20);
 		UINT32 attr1  = ram[ofst1 * 2 + 1];
 
-	if(previous_bank[sel]!=((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5)		)
+	if(previous_bank[sel]!=(((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5))		)
 	{
-		previous_bank[sel] = ((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5);
-
+		previous_bank[sel] = (((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5));
+//				previous_bank[sel] = 0;
+//				previous_bank[sel] = 0x400;
+//0x800*128= position tile à 0x800
+//(attr1 & 0x10) << 7 = 0x800
+//(attr1 & 0x20) << 5 = 0x400
 		if(!sel)
-		memcpy(DrvGfxROM2,(UINT8*)0x00200000+(previous_bank[sel]*128),0x20000);
+		memcpy(rom,(UINT8*)0x00200000+(previous_bank[sel]*128),0x20000);
 		else
-		memcpy(DrvGfxROM3,(UINT8*)0x00270000+(previous_bank[sel]*128),0x40000);
+		memcpy(rom,(UINT8*)0x00270000+(previous_bank[sel]*128),0x20000);
 //				memcpy(DrvGfxROM3,(UINT8*)0x00270000,0x20000);
 
 //		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"                   ",20,60);
@@ -1431,7 +1458,7 @@ UINT16* tmp = (UINT16*)0x00200000;
 		INT32 ofst = (sx & 0x0f) + (sy * 16) + ((sx & 0x70) * 0x20);
 		INT32 attr  = ram[ofst * 2 + 1];
 //		INT32 code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
-		INT32 code  = ram[ofst * 2 + 0] + ((attr & 0xc0) << 2);
+		UINT32 code  = ram[ofst * 2 + 0] + ((attr & 0xc0) << 2);
 
 			int offs2 = (sx | sy <<5)*2;
 
@@ -1444,11 +1471,16 @@ UINT16* tmp = (UINT16*)0x00200000;
 		}
 		else
 		{
-//tmp[offs*2] = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5)+ ((attr & 0xc0) << 2); // + ((attr & 0xc0) << 2);
-//tmp[(offs*2)+1] = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5)+ ((attr & 0xc0) << 2) + ((attr & 0xc0) << 2);
+	/*		
+tmp[offs*4] = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5)+ ((attr & 0xc0) << 2); // + ((attr & 0xc0) << 2);
+tmp[(offs*4)+1] = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5)+ ((attr & 0xc0) << 2); 
+tmp[(offs*4)+2] = previous_bank[sel];
+tmp[(offs*4)+3] = 0xff;
+*/
 //code  = ram[ofst * 2 + 0] + /*((attr & 0x10) << 7) + ((attr & 0x20) << 5) +*/ ((attr & 0xc0) << 2);
 //code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
 			ss_font[offs2] = (attr & 0x0f);
+//			code  = ram[ofst * 2 + 0] + /*((attr & 0x10) << 7) + (/*(attr & 0x20) << 5)*/ + ((attr & 0xc0) << 2);
 			ss_font[offs2+1] = (0x1400+((code)<<2));
 		}
 	}
