@@ -636,7 +636,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 
 	DrvZ80ROM0	= Next; Next += 0x050000;
-	DrvZ80ROM1	= Next; Next += 0x020000;
+//	DrvZ80ROM1	= Next; Next += 0x020000;
 
 	DrvGfxROM0	 	= (UINT8 *)cache;// fg //Next; Next += 0x010000;
 	DrvGfxROM1		= (UINT8 *)(ss_vram+0x1100); // sprites //(UINT8*)cache+0x010000;//Next; Next += 0x080000;
@@ -862,8 +862,8 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		if (BurnLoadRom(DrvZ80ROM0 + 0x20000,  3, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x28000,  4, 1)) return 1;
 
-		if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  5, 1)) return 1;
-		memcpy (DrvZ80ROM1 + 0x10000, DrvZ80ROM1, 0x10000);
+//		if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  5, 1)) return 1;
+//		memcpy (DrvZ80ROM1 + 0x10000, DrvZ80ROM1, 0x10000);
 
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  6, 1)) return 1;
 
@@ -988,7 +988,8 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 		memset(DrvGfxROM0,0x00,0x70000);
 
-//DrvGfxROM4
+//DrvGfxROM4 trouver 400k de ram !!!
+/*
 		tmp = (UINT8*)0x0060A0000;
 		if (BurnLoadRom(tmp + 0x00000, 25, 1)) return 1;
 		if (BurnLoadRom(tmp + 0x10000, 26, 1)) return 1;
@@ -1008,7 +1009,8 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 			else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
 		}
 
-		memset(DrvGfxROM0,0x00,0x60A0000);
+		memset(DrvGfxROM0,0x00,0x60000);
+*/
 //DrvGfxROM0
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  5, 1)) return 1;
 
