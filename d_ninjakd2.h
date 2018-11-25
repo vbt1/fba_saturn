@@ -19,16 +19,18 @@
 /*static*/  UINT8 *AllRam;
 /*static*/  UINT8 *RamEnd;
 /*static*/  UINT8 *DrvZ80ROM0;
-/*static*/  UINT8 *DrvZ80ROM1;
+/*static*///  UINT8 *DrvZ80ROM1;
 /*static*/  UINT8 *DrvGfxROM0;
 /*static*/  UINT8 *DrvGfxROM1;
 /*static*/  UINT8 *DrvGfxROM2;
 /*static*/  UINT8 *DrvGfxROM3;
 /*static*/  UINT8 *DrvGfxROM4;
-/*static*/  UINT8 *DrvZ80Key;
-/*static*/  UINT8 *DrvSndROM;
+/*static*/  UINT8 *DrvGfxROM4Data1;
+/*static*/  UINT8 *DrvGfxROM4Data2;
+/*static*///  UINT8 *DrvZ80Key;
+/*static*///  UINT8 *DrvSndROM;
 /*static*/  UINT8 *DrvZ80RAM0;
-/*static*/  UINT8 *DrvZ80RAM1;
+/*static*///  UINT8 *DrvZ80RAM1;
 /*static*/  UINT8 *DrvSprRAM;
 /*static*/  UINT8 *DrvPalRAM;
 /*static*/  UINT8 *DrvFgRAM;
@@ -42,8 +44,8 @@
 /*static*/  UINT16 *DrvPalette;
 /*static*/  UINT8 DrvRecalc;
 
-/*static*/  UINT8 *soundlatch;
-/*static*/  UINT8 *flipscreen;
+/*static*/  UINT8 soundlatch;
+/*static*/  UINT8 flipscreen;
 
 /*static*/  UINT16 scrollx[3];
 /*static*/  UINT16 scrolly[3];

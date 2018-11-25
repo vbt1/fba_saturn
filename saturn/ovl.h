@@ -79,7 +79,9 @@ static unsigned char *cache = NULL;
 #define SS_SET_N2PRIN(/* 3 bits */ n2prin) \
   (ss_BgPriNum->PriorityNumberNBG23 \
    = (ss_BgPriNum->PriorityNumberNBG23 & 0xFF00) | ((n2prin)))
-
+#define SS_SET_N3PRIN(/* 3 bits */ n3prin) \
+  ( ss_BgPriNum->PriorityNumberNBG23 \
+   = (ss_BgPriNum->PriorityNumberNBG23 & 0x00FF) | ((n3prin) << 8))
 
 #define SS_SET_SPCCEN(/* 1 bit */ spccen) \
   (ss_OtherPri->ColorMixControl \

@@ -917,6 +917,44 @@ void SCL_SetConfig(Uint16 sclnum, SclConfig *scfg)
 			map = &Scl_d_reg.normap[4];
 			max = 2;
 			break;
+
+		case SCL_NBG3:
+			temp = scfg->dispenbl;		/* display enable */
+			temp = (temp << 3) & 0x0008;
+			Scl_s_reg.dispenbl &= 0xfff7;
+			Scl_s_reg.dispenbl |= temp;
+
+			temp = scfg->charsize;		/* char size */
+			temp = (temp << 4) & 0x0010;
+			Scl_d_reg.charcontrl1 &= 0xffef;
+			Scl_d_reg.charcontrl1 |= temp;
+
+			Scl_d_reg.patnamecontrl[3] = scfg->patnamecontrl;
+
+			temp = scfg->pnamesize;		/* pattern name size */
+			temp = (temp <<15) & 0x8000;
+			Scl_d_reg.patnamecontrl[3] &= 0x7fff;
+			Scl_d_reg.patnamecontrl[3] |= temp;
+
+			Scl_d_reg.patnamecontrl[3] &= 0xbfff;
+			Scl_d_reg.patnamecontrl[3] |= flip; /* flip bit set*/
+
+			temp = scfg->platesize;		/* plate size */
+			temp = (temp << 6) &  0x00c0;
+			Scl_d_reg.platesize &= 0xff3f;
+			Scl_d_reg.platesize |= temp;
+
+			temp = scfg->coltype;		/* color type */
+			temp = (temp <<5) & 0x0020;
+			Scl_d_reg.charcontrl1 &= 0xffdf;
+			Scl_d_reg.charcontrl1 |= temp;
+
+			Scl_d_reg.mapoffset0 &= 0x0fff;	/* Init map offset */ 
+			mapoffset = &Scl_d_reg.mapoffset0;	/* map offset */ 
+			shift = 12;
+			map = &Scl_d_reg.normap[6];
+			max = 2;
+			break;
 	}
 /*
  *	Set Map Address
