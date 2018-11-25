@@ -313,7 +313,7 @@ int ovlInit(char *szShortName)
 		return;
 	}
 }
-
+#if	 0
 // Copied directly from MAME
 /*static*/  UINT8 omegaf_protection_read(INT32 offset)
 {
@@ -594,6 +594,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_3, 0.10, BURN_SND_ROUTE_BOTH);
 */
 }
+#endif
 
 /*static*/  INT32 DrvDoReset()
 {
@@ -617,11 +618,11 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	overdraw_enable = 0;
 	memset (tilemap_enable, 0, 3);
 
-	memset (m_omegaf_io_protection, 0, 3);
-	m_omegaf_io_protection_input = 0;
-	m_omegaf_io_protection_tic = 0;
+//	memset (m_omegaf_io_protection, 0, 3);
+//	m_omegaf_io_protection_input = 0;
+//	m_omegaf_io_protection_tic = 0;
 
-	ninjakd2_sample_offset = -1;
+//	ninjakd2_sample_offset = -1;
 
 	previous_coin[0] = previous_coin[1] = 0;
 
@@ -637,12 +638,13 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 	DrvZ80ROM0	= Next; Next += 0x050000;
 //	DrvZ80ROM1	= Next; Next += 0x020000;
+DrvSndROM	= Next; Next += 0x3FF00;
 
 	DrvGfxROM0	 	= (UINT8 *)cache;// fg //Next; Next += 0x010000;
 	DrvGfxROM1		= (UINT8 *)(ss_vram+0x1100); // sprites //(UINT8*)cache+0x010000;//Next; Next += 0x080000;
 	DrvGfxROM2	 	= (UINT8 *)cache+0x08000;// bg1 //Next; Next += 0x100000;
 	DrvGfxROM3	 	= (UINT8 *)cache+0x28000;//bg2  //Next; Next += 0x100000;
-//	DrvGfxROM4		= (UINT8 *)cache+0x28000;//bg3 // Next; Next += 0x100000;
+	DrvGfxROM4		= (UINT8 *)cache+0x48000;//bg3 // Next; Next += 0x100000;
 /*
 	DrvZ80Key	= Next; Next += 0x002000;
 
@@ -652,15 +654,15 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	DrvPalette		= (UINT16*)colAddr;
 	AllRam			= Next;
 
-	DrvZ80RAM0	= Next; Next += 0x001a00;
-	DrvZ80RAM1	= Next; Next += 0x000800;
-	DrvSprRAM	= Next; Next += 0x000600;
-	DrvPalRAM	= Next; Next += 0x000800;
-	DrvFgRAM	= Next; Next += 0x000800;
-	DrvBgRAM0	= Next;
-	DrvBgRAM	= Next; Next += 0x002000;
-	DrvBgRAM1	= Next; Next += 0x002000;
-	DrvBgRAM2	= Next; Next += 0x002000;
+	DrvZ80RAM0	= 0x2F0000;//Next; Next += 0x001a00;
+	DrvZ80RAM1	= 0x2F1a00;//Next; Next += 0x000800;
+	DrvSprRAM	= 0x2F2200;//Next; Next += 0x000600;
+	DrvPalRAM	= 0x2F2800;//Next; Next += 0x000800;
+	DrvFgRAM	= 0x2F3000;//Next; Next += 0x000800;
+	DrvBgRAM0	= 0x2F3800;//Next;
+	DrvBgRAM	= 0x2F5800;//Next; Next += 0x002000;
+	DrvBgRAM1	= 0x2F7800;//Next; Next += 0x002000;
+	DrvBgRAM2	= 0x2F9800;//Next; Next += 0x002000;
 
 	soundlatch	= Next; Next += 0x000001;
 	flipscreen	= Next; Next += 0x000001;
@@ -812,7 +814,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 	return 0;
 }
-
+#if	 0
 /*static*/  INT32 Ninjakd2Init()
 {
 	DrvInitSaturn();
@@ -906,6 +908,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 	return 0;
 }
+#endif
 
 /*static*/  INT32 RobokidInit()
 {
@@ -1051,7 +1054,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	CZetSetReadHandler(ninjakd2_main_read);
 	CZetClose();
 
-	ninjakd2_sound_init();
+//	ninjakd2_sound_init();
 //	BurnYM2203SetPSGVolume(0, 0.03);
 //	BurnYM2203SetPSGVolume(1, 0.03);
 
@@ -1066,7 +1069,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 	return 0;
 }
-
+#if	 0
 /*static*/  INT32 OmegafInit()
 {
 	DrvInitSaturn();
@@ -1128,6 +1131,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 	return 0;
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initLayers()
 {
@@ -1586,7 +1590,7 @@ tmp[(offs*4)+3] = 0xff;
 		sprptr += 16;
 	}
 }
-
+#if	 0
 /*static*/  void draw_copy_sprites()
 {
 	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
@@ -1661,7 +1665,7 @@ tmp[(offs*4)+3] = 0xff;
 
 	return 0;
 }
-
+#endif
 /*static*/  INT32 RobokidDraw()
 {
 /*	if (DrvRecalc) {
@@ -1722,7 +1726,7 @@ tmp[(offs*4)+3] = 0xff;
 
 	return 0;
 }
-
+#if	 0
 /*static*/  INT32 OmegafDraw()
 {
 	if (DrvRecalc) {
@@ -1756,6 +1760,7 @@ tmp[(offs*4)+3] = 0xff;
 
 	return 0;
 }
+#endif
 
 /*static*/  inline void DrvClearOpposites(UINT8* nJoystickInputs)
 { // for active LOW

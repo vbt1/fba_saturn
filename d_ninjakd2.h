@@ -37,7 +37,7 @@
 /*static*/  UINT8 *DrvBgRAM1;
 /*static*/  UINT8 *DrvBgRAM2;
 
-/*static*/  UINT16 *pSpriteDraw;
+/*static*/ // UINT16 *pSpriteDraw;
 
 /*static*/  UINT16 *DrvPalette;
 /*static*/  UINT8 DrvRecalc;
@@ -52,11 +52,11 @@
 /*static*/  UINT8 nZ80RomBank;
 /*static*/  UINT8 nZ80RamBank[3];
 
-/*static*/  UINT8 m_omegaf_io_protection[3];
-/*static*/  UINT8 m_omegaf_io_protection_input;
-/*static*/  INT32 m_omegaf_io_protection_tic;
+/*static*/  //UINT8 m_omegaf_io_protection[3];
+/*static*/  //UINT8 m_omegaf_io_protection_input;
+/*static*/  //INT32 m_omegaf_io_protection_tic;
 
-/*static*/  INT32 ninjakd2_sample_offset;
+/*static*/  //INT32 ninjakd2_sample_offset;
 
 /*static*/  UINT8 DrvJoy1[8];
 /*static*/  UINT8 DrvJoy2[8];
@@ -443,7 +443,7 @@ STDDIPINFO(Arkarea)
 };
 
 STDDIPINFO(Robokid)
-
+#if	 0
 /*static*/  struct BurnDIPInfo RobokidjDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xcf, NULL				},
@@ -887,6 +887,7 @@ struct BurnDriver BurnDrvArkarea = {
 	256, 192, 4, 3
 };
 */
+#endif
 
 // Atomic Robo-kid (World, Type-2)
 
@@ -945,7 +946,7 @@ struct BurnDriver BurnDrvRobokid = {
 	256, 192, 4, 3
 };
 */
-
+#if	 0
 // Atomic Robo-kid (Japan, Type-2, set 1)
 
 /*static*/  struct BurnRomInfo robokidjRomDesc[] = {
@@ -1185,4 +1186,6 @@ struct BurnDriver BurnDrvOmegafs = {
 	192, 256, 3, 4
 };
 */
+#endif
+
 #endif
