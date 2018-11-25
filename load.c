@@ -31,10 +31,10 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
 
     // Allocate space for the file
     Load=(unsigned char *)0x00200000;//malloc(nLen);
-    if (Load==NULL) 
-	  {
-	return 1;
-	  }
+//    if (Load==NULL) 
+//	  {
+//	return 1;
+//	  }
     memset(Load,0,nLen);
     // Load in the file
 //static int __cdecl SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor)
@@ -44,7 +44,7 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
     if (nRet!=0) 
 	{
 //		free(Load); 
-		Load = NULL; 
+//		Load = NULL; 
 		return 1;
 	}
 
@@ -66,7 +66,7 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
     }
 	pd=pl=LoadEnd=NULL;
 //	free(Load);
-	Load = NULL;
+//	Load = NULL;
   }
   else
   {
@@ -91,6 +91,7 @@ int BurnXorRom(unsigned char *Dest,int i,int nGap)
 
 // Separate out a bitfield into Bit number 'nField' of each nibble in pDest
 // (end result: each dword in memory carries the 8 pixels of a tile line).
+#if	 0
 int BurnLoadBitField(unsigned char *pDest,unsigned char *pSrc,int nField,int nSrcLen)
 {
   int nPix=0;
@@ -110,4 +111,4 @@ int BurnLoadBitField(unsigned char *pDest,unsigned char *pSrc,int nField,int nSr
   }
   return 0;
 }
-
+#endif

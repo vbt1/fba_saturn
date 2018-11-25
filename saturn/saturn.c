@@ -3,7 +3,7 @@
 //#include "sc_saturn.h"
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR  0x060B4000
+#define OVLADDR  0x060BE000
 #define LOWADDR 0x00200000
 //#define DEBUG_DRV 1
 volatile SysPort	*__port;
@@ -216,7 +216,7 @@ static void initSound()
 	PCM_Start(pcm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void resetLayers()
+static void resetLayers()
 {
 	Uint16	CycleTb[]={
 		0x55ee, 0xeeee, //A1
@@ -264,13 +264,12 @@ void resetLayers()
     SCL_SET_N2PRIN(1);
 }
 //--------------------------------------------------------------------------------------------------------------
-/*static*/ void resetColors()
+static void resetColors()
 {
-	Uint16 i;
 	Uint16 *VRAM;
 
 	VRAM = (Uint16 *)SCL_COLRAM_ADDR;
-	for( i = 0; i < 4096; i++ )
+	for(Uint16 i = 0; i < 4096; i++ )
 		*(VRAM++) = 0x8000;
 
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
@@ -286,7 +285,7 @@ void resetLayers()
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void resetSound()
+static void resetSound()
 {
 	PCM_MeSetVolume(pcm,0);
 	PCM_DrvChangePcmPara(pcm,-1,-1);
@@ -299,9 +298,9 @@ void resetLayers()
 	PCM_MeStart(pcm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initSaturn()
+static void initSaturn()
 {
-	DMA_ScuInit();
+//	DMA_ScuInit();
 //	nBurnLinescrollSize = 0x400;//0x400
 //	nBurnSprites = 131;
 //	INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
@@ -382,8 +381,8 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-	unsigned char *Mem = malloc((unsigned char *)0x86000);
-	memset(Mem,0x00,0x86000);
+	unsigned char *Mem = malloc((unsigned char *)0x90000);
+//	memset(Mem,0x00,0x90000);
 	free(Mem);
 	Mem=NULL;
 
@@ -400,6 +399,16 @@ static void VDP2_InitVRAM(void)
 	memset4_fast(SCL_VDP2_VRAM_B0,0x00000000,0x40000);
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
+static void wait_key(Uint8 key)
+{
+	SysDevice	*device;
+	do
+	{
+		device = PER_GetDeviceR( &__port[0], 0 );
+		pltrigger[0]  = PER_GetTrigger( device );
+	}while((pltrigger[0] & PER_DGT_B)==0) ;
+}
+//--------------------------------------------------------------------------------------------------------------------------------------
 static void load_img(int id)
 {
 // vbt à remettre	
@@ -412,16 +421,6 @@ static void load_img(int id)
 	 	wait_key(PER_DGT_B);
 		load_img(0);
 	}
-}
-//--------------------------------------------------------------------------------------------------------------------------------------
-void wait_key(Uint8 key)
-{
-	SysDevice	*device;
-	do
-	{
-		device = PER_GetDeviceR( &__port[0], 0 );
-		pltrigger[0]  = PER_GetTrigger( device );
-	}while((pltrigger[0] & PER_DGT_B)==0) ;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static unsigned char update_input(unsigned int *current_page,unsigned char *loaded, unsigned char *modified)
@@ -761,7 +760,7 @@ void SCL_Close(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	SCL_SetCycleTable(Uint16 *tp)
 {
-	Uint16 i;
+	Uint8 i;
 	for(i = 0; i<8; i++){
 		Scl_s_reg.vramcyc[i] = tp[i];
 	}
@@ -993,7 +992,7 @@ void  SCL_SetColRam(Uint32 Object, Uint32 Index,Uint32 num,void *Color)
 //-------------------------------------------------------------------------------------------------------------------------------------
 Uint32  SCL_AllocColRam(Uint32 Surface, Uint8 transparent)
 {
-	Uint32	i;
+	Uint8	i;
 	for(i=0;i<8;i++)
 	{
 		if(SclColRamAlloc256[i]==0)
@@ -1323,6 +1322,7 @@ void CSH_Init(Uint16 sw)
 	CSH_SET_ENABLE(CSH_ENABLE);					/*	ƒLƒƒƒbƒVƒ…ƒCƒl[ƒuƒ‹	*/
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+
 void CSH_Purge(void *adrs, Uint32 P_size)
 {
 	typedef Uint32 Line[0x10/sizeof(Uint32)];	/* ƒ‰ƒCƒ“‚Í 0x10 ƒoƒCƒg’PˆÊ */
@@ -1379,7 +1379,7 @@ static int __cdecl SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int n
 static int DoInputBlank(int bDipSwitch)
 {
   int iJoyNum = 0;
-  unsigned int i=0; 
+   int i=0; 
   // Reset all inputs to undefined (even dip switches, if bDipSwitch==1)
   char controlName[12];
   
@@ -1528,7 +1528,7 @@ static int DoInputBlank(int bDipSwitch)
   return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void InpExit()
+static void InpExit()
 {
 //  bInputOk = false;
 //  nGameInpCount = 0;
@@ -1543,10 +1543,10 @@ void InpExit()
 //  return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int InpMake(unsigned int key[])
+static void InpMake(unsigned int key[])
 {
-	unsigned int i=0; 
-	unsigned int down = 0;
+	int i=0; 
+	int down = 0;
 /*
 	if (ServiceDip)
 	{
@@ -1584,10 +1584,10 @@ static int InpMake(unsigned int key[])
 	{
 		*(P1Start) = *(P2Start) = 1;
 	}
-	return 0;
+//	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-int InpInit()
+static void InpInit()
 {
   unsigned int i=0; 
   int nRet=0;
@@ -1608,11 +1608,11 @@ int InpInit()
   DoInputBlank(1);
 
 //  bInputOk = 1;
-  return 0;
+ // return 0;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-void InpDIP()
+static void InpDIP()
 {
 	struct BurnDIPInfo bdi;
 	struct GameInp* pgi;

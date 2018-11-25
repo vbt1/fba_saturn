@@ -287,7 +287,7 @@ static unsigned int get_hz(void);
 static Uint8 GetComBlockAdr(void);
 static void CopyMem(void *,void *,Uint32);
 static void DmaClrZero(void *, Uint32);
-static int InpMake(unsigned int key[]);
+static void InpMake(unsigned int key[]);
 static void run_fba_emulator(void);
 static void wait_vblank(void);
 static void do_keypad(void);

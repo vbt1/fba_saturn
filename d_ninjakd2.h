@@ -118,7 +118,7 @@ STDINPUTINFO(Drv)
 };
 
 STDINPUTINFO(Drv2)
-
+#if 0
 /*static*/  struct BurnInputInfo OmegafInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
@@ -390,6 +390,7 @@ STDDIPINFO(Rdaction)
 };
 
 STDDIPINFO(Arkarea)
+#endif 
 
 /*static*/  struct BurnDIPInfo RobokidDIPList[]=
 {

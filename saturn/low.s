@@ -8,7 +8,7 @@
    .global  _memsetl
 !   .global  _memsetl_fast
     .global  _memset4_fast
-    .global  _memset4_fast2
+!    .global  _memset4_fast2
 
 ! dst 	   = r4
 ! src 	   = r5
@@ -98,12 +98,6 @@ lendl:
 ! be a multiple of 4. None of these are checked in the function itself
 ! (although, it will throw an exception if the ptr isn't aligned, since the CPU
 ! won't do that access).
-
-_memset4_fast2:
-nop
-    rts
-
-    nop
 
 _memset4_fast:
     add     r4, r6

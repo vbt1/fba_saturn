@@ -917,7 +917,7 @@ static void initColors()
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-//	DMA_ScuInit();
+	DMA_ScuInit();
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
