@@ -239,7 +239,8 @@ Allocate Memory
 
 
 
-	System1Ram1            = Next; Next += 0x0020fd;
+//	System1Ram1            = Next; Next += 0x0020fd;
+	System1Ram1            = Next; Next += 0x002100;
 	System1Ram2            = Next; Next += 0x000800;
 	System1SpriteRam       = Next; Next += 0x000200;
 	System1PaletteRam      = Next; Next += 0x000600;
@@ -256,7 +257,7 @@ Allocate Memory
 	System1ScrollY          = System1efRam + 0xbd;
 	System1ScrollX           = System1efRam + 0xfc;
 	System1f4Ram           = Next; Next += 0x000400;
-	System1fcRam           = Next; Next += 0x000403; // +3 pour avoir un code aligné pour SpriteOnScreenMap
+	System1fcRam           = Next; Next += 0x000400; // +3 pour avoir un code aligné pour SpriteOnScreenMap
 	SpriteOnScreenMap      = Next; Next += (256 * 256);
 //	SpriteOnScreenMap      = 0x002F0000;
 //	System1Sprites         = Next; Next += System1SpriteRomSize;
@@ -884,8 +885,8 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 //	System1SpriteXOffset = 1;
 	
-	nCyclesTotal[0] = 2000000 / hz ;//3500000
-	nCyclesTotal[1] = 2000000 / hz ;//3500000
+	nCyclesTotal[0] = 2500000 / hz ;//3500000
+	nCyclesTotal[1] = 2500000 / hz ;//3500000
 
 	SN76489AInit(0, 2000000, 0);	  //2000000
 	SN76489AInit(1, 4000000, 1);//4000000

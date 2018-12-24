@@ -578,8 +578,8 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	
 //	System1SpriteXOffset = 1;
 	
-	nCyclesTotal[0] = 2000000 / hz;
-	nCyclesTotal[1] = 2000000 / hz;
+	nCyclesTotal[0] = 3000000 / hz;
+	nCyclesTotal[1] = 3000000 / hz;
 
 	SN76489AInit(0, 2000000, 0);
 	SN76489AInit(1, 4000000, 1);
@@ -659,17 +659,20 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 
 void renderTile(UINT32 offs,UINT32 code,UINT32 current_map)
 {
+	code = (code>>8)|(code<<8);
 	code = ((code >> 4) & 0x800) | (code & 0x7ff);
 
 	unsigned int x = map_offset_lut[offs];
+//	unsigned int x =	(offs & 0x3f) | ((offs & (~0x3f))<<1);
+
 	UINT16 *map = &ss_map[x+current_map]; 
 	map[0] = ((code >> 5) & 0x3f); //|((code & 0x800)?0x3000:0x1000);//color_lut[Code];
-	map[1] = code & 0xfff;
+	map[1] = code;// & 0xfff;
 }
 
 unsigned int map_cache[4][0x800];
 
-static void wbml_draw_bg( int trasp)
+static void wbml_draw_bg()
 {
 //	ss_reg->n2_move_x = (-(((System1VideoRam[0x7c0] >> 1) + ((System1VideoRam[0x7c1] & 1) << 7) +1))) & 0xff;
 	ss_reg->n2_move_x = (255-((System1VideoRam[0x7c0] >> 1) + ((System1VideoRam[0x7c1] & 1) << 7))) &0xff;
@@ -682,52 +685,42 @@ static void wbml_draw_bg( int trasp)
 	{
 		unsigned int current_map=v[page];
 //		UINT8 *source = System1VideoRam + (System1VideoRam[0x0740 + page*2] & 0x07)*0x800;
-		UINT8 *source = System1VideoRam + ((System1VideoRam[0x0740 + page*2] & 0x07)<<11);
-//		UINT16 *source = (UINT16 *)source1;
-		UINT32 *curr_cache = &map_cache[page];
+		UINT16 *source = (UINT16 *)(System1VideoRam + ((((System1VideoRam[0x0740 + page*2] & 0x07)*0x800))));
+		UINT32 *curr_cache = map_cache[page];
 
 		for(UINT32 offs = 0; offs <0x400;)
 		{
-			UINT32 code = source[0] + (source[1] << 8);
-
-			if(curr_cache[offs]!=code)
+			if(curr_cache[offs]!=*source)
 			{
- 				curr_cache[offs]=code;
-				renderTile(offs*2,code,current_map);
+ 				curr_cache[offs] = *source;
+				renderTile(offs*2,*source,current_map);
 			}
-			source+=2;
+			++source;
 			++offs;
 
-			code = source[0] + (source[1] << 8);
-
-			if(curr_cache[offs]!=code)
+			if(curr_cache[offs]!=*source)
 			{
- 				curr_cache[offs]=code;
-				renderTile(offs*2,code,current_map);
+ 				curr_cache[offs] = *source;
+				renderTile(offs*2,*source,current_map);
 			}
-			source+=2;
+			++source;
 			++offs;
- /*
-			code = source[0] + (source[1] << 8);
 
-			if(curr_cache[offs]!=code)
+			if(curr_cache[offs]!=*source)
 			{
- 				curr_cache[offs]=code;
-				renderTile(offs*2,code,current_map);
+ 				curr_cache[offs] = *source;
+				renderTile(offs*2,*source,current_map);
 			}
-			source+=2;
-			offs++;
+			++source;
+			++offs;
 
-			code = source[0] + (source[1] << 8);
-
-			if(curr_cache[offs]!=code)
+			if(curr_cache[offs]!=*source)
 			{
- 				curr_cache[offs]=code;
-				renderTile(offs*2,code,current_map);
+ 				curr_cache[offs] = *source;
+				renderTile(offs*2,*source,current_map);
 			}
-			source+=2;
-			offs++;		  */
-
+			++source;
+			++offs;
 		}
 	}
 #endif
@@ -835,4 +828,3 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 // <gamezfan> bootleg set 1 is the best outside of the virtual console version
-
