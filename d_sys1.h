@@ -317,7 +317,6 @@ STDDIPINFO(Pitfallu)
 	{0x14, 0x01, 0x20, 0x20, "Easy"                   },
 	{0x14, 0x01, 0x20, 0x00, "Hard"                   },
 };
-
 STDDIPINFO(Myhero)
 
 /*

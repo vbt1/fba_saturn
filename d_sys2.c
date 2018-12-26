@@ -74,7 +74,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-inline void wbml_videoram_bank_latch_w (UINT8 d)
+inline void System2_videoram_bank_latch_w (UINT8 d)
 {
 	if(System1BgBankLatch != d)
 	{
@@ -87,6 +87,7 @@ inline void wbml_videoram_bank_latch_w (UINT8 d)
 
 void system2_foregroundram_w(unsigned short a, UINT8 d) 
 {
+	RamStart1						= System1VideoRam-0xe000;	 // fg
 	if(RamStart1[a]!=d)
 	{
 		RamStart1[a] = d;
@@ -179,7 +180,7 @@ static void System2PPI0WriteA(UINT8 data)
 
 static void System2PPI0WriteB(UINT8 data)
 {
-	chplft_bankswitch_w(data);
+	System2_bankswitch_w(data);
 }
 
 static void System2PPI0WriteC(UINT8 data)
@@ -203,10 +204,10 @@ xxxxx
 //		z80_emulate(0);
 	}
 
-	wbml_videoram_bank_latch_w(data);
+	System2_videoram_bank_latch_w(data);
 }
 
-/*static*/ inline void chplft_bankswitch_w (UINT8 d)
+/*static*/ inline void System2_bankswitch_w (UINT8 d)
 {
 	System1RomBank = (d & 0x0c) >> 2;
 	System1BankRom();
@@ -451,7 +452,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 			memcpy(System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
 			memcpy(System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
 
-			if (nZ80Rom1Size == (ri.nLen * 2))
+			if ((UINT32)nZ80Rom1Size == (ri.nLen * 2))
 			{ // last rom half the size, reload it into the last slot
 				memcpy (System1Rom1 + 0x18000, System1TempRom + 0x20000, 0x8000);
 			}
@@ -729,7 +730,7 @@ static void wbml_draw_bg()
 /*static*/ void System1Render()
 {
 	System1DrawSprites();
-	wbml_draw_bg(0);
+	wbml_draw_bg();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #if 1

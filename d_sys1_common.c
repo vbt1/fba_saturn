@@ -230,7 +230,7 @@ Allocate Memory
 {
 	UINT8 *Next; Next = Mem;
 
-	System1Rom1            = Next; Next += 0x030000;
+	System1Rom1            = Next; Next += 0x040000;
 	System1Fetch1          = Next; Next += 0x010000;
 	System1Rom2            = Next; Next += 0x008000;
 	System1PromRed         = Next; Next += 0x000100;
@@ -721,29 +721,36 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		BurnDrvGetRomInfo(&ri, i);
 	}
 
-	if (System1BankedRom) {
-		memcpyl(System1TempRom, System1Rom1, 0x20000);
-		memset(System1Rom1, 0, 0x20000);
-		memcpyl(System1Rom1 + 0x00000, System1TempRom + 0x00000, 0x8000);
-		memcpyl(System1Rom1 + 0x10000, System1TempRom + 0x08000, 0x8000);
-		memcpyl(System1Rom1 + 0x18000, System1TempRom + 0x10000, 0x8000);
+	if (System1BankedRom)
+	{
+		memcpy(System1TempRom, System1Rom1, 0x40000);
+		memset(System1Rom1, 0, 0x40000);
 
-		if (System1BankedRom==2) 
-		{ // here!
-			memset(System1Rom1, 0, 0x40000);
-			memcpy (System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
-			memcpy (System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
-			memcpy (System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
-			memcpy (System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
-			memcpy (System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
-			memcpy (System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
+		if (System1BankedRom == 1)
+		{ // Encrypted, banked
+			memcpy(System1Rom1 + 0x00000, System1TempRom + 0x00000, 0x8000);
+			memcpy(System1Rom1 + 0x10000, System1TempRom + 0x08000, 0x8000);
+			memcpy(System1Rom1 + 0x18000, System1TempRom + 0x10000, 0x8000);
+		}
 
-			if (nZ80Rom1Size == (ri.nLen * 2))
+		if (System1BankedRom == 2)
+		{ // Unencrypted, banked
+			memcpy(System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
+			memcpy(System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
+			memcpy(System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
+			memcpy(System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
+			memcpy(System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
+			memcpy(System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
+
+			if ((UINT32)nZ80Rom1Size == (ri.nLen * 2))
 			{ // last rom half the size, reload it into the last slot
 				memcpy (System1Rom1 + 0x18000, System1TempRom + 0x20000, 0x8000);
 			}
 		}
 	}
+
+	memset(System1Rom2, 0, 0x10000);
+
 	if (DecodeFunction) DecodeFunction();
 	
 	// Load Z80 #2 Program roms
@@ -896,8 +903,10 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	MakeInputsFunction = System1MakeInputs;
 	
 	// Reset the driver
-	if (bReset) System1DoReset();
-
+	if (bReset) 
+	{	
+		System1DoReset();
+	}
 	System1CalcPalette();
 
 	System1efRam[0xfe] = 0x4f;

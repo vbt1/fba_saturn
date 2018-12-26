@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 57
+#define NB_DRV 58
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -101,7 +101,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvRaiders5 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvWbml = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvWbmlb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvWbmlvc = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvWbmlvc = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvpuckman = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvAppoooh = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvRobowres = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
@@ -290,9 +290,9 @@ BurnDrvWbml.szShortName="wbml";
 BurnDrvWbml.szFullNameA="Wonder Boy in Monster Land (Jap New)";
 BurnDrvWbml.szParent="sys2";
 
-//BurnDrvWbmlvc.szShortName="wbmlvc";
-//BurnDrvWbmlvc.szFullNameA="Wonder Boy in Monster Land (EN VC)";
-//BurnDrvWbmlvc.szParent="sys2";
+BurnDrvWbmlvc.szShortName="wbmlvc";
+BurnDrvWbmlvc.szFullNameA="Wonder Boy in Monster Land (EN VC)";
+BurnDrvWbmlvc.szParent="sys2";
 
 BurnDrvpuckman.szShortName="puckman";
 BurnDrvpuckman.szFullNameA="Puck Man (Japan set 1)";
@@ -471,7 +471,7 @@ pDriver[i++] = &BurnDrvWboyu;
 pDriver[i++] = &BurnDrvWbdeluxe;
 pDriver[i++] = &BurnDrvWbml;
 //pDriver[i++] = &BurnDrvWbmlb;
-//pDriver[i++] = &BurnDrvWbmlvc;
+pDriver[i++] = &BurnDrvWbmlvc;
 pDriver[i++] = &BurnDrvZaxxon;
 //
 //pDriver[i++] = &BurnDrvGnga;
