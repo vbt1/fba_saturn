@@ -1,7 +1,14 @@
 #include "d_solomon.h"
+
 #define	nCyclesTotal0 4000000 / 60
 #define nCyclesTotal1 3072000 / 60 / 3
 #define RAZE0 1
+
+void vblIn()
+{
+	SolomonCalcPalette();
+	DMA_ScuIndirectMemCopy(ss_map2,bgmap_buf,0x1000,0);
+}
 
 int ovlInit(char *szShortName)
 {
@@ -134,8 +141,11 @@ void __fastcall SolomonWrite1_0xd000(UINT16 a, UINT8 d)
 	{
 		RamStart[a]=d;
 		unsigned int i = map_offset_lut[a&0x3ff];
-		ss_map2[i] =  (d & 0x70) >> 4;
-		ss_map2[i+1] = 0x800|SolomonVideoRam[a&0x3ff] + ((d & 0x07)<<8);
+		bgmap_buf[i] =  (d & 0x70) >> 4;
+		bgmap_buf[i+1] = 0x800|SolomonVideoRam[a&0x3ff] + ((d & 0x07)<<8);
+//		ss_map2[i] =  (d & 0x70) >> 4;
+//		ss_map2[i+1] = 0x800|SolomonVideoRam[a&0x3ff] + ((d & 0x07)<<8);
+
 	}
 }
 
@@ -147,7 +157,8 @@ void __fastcall SolomonWrite1_0xd400(UINT16 a, UINT8 d)
 		RamStart[a]=d;
 		a&=0x3ff;
 		unsigned int i = map_offset_lut[a];
-		ss_map2[i+1] = 0x800|d + ((SolomonColourRam[a] & 0x07)<<8);
+//		ss_map2[i+1] = 0x800|d + ((SolomonColourRam[a] & 0x07)<<8);
+		bgmap_buf[i+1] = 0x800|d + ((SolomonColourRam[a] & 0x07)<<8);
 	}
 }
 
@@ -165,6 +176,8 @@ void __fastcall SolomonWrite1_0xd800(UINT16 a, UINT8 d)
 		unsigned int i = map_offset_lut[a&0x3ff];
 		ss_map[i] = 8 | Colour | FlipX << 8 | FlipY << 16;
 		ss_map[i+1] = SolomonBgVideoRam[a&0x3ff] + ((d & 0x07)<<8);
+//		bgmap_buf[i] =  8 | Colour | FlipX << 8 | FlipY << 16;
+//		bgmap_buf[i+1] = SolomonBgVideoRam[a&0x3ff] + ((d & 0x07)<<8);
 	}
 }
 
@@ -177,6 +190,7 @@ void __fastcall SolomonWrite1_0xdc00(UINT16 a, UINT8 d)
 		a&=0x3ff;
 		unsigned int i = map_offset_lut[a];
 		ss_map[i+1] = d + ((SolomonBgColourRam[a] & 0x07)<<8);
+//		bgmap_buf[i+1] = d + ((SolomonBgColourRam[a] & 0x07)<<8);
 	}
 }
 #endif
@@ -257,6 +271,9 @@ static INT32 SolomonMemIndex()
 	pFMBuffer					= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 	map_offset_lut			= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
 	cram_lut					= (UINT16*)Next; Next += 4096 * sizeof(UINT16);
+
+	bgmap_buf				= Next; Next += 0x800 * sizeof (UINT16);//bgmap_lut + 0x20000;
+
 //	SolomonPalette         = (UINT32*)Next; Next += 0x00200 * sizeof(UINT32);
 
 	MemEnd                 = Next;
@@ -427,6 +444,7 @@ INT32 SolomonInit()
 
 	// Reset the driver
 	SolomonDoReset();
+	nBurnFunction = vblIn;
 
 	return 0;
 }
@@ -707,6 +725,7 @@ static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	DMA_ScuInit();
 
 	nBurnSprites  = 32+4;//27;
 
