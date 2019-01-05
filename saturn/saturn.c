@@ -269,7 +269,7 @@ static void resetColors()
 	Uint16 *VRAM;
 
 	VRAM = (Uint16 *)SCL_COLRAM_ADDR;
-	for(Uint16 i = 0; i < 4096; i++ )
+	for(Uint32 i = 0; i < 4096; i++ )
 		*(VRAM++) = 0x8000;
 
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
@@ -1939,8 +1939,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 		else
@@ -1953,8 +1953,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 	}
@@ -2004,6 +2004,72 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 
 	_spr2_transfercommand();
 }
+
+
+
+#if 0
+typedef struct TC_TRANSFER {
+    Uint32 size;
+    void *target;
+    void *source;
+} TC_transfer;
+
+void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt)
+{
+    Uint32 msk;
+    DmaScuPrm prm;
+// ????
+    msk = get_imask();
+    set_imask(15);
+
+    TC_transfer *tc = (TC_transfer *)malloc (16*sizeof(TC_transfer));
+
+    tc->size = cnt;
+    tc->source = &src[0];
+    tc->target = &dst[0];
+
+tc++;
+    tc->size = cnt;
+    tc->source = ((Uint32)src+cnt)+1<<31;
+    tc->target = (void *)dst+cnt;
+/*
+    tc[1].size = cnt;
+    tc[1].source = ((Uint32)src)+1<<31;
+    tc[1].target = dst;
+*/
+
+    prm.dxr = (Uint32)NULL;     // no meaning in indirect mode
+    prm.dxw = ((Uint32)src);
+    prm.dxc = 0; // not matter ? sizeof();
+    prm.dxad_r = DMA_SCU_R4;
+
+//    if(((prm.dxw >= ADR_B_BUS_START) & (prm.dxw < ADR_B_BUS_END)) ||
+//       ((prm.dxw >= CADR_B_BUS_START) & (prm.dxw < CADR_B_BUS_END))){
+       prm.dxad_w = DMA_SCU_W2;
+//    }else
+//	{
+//       prm.dxad_w = DMA_SCU_W4;
+//    }
+
+    prm.dxmod = DMA_SCU_IN_DIR;
+    prm.dxrup = DMA_SCU_KEEP;
+    prm.dxwup = DMA_SCU_KEEP;
+    prm.dxft = DMA_SCU_F_DMA;
+    prm.msk = DMA_SCU_M_DXR    |
+              DMA_SCU_M_DXW    ;
+    // set end code
+ //   (tc->source + nTransfer - 1)->source += 1 << 31;
+//    src[tc.size - 1] += 1 << 31;
+
+    DMA_ScuSetPrm(&prm, DMA_SCU_CH0);
+  //  DMA_ScuStart(DMA_SCU_CH0);
+
+	set_imask(msk);
+
+//    dma_start_flg = ON;                         /* DMAはスタートしている     */
+//    set_imask(msk);                                         /* 割り込みPOP   */
+}
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright)
 {
