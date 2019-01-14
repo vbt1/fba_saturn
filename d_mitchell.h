@@ -52,6 +52,41 @@ SFX sfx_pang[50] = {
 /*049.PCM*/	{0,752732,10}, // Stage 28-30 (Barcelona) / Stage 49-50 (Easter Island)
 };
 
+SFX sfx_spang[60] = {
+/*000.pcm*/{0,PCM_000_SIZE,10},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},
+/*033.PCM*/	{0,982268,10},	// World 1 (Asia), Stage 01 (Hong Kong)
+/*034.PCM*/	{0,436608,10},	// World 1, Stage 02-04 (Java)
+/*035.PCM*/	{0,644076,10},	// World 1, Stage 05-07 (Silk Road (Xi'an))
+/*036.PCM*/	{0,1110720,10},	// World 1, Stage 08-10 (Himarayas)
+/*037.PCM*/	{0,793560,10},	// World 1, Stage 11-13 (Istanbul)
+/*038.PCM*/	{0,892154,0},	// World 2 (Europe), Stage 14-16 (Germany)
+/*039.PCM*/	{0,616936,10},	// World 2, Stage 17-18 (Venice)
+/*040.PCM*/	{0,615930,10},	// World 2, Stage 19-21 (Spain)
+/*041.PCM*/	{0,917682,10},	// World 2, Stage 22-24 (France (The Sacred-Heart Basilica))
+/*042.PCM*/	{0,843904,10},	// World 2, Stage 25-27 (Tower Bridge)
+/*043.PCM*/	{0,617148,10},	// World 3 (America), Stage 28-30 (Canada)
+/*044.PCM*/	{0,679506,10},	// World 3, Stage 31-33 (The Wild West)
+/*045.PCM*/	{0,489246,10},	// World 3, Stage 34-35 (The Ruins of Maya)
+/*046.PCM*/	{0,947534,10},	// World 3, Stage 36-38 (Brazil (Iguazu Falls))
+/*047.PCM*/	{0,888578,10},	// World 3, Stage 39-40 (The Carribean)
+/*048.PCM*/	{0,394526,10},	// Mode Select
+/*049.PCM*/	{0,253400,10},	// Hurry Up !
+/*050.PCM*/	{0,84490,10},	// Game Over
+/*051.PCM*/	{0,461858,10},	// Continue
+/*052.PCM*/	{0,547020,10},	// Name Entry
+/*053.PCM*/	{0,61440,10},	// Stage Cleared
+/*054.PCM*/	{0,99838,10},	// Congratulations ! (All Stage Cleared)
+/*055.PCM*/	{0,794392,10},	// Staff Roll (Ending)
+/*056.PCM*/	{0,854250,0},
+/*057.PCM*/	{0,734022,0},
+/*058.PCM*/	{0,0,0},
+/*059.PCM*/	{0,199678,10},	// World Cleared
+};
+
 static unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
 static unsigned char DrvInputPort1[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
 static unsigned char DrvInputPort2[8]  = {0, 0, 0, 0, 0, 0, 0, 0};

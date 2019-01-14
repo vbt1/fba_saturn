@@ -605,6 +605,87 @@ Track MODE1
 				File SPJ102K.BIN;1
 					Source SPANG\SPJ102K.BIN
 				EndFile
+				File 000.PCM;1
+					Source SPANG\000.PCM
+				EndFile
+				File 033.PCM;1
+					Source SPANG\033.PCM
+				EndFile
+				File 034.PCM;1
+					Source SPANG\034.PCM
+				EndFile
+				File 035.PCM;1
+					Source SPANG\035.PCM
+				EndFile
+				File 036.PCM;1
+					Source SPANG\036.PCM
+				EndFile
+				File 037.PCM;1
+					Source SPANG\037.PCM
+				EndFile
+				File 038.PCM;1
+					Source SPANG\038.PCM
+				EndFile
+				File 039.PCM;1
+					Source SPANG\039.PCM
+				EndFile
+				File 040.PCM;1
+					Source SPANG\040.PCM
+				EndFile
+				File 041.PCM;1
+					Source SPANG\041.PCM
+				EndFile
+				File 042.PCM;1
+					Source SPANG\042.PCM
+				EndFile
+				File 043.PCM;1
+					Source SPANG\043.PCM
+				EndFile
+				File 044.PCM;1
+					Source SPANG\044.PCM
+				EndFile
+				File 045.PCM;1
+					Source SPANG\045.PCM
+				EndFile
+				File 046.PCM;1
+					Source SPANG\046.PCM
+				EndFile
+				File 047.PCM;1
+					Source SPANG\047.PCM
+				EndFile
+				File 048.PCM;1
+					Source SPANG\048.PCM
+				EndFile
+				File 049.PCM;1
+					Source SPANG\049.PCM
+				EndFile
+				File 050.PCM;1
+					Source SPANG\050.PCM
+				EndFile
+				File 051.PCM;1
+					Source SPANG\051.PCM
+				EndFile
+				File 052.PCM;1
+					Source SPANG\050.PCM
+				EndFile
+				File 053.PCM;1
+					Source SPANG\053.PCM
+				EndFile
+				File 054.PCM;1
+					Source SPANG\054.PCM
+				EndFile
+				File 055.PCM;1
+					Source SPANG\055.PCM
+				EndFile
+				File 056.PCM;1
+					Source SPANG\056.PCM
+				EndFile
+				File 057.PCM;1
+					Source SPANG\057.PCM
+				EndFile
+				File 059.PCM;1
+					Source SPANG\059.PCM
+				EndFile
 			EndDirectory
 
 			Directory GNGA

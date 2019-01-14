@@ -178,7 +178,7 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 
 			PCM_SetLoadNum(pcmStream, 10);
 			PCM_SetTrModeCd(pcmStream, PCM_TRMODE_SDMA);
-			PCM_Set1TaskSample(pcmStream, 2048);
+			PCM_Set1TaskSample(pcmStream, 1024);
 
 			PCM_Start(pcmStream);
 		}
