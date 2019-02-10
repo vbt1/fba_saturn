@@ -951,6 +951,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	scfg.plate_addr[1] = (Uint32)ss_map3;
 	scfg.plate_addr[2] = (Uint32)ss_map3;
 	scfg.plate_addr[3] = (Uint32)ss_map3;
+	scfg.dispenbl      = OFF;
 
 	SCL_SetConfig(SCL_NBG3, &scfg);
 
@@ -996,8 +997,8 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;		    // fg
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x1000;			// bg0
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x6000;			// bg1
-	ss_map3						=(Uint16 *)SCL_VDP2_VRAM_B1+0xA000;			// bg2
+	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
+	ss_map3						=(Uint16 *)NULL;//SCL_VDP2_VRAM_B1+0xA000;			// bg2
 
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
@@ -1140,7 +1141,7 @@ UINT16* tmp = (UINT16*)0x00200000;
 
 	if(previous_bank[sel]!=(((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5))		)
 	{
-		previous_bank[sel] = (((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5));
+		previous_bank[sel] = 0; //(((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5));
 //				previous_bank[sel] = 0;
 //				previous_bank[sel] = 0x400;
 //0x800*128= position tile à 0x800
@@ -1154,10 +1155,11 @@ UINT16* tmp = (UINT16*)0x00200000;
 				memcpy(rom,(UINT8*)0x00200000+(previous_bank[sel]*128),0x20000);
 				break;
 			case 1:
-				memcpy(rom,(UINT8*)0x00270000+(previous_bank[sel]*128),0x20000);
+//				memcpy(rom,(UINT8*)0x00270000+(previous_bank[sel]*128),0x20000);
+				memcpy(rom,(UINT8*)0x00270000+(previous_bank[sel]*128),0x40000);
 				break;
 			case 2:
-				memcpy(rom,(UINT8*)DrvGfxROM4Data1+(previous_bank[sel]*128),0x20000);
+//				memcpy(rom,(UINT8*)DrvGfxROM4Data1+(previous_bank[sel]*128),0x20000);
 				break;
 		}
 
@@ -1190,16 +1192,15 @@ UINT16* tmp = (UINT16*)0x00200000;
 				ss_map2[offs2+1] = (0x400+(code<<2));
 				break;
 			case 1:
-				previous_bank[sel] = 0;
 				code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
 				ss_font[offs2] = (attr & 0x0f);
 				ss_font[offs2+1] = (0x1400+((code)<<2));
 				break;
 			case 2:
-				previous_bank[sel] = 0;
+/*				previous_bank[sel] = 0;
 				code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
 				ss_map3[offs2] = (attr & 0x0f);
-				ss_map3[offs2+1] = (0x2400+((code)<<2));
+				ss_map3[offs2+1] = (0x2400+((code)<<2));*/
 				break;
 		}
 	}

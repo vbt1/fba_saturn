@@ -1939,8 +1939,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 		else
@@ -1953,8 +1953,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 	}
@@ -2074,7 +2074,7 @@ tc++;
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright)
 {
 	Uint16 *VRAM;    
-	int x,j;  
+	Uint32 x,j;  
 	col[0]=10;
     VRAM = (Uint16 *)SS_FONT;
 // barre horizontale haut

@@ -799,9 +799,10 @@ static void dummy(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
+#ifdef DEBUG
 	GFS_SetErrFunc(errGfsFunc, NULL);
 	PCM_SetErrFunc(errPcmFunc, NULL);
-
+#endif
 	nBurnSprites  = 131;
 	nBurnLinescrollSize = 0x0;
 //	TVOFF;

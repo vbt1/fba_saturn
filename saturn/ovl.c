@@ -69,36 +69,6 @@ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 		l+=32;
 	}	
 }
-/*
-void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
-{
-	unsigned int i,j,k,l=0;
-	unsigned char temp[8][8];
-
-	for (k=0;k<size;k++)
-	{
-		for(i=0;i<8;i++)
-			for(j=0;j<4;j++)
-			{
-				temp[i][j<<1]=target[l+(i<<2)+j]>>4;
-				temp[i][(j<<1)+1]=target[l+(i<<2)+j]&0x0f;
-			}
-  
-		for(i=0;i<8;i++)
-		{
-			for(j=0;j<8;j+=2)
-			{
-				if(flip)
-//					target[l+(i<<2)+(j>>1)]= (temp[j][i]<<4)|temp[j+1][i] ;
-					target[l+((7-i)<<2)+((7-j)>>1)]= (temp[7-j][i])|temp[7-j-1][i]<<4 ;
-				else
-					target[l+(i<<2)+(j>>1)]= (temp[7-j][i]<<4)|temp[7-j-1][i] ;
-			}
-//					target[l+(i<<2)+(j>>1)]= (temp[j][i]<<4)|temp[j+1][i] ;
-		}		 
-		l+=32;
-	}	
-}		*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom)
 {
@@ -134,18 +104,19 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void wait_vblank(void)
+{
+     while((TVSTAT & 8) == 0);
+     while((TVSTAT & 8) == 8);
+}
+#if 0
+//-------------------------------------------------------------------------------------------------------------------------------------
 void vout(char *string, char *fmt, ...)                                         
 {                                                                               
    va_list arg_ptr;                                                             
    va_start(arg_ptr, fmt);                                                      
    vsprintf(string, fmt, arg_ptr);                                              
    va_end(arg_ptr);                                                             
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void wait_vblank(void)
-{
-     while((TVSTAT & 8) == 0);
-     while((TVSTAT & 8) == 8);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt, Uint32 channel)
@@ -191,6 +162,7 @@ void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt, Uint32 channel)
 	set_imask(msk);
     set_imask(msk);                                         /* Š„‚èž‚ÝPOP   */
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*int SlaveInWork()
 {

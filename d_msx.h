@@ -57,37 +57,38 @@ typedef	struct	SysDevice	{
 } SysDevice;
 
 //static INT16 *pAY8910Buffer[3];
-static UINT16 *SCCMixerBuffer	= NULL;
-static UINT16 *SCCMixerTable	= NULL;
+/*static*/  UINT16 *SCCMixerBuffer	= NULL;
+/*static*/  UINT16 *SCCMixerTable	= NULL;
 
-static UINT8 *CZ80Context = NULL;
-static UINT8 *AllMem	= NULL;
-static UINT8 *MemEnd	= NULL;
-static UINT8 *AllRam	= NULL;
-static UINT8 *RamEnd	= NULL;
-static UINT8 *maincpu	= NULL; // msx bios rom
-static UINT8 *game      = NULL; // game cart rom, tape side A
-static UINT8 *game2     = NULL; // tape side B
-static UINT8 *main_mem	= NULL;
-static UINT8 *kanji_rom = NULL;
-static UINT8 *game_sram = NULL;
+/*static*/  UINT8 *CZ80Context = NULL;
+/*static*/  UINT8 *AllMem	= NULL;
+/*static*/  UINT8 *MemEnd	= NULL;
+/*static*/  UINT8 *AllRam	= NULL;
+/*static*/  UINT8 *RamEnd	= NULL;
+/*static*/  UINT8 *maincpu	= NULL; // msx bios rom
+/*static*/  UINT8 *game      = NULL; // game cart rom, tape side A
+/*static*/  UINT8 *game2     = NULL; // tape side B
+/*static*/  UINT8 *main_mem	= NULL;
+/*static*/  UINT8 *kanji_rom = NULL;
+/*static*/  UINT8 *game_sram = NULL;
+/*static*/// UINT8 *tmpbmp = NULL;
 
 #ifdef CASSETTE
-static UINT8 *curtape   = NULL; // pointer(only) to currently inserted tape.
-static INT32 curtapelen = 0;
+/*static*/  UINT8 *curtape   = NULL; // pointer(only) to currently inserted tape.
+/*static*/  INT32 curtapelen = 0;
 #endif
 
-static UINT8 use_kanji     = 0;
-static UINT8 msx_basicmode = 0;
+/*static*/  UINT8 use_kanji     = 0;
+/*static*/  UINT8 msx_basicmode = 0;
 
-static UINT8 DrvInputs[2];
+/*static*/  UINT8 DrvInputs[2]={0,0};
 
-static UINT8 DrvJoy1[8];
-static UINT8 DrvJoy2[8];
-static UINT8 DrvJoy4[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-static UINT8 DrvDips[1];
-static UINT8 DrvReset;
-static UINT8 DrvNMI = 0;
+/*static*/  UINT8 DrvJoy1[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+/*static*/  UINT8 DrvJoy2[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+/*static*/  UINT8 DrvJoy4[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+/*static*/  UINT8 DrvDips[1];
+/*static*/  UINT8 DrvReset = 0;
+/*static*/  UINT8 DrvNMI = 0;
 
 static struct BurnInputInfo MSXInputList[] = {
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"},
@@ -229,12 +230,9 @@ static UINT8 Hertz60 = 0;      // DIP setting.
 static UINT8 BiosmodeJapan = 0;// DIP setting.
 
 // Game-based kludges
-static INT32 MapCursorToJoy1 = 0; // Map Cursor Keys & space to Joy1
+//static INT32 MapCursorToJoy1 = 0; // Map Cursor Keys & space to Joy1
 
 static INT32 VBlankKludge = 0; // For VoidRunner (joystick selection hangs)
-static INT32 SwapRamslot = 0; // For Toshiba-EMI's Break Out!
-static INT32 SwapButton2 = 0; // Swaps Joy button#2 with 'm', for Xenon and Astro Marine Corps
-static INT32 SwapSlash = 0; // For Square Dancer, swaps the / key with the Japanese Underscore key
 #ifdef CASSETTE
 static INT32 CASMode = 0;      // Using .cas file?
 static INT32 CASPos = 0;       // Internal tape position counter

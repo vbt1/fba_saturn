@@ -18,7 +18,6 @@ static int DrvExit();
 static int DrvFrame();
 static int DrvDoReset();
 static UINT8 update_input1(void);
-static void make_lut();
 static UINT8 __fastcall sg1000_read_port(unsigned short port);
 void __fastcall sg1000_write_port(unsigned short port, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_0000(UINT16 address);
@@ -93,6 +92,7 @@ typedef	struct	SysDevice	{
 /*static*/ UINT8 *DrvZ80RAM	= NULL;
 /*static*/ UINT8 *DrvZ80ExtRAM = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
+/*static*/ //UINT8 *tmpbmp = NULL;
 
 /*static*/ UINT8 DrvInputs[2]={0,0};
 /*static*/ UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};

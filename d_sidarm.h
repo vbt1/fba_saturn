@@ -49,7 +49,7 @@ SFX sfx_sidarm[96] = {
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
 
-/*static*/ UINT32 *bgmap_buf = NULL;
+/*static*/// UINT32 *bgmap_buf = NULL;
 /*static*/ UINT16 *bgmap_lut = NULL;
 /*static*/ UINT16 *remap4to16_lut = NULL;
 /*static*/ UINT16 *map_lut = NULL;  //[256];

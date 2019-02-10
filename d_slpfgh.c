@@ -2,6 +2,9 @@
 
 #include "d_slpfgh.h"
 
+#define nVBlankCycles 248 * 4000000 / 60 / 262
+#define nInterleave 12
+
 int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvSlapBtJP = {
@@ -54,6 +57,7 @@ static INT32 MemIndex()
 	TigerHeliPalette		= (UINT32*)Next; Next += 0x000100 * sizeof(UINT32);
 	map_offset_lut		= Next; Next += 0x800 * sizeof(UINT16);
 	map_offset_lut2		= Next; Next += 0x800 * sizeof(UINT16);
+
 	MemEnd				= Next;
 	return 0;
 }
@@ -147,7 +151,7 @@ void __fastcall tigerhWriteCPU0(UINT16 a, UINT8 d)
 			ss_map2[x]     = color;
 			ss_map2[x+1] = code+0x1000;
 		}
-		 return;
+		return;
 	}
 
 	if(a>= 0xF000 && a <= 0xFFFF)
@@ -698,6 +702,7 @@ static void initLayers()
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+
 	nBurnSprites = 259; //256;
 	nBurnLinescrollSize = 0;
 	nSoundBufferPos = 0;
@@ -770,7 +775,7 @@ static INT32 tigerhExit()
 	Mem = NULL;
 
 	nWhichGame = 0;
-	bInterruptEnable = bSoundNMIEnable = bSoundCPUEnable = bVBlank = 0;
+	bInterruptEnable = bSoundNMIEnable = bSoundCPUEnable = 0;
 	nStatusIndex = nProtectIndex = 0;
 
 	nTigerHeliTileXPosLo = nTigerHeliTileXPosHi = nTigerHeliTileYPosLo = 0;
@@ -949,7 +954,7 @@ static INT32 tigerhInit()
 	return 0;
 }
 
-static void TigerHeliBufferSprites()
+static inline void TigerHeliBufferSprites()
 {
 	memcpyl(TigerHeliSpriteBuf, TigerHeliSpriteRAM, 0x0800);
 }
@@ -957,7 +962,8 @@ static void TigerHeliBufferSprites()
 static void draw_sprites()
 {
 	UINT8 *ram = TigerHeliSpriteBuf;
-	UINT8 delta=3;
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
+
 	for (INT32 i = 3; i < 259; i++)
 	{
 			ss_sprite[i].ax    = -48;
@@ -968,14 +974,14 @@ static void draw_sprites()
 	{
 		if( (ram[offs + 3] - 15) > -7)
 		{
-			INT32 attr  =  ram[offs + 2];
-			UINT16 code  = (ram[offs + 0] | ((attr & 0xc0) << 2)) & nTigerHeliSpriteMask;
-			ss_sprite[delta].charAddr = 0x440+(code<<4);
-			ss_sprite[delta].ay    = 280-(ram[offs + 1] | (attr << 8 & 0x100));// - (13);
-			ss_sprite[delta].ax    =  ram[offs + 3] - 11;
-			ss_sprite[delta].color=  (attr >> 1 & 0xf)<<4;
-			delta++;
-		}	   
+			UINT32 attr					=  ram[offs + 2];
+			UINT32 code					= (ram[offs + 0] | ((attr & 0xc0) << 2)) & nTigerHeliSpriteMask;
+			ss_spritePtr->charAddr	= 0x440+(code<<4);
+			ss_spritePtr->ay			= 280-(ram[offs + 1] | (attr << 8 & 0x100));// - (13);
+			ss_spritePtr->ax			=  ram[offs + 3] - 11;
+			ss_spritePtr->color		=  (attr >> 1 & 0xf)<<4;
+			ss_spritePtr++;
+		}
 	}
 }
 
@@ -986,8 +992,9 @@ static inline INT32 CheckSleep(INT32 duration)
 
 static INT32 tigerhFrame()
 {
-	INT32 nCyclesTotal[3], nCyclesDone[3];
-	UINT8 *tmp0 = (UINT8*)0x00200000;
+	UINT32 nCyclesTotal[3] = {4000000 / 60,2000000 / 60};
+	INT32 nCyclesDone[3] = {0,0};
+//	UINT8 *tmp0 = (UINT8*)0x00200000;
 
 	CZetNewFrame();
 
@@ -1016,30 +1023,8 @@ static INT32 tigerhFrame()
 		tigerhInput[0] &= ~0xC0;
 	}
 
-	if (nWhichGame == 1) {
-		tigerhInput[0] = (tigerhInput[0] & 0x99) | ((tigerhInput[0] << 1) & 0x44) | ((tigerhInput[0] >> 1) & 0x22);
-	}
+	UINT32 nSoundNMIMask = 0;
 
-//	nCyclesTotal[0] = 6000000 / 60;
-	nCyclesTotal[0] = 4000000 / 60;
-	nCyclesTotal[1] = 2000000 / 60;
-
-	nCyclesDone[0] = nCyclesDone[1] = /*nCyclesDone[2] =*/ 0;
-//	nCyclesTotal[2] = 3000000 / 60;
-
-//	INT32 nVBlankCycles = 248 * 6000000 / 60 / 262;
-	const UINT32 nVBlankCycles = 248 * 4000000 / 60 / 262;
-	const UINT32 nInterleave = 12;
-/*
-	if (nWhichGame == 9)
-	{
-		nCyclesTotal[0] = 4000000 / 60;
-		nCyclesTotal[1] = 2000000 / 60;
-		nVBlankCycles = 248 * 4000000 / 60 / 262;
-	}
-*/
-	INT32 nSoundBufferPos = 0;
-	INT32 nSoundNMIMask = 0;
 	switch (nWhichGame) {
 		case 0:
 			nSoundNMIMask = 1;
@@ -1056,12 +1041,12 @@ static INT32 tigerhFrame()
 			break;			*/
 	}
 
-	bVBlank = false;
+	bool bVBlank = false;
  	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 
-	for (INT32 i = 0; i < nInterleave; i++) 
+	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
-    	INT32 nCurrentCPU;
+    	UINT32 nCurrentCPU;
 		INT32 nNext, nCyclesSegment;
 
 		nCurrentCPU = 0;
@@ -1117,7 +1102,7 @@ static INT32 tigerhFrame()
 		}
 	}
 //	draw_sprites();
-	INT32 scrollx = (((nTigerHeliTileXPosHi * 256) + nTigerHeliTileXPosLo)) & 0x1ff;
+	INT32 scrollx = (((nTigerHeliTileXPosHi << 8) + nTigerHeliTileXPosLo)) & 0x1ff;
 	INT32 scrolly = (nTigerHeliTileYPosLo + 15) & 0xff;
 	ss_reg->n2_move_y = -scrollx-283;
 	SPR_WaitEndSlaveSH();

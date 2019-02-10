@@ -20,7 +20,7 @@ typedef int bool;
 static bool bInterruptEnable = 0;
 static bool bSoundCPUEnable = 0;
 static bool bSoundNMIEnable = 0;
-static bool bVBlank = 0;
+//static bool bVBlank = 0;
 
 static INT32 nWhichGame = 0;
 static UINT32 nStatusIndex = 0;

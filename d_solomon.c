@@ -3,12 +3,16 @@
 #define	nCyclesTotal0 4000000 / 60
 #define nCyclesTotal1 3072000 / 60 / 3
 #define RAZE0 1
+//#define USE_IDMA 1
 
+#ifdef USE_IDMA
 void vblIn()
 {
+	DMA_ScuIndirectMemCopy(ss_map2,bgmap2_buf,0x1000,0);
 	SolomonCalcPalette();
-	DMA_ScuIndirectMemCopy(ss_map2,bgmap_buf,0x1000,0);
+//	DMA_ScuIndirectMemCopy(ss_map,bgmap_buf,0x1000,1);
 }
+#endif
 
 int ovlInit(char *szShortName)
 {
@@ -141,11 +145,13 @@ void __fastcall SolomonWrite1_0xd000(UINT16 a, UINT8 d)
 	{
 		RamStart[a]=d;
 		unsigned int i = map_offset_lut[a&0x3ff];
-		bgmap_buf[i] =  (d & 0x70) >> 4;
-		bgmap_buf[i+1] = 0x800|SolomonVideoRam[a&0x3ff] + ((d & 0x07)<<8);
-//		ss_map2[i] =  (d & 0x70) >> 4;
-//		ss_map2[i+1] = 0x800|SolomonVideoRam[a&0x3ff] + ((d & 0x07)<<8);
-
+#ifdef USE_IDMA
+		bgmap2_buf[i] =  (d & 0x70) >> 4;
+		bgmap2_buf[i+1] = 0x800|SolomonVideoRam[a&0x3ff] + ((d & 0x07)<<8);
+#else
+		ss_map2[i] =  (d & 0x70) >> 4;
+		ss_map2[i+1] = 0x800|SolomonVideoRam[a&0x3ff] + ((d & 0x07)<<8);
+#endif
 	}
 }
 
@@ -157,8 +163,11 @@ void __fastcall SolomonWrite1_0xd400(UINT16 a, UINT8 d)
 		RamStart[a]=d;
 		a&=0x3ff;
 		unsigned int i = map_offset_lut[a];
-//		ss_map2[i+1] = 0x800|d + ((SolomonColourRam[a] & 0x07)<<8);
-		bgmap_buf[i+1] = 0x800|d + ((SolomonColourRam[a] & 0x07)<<8);
+#ifdef USE_IDMA
+		bgmap2_buf[i+1] = 0x800|d + ((SolomonColourRam[a] & 0x07)<<8);
+#else
+		ss_map2[i+1] = 0x800|d + ((SolomonColourRam[a] & 0x07)<<8);
+#endif
 	}
 }
 
@@ -174,10 +183,13 @@ void __fastcall SolomonWrite1_0xd800(UINT16 a, UINT8 d)
 		UINT32 FlipY = (d & 0x08) / 8;
 
 		unsigned int i = map_offset_lut[a&0x3ff];
+#ifdef USE_IDMAx
+		bgmap_buf[i] =  8 | Colour | FlipX << 8 | FlipY << 16;
+		bgmap_buf[i+1] = SolomonBgVideoRam[a&0x3ff] + ((d & 0x07)<<8);
+#else
 		ss_map[i] = 8 | Colour | FlipX << 8 | FlipY << 16;
 		ss_map[i+1] = SolomonBgVideoRam[a&0x3ff] + ((d & 0x07)<<8);
-//		bgmap_buf[i] =  8 | Colour | FlipX << 8 | FlipY << 16;
-//		bgmap_buf[i+1] = SolomonBgVideoRam[a&0x3ff] + ((d & 0x07)<<8);
+#endif
 	}
 }
 
@@ -189,8 +201,11 @@ void __fastcall SolomonWrite1_0xdc00(UINT16 a, UINT8 d)
 		RamStart[a]=d;
 		a&=0x3ff;
 		unsigned int i = map_offset_lut[a];
+#ifdef USE_IDMAx
+		bgmap_buf[i+1] = d + ((SolomonBgColourRam[a] & 0x07)<<8);
+#else
 		ss_map[i+1] = d + ((SolomonBgColourRam[a] & 0x07)<<8);
-//		bgmap_buf[i+1] = d + ((SolomonBgColourRam[a] & 0x07)<<8);
+#endif
 	}
 }
 #endif
@@ -271,9 +286,10 @@ static INT32 SolomonMemIndex()
 	pFMBuffer					= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 	map_offset_lut			= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
 	cram_lut					= (UINT16*)Next; Next += 4096 * sizeof(UINT16);
-
-	bgmap_buf				= Next; Next += 0x800 * sizeof (UINT16);//bgmap_lut + 0x20000;
-
+#ifdef USE_IDMA
+	bgmap_buf				= Next; Next += 0x1000 * sizeof (UINT16);//bgmap_lut + 0x20000;
+	bgmap2_buf				= Next; Next += 0x1000 * sizeof (UINT16);//bgmap_lut + 0x20000;
+#endif
 //	SolomonPalette         = (UINT32*)Next; Next += 0x00200 * sizeof(UINT32);
 
 	MemEnd                 = Next;
@@ -444,8 +460,12 @@ INT32 SolomonInit()
 
 	// Reset the driver
 	SolomonDoReset();
-	nBurnFunction = vblIn;
 
+#ifdef USE_IDMA
+	nBurnFunction = vblIn;
+#else
+	nBurnFunction = SolomonCalcPalette;
+#endif	
 	return 0;
 }
 
@@ -472,7 +492,7 @@ INT32 SolomonExit()
 	SolomonZ80Ram1 = SolomonZ80Ram2 = SolomonColourRam = SolomonVideoRam = NULL;
 	SolomonBgColourRam = SolomonBgVideoRam = SolomonSpriteRam = NULL;
 	SolomonPaletteRam = CZ80Context = NULL;
-	map_offset_lut = cram_lut = NULL;
+	bgmap_buf = bgmap2_buf = map_offset_lut = cram_lut = NULL;
 
 	for (int i = 0; i < 9; i++) {
 		pAY8910Buffer[i] = NULL;
@@ -725,7 +745,9 @@ static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+#ifdef USE_IDMA
 	DMA_ScuInit();
+#endif
 
 	nBurnSprites  = 32+4;//27;
 
@@ -764,8 +786,6 @@ static void DrvInitSaturn()
 		ss_sprite[i].ax    = -48;
 		ss_sprite[i].ay    =  -32;
 	}
-
-	nBurnFunction = SolomonCalcPalette;
 	drawWindow(0,240,0,0,62); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

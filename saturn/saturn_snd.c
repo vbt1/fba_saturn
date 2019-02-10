@@ -20,8 +20,9 @@ void stmInit(void)
 	STM_Init(12, 24, stm_work);
 //	STM_Init(4, 20, stm_work);
 //	STM_Init(1, 2, stm_work);
+#ifdef DEBUG
 	STM_SetErrFunc(errStmFunc, NULL);
-
+#endif
 	grp_hd = STM_OpenGrp();
 	if (grp_hd == NULL) {
 		return;
@@ -48,6 +49,7 @@ void stmClose(StmHn fp)
 	STM_Close(fp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef DEBUG
 void errStmFunc(void *obj, Sint32 ec)
 {
 //	VTV_PRINTF((VTV_s, "S:ErrStm %X %X\n", obj, ec));
@@ -92,6 +94,7 @@ void errPcmFunc(void *obj, Sint32 ec)
 
 	}while(1);
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SetStreamPCM()
 {
@@ -178,14 +181,15 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 
 			PCM_SetLoadNum(pcmStream, 10);
 			PCM_SetTrModeCd(pcmStream, PCM_TRMODE_SDMA);
-			PCM_Set1TaskSample(pcmStream, 1024);
+			PCM_Set1TaskSample(pcmStream, 3192);
 
 			PCM_Start(pcmStream);
 		}
-		else
+/*		else
 		{
 			while(1);
 		}
+*/
 //	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

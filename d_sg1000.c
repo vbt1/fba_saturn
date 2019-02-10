@@ -333,6 +333,8 @@ static int MemIndex()
 
 	RamEnd			= Next;
 	CZ80Context		= Next; Next += 0x1080;
+//	tmpbmp				= Next; Next += (256*192);
+
 	MemEnd			= Next;
 
 	return 0;
@@ -413,9 +415,9 @@ static int DrvInit()
 	CZetInit2(1,CZ80Context);
 	#endif
 
-//	make_lut();
-	load_rom();
 // 	set_memory_map(0);
+//	PCM_MeStop(pcm);
+//	PCM_MeStart(pcm);
 	SN76489AInit(0, 3579545, 0);
 
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt);
@@ -427,15 +429,13 @@ static int DrvInit()
 	PPI0PortWriteC	= sg1000_ppi8255_portC_write;
 
 	DrvDoReset();
-
+	load_rom();
 	return 0;
 }
 
 static int DrvExit()
 {
-//	SPR_InitSlaveSH();
 	nBurnFunction = NULL;
-//	nSoundBufferPos=0;
 #ifdef RAZE
 	z80_stop_emulating();
 
@@ -455,7 +455,7 @@ static int DrvExit()
 #endif
 	ppi8255_exit();
 	TMS9928AExit();
-	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
+/*	tmpbmp =*/ CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
 	free (AllMem);
 	AllMem = NULL;
 	DrvReset = 0;
@@ -482,33 +482,27 @@ static int DrvFrame()
 		}
 	}
  
-	INT32 nInterleave = 16;
-	INT32 nCyclesTotal[1] = { 3579545 / 60 };
-	INT32 nCyclesDone[1] = { 0 };
-	INT32 nSoundBufferPos2 = 0;
-	INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+	UINT32 nInterleave = 16;
+	UINT32 nCyclesTotal =  3579545 / 60;
+	UINT32 nCyclesDone = 0;
+	UINT32 nSoundBufferPos2 = 0;
+	UINT32 nSegmentLength = nBurnSoundLen / nInterleave;
 
 #ifndef RAZE
     CZetOpen(0);
 #endif
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
-	for (INT32 i = 0; i < nInterleave; i++)
+	for (UINT32 i = 0; i < nInterleave; i++)
 	{
 #ifdef RAZE
-		nCyclesDone[0] += z80_emulate(nCyclesTotal[0] / nInterleave);
+		nCyclesDone += z80_emulate(nCyclesTotal / nInterleave);
 #else
-		nCyclesDone[0] += CZetRun(nCyclesTotal[0] / nInterleave);
+		nCyclesDone += CZetRun(nCyclesTotal / nInterleave);
 #endif
-		// Render Sound Segment
-	/*	if (pBurnSoundOut) 
-		{			 */
-
-			INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
-			SN76496Update(0, pSoundBuf, nSegmentLength);
-			nSoundBufferPos += nSegmentLength;
-			nSoundBufferPos2 += nSegmentLength;
-	//	}
-		//
+		INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
+		SN76496Update(0, pSoundBuf, nSegmentLength);
+		nSoundBufferPos += nSegmentLength;
+		nSoundBufferPos2 += nSegmentLength;
 	}
 
 	TMS9928AInterrupt();
@@ -516,6 +510,9 @@ static int DrvFrame()
 	CZetClose();
 #endif
 	TMS9928ADraw();
+//	unsigned char *ss_vram = (unsigned char *)SS_SPRAM;
+
+//	DMA_ScuIndirectMemCopy((ss_vram+0x1100+0x10000),tmpbmp,0x4000,0);
 
 // Make sure the buffer is entirely filled.
 	
@@ -606,8 +603,6 @@ void initPosition(void)
 /*static*/ void DrvInitSaturn()
 {
 //	InitCDsms();
-//	SPR_InitSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 	nBurnSprites  = 4+32;//131;//27;
 	nBurnLinescrollSize = 0;
 	nSoundBufferPos = 0;//sound position à renommer

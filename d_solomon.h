@@ -10,6 +10,7 @@
 INT32 SolomonInit();
 INT32 SolomonExit();
 INT32 SolomonFrame();
+void SolomonCalcPalette();
 void updateSound();
 void CZetRunSlave(int *nCycles);
 
@@ -36,7 +37,7 @@ void CZetRunSlave(int *nCycles);
 /*static*/ UINT8 *SolomonPaletteRam   = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT16 *bgmap_buf = NULL;
-/*static*/ UINT16 *bgmap_buf2 = NULL;
+/*static*/ UINT16 *bgmap2_buf = NULL;
 
 UINT16* map_offset_lut      = NULL;
 UINT16 *cram_lut = NULL;

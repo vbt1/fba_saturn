@@ -12,7 +12,7 @@
 //#define DEBUG_PCM 1
 #define PCM_SFX 1
 #define PCM_MUSIC 1
-
+/*
 void vout3(char *string, char *fmt, ...)                                         
 {                                                                               
    va_list arg_ptr;                                                             
@@ -20,7 +20,7 @@ void vout3(char *string, char *fmt, ...)
    vsprintf(string, fmt, arg_ptr);                                              
    va_end(arg_ptr);                                                             
 }
-
+*/
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -328,7 +328,7 @@ if(i==0)
 //					STM_ResetTrBuf(stm);
 					char pcm_file[14];
 
-					vout3(pcm_file, "%03d%s",data,".PCM"); 
+//					vout3(pcm_file, "%03d%s",data,".PCM"); 
 					PcmInfo 		info;
 
 					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
@@ -1746,9 +1746,10 @@ static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+#ifdef DEBUG
 	GFS_SetErrFunc(errGfsFunc, NULL);
 	PCM_SetErrFunc(errPcmFunc, NULL);
-
+#endif
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
 // 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1;		   //c

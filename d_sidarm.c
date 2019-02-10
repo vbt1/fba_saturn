@@ -1,6 +1,7 @@
 // FB Alpha Side Arms driver module
 // Based on MAME driver by Paul Leaman
-
+#include "SEGA_DMA.H"
+#include    "machine.h"
 #include "d_sidarm.h"
 //#define nScreenHeight 224
 //#define nScreenWidth 384
@@ -368,7 +369,9 @@ inline /*static*/ /*double DrvGetTime()
 
 //	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
 	bgmap_lut	 		= 0x00200000; //Next; Next += 0x008000 * sizeof (UINT16);
-	bgmap_buf		= bgmap_lut + 0x20000;
+//	bgmap_buf		= Next; Next += 0x800 * sizeof (UINT32);//bgmap_lut + 0x20000;
+//	bgmap_buf		= bgmap_lut + 0x20000;
+
 	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
 	map_lut				= Next; Next += 256 * sizeof (UINT16);
 	map_offset_lut	= Next; Next += 4096 * sizeof (UINT16);
@@ -587,12 +590,13 @@ inline /*static*/ /*double DrvGetTime()
 	stm = stmOpen("000.PCM");
 	STM_ResetTrBuf(stm);
 	SetStreamPCM();
-
+#ifdef DEBUG
 	GFS_SetErrFunc(errGfsFunc, NULL);
 	PCM_SetErrFunc(errPcmFunc, NULL);	
+#endif
 	PCM_Start(pcmStream);
 //-------------------------------------------------
-	nBurnFunction = vblIn;
+//	nBurnFunction = vblIn;
 
 	return 0;
 }
@@ -626,7 +630,7 @@ inline /*static*/ /*double DrvGetTime()
 	PCM_DestroyStmHandle(pcmStream);
 	stmClose(stm);
 
-	bgmap_buf = NULL;
+//	bgmap_buf = NULL;
 	bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = DrvPalette = NULL;
 	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM0 = DrvGfxROM0 = DrvGfxROM1= DrvGfxROM2 = NULL;
 	DrvStarMap = DrvTileMap = DrvVidRAM = DrvSprBuf = DrvSprRAM = DrvPalRAM = DrvZ80RAM0 = bgscrollx = bgscrolly = NULL;
@@ -652,24 +656,85 @@ inline /*static*/ /*double DrvGetTime()
 	return 0;
 }
 
+#if 0
+typedef struct TC_TRANSFER {
+    Uint32 size;
+    void *target;
+    void *source;
+} TC_transfer;
+
+void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt)
+{
+    Uint32 msk;
+// ????
+    msk = get_imask();
+    set_imask(15);
+
+    TC_transfer tc[2];
+    DmaScuPrm prm;
+    DmaScuStatus status;
+
+	tc[0].size = cnt;
+    tc[0].source = src;
+    tc[0].target = dst;
+
+    tc[1].size = cnt;
+    tc[1].source = ((Uint32)src+(cnt-1))+1<<31;
+    tc[1].target = (Uint32)dst+(cnt-1);
+/*
+           setTransferTable((Uint16 *)VDP2_VRAM_A0, 512, (Uint16 *)(buffer), 240, 320);    
+            were_here("high level transfer");
+            DMA_ScuMemCopy((TC_TRANSFER_TABLE + 84)->target, (TC_TRANSFER_TABLE + 84)->source, (TC_TRANSFER_TABLE + 84)->size);
+ */
+
+
+
+
+    prm.dxr = (Uint32)NULL;     // no meaning in indirect mode
+    prm.dxw = ((Uint32)src);
+    prm.dxc = 0; // not matter ? sizeof();
+    prm.dxad_r = DMA_SCU_R4;
+    prm.dxad_w = DMA_SCU_W4; // W2 pour le son
+    prm.dxmod = DMA_SCU_IN_DIR;
+    prm.dxrup = DMA_SCU_KEEP;
+    prm.dxwup = DMA_SCU_KEEP;
+    prm.dxft = DMA_SCU_F_DMA;
+    prm.msk = DMA_SCU_M_DXR    |              DMA_SCU_M_DXW    ;
+
+    do {
+        DMA_ScuGetStatus(&status, DMA_SCU_CH1);
+    } while(status.dxmv == DMA_SCU_MV);
+
+    DMA_ScuSetPrm(&prm, DMA_SCU_CH1);
+    DMA_ScuStart(DMA_SCU_CH1);
+
+//	set_imask(msk);
+
+//    dma_start_flg = ON;                         /* DMAÇÕÉXÉ^Å[ÉgÇµÇƒÇ¢ÇÈ     */
+    set_imask(msk);                                         /* äÑÇËçûÇ›POP   */
+}
+
 void vblIn()
 {
 //	playMusic();
 
 	if(bglayer_enable)
 	{
-		DMA_ScuMemCopy(ss_map2,bgmap_buf,0x800);
-		while(DMA_ScuResult()==2);
-	//		memcpyl(ss_map2,bgmap_buf,0x800);
+//		DMA_ScuMemCopy(ss_map2,bgmap_buf,0x800);
+////		DMA_ScuIndirectMemCopy(ss_map2,bgmap_buf,0x800);
+		DMA_ScuIndirectMemCopy(ss_map2,bgmap_buf,256);
+//		while(DMA_ScuResult()==2);
+//			memcpyl(ss_map2,bgmap_buf,0x800);
 	}
 }
+#endif
 
 /*static*/ void draw_bg_layer()
 {
 	INT32 scrollx = ((((bgscrollx[1] << 8) + bgscrollx[0]) & 0xfff) + 64) & 0xfff;
 	INT32 scrolly = ((((bgscrolly[1] << 8) + bgscrolly[0]) & 0xfff) + 16) & 0xfff; 
-//	INT32 *map = (UINT32 *)ss_map2;
-	UINT32 *map = (UINT32 *)bgmap_buf;
+	INT32 *map = (UINT32 *)ss_map2;
+//	UINT32 *map = (UINT32 *)bgmap_buf;
 
 	INT32 offs = 2 * (scrollx >> 5) + 0x100 * (scrolly >> 5);
 
@@ -808,9 +873,9 @@ z80_raise_IRQ(0);
 	CZetClose();
 #endif	
 
-	SidearmsDraw();
+//	SidearmsDraw();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
-playMusic();
+//playMusic(); // ‡ remettre
 
 	return 0;
 }
@@ -938,7 +1003,6 @@ static void DrvInitSaturn()
 
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+3;
-//	nBurnFunction = PCM_VblIn;//smpVblIn;
 
 //3 nbg
 //	SS_SET_N0PRIN(7); // window
