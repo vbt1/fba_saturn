@@ -12,7 +12,7 @@
 //#define DEBUG_PCM 1
 #define PCM_SFX 1
 #define PCM_MUSIC 1
-/*
+
 void vout3(char *string, char *fmt, ...)                                         
 {                                                                               
    va_list arg_ptr;                                                             
@@ -20,7 +20,7 @@ void vout3(char *string, char *fmt, ...)
    vsprintf(string, fmt, arg_ptr);                                              
    va_end(arg_ptr);                                                             
 }
-*/
+
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -87,17 +87,14 @@ static void palette_write(INT32 offset)
 		unsigned short position = remap16_lut[offset];
 
 		DrvPalette[position] = cram_lut[data];//RGB(r>>3, g>>3, b>>3);
-//		if(position==0)
-//					DrvPalette[position] = RGB(0,0,0);
 	}
-
 }
 
 static void DrvRomBankswitch(INT32 bank)
 {
 	*DrvRomBank = bank & 0x0f;
 
-	INT32 nBank = 0x10000 + (bank & 0x0f) * 0x4000;
+	UINT32 nBank = 0x10000 + (bank & 0x0f) * 0x4000;
 
 #ifdef RAZE0
 	z80_map_read  (0x8000, 0xbfff, DrvZ80ROM0 + nBank);
@@ -108,7 +105,7 @@ static void DrvRomBankswitch(INT32 bank)
 static void DrvVidRamBankswitch(INT32 bank)
 {
 	*DrvVidBank = (bank & 0x03);
-	INT32 nBank = (bank & 3) * 0x1000;
+	UINT32 nBank = (bank & 3) * 0x1000;
 
 #ifdef RAZE0
 	z80_map_read  (0xc000, 0xcfff, DrvBgRAM + nBank);
@@ -328,7 +325,7 @@ if(i==0)
 //					STM_ResetTrBuf(stm);
 					char pcm_file[14];
 
-//					vout3(pcm_file, "%03d%s",data,".PCM"); 
+					vout3(pcm_file, "%03d%s",data,".PCM"); 
 					PcmInfo 		info;
 
 					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
@@ -337,7 +334,7 @@ if(i==0)
 					PCM_INFO_SAMPLING_BIT(&info) = 16;
 					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
 //#ifdef DEBUG_PCM
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
+//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gfs_size              ",40,200);
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(sfx_list[data].size),80,200);
 //#endif
@@ -446,13 +443,11 @@ if(i==0)
 
 			if(data)		  // 1 = 128x64, 0 = 64x128
 			{
-//				*DrvScreenLayout = 1;
 				bg_map_lut = &bg_map_lut2x1[0];
 				PLANEADDR1 = ss_regd->normap[2] = 0x3430;
 			}
 			else
 			{
-//				*DrvScreenLayout = 0;
 				bg_map_lut = &bg_map_lut2x2[0];
 				PLANEADDR1 = ss_regd->normap[2] = 0x3030;
 			}
@@ -710,25 +705,6 @@ static void DrvFMIRQHandler(INT32 irq, INT32 nStatus)
 //int aaa = 10;
 static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 {
-//	return (INT32)CZetTotalCyclesSlave() * nSoundRate / nYM2203Clockspeed;
-/*	if(aaa < 200)
-	{
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(
-			
-		(INT32)CZetTotalCycles() * 44100 / nYM2203Clockspeed
-		),10,aaa);	
-
-		
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(
-			
-		(INT32)CZetTotalCycles() * nSoundRate / nYM2203Clockspeed
-		),80,aaa);	
-		aaa+=10;
-	}
-	else
-	{
-		aaa=10;
-	}*/
 	return (INT32)CZetTotalCycles() * nSoundRate / nYM2203Clockspeed;
 }
 
@@ -841,7 +817,6 @@ static INT32 DrvExit()
 {
 	SPR_InitSlaveSH();
 
-	nSoundBufferPos=0;
 #ifdef RAZE0
 	z80_stop_emulating();
 	z80_add_write(0xc000, 0xdfff, 1, (void *)NULL);
@@ -855,11 +830,14 @@ static INT32 DrvExit()
 #ifdef CZET
 	CZetExit2();
 #endif
-	for(int i=0;i<14;i++)
+	for(unsigned int i=0;i<14;i++)
 	{
 		PCM_MeStop(pcm14[i]);
-		memset(SOUND_BUFFER+(PCM_BLOCK_SIZE*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
+	memset(SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*14);
+	STM_ResetTrBuf(stm);
+	PCM_DestroyStmHandle(pcm14[0]);
+	stmClose(stm);
 
 	CZ80Context = DrvZ80ROM0 = DrvZ80ROM1 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
 	DrvZ80RAM0	 = DrvZ80RAM1 = DrvPalRAM = DrvTxRAM = DrvBgRAM = DrvSprRAM = DrvSprBuf = NULL;
@@ -873,6 +851,8 @@ static INT32 DrvExit()
 
 	free (AllMem);
 	AllMem = NULL;
+	nSoundBufferPos=0;
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -881,8 +861,8 @@ static INT32 DrvFrame()
 // cheat code level
 //DrvZ80RAM0[0xF3A1-0xe000]=4; // niveau 4 pour transparence
 // cheat code invincible
-DrvZ80RAM0[0xE905-0xe000]= 0x01;
-DrvZ80RAM0[0xF424-0xe000]= 0x0F;
+//DrvZ80RAM0[0xE905-0xe000]= 0x01;
+//DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 *(Uint16 *)0x25E00000 = colBgAddr[0];
 	if (watchdog >= 180) {
 		DrvDoReset(0);
@@ -981,8 +961,8 @@ DrvZ80RAM0[0xF424-0xe000]= 0x0F;
 //#endif
 //				if(PCM_GetPlayStatus(pcm14[i]) != PCM_STAT_PLAY_CREATE)
 				{
-if(i==0)
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)" stopping pcm 0 !!!!     ",100,80);
+//if(i==0)
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)" stopping pcm 0 !!!!     ",100,80);
 					PCM_MeStop(pcm14[i]);
 
 //					memset((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i)),0x00,RING_BUF_SIZE);
@@ -1052,25 +1032,12 @@ static void initLayers()
 //	scfg.patnamecontrl =  0x0008;// VRAM A0?
 	scfg.patnamecontrl =  0x0008;// VRAM A0?
 	scfg.flip          = SCL_PN_10BIT; // on force ? 0
- //2x1
-/*
-	scfg.plate_addr[0] = (Uint32)SS_MAP2;
-	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x800);
-	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x400);	 // good	  0x400
-	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0xC00);
-*/
-// pour 2x1
-				scfg.plate_addr[0] = (Uint32)(SS_MAP2);
-				scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x1000);
-				scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
-				scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
-// pour 2x2
-/*
-				scfg.plate_addr[0] = (Uint32)(SS_MAP2);//////
-				scfg.plate_addr[1] = (Uint32)(SS_MAP2);//////
-				scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
-				scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
-*/
+
+	scfg.plate_addr[0] = (Uint32)(SS_MAP2);
+	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x1000);
+	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
+	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
+
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
 	scfg.pnamesize     = SCL_PN2WORD; //2word
@@ -1798,9 +1765,8 @@ static void DrvInitSaturn()
 //	memset((Uint8 *)ss_map3,0,0x2000);
 //	memset((Uint8 *)bg_map_dirty,1,0x4000);
 	SprSpCmd *ss_spritePtr;
-	unsigned int i = 3;
 	
-	for (i = 3; i <nBurnSprites; i++) 
+	for (unsigned int i = 3; i <nBurnSprites; i++) 
 	{
 		ss_spritePtr				= &ss_sprite[i];
 		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
