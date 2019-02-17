@@ -186,9 +186,9 @@ void fillSpriteCollision(unsigned int Num, int *values)
 	if(values[1]>0){sprites_collision[Num].y=values[1] & 0xff;};	  //y max 255
 	if(skip<0)	    // width<0
 	{
-		if(values[0]>abs(skip))		// x > abs(width)	
+		if(values[0]>ABS(skip))		// x > abs(width)	
 		{
-			sprites_collision[Num].width=abs(skip)  & 0xff;// width>0
+			sprites_collision[Num].width=ABS(skip)  & 0xff;// width>0
 			sprites_collision[Num].x=(values[0]+skip) & 0xff; // x=x+width
 		}
 	}
@@ -205,7 +205,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 {
 	int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[abs(Skip)];
+	unsigned int Width = width_lut[ABS(Skip)];
 
 	int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	renderSpriteCache(values);
@@ -231,7 +231,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 {
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[abs(Skip)];
+	unsigned int Width = width_lut[ABS(Skip)];
 	unsigned int delta	= (Num+3);
 
 	ss_sprite[delta].ax			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;

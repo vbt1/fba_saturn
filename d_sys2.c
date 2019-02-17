@@ -738,7 +738,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[abs(Skip)];
+	unsigned int Width = width_lut[ABS(Skip)];
 
 	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	spriteCache[addr]=nextSprite;
@@ -766,7 +766,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 {
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[abs(Skip)];
+	unsigned int Width = width_lut[ABS(Skip)];
 	unsigned int delta	= (Num+3);
 
 	{

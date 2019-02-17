@@ -739,23 +739,21 @@ int ovlInit(char *szShortName)
 //	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
 	DrvMakeInputs();
 
-	nCyclesTotal = 10738635 / 2 / 60;
-	nCyclesDone = 0;
+	UINT32 nCyclesTotal = 10738635 / 2 / 60;
+	UINT32 nCyclesDone = 0;
 	currentLine = 0;
 	CZetOpen(0);
 
 	CZetNewFrame();
 //
-	
-DrvRAM[0xC222-0xc000]=0x99;
+//  pour temps illimité sur hangon	
+// DrvRAM[0xC222-0xc000]=0x99;
 
 	for (UINT32 i = 0; i < nInterleave; i++) {
-		UINT32 nNext;
 
 		// Run Z80 #1
-		nNext = (i + 1) * nCyclesTotal / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone;
-		nCyclesDone += CZetRun(nCyclesSegment);
+		UINT32 nNext = (i + 1) * nCyclesTotal / nInterleave;
+		nCyclesDone += CZetRun(nNext - nCyclesDone);
 		currentLine = (i - 4) & 0xff;
 
 		if(currentLine>7)

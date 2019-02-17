@@ -62,9 +62,8 @@ struct BurnDriver nBurnDrvRaflesia = {
 /*static*/ void BlockgalMakeInputs()
 {
 	System1Input[2] = 0x00;
-	int i;
 	
-	for (i = 0; i < 8; i++) {
+	for (UINT32 i = 0; i < 8; i++) {
 		System1Input[2] |= (System1InputPort2[i] & 1) << i;
 	}
 	
@@ -170,7 +169,7 @@ Driver Inits
 	nCyclesTotal[0] = 3000000 / hz ;
 	nCyclesTotal[1] = 3000000 / hz ;
 
-	for (int i = 0; i < 10; i++) cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;
+	for (UINT32 i = 0; i < 10; i++) cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;
 	return nRet;
 }
 
@@ -193,7 +192,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[abs(Skip)];
+	unsigned int Width = width_lut[ABS(Skip)];
 	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	renderSpriteCache(values);
 	spriteCache[addr]=nextSprite;
@@ -243,7 +242,7 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[abs(Skip)];
+	unsigned int Width = width_lut[ABS(Skip)];
 
 	unsigned int delta	= (Num+3);
 

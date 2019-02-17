@@ -96,10 +96,10 @@ void *memset4_fast(void *, long, size_t);
 /*static*/ UINT8  BlockgalDial1;
 /*static*/ UINT8  BlockgalDial2;
 
-/*static*/ int System1SpriteRomSize;
-/*static*/ int System1NumTiles;
-/*static*/ int System1ColourProms = 0;
-/*static*/ int System1BankedRom = 0;
+/*static*/ unsigned int System1SpriteRomSize;
+/*static*/ unsigned int System1NumTiles;
+/*static*/ unsigned int System1ColourProms = 0;
+/*static*/ unsigned int System1BankedRom = 0;
 
 typedef void (*Decode)();
 /*static*/ Decode DecodeFunction;
@@ -109,8 +109,7 @@ Collision CollisionFunction;
 typedef void (*MakeInputs)();
 /*static*/ MakeInputs MakeInputsFunction;
 
-/*static*/ int nCyclesDone[2], nCyclesTotal[2];
-/*static*/ int nCyclesSegment=0;
+/*static*/unsigned int nCyclesTotal[2];
 
 /*==============================================================================================
 Input Definitions

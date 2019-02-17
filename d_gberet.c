@@ -273,9 +273,9 @@ int ovlInit(char *szShortName)
 
 /*static*/ void DrvGfxDecode()
 {
-	/*static*/ int Planes[4] = { 0, 1, 2, 3 };
-	/*static*/ int XOffs[16] = { 0, 4, 8, 12, 16, 20, 24, 28, 256, 260, 264, 268, 272, 276, 280, 284 };
-	/*static*/ int YOffs[16] = { 0, 32, 64, 96, 128, 160, 192, 224, 512, 544, 576, 608, 640, 672, 704, 736 };
+	/*static*/ unsigned int Planes[4] = { 0, 1, 2, 3 };
+	/*static*/ unsigned int XOffs[16] = { 0, 4, 8, 12, 16, 20, 24, 28, 256, 260, 264, 268, 272, 276, 280, 284 };
+	/*static*/ unsigned int YOffs[16] = { 0, 32, 64, 96, 128, 160, 192, 224, 512, 544, 576, 608, 640, 672, 704, 736 };
 
 	Graphics_Decode(Planes, XOffs, YOffs, Planes, XOffs, YOffs, 0x400);
 }
@@ -288,9 +288,8 @@ int ovlInit(char *szShortName)
 	unsigned char *Load1 = Gfx0;
 	unsigned char *Load2 = Gfx1;
 	unsigned char *Load3 = Prom;
-	unsigned int i;
 
-	for (i = 0; !BurnDrvGetRomName(&pRomName, i, 0); i++) {
+	for (unsigned int i = 0; !BurnDrvGetRomName(&pRomName, i, 0); i++) {
 
 		BurnDrvGetRomInfo(&ri, i);
 
@@ -332,14 +331,13 @@ int ovlInit(char *szShortName)
 
 /*static*/ int DrvInit()
 {
-//	FNT_Print256_2bpp((volatile Uint8 *)SCL_VDP2_VRAM_A1,(Uint8 *)"bet initsaturn     ",1,70);
-
 	DrvInitSaturn();
 
 	int nLen;
 	Mem = NULL;
 	MemIndex();
 	nLen = MemEnd - (unsigned char *)0;
+
 	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	MemIndex();
@@ -347,6 +345,7 @@ int ovlInit(char *szShortName)
 	/*if (game_type == 1) {
 		BootGfxDecode();
 	} else*/ 
+
 	{
 		DrvGfxDecode();
 	}
@@ -486,7 +485,6 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	_30_HZ=0;
 	game_type = 0;
 	nSoundBufferPos = 0;
-	nCyclesDone = 0;
 	DrvReset = 0;
 	nBurnLinescrollSize = 1;
 
@@ -565,25 +563,23 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
 //	memset(&ss_scl[0],16<<16,64);
 	memset(&ss_scl[0],16<<16,128);
-
 	drawWindow(0,240,0,2,66);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void gberet_draw_sprites()
 {
-	unsigned int offs;
 	unsigned char *sr = Rom + 0xd000 + ((~gberet_spritebank & 8) << 5);
 
-	for (offs = 0; offs < 0xc0; offs += 4)
+	for (unsigned int offs = 0; offs < 0xc0; offs += 4)
 	{
 		unsigned int delta=(offs>>2)+3;
 //		ss_sprite[delta].charSize   = 0;  //0x100 16*16
 
 		if (sr[offs + 3])
 		{
-			int attr = sr[offs + 1];
-			int code = sr[offs + 0] + ((attr & 0x40) << 2);
+			unsigned int  attr = sr[offs + 1];
+			unsigned int  code = sr[offs + 0] + ((attr & 0x40) << 2);
 			unsigned int flip = attr & 0x30;
 
 			ss_sprite[delta].ax			= sr[offs + 2] - 2 * (attr & 0x80);
@@ -650,8 +646,7 @@ void renderSound(unsigned int *nSoundBufferPos)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void cleanSprites()
 {
-	unsigned int delta;	
-	for (delta=3; delta<nBurnSprites; delta++)
+	for (unsigned int delta=3; delta<nBurnSprites; delta++)
 	{
 		ss_sprite[delta].charSize   = 0;
 		ss_sprite[delta].charAddr   = 0;
@@ -662,8 +657,7 @@ void renderSound(unsigned int *nSoundBufferPos)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int DrvFrame()
 {
-	unsigned int i;
-	int nInterleave = game_type ? 16 : 32;
+	unsigned int nInterleave = game_type ? 16 : 32;
 	if (DrvReset) {
 		DrvDoReset();
 	}
@@ -671,8 +665,7 @@ void renderSound(unsigned int *nSoundBufferPos)
 	if(game_type & 2)
 		CZetOpen(0);
 #endif
-	int nCyclesDone, nCyclesTotal;
-	nCyclesDone = 0;
+	unsigned int nCyclesDone = 0, nCyclesTotal;
 
 if (_30_HZ)
 #ifdef RAZE
@@ -687,15 +680,13 @@ else
 	nCyclesTotal = 3072000 / 9 / (6000 / 256);
 #endif
 
-	for (i = 0; i < nInterleave; i++)
+	for (unsigned int i = 0; i < nInterleave; i++)
 	{
-		int nCyclesSegment = (nCyclesTotal - nCyclesDone) / (nInterleave - i);
-
 #ifdef CZ80
-		nCyclesDone = CZetRun(nCyclesSegment);
+		nCyclesDone += CZetRun(nCyclesTotal / nInterleave);
 #else
 #ifdef RAZE
-		nCyclesDone = z80_emulate(nCyclesSegment);
+		nCyclesDone += z80_emulate(nCyclesTotal / nInterleave);
 #endif
 #endif
 

@@ -25,7 +25,6 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 /*static*/ unsigned short *Palette = NULL;
 /*static*/ unsigned int _30_HZ=0;
 
-/*static*/ unsigned int nCyclesDone, nCyclesTotal=3072000 / 7 / (6000 / 256);
 /*static*/ unsigned char *Mem, *MemEnd, *Rom, *Gfx0, *Gfx1, *Prom;
 /*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvDips[4], DrvReset;
 

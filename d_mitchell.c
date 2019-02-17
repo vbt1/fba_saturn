@@ -103,7 +103,7 @@ int ovlInit(char *szShortName)
 
 /*static*/ int PangMemIndex()
 {
-	unsigned char *Next; Next = Mem;
+	UINT8 *Next; Next = Mem;
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	DrvZ80Rom				= Next; Next += 0x50000;
 //	DrvZ80Rom             = (unsigned char *)0x00200000;//Next; Next += 0x50000;
@@ -259,8 +259,8 @@ int ovlInit(char *szShortName)
 	if(a==0xe172)
 	{
 		DrvZ80Ram[a-0xe000]=d;
-				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,130);	
-				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(d),80,130);	
+//				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,130);	
+//				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(d),80,130);	
 //			if(current_pcm!=d && (d==0 || (d >=0x20 && d <=0x3D)))
 			if(current_pcm!=d && (d==0 || (d >=0x20 && d <=0x3D)))
 			{
@@ -413,51 +413,11 @@ int ovlInit(char *szShortName)
 		
 		case 0x03: {
 //			BurnYM2413Write(1, d);
-/*   xxxxxxxxxx
-if(current_pcm!=d && (d==40||d==32||d==33||d==34||d==35||d==36||d==37||d==38))
-			{
-				current_pcm = d;
-				PCM_MeStop(pcmStream);
-				pcm_EndProcess(pcmStream);
-				PCM_DestroyStmHandle(pcmStream);
-				stmClose(stm);
-				char pcm_file[14];
-
-				vout(pcm_file, "%03d%s",(int)d,".PCM"); 
-				pcm_file[7]='\0';
-				PcmInfo info;
-
-				PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
-				PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
-				PCM_INFO_CHANNEL(&info) = 0x01;
-				PCM_INFO_SAMPLING_BIT(&info) = 16;
-				PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
-				PCM_INFO_FILE_SIZE(&info) = sfx_list[d].size;//SOUNDRATE*2;//0x4000;//214896;
-				
-				stm = stmOpen(pcm_file);
-				STM_ResetTrBuf(stm);
-
-				pcmStream = PCM_CreateStmHandle(&paraStream, stm);
-
-				PCM_SetPcmStreamNo(pcmStream, 1);
-				PCM_SetInfo(pcmStream, &info);
-
-				PcmWork		*work = *(PcmWork **)pcmStream;
-				PcmStatus	*st = &work->status;
-				st->need_ci = PCM_OFF;
-				STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
-				PCM_Start(pcmStream);
-			}
-*/
 			return;
 		}
 		
 		case 0x04: {
 //			BurnYM2413Write(0, d);
-/*if(d==0x40)
-			{
-while(1);
-			}*/
 			return;
 		}
 		
@@ -519,12 +479,12 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 /*static*/ void spang_decode()    { mitchell_decode(0x45670123, 0x45670123, 0x5852, 0x43); }
 /*static*/ void block_decode()    { mitchell_decode(0x02461357, 0x64207531, 0x0002, 0x01); }
 
-/*static*/ int CharPlaneOffsets[4]           = { 0x400004, 0x400000, 4, 0 };
-/*static*/ int CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
-/*static*/ int CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
-/*static*/ int SpritePlaneOffsets[4]         = { 0x100004, 0x100000, 4, 0 };
-/*static*/ int SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
-/*static*/ int SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
+/*static*/ UINT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
+/*static*/ UINT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
+/*static*/ UINT32 CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
+/*static*/ UINT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };
+/*static*/ UINT32 SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
+/*static*/ UINT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
 
 /*static*/ const unsigned char spang_default_eeprom[128] = {
 	0x00, 0x02, 0x00, 0x01, 0x01, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x01,
@@ -762,7 +722,7 @@ if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
-//	scfg.dispenbl 		 = OFF;		  // VBT à decommenter pour ne pas afficher l'écran de texte
+	scfg.dispenbl 		 = OFF;		  // VBT à decommenter pour ne pas afficher l'écran de texte
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 //	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
@@ -808,7 +768,7 @@ static void dummy(void)
 //	TVOFF;
 	SS_MAP2    = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT    = ss_font     = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
-	SS_FONT    = ss_font     = (Uint16 *)SCL_VDP2_VRAM_B0;// remttre null
+//	SS_FONT    = ss_font     = (Uint16 *)SCL_VDP2_VRAM_B0;// remttre null
 	SS_MAP      = ss_map    = (Uint16 *)NULL;
 //	SS_FONT    = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = cache       =(Uint8  *)SCL_VDP2_VRAM_A0;
@@ -839,9 +799,8 @@ static void dummy(void)
 	initSprites(352-1,240-1,0,0,-80,-16);
 
 	SprSpCmd *ss_spritePtr;
-	int i = 3;
 	
-	for (i = 3; i <nBurnSprites; i++) 
+	for (UINT32 i = 3; i <nBurnSprites; i++) 
 	{
 		ss_spritePtr				= &ss_sprite[i];
 		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
@@ -884,6 +843,11 @@ static void dummy(void)
 #endif
 	MSM6295ROM = NULL;
 	if (DrvHasEEPROM) EEPROMExit();
+
+	STM_ResetTrBuf(stm);
+	PCM_MeStop(pcmStream);
+	PCM_DestroyStmHandle(pcmStream);
+	stmClose(stm);
 
 	CZ80Context = MemEnd = DrvZ80Rom = DrvZ80Code = DrvSoundRom = DrvZ80Ram = NULL;
 	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam = NULL;
@@ -945,11 +909,6 @@ static void dummy(void)
 	{
 		map_lut[i] = ((i & 0x80)<<7) | i & 0x7f;
 	}
-
-/*	for (int i = 0; i < nInterleave; i++)
-	{
-			cpu_lut[i] = ((i + 1) * nCyclesTotal) / nInterleave;
-	}*/
 }
 
 

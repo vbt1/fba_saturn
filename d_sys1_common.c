@@ -1,3 +1,5 @@
+#define nInterleave 10
+
 /*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x30) == 0x30) {
@@ -889,8 +891,6 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 //	memset4_fast(SpriteOnScreenMap, 255, 256 * 256); plante sur saturn
 	memset(SpriteOnScreenMap, 255, 256 * 256);
-
-//	System1SpriteXOffset = 1;
 	
 	nCyclesTotal[0] = 2500000 / hz ;//3500000
 	nCyclesTotal[1] = 2500000 / hz ;//3500000
@@ -981,9 +981,7 @@ spriteCache = NULL;
 	System1BankSwitch =0;
 	System1Reset = 0;
 	
-	nCyclesDone[0] = nCyclesDone[1] = 0;
 	nCyclesTotal[0] = nCyclesTotal[1] = 0;
-//	nCyclesSegment = 0;
 
 	nextSprite=0;
 	flipscreen=0;
@@ -1208,14 +1206,11 @@ Frame functions
 ===============================================================================================*/
 int System1Frame()
 {
-	unsigned int nInterleave = 10;
-	int i;
-
 	if (System1Reset) System1DoReset();
 	MakeInputsFunction();
-	nCyclesDone[0] = nCyclesDone[1] = 0;
+	unsigned int nCyclesDone[2] = {0,0};
 	
-	for (i = 0; i < nInterleave; i++) {
+	for (unsigned int i = 0; i < nInterleave; i++) {
 		
 		// Run Z80 #1
 #ifdef CZ80

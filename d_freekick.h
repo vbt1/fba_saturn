@@ -60,6 +60,7 @@ typedef void (*RenderSprite)(INT32);
 /*static*/ UINT8 countrunbmode = 0;
 /*static*/ UINT8 pbillrdmode = 0;
 /*static*/ UINT16 *map_offset_lut = NULL;
+UINT32 sprite_number = 3;
 
 /*static*/ void DrvPaletteInit();
 

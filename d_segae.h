@@ -38,13 +38,9 @@ void SCL_SetLineParamNBG1();
 /*static*/ UINT8 DrvInput[5];
 /*static*/ UINT8 DrvDip[2];
 /*static*/ UINT8 DrvReset;
-/*static*/ UINT8 DrvRecalc;
 
 /*static*/ INT32 DrvWheel = 0;
 /*static*/ INT32 DrvAccel = 0;
-
-/*static*/ INT32 nCyclesDone, nCyclesTotal;
-/*static*/ INT32 nCyclesSegment;
 
 /*static*/ UINT8 *AllMem;
 /*static*/ UINT8 *MemEnd;

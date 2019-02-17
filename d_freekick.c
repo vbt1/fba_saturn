@@ -1,6 +1,5 @@
 #include "d_freekick.h"
 
-UINT32 sprite_number = 3;
 // Gigas / Freekick / Counter Run / Perfect Billiard for FBA, ported by vbt
 
 int ovlInit(char *szShortName)
@@ -189,15 +188,15 @@ void freekick_draw_sprite(INT32 offs)
 	// Draw tiles
 	for (INT32 offs = 0x3ff; offs >= 0; offs--)
 	{
-		INT32 code  = DrvVidRAM[offs] + ((DrvVidRAM[offs + 0x400] & 0xe0) << 3);
-		INT32 color = DrvVidRAM[offs + 0x400] & 0x1f;
+		UINT32 code  = DrvVidRAM[offs] + ((DrvVidRAM[offs + 0x400] & 0xe0) << 3);
+		UINT32 color = DrvVidRAM[offs + 0x400] & 0x1f;
 		UINT32 x = map_offset_lut[offs]; 
 
 		ss_map2[x] = color;
 		ss_map2[x+1] =code; 
 	}
 
-	for (INT32 offs = 0; offs < 0x100; offs += 4)
+	for (UINT32 offs = 0; offs < 0x100; offs += 4)
 	{
 		DrawSprite(offs);
 	}
@@ -520,15 +519,15 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvGfxDecode()
 {
-	INT32 Planes0[3] = { RGN_FRAC(0xc000, 2,3), RGN_FRAC(0xc000, 1,3), RGN_FRAC(0xc000, 0,3) };
-	INT32 XOffs0[8]  = {0, 1, 2, 3, 4, 5, 6, 7};
-	INT32 YOffs0[8]  = {STEP8(0, 8)};
+	UINT32 Planes0[3] = { RGN_FRAC(0xc000, 2,3), RGN_FRAC(0xc000, 1,3), RGN_FRAC(0xc000, 0,3) };
+	UINT32 XOffs0[8]  = {0, 1, 2, 3, 4, 5, 6, 7};
+	UINT32 YOffs0[8]  = {STEP8(0, 8)};
 
-	INT32 Planes1[3] = { RGN_FRAC(0xc000, 0,3),RGN_FRAC(0xc000, 2,3),RGN_FRAC(0xc000, 1,3) };
-	INT32 XOffs1[16] = {0, 1, 2, 3, 4, 5, 6, 7,128+0,128+1,128+2,128+3,128+4,128+5,128+6,128+7};
+	UINT32 Planes1[3] = { RGN_FRAC(0xc000, 0,3),RGN_FRAC(0xc000, 2,3),RGN_FRAC(0xc000, 1,3) };
+	UINT32 XOffs1[16] = {0, 1, 2, 3, 4, 5, 6, 7,128+0,128+1,128+2,128+3,128+4,128+5,128+6,128+7};
 
 //	INT32 YOffs1[16] = {0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 8*8, 9*8, 10*8, 11*8,12*8,13*8,14*8,15*8};
-	INT32 YOffs1[16] = {15*8, 14*8, 13*8, 12*8, 11*8, 10*8, 9*8, 8*8, 7*8, 6*8, 5*8, 4*8,3*8,2*8,1*8,0*8};
+	UINT32 YOffs1[16] = {15*8, 14*8, 13*8, 12*8, 11*8, 10*8, 9*8, 8*8, 7*8, 6*8, 5*8, 4*8,3*8,2*8,1*8,0*8};
 
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x40, DrvGfxTMP0, DrvGfxROM0);
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM1);
@@ -547,18 +546,18 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 
 	for (UINT32 i = 0; i < len; i++)
 	{
-		INT32 bit0,bit1,bit2,bit3,r,g,b;
+		UINT32 bit0,bit1,bit2,bit3,r,g,b;
 
-		bit0 = (DrvColPROM[i + len * 0] >> 0) & 0x01;
-		bit1 = (DrvColPROM[i + len * 0] >> 1) & 0x01;
-		bit2 = (DrvColPROM[i + len * 0] >> 2) & 0x01;
-		bit3 = (DrvColPROM[i + len * 0] >> 3) & 0x01;
+		bit0 = (DrvColPROM[i] >> 0) & 0x01;
+		bit1 = (DrvColPROM[i] >> 1) & 0x01;
+		bit2 = (DrvColPROM[i] >> 2) & 0x01;
+		bit3 = (DrvColPROM[i] >> 3) & 0x01;
 		r = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
 
-		bit0 = (DrvColPROM[i + len * 1] >> 0) & 0x01;
-		bit1 = (DrvColPROM[i + len * 1] >> 1) & 0x01;
-		bit2 = (DrvColPROM[i + len * 1] >> 2) & 0x01;
-		bit3 = (DrvColPROM[i + len * 1] >> 3) & 0x01;
+		bit0 = (DrvColPROM[i + len] >> 0) & 0x01;
+		bit1 = (DrvColPROM[i + len] >> 1) & 0x01;
+		bit2 = (DrvColPROM[i + len] >> 2) & 0x01;
+		bit3 = (DrvColPROM[i + len] >> 3) & 0x01;
 		g = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
 
 		bit0 = (DrvColPROM[i + len * 2] >> 0) & 0x01;
@@ -586,7 +585,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 
 /*static*/ INT32 LoadRoms()
 {
-	INT32 rom_number = 0;
+	UINT32 rom_number = 0;
 
 	countrunbmode = !strcmp(BurnDrvGetTextA(DRV_NAME), "countrnb");
 
@@ -956,7 +955,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
@@ -988,12 +987,10 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 
 	memset((Uint8 *)ss_map  ,0,0x2000);
 	memset((Uint8 *)ss_map2,0,0x2000);
-//	memset(is_fg_dirty,1,0x400);
 
 	SprSpCmd *ss_spritePtr;
-	unsigned int i = 3;
 	
-	for (i = 3; i <nBurnSprites; i++) 
+	for (unsigned int i = 3; i <nBurnSprites; i++) 
 	{
 		ss_spritePtr				= &ss_sprite[i];
 		if (pbillrdmode)
@@ -1009,7 +1006,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 //	GenericTilesExit();
 	CZetExit2();
 	ppi8255_exit();
@@ -1028,7 +1025,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	use_encrypted = 0;
 	DrvZ80Bank0 = 0;
 	DrvReset = 0;
-
+	nSoundBufferPos = 0;
 	return 0;
 }
 
@@ -1042,7 +1039,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	DrvInputs[0] = 0xff; // Active LOW
 	DrvInputs[1] = 0xff;
 
-	for (INT32 i = 0; i < 8; i++) {
+	for (UINT32 i = 0; i < 8; i++) {
 		DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
 		DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 	}
@@ -1059,11 +1056,11 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 		if (DrvDial2 < 0) DrvDial2 = 0xfc;
 	}
 
-	INT32 nInterleave = 256;
-	INT32 nCyclesTotal = nCyclesTotal = (countrunbmode) ? 6000000 / 60 : 3072000 / 60;
+	UINT32 nInterleave = 256;
+	UINT32 nCyclesTotal = nCyclesTotal = (countrunbmode) ? 6000000 / 60 : 3072000 / 60;
 
 	CZetOpen(0);
-	for (INT32 i = 0; i < nInterleave; i++) {
+	for (UINT32 i = 0; i < nInterleave; i++) {
 		CZetRun(nCyclesTotal / nInterleave);
 
 		if (i % 128 == 127)
