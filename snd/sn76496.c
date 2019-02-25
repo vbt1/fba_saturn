@@ -36,9 +36,7 @@ struct SN76496
 void SN76496Update(int Num, short* pSoundBuf, int Length)
 {
 	int i;
-	int Temp;
-
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update1                   ",12,22);
+//	int Temp;
 
 	struct SN76496 *R = &Chip0;
 	
@@ -67,14 +65,12 @@ void SN76496Update(int Num, short* pSoundBuf, int Length)
 		unsigned int Out;
 		int Left;
 
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update2                   ",12,22);
 		/* vol[] keeps track of how long each square wave stays */
 		/* in the 1 position during the sample period. */
 		Vol[0] = Vol[1] = Vol[2] = Vol[3] = 0;
 
 		for (i = 0;i < 3;i++)
 		{
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update3                   ",12,22);
 			if (R->Output[i]) Vol[i] += R->Count[i];
 			R->Count[i] -= STEP;
 			/* Period[i] is the half period of the square wave. Here, in each */
@@ -87,41 +83,30 @@ void SN76496Update(int Num, short* pSoundBuf, int Length)
 			/* wave is 1. */
 			while (R->Count[i] <= 0)
 			{
-//				char toto[50];
 				if (R->Period[i]==0)
 				{
 					R->Period[i]=50;
 				}
-//					sprintf(toto,"loop %d period %d %08X ****",R->Count[i],R->Period[i],R);
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update4                   ",12,22);
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)toto,12,32);
 				R->Count[i] += R->Period[i];
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update4 a                  ",12,22);
+
 				if (R->Count[i] > 0)
 				{
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update4 b                   ",12,22);
 					R->Output[i] ^= 1;
 					if (R->Output[i]) Vol[i] += R->Period[i];
 					{
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update4 c                  ",12,22);
 						break;
 					}
 				}
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update4 d                  ",12,22);
 				R->Count[i] += R->Period[i];
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update4 e                  ",12,22);
 				Vol[i] += R->Period[i];
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update4 f                  ",12,22);
 			}
 			if (R->Output[i]) Vol[i] -= R->Count[i];
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update4 g                  ",12,22);
 		}
 
 		Left = STEP;
 		do
 		{
 			int NextEvent;
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update5                   ",12,22);
 
 			if (R->Count[3] < Left) NextEvent = R->Count[3];
 			else NextEvent = Left;
@@ -163,37 +148,33 @@ void SN76496Update(int Num, short* pSoundBuf, int Length)
 
 			Left -= NextEvent;
 		} while (Left > 0);
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update6                   ",12,22);
 //		Out = Vol[0] * R->Volume[0] + Vol[1] * R->Volume[1] +
 //				Vol[2] * R->Volume[2] + Vol[3] * R->Volume[3];
 		Out = Vol[0] * R->Volume[0] + Vol[1] * R->Volume[1] +
 				Vol[2] * R->Volume[2] + Vol[3] * R->Volume[3];
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update7                   ",12,22);
 		if (Out > MAX_OUTPUT * STEP) Out = MAX_OUTPUT * STEP;
 
 		Out /= STEP;
 		
 		if (R->bSignalAdd) {
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update8a                   ",12,22);
 //			Temp = pSoundBuf[0] + Out;
-			Temp = pSoundBuf[0] + Out;
+			int Temp = pSoundBuf[0] + Out;
 			if (Temp > 32767) Temp = 32767;
 			if (Temp < -32768) Temp = -32768;
 //			pSoundBuf[0] = Temp;
-			pSoundBuf[0] = Temp;
-			
+//			pSoundBuf[0] = Temp;
+			*pSoundBuf++ = Temp;			
 //			Temp = pSoundBuf[1] + Out;
 //			if (Temp > 32767) Temp = 32767;
 //			if (Temp < -32768) Temp = -32768;
 //			pSoundBuf[1] = Temp;
 		} else {
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update8b                   ",12,22);
-			pSoundBuf[0] = Out;
+			*pSoundBuf++ = Out;
+//			pSoundBuf[0] = Out;
 //			pSoundBuf[1] = Out;
 		}
-//	FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496Update9                   ",12,22);		
 //		pSoundBuf += 2;
-		pSoundBuf++;
+//		pSoundBuf++;
 
 		Length--;
 	}
@@ -227,7 +208,6 @@ void SN76496Write(int Num, int Data)
 		case 2:	/* tone 1 : frequency */
 		case 4:	/* tone 2 : frequency */
 		    if ((Data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x0f) | ((Data & 0x3f) << 4);
-//				FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"SN76496 write period                  ",12,42);
 
 			R->Period[c] = R->UpdateStep * R->Register[r];
 			if (R->Period[c] == 0) R->Period[c] = R->UpdateStep;
@@ -263,9 +243,7 @@ void SN76496Write(int Num, int Data)
 
 /*static*/ void SN76496SetGain(struct SN76496 *R,int Gain)
 {
-	int i;
 	double Out;
-
 	Gain &= 0xff;
 
 	/* increase max output basing on gain (0.2 dB per step) */
@@ -274,7 +252,7 @@ void SN76496Write(int Num, int Data)
 		Out *= 1.023292992;	/* = (10 ^ (0.2/20)) */
 
 	/* build volume table (2dB per step) */
-	for (i = 0;i < 15;i++)
+	for (unsigned int i = 0;i < 15;i++)
 	{
 		/* limit volume to avoid clipping */
 		if (Out > MAX_OUTPUT / 3) R->VolTable[i] = MAX_OUTPUT / 3;
@@ -285,14 +263,13 @@ void SN76496Write(int Num, int Data)
 	R->VolTable[15] = 0;
 }
 
-/*static*/ void SN76496Init2(struct SN76496 *R, int Clock)
+/*static*/ void SN76496Init2(struct SN76496 *R, unsigned int Clock)
 {
-	int i;
-	
+	unsigned int i;
 	R->UpdateStep = (unsigned int)(((double)STEP * nBurnSoundRate * 16) / Clock);
 		
-	for (i = 0; i < 4; i++) R->Volume[i] = 0;
-	
+	R->Volume[0] = R->Volume[1] = R->Volume[2] = R->Volume[3] = 0;
+
 	R->LastRegister = 0;
 	for (i = 0; i < 8; i += 2) {
 		R->Register[i + 0] = 0x00;
@@ -320,9 +297,10 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 0) {
 	//Chip0 = (struct SN76496*)malloc(sizeof(*Chip0));
-		memset(&Chip0, 0, sizeof(Chip0));
+		memset(&Chip0, 0, sizeof(struct SN76496));
 	
 		SN76496Init2(&Chip0, Clock);
+
 		SN76496SetGain(&Chip0, 0);
 		
 		Chip0.FeedbackMask = FeedbackMask;
@@ -333,7 +311,7 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 1) {
 //		Chip1 = (struct SN76496*)malloc(sizeof(*Chip1));
-		memset(&Chip1, 0, sizeof(Chip1));
+		memset(&Chip1, 0, sizeof(struct SN76496));
 	
 		SN76496Init2(&Chip1, Clock);
 		SN76496SetGain(&Chip1, 0);
@@ -346,7 +324,7 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 2) {
 //		Chip2 = (struct SN76496*)malloc(sizeof(*Chip2));
-		memset(&Chip2, 0, sizeof(Chip2));
+		memset(&Chip2, 0, sizeof(struct SN76496));
 	
 		SN76496Init2(&Chip2, Clock);
 		SN76496SetGain(&Chip2, 0);
@@ -359,7 +337,7 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 3) {
 //		Chip3 = (struct SN76496*)malloc(sizeof(*Chip3));
-		memset(&Chip3, 0, sizeof(Chip3));
+		memset(&Chip3, 0, sizeof(struct SN76496));
 	
 		SN76496Init2(&Chip3, Clock);
 		SN76496SetGain(&Chip3, 0);
@@ -372,7 +350,7 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 4) {
 //		Chip4 = (struct SN76496*)malloc(sizeof(*Chip4));
-		memset(&Chip4, 0, sizeof(Chip4));
+		memset(&Chip4, 0, sizeof(struct SN76496));
 	
 		SN76496Init2(&Chip4, Clock);
 		SN76496SetGain(&Chip4, 0);

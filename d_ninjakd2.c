@@ -1173,10 +1173,10 @@ UINT16* tmp = (UINT16*)0x00200000;
 //		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)titi,20,60);
 	}
 
-	for (INT32 offs = 0; offs < wide * 32; offs++)
+	for (UINT32 offs = 0; offs < wide * 32; offs++)
 	{
-		INT32 sx = (offs % wide);
-		INT32 sy = (offs / wide);
+		UINT32 sx = (offs % wide);
+		UINT32 sy = (offs / wide);
 
 		INT32 ofst = (sx & 0x0f) + (sy * 16) + ((sx & 0x70) * 0x20);
 		INT32 attr  = ram[ofst * 2 + 1];

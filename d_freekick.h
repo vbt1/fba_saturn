@@ -16,14 +16,14 @@
 /*static*/ INT32 DrvFrame();
 /*static*/ INT32 DrvDraw();
 
-/*static*/ UINT8 DrvJoy1[8];
-/*static*/ UINT8 DrvJoy2[8];
+/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 
-/*static*/ UINT8 DrvInputs[2];
-/*static*/ UINT8 DrvDip[3];
-/*static*/ INT16 DrvDial1;
-/*static*/ INT16 DrvDial2;
-/*static*/ UINT8 DrvReset;
+/*static*/ UINT8 DrvInputs[2] = {0,0};
+/*static*/ UINT8 DrvDip[3] = {0,0,0};
+/*static*/ INT16 DrvDial1 = 0;
+/*static*/ INT16 DrvDial2 = 0;
+/*static*/ UINT8 DrvReset = 0;
 
 ///*static*/ UINT8 DrvRecalc;
 /*static*/ UINT8 *CZ80Context = NULL;
@@ -38,23 +38,17 @@
 /*static*/ UINT8 *DrvVidRAM = NULL;
 /*static*/ UINT8 *DrvSprRAM = NULL;
 /*static*/ UINT8 *DrvColRAM = NULL;
-/*static*/ UINT8 *DrvGfxROM0 = NULL;
-/*static*/ UINT8 *DrvGfxROM1 = NULL;
-/*static*/ UINT8 *DrvGfxTMP0 = NULL;
-/*static*/ UINT8 *DrvGfxTMP1 = NULL;
 /*static*/ UINT8 *DrvColPROM = NULL;
 /*static*/ UINT8 *MC8123Key = NULL;
-/*static*/ UINT16 *DrvPalette = NULL;
-/*static*/ UINT8 DrvZ80Bank0 = 0;
 typedef void (*RenderSprite)(INT32);
 /*static*/ RenderSprite DrawSprite;
 
-/*static*/ UINT8 nmi_enable;
-/*static*/ UINT8 flipscreen;
-/*static*/ UINT8 coin;
-/*static*/ UINT8 spinner;
-/*static*/ UINT8 ff_data;
-/*static*/ UINT16 romaddr;
+/*static*/ UINT8 DrvZ80Bank0 = 0;
+/*static*/ UINT8 nmi_enable = 0;
+/*static*/ UINT8 coin = 0;
+/*static*/ UINT8 spinner = 0;
+/*static*/ UINT8 ff_data = 0;
+/*static*/ UINT16 romaddr = 0;
 
 /*static*/ UINT8 use_encrypted = 0;
 /*static*/ UINT8 countrunbmode = 0;

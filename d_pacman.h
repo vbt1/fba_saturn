@@ -27,7 +27,6 @@
 /*static*/ UINT8 *PengoStart = NULL;
 /*static*/ UINT8 *DrvZ80ROM = NULL;
 /*static*/ UINT8 *DrvQROM = NULL;
-/*static*/ UINT8 *DrvGfxROM = NULL;
 /*static*/ UINT8 *DrvZ80RAM = NULL;
 /*static*/ UINT8 *DrvVidRAM = NULL;
 /*static*/ UINT8 *DrvColRAM = NULL;
@@ -38,10 +37,6 @@
 /*static*/ UINT16 *map_offset_lut = NULL;
 /*static*/ UINT16 *ofst_lut = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ //INT16 pBurnSoundOut[0x8000];
-///*static*/ INT16 *pAY8910Buffer[3];
-/*static*/ //UINT32 *Palette = NULL;;
-/*static*/ //UINT8 DrvRecalc = 0;
 
 /*static*/ UINT8 DrvReset = 0;
 /*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
@@ -55,19 +50,13 @@
 enum { PACMAN=0, PENGO };
 
 extern struct namco_sound *chip;
-/*static*/ INT32 game_select = 0;
-///*static*/ INT32 acitya = 0;
-
-/*static*/ //UINT8 *flipscreen = 0;
-
-/*static*/ INT32 interrupt_mode = 0;
-/*static*/ INT32 interrupt_mask = 0;
-
+/*static*/ UINT8 game_select = 0;
+/*static*/ UINT8 interrupt_mode = 0;
+/*static*/ UINT8 interrupt_mask = 0;
 /*static*/ UINT8 colortablebank = 0;
 /*static*/ UINT8 palettebank = 0;
 /*static*/ UINT8 spritebank = 0;
 /*static*/ UINT8 charbank = 0;
-/*static*/ //INT32 nPacBank = 0;
 /*static*/ UINT32 watchdog = 0;
 //------------------------------------------------------------------------------------------------------
 /*static*/ struct BurnInputInfo DrvInputList[] = {

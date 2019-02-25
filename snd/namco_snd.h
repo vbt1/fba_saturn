@@ -50,7 +50,7 @@ struct namco_sound
 	
 	INT32 update_step;
 	
-	double gain[2];
+//	double gain[2];
 //	INT32 output_dir[2];
 };
 
