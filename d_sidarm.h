@@ -49,7 +49,7 @@ SFX sfx_sidarm[96] = {
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
 
-/*static*/// UINT32 *bgmap_buf = NULL;
+/*static*/ UINT32 *bgmap_buf = NULL;
 /*static*/ UINT16 *bgmap_lut = NULL;
 /*static*/ UINT16 *remap4to16_lut = NULL;
 /*static*/ UINT16 *map_lut = NULL;  //[256];
@@ -78,16 +78,16 @@ SFX sfx_sidarm[96] = {
 #ifdef SOUND
 /*static*/ UINT8 *DrvZ80RAM1= NULL;
 #endif
-/*static*/ UINT16 *DrvPalette= NULL;
+/*static*/ //UINT16 *DrvPalette= NULL;
 /*static*/ //UINT8 DrvRecalc;
 
 /*static*/ UINT8 *bgscrollx= NULL;
 /*static*/ UINT8 *bgscrolly= NULL;
 
-/*static*/ UINT8 flipscreen=0;
-/*static*/ UINT8 soundlatch=0;
+/*static*/ //UINT8 flipscreen=0;
+/*static*/// UINT8 soundlatch=0;
 /*static*/ UINT8 starfield_enable=0;
-/*static*/ UINT8 character_enable=0;
+/*static*/ //UINT8 character_enable=0;
 /*static*/ UINT8 sprite_enable=0;
 /*static*/ UINT8 bglayer_enable=0;
 /*static*/ UINT8 bank_data=0;
