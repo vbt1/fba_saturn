@@ -1,5 +1,6 @@
 // FB Alpha Side Arms driver module
 // Based on MAME driver by Paul Leaman
+#define DEBUG 1
 #include "SEGA_INT.H"
 #include "SEGA_DMA.H"
 
@@ -119,7 +120,7 @@ int ovlInit(char *szShortName)
 		case 0xc800:
 			if(current_pcm!=data) 
 			{
-				if (data==0 || (data >=0x20 && data <=0x3D))
+				if (data==0 || (data >=0x20 && data <=0x36))
 					PlayStreamPCM(data,current_pcm);
 				current_pcm = data;
 			}
@@ -154,7 +155,7 @@ int ovlInit(char *szShortName)
 				ss_regs->dispenbl |= (starfield_enable >> 5) & 0x0001;
 				BGON = ss_regs->dispenbl;
 
-				hflop_74a = 1;
+//				hflop_74a = 1;
 				starscrollx = starscrolly = 0;
 			}
 
@@ -290,9 +291,9 @@ int ovlInit(char *szShortName)
 	starfield_enable = 0;
 	starscrollx = 0;
 	starscrolly = 0;
-	hflop_74a = 1;
-
-	memset4_fast((Uint8 *)DrvGfxROM2+0x42000,0x00,0x3E000);
+	//hflop_74a = 1;
+	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
+	memset4_fast((UINT8 *)(ss_vram+0x42000),0x00,0x3E000);
 
 	for (UINT32 i = 0; i < 0x400; i++) 
 	{
@@ -306,15 +307,15 @@ int ovlInit(char *szShortName)
 {
 	UINT8 *Next; 
 	Next						= AllMem;
-	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
+//	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
 	CZ80Context			= Next; Next += (0x1080*1);
 	DrvZ80ROM0		= Next; Next += 0x018000;
 #ifdef SOUND
 	DrvZ80ROM1		= Next; Next += 0x008000;
 #endif
-	DrvGfxROM0		= SS_CACHE;
-	DrvGfxROM1		= (UINT8 *)(SS_CACHE + 0x4000);
-	DrvGfxROM2	 	= (UINT8 *)(ss_vram+0x1100);
+//	DrvGfxROM0		= SS_CACHE;
+//	DrvGfxROM1		= (UINT8 *)(SS_CACHE + 0x4000);
+//	DrvGfxROM2	 	= (UINT8 *)(ss_vram+0x1100);
 
 	DrvStarMap		= Next; Next += 0x008000;
 //	DrvStarMap		= 0x00200000;
@@ -326,7 +327,7 @@ int ovlInit(char *szShortName)
 	AllRam			= Next;
 
 	DrvVidRAM		= Next; Next += 0x001000;
-	DrvSprBuf		= Next; Next += 0x001000;
+	DrvSprBuf			= Next; Next += 0x001000;
 	DrvSprRAM		= Next; Next += 0x001000;
 	DrvPalRAM		= Next; Next += 0x000800;
 	DrvZ80RAM0		= Next; Next += 0x002000;
@@ -357,16 +358,20 @@ int ovlInit(char *szShortName)
 
 /*static*/ void DrvGfxDecode()
 {
+	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
 	INT32 Plane0[2]  = { 4, 0 };
 	INT32 Plane1[4]  = { 0x200000 + 4, 0x200000 + 0, 4, 0 };
 	INT32 Plane2[4]  = { 0x100000 + 4, 0x100000 + 0, 4, 0 };
 	INT32 XOffs0[16] = { STEP4(0,1), STEP4(8,1), STEP4(256,1), STEP4(256+8,1) };
 	INT32 XOffs1[32] = { STEP4(0,1), STEP4(8,1), STEP4(512,1), STEP4(512+8,1), STEP4(1024,1), STEP4(1024+8,1), STEP4(1536,1), STEP4(1536+8,1) };
 	INT32 YOffs[32]  = { STEP32(0,16) };
-
+	UINT8 *DrvGfxROM1	 = (UINT8 *)(SS_CACHE + 0x4000);
+	UINT8 *DrvGfxROM0	 = (UINT8 *)SS_CACHE;
+	UINT8 *DrvGfxROM2	 = (UINT8 *)(ss_vram + 0x1100);
 	UINT8 *tmp = (UINT8*)0x00200000; 
+
 	memset4_fast(tmp,0x00,0x80000);
-// bg	
+// bg
 	memcpyl (tmp, DrvGfxROM1, 0x70000);
 
 //	memset(DrvGfxROM1,0x00,0x40000);
@@ -383,7 +388,6 @@ int ovlInit(char *szShortName)
 	}
 
 	memcpyl (DrvGfxROM1, tmp, 0x70000);
-
 	memcpyl (tmp, DrvGfxROM0, 0x04000);
 // text
 	GfxDecode4Bpp(0x0400, 2,  8,  8, Plane0, XOffs0, YOffs, 0x080, tmp, DrvGfxROM0);
@@ -397,7 +401,7 @@ int ovlInit(char *szShortName)
 		else if ((DrvGfxROM0[i]& 0x30)==0x30) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x03;
 	}	
 // sprites
-	memcpyl (tmp, DrvGfxROM2, 0x40000);
+	memcpyl (tmp, (UINT8 *)DrvGfxROM2, 0x40000);
 
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane2, XOffs0, YOffs, 0x200, tmp, DrvGfxROM2);
 
@@ -419,6 +423,10 @@ int ovlInit(char *szShortName)
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
+	UINT8 *ss_vram			 = (UINT8 *)SS_SPRAM;
+	UINT8 *DrvGfxROM1	 = (UINT8 *)(SS_CACHE + 0x4000);
+	UINT8 *DrvGfxROM2	 = (UINT8 *)(ss_vram + 0x1100);
+
 //	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"SidearmsInit       ",24,30);
 
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) 
@@ -430,7 +438,6 @@ int ovlInit(char *szShortName)
 	MemIndex();
 	{
 //		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom     ",24,30);
-
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x08000,  1, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  2, 1)) return 1;
@@ -439,7 +446,7 @@ int ovlInit(char *szShortName)
 #endif
 		if (BurnLoadRom(DrvStarMap + 0x00000,  4, 1)) return 1;
 	
-		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  5, 1)) return 1;
+		if (BurnLoadRom(SS_CACHE + 0x00000,  5, 1)) return 1;
 
 		if (BurnLoadRom(DrvGfxROM1 + 0x00000,  6, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x08000,  7, 1)) return 1;
@@ -585,7 +592,7 @@ int ovlInit(char *szShortName)
 
 	bgmap_buf = NULL;
 	bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = /*DrvPalette =*/ NULL;
-	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM0 = DrvGfxROM0 = DrvGfxROM1= DrvGfxROM2 = NULL;
+	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM0 = /*DrvGfxROM0 = DrvGfxROM1= DrvGfxROM2 =*/ NULL;
 	DrvStarMap = DrvTileMap = DrvVidRAM = DrvSprBuf = DrvSprRAM = DrvPalRAM = DrvZ80RAM0 = bgscrollx = bgscrolly = NULL;
 	BurnFree (AllMem);
 	AllMem = NULL;
@@ -603,7 +610,7 @@ int ovlInit(char *szShortName)
 	starfield_enable = 0;
 	starscrollx = 0;
 	starscrolly = 0;
-	hflop_74a = 0;
+	//hflop_74a = 0;
 	DrvReset = 0;
 
 	return 0;
@@ -851,6 +858,25 @@ z80_raise_IRQ(0);
 //-------------------------------------------------------------------------------------------------------------------------------------
 void playMusic()
 {
+	PcmWork		*work = *(PcmWork **)pcmStream;
+	PcmStatus	*st= &work->status;
+
+	if(st->play ==PCM_STAT_PLAY_ERR_STOP)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40);
+	else if (st->play ==PCM_STAT_PLAY_CREATE)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40);
+	else if (st->play ==PCM_STAT_PLAY_PAUSE)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,40);
+	else if (st->play ==PCM_STAT_PLAY_START)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,40);
+	else if (st->play ==PCM_STAT_PLAY_HEADER)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,40);
+	else if (st->play ==PCM_STAT_PLAY_TIME)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,40);
+	else if (st->play ==PCM_STAT_PLAY_END)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40);
+	else
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40);
 
     STM_ExecServer();
 
@@ -928,6 +954,7 @@ static void initColors()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
+	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 	SPR_InitSlaveSH();
 //	DMA_ScuInit();
 //    INT_ChgMsk(INT_MSK_DMA0, INT_MSK_NULL);
@@ -987,7 +1014,7 @@ static void DrvInitSaturn()
 	for (unsigned int delta=3; delta<nBurnSprites; delta++)
 	{
 //		ss_sprite[delta].charSize   = 0;
-		ss_sprite[delta].charAddr   = 0;
+//		ss_sprite[delta].charAddr   = 0;
 		ss_sprite[delta].ax   = -16;
 		ss_sprite[delta].ay   = -16;
 	} 
@@ -1126,7 +1153,8 @@ static void DrvInitSaturn()
 				UINT32 vadd_283 = 0 + y;
 
 				INT32 i = (vadd_283<<4) & 0xff0;
-				i |= (hflop_74a^(hadd_283>>8)) << 3;
+//				i |= (hflop_74a^(hadd_283>>8)) << 3;
+				i |= (1^(hadd_283>>8)) << 3;
 				i |= (hadd_283>>5) & 7;
 				UINT32 latch_374 = DrvStarMap[i + 0x3000];
 
@@ -1144,7 +1172,8 @@ static void DrvInitSaturn()
 					if ((i & 0x1f)==0x1f)
 					{
 						i  = (vadd_283<<4) & 0xff0;
-						i |= (hflop_74a^(hadd_283>>8)) << 3;
+//						i |= (hflop_74a^(hadd_283>>8)) << 3;
+						i |= (1^(hadd_283>>8)) << 3;
 						i |= (hadd_283>>5) & 7;
 						latch_374 = DrvStarMap[i + 0x3000];
 					}

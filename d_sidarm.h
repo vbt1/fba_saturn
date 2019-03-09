@@ -10,7 +10,7 @@ INT32 DrvExit();
 INT32 DrvFrame();
 UINT32 SidearmsDraw();
 void sidearms_draw_starfield(int *starfield_enable);
-void vblIn();
+//void vblIn();
 static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 unsigned char current_pcm=255;
 
@@ -21,7 +21,7 @@ SFX sfx_sidarm[96] = {
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 	{0,0,0},	{0,0,0},	
 /*032.pcm*/ {0,307974,60},	// Opening Demo
-/*033.pcm*/ {0,/*935758*/935758*3,60},	// Round 1
+/*033.pcm*/ {0,/*935758*/935758,60},	// Round 1
 /*034.pcm*/ {0,1041490*4,60},	// Round 2
 /*035.pcm*/ {0,893978,60},	// Round 3	
 /*036.pcm*/ {0,820502,60},	// Round 4
@@ -65,9 +65,9 @@ SFX sfx_sidarm[96] = {
 #ifdef SOUND
 /*static*/ UINT8 *DrvZ80ROM1= NULL;
 #endif
-/*static*/ UINT8 *DrvGfxROM0= NULL;
-/*static*/ UINT8 *DrvGfxROM1= NULL;
-/*static*/ UINT8 *DrvGfxROM2= NULL;
+/*static*/ //UINT8 *DrvGfxROM0= NULL;
+/*static*/ //UINT8 *DrvGfxROM1= NULL;
+/*static*/// UINT8 *DrvGfxROM2= NULL;
 /*static*/ UINT8 *DrvStarMap= NULL;
 /*static*/ UINT8 *DrvTileMap= NULL;
 /*static*/ UINT8 *DrvVidRAM= NULL;
@@ -95,11 +95,11 @@ SFX sfx_sidarm[96] = {
 /*static*/ UINT16 starscrollx=0;
 /*static*/ UINT16 starscrolly=0;
 
-/*static*/ INT32 hflop_74a=0;
+/*static*/// INT32 hflop_74a=0;
 
-/*static*/ INT32 enable_watchdog=0;
-/*static*/ INT32 watchdog=0;
-/*static*/ INT32 vblank=0;
+/*static*/ UINT32 enable_watchdog=0;
+/*static*/ UINT32 watchdog=0;
+/*static*/ UINT32 vblank=0;
 /*static*/ //INT32 is_whizz = 0; // uses ym2151 instead of ym2203
 /*static*/ //INT32 is_turtshipk = 0;
 

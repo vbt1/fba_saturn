@@ -1069,10 +1069,10 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 	unsigned int delta;	
 	for (delta=3; delta<nBurnSprites; delta++)
 	{
-		ss_sprite[delta].charSize   = 0;
-		ss_sprite[delta].charAddr   = 0;
-		ss_sprite[delta].ax   = 0;
-		ss_sprite[delta].ay   = 0;
+//		ss_sprite[delta].charSize   = 0;
+//		ss_sprite[delta].charAddr   = 0;
+		ss_sprite[delta].ax   = -16;
+		ss_sprite[delta].ay   = -16;
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+#define DEBUG 1
 #include "saturn_snd.h"
 #include <stdarg.h>
 PcmHn 	pcmStream;
@@ -50,6 +51,14 @@ void stmClose(StmHn fp)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifdef DEBUG
+void vout(char *string, char *fmt, ...)                                         
+{                                                                               
+   va_list arg_ptr;                                                             
+   va_start(arg_ptr, fmt);                                                      
+   vsprintf(string, fmt, arg_ptr);                                              
+   va_end(arg_ptr);                                                             
+}
+
 void errStmFunc(void *obj, Sint32 ec)
 {
 //	VTV_PRINTF((VTV_s, "S:ErrStm %X %X\n", obj, ec));
@@ -75,6 +84,16 @@ void errGfsFunc(void *obj, Sint32 ec)
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
 
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
+
+    Sint32      ret;
+    GfsErrStat  stat;
+    GFS_GetErrStat(&stat);
+    ret = GFS_ERR_CODE(&stat);
+
+	vout(texte, "ErrGfsCode %X",ret); 
+	texte[49]='\0';
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,150);
+
 	wait_vblank();
 
 	}while(1);
@@ -134,10 +153,12 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 {
 //	if(current_pcm!=d && (d==0 || (d >=0x20 && d <=0x3D)))
 //	{
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,140);	
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"        ",80,150);	
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(d),80,140);	
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(sfx_list[d].size),80,150);	
+#ifdef DEBUG
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,140);	
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"        ",80,150);	
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(d),80,140);	
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(sfx_list[d].size),80,150);	
+#endif
 
 		if(current_pcm!=0x3D)
 		{
@@ -159,7 +180,7 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 			PCM_INFO_CHANNEL(&info) = 0x01;
 			PCM_INFO_SAMPLING_BIT(&info) = 16;
 			PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
-			PCM_INFO_FILE_SIZE(&info) =sfx_list[d].size;//SOUNDRATE*2;//0x4000;//214896;
+			PCM_INFO_FILE_SIZE(&info) =sfx_list[d].size*sfx_list[d].loop;//SOUNDRATE*2;//0x4000;//214896;
 /*
 			PcmWork		*work = *(PcmWork **)pcm14[0];
 			PcmStatus	*st = &work->status;
