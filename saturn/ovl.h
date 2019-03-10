@@ -7,9 +7,9 @@ extern Uint32 *shared;
 //static int nBurnSoundLen;
 //static Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
 extern unsigned int  nSoundBufferPos;
-
+extern unsigned int nBurnSprites;
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
-void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest);
+void GfxDecode4Bpp(unsigned int num, unsigned int numPlanes, unsigned int xSize, unsigned int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 void initScrolling(Uint8 enabled,void *address);
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);

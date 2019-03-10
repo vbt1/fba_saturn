@@ -644,17 +644,6 @@ void renderSound(unsigned int *nSoundBufferPos)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void cleanSprites()
-{
-	for (unsigned int delta=3; delta<nBurnSprites; delta++)
-	{
-//		ss_sprite[delta].charSize   = 0;
-//		ss_sprite[delta].charAddr   = 0;
-		ss_sprite[delta].ax   = -16;
-		ss_sprite[delta].ay   = -16;
-	} 
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int DrvFrame()
 {
 	unsigned int nInterleave = game_type ? 16 : 32;

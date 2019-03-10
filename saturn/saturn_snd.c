@@ -23,6 +23,8 @@ void stmInit(void)
 //	STM_Init(1, 2, stm_work);
 #ifdef DEBUG
 	STM_SetErrFunc(errStmFunc, NULL);
+	GFS_SetErrFunc(errGfsFunc, NULL);
+	PCM_SetErrFunc(errPcmFunc, NULL);	
 #endif
 	grp_hd = STM_OpenGrp();
 	if (grp_hd == NULL) {
@@ -30,6 +32,9 @@ void stmInit(void)
 	}
 	STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
 	STM_SetExecGrp(grp_hd);
+
+	stm = stmOpen("000.PCM");
+	STM_ResetTrBuf(stm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 StmHn stmOpen(char *fname)
@@ -66,7 +71,33 @@ void errStmFunc(void *obj, Sint32 ec)
 	vout(texte, "ErrStm %X %X",obj, ec); 
 	texte[49]='\0';
 	do{
-	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"plante stm                         ",40,130);
+	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"plante stm                         ",40,120);
+/*
+
+		switch (state)
+	{
+		case CPUINFO_INT_INPUT_STATE + INPUT_LINE_NMI:
+	if(st->play ==PCM_STAT_PLAY_ERR_STOP)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40);
+	else if (st->play ==PCM_STAT_PLAY_CREATE)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40);
+
+enum StmErrCode {
+    STM_ERR_OK = GFS_ERR_OK, / * Normal completion * /
+    STM_ERR_CDRD = GFS_ERR_CDRD, / * CD read error * /
+    STM_ERR_CDNODISC = GFS_ERR_CDNODISC, / * CD not set * /
+    STM_ERR_FID = GFS_ERR_FID, / * File identifier invalid * /
+    STM_ERR_HNDL = GFS_ERR_HNDL, / * Handle is invalid * /
+    STM_ERR_NUM = GFS_ERR_NUM, / * The number of bytes is negative * /
+    STM_ERR_PARA = GFS_ERR_PARA, / * parameter is invalid * /
+    STM_ERR_NOHNDL = GFS_ERR_NOHNDL, / * there is no available space on the handle * /
+    STM_ERR_PUINUSE = GFS_ERR_PUINUSE, / * Pickup operation in progress * /
+    STM_ERR_TMOUT = GFS_ERR_TMOUT, / * timeout * /
+    STM_ERR_CDOPEN = GFS_ERR_CDOPEN, / * Tray is open * /
+    STM_ERR_FATAL = GFS_ERR_FATAL, / * CD is FATAL state * /
+    STM_ERR_END
+};
+*/
 
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,130);
 	wait_vblank();
@@ -92,6 +123,36 @@ void errGfsFunc(void *obj, Sint32 ec)
 
 	vout(texte, "ErrGfsCode %X",ret); 
 	texte[49]='\0';
+#if 0
+#define GFS_ERR_OK 0 / * Successful completion * /
+#define GFS_ERR_CDRD (-1) / * CD read error * /
+#define GFS_ERR_CDNODISC (-2) / * CD is not set * /
+#define GFS_ERR_CDROM (-3) / * Disk is not CD-ROM * /
+#define GFS_ERR_DIRTBL (-4) / * Invalid directory management table * /
+#define GFS_ERR_OPENMAX (-5) / * Value of maximum open number is invalid * /
+#define GFS_ERR_DIR (-6) / * The specified file is not a directory * /
+#define GFS_ERR_CDBFS (-7) / * CD block file system * /
+
+#define GFS_ERR_NONAME (-8) / * can not handle file name * /
+#define GFS_ERR_NEXIST (-9) / * The specified file does not exist * /
+#define GFS_ERR_FID (- 10) / * Invalid file identifier * /
+#define GFS_ERR_HNDL (-11) / * File handle is invalid * /
+#define GFS_ERR_SEEK (-12) / * Invalid seek position * /
+#define GFS_ERR_ORG (-13) / * Invalid reference level value * /
+#define GFS_ERR_NUM (-14) / * The number of bytes is negative * /
+#define GFS_ERR_OFS (-15) / * Invalid offset * /
+#define GFS_ERR_FBUSY (-16) / * Processing of specified file still remains * /
+#define GFS_ERR_PARA (-17) / * Invalid parameter * /
+#define GFS_ERR_BUSY (-18) / * Library function in progress * /
+#define GFS_ERR_NOHNDL (-19) / * There is no space available on the file handle * /
+#define GFS_ERR_PUINUSE (-20) / * Pickup operation in progress * /
+#define GFS_ERR_ALIGN (-21) / * Working area is not on 4-byte boundary * /
+#define GFS_ERR_TMOUT (-22) / * timeout * /
+#define GFS_ERR_CDOPEN (-23) / * Tray is open * /
+#define GFS_ERR_BFUL (-24) / * Stop reading buffer full * /
+#define GFS_ERR_FATAL (-25) / * CD is FATAL state * /
+#endif
+
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,150);
 
 	wait_vblank();
@@ -206,11 +267,6 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 
 			PCM_Start(pcmStream);
 		}
-/*		else
-		{
-			while(1);
-		}
-*/
 //	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

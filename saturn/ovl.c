@@ -1,16 +1,48 @@
 #include <stdarg.h>
 #include "SEGA_DMA.H"
+#include "SEGA_SPR.H"
 #include    "machine.h"
+
+struct SprSpCmd {                       /* Sprite Command Table             */
+    Uint16  control;                    /* control word                     */
+    Uint16  link;                       /* command link                     */
+    Uint16  drawMode;                   /* draw mode                        */
+    Uint16  color;                      /* color info.                      */
+    Uint16  charAddr;                   /* character address                */
+    Uint16  charSize;                   /* character size                   */
+    Sint16  ax;                         /* point A x                        */
+    Sint16  ay;                         /* point A y                        */
+    Sint16  bx;                         /* point B x                        */
+    Sint16  by;                         /* point B y                        */
+    Sint16  cx;                         /* point C x                        */
+    Sint16  cy;                         /* point C y                        */
+    Sint16  dx;                         /* point D x                        */
+    Sint16  dy;                         /* point D y                        */
+    Uint16  grshAddr;                   /* gouraud shading table address    */
+    Uint16  dummy;                      /* dummy area                       */
+};
+typedef struct SprSpCmd     SprSpCmd;
+extern unsigned int nBurnSprites;
+extern SprSpCmd *ss_sprite;
 
 #define TVSTAT      (*(volatile unsigned short *)0x25F80004)
 #define	RGB( r, g, b )		(0x8000U|((b) << 10)|((g) << 5 )|(r))
+//-------------------------------------------------------------------------------------------------------------------------------------
+void cleanSprites()
+{
+	for (unsigned int delta=3; delta<nBurnSprites; delta++)
+	{
+		ss_sprite[delta].ax   = -16;
+		ss_sprite[delta].ay   = -16;
+	} 
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*inline*/ /*static*/ int readbit(const unsigned char *src, int bitnum)
 {
 	return src[bitnum / 8] & (0x80 >> (bitnum % 8));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void GfxDecode4Bpp(int num, int numPlanes, int xSize, int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
+/*static*/ void GfxDecode4Bpp(unsigned int num, unsigned int numPlanes, unsigned int xSize, unsigned int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
 {
 	int c;
 //	wait_vblank();

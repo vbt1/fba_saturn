@@ -1,12 +1,7 @@
 // FB Alpha Black Tiger driver module
 // Based on MAME driver by Paul Leaman
 
-//#include "tiles_generic.h"
-//#include "z80_intf.h"
-#include "snd/burn_ym2203.h"
-//#include "bitswap.h"
 #include "d_blktiger.h"
-#include    "machine.h"
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
 //#define DEBUG_PCM 1
@@ -338,7 +333,7 @@ if(i==0)
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gfs_size              ",40,200);
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(sfx_list[data].size),80,200);
 //#endif
-	PCM_INFO_FILE_SIZE(&info) = sfx_list[data].size;//SOUNDRATE*2;//0x4000;//214896;
+	PCM_INFO_FILE_SIZE(&info) = sfx_list[data].size*10;//SOUNDRATE*2;//0x4000;//214896;
 
 					if((stm = stmOpen(pcm_file))==NULL)
 						FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"stream failed              ",40,210);
@@ -754,8 +749,6 @@ static INT32 DrvInit()
 	GFS_Load(fid, 0, (UINT8*)0x00200000, fileSize);
 
 	stmInit();
-	stm = stmOpen("000.PCM");
-	STM_ResetTrBuf(stm);
 	Set14PCM();
 
 	drawWindow(0,224,240,0,64);
@@ -903,22 +896,8 @@ static INT32 DrvFrame()
 #endif
 	}
 
-// streaming de la musique
-//	PCM_EntryNext(pcm[1]);
-//	PCM_NotifyWriteSize(pcm14[0], 8192);
-//		if(stm!=NULL)
 #ifdef PCM_MUSIC
-		{
-			STM_ExecServer();
-//	smpStmTask(stm);
-
-//			vbt_PCM_MeTask(pcm14[0]);
-			PCM_MeTask(pcm14[0]);
-//			if (STM_IsTrBufFull(stm) == TRUE) 
-			{
-				STM_ResetTrBuf(stm);
-			}
-		}
+		playMusic(pcm14[0]);
 #endif
 
 #ifdef PCM_SFX

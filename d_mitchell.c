@@ -626,8 +626,6 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	DrvDoReset();
 //-------------------------------------------------
 	stmInit();
-	stm = stmOpen("000.PCM");
-	STM_ResetTrBuf(stm);
 	SetStreamPCM();
 	PCM_Start(pcmStream);
 //-------------------------------------------------
@@ -693,8 +691,6 @@ if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 	DrvDoReset();
 //-------------------------------------------------
 	stmInit();
-	stm = stmOpen("000.PCM");
-	STM_ResetTrBuf(stm);
 	SetStreamPCM();
 	PCM_Start(pcmStream);
 //-------------------------------------------------
@@ -1051,13 +1047,7 @@ static void dummy(void)
 */
 	}
 #ifdef PCM_MUSIC
-	STM_ExecServer();
-
-	PCM_MeTask(pcmStream);
-	if (STM_IsTrBufFull(stm) == TRUE) 
-	{
-		STM_ResetTrBuf(stm);
-	}
+	playMusic(pcmStream);
 #endif
 
 	signed short *nSoundBuffer = (signed short *)0x25a20000;

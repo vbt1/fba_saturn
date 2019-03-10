@@ -2104,6 +2104,101 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
 		play=1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+
+#if 0
+typedef struct TC_TRANSFER {
+    Uint32 size;
+    void *target;
+    void *source;
+} TC_transfer;
+
+void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt)
+{
+    Uint32 msk;
+// ????
+    msk = get_imask();
+    set_imask(15);
+
+    TC_transfer tc[2];
+    DmaScuPrm prm;
+    DmaScuStatus status;
+
+	tc[0].size = cnt;
+    tc[0].source = src;
+    tc[0].target = dst;
+
+    tc[1].size = cnt;
+    tc[1].source = ((Uint32)src+(cnt-1))+1<<31;
+    tc[1].target = (Uint32)dst+(cnt-1);
+/*
+           setTransferTable((Uint16 *)VDP2_VRAM_A0, 512, (Uint16 *)(buffer), 240, 320);    
+            were_here("high level transfer");
+            DMA_ScuMemCopy((TC_TRANSFER_TABLE + 84)->target, (TC_TRANSFER_TABLE + 84)->source, (TC_TRANSFER_TABLE + 84)->size);
+ */
+    prm.dxr = (Uint32)NULL;     // no meaning in indirect mode
+    prm.dxw = ((Uint32)src);
+    prm.dxc = 0; // not matter ? sizeof();
+    prm.dxad_r = DMA_SCU_R4;
+    prm.dxad_w = DMA_SCU_W4; // W2 pour le son
+    prm.dxmod = DMA_SCU_IN_DIR;
+    prm.dxrup = DMA_SCU_KEEP;
+    prm.dxwup = DMA_SCU_KEEP;
+    prm.dxft = DMA_SCU_F_DMA;
+    prm.msk = DMA_SCU_M_DXR    |              DMA_SCU_M_DXW    ;
+
+    do {
+        DMA_ScuGetStatus(&status, DMA_SCU_CH1);
+    } while(status.dxmv == DMA_SCU_MV);
+
+    DMA_ScuSetPrm(&prm, DMA_SCU_CH1);
+    DMA_ScuStart(DMA_SCU_CH1);
+
+//	set_imask(msk);
+
+//    dma_start_flg = ON;                         /* DMAはスタートしている     */
+    set_imask(msk);                                         /* 割り込みPOP   */
+}
+
+void transfer_sprites()
+{
+//	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
+	SDMA_ScuCst(DMA_SCU_CH1,DrvSprRAM,DrvSprBuf,0x1000);
+	while(SDMA_ScuResult(DMA_SCU_CH1) != DMA_SCU_END);
+//	DMA_ScuIndirectMemCopy(DrvSprRAM,DrvSprBuf,0x1000/2);
+}
+#endif
+
+void SDMA_ScuCst(Uint32 ch, void *dst, void *src, Uint32 cnt)
+{
+    DmaScuPrm prm;                              /* 転送パラメータ            */
+                                                /*****************************/
+
+    prm.dxr = (Uint32)src;
+    prm.dxw = (Uint32)dst;
+    prm.dxc = cnt;
+    prm.dxad_r = DMA_SCU_R4;
+    prm.dxad_w = DMA_SCU_W2;
+    prm.dxmod = DMA_SCU_DIR;
+    prm.dxrup = DMA_SCU_KEEP;
+    prm.dxwup = DMA_SCU_REN;
+    prm.dxft = DMA_SCU_F_DMA;
+    prm.msk = DMA_SCU_M_DXR   |
+              DMA_SCU_M_DXW;
+
+    DMA_ScuSetPrm(&prm, ch);
+    DMA_ScuStart(ch);
+}
+
+Uint32 SDMA_ScuResult(Uint32 ch)
+{
+    DmaScuStatus status;
+
+    DMA_ScuGetStatus(&status, ch);
+        if(status.dxmv == DMA_SCU_MV)
+            return(DMA_SCU_BUSY);
+        return(DMA_SCU_END);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 /*
 sprintf broken
 	  char toto[50];

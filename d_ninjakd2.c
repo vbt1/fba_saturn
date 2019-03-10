@@ -1064,18 +1064,6 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void cleanSprites()
-{
-	unsigned int delta;	
-	for (delta=3; delta<nBurnSprites; delta++)
-	{
-//		ss_sprite[delta].charSize   = 0;
-//		ss_sprite[delta].charAddr   = 0;
-		ss_sprite[delta].ax   = -16;
-		ss_sprite[delta].ay   = -16;
-	} 
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 
 /*static*/  INT32 DrvExit()
 {

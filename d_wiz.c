@@ -935,19 +935,6 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void cleanSprites()
-{
-	unsigned int delta;	
-	for (delta=3; delta<nBurnSprites; delta++)
-	{
-		ss_sprite[delta].control	   = ( JUMP_NEXT | FUNC_NORMALSP);
-		ss_sprite[delta].charSize   = 0;
-		ss_sprite[delta].charAddr   = 0;
-		ss_sprite[delta].ax   = 0;
-		ss_sprite[delta].ay   = 0;
-	} 
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void updateSound()
 {
 	int nSample;

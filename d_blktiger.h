@@ -5,6 +5,7 @@
 #include "saturn/ovl.h"
 #include "saturn/saturn_snd.h"
 #include "raze/raze.h"
+#include "machine.h"
 
 INT32 BurnTimerUpdate(INT32 *nCycles);
 void BurnTimerEndFrame(INT32 *nCycles);

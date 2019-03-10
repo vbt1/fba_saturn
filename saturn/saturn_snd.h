@@ -4,7 +4,7 @@
 #include "sega_spr.h"
 #include "sega_scl2.h"
 #include "sega_pcm.h"
-
+#include "pcm_mem.h"
 #include "../globals.h"
 
 #ifndef _SATURN_SND_H_
@@ -57,4 +57,43 @@ extern StmHn stm;
 extern StmGrpHn grp_hd;
 
 extern SFX *sfx_list;
+
+
+
+
+
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+inline void playMusic(PcmHn hn)
+{
+#ifdef DEBUG
+	PcmWork		*work = *(PcmWork **)hn;
+	PcmStatus	*st= &work->status;
+
+	if(st->play ==PCM_STAT_PLAY_ERR_STOP)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40);
+	else if (st->play ==PCM_STAT_PLAY_CREATE)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40);
+	else if (st->play ==PCM_STAT_PLAY_PAUSE)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,40);
+	else if (st->play ==PCM_STAT_PLAY_START)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,40);
+	else if (st->play ==PCM_STAT_PLAY_HEADER)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,40);
+	else if (st->play ==PCM_STAT_PLAY_TIME)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,40);
+	else if (st->play ==PCM_STAT_PLAY_END)
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40);
+	else
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40);
+#endif
+    STM_ExecServer();
+
+	PCM_MeTask(hn);
+
+//	if (STM_IsTrBufFull(hn) == TRUE) 
+	{
+		STM_ResetTrBuf(hn);
+	}
+}
 #endif

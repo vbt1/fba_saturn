@@ -372,7 +372,7 @@ static INT32 SMSExit(void)
 static INT32 SMSFrame(void)
 {
 #ifdef GG0
-	cleanSprites();
+	cleanSpritesGG();
 #endif
 	if(running)
 	{
@@ -694,7 +694,7 @@ static void update_bg(t_vdp *vdp, int index)
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifdef GG
 #ifdef GG0
-/*static*/ void cleanSprites()
+/*static*/ void cleanSpritesGG()
 {
 
 	memset4_fast(disp_spr,0,64);
