@@ -8,6 +8,9 @@
 
 #define SAMPLE 7680L
 #define nBurnSoundLen 128
+#define nInterleave 16
+#define nCyclesTotal 3579545 / 60
+#define nSegmentLength nBurnSoundLen / nInterleave
 
 int ovlInit(char *szShortName)
 {
@@ -465,15 +468,10 @@ static int DrvExit()
 
 static int DrvFrame()
 {
-/*	if (DrvReset) {
-//		while(1);
-		DrvDoReset();
-	}
-*/
 
 	{ // Compile Inputs
 		memset (DrvInputs, 0xff, 2);
-		for (int i = 0; i < 8; i++) {
+		for (UINT32 i = 0; i < 8; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
 			if (i==6 || i==7)
 				DrvInputs[1] ^= (DrvJoy1[i] & 1) << i;
@@ -481,12 +479,9 @@ static int DrvFrame()
 				DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		}
 	}
- 
-	UINT32 nInterleave = 16;
-	UINT32 nCyclesTotal =  3579545 / 60;
+
 	UINT32 nCyclesDone = 0;
 	UINT32 nSoundBufferPos2 = 0;
-	UINT32 nSegmentLength = nBurnSoundLen / nInterleave;
 
 #ifndef RAZE
     CZetOpen(0);
@@ -517,12 +512,12 @@ static int DrvFrame()
 // Make sure the buffer is entirely filled.
 	
 //	if (pBurnSoundOut) {
-		nSegmentLength = nBurnSoundLen - nSoundBufferPos2;
-		if (nSegmentLength) 
+		int nSegmentLength2 = nBurnSoundLen - nSoundBufferPos2;
+		if (nSegmentLength2) 
 		{
 			INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
-			SN76496Update(0, pSoundBuf, nSegmentLength);
-			nSoundBufferPos += nSegmentLength;
+			SN76496Update(0, pSoundBuf, nSegmentLength2);
+			nSoundBufferPos += nSegmentLength2;
 		}	   
 		
 //	} 
@@ -540,10 +535,8 @@ static int DrvFrame()
 /*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-//	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
 	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
-//	SCL_SetColRam(SCL_NBG1,0,8,palette);
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -561,17 +554,8 @@ void initLayers(void)
 	};
  	SclConfig	scfg;
 
-//	SCL_InitConfigTb(&scfg);
 	scfg.dispenbl		= OFF;
-/*	
-	scfg.charsize		= SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
-	scfg.pnamesize	= SCL_PN1WORD;
-	scfg.flip				= SCL_PN_10BIT;
-	scfg.platesize	= SCL_PL_SIZE_1X1;
-	scfg.coltype		= SCL_COL_TYPE_16;
-	scfg.datatype	= SCL_CELL;
-	scfg.patnamecontrl =  0x000c;// VRAM B1 のオフセット 
-	scfg.plate_addr[0] = ss_map;		 */
+
 	SCL_SetConfig(SCL_NBG0, &scfg);
 	SCL_SetConfig(SCL_NBG2, &scfg);
 	
@@ -615,17 +599,10 @@ void initPosition(void)
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-//	ss_scl			= (Fixed32 *)SS_SCL;
-//	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-//	pTransDraw	= (ss_vram+0x1100);
 	file_id			= 2; // bubble bobble
-//	file_max		= getNbFiles();
 
-//	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
-//	SaturnMem = (UINT8 *)malloc(nLen);
-//	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
-//	SaturnInitMem();
+
 	ss_sprite[3].ax = 0;
 	ss_sprite[3].ay = 0;
 
@@ -635,21 +612,13 @@ void initPosition(void)
 	ss_sprite[3].drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP); //256 colors
 	ss_sprite[3].charSize    = 0x20C0;  // 256x*192y
 	
-//	initLayers();
-	
     SS_SET_N0PRIN(0);
     SS_SET_N1PRIN(6);
     SS_SET_S0PRIN(5);
 
 	initLayers();
 	initColors();
-//	initPosition();
-//	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 
-//	initSprites(256-1,192-1,0,0,0,0);
-
-//	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
-//	drawWindow(32,192,192,14,52);
 	nBurnFunction = update_input1;
 	drawWindow(0,192,192,2,66);
 	SetVblank2();

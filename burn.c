@@ -482,4 +482,4 @@ pDriver[i++] = &BurnDrvZaxxon;
 }
 
 // Application-defined rom loading function:
-int (__cdecl *BurnExtLoadRom)(unsigned char *Dest,int *pnWrote,int i, int nGap,int bXor) = NULL;
+//int (__cdecl *BurnExtLoadRom)(unsigned char *Dest,int *pnWrote,int i, int nGap,int bXor) = NULL;

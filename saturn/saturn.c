@@ -381,8 +381,8 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-	unsigned char *Mem = malloc((unsigned char *)0x90000);
-	memset(Mem,0x00,0x90000);
+	unsigned char *Mem = malloc((unsigned char *)0x9C000);
+	memset(Mem,0x00,0x9C000);
 	free(Mem);
 	Mem=NULL;
 
@@ -1389,31 +1389,6 @@ static unsigned int get_hz(void)
 		return 50;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int __cdecl SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor)
-{
-	int nRet = 0;
-	char* pszFilename;
-	struct BurnRomInfo ri;
-	BurnDrvGetRomName(&pszFilename, i, 0);
-		BurnDrvGetRomInfo(&ri, i);
-/*		char toto[100];
-		sprintf (toto,"ld %s T %d L%d",pszFilename,ri.nType&7,ri.nLen);
-		FNT_Print256_2bpp((volatile UINT8 *)SS_FONT,(UINT8 *)toto,10,(10*i)+20);
- */
-
-	int fid			= GFS_NameToId((Sint8 *)strupr(pszFilename));
-	long fileSize	= GetFileSize(fid);
-	GFS_Load(fid, 0, Dest, ri.nLen);
-	pnWrote[0] = ri.nLen;
-	wait_vblank();
-
-//		char text[100];
-//		sprintf(text,"%d %d %s %d ", fid,fileSize,pszFilename,ri.nLen);
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)text,10,(20*i)+60);
-
-	return nRet;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 static int DoInputBlank(int bDipSwitch)
 {
   int iJoyNum = 0;
@@ -1773,7 +1748,7 @@ static int DrvExit()
 	{
 		BurnDrvExit();				// Exit the driver
 	}
-	BurnExtLoadRom = NULL;
+//	BurnExtLoadRom = NULL;
 
 //	nBurnDrvSelect = 0;			// no driver selected
 	return 0;
@@ -1794,7 +1769,7 @@ static int nDrvInit(int nDrvNum)
 	char drv_file[14];
 //	DrvExit(); // Make sure exited
 	nBurnDrvSelect = nDrvNum; // set the driver number
-	BurnExtLoadRom = SaturnLoadRom;
+//	BurnExtLoadRom = SaturnLoadRom;
 
 	shared   = pDriver[nBurnDrvSelect];
 
@@ -1820,7 +1795,7 @@ static int nDrvInit(int nDrvNum)
 		BurnDrvExit(); // Exit the driver
 		return 1;
 	}
-	BurnExtLoadRom = SaturnLoadRom;
+//	BurnExtLoadRom = SaturnLoadRom;
  /*
 	ss_map = (Uint16 *)SS_MAP;
 	ss_map2= (Uint16 *)SS_MAP2;

@@ -63,7 +63,7 @@ typedef unsigned int UINT32;
 // Callbacks
 
 // Application-defined rom loading function
-extern int (__cdecl *BurnExtLoadRom)(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor);
+//extern int (__cdecl *BurnExtLoadRom)(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor);
 
 // Application-defined colour conversion function
 extern unsigned int (__cdecl *BurnHighCol) (int r, int g, int b, int i);

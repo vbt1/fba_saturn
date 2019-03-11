@@ -240,7 +240,7 @@ void stop_slave()
 		 if(SlaveInWork())
 		{
 //			 int i = 0;
-//			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SlaveInWork   yes            ",10,20);	
+//			FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"SlaveInWork   yes            ",10,20);	
 //			InitSlaveSH();
 			*( unsigned short * )0x21800000 = 0xffff;
 //			*( unsigned short * )0x21000000 = 0xffff;

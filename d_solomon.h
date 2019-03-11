@@ -36,8 +36,10 @@ void CZetRunSlave(int *nCycles);
 /*static*/ UINT8 *SolomonSpriteRam    = NULL;
 /*static*/ UINT8 *SolomonPaletteRam   = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
+#ifdef USE_IDMA
 /*static*/ UINT16 *bgmap_buf = NULL;
 /*static*/ UINT16 *bgmap2_buf = NULL;
+#endif
 
 UINT16* map_offset_lut      = NULL;
 UINT16 *cram_lut = NULL;

@@ -1,12 +1,37 @@
 // Burn - Rom Loading module
 #include "burnint.h"
-
+//-------------------------------------------------------------------------------------------------------------------------------------
+static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor)
+{
+	int nRet = 0;
+	char* pszFilename;
+	struct BurnRomInfo ri;
+	BurnDrvGetRomName(&pszFilename, i, 0);
+		BurnDrvGetRomInfo(&ri, i);
+/*
+		char toto[100];
+		sprintf (toto,"ld %s T %d L%d",pszFilename,ri.nType&7,ri.nLen);
+		FNT_Print256_2bpp((volatile UINT8 *)0x25e20000,(UINT8 *)toto,10,(10*i)+20);
+ */
+	int fid			= GFS_NameToId((Sint8 *)strupr(pszFilename));
+	long fileSize	= GetFileSize(fid);
+	GFS_Load(fid, 0, Dest, ri.nLen);
+	pnWrote[0] = ri.nLen;
+	wait_vblank();
+/*
+		char text[100];
+		sprintf(text,"%d %d %s %d ", fid,fileSize,pszFilename,ri.nLen);
+		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)text,10,(20*i)+60);
+*/
+	return nRet;
+}
 // Load a rom and separate out the bytes by nGap
 // Dest is the memory block to insert the rom into
+//-------------------------------------------------------------------------------------------------------------------------------------
 static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
 {
   int nRet=0,nLen=0;
-  if (BurnExtLoadRom==NULL) return 1; // Load function was not defined by the application
+//  if (BurnExtLoadRom==NULL) return 1; // Load function was not defined by the application
 
   // Find the length of the rom (as given by the current driver)
   {
@@ -38,7 +63,7 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
     memset(Load,0,nLen);
     // Load in the file
 //static int __cdecl SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor)
-    nRet=BurnExtLoadRom(Load,&nLoadLen,i,nGap,bXor);
+    nRet=SaturnLoadRom(Load,&nLoadLen,i,nGap,bXor);
 	
    //if (bDoPatch) ApplyPatches(Load, RomName);
     if (nRet!=0) 
@@ -71,19 +96,19 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
   else
   {
     // If no XOR, and gap of 1, just copy straight in
-    nRet=BurnExtLoadRom(Dest,NULL,i,nGap,bXor);
+    nRet=SaturnLoadRom(Dest,NULL,i,nGap,bXor);
 //    if (bDoPatch) ApplyPatches(Dest, RomName);
     if (nRet!=0) return 1;
   }
 
   return 0;
 }
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 int BurnLoadRom(unsigned char *Dest,int i,int nGap)
 {
   return LoadRom(Dest,i,nGap,0);
 }
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 int BurnXorRom(unsigned char *Dest,int i,int nGap)
 {
   return LoadRom(Dest,i,nGap,1);

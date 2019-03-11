@@ -43,7 +43,7 @@ inline void SolomonMakeInputs()
 	SolomonInput[0] = SolomonInput[1] = SolomonInput[2] = 0x00;
 
 	// Compile Digital Inputs
-	for (INT32 i = 0; i < 8; i++) {
+	for (UINT32 i = 0; i < 8; i++) {
 		SolomonInput[0] |= (SolomonInputPort0[i] & 1) << i;
 		SolomonInput[1] |= (SolomonInputPort1[i] & 1) << i;
 		SolomonInput[2] |= (SolomonInputPort2[i] & 1) << i;
@@ -73,8 +73,6 @@ INT32 SolomonDoReset()
 	for (UINT32 i = 0; i < 3; i++) {
 		AY8910Reset(i);
 	}
-
-//	HiscoreReset();
 
 	return 0;
 }
@@ -279,10 +277,6 @@ static INT32 SolomonMemIndex()
 	SolomonPaletteRam      = Next; Next += 0x00200;
 	RamEnd                 = Next;
 
-//	SolomonBgTiles         = Next; Next += 2048 * 8 * 8;
-//	SolomonFgTiles         = Next; Next += 2048 * 8 * 8;
-//	SolomonSprites         = Next; Next += 2048 * 8 * 8;
-
 	pFMBuffer					= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 	map_offset_lut			= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
 	cram_lut					= (UINT16*)Next; Next += 4096 * sizeof(UINT16);
@@ -290,8 +284,6 @@ static INT32 SolomonMemIndex()
 	bgmap_buf				= Next; Next += 0x1000 * sizeof (UINT16);//bgmap_lut + 0x20000;
 	bgmap2_buf				= Next; Next += 0x1000 * sizeof (UINT16);//bgmap_lut + 0x20000;
 #endif
-//	SolomonPalette         = (UINT32*)Next; Next += 0x00200 * sizeof(UINT32);
-
 	MemEnd                 = Next;
 
 	return 0;
@@ -325,13 +317,13 @@ INT32 SolomonInit()
 	UINT8 *SolomonBgTiles		= (UINT8 *)cache;
 	UINT8 *SolomonFgTiles		= (UINT8 *)cache+0x10000;
 	UINT8 *SolomonSprites		= &ss_vram[0x1100];
-
+	memset(SolomonTempRom, 0, 0x10000);
 	// Load Z80 #1 Program Roms
 	nRet = BurnLoadRom(SolomonZ80Rom1, 0, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(SolomonTempRom, 1, 1); if (nRet != 0) return 1;
 	memcpy(SolomonZ80Rom1 + 0x4000, SolomonTempRom + 0x4000, 0x4000);
 	memcpy(SolomonZ80Rom1 + 0x8000, SolomonTempRom + 0x0000, 0x4000);
-	memset(SolomonTempRom, 0, 0x10000);
+	memset(SolomonTempRom, 0, 0x20000);
 	nRet = BurnLoadRom(SolomonTempRom, 2, 1); if (nRet != 0) return 1;
 	memcpy(SolomonZ80Rom1 + 0xf000, SolomonTempRom, 0x1000);
 	
@@ -485,16 +477,19 @@ INT32 SolomonExit()
 
 	CZetExit2();
 
-	for (INT32 i = 0; i < 3; i++) {
+	for (UINT32 i = 0; i < 3; i++) {
 		AY8910Exit(i);
 	}
 	MemEnd = RamStart = RamEnd = SolomonZ80Rom1 = SolomonZ80Rom2 = NULL;
 	SolomonZ80Ram1 = SolomonZ80Ram2 = SolomonColourRam = SolomonVideoRam = NULL;
 	SolomonBgColourRam = SolomonBgVideoRam = SolomonSpriteRam = NULL;
 	SolomonPaletteRam = CZ80Context = NULL;
-	bgmap_buf = bgmap2_buf = map_offset_lut = cram_lut = NULL;
+#ifdef USE_IDMA
+	bgmap_buf = bgmap2_buf = NULL;
+#endif
+	map_offset_lut = cram_lut = NULL;
 
-	for (int i = 0; i < 9; i++) {
+	for (UINT32 i = 0; i < 9; i++) {
 		pAY8910Buffer[i] = NULL;
 	}
 	pFMBuffer = NULL;
@@ -506,6 +501,7 @@ INT32 SolomonExit()
 	SolomonFlipScreen = 0;
 	SolomonSoundLatch = 0;
 	SolomonReset = 0;
+	nSoundBufferPos = 0;
 	return 0;
 }
 
