@@ -8,14 +8,6 @@
 #define PCM_SFX 1
 #define PCM_MUSIC 1
 
-void vout3(char *string, char *fmt, ...)                                         
-{                                                                               
-   va_list arg_ptr;                                                             
-   va_start(arg_ptr, fmt);                                                      
-   vsprintf(string, fmt, arg_ptr);                                              
-   va_end(arg_ptr);                                                             
-}
-
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -260,99 +252,20 @@ if(i==0)
 					PCM_INFO_FILE_SIZE(&info) = pcm_info[i].size; //sfx_list[data].size;//SOUNDRATE*2;//0x4000;//214896;
 					PCM_SetInfo(pcm14[i], &info);
 
-//					PCM_SetInfo(pcm14[i], &info[i]);
 					st->play = PCM_STAT_PLAY_HEADER;
-
-// vbt remis pour vérif !!!!
-//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
- #ifdef DEBUG_PCM
-if(i==0)
-{
-					char toto[50];
-					char *titi=&toto[0];
-					titi=itoa(data);
-					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"       ",70,20+i*10);
-					FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)titi,70,20+i*10);
-}
-#endif
 				}
 #endif
 			}
 			else
 			{
-					PcmWork		*work = *(PcmWork **)pcm14[0];
-					st = &work->status;
-//					st->cnt_loop = sfx_list[data].loop;
-					st->need_ci = PCM_OFF;
-#ifdef DEBUG_PCM
-if(i==0)
-{
-					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40+i*10);
-					else if (st->play ==PCM_STAT_PLAY_CREATE)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40+i*10);
-					else if (st->play ==PCM_STAT_PLAY_PAUSE)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,40+i*10);
-					else if (st->play ==PCM_STAT_PLAY_START)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,40+i*10);
-					else if (st->play ==PCM_STAT_PLAY_HEADER)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,40+i*10);
-					else if (st->play ==PCM_STAT_PLAY_TIME)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,40+i*10);
-					else if (st->play ==PCM_STAT_PLAY_END)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40+i*10);
-					else
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
-}
-#endif
 				if(	current_pcm != data)
 				{
 					current_pcm = data;
-//					st->play = PCM_STAT_PLAY_END;
 					PCM_MeStop(pcm14[0]);
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pcm_EndProcess pcm0 ",40,20);
-
-					pcm_EndProcess(pcm14[0]);
-//					PCM_GfsReset(pcm14[0]);
-
+//					pcm_EndProcess(pcm14[0]);
 					PCM_DestroyStmHandle(pcm14[0]);
 					stmClose(stm);
-//					STM_ResetTrBuf(stm);
-					char pcm_file[14];
-
-					vout3(pcm_file, "%03d%s",data,".PCM"); 
-					PcmInfo 		info;
-
-					PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
-					PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
-					PCM_INFO_CHANNEL(&info) = 0x01;
-					PCM_INFO_SAMPLING_BIT(&info) = 16;
-					PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;
-//#ifdef DEBUG_PCM
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,70,60);
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gfs_size              ",40,200);
-//	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)itoa(sfx_list[data].size),80,200);
-//#endif
-	PCM_INFO_FILE_SIZE(&info) = sfx_list[data].size*10;//SOUNDRATE*2;//0x4000;//214896;
-
-					if((stm = stmOpen(pcm_file))==NULL)
-						FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"stream failed              ",40,210);
-
-					STM_ResetTrBuf(stm);
-
-					pcm14[0] = PCM_CreateStmHandle(&para[0], stm);
-//					PCM_MeReset(pcm14[0]);
-//STM_MovePickup(stm, 0);
-
-					PCM_SetPcmStreamNo(pcm14[0], 0);
-					PCM_SetInfo(pcm14[0], &info);
-
-					work = *(PcmWork **)pcm14[0];
-//					st->cnt_loop = sfx_list[data].loop;
-					st->need_ci = PCM_OFF;
-					STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
-					PCM_Start(pcm14[0]);
-//st->play = PCM_STAT_PLAY_TIME;
+					UpdateStreamPCM(data, &pcm14[0], &para[0]);
 				}
 			}
 		}
@@ -897,7 +810,7 @@ static INT32 DrvFrame()
 	}
 
 #ifdef PCM_MUSIC
-		playMusic(pcm14[0]);
+		playMusic(&pcm14[0]);
 #endif
 
 #ifdef PCM_SFX

@@ -627,8 +627,8 @@ void dummy()
 {
 	if (starfield_enable)
 	{
-//		ss_reg->n0_move_x = starscrollx<<16;
-//		ss_reg->n0_move_y = starscrolly<<16;
+		ss_reg->n0_move_x = starscrollx<<16;
+		ss_reg->n0_move_y = starscrolly<<16;
 	}
 
 	if (bglayer_enable) 
@@ -696,7 +696,7 @@ z80_raise_IRQ(0);
 	}
 	SidearmsDraw();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
-	playMusic(pcmStream);
+	playMusic(&pcmStream);
 
 	return 0;
 }

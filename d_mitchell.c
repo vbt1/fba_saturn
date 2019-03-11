@@ -1047,7 +1047,7 @@ static void dummy(void)
 */
 	}
 #ifdef PCM_MUSIC
-	playMusic(pcmStream);
+	playMusic(&pcmStream);
 #endif
 
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
