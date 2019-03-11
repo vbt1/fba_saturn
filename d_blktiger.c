@@ -981,8 +981,8 @@ static PcmHn createHandle(PcmCreatePara *para)
 static void Set14PCM()
 {
 //	PcmCreatePara	para[14];
-	PcmInfo 		info[14];
-	static PcmWork g_movie_work[14];
+	PcmInfo 		info[8];
+	static PcmWork g_movie_work[8];
 	PcmStatus	*st;
 
 	for (int i=0; i<8; i++)

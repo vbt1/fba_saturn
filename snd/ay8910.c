@@ -974,35 +974,3 @@ int AY8910Init(int chip, int clock, int sample_rate,
 
 	return 0;
 }
-
-int AY8910InitYM(int chip, int clock, int sample_rate,
-		read8_handler portAread, read8_handler portBread,
-		write8_handler portAwrite, write8_handler portBwrite,
-		void (*update_callback)(void))
-{
-	int val = AY8910Init(ay8910_index_ym + chip, clock, sample_rate, portAread, portBread, portAwrite, portBwrite);
-
-	AYStreamUpdate = update_callback;
-
-	if (val == 0) {
-		ym_num++;
-	}
-
-	ay8910_index_ym = num - ym_num;
-
-	return val;
-}
-
-void AY8910SetRoute(int chip, int nIndex, double nVolume, int nRouteDir)
-{
-#if defined FBA_DEBUG
-#ifdef __GNUC__ 
-	if (!DebugSnd_AY8910Initted) bprintf(PRINT_ERROR, _T("AY8910SetRoute called without init\n"));
-	if (nIndex < 0 || nIndex > 2) bprintf(PRINT_ERROR, _T("AY8910SetRoute called with invalid index %i\n"), nIndex);
-	if (chip >= num) bprintf(PRINT_ERROR, _T("AY8910SetRoute called with invalid chip %i\n"), chip);
-#endif
-#endif
-	
-//	AY8910Volumes[(chip * 3) + nIndex] = nVolume;
-//	AY8910RouteDirs[(chip * 3) + nIndex] = nRouteDir;
-}

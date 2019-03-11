@@ -64,13 +64,13 @@ INT32 SolomonDoReset()
 	z80_reset();
 #endif
 
-	for (INT32 i = 0; i < 2; i++) {
+	for (UINT32 i = 0; i < 2; i++) {
 		CZetOpen(i);
 		CZetReset();
 		CZetClose();
 	}
 
-	for (INT32 i = 0; i < 3; i++) {
+	for (UINT32 i = 0; i < 3; i++) {
 		AY8910Reset(i);
 	}
 
@@ -302,12 +302,12 @@ INT32 SolomonInit()
 	DrvInitSaturn();
 	INT32 nRet = 0, nLen;
 
-	INT32 TilePlaneOffsets[4]   = { 0, 1, 2, 3 };
-	INT32 TileXOffsets[8]       = { 0, 4, 8, 12, 16, 20, 24, 28 };
-	INT32 TileYOffsets[8]       = { 0, 32, 64, 96, 128, 160, 192, 224 };
-	INT32 SpritePlaneOffsets[4] = { 0, 131072, 262144, 393216 };
-	INT32 SpriteXOffsets[16]    = { 0, 1, 2, 3, 4, 5, 6, 7, 64, 65, 66, 67, 68, 69, 70, 71 };
-	INT32 SpriteYOffsets[16]    = { 0, 8, 16, 24, 32, 40, 48, 56, 128, 136, 144, 152, 160, 168, 176, 184 };
+	UINT32 TilePlaneOffsets[4]   = { 0, 1, 2, 3 };
+	UINT32 TileXOffsets[8]       = { 0, 4, 8, 12, 16, 20, 24, 28 };
+	UINT32 TileYOffsets[8]       = { 0, 32, 64, 96, 128, 160, 192, 224 };
+	UINT32 SpritePlaneOffsets[4] = { 0, 131072, 262144, 393216 };
+	UINT32 SpriteXOffsets[16]    = { 0, 1, 2, 3, 4, 5, 6, 7, 64, 65, 66, 67, 68, 69, 70, 71 };
+	UINT32 SpriteYOffsets[16]    = { 0, 8, 16, 24, 32, 40, 48, 56, 128, 136, 144, 152, 160, 168, 176, 184 };
 
 	// Allocate and Blank all required memory
 
@@ -511,7 +511,7 @@ INT32 SolomonExit()
 
 void SolomonRenderSpriteLayer()
 {
-	SprSpCmd *ss_spritePtr = &ss_sprite[0];
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
 
 	for (INT32 Offs = 0x80 - 4; Offs >= 0; Offs -= 4) 
 	{
@@ -531,7 +531,7 @@ void SolomonRenderSpriteLayer()
 
 inline static UINT32 CalcCol(UINT16 nColour)
 {
-	INT32 r, g, b;
+	UINT32 r, g, b;
 
 	r = (nColour >> 0) & 0x0f;
 	g = (nColour >> 4) & 0x0f;
@@ -546,7 +546,7 @@ inline static UINT32 CalcCol(UINT16 nColour)
 
 void SolomonCalcPalette()
 {
-	for (INT32 i = 0; i < 0x200; i++) 
+	for (UINT32 i = 0; i < 0x200; i++) 
 	{
 		colBgAddr[0x100 | (i / 2)] = colBgAddr[i / 2] = cram_lut[SolomonPaletteRam[i & ~1] | (SolomonPaletteRam[i | 1] << 8)];
 	}
@@ -778,7 +778,7 @@ static void DrvInitSaturn()
 
 	memset(ss_map,0,0x20000);
 
-	for (unsigned int i = 3; i <nBurnSprites; i++) 
+	for (UINT32 i = 3; i <nBurnSprites; i++) 
 	{
 		ss_sprite[i].control   = ( JUMP_NEXT | FUNC_NORMALSP);
 		ss_sprite[i].charSize  = 0x210;

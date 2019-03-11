@@ -2,6 +2,9 @@
 //#define SELECTED_CHIP 1
 //#define TWO_WORDS 1
 // based on MESS/MAME driver by David Haywood
+#define nInterleave 262
+#define nCyclesTotal 10738635 / 2 / 60
+
 Fixed32	ss_scl1[SCL_MAXLINE];
 volatile SysPort	*ss_port;
 
@@ -575,7 +578,7 @@ int ovlInit(char *szShortName)
 	DrvMainROM	 	    = (UINT8 *) 0x00200000;
 	DrvMainROMFetch= (UINT8 *) 0x00280000;
 	mc8123key           = Next; Next += 0x02000;
-	CZ80Context			= Next; Next += (0x1080*2);
+	CZ80Context			= Next; Next += (0x1080*1);
 
 	AllRam				= Next;
 	DrvRAM			    = Next; Next += 0x10000;
@@ -588,11 +591,6 @@ int ovlInit(char *szShortName)
 
 	segae_vdp_cram[1]	= Next; Next += 0x20;
 	segae_vdp_regs[1]	= Next; Next += 0x20;
-
-//	cache_bitmap		= Next; Next += ( (16+256+16) * 192+17 ) + 0x0f; /* 16 pixels either side to simplify drawing + 0xf for alignment */
-
-//	DrvPalette			= (UINT32*)Next; Next += 0x040 * sizeof(UINT32);
-//	Palette			    = (UINT32*)Next; Next += 0x040 * sizeof(UINT32);
 
 	RamEnd			= Next;
 	
@@ -637,7 +635,6 @@ int ovlInit(char *szShortName)
 
  	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
  	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
-
 	return 0;
 }
 
@@ -735,11 +732,9 @@ int ovlInit(char *szShortName)
 
 /*static*/ INT32 DrvFrame()
 {
-	UINT32 nInterleave = 262;
 //	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
 	DrvMakeInputs();
 
-	UINT32 nCyclesTotal = 10738635 / 2 / 60;
 	UINT32 nCyclesDone = 0;
 	currentLine = 0;
 	CZetOpen(0);
@@ -852,14 +847,8 @@ int ovlInit(char *szShortName)
 
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
-//	CZetMapMemory(DrvMainROM, 0x0000, 0x7fff, MAP_ROM);
-	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM + 0x0000);
-	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM + 0x0000);
-
-//	CZetMapMemory(DrvRAM, 0xc000, 0xffff, MAP_RAM);
-	CZetMapArea(0xc000, 0xffff, 0, DrvRAM);
-	CZetMapArea(0xc000, 0xffff, 1, DrvRAM);
-	CZetMapArea(0xc000, 0xffff, 2, DrvRAM);
+	CZetMapMemory(DrvMainROM, 0x0000, 0x7fff, MAP_ROM);
+	CZetMapMemory(DrvRAM, 0xc000, 0xffff, MAP_RAM);
 
 	if (mc8123) {
 		CZetMapArea2(0x0000, 0x7fff, 2, DrvMainROMFetch, DrvMainROM);
@@ -875,12 +864,7 @@ int ovlInit(char *szShortName)
 	SN76489Init(0, 10738635 / 3, 0);
 	SN76489Init(1, 10738635 / 3, 1);
 
-//	SN76496SetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
-//	SN76496SetRoute(1, 0.50, BURN_SND_ROUTE_BOTH);
-
-//	GenericTilesInit();
-
-	for (INT32 i = 0; i < 0x40; i++) 
+	for (UINT32 i = 0; i < 0x40; i++) 
 	{
 		colAddr[i] = colBgAddr[i] = colBgAddr[i+256] = cram_lut[i];
 	}
@@ -1137,7 +1121,6 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 				ss_spritePtr[INV-x].ax	= -16;
 				ss_spritePtr[INV-x].ay	= yp;
 			}
-
 			return;
 		}
 		unsigned int inv_delta=INV-delta;
@@ -1233,9 +1216,9 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_map_lut()
 {
-	unsigned int row,column;
+	UINT32 row,column;
 
-	for (int i = 0; i < 0x800;i++) 
+	for (UINT32 i = 0; i < 0x800;i++) 
 	{
 		row = i & 0x7C0;
 		column = (i>>1) & 0x1F;
@@ -1249,12 +1232,11 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_name_lut()
 {
-	unsigned int i, j;
-	for(j = 0; j < 0x10000; j++)
+	for(UINT32 j = 0; j < 0x10000; j++)
 	{
-		i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
-		unsigned int flip = (i >> 9) & 3;
-		unsigned int pal = (i >> 11) & 1;
+		UINT32 i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
+		UINT32 flip = (i >> 9) & 3;
+		UINT32 pal = (i >> 11) & 1;
 #ifdef TWO_WORDS
 /*
 Bit 15 - 13: Unused
@@ -1264,10 +1246,10 @@ Bit 10: Vertical Flip Flag
 Bit 09: Horizontal Flip Flag
 Bit 08 - 00 : Pattern Index 
 */
-		unsigned int priority = (i >> 12) & 1;
+		UINT32 priority = (i >> 12) & 1;
 		name_lut[j] = (flip << 14 | priority << 13 | pal);
 #else
-		unsigned int name = (i & 0x1FF);
+		UINT32 name = (i & 0x1FF);
 		name_lut[j] = (pal << 12 | flip << 10 | name);
 #endif
 	}
@@ -1276,11 +1258,10 @@ Bit 08 - 00 : Pattern Index
 /*static*/ void make_bp_lut(void)
 {
 //	bp_lut = (UINT32 *)malloc(0x10000*sizeof(UINT32));
-    unsigned int i, j;
-    for(j = 0; j < 0x10000; j++)
+    for(UINT32 j = 0; j < 0x10000; j++)
     {
         UINT32 row = 0;
-        i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
+        UINT32 i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
 
         if(i & 0x8000) row |= 0x20000000;
         if(i & 0x4000) row |= 0x02000000;
@@ -1304,11 +1285,11 @@ Bit 08 - 00 : Pattern Index
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_cram_lut(void)
 {
-    for(unsigned int j = 0; j < 0x40; j++)
+    for(UINT32 j = 0; j < 0x40; j++)
     {
-        int r = (j >> 0) & 3;
-        int g = (j >> 2) & 3;
-        int b = (j >> 4) & 3;
+        UINT32 r = (j >> 0) & 3;
+        UINT32 g = (j >> 2) & 3;
+        UINT32 b = (j >> 4) & 3;
         r  = (r << 3) | (r << 1) | (r >> 1);
         g = (g << 3) | (g << 1) | (g >> 1);
         b = (b << 3) | (b << 1) | (b >> 1);

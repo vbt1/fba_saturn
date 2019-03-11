@@ -335,8 +335,8 @@ static void pcm_Wait(int cnt);
 static Uint8 GetComBlockAdr(void);
 static Uint16 ChgPan(SndPan pan);
 
-PcmHn 	pcm14[14];
-PcmCreatePara	para[14];
+PcmHn 	pcm14[8];
+PcmCreatePara	para[8];
 
 //---------------------------------------------------------------------------------------------------------------
 //PcmInfo 		info[14];

@@ -296,14 +296,14 @@ void Cz80_Init(cz80_struc *CPU)
 /*--------------------------------------------------------
 	CPUŽÀs
 --------------------------------------------------------*/
-
+/*
 #define INT_DIGITS 19
 char *itoa2(i)
      int i;
 {
-  /* Room for INT_DIGITS digits, - and '\0' */
+  // Room for INT_DIGITS digits, - and '\0' 
   static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  char *p = buf + INT_DIGITS + 1;	// points to terminating '\0' 
   if (i >= 0) {
     do {
       *--p = '0' + (i % 10);
@@ -311,7 +311,7 @@ char *itoa2(i)
     } while (i != 0);
     return p;
   }
-  else {			/* i < 0 */
+  else {			// i < 0 
     do {
       *--p = '0' - (i % 10);
       i /= 10;
@@ -320,7 +320,7 @@ char *itoa2(i)
   }
   return p;
 }
-
+*/
 
 
 

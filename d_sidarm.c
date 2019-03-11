@@ -530,19 +530,15 @@ int ovlInit(char *szShortName)
 	CZetClose();
 	CZetExit2();
 #endif
-//	if (is_whizz) {
-//		BurnYM2151Exit();
-//	} else {
-//		BurnYM2203Exit();
-//	}
+
 	STM_ResetTrBuf(stm);
 	PCM_MeStop(pcmStream);
 	PCM_DestroyStmHandle(pcmStream);
 	stmClose(stm);
 
 	bgmap_buf = NULL;
-	bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = /*DrvPalette =*/ NULL;
-	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM0 = /*DrvGfxROM0 = DrvGfxROM1= DrvGfxROM2 =*/ NULL;
+	bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = NULL;
+	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM0 = NULL;
 	DrvStarMap = DrvTileMap = DrvVidRAM = DrvSprBuf = DrvSprRAM = DrvPalRAM = DrvZ80RAM0 = bgscrollx = bgscrolly = NULL;
 	BurnFree (AllMem);
 	AllMem = NULL;
