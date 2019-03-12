@@ -26,7 +26,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int DrvInit();
 /*static*/ void make_cram_lut(void);
 /*static*/ void DrvCalcPalette();
-/*static*/ Uint16 cram_lut[32768*2];
+/*static*/ Uint16 *cram_lut; //[32768*2];
 
 /*static*/ unsigned char *Mem                 = NULL;
 /*static*/ unsigned char *MemEnd              = NULL;

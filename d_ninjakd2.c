@@ -639,13 +639,13 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 	DrvZ80ROM0				= Next; Next += 0x050000;
 //	DrvZ80ROM1				= Next; Next += 0x020000;
-	DrvGfxROM4Data1		= Next; Next += 0x040000;
+	DrvGfxROM4Data1		= Next; Next += 0x050000;
 
 	DrvGfxROM0	 	= (UINT8 *)cache;// fg //Next; Next += 0x010000;
 	DrvGfxROM1		= (UINT8 *)(ss_vram+0x1100); // sprites //(UINT8*)cache+0x010000;//Next; Next += 0x080000;
 	DrvGfxROM2	 	= (UINT8 *)cache+0x08000;// bg1 //Next; Next += 0x100000;
 	DrvGfxROM3	 	= (UINT8 *)cache+0x28000;//bg2  //Next; Next += 0x100000;
-	DrvGfxROM4		= (UINT8 *)cache+0x48000;//bg3 // Next; Next += 0x100000;
+	DrvGfxROM4		= (UINT8 *)cache+0x58000;//bg3 // Next; Next += 0x100000;
 /*
 	DrvZ80Key	= Next; Next += 0x002000;
 
@@ -656,7 +656,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	AllRam			= Next;
 
 	DrvZ80RAM0	= 0x2F0000;//Next; Next += 0x001a00;
-//	DrvZ80RAM1	= 0x2F1a00;//Next; Next += 0x000800; // vbt : récuperer ces 0x800 de ram
+//	DrvZ80RAM1	= 0x2F1a00;//Next; Next += 0x000800; // vbt : r?cuperer ces 0x800 de ram
 	DrvSprRAM	= 0x2F2200;//Next; Next += 0x000600;
 	DrvPalRAM	= 0x2F2800;//Next; Next += 0x000800;
 	DrvFgRAM	= 0x2F3000;//Next; Next += 0x000800;
@@ -664,7 +664,18 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	DrvBgRAM	= 0x2F5800;//Next; Next += 0x002000;
 	DrvBgRAM1	= 0x2F7800;//Next; Next += 0x002000;
 	DrvBgRAM2	= 0x2F9800;//Next; Next += 0x002000;
+/*
+	DrvZ80RAM0	= Next; Next += 0x001a00;
+//	DrvZ80RAM1	= Next; Next += 0x000800; // vbt : récuperer ces 0x800 de ram
 
+	DrvSprRAM	= Next; Next += 0x000600;
+	DrvPalRAM	= Next; Next += 0x000800;
+	DrvFgRAM	= Next; Next += 0x000800;
+	DrvBgRAM0	= Next;
+	DrvBgRAM	= Next; Next += 0x002000;
+	DrvBgRAM1	= Next; Next += 0x002000;
+	DrvBgRAM2	= Next; Next += 0x002000;
+*/
 //	soundlatch	= Next; Next += 0x000001;
 //	flipscreen	= Next; Next += 0x000001;
 
@@ -847,11 +858,20 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 		if (BurnLoadRom(tmp + 0x10000, 26, 1)) return 1;
 		if (BurnLoadRom(tmp + 0x20000, 27, 1)) return 1;
 		if (BurnLoadRom(tmp + 0x30000, 28, 1)) return 1;
-//		if (BurnLoadRom(tmp + 0x40000, 29, 1)) return 1;
+		if (BurnLoadRom(tmp + 0x40000, 29, 1)) return 1;
 //		if (BurnLoadRom(tmp + 0x50000, 30, 1)) return 1;
 
 //		DrvGfxDecode((UINT8*)tmp, 0x60000, 3);
 		DrvGfxDecode((UINT8*)tmp, 0x40000, 3);
+
+		for (UINT32 i=0;i<0x40000;i++ )
+		{
+			if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
+			else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
+
+			if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
+			else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
+		}
 /*
 		memset(DrvGfxROM0,0x00,0x60000);
 */
@@ -951,7 +971,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	scfg.plate_addr[1] = (Uint32)ss_map3;
 	scfg.plate_addr[2] = (Uint32)ss_map3;
 	scfg.plate_addr[3] = (Uint32)ss_map3;
-	scfg.dispenbl      = OFF;
+//	scfg.dispenbl      = OFF;
 
 	SCL_SetConfig(SCL_NBG3, &scfg);
 
@@ -998,15 +1018,15 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;		    // fg
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x1000;			// bg0
 	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
-	ss_map3						=(Uint16 *)NULL;//SCL_VDP2_VRAM_B1+0xA000;			// bg2
+	ss_map3						=(Uint16 *)SCL_VDP2_VRAM_B1+0xa000;			// bg2
 
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	SS_SET_S0PRIN(4);
 	SS_SET_N0PRIN(5);
-	SS_SET_N2PRIN(6);
+	SS_SET_N2PRIN(7);
 	SS_SET_N1PRIN(3);
-	SS_SET_N3PRIN(7);
+	SS_SET_N3PRIN(6);
 	initPosition();
 
 		initColors();
@@ -1129,7 +1149,7 @@ UINT16* tmp = (UINT16*)0x00200000;
 
 	if(previous_bank[sel]!=(((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5))		)
 	{
-		previous_bank[sel] = 0; //(((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5));
+		previous_bank[sel] = (((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5));
 //				previous_bank[sel] = 0;
 //				previous_bank[sel] = 0x400;
 //0x800*128= position tile à 0x800
@@ -1143,11 +1163,10 @@ UINT16* tmp = (UINT16*)0x00200000;
 				memcpy(rom,(UINT8*)0x00200000+(previous_bank[sel]*128),0x20000);
 				break;
 			case 1:
-//				memcpy(rom,(UINT8*)0x00270000+(previous_bank[sel]*128),0x20000);
-				memcpy(rom,(UINT8*)0x00270000+(previous_bank[sel]*128),0x40000);
+				memcpy(rom,(UINT8*)0x00270000+(previous_bank[sel]*128),0x30000);
 				break;
 			case 2:
-//				memcpy(rom,(UINT8*)DrvGfxROM4Data1+(previous_bank[sel]*128),0x20000);
+				memcpy(rom,(UINT8*)DrvGfxROM4Data1+(previous_bank[sel]*128),0x20000);
 				break;
 		}
 
@@ -1185,10 +1204,11 @@ UINT16* tmp = (UINT16*)0x00200000;
 				ss_font[offs2+1] = (0x1400+((code)<<2));
 				break;
 			case 2:
-/*				previous_bank[sel] = 0;
+//				previous_bank[sel] = 0;
 				code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
 				ss_map3[offs2] = (attr & 0x0f);
-				ss_map3[offs2+1] = (0x2400+((code)<<2));*/
+//				ss_map3[offs2+1] = (0x2400+((code)<<2)); // si 0x20000 pour bg2
+				ss_map3[offs2+1] = (0x2C00+((code)<<2));
 				break;
 		}
 	}
@@ -1288,7 +1308,7 @@ UINT16* tmp = (UINT16*)0x00200000;
 {
 	draw_robokid_bg_layer(0, DrvBgRAM0, DrvGfxROM2, 0, 0);
 	draw_robokid_bg_layer(1, DrvBgRAM1, DrvGfxROM3, 0, 1);
-	draw_robokid_bg_layer(2, DrvBgRAM1, DrvGfxROM4, 0, 1);
+	draw_robokid_bg_layer(2, DrvBgRAM2, DrvGfxROM4, 0, 1);
 
 	draw_sprites(0x200, 1);
 

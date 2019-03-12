@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 57
+#define NB_DRV 58
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -132,7 +132,7 @@ void BurnDrvAssignList()
 
 	static struct BurnDriver BurnDrvSolomon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvSidearms = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvRobokid = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvRobokid = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -398,9 +398,9 @@ BurnDrvSidearms.szShortName="sidarm";
 BurnDrvSidearms.szFullNameA="Side Arms - Hyper Dyne (World, 861129)";
 BurnDrvSidearms.szParent=NULL;	
 
-//BurnDrvRobokid.szShortName="robokid";
-//BurnDrvRobokid.szFullNameA="Atomic Robo-kid (World, Type-2)";
-//BurnDrvRobokid.szParent="ninkd2";	
+BurnDrvRobokid.szShortName="robokid";
+BurnDrvRobokid.szFullNameA="Atomic Robo-kid (World, Type-2)";
+BurnDrvRobokid.szParent="ninkd2";	
 
 //BurnDrvFM.szShortName="fm";
 //BurnDrvFM.szFullNameA="FM Test Driver";
@@ -414,7 +414,7 @@ pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvMSX_1942;
-//pDriver[i++] = &BurnDrvRobokid;
+pDriver[i++] = &BurnDrvRobokid;
 //pDriver[i++] = &BurnDrvGnga;
 //pDriver[i++] = &BurnDrvOpaopa;
 //pDriver[i++] = &BurnDrvKungfut;

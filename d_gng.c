@@ -89,7 +89,7 @@ struct BurnDriver nBurnDrvGnga = {
 	DrvTiles               = (unsigned char *)SCL_VDP2_VRAM_B1;//Next; Next += 0x400 * 16 * 16;
 	DrvSprites             = ss_vram+0x1100;//Next; Next += 0x400 * 16 * 16;
 	//DrvPalette             = (unsigned int*)Next; Next += 0x00100 * sizeof(unsigned int);
-
+	cram_lut				= Next; Next += 65536*2;
 	MemEnd                 = Next;
 
 	return 0;

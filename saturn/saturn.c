@@ -3,7 +3,7 @@
 //#include "sc_saturn.h"
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR  0x060BE000
+#define OVLADDR  0x060C8000
 #define LOWADDR 0x00200000
 //#define DEBUG_DRV 1
 volatile SysPort	*__port;
@@ -381,8 +381,8 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-	unsigned char *Mem = malloc((unsigned char *)0x9C000);
-	memset(Mem,0x00,0x9C000);
+	unsigned char *Mem = malloc((unsigned char *)0xA6000);
+	memset(Mem,0x00,0xA6000);
 	free(Mem);
 	Mem=NULL;
 
@@ -479,9 +479,9 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 					run_fba_emulator();
 					loaded[0] = 0;
 					modified[0] = 1;
-
+#ifdef HEAP_WALK
 	 heapWalk();
-
+#endif
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"A:Help",12,201);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"C:Credits",127,201);
 
@@ -511,9 +511,9 @@ static void display_menu(void)
 
 //	sc_init();
 //	the_loop = 1;
-
+#ifdef HEAP_WALK
 	heapWalk();
-
+#endif
 	unsigned int current_page = 1,m;
 	unsigned char modified = 1;
 	do
@@ -2197,7 +2197,7 @@ int vspfunc(char *format, ...)
 */
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-#if 1
+#ifdef HEAP_WALK
 extern UINT32  end;
 extern UINT32  __malloc_free_list;
 extern UINT32  _sbrk(int size);
