@@ -44,9 +44,9 @@ int BurnDrvGetDIPInfo(struct BurnDIPInfo* pdi, unsigned int i)
 // Init game emulation (loading any needed roms)
 int BurnDrvInit()
 {
-	if (nBurnDrvSelect >= nBurnDrvCount) {
+/*	if (nBurnDrvSelect >= nBurnDrvCount) {
 		return 1;
-	}
+	}*/
 	return pDriver[nBurnDrvSelect]->Init();	// Forward to drivers function
 }
 

@@ -17,7 +17,7 @@ CCFLAGS2 = -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args
 #CCOVLFLAGS = -g -m2 -mrenesas  -std=gnu99 -Wfatal-errors -Os -D_SH -DMODEL_S -c
 # pour asm 
 #CCOVLFLAGS = -S -fverbose-asm -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
-CCOVLFLAGS = -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
+CCOVLFLAGS =  -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
 #LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles  -nostdlib
 
@@ -26,9 +26,7 @@ TARGET1  = root/sl.bin
 LDFILE	 = ./$(TARGET:.coff=.lnk)
 MPFILE     = $(TARGET:.coff=.maps)
 LDFLAGS = -m2 -O2 -Xlinker -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
-#SRCS       = saturn/iapetus/cd/cd.c  burn.c load.c saturn/font.c saturn/file.c saturn/saturn.c saturn/low.s saturn/sc_saturn_vbt.c
-SRCS       = saturn/iapetus/cd/cd.c  saturn/low.s burn.c saturn/font.c saturn/file.c saturn/saturn.c 
-#OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o saturn/maths.o $(SRCS:.c=.o)
+SRCS       = saturn/low.s burn.c saturn/font.c saturn/file.c saturn/saturn.c 
 OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 
 OVLIMG                 = root/img.coff
@@ -208,7 +206,7 @@ OVLWIZ                = root/d_wiz.coff
 OVLWIZ1              = root/d_wiz.bin
 MPOVLWIZFILE    = $(OVLWIZ:.coff=.maps)
 LDOVLWIZFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLWIZFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLWIZ         = d_wiz.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c
+SRCOVLWIZ         = d_wiz.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c saturn/saturn_ext.c
 OBJOVLWIZ         = $(SRCOVLWIZ:.c=.o)
 
 OVLSLPFGHT                = root/d_slpfgh.coff
@@ -238,7 +236,7 @@ OVLSEGAE                 = root/d_segae.coff
 OVLSEGAE1               = root/d_segae.bin
 MPOVLSEGAEFILE    = $(OVLSEGAE:.coff=.maps)
 LDOVLSEGAEFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSEGAEFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c
+SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c saturn/saturn_ext.c
 OBJOVLSEGAE         = $(SRCOVLSEGAE:.c=.o)
 
 OVLSOLOMN                = root/d_solomn.coff
@@ -252,7 +250,7 @@ OVLSIDARM                 = root/d_sidarm.coff
 OVLSIDARM1               = root/d_sidarm.bin
 MPOVLSIDARMFILE    = $(OVLSIDARM:.coff=.maps)
 LDOVLSIDARMFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSIDARMFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSIDARM         = d_SIDARM.c czet.c cz80/cz80.c saturn/ovl.c load.c saturn/saturn_snd.c
+SRCOVLSIDARM         = d_SIDARM.c czet.c cz80/cz80.c saturn/ovl.c load.c saturn/saturn_snd.c saturn/saturn_ext.c
 OBJOVLSIDARM         = $(SRCOVLSIDARM:.c=.o)
 
 OVLNINKD2                 = root/d_ninkd2.coff
@@ -266,7 +264,6 @@ OBJOVLNINKD2         = $(SRCOVLNINKD2:.c=.o)
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
-../../SBL6/SEGALIB/LIB/elf/sega_stm.a \
 ../../SBL6/SEGALIB/LIB/elf/sega_gfs.a \
 ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a \
 ../../SBL6/SEGALIB/SPR/vbtelf1/spr_slv.o \
@@ -278,9 +275,10 @@ LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
 ../../SBL6/SEGALIB/PCM/pcm_gfs.o \
  cdc/cdcrep.a
 
- LIBSTM = ../../SBL6/SEGALIB/PCM/pcm_stm.o ../../SBL6/SEGALIB/LIB/elf/sega_stm.a
+ LIBSTM = ../../SBL6/SEGALIB/PCM/pcm_stm.o ../../SBL6/SEGALIB/LIB/elf/sega_stm.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_dma.a
 
 LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_dma.a
+
 all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \
      $(OVLHIGEMARU) $(OVLHIGEMARU1) $(OVLPKUNW) $(OVLPKUNW1) \

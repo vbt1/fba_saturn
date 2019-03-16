@@ -829,7 +829,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 				tmp[i] = 0x00;
 		}
 
-		memset(DrvGfxROM0,0x00,0x80000);
+//		memset(DrvGfxROM0,0x00,0x80000); // inutile
 //DrvGfxROM2
 		tmp = (UINT8*)0x00200000;
 		if (BurnLoadRom((UINT8*)tmp + 0x00000, 10, 1)) return 1;
@@ -851,7 +851,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 			else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
 		}
 
-		memset(DrvGfxROM0,0x00,0x70000);
+//		memset(DrvGfxROM0,0x00,0x70000);  on vire
 //DrvGfxROM4 trouver 400k de ram !!!
 		tmp = (UINT8*)DrvGfxROM4Data1;
 		if (BurnLoadRom(tmp + 0x00000, 25, 1)) return 1;
@@ -862,9 +862,9 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 //		if (BurnLoadRom(tmp + 0x50000, 30, 1)) return 1;
 
 //		DrvGfxDecode((UINT8*)tmp, 0x60000, 3);
-		DrvGfxDecode((UINT8*)tmp, 0x40000, 3);
+		DrvGfxDecode((UINT8*)tmp, 0x50000, 3);
 
-		for (UINT32 i=0;i<0x40000;i++ )
+		for (UINT32 i=0;i<0x50000;i++ )
 		{
 			if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
 			else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
@@ -886,7 +886,7 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 			if ((DrvGfxROM0[i]& 0xf0)       ==0x00)DrvGfxROM0[i] = 0xf0 | DrvGfxROM0[i] & 0x0f;
 			else if ((DrvGfxROM0[i]& 0xf0)==0xf0) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x0f;
 		}
-		memset(DrvGfxROM2,0x00,0x70000);
+//		memset(DrvGfxROM2,0x00,0x70000); // inutile
 
 
 //		DrvGfxDecode(DrvGfxROM0, 0x08000, 0); // deja du 4bpp !!!

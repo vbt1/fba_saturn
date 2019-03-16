@@ -89,10 +89,7 @@ int ovlInit(char *szShortName)
 		r = (r << 4) | r;
 		g = (g << 4) | g;
 		b = (b << 4) | b;
-		r >>= 3;
-		g >>= 3;
-		b >>= 3;
-        cram_lut[j] =RGB(r,g,b);
+        cram_lut[j] =BurnHighCol(r,g,b,0);
     }
 
 	j=0;
@@ -101,13 +98,12 @@ int ovlInit(char *szShortName)
 		for (int mx = 0; mx < 64; mx+=2) 
 		{
 			map_offset_lut[j] = (mx|(my<<6));
+			ss_map[map_offset_lut[j]+0x40] =  0x00;
+			ss_map[map_offset_lut[j]+0x41] =  0x01;
 			j++;
 		}
 	}
 }
-
-
-
 
 /*static*/ unsigned char __fastcall NewsRead(unsigned short a)
 {
@@ -325,6 +321,10 @@ int ovlInit(char *szShortName)
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
 	scfg.plate_addr[0] = (Uint32)ss_map;
+	scfg.plate_addr[1] = (Uint32)ss_map;
+	scfg.plate_addr[2] = (Uint32)ss_map;
+	scfg.plate_addr[3] = (Uint32)ss_map;
+
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
 	scfg.dispenbl 		 = OFF;
@@ -378,7 +378,6 @@ int ovlInit(char *szShortName)
 #ifdef CACHE
 	memset(fg_dirtybuffer,1,1024);
 #endif
-
 	SS_SET_N0PRIN(7);
 	SS_SET_N2PRIN(5);
 	SS_SET_N1PRIN(4);
@@ -467,6 +466,10 @@ int ovlInit(char *szShortName)
 			unsigned int x = map_offset_lut[TileIndex];
 			ss_map[x] = Colour;
 			ss_map[x+1] =  Code;
+
+			ss_map[x+0x40] =  10;
+			ss_map[x+0x41] =  0x01;
+
 #ifdef CACHE
 		}
 #endif
@@ -510,6 +513,5 @@ int ovlInit(char *szShortName)
 		nSoundBufferPos=0;
 	}
 	SPR_WaitEndSlaveSH();  
-
 	return 0;
 }

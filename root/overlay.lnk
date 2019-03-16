@@ -44,11 +44,9 @@ SECTIONS {
 	.bss ALIGN(4) (NOLOAD):			
 	{
 		__bstart = . ;
-		_bss_start = . ;
 		root/sl.coff (.bss)
 		root/sl.coff ("COMMON")
 		. = ALIGN(4);
-		_bss_end = . ;
 		__bend = . ;
 		_end = .;
 	} > ram
@@ -59,18 +57,14 @@ SECTIONS {
                 _overlaystart = .;
 		*(.boot)
 		*(".text")
-		*("P")
-		*("SEGA_P")
 		*(".strings")
 		*(.ctors)
 		*(.dtors)
 		*(.data)
 		. = ALIGN(4);
-		_bss_start = . ;
 		*(.bss)
 		*("COMMON")
-		_bss_end = .;
 		_end = .;
-		
+	
         } > ram
  }

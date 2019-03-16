@@ -40,44 +40,25 @@ SECTIONS {
 	.text ALIGN(4) :
 	{
 		*(.text)
-                *("P")
-                *("SEGA_P")
-                *("C")
-                *("SEGA_C")
 		*(.strings)
-
-
-                ___ctors = . ;
-                *(.ctors)
-                ___ctors_end = . ;
                 ___dtors = . ;
                 *(.dtors)
                 ___dtors_end = . ;
-		*(.eh_frame); 
+		*(.eh_frame)
                 *(.data)
-                *("D")
-                *("SEGA_D")
-                . = ALIGN(4);
-
 	} > ram
 
-	.rodata  :			
+	.rodata ALIGN(4) :			
 	{			
 		*(.rodata)	
-		. = ALIGN(4);
 	} > ram
 	
 	.bss  ALIGN(4) (NOLOAD):
 	{
 		__bstart = . ;
-		_bss_start = . ;
 		*(.bss)
-		*("B")
-		*("SEGA_B")
 		*("COMMON")
 		. = ALIGN(4);
-
-		_bss_end = . ;
 		__bend = . ;
 		_end = .;
  	} > ram

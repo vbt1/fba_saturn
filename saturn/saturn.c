@@ -34,9 +34,6 @@ void	UsrVblankIn( void )
 		{
 				if(frame_displayed!=frame_x)
 				{
-//					UINT8 *tmp0 = (UINT8*)0x00200000;
-//					sprintf(tmp0,"*%03d*",frame_x);
-				//tmp0[0] = frame_x;
 					sprintf(xx,"%03d",frame_x);
 					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)xx,136,20);
 					frame_displayed = frame_x;
@@ -82,7 +79,7 @@ int main(void)
 	SYS_CHGSYSCK(1);             //28mhz
 	set_imask(0); 
 	
-	VDP2_InitVRAM();   
+	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
 	
 	ss_main();
 	return 0;
@@ -130,41 +127,6 @@ void initScrolling(Uint8 enabled,void *address)
 //	(*(Uint16 *)0x25F80020) = 0x0303;			// display enable
 	SclProcess = 2;
 }
-
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*
-void initScrollingNBG1(Uint8 enabled,void *address)
-{
-//    SCL_InitLineParamTb(&lp);
-	lp.delta_enbl=OFF;
-	lp.cell_enbl=OFF;
-    lp.v_enbl=OFF;
-    lp.h_enbl=enabled;
-	lp.interval=3; // pour 8
-	
-	if(enabled==ON)
-	{
-		lp.line_addr1=(Uint32 )&address[0];//SCL_VDP2_VRAM_B0+0x4000;
-		SclAddrLsTbl[2] = lp.line_addr1;//+0x20;
-		SclAddrLsTbl[3] = (Uint32 )&ls_tbl1[0];
-	}
-	else
-	{
-		lp.line_addr1=0x00;
-		SclAddrLsTbl[2] = 0x00;
-		SclAddrLsTbl[3] = NULL;
-		nBurnLinescrollSize = 1;
-	}
-
-	Uint16 temp = (lp.h_enbl << 1) & 0x0002;
-//	temp |= (lp.interval << 4) & 0x0030;
-	temp = (temp <<8) & 0xff00;
-    lp.interval = 0;
-
-	Scl_n_reg.linecontrl |= temp;
-	SclProcess = 2;
-}
-*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initSound()
 {
@@ -229,11 +191,6 @@ static void resetLayers()
 	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_MAP  = (Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_MAP2 = (Uint16 *)SCL_VDP2_VRAM_A0;
-//	memset(SCL_VDP2_VRAM,0,0x80000);
-//	memset(ss_map,0,0x20000);
-//	memset(ss_map2,0,0x20000);
-//	memset4_fast(SS_CACHE,0,0x30000);
-//	cache    =(Uint16 *)NULL;
 
 	SCL_ParametersInit();
 
@@ -300,26 +257,16 @@ static void resetSound()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initSaturn()
 {
-//	DMA_ScuInit();
-//	nBurnLinescrollSize = 0x400;//0x400
-//	nBurnSprites = 131;
-//	INT_ChgMsk(INT_MSK_NULL,INT_ST_ALL);
 	nBurnFunction = NULL;
-//	nSoundBufferPos = 0;
 	play=1;
-//	cleanSprites();
-//	_spr2_transfercommand();
-//	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
-//	memset(ls_tbl,0,sizeof(ls_tbl));
+
 	initScrolling(OFF,NULL);
 
 	InitCD();
-	VDP2_InitVRAM();
+//	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00000000,0x80000);
 	resetLayers();
-//	PCM_MeReset(pcm);
-//	SetVblank();
-//wait_vblank();
-	VDP2_InitVRAM();
+
+	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
 
 	memset(pltrigger[0],0x00,sizeof(trigger_t));
 	memset(pltriggerE[0],0x00,sizeof(trigger_t));
@@ -327,19 +274,14 @@ static void initSaturn()
 	play = 0;
 	resetColors();
 	initSprites(352-1,240-1,0,0,0,0);
-//	_spr2_transfercommand();
-	//SclProcess = 2;
+
 	SetVblank();
 	SCL_SetLineParamNBG0(&lp);
 wait_vblank();
 	play=1;
 
 	resetSound();
-//	SCL_ParametersInit();
-//	SCL_SetLineParam2(&lp);
-//	PCM_Task(pcm);
-//	PCM_MeSetVolume(pcm,0);
-//	PCM_DrvChangePcmPara(pcm,-1,-1);
+
 	play = 0;
 	wait_vblank();
 
@@ -381,22 +323,15 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-	unsigned char *Mem = malloc((unsigned char *)0xA6000);
-	memset(Mem,0x00,0xA6000);
+	unsigned char *Mem = malloc((unsigned char *)0xA4000);
+	memset(Mem,0x00,0xA4000);
 	free(Mem);
 	Mem=NULL;
 
 	while(1)
 	{
-//		__port = PER_OpenPort();
 		display_menu();
 	}
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-static void VDP2_InitVRAM(void)
-{
-	memset4_fast(SCL_VDP2_VRAM_A0,0x00000000,0x40000);
-	memset4_fast(SCL_VDP2_VRAM_B0,0x00000000,0x40000);
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 static void wait_key(Uint8 key)
@@ -563,85 +498,6 @@ static void display_menu(void)
 
 
 	}while(1);
-	
-
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-static void SCL_SetWindowSub(Uint32 surfaces,Uint32 enable,Uint8 *contrl,Uint8 on,Uint8 off)
-{
-//    if( (enable & SCL_NBG0) || (enable & SCL_RBG1) )
-    if( enable & SCL_NBG0 )
-    {
-//	if( (surfaces & SCL_NBG0) || (surfaces & SCL_RBG1) )
-	if( surfaces & SCL_NBG0 )
-				contrl[1] |= on;
-	else			contrl[1] &= off;
-    }
-
-//    if( (enable & SCL_NBG1) || (enable & SCL_EXBG) )
-    if( enable & SCL_NBG1 )
-    {
-//	if( (surfaces & SCL_NBG1) || (surfaces & SCL_EXBG) )
-	if( surfaces & SCL_NBG1 )
-				contrl[0] |= on;
-	else			contrl[0] &= off;
-    }
-
-    if(enable & SCL_SPR)
-    {
-	if(surfaces & SCL_SPR)	contrl[4] |= on;
-	else			contrl[4] &= off;
-    }
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void	SCL_SetWindow(Uint8 win,Uint32 logic,Uint32 enable,Uint32 area,
-		Uint16 sx,Uint16 sy,Uint16 ex,Uint16 ey)
-{
-    Uint16	*sxy,*exy;
-    Uint8	*contrl;
-    Uint8	en_on,en_off;
-    Uint8	ar_on,ar_off;
-
-    switch(win)
-    {
-	case SCL_W0:
-		Scl_w_reg.linewin0_addr = 0;
-		sxy = &Scl_w_reg.win0_start[0];
-		exy = &Scl_w_reg.win0_end[0];
-		en_on  = 0x02;
-		en_off = 0xfd;
-		ar_on  = 0x01;
-		ar_off = 0xfe;
-		break;
-	case SCL_W1:
-		Scl_w_reg.linewin1_addr = 0;
-		sxy = &Scl_w_reg.win1_start[0];
-		exy = &Scl_w_reg.win1_end[0];
-		en_on  = 0x08;
-		en_off = 0xf7;
-		ar_on  = 0x04;
-		ar_off = 0xfb;
-		break;
-	default:
-		return;
-		break;
-    }
-
-    contrl = (Uint8 *)&Scl_w_reg.wincontrl[0];
-
-	sxy[0] = sx*2;
-	exy[0] = ex*2;
-
-	sxy[1] = sy;
-    exy[1] = ey;
-
-    if(logic | enable)	SCL_SetWindowSub(logic,enable,contrl,0x80,0x7f);
-
-    if(area | enable)	SCL_SetWindowSub(area,enable,contrl,ar_on,ar_off);
-
-    SCL_SetWindowSub(enable,0xffffffff,contrl,en_on,en_off);
-
-    if(SclProcess == 0)	SclProcess = 1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void SCL_ParametersInit(void)
@@ -703,8 +559,6 @@ static void SCL_CopyReg()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void SCL_InitLineParamTb(SclLineparam *lp)
 {
-	Uint16	i;
-
 	lp->h_enbl = OFF;
 	lp->v_enbl = OFF;
 	lp->delta_enbl = OFF;
@@ -713,7 +567,7 @@ static void SCL_InitLineParamTb(SclLineparam *lp)
 	lp->cell_addr = 0x00;
 	lp->interval  = 0;
 
-	for(i = 0; i< SCL_MAXLINE; i++) 
+	for(unsigned int i = 0; i< SCL_MAXLINE; i++) 
 	{
 //	for(i = 0; i< 192; i++) {
 		if(i < SCL_MAXCELL) 
@@ -760,15 +614,13 @@ void SCL_Close(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	SCL_SetCycleTable(Uint16 *tp)
 {
-	Uint8 i;
-	for(i = 0; i<8; i++){
+	for(Uint8 i = 0; i<8; i++){
 		Scl_s_reg.vramcyc[i] = tp[i];
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SCL_SetConfig(Uint16 sclnum, SclConfig *scfg)
 {
-/*	Uint16	temp, *mapoffset, boundary, *map, *map2, shift,shift2;	*/
 	Uint16	temp;
 	Uint16	*mapoffset = 0;
 	Uint16	*map = 0;
@@ -777,7 +629,6 @@ void SCL_SetConfig(Uint16 sclnum, SclConfig *scfg)
 										/* add by C.yoshida */
 
 	Uint16	max = 0;
-	Uint16	i;
 	Uint16	flip;
 	Uint16	mapoffsetW;
 										/* add by C.yoshida */
@@ -982,7 +833,7 @@ void SCL_SetConfig(Uint16 sclnum, SclConfig *scfg)
 		*mapoffset |= mapoffsetW << shift;
 	}
 
-	for(i = 0; i < max; i++) {
+	for(Uint16 i = 0; i < max; i++) {
 		map[i] = (0x003f & ((scfg->plate_addr[i * 2] - SCL_VDP2_VRAM)
 				/ boundary));
 		temp = (0x003f & ((scfg->plate_addr[i * 2 + 1] - SCL_VDP2_VRAM)
@@ -1030,8 +881,7 @@ void  SCL_SetColRam(Uint32 Object, Uint32 Index,Uint32 num,void *Color)
 //-------------------------------------------------------------------------------------------------------------------------------------
 Uint32  SCL_AllocColRam(Uint32 Surface, Uint8 transparent)
 {
-	Uint8	i;
-	for(i=0;i<8;i++)
+	for(Uint8 i=0;i<8;i++)
 	{
 		if(SclColRamAlloc256[i]==0)
 		{
@@ -1083,24 +933,7 @@ void SPR_Initial(Uint8 **VRAM)
     int     iMask;
     iMask = get_imask();
     set_imask(15);                           // interrupt disable
-/*	play = 1;
-	SclProcess = 1;
-    SPR_WRITE_REG(SPR_W_FBCR, SPR_FBCR_MANUAL);
-    SCL_ScrollShow();
-	set_imask(iMask);                    // interrupt enable
-    set_imask(15);                           //* interrupt disable
-	SclProcess = 1;
-	SPR_WRITE_REG(SPR_W_FBCR, SPR_FBCR_ERASE|0);
-    SCL_ScrollShow();
-	set_imask(iMask);                    // interrupt enable
-    set_imask(15);                           // interrupt disable
-	SclProcess = 1;	 
-		SPR_WRITE_REG(SPR_W_FBCR, SPR_FBCR_ERASE|1);
-    SCL_ScrollShow();
-	set_imask(iMask);                    // interrupt enable
-    set_imask(15);                           // interrupt disable
-	SclProcess = 1;	 
-	*/
+
 	/* change frame buffer to auto change mode  */
     SPR_WRITE_REG(SPR_W_FBCR, SPR_FBCR_AUTO);
 
@@ -1184,16 +1017,6 @@ Uint8 SND_ChgMap(Uint8 area_no)
 }
 
 #define DMA_SCU_END     0
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*static void CopyMem(void *dst, void *src, Uint32 cnt)
-{
-	memcpyw(dst, src, cnt);
-}*/
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*static void DmaClrZero(void *dst, Uint32 cnt)
-{
-	memset(dst, 0x00, cnt);
-}		   */
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void sndInit(void)
 {
@@ -1560,11 +1383,7 @@ static void InpMake(unsigned int key[])
 {
 	int i=0; 
 	int down = 0;
-/*
-	if (ServiceDip)
-	{
-		*(ServiceDip)=ServiceRequest;
-	}*/
+
 	short joyNum=0;
 //	for (joyNum=0;joyNum<numJoy;joyNum++)
 	{
@@ -1619,9 +1438,6 @@ static void InpInit()
 
   memset(GameInp,0,12*4*sizeof(struct GameInp));
   DoInputBlank(1);
-
-//  bInputOk = 1;
- // return 0;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1639,9 +1455,6 @@ static void InpDIP()
 			break;
 		}
 
-
-
-
 	// set DIP to default
 	i = 0;
 //	j = 40;
@@ -1657,54 +1470,6 @@ static void InpDIP()
 			pgi = DIPInfo.DIPData + (bdi.nInput + nDIPOffset - DIPInfo.nFirstDIP);
 			pgi->nConst = (pgi->nConst & ~bdi.nMask) | (bdi.nSetting & bdi.nMask);
 		}
-/*		else
-		{
-			 if (bdi.nFlags == 0xFE) 
-			{
-				if ( bdi.szText )
-				 {
-					col[1]=9;
-					col[2]=11;
-					col[3]=11;
-					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)bdi.szText,136,j); 
-					j+=10;
-				 }
-			}
-			 if (bdi.nFlags == 0x01 && bdi.nSetting == 0x00) 
-			{
-				if ( bdi.szText )
-				 {
-					col[1]=9;
-					col[2]=10;
-					col[3]=10;
-					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)bdi.szText,136,j); 
-					j+=10;
-				 }
-			}
-		}*/
-		/*		else 
-		if (bdi.nFlags == 0xFE) {
-			if ( bdi.szText )
-				if ( ( strcmp(bdi.szText, "Difficulty") == 0  ) ||
-				     ( strcmp(bdi.szText, "Game Level") == 0  )
-				   ) 
-			{
-				FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"difficulty found",10,70);				
-				bDifficultyFound = 1;
-			}
-		} else {
-			if (bDifficultyFound) {
-				if ( bdi.nFlags == 0x01 ) {
-					// use GameScreenMode store 
-					pgi = DIPInfo.DIPData + (bdi.nInput + nDIPOffset - DIPInfo.nFirstDIP);
-					for (j=0; j<8; j++)
-						if ((1U << j) & bdi.nMask) 
-							break;
-					pgi->nConst = (pgi->nConst & ~bdi.nMask) | ((0 << j) & bdi.nMask);
-				}
-				bDifficultyFound = 0;
-			}
-		}*/
 		i++;
 	}
 	for (i=0,pgi=DIPInfo.DIPData; i<(int)DIPInfo.nDIP; i++,pgi++) {
@@ -1714,62 +1479,17 @@ static void InpDIP()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-//void InpDIPSWResetDIPs()
-/*
-void InpDIPx()
-{
-	int i = 0;
-	struct BurnDIPInfo bdi;
-	struct GameInp* pgi;
-   int nDIPOffset = 0;
-
-	for (i = 0; BurnDrvGetDIPInfo(&bdi, i) == 0; i++)
-		if (bdi.nFlags == 0xF0) {
-			nDIPOffset = bdi.nInput;
-			break;
-		}
-
-	while (BurnDrvGetDIPInfo(&bdi, i) == 0) {
-		if (bdi.nFlags == 0xFF) {
-//			pgi = GameInp + bdi.nInput + nDIPOffset;
-//			pgi->nConst = (pgi->nConst & ~bdi.nMask) | (bdi.nSetting & bdi.nMask);
-			pgi = DIPInfo.DIPData + (bdi.nInput + nDIPOffset - DIPInfo.nFirstDIP);
-			pgi->nConst = (pgi->nConst & ~bdi.nMask) | (bdi.nSetting & bdi.nMask);
-
-		}
-		i++;
-	}
-}
-*/
-//-------------------------------------------------------------------------------------------------------------------------------------
-static int DrvExit()
-{
-	if (nBurnDrvSelect < nBurnDrvCount) 
-	{
-		BurnDrvExit();				// Exit the driver
-	}
-//	BurnExtLoadRom = NULL;
-
-//	nBurnDrvSelect = 0;			// no driver selected
-	return 0;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 static int DoLibInit() // Do Init of Burn library driver
 {
-  	int nRet;
-		
-	nRet = BurnDrvInit();
-	return (nRet) ? 3 : 0 ;
+	return (BurnDrvInit()) ? 3 : 0 ;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static int nDrvInit(int nDrvNum)
 {
-	int nRet=0;
 	void (*fp)(char *);
 	char drv_file[14];
 //	DrvExit(); // Make sure exited
 	nBurnDrvSelect = nDrvNum; // set the driver number
-//	BurnExtLoadRom = SaturnLoadRom;
 
 	shared   = pDriver[nBurnDrvSelect];
 
@@ -1777,8 +1497,6 @@ static int nDrvInit(int nDrvNum)
 		sprintf(drv_file,"d_%s.bin",BurnDrvGetTextA(DRV_NAME));
 	else
 		sprintf(drv_file,"d_%s.bin",BurnDrvGetTextA(DRV_PARENT));
-
-
 
 // vbt ‡ remettre    
 #ifndef DEBUG_DRV 
@@ -1788,20 +1506,13 @@ static int nDrvInit(int nDrvNum)
 
 	fp = (void *)OVLADDR;
 	(*fp)(pDriver[nBurnDrvSelect]->szShortName);
-	nRet=DoLibInit(); // Init the Burn library's driver
 
-	if (nRet!=0) 
+	if (BurnDrvInit()!=0) 
 	{
 		BurnDrvExit(); // Exit the driver
 		return 1;
 	}
-//	BurnExtLoadRom = SaturnLoadRom;
- /*
-	ss_map = (Uint16 *)SS_MAP;
-	ss_map2= (Uint16 *)SS_MAP2;
-	ss_font= (Uint16 *)SS_FONT;
-	cache  = (Uint8  *)SS_CACHE;
-   */
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1827,8 +1538,6 @@ static void check_exit(Uint16 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void do_keypad()
 {
-	int i;
-	
 	FBA_KEYPAD[0] = 0;
 	FBA_KEYPAD[1] = 0;
 	FBA_KEYPAD[2] = 0;
@@ -1848,7 +1557,7 @@ static void do_keypad()
 
 		check_exit(pltrigger[0]);
 
-		for(i=0;i<12;i++)
+		for(unsigned int i=0;i<12;i++)
 		{
 			if((pltrigger[0] & pad_asign[i])!=0)
 			{
@@ -1878,7 +1587,6 @@ static void do_keypad()
 static void run_fba_emulator()
 {
 	nBurnSoundRate = SOUNDRATE;
-
 	ChangeDir("GAMES");
 
 	if (nDrvInit(nBurnDrvSelect) != 0) 
@@ -1924,7 +1632,6 @@ static void run_fba_emulator()
 			{
 				Frame();
 				SclProcess = 2; 
-//				SCL_SetLineParamNBG0(&lp);
 				_spr2_transfercommand();
 				frame_x++;
 
@@ -1936,12 +1643,10 @@ static void run_fba_emulator()
 	if(drvquit==1)
 	{
 		InpExit();
-		DrvExit();
-//		_smpc_SSHOFF();
+		if (nBurnDrvSelect < nBurnDrvCount) 
+			BurnDrvExit();
 		initSaturn();
-//		BurnLibInit();
 		BurnDrvAssignList();
-//		nBurnDrvSelect=0;
 	}
 	asm("nop\n");
 }
@@ -1979,72 +1684,6 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 
 	_spr2_transfercommand();
 }
-
-
-
-#if 0
-typedef struct TC_TRANSFER {
-    Uint32 size;
-    void *target;
-    void *source;
-} TC_transfer;
-
-void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt)
-{
-    Uint32 msk;
-    DmaScuPrm prm;
-// ????
-    msk = get_imask();
-    set_imask(15);
-
-    TC_transfer *tc = (TC_transfer *)malloc (16*sizeof(TC_transfer));
-
-    tc->size = cnt;
-    tc->source = &src[0];
-    tc->target = &dst[0];
-
-tc++;
-    tc->size = cnt;
-    tc->source = ((Uint32)src+cnt)+1<<31;
-    tc->target = (void *)dst+cnt;
-/*
-    tc[1].size = cnt;
-    tc[1].source = ((Uint32)src)+1<<31;
-    tc[1].target = dst;
-*/
-
-    prm.dxr = (Uint32)NULL;     // no meaning in indirect mode
-    prm.dxw = ((Uint32)src);
-    prm.dxc = 0; // not matter ? sizeof();
-    prm.dxad_r = DMA_SCU_R4;
-
-//    if(((prm.dxw >= ADR_B_BUS_START) & (prm.dxw < ADR_B_BUS_END)) ||
-//       ((prm.dxw >= CADR_B_BUS_START) & (prm.dxw < CADR_B_BUS_END))){
-       prm.dxad_w = DMA_SCU_W2;
-//    }else
-//	{
-//       prm.dxad_w = DMA_SCU_W4;
-//    }
-
-    prm.dxmod = DMA_SCU_IN_DIR;
-    prm.dxrup = DMA_SCU_KEEP;
-    prm.dxwup = DMA_SCU_KEEP;
-    prm.dxft = DMA_SCU_F_DMA;
-    prm.msk = DMA_SCU_M_DXR    |
-              DMA_SCU_M_DXW    ;
-    // set end code
- //   (tc->source + nTransfer - 1)->source += 1 << 31;
-//    src[tc.size - 1] += 1 << 31;
-
-    DMA_ScuSetPrm(&prm, DMA_SCU_CH0);
-  //  DMA_ScuStart(DMA_SCU_CH0);
-
-	set_imask(msk);
-
-//    dma_start_flg = ON;                         /* DMAÇÕÉXÉ^Å[ÉgÇµÇƒÇ¢ÇÈ     */
-//    set_imask(msk);                                         /* äÑÇËçûÇ›POP   */
-}
-#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright)
 {
@@ -2078,124 +1717,6 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
 		wait_vblank();
 		play=1;
 }
-//-------------------------------------------------------------------------------------------------------------------------------------
-
-#if 0
-typedef struct TC_TRANSFER {
-    Uint32 size;
-    void *target;
-    void *source;
-} TC_transfer;
-
-void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt)
-{
-    Uint32 msk;
-// ????
-    msk = get_imask();
-    set_imask(15);
-
-    TC_transfer tc[2];
-    DmaScuPrm prm;
-    DmaScuStatus status;
-
-	tc[0].size = cnt;
-    tc[0].source = src;
-    tc[0].target = dst;
-
-    tc[1].size = cnt;
-    tc[1].source = ((Uint32)src+(cnt-1))+1<<31;
-    tc[1].target = (Uint32)dst+(cnt-1);
-/*
-           setTransferTable((Uint16 *)VDP2_VRAM_A0, 512, (Uint16 *)(buffer), 240, 320);    
-            were_here("high level transfer");
-            DMA_ScuMemCopy((TC_TRANSFER_TABLE + 84)->target, (TC_TRANSFER_TABLE + 84)->source, (TC_TRANSFER_TABLE + 84)->size);
- */
-    prm.dxr = (Uint32)NULL;     // no meaning in indirect mode
-    prm.dxw = ((Uint32)src);
-    prm.dxc = 0; // not matter ? sizeof();
-    prm.dxad_r = DMA_SCU_R4;
-    prm.dxad_w = DMA_SCU_W4; // W2 pour le son
-    prm.dxmod = DMA_SCU_IN_DIR;
-    prm.dxrup = DMA_SCU_KEEP;
-    prm.dxwup = DMA_SCU_KEEP;
-    prm.dxft = DMA_SCU_F_DMA;
-    prm.msk = DMA_SCU_M_DXR    |              DMA_SCU_M_DXW    ;
-
-    do {
-        DMA_ScuGetStatus(&status, DMA_SCU_CH1);
-    } while(status.dxmv == DMA_SCU_MV);
-
-    DMA_ScuSetPrm(&prm, DMA_SCU_CH1);
-    DMA_ScuStart(DMA_SCU_CH1);
-
-//	set_imask(msk);
-
-//    dma_start_flg = ON;                         /* DMAÇÕÉXÉ^Å[ÉgÇµÇƒÇ¢ÇÈ     */
-    set_imask(msk);                                         /* äÑÇËçûÇ›POP   */
-}
-
-void transfer_sprites()
-{
-//	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
-	SDMA_ScuCst(DMA_SCU_CH1,DrvSprRAM,DrvSprBuf,0x1000);
-	while(SDMA_ScuResult(DMA_SCU_CH1) != DMA_SCU_END);
-//	DMA_ScuIndirectMemCopy(DrvSprRAM,DrvSprBuf,0x1000/2);
-}
-#endif
-
-void SDMA_ScuCst(Uint32 ch, void *dst, void *src, Uint32 cnt)
-{
-    DmaScuPrm prm;                              /* ì]ëóÉpÉâÉÅÅ[É^            */
-                                                /*****************************/
-
-    prm.dxr = (Uint32)src;
-    prm.dxw = (Uint32)dst;
-    prm.dxc = cnt;
-    prm.dxad_r = DMA_SCU_R4;
-    prm.dxad_w = DMA_SCU_W2;
-    prm.dxmod = DMA_SCU_DIR;
-    prm.dxrup = DMA_SCU_KEEP;
-    prm.dxwup = DMA_SCU_REN;
-    prm.dxft = DMA_SCU_F_DMA;
-    prm.msk = DMA_SCU_M_DXR   |
-              DMA_SCU_M_DXW;
-
-    DMA_ScuSetPrm(&prm, ch);
-    DMA_ScuStart(ch);
-}
-
-Uint32 SDMA_ScuResult(Uint32 ch)
-{
-    DmaScuStatus status;
-
-    DMA_ScuGetStatus(&status, ch);
-        if(status.dxmv == DMA_SCU_MV)
-            return(DMA_SCU_BUSY);
-        return(DMA_SCU_END);
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*
-sprintf broken
-	  char toto[50];
-	 vspfunc("titi %04x %04x", pSoundBuf[(n << 1) + 0],pSoundBuf[(n << 1) + 1]);
-
-		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)buffer,10,100);
-char buffer[80];
-int vspfunc(char *format, ...);
-
-int vspfunc(char *format, ...)
-{
-   va_list aptr;
-   int ret;
-
-   va_start(aptr, format);
-   ret = vsprintf(buffer, format, aptr);
-   va_end(aptr);
-
-   return(ret);
-}
-*/
-
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifdef HEAP_WALK
 extern UINT32  end;

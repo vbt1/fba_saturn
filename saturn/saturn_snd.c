@@ -8,7 +8,7 @@ StmHn stm;
 StmGrpHn grp_hd;
 SFX *sfx_list;
 
-void vout2(char *string, char *fmt, ...)                                         
+void vout(char *string, char *fmt, ...)                                         
 {                                                                               
    va_list arg_ptr;                                                             
    va_start(arg_ptr, fmt);                                                      
@@ -55,13 +55,6 @@ void stmClose(StmHn fp)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifdef DEBUG
-void vout(char *string, char *fmt, ...)                                         
-{                                                                               
-   va_list arg_ptr;                                                             
-   va_start(arg_ptr, fmt);                                                      
-   vsprintf(string, fmt, arg_ptr);                                              
-   va_end(arg_ptr);                                                             
-}
 
 void errStmFunc(void *obj, Sint32 ec)
 {
@@ -156,7 +149,7 @@ void UpdateStreamPCM(Uint8 data, PcmHn *hn, PcmCreatePara *para)
 {
 	char pcm_file[14];
 
-	vout2(pcm_file, "%03d%s",data,".PCM"); 
+	vout(pcm_file, "%03d%s",data,".PCM"); 
 	PcmInfo 		info;
 
 	PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			

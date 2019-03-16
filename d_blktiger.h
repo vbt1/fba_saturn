@@ -117,7 +117,7 @@ SFX sfx_blktiger[68]=
 /*static*/ UINT16 *bg_map_lut2x1 = NULL;//[0x2000];
 /*static*/ UINT16 *bg_map_lut2x2 = NULL;//[0x2000];
 /*static*/ UINT16 *bg_map_lut = NULL;
-/*static*/ INT16 *ym_buffer = NULL;
+/*static*/// INT16 *ym_buffer = NULL;
 
 /*static*/ UINT8 *AllMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;

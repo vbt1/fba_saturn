@@ -21,9 +21,9 @@
 //#include "sega_sys.h"
 #include "sega_pcm.h"
 #include "sega_snd.h"
-#include "burnint.h"
+#include "../burnint.h"
 //#include "ovl.h"
-#include "globals.h"
+#include "../globals.h"
 
 void PCM_MeVblIn(void);
 void	PCM_MeSetLoop( PcmHn	hn, Sint32	cnt_loop );
@@ -41,11 +41,11 @@ void *memset4_fast(void *, long, size_t);
 #define	AD_SMPC_COMREG	0x2010001F
 #define	SMPC_COMREG		(*( volatile Uint8 * )AD_SMPC_COMREG)
 #define	SMPC_COMREG_SYSRES		0x0D
-#define	SMPC_COMREG_SSHOFF		0x03
+//#define	SMPC_COMREG_SSHOFF		0x03
 #define	_smpc_sendcommand( command )	\
 								(SMPC_COMREG=( Uint8 )(command))
 #define	_smpc_SYSRES()		_smpc_sendcommand( SMPC_COMREG_SYSRES )
-#define	_smpc_SSHOFF()		_smpc_sendcommand( SMPC_COMREG_SSHOFF )
+//#define	_smpc_SSHOFF()		_smpc_sendcommand( SMPC_COMREG_SSHOFF )
 
 
 #define	REGADDR	    0x25F80000
@@ -118,11 +118,7 @@ static unsigned char *P1Start = 0;
 static unsigned char *P2Start = 0;
 
 extern struct BurnDriver* pDriver[];// __attribute__ ((section(".pdriver")));
-//int nBurnSoundRate;				// sample rate of sound or zero for no sound
-//int nBurnSoundLen;				// Length in samples per frame
-//unsigned int  nBurnLinescrollSize=0x300;
-//unsigned char nBurnSprites = 32;
-//unsigned int  nSoundBufferPos=0;
+
 #ifdef FONT
 static unsigned int frame_x=0;
 static unsigned int frame_y=0;
@@ -131,23 +127,11 @@ unsigned char hz=0;
 #endif
 
 static Uint8        *aVRAM;
-//static Uint16       *colAddr; //sprite color
-//Uint16       *colBgAddr2;
-//Uint16       *colBgAddr; // color
-//static Uint32       SclColRamAlloc256[8];
 static SprSpCmd     smsSprite[256+3];
 SclLineparam lp;
 
-//static Uint16 *ss_font;
-//static Uint16 *ss_map;
-//static Uint16 *ss_map2;
-//static unsigned char *cache;
-
-//static Uint32	SclAddrLsTbl[4];
 static Uint32	SclAddrLsTbl[2];
 static Fixed32	ls_tbl[SCL_MAXLINE];
-//static Fixed32	ls_tbl1[SCL_MAXLINE];
-//Uint16	SclProcess = 0;
 extern Uint16	SclProcess;
 extern unsigned char col[4];
 SclSysreg	Scl_s_reg;
@@ -161,8 +145,6 @@ SclBgColMixRegister  SclBgColMix;
 //SclPriBuffDirtyFlags SclPriBuffDirty;
 //-------------------------------------------------------------------------------------------------------------------------------------
 extern Uint8	*FntAsciiFontData2bpp;
-//extern Uint8	FntAsciiFontData2bpp[1600];
-//Sint8 *g_movie_buf = (Sint8 *)0x25a20000;//0x04000000;
 extern PcmHn 			pcm;
 
 extern Uint32   _bstart, _bend;
@@ -195,11 +177,6 @@ static volatile Uint8 *adr_com_block;
 
 #define ADR_COM_DATA    (0x00)                  /* コマンド                  */
 #define ADR_PRM_DATA    (0x02)                  /* パラメータ                */
-#define ADR_SONG_STAT   (0x80)                  /* song status               */
-#define ADR_TL_VL       (0x90)                  /* Total volume              */
-#define ADR_TL_HZ_VL    (0x94)                  /* 周波数帯域別Volume        */
-#define ADR_PCM         (0xa0)                  /* PCM                       */
-//#define ADR_SEQ         (0xb0)                  /* Sequence                  */
 
 #define SND_POKE_W(adr, data)   (*((volatile Uint16 *)(adr)) = ((Uint16)(data)))
 #define SND_ADR_INTR_RESET  ((volatile Uint16 *)0x25b0042e)  /* SCSP割り込みﾘｾｯﾄﾚｼﾞｽﾀ */
@@ -249,13 +226,6 @@ static volatile Uint8 *adr_com_block;
 #define	SZ_PERIPHERAL	5
 #define	SZ_BUFFER		((_MAX_PORT*_MAX_PERIPHERAL*(SZ_PERIPHERAL+2)*2)+SZ_PERIPHERAL)
 
-typedef	struct	SysDevDigital	{
-	Uint8	type;
-	Uint8	size;
-	Uint8	data[2];
-	Uint8	expanded[1];
-} SysDevDigital;
-
 typedef	struct	SysDevice	{
 	Uint8	type;
 	Uint8	size;
@@ -297,10 +267,7 @@ static void loadLogo(void);
 static void	SCL_ScrollShow(void);
 static void SCL_CopyReg(void);
 static void SCL_SetLineParamNBG0(SclLineparam *lp);
-//static void SCL_SetLineParamNBG1(SclLineparam *lp);
-//static void SCL_PriIntProc(void);
 /*static*/ void SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
-//static void SCL_SetColRam(Uint32 Object, Uint32 Index,Uint32 num,void *Color);
 static void SCL_ParametersInit(void);
 static void ss_main(void);
 static void VDP2_InitVRAM(void);

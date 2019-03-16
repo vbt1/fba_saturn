@@ -12,15 +12,7 @@
 #define nCyclesSegment nCyclesTotal / nInterleave
 #define DrvNumColours 0x800 * 2
 #define 	DrvTileMask 0x7fff
-/*
-void vout2(char *string, char *fmt, ...)                                         
-{                                                                               
-   va_list arg_ptr;                                                             
-   va_start(arg_ptr, fmt);                                                      
-   vsprintf(string, fmt, arg_ptr);                                              
-   va_end(arg_ptr);                                                             
-}
-*/
+
 int ovlInit(char *szShortName)
 {
 	struct BurnDriver nBurnDrvPang = {
