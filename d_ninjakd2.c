@@ -43,16 +43,15 @@ int ovlInit(char *szShortName)
 
 	if((((offset/2)+1)%16)==0)
 	{
-//		DrvPalette[offset/2]		= DrvPalette[(offset/2)-15];
-		DrvPalette[(offset/2)-15]= BurnHighCol(r,g,b,0);
+		colAddr[(offset/2)-15]= BurnHighCol(r,g,b,0);
 	}
 	else if(((offset/2)%16)==0)
 	{
-		DrvPalette[(offset/2)+15]= BurnHighCol(r,g,b,0);
+		colAddr[(offset/2)+15]= BurnHighCol(r,g,b,0);
 	}
 	else
 	{
-		DrvPalette[offset/2] = BurnHighCol(r,g,b,0);
+		colAddr[offset/2] = BurnHighCol(r,g,b,0);
 	}
 }
 
@@ -60,7 +59,7 @@ int ovlInit(char *szShortName)
 {
 	INT32 nBank = 0x10000 + (data * 0x4000);
 
-	nZ80RomBank = data;
+//	nZ80RomBank = data;
 
 	CZetMapMemory(DrvZ80ROM0 + nBank, 	0x8000, 0xbfff, MAP_ROM);
 }
@@ -236,7 +235,7 @@ int ovlInit(char *szShortName)
 
 	INT32 nBank = 0x400 * data;
 
-	nZ80RamBank[sel&3] = data;
+//	nZ80RamBank[sel&3] = data;
 
 	CZetMapMemory(ram[sel&3] + nBank, off[sel>>2][sel&3], off[sel>>2][sel&3] | 0x3ff, MAP_RAM);
 }
@@ -560,12 +559,7 @@ int ovlInit(char *szShortName)
 		return;
 	}
 }
-/*
-inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
-{
-	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
-}
-*/
+
 /*static*/  void ninjakd2_sound_init()
 {
 //	CZetInit(1);
@@ -581,19 +575,6 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	CZetSetWriteHandler(ninjakd2_sound_write);
 	CZetSetReadHandler(ninjakd2_sound_read);
 	CZetClose();
-
-/*
-	BurnYM2203Init(2,  1500000, &DrvYM2203IRQHandler, 0);
-	BurnTimerAttachZet(5000000);
-	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   0.50, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.10, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_2, 0.10, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_3, 0.10, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(1, BURN_SND_YM2203_YM2203_ROUTE,   0.50, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_1, 0.10, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_2, 0.10, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_3, 0.10, BURN_SND_ROUTE_BOTH);
-*/
 }
 #endif
 
@@ -604,17 +585,17 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	CZetOpen(0);
 	CZetReset();
 	CZetClose();
-
+/*
 	CZetOpen(1);
 	CZetReset();
 //	BurnYM2203Reset();
 	CZetClose();
-
+*/
 	memset (scrollx, 0, 3 * sizeof(UINT16));
 	memset (scrolly, 0, 3 * sizeof(UINT16));
 
-	nZ80RomBank = 0;
-	memset (nZ80RamBank, 0, 3);
+//	nZ80RomBank = 0;
+//	memset (nZ80RamBank, 0, 3);
 
 	overdraw_enable = 0;
 	memset (tilemap_enable, 0, 3);
@@ -648,12 +629,12 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	DrvGfxROM4		= (UINT8 *)cache+0x58000;//bg3 // Next; Next += 0x100000;
 /*
 	DrvZ80Key	= Next; Next += 0x002000;
-
 	DrvSndROM	= Next; Next += 0x010000;
 */
 //	DrvPalette	= (UINT32*)Next; Next += 0x0400 * sizeof(UINT32);
-	DrvPalette		= (UINT16*)colAddr;
+//	DrvPalette		= (UINT16*)colAddr;
 	AllRam			= Next;
+	CZ80Context	= Next; Next += (0x1080);
 
 	DrvZ80RAM0	= 0x2F0000;//Next; Next += 0x001a00;
 //	DrvZ80RAM1	= 0x2F1a00;//Next; Next += 0x000800; // vbt : r?cuperer ces 0x800 de ram
@@ -900,7 +881,8 @@ inline  void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 
 //	memset4_fast((UINT8*)0x00200000,0x00000000,0x40000);
 
-	CZetInit(2);
+	CZetInit2(1,CZ80Context);
+//CZetInit(1);
 	CZetOpen(0);
 	CZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, MAP_ROM);
 	CZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, MAP_ROM);
@@ -1087,13 +1069,16 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 
 /*static*/  INT32 DrvExit()
 {
-//	BurnYM2203Exit();
+	CZetExit2();
+	nSoundBufferPos=0;
 
-//	GenericTilesExit();
-
-	CZetExit();
-
-//	BurnFree (AllMem);
+	CZ80Context	=  NULL;
+	MemEnd = AllRam = RamEnd = DrvZ80ROM0 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
+	DrvGfxROM3 = DrvGfxROM4 = DrvGfxROM4Data1 = DrvZ80RAM0 = DrvSprRAM = DrvPalRAM = NULL;
+	DrvFgRAM = DrvBgRAM = DrvBgRAM0 = DrvBgRAM1 = DrvBgRAM2 = NULL;
+	soundlatch = flipscreen = overdraw_enable = DrvReset = 0;
+	free(AllMem);
+	AllMem = NULL;
 
 	return 0;
 }

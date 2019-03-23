@@ -323,8 +323,8 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-	unsigned char *Mem = malloc((unsigned char *)0xA4000);
-	memset(Mem,0x00,0xA4000);
+	unsigned char *Mem = malloc((unsigned char *)0xA7000);
+	memset(Mem,0x00,0xA7000);
 	free(Mem);
 	Mem=NULL;
 

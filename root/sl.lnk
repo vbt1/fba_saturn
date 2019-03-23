@@ -40,12 +40,14 @@ SECTIONS {
 	.text ALIGN(4) :
 	{
 		*(.text)
+		*("SEGA_P")
 		*(.strings)
                 ___dtors = . ;
                 *(.dtors)
                 ___dtors_end = . ;
-		*(.eh_frame)
                 *(.data)
+		*(.eh_frame_hdr)
+		*(.eh_frame)
 	} > ram
 
 	.rodata ALIGN(4) :			

@@ -6,11 +6,11 @@
 #include "snd/sn76496.h"
 #include "snd/msm5205.h"
 #define SOUND_LEN 128
-static INT32 DrvInit();
-static INT32 DrvRobowresInit();
-static INT32 DrvExit();
-static INT32 DrvFrame();
-static void DrvDraw();
+/*static*/ INT32 DrvInit();
+/*static*/ INT32 DrvRobowresInit();
+/*static*/ INT32 DrvExit();
+/*static*/ INT32 DrvFrame();
+/*static*/ void DrvDraw();
 static void Set4PCM();
 void dummy();
 
@@ -47,14 +47,14 @@ PcmHn 			pcm4[4];
 /*static*/ UINT8 *DrvGfxROM1 = NULL;
 /*static*/ UINT8 *DrvGfxROM2 = NULL;
 /*static*/ UINT8 *DrvGfxROM3 = NULL;
-/*static*/ UINT8 *DrvGfxTMP0 = NULL;
-/*static*/ UINT8 *DrvGfxTMP1 = NULL;
+/*static*/ //UINT8 *DrvGfxTMP0 = NULL;
+/*static*/ //UINT8 *DrvGfxTMP1 = NULL;
 /*static*/ UINT8 *DrvColPROM = NULL;
 /*static*/ UINT8 *DrvMainROM = NULL;
 /*static*/ UINT8 *DrvSoundROM = NULL;
 /*static*/ UINT8 *DrvFetch = NULL;
 ///*static*/ UINT32 *DrvPalette;
-/*static*/ UINT16 *DrvPalette = NULL;
+/*static*/ //UINT16 *DrvPalette = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
 /*static*/ UINT16 *charaddr_lut = NULL;
 /*static*/ UINT8 scroll_x = 0;
@@ -63,7 +63,7 @@ PcmHn 			pcm4[4];
 /*static*/ UINT8 interrupt_enable = 0;
 /*static*/ UINT32 adpcm_data = 0;
 /*static*/ UINT32 adpcm_address = 0;
-/*static*/ INT32 nCyclesTotal = 0;
+/*static*/ //INT32 nCyclesTotal = 0;
 /*static*/ INT32 game_select = 0; // 1 = robowres
 
 static struct BurnInputInfo AppooohInputList[] = {

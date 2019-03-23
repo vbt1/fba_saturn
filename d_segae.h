@@ -35,9 +35,9 @@ void SCL_SetLineParamNBG1();
 /*static*/ UINT8 DrvJoy3[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 DrvJoy4[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-/*static*/ UINT8 DrvInput[5];
-/*static*/ UINT8 DrvDip[2];
-/*static*/ UINT8 DrvReset;
+/*static*/ UINT8 DrvInput[5] = {0,0,0,0,0};
+/*static*/ UINT8 DrvDip[2] = {0, 0};
+/*static*/ UINT8 DrvReset = 0;
 
 /*static*/ INT32 DrvWheel = 0;
 /*static*/ INT32 DrvAccel = 0;
@@ -66,7 +66,7 @@ UINT8 vintpending = 0;
 UINT8 hintpending = 0;
 
 //UINT8 m_port_select;
-UINT8 currentLine = 0;
+INT16 currentLine = 0;
 
 //UINT8 leftcolumnblank = 0; // most games need this, except tetris
 

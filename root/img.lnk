@@ -45,25 +45,18 @@ SECTIONS {
 	.bss ALIGN(4) (NOLOAD):			
 	{
 		__bstart = . ;
-		_bss_start = . ;
 		root/sl.coff (.bss)
 		root/sl.coff ("COMMON")
 		. = ALIGN(4);
-		_bss_end = . ;
 		__bend = . ;
 		_end = .;
 	} > ram
  
   .overlaydma ALIGN(4) (NOLOAD):
   {
-	_bss_start = . ;
 	*(.bss)
-	*("B")
-	*("SEGA_B")
-		*("COMMON")
-		. = ALIGN(4);
-	_bss_end = .;
-
+	*("COMMON")
+	. = ALIGN(4);
 	_end = .;
   } > ram
 
@@ -72,20 +65,11 @@ SECTIONS {
                 _ovlstart = .;
 		*(.boot)
 		*(".text")
-		*("P")
-		*("SEGA_P")
-		*("C")
-		*("SEGA_C")
 		*(".strings")
 		. = ALIGN(4);
-		*(.ctors)
 		*(.dtors)
 		. = ALIGN(4);
 		*(.data)
-		*("D")
-		*("SEGA_D")
 		. = ALIGN(4);
-		
         } > ram2
-
 }

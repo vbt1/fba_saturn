@@ -9,65 +9,56 @@
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
 
-
 /*static*/  INT32 RobokidInit();
 /*static*/  INT32 DrvExit();
 /*static*/  INT32 DrvFrame();
 
-/*static*/  UINT8 *AllMem;
-/*static*/  UINT8 *MemEnd;
-/*static*/  UINT8 *AllRam;
-/*static*/  UINT8 *RamEnd;
-/*static*/  UINT8 *DrvZ80ROM0;
+/*static*/  UINT8 *AllMem = NULL;
+/*static*/  UINT8 *MemEnd = NULL;
+/*static*/  UINT8 *AllRam = NULL;
+/*static*/  UINT8 *RamEnd = NULL;
+/*static*/  UINT8 *DrvZ80ROM0 = NULL;
 /*static*///  UINT8 *DrvZ80ROM1;
-/*static*/  UINT8 *DrvGfxROM0;
-/*static*/  UINT8 *DrvGfxROM1;
-/*static*/  UINT8 *DrvGfxROM2;
-/*static*/  UINT8 *DrvGfxROM3;
-/*static*/  UINT8 *DrvGfxROM4;
-/*static*/  UINT8 *DrvGfxROM4Data1;
-/*static*/  UINT8 *DrvGfxROM4Data2;
+/*static*/  UINT8 *DrvGfxROM0 = NULL;
+/*static*/  UINT8 *DrvGfxROM1 = NULL;
+/*static*/  UINT8 *DrvGfxROM2 = NULL;
+/*static*/  UINT8 *DrvGfxROM3 = NULL;
+/*static*/  UINT8 *DrvGfxROM4 = NULL;
+/*static*/  UINT8 *DrvGfxROM4Data1 = NULL;
+/*static*///  UINT8 *DrvGfxROM4Data2 = NULL;
 /*static*///  UINT8 *DrvZ80Key;
 /*static*///  UINT8 *DrvSndROM;
-/*static*/  UINT8 *DrvZ80RAM0;
+/*static*/  UINT8 *DrvZ80RAM0 = NULL;
 /*static*///  UINT8 *DrvZ80RAM1;
-/*static*/  UINT8 *DrvSprRAM;
-/*static*/  UINT8 *DrvPalRAM;
-/*static*/  UINT8 *DrvFgRAM;
-/*static*/  UINT8 *DrvBgRAM;
-/*static*/  UINT8 *DrvBgRAM0;
-/*static*/  UINT8 *DrvBgRAM1;
-/*static*/  UINT8 *DrvBgRAM2;
+/*static*/  UINT8 *DrvSprRAM = NULL;
+/*static*/  UINT8 *DrvPalRAM = NULL;
+/*static*/  UINT8 *DrvFgRAM = NULL;
+/*static*/  UINT8 *DrvBgRAM = NULL;
+/*static*/  UINT8 *DrvBgRAM0 = NULL;
+/*static*/  UINT8 *DrvBgRAM1 = NULL;
+/*static*/  UINT8 *DrvBgRAM2 = NULL;
+/*static*/  UINT8 *CZ80Context = NULL;
+/*static*/  UINT8 soundlatch = 0;
+/*static*/  UINT8 flipscreen = 0;
 
-/*static*/ // UINT16 *pSpriteDraw;
-
-/*static*/  UINT16 *DrvPalette;
-/*static*/  UINT8 DrvRecalc;
-
-/*static*/  UINT8 soundlatch;
-/*static*/  UINT8 flipscreen;
-
-/*static*/  UINT16 scrollx[3];
-/*static*/  UINT16 scrolly[3];
-/*static*/  UINT8 tilemap_enable[3];
-/*static*/  UINT8 overdraw_enable;
-/*static*/  UINT8 nZ80RomBank;
-/*static*/  UINT8 nZ80RamBank[3];
+/*static*/  UINT16 scrollx[3] = {0,0,0};
+/*static*/  UINT16 scrolly[3] = {0,0,0};
+/*static*/  UINT8 tilemap_enable[3] = {0,0,0};
+/*static*/  UINT8 overdraw_enable = 0;
 
 /*static*/  //UINT8 m_omegaf_io_protection[3];
 /*static*/  //UINT8 m_omegaf_io_protection_input;
 /*static*/  //INT32 m_omegaf_io_protection_tic;
-
 /*static*/  //INT32 ninjakd2_sample_offset;
 
-/*static*/  UINT8 DrvJoy1[8];
-/*static*/  UINT8 DrvJoy2[8];
-/*static*/  UINT8 DrvJoy3[8];
-/*static*/  UINT8 DrvDips[2];
-/*static*/  UINT8 DrvInputs[3];
-/*static*/  UINT8 DrvReset;
+/*static*/  UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+/*static*/  UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+/*static*/  UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+/*static*/  UINT8 DrvDips[2] = {0,0};
+/*static*/  UINT8 DrvInputs[3] = {0,0,0};
+/*static*/  UINT8 DrvReset = 0;
 
-/*static*/  INT32 previous_coin[2];
+/*static*/  INT32 previous_coin[2] = {0,0};
 
 /*static*/  struct BurnInputInfo DrvInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},

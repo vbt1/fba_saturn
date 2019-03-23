@@ -4,7 +4,7 @@
 // based on MESS/MAME driver by David Haywood
 #define nInterleave 262
 #define nCyclesTotal 10738635 / 2 / 60
-
+#define nCycleSegment nCyclesTotal / nInterleave
 Fixed32	ss_scl1[SCL_MAXLINE];
 volatile SysPort	*ss_port;
 
@@ -44,13 +44,13 @@ int ovlInit(char *szShortName)
 		fantzn2RomInfo, fantzn2RomName, TransfrmInputInfo, Fantzn2DIPInfo,
 		DrvFantzn2Init, DrvExit, DrvFrame, NULL
 	};
-
+/*
 	struct BurnDriver nBurnDrvOpaopa = {
 		"opaopa", "segae",
 		"Opa Opa (MC-8123, 317-0042)",
 		opaopaRomInfo, opaopaRomName, Segae2pInputInfo, OpaopaDIPInfo,
 		DrvOpaopaInit, DrvExit, DrvFrame, NULL
-	};
+	};*/
 
 	struct BurnDriver nBurnDrvSlapshtr = {
 		"slapshtr", "segae",
@@ -69,8 +69,8 @@ int ovlInit(char *szShortName)
 	memcpy(shared,&nBurnDrvFantzn2,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvAstrofl.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvAstrofl,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvOpaopa.szShortName, szShortName) == 0) 
-	memcpy(shared,&nBurnDrvOpaopa,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvOpaopa.szShortName, szShortName) == 0) 
+//	memcpy(shared,&nBurnDrvOpaopa,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvSlapshtr.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvSlapshtr,sizeof(struct BurnDriver));
 
@@ -747,7 +747,7 @@ int ovlInit(char *szShortName)
 	for (UINT32 i = 0; i < nInterleave; i++) {
 
 		// Run Z80 #1
-		UINT32 nNext = (i + 1) * nCyclesTotal / nInterleave;
+		UINT32 nNext = (i + 1) * nCycleSegment;
 		nCyclesDone += CZetRun(nNext - nCyclesDone);
 		currentLine = (i - 4) & 0xff;
 
@@ -797,6 +797,11 @@ int ovlInit(char *szShortName)
 		return 0;
 	}
 	memset(AllMem, 0, nLen);
+	memset(DrvMainROM, 0, 0x80000);
+	memset(DrvMainROMFetch, 0, 0x80000);
+
+	memset(SCL_VDP2_VRAM_A0, 0, 0x80000);
+
 	MemIndex();
 
 	switch (game) {
@@ -930,8 +935,6 @@ int ovlInit(char *szShortName)
 	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
-//	SCL_SetColRam(SCL_NBG0,0,8,palette); // à enlever
-//	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initLayers(void)
@@ -1063,10 +1066,10 @@ int ovlInit(char *szShortName)
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	memset(&ss_vram[0x1100],0,0x12000);
-	memset((UINT8 *)SCL_VDP2_VRAM_A0,0x00,0x10000);
-	memset((UINT8 *)SCL_VDP2_VRAM_A1,0x00,0x10000);
-	memset((UINT8 *)ss_map,0x00,0x2000);
-	memset((UINT8 *)ss_map2,0x00,0x2000);
+//	memset((UINT8 *)SCL_VDP2_VRAM_A0,0x00,0x10000);
+//	memset((UINT8 *)SCL_VDP2_VRAM_A1,0x00,0x10000);
+//	memset((UINT8 *)ss_map,0x00,0x2000);
+//	memset((UINT8 *)ss_map2,0x00,0x2000);
 
 	memset(ss_scl,0xff,192*4);
 	memset(ss_scl1,0xff,192*4);
@@ -1198,7 +1201,7 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 //			if(chip==0)
 //			map[0] =map[32] =map[0x700] =map[0x720] =0;
 //			else
-			map[0] =map[32] =map[0x700] =map[0x720] = name_lut[temp];
+			map[0] =map[32] =map[0x700] =map[0x720] = index;//name_lut[temp];
 #endif
 		}
 	}
