@@ -324,7 +324,7 @@ static void ss_main(void)
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
 	unsigned char *Mem = malloc((unsigned char *)0xA7000);
-	memset(Mem,0x00,0xA7000);
+//	memset(Mem,0x00,0xA2000);
 	free(Mem);
 	Mem=NULL;
 
@@ -380,40 +380,40 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 				{
 					case PER_DGT_A: 
 					load_img(1);
-					modified[0] = 1;
+					*modified = 1;
 					break;
 
 					case PER_DGT_C: 
 					load_img(2);
-					modified[0] = 1;
+					*modified = 1;
 					break;
 
 					case PER_DGT_D: 
 					if(nBurnDrvSelect < nBurnDrvCount-1 && nBurnDrvSelect < ((*current_page) * GAME_BY_PAGE)-1) nBurnDrvSelect++;
-					modified[0] = 1;
+					*modified = 1;
 //					else								 nBurnDrvSelect=0;
 					break;
 
 					case PER_DGT_U:
 					if(nBurnDrvSelect >  ((*current_page)-1) * GAME_BY_PAGE)	nBurnDrvSelect--;
-					modified[0] = 1;
+					*modified = 1;
 //					else						nBurnDrvSelect=nBurnDrvCount-1;
 					break;
 
 					case PER_DGT_L: 
 					if(*current_page > 1) nBurnDrvSelect = (--(*current_page)-1) * GAME_BY_PAGE;
-					modified[0] = 1;
+					*modified = 1;
 					break;
 
 					case PER_DGT_R: 
 					if(*current_page * GAME_BY_PAGE  < nBurnDrvCount) nBurnDrvSelect = (++(*current_page)-1) * GAME_BY_PAGE;
-					modified[0] = 1;
+					*modified = 1;
 					break;
 
 					case PER_DGT_S:
 					run_fba_emulator();
 					loaded[0] = 0;
-					modified[0] = 1;
+					*modified = 1;
 #ifdef HEAP_WALK
 	 heapWalk();
 #endif
@@ -435,12 +435,7 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 //int the_loop=1;
 static void display_menu(void)
 {
-//	_spr2_initialize();	
-//	SetVblank();
-//	set_imask(0);
-	
 	unsigned int l;
-	unsigned int newBurnMallocAddr = 0;
 	unsigned char loaded = 0;
 
 
@@ -451,6 +446,8 @@ static void display_menu(void)
 #endif
 	unsigned int current_page = 1,m;
 	unsigned char modified = 1;
+	char game_name[40];
+
 	do
 	{
 		if(!loaded)
@@ -468,7 +465,6 @@ static void display_menu(void)
 		}
 		m=0;
 //		char page_header[50];
-		char game_name[40];
 //		sprintf(page_header,"Game list:                       %02d/%02d",current_page, (nBurnDrvCount+GAME_BY_PAGE-1)/GAME_BY_PAGE);
 //		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)page_header,12,12);
 

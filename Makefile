@@ -167,7 +167,7 @@ OVLVIGIL                 = root/d_vigil.coff
 OVLVIGIL1               = root/d_vigil.bin
 MPOVLVIGILFILE    = $(OVLVIGIL:.coff=.maps)
 LDOVLVIGILFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLVIGILFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c snd/dac.c snd/ym2151.c load.c saturn/ovl.c
+SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c snd/dac.c load.c saturn/ovl.c
 #SRCOVLVIGIL         = d_vigilant.c z80_intf.c z80.c z80daisy.c burn_ym2151.c ym2151.c dac.c burn_sound_c.c load.c saturn/ovl.c
 OBJOVLVIGIL         = $(SRCOVLVIGIL:.c=.o)
 
@@ -236,7 +236,7 @@ OVLSEGAE                 = root/d_segae.coff
 OVLSEGAE1               = root/d_segae.bin
 MPOVLSEGAEFILE    = $(OVLSEGAE:.coff=.maps)
 LDOVLSEGAEFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSEGAEFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c saturn/saturn_ext.c
+SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c 
 OBJOVLSEGAE         = $(SRCOVLSEGAE:.c=.o)
 
 OVLSOLOMN                = root/d_solomn.coff
@@ -318,7 +318,7 @@ $(OVERLAY1) : $(OBJOVL) $(MAKEFILE) $(LDOVLFILE)
 	$(CONV) -O binary $(OVERLAY) $(OVERLAY1)
 
 $(OVLNEWS) : $(OBJOVLNEWS) $(MAKEFILE) $(OBJOVLNEWS) $(LDOVLNEWSFILE)
-	$(CC) $(LDOVLNEWSFLAGS) $(OBJOVLNEWS) $(LIBSOVL) -lm -o $@
+	$(CC) $(LDOVLNEWSFLAGS) $(OBJOVLNEWS) $(LIBSOVL) -o $@
 
 $(OVLNEWS1) : $(OBJOVLNEWS) $(MAKEFILE) $(LDOVLNEWSFILE)
 	$(CONV) -O binary $(OVLNEWS) $(OVLNEWS1)
@@ -342,7 +342,7 @@ $(OVLPKUNW1) : $(OBJOVLPKUNW) $(MAKEFILE) $(LDOVLPKUNWFILE)
 	$(CONV) -O binary $(OVLPKUNW) $(OVLPKUNW1)
 
 $(OVLMITCH) : $(OBJOVLMITCH) $(MAKEFILE) $(OBJOVLMITCH) $(LDOVLMITCHFILE)
-	$(CC) $(LDOVLMITCHFLAGS) $(OBJOVLMITCH) $(LIBSOVL) $(LIBSTM) -lm -o $@
+	$(CC) $(LDOVLMITCHFLAGS) $(OBJOVLMITCH) $(LIBSOVL) $(LIBSTM) -o $@
 
 $(OVLMITCH1) : $(OBJOVLMITCH) $(MAKEFILE) $(LDOVLMITCHFILE)
 	$(CONV) -O binary $(OVLMITCH) $(OVLMITCH1)
@@ -415,8 +415,8 @@ $(OVLZAXXON1) : $(OBJOVLZAXXON) $(MAKEFILE) $(LDOVLZAXXONFILE)
 	$(CONV) -O binary $(OVLZAXXON) $(OVLZAXXON1)
 
 $(OVLVIGIL) : $(OBJOVLVIGIL) $(MAKEFILE) $(OBJOVLVIGIL) $(LDOVLVIGILFILE)
-#	$(CC) $(LDOVLVIGILFLAGS) $(OBJOVLVIGIL) $(LIBSOVL) -lm -o $@
-	$(CC) $(LDOVLVIGILFLAGS) $(OBJOVLVIGIL) $(LIBSOVL) raze/raze.o -lm -o $@
+#	$(CC) $(LDOVLVIGILFLAGS) $(OBJOVLVIGIL) $(LIBSOVL) -o $@
+	$(CC) $(LDOVLVIGILFLAGS) $(OBJOVLVIGIL) $(LIBSOVL) raze/raze.o -o $@
 
  $(OVLVIGIL1) : $(OBJOVLVIGIL) $(MAKEFILE) $(LDOVLVIGILFILE)
 	$(CONV) -O binary $(OVLVIGIL) $(OVLVIGIL1)
@@ -435,13 +435,13 @@ $(OVLBOMBJACK1) : $(OBJOVLBOMBJACK) $(MAKEFILE) $(LDOVLBOMBJACKFILE)
 	$(CONV) -O binary $(OVLBOMBJACK) $(OVLBOMBJACK1)
 
 $(OVLAPPOOO) : $(OBJOVLAPPOOO) $(MAKEFILE) $(OBJOVLAPPOOO) $(LDOVLAPPOOOFILE)
-	$(CC) $(LDOVLAPPOOOFLAGS) $(OBJOVLAPPOOO) $(LIBSOVL) -lm -o $@
+	$(CC) $(LDOVLAPPOOOFLAGS) $(OBJOVLAPPOOO) $(LIBSOVL) -o $@
 
 $(OVLAPPOOO1) : $(OBJOVLAPPOOO) $(MAKEFILE) $(LDOVLAPPOOOFILE)
 	$(CONV) -O binary $(OVLAPPOOO) $(OVLAPPOOO1)
 
 $(OVLBLKTGR) : $(OBJOVLBLKTGR) $(MAKEFILE) $(OBJOVLBLKTGR) $(LDOVLBLKTGRFILE)
-	$(CC) $(LDOVLBLKTGRFLAGS) $(OBJOVLBLKTGR) $(LIBSOVL) $(LIBSTM) -lm raze/raze.o -o $@
+	$(CC) $(LDOVLBLKTGRFLAGS) $(OBJOVLBLKTGR) $(LIBSOVL) $(LIBSTM) raze/raze.o -o $@
 
 $(OVLBLKTGR1) : $(OBJOVLBLKTGR) $(MAKEFILE) $(LDOVLBLKTGRFILE)
 	$(CONV) -O binary $(OVLBLKTGR) $(OVLBLKTGR1)

@@ -698,8 +698,9 @@ void xxx(int *i)
 	}		
 */
 		CZetOpen(1);
+#ifdef SOUND
 		YM2151UpdateOneSlave();
-
+#endif
 #endif
 	}
 #ifdef SOUND

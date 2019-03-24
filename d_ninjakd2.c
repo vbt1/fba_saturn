@@ -671,11 +671,11 @@ int ovlInit(char *szShortName)
 
 /*static*/  INT32 DrvGfxDecode(UINT8 *rom, INT32 len, INT32 type)
 {
-	INT32 Plane[4]   = { STEP4(0,1) };
-	INT32 XOffs0[16] = { STEP8(0,4), STEP8(32*8,4) };
-	INT32 XOffs1[16] = { STEP8(0,4), STEP8(64*8,4) };
-	INT32 YOffs0[16] = { STEP8(0,32), STEP8(64*8,32) };
-	INT32 YOffs1[16] = { STEP16(0,32) };
+	UINT32 Plane[4]   = { STEP4(0,1) };
+	UINT32 XOffs0[16] = { STEP8(0,4), STEP8(32*8,4) };
+	UINT32 XOffs1[16] = { STEP8(0,4), STEP8(64*8,4) };
+	UINT32 YOffs0[16] = { STEP8(0,32), STEP8(64*8,32) };
+	UINT32 YOffs1[16] = { STEP16(0,32) };
 
 //	UINT8 *tmp = (UINT8*)BurnMalloc(len);
 	UINT8 *tmp = (UINT8*)0x00200000; //malloc(0x40000);
@@ -697,14 +697,12 @@ int ovlInit(char *szShortName)
 				memcpy (tmp, rom, len);
 
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs0, YOffs0, 0x400, tmp, rom);
-//			tile16x16toSaturn(1,(len * 2) / (16 * 16), DrvGfxROM1);
 		break;
 
 		case 2: // decode pour sprites
 			memcpy (tmp, rom, len);
 
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs1, YOffs1, 0x400, tmp, rom);
-//			tile16x16toSaturn(1,(len * 2) / (16 * 16), DrvGfxROM1);
 		break;
 		case 3: // decode pour bg1
 			tmp = (UINT8*)DrvGfxROM0;
@@ -722,9 +720,6 @@ int ovlInit(char *szShortName)
 			tile16x16toSaturn(1,(len * 2) / (16 * 16), rom);
 		break;
 	}
-
-//	BurnFree (tmp);
-
 	return 0;
 }
 

@@ -10,7 +10,7 @@
 /*static*/ void updateSound();
 /*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8];
 /*static*/ unsigned char DrvDips[2]={0,0},DrvReset=0;
-/*static*/ UINT8 DrvInputs[8];
+/*static*/ UINT8 DrvInputs[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ short *pAY8910Buffer[6], *pFMBuffer = NULL;
 /*static*/ unsigned char *Mem = NULL;
 /*static*/ UINT8 *DrvMainROM = NULL;
@@ -27,19 +27,20 @@
 /*static*/ UINT8 *DrvPalRAM = NULL;
 /*static*/ UINT8 *DrvSubRAM = NULL;
 /*static*/ UINT32 *offs_lut = NULL;
+/*static*/ UINT16 *cram_lut = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
 
-/*static*/ INT32 DrvCoinHold = 0;
-/*static*/ INT32 DrvCoinHoldframecnt = 0;
-/*static*/ INT32 flipscreen;
-/*static*/ INT32 xscroll;
-/*static*/ INT32 yscroll;
-/*static*/ INT32 watchdog;
-/*static*/ UINT8 ninjakun_ioctrl;
+/*static*/ UINT32 DrvCoinHold = 0;
+/*static*/ UINT32 DrvCoinHoldframecnt = 0;
+/*static*/ UINT32 flipscreen = 0;
+/*static*/ INT32 xscroll = 0;
+/*static*/ INT32 yscroll = 0;
+/*static*/ UINT32 watchdog = 0;
+/*static*/ UINT8 ninjakun_ioctrl = 0;
 
  void cleanSprites();
 ///*static*/ int flipscreen, vblank;
-/*static*/ int vblank;
+/*static*/ int vblank = 0;
 /*static*/ int DrvDraw();
 /*static*/ int DrvFrame();
 /*static*/ int DrvExit();

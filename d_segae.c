@@ -486,11 +486,11 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/ void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],const INT32 opcode_swap_select[64],
+static void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],const INT32 opcode_swap_select[64],
 		const UINT8 data_xor[64],const INT32 data_swap_select[64])
 {
 	INT32 A;
-	/*static*/ const UINT8 swaptable[24][4] =
+	static const UINT8 swaptable[24][4] =
 	{
 		{ 6,4,2,0 }, { 4,6,2,0 }, { 2,4,6,0 }, { 0,4,2,6 },
 		{ 6,2,4,0 }, { 6,0,2,4 }, { 6,4,0,2 }, { 2,6,4,0 },
@@ -529,9 +529,9 @@ int ovlInit(char *szShortName)
 	memcpy(pDestDec + 0x8000, pDest + 0x8000, 0x4000);
 }
 
-/*static*/ void astrofl_decode(void)
+static void astrofl_decode(void)
 {
-	/*static*/ const UINT8 opcode_xor[64] =
+	static const UINT8 opcode_xor[64] =
 	{
 		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
 		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
@@ -541,7 +541,7 @@ int ovlInit(char *szShortName)
 		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,
 	};
 
-	/*static*/ const UINT8 data_xor[64] =
+	static const UINT8 data_xor[64] =
 	{
 		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
 		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
@@ -551,7 +551,7 @@ int ovlInit(char *szShortName)
 		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,
 	};
 
-	/*static*/ const INT32 opcode_swap_select[64] =
+	static const INT32 opcode_swap_select[64] =
 	{
 		0,0,1,1,1,2,2,3,3,4,4,4,5,5,6,6,
 		6,7,7,8,8,9,9,9,10,10,11,11,11,12,12,13,
@@ -560,7 +560,7 @@ int ovlInit(char *szShortName)
 		14,15,15,16,16,17,17,17,18,18,19,19,19,20,20,21,
 	};
 
-	/*static*/ const INT32 data_swap_select[64] =
+	static const INT32 data_swap_select[64] =
 	{
 		0,0,1,1,2,2,2,3,3,4,4,5,5,5,6,6,
 		7,7,7,8,8,9,9,10,10,10,11,11,12,12,12,13,
@@ -578,7 +578,7 @@ int ovlInit(char *szShortName)
 	DrvMainROM	 	    = (UINT8 *) 0x00200000;
 	DrvMainROMFetch= (UINT8 *) 0x00280000;
 	mc8123key           = Next; Next += 0x02000;
-	CZ80Context			= Next; Next += (0x1080*1);
+	CZ80Context			= Next; Next += (0x1080*2);
 
 	AllRam				= Next;
 	DrvRAM			    = Next; Next += 0x10000;
@@ -633,8 +633,8 @@ int ovlInit(char *szShortName)
 
 	currentLine = mc8123 = 	mc8123_banked = hintcount = vintpending = hintpending = 0;
 
- 	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
- 	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
+// 	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
+// 	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
 	return 0;
 }
 
@@ -803,6 +803,7 @@ int ovlInit(char *szShortName)
 	memset(SCL_VDP2_VRAM_A0, 0, 0x80000);
 
 	MemIndex();
+//	make_lut();
 
 	switch (game) {
 		case 0:
@@ -971,7 +972,6 @@ int ovlInit(char *szShortName)
 // vbt : active le prioritybit en mode 1word
 	scfg.patnamecontrl =  0x0000;// VRAM A0
 	scfg.plate_addr[0] = ss_map;
-//	SCL_SetConfig(SCL_NBG0, &scfg);
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
 //	scfg.dispenbl		= OFF;
@@ -1042,20 +1042,20 @@ int ovlInit(char *szShortName)
 	if(game==1)
 	{
 			initSprites(240-1,192-1,16,0,0,0);
-		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17+8,0,240+8,191);
-		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17+8,0,240+8,191);
+//		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17+8,0,240+8,191);
+//		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17+8,0,240+8,191);
 	}
 	else if(game==5 || game==3 || game==2)
 	{
 			initSprites(248-1,192-1,8,0,0,0);
-		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,9,0,248,191);
-		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,9,0,248,191);
+//		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,9,0,248,191);
+//		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,9,0,248,191);
 	}
 	else
 	{
 		initSprites(256-1,192-1,0,0,0,0);
-		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,0,0,256,191);
-		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,0,0,256,191);
+//		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,0,0,256,191);
+//		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,0,0,256,191);
 	}
 
 	initScrolling(ON,SCL_VDP2_VRAM_B0);
@@ -1066,11 +1066,7 @@ int ovlInit(char *szShortName)
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	memset(&ss_vram[0x1100],0,0x12000);
-//	memset((UINT8 *)SCL_VDP2_VRAM_A0,0x00,0x10000);
-//	memset((UINT8 *)SCL_VDP2_VRAM_A1,0x00,0x10000);
-//	memset((UINT8 *)ss_map,0x00,0x2000);
-//	memset((UINT8 *)ss_map2,0x00,0x2000);
-
+// vbt : remis
 	memset(ss_scl,0xff,192*4);
 	memset(ss_scl1,0xff,192*4);
 }
@@ -1201,7 +1197,7 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 //			if(chip==0)
 //			map[0] =map[32] =map[0x700] =map[0x720] =0;
 //			else
-			map[0] =map[32] =map[0x700] =map[0x720] = index;//name_lut[temp];
+			map[0] =map[32] =map[0x700] =map[0x720] = name_lut[temp];
 #endif
 		}
 	}
@@ -1212,8 +1208,6 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 	UINT32 *sg = (UINT32 *)&ss_vram[0x1100+ (chip<<16) + (index & ~3)];
 	UINT32 temp1 = bp_lut[bp & 0xFFFF];
 	UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
-//	if(index<=256)
-//		temp1 = temp2=0x00;
 	*sg= *pg = (temp1<<2 | temp2 );
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1290,9 +1284,9 @@ Bit 08 - 00 : Pattern Index
 {
     for(UINT32 j = 0; j < 0x40; j++)
     {
-        UINT32 r = (j >> 0) & 3;
-        UINT32 g = (j >> 2) & 3;
-        UINT32 b = (j >> 4) & 3;
+        INT32 r = (j >> 0) & 3;
+        INT32 g = (j >> 2) & 3;
+        INT32 b = (j >> 4) & 3;
         r  = (r << 3) | (r << 1) | (r >> 1);
         g = (g << 3) | (g << 1) | (g >> 1);
         b = (b << 3) | (b << 1) | (b >> 1);

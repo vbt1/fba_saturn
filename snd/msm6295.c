@@ -332,6 +332,38 @@ void MSM6295Exit(int nChip)
 	pBuffer = NULL;
 }
 
+int ipow(int base, int exp)
+{
+    int result = 1;
+    for (;;)
+    {
+        if (exp & 1)
+            result *= base;
+        exp >>= 1;
+        if (!exp)
+            break;
+        base *= base;
+    }
+
+    return result;
+}
+
+float powerf(float x, int y) 
+{ 
+    float temp; 
+    if( y == 0) 
+       return 1; 
+    temp = powerf(x, y/2);        
+    if (y%2 == 0) 
+        return temp*temp; 
+    else
+    { 
+        if(y > 0) 
+            return x*temp*temp; 
+        else
+            return (temp*temp)/x; 
+    } 
+}  
 int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, bool bAddSignal)
 {
 //	if (nBurnSoundRate > 0) {
@@ -368,7 +400,7 @@ int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, bool bAddSignal)
 // vbt correct
 	for (i = 0; i < 49; i++) {
 //		int nStep = (int)(pow(1.1, (double)i) * 16.0);
-		int nStep = (int)(powf(1.1, (double)i) * 16.0);
+		int nStep = (int)(powerf(1.1, i) * 16.0);
 		for (n = 0; n < 16; n++) {
 			int nDelta = nStep >> 3;
 			if (n & 1) {

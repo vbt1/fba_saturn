@@ -16,13 +16,12 @@
 /*static*/ int NewsExit();
 int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength);
 
-/*static*/ Uint16 cram_lut[4096];
-/*static*/ UINT16 map_offset_lut[0x400];
+/*static*/ Uint16 *cram_lut = NULL;//[4096];
+/*static*/ UINT16 *map_offset_lut = NULL;//[0x400];
 ///*static*/ Uint16 *cram_lut;
 #ifdef CACHE2
-/*static*/ unsigned char 	bg_dirtybuffer[1024];
-/*static*/ unsigned char 	fg_dirtybuffer[1024];
-/*static*/ unsigned char	new_pic;
+/*static*/ unsigned char 	*bg_dirtybuffer = NULL;
+/*static*/ unsigned char 	*fg_dirtybuffer = NULL;
 #endif
 extern unsigned char* MSM6295ROM;
 extern int* pBuffer;

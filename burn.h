@@ -123,14 +123,8 @@ struct BurnDIPInfo {
 };
 
 // ---------------------------------------------------------------------------
-int BurnLibInit();
-int BurnLibExit();
-
 int BurnDrvInit();
 int BurnDrvExit();
-int BurnDrvFrame();
-//int BurnDrvRedraw();
-//int BurnRecalcPal();
 // ---------------------------------------------------------------------------
 // Retrieve driver information
 
@@ -145,34 +139,12 @@ int BurnDrvFrame();
 #define DRV_BOARDROM	 (8)
 
 #define DRV_NEXTNAME	 (1 << 8)
-#define DRV_ASCIIONLY	 (1 << 12)
-#define DRV_UNICODEONLY	 (1 << 13)
 
-
-int BurnDrvGetZipName(char** pszName, unsigned int i);
+//int BurnDrvGetZipName(char** pszName, unsigned int i);
 int BurnDrvGetRomInfo(struct BurnRomInfo *pri, unsigned int i);
 int BurnDrvGetRomName(char** pszName, unsigned int i, int nAka);
 int BurnDrvGetInputInfo(struct BurnInputInfo* pii, unsigned int i);
 int BurnDrvGetDIPInfo(struct BurnDIPInfo* pdi, unsigned int i);
-int BurnDrvGetVisibleSize(int* pnWidth, int* pnHeight);
-int BurnDrvGetVisibleOffs(int* pnLeft, int* pnTop);
-int BurnDrvGetFullSize(int* pnWidth, int* pnHeight);
-int BurnDrvGetAspect(int* pnXAspect, int* pnYAspect);
-int BurnDrvGetHardwareCode();
-int BurnDrvGetFlags();
-//bool BurnDrvIsWorking();
-//int BurnDrvGetMaxPlayers();
-//int BurnDrvSetVisibleSize(int pnWidth, int pnHeight);
-//int BurnDrvSetAspect(int pnXAspect, int pnYAspect);
-//int BurnDrvGetGenreFlags();
-//int BurnDrvGetFamilyFlags();
-//int BurnDoGameListLocalisation();
-
-//void ApplyPatches(UINT8* base, char* rom_name);
-
-//#define MAX_NEO_SLOTS	6
-//extern unsigned int nNeoSlotDrvNum[MAX_NEO_SLOTS];
-
 // ---------------------------------------------------------------------------
 // Flags used with the Burndriver structure
 

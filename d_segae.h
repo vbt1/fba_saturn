@@ -66,7 +66,7 @@ UINT8 vintpending = 0;
 UINT8 hintpending = 0;
 
 //UINT8 m_port_select;
-INT16 currentLine = 0;
+UINT8 currentLine = 0;
 
 //UINT8 leftcolumnblank = 0; // most games need this, except tetris
 

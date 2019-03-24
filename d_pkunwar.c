@@ -3,9 +3,6 @@
 #define CZ80 1
 //#define RAZE 1  // `EMULATE_R_REGISTER obligatoire
 #include "d_pkunwar.h"
-/*static*/ UINT16 cram_lut[256];
-///*static*/ UINT32 map_cache[0x400];
-///*static*/ UINT32 map_cache[0x800];
 
 int ovlInit(char *szShortName)
 {
@@ -694,8 +691,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 /*static*/ void pkunwar_palette_init()
 {
-	unsigned int i;
-	for (i = 0; i < 0x200; i++)
+	for (UINT32 i = 0; i < 0x200; i++)
 	{
 		int entry;
 		int intensity,r,g,b;
@@ -715,24 +711,20 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 		g = (((DrvColPROM[entry] >> 2) & 0x0c) | intensity) * 0x11;
 		b = (((DrvColPROM[entry] >> 4) & 0x0c) | intensity) * 0x11;
 
-        r =  (r >>3);
-        g =  (g >>3);
-        b =  (b >>3);
-
-		colAddr[i] = colBgAddr[i] = RGB(r,g,b);
+		colAddr[i] = colBgAddr[i] = BurnHighCol(r,g,b,0);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void pkunwar_gfx_decode(unsigned char *Gfx)
 {
-	/*static*/ int PlaneOffsets[4] = { 0, 1, 2, 3 };
+	/*static*/ UINT32 PlaneOffsets[4] = { 0, 1, 2, 3 };
 
-	/*static*/ int XOffsets[16] = {
+	/*static*/ UINT32 XOffsets[16] = {
 		0x00000, 0x00004, 0x40000, 0x40004, 0x00008, 0x0000c, 0x40008, 0x4000c,
 		0x00080, 0x00084, 0x40080, 0x40084, 0x00088, 0x0008c, 0x40088, 0x4008c
 	};
 
-	/*static*/ int YOffsets[16] = {
+	/*static*/ UINT32 YOffsets[16] = {
 		0x000, 0x010, 0x020, 0x030, 0x040, 0x050, 0x060, 0x070,
 		0x100, 0x110, 0x120, 0x130, 0x140, 0x150, 0x160, 0x170
 	};
@@ -749,9 +741,9 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 /*static*/ void nova_gfx_decode(unsigned char *Gfx)
 {
-	INT32 Planes[4]    = { STEP4(0,1) };
-	INT32 XOffsets[16] = { STEP8(0,4), STEP8(256,4) };
-	INT32 YOffsets[16] = { STEP8(0,32), STEP8(512,32) };
+	UINT32 Planes[4]    = { STEP4(0,1) };
+	UINT32 XOffsets[16] = { STEP8(0,4), STEP8(256,4) };
+	UINT32 YOffsets[16] = { STEP8(0,32), STEP8(512,32) };
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	GfxDecode4Bpp(0x800, 4,  8,  8, Planes, XOffsets, YOffsets, 0x100, Gfx, cache);
@@ -772,8 +764,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	if (BurnLoadRom(DrvGfxROM0 + 0x8000, 5, 1)) return 1;
 	if (BurnLoadRom(DrvGfxROM0 + 0xc000, 6, 1)) return 1;
 
-	for (INT32 i = 0; i < 8; i++) {
-		int j = ((i & 1) << 2) | ((i >> 1) & 3);
+	for (UINT32 i = 0; i < 8; i++) {
+		UINT32 j = ((i & 1) << 2) | ((i >> 1) & 3);
 		memcpy (tmp + j * 0x2000, DrvGfxROM0 + i * 0x2000, 0x2000);
 	}
 
@@ -853,8 +845,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	if (BurnLoadRom(DrvGfxROM0 + 0x4000,  4, 1)) return 1;
 	if (BurnLoadRom(DrvGfxROM0 + 0x8000,  5, 1)) return 1;
 
-	for (INT32 i = 0; i < 8; i++) {
-		int j = ((i & 1) << 2) | ((i >> 1) & 3);
+	for (UINT32 i = 0; i < 8; i++) {
+		UINT32 j = ((i & 1) << 2) | ((i >> 1) & 3);
 		memcpy (tmp + j * 0x2000, DrvGfxROM0 + i * 0x2000, 0x2000);
 	}
 
@@ -871,7 +863,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	DrvGfxROM0	= Next; Next += 0x020000;
 	DrvColPROM= Next; Next += 0x000020;
 	pFMBuffer	= Next; Next += SOUND_LEN * 6 * sizeof(short);
-	offs_lut = Next; Next += 0x400 * (sizeof(UINT32));
+	offs_lut = (UINT32 *)Next; Next += 0x400 * (sizeof(UINT32));
+	cram_lut = (UINT16 *)Next; Next += 256 * (sizeof(UINT16));
 	CZ80Context	= Next; Next += (0x1080*2);
 	MemEnd	= Next;
 }
@@ -1019,8 +1012,6 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 /*static*/ INT32 NinjakunInit()
 {
 	DrvInitSaturn(3);
-	make_lut();
-
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
@@ -1032,9 +1023,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	DrvSprRAM = DrvMainROM + 0xd000;
 	DrvPalRAM = DrvMainROM + 0xd800;
 	DrvMainRAM = DrvMainROM + 0x10000;
-//	DrvSubRAM = DrvMainROM += 0xe800;
-//	DrvSubROM = DrvMainROM += 0x010000;
-	
+
+	make_lut();
 	make_nova_lut();
 	NinjakunLoadRoms();
 
@@ -1227,12 +1217,6 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	AY8910Init(0, 1500000, nBurnSoundRate, &raiders5_port_0, &pkunwar_port_1, NULL, NULL);
 	AY8910Init(1, 1500000, nBurnSoundRate, &nova2001_port_3, &nova2001_port_4, NULL, NULL);
-
-//	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
-//	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
-
-//	GenericTilesInit();
-
 	NinjakunDoReset();
 
 	return 0;
@@ -1329,10 +1313,6 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	SPR_InitSlaveSH();
 	nBurnSprites  = 67;
 
-//	ss_map  = (Uint16 *)SS_MAP;
-//	ss_map2= (Uint16 *)SS_MAP2;
-//	ss_font  = (Uint16 *)SS_FONT;
-
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 
@@ -1363,15 +1343,14 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	initSprites(264-1,216-1,0,0,8,-32);
 	drawWindow(0,192,192,2,62);
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
-	//*(unsigned int*)OPEN_CSH_VAR(SOUND_LEN) = 128;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int DrvExit()
 {
+	SPR_InitSlaveSH();
 	nBurnSprites=128;
 	cleanSprites();
-//	if(((*(unsigned char *)0xfffffe11 & 0x80) == 0))
-//		SPR_WaitEndSlaveSH();
+
 	AY8910Exit(1);
 	AY8910Exit(0);
 #ifndef RAZE
@@ -1381,18 +1360,20 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	DrvMainROM = DrvGfxROM0 = DrvGfxROM1 = DrvColPROM = DrvMainRAM = NULL;
 	MemEnd	= DrvBgRAM = DrvFgRAM = DrvSprRAM = DrvPalRAM = NULL;
 	DrvSubRAM = DrvSubROM = CZ80Context = NULL;
+	cram_lut = NULL;
 	offs_lut = NULL;
 
-
-	for (int i = 0; i < 6; i++) {
+	for (UINT32 i = 0; i < 6; i++) {
 		pAY8910Buffer[i] = NULL;
 	}
 
 	pFMBuffer = NULL;
 	free (AllMem);
 	AllMem = NULL;
-	vblank /*= flipscreen */= 0;
-	SPR_InitSlaveSH();
+	DrvCoinHold = DrvCoinHoldframecnt = flipscreen = watchdog = 0;
+	xscroll = yscroll = 0;
+	ninjakun_ioctrl = 0;
+
 	return 0;
 }
 
@@ -1401,14 +1382,12 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 /*static*/ int DrawChars(int priority)
 {
-	int offs;
-
 	if(priority==0)
 		ss_map =(Uint16 *)SCL_VDP2_VRAM_B0;
 	else
 		ss_map =(Uint16 *)SCL_VDP2_VRAM_A0;
 
-	for (offs = 0x3c0 - 1;offs >= 0x40;offs--)
+	for (INT32 offs = 0x3c0 - 1;offs >= 0x40;offs--)
 	{
 		int sx,sy;
 		sx = (offs & 0x1f);
@@ -1480,7 +1459,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	{
 		memset (DrvInputs, 0xff, 3);
 
-		for (INT32 i = 0; i < 8; i++) {
+		for (UINT32 i = 0; i < 8; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
@@ -1504,13 +1483,13 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	vblank = 0;
 //	INT32 nInterleave = 256;
-	INT32 nInterleave = 32;
-	INT32 nCyclesTotal = 3000000 / 60;
+	UINT32 nInterleave = 32;
+	UINT32 nCyclesTotal = 3000000 / 60;
 
  	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 
 	CZetOpen(0);
-	for (INT32 i = 0; i < nInterleave; i++) 
+	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
 		CZetRun(nCyclesTotal / nInterleave);
 //		if (i == 240) 
@@ -1532,7 +1511,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 /*static*/ void DrvPalRAMUpdate()
 {
-	for (INT32 i = 0; i < 16; i++) {
+	for (UINT32 i = 0; i < 16; i++) {
 		if (i != 1) { // ??
 			for (INT32 j = 0; j < 16; j++) {
 				DrvPalRAM[0x200 + i + j * 16 + 0] = DrvPalRAM[i];
@@ -1541,35 +1520,11 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 		DrvPalRAM[0x200 + i * 16 + 1] = DrvPalRAM[i];
 	}
 
-	for (INT32 i = 0; i < 0x300; i++) 
+	for (UINT32 i = 0; i < 0x300; i++) 
 	{
 		UINT8 color = DrvPalRAM[i];
 		colAddr[i] = colBgAddr[i] = cram_lut[color];
 	}
-}
-
-#define INT_DIGITS 19
-char *itoa(i)
-     int i;
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  /*static*/ char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
 }
 
 /*static*/ inline INT32 NinjakunDraw()
@@ -1594,16 +1549,16 @@ char *itoa(i)
 
 	memset (DrvInputs, 0xff, 3);
 
-	for (INT32 i = 0; i < 8; i++) {
+	for (UINT32 i = 0; i < 8; i++) {
 		DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
 		DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 	}
 
 	vblank = 0;
-	INT32 nInterleave = 256;
-	INT32 nCyclesTotal = 1500000 / 60;
-	INT32 nCyclesDone = 0;
-	for (INT32 i = 0; i < nInterleave; i++) {
+	UINT32 nInterleave = 256;
+	UINT32 nCyclesTotal = 1500000 / 60;
+	UINT32 nCyclesDone = 0;
+	for (UINT32 i = 0; i < nInterleave; i++) {
 		CZetOpen(0);
 		CZetRun(nCyclesTotal / nInterleave);
 		INT32 sync_cycles = CZetTotalCycles();
@@ -1649,11 +1604,6 @@ char *itoa(i)
 
 	}
 
-//	if (pBurnSoundOut) {
-//		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
-//	}
-//  	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
-//	updateSound();
 	NinjakunDraw();
 	SPR_WaitEndSlaveSH();
 	return 0;
@@ -1676,10 +1626,10 @@ char *itoa(i)
 
 	vblank = 0;
 	//INT32 Multiplier = 8; // needs high multiplier for inter-processor communication w/shared memory
-	INT32 nInterleave = 2000;//2000/20; //256*Multiplier;
-	INT32 nCyclesTotal = 3000000 / 60 /2;
+	UINT32 nInterleave = 2000;//2000/20; //256*Multiplier;
+	UINT32 nCyclesTotal = 3000000 / 60 /2;
 
-	for (INT32 i = 0; i < nInterleave; i++) 
+	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
 		CZetOpen(0);
 		CZetRun(nCyclesTotal / nInterleave);
@@ -1726,10 +1676,10 @@ char *itoa(i)
 {
 	for (INT32 offs = 0; offs < 0x800; offs += 32)
 	{
-		INT32 attr = DrvSprRAM[offs+3];
-		INT32 flip = (DrvSprRAM[offs+0] & 0x03)<<4;
-		INT32 code = ((DrvSprRAM[offs+0] & 0xfc) >> 2) + ((attr & 0x07) << 6);
-		INT32 delta = (offs>>5)+3;
+		UINT32 attr = DrvSprRAM[offs+3];
+		UINT32 flip = (DrvSprRAM[offs+0] & 0x03)<<4;
+		UINT32 code = ((DrvSprRAM[offs+0] & 0xfc) >> 2) + ((attr & 0x07) << 6);
+		UINT32 delta = (offs>>5)+3;
 
 		ss_sprite[delta].ax = DrvSprRAM[offs+1];
 		ss_sprite[delta].ay = DrvSprRAM[offs+2];
@@ -1753,9 +1703,9 @@ char *itoa(i)
 {
 	for (INT32 offs = 0; offs < 0x800; offs += 32)
 	{
-		INT32 attr = DrvSprRAM[offs+3];
-		INT32 delta = (offs>>5)+3;
-		INT32 code = DrvSprRAM[offs+0];
+		UINT32 attr = DrvSprRAM[offs+3];
+		UINT32 delta = (offs>>5)+3;
+		UINT32 code = DrvSprRAM[offs+0];
 
 		if (attr & 0x80)
 		{
@@ -1797,11 +1747,8 @@ char *itoa(i)
 #endif
 
 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
-//	updateSound();
 	DrvDraw();
 
-
-//PCM_Task(pcm);
 	SPR_WaitEndSlaveSH();
 
 	return 0;
@@ -1810,7 +1757,6 @@ char *itoa(i)
 /*static*/ void updateSound()
 {
 	int nSample;
-	int n;
 	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
@@ -1819,7 +1765,7 @@ char *itoa(i)
 	AY8910Update(0, &pAY8910Buffer[0], SOUND_LEN);
 	AY8910Update(1, &pAY8910Buffer[3], SOUND_LEN);
 
-	for (n = 0; n < SOUND_LEN; n++) 
+	for (UINT32 n = 0; n < SOUND_LEN; n++) 
 	{
 		nSample  = pAY8910Buffer[0][n]; // >> 2;
 		nSample += pAY8910Buffer[1][n]; // >> 2;
@@ -1858,20 +1804,15 @@ char *itoa(i)
 //-------------------------------------------------------------------------------------------------
 void make_lut()
 {
-	for (INT32 i = 0; i < 256; i++) 
+	for (UINT32 i = 0; i < 256; i++) 
 	{
-		INT32 intensity = i & 0x03;
+		UINT32 intensity = i & 0x03;
 
-		INT32 r = (((i >> 0) & 0x0c) | intensity) * 0x11;
-		INT32 g = (((i >> 2) & 0x0c) | intensity) * 0x11;
-		INT32 b = (((i >> 4) & 0x0c) | intensity) * 0x11;
+		UINT32 r = (((i >> 0) & 0x0c) | intensity) * 0x11;
+		UINT32 g = (((i >> 2) & 0x0c) | intensity) * 0x11;
+		UINT32 b = (((i >> 4) & 0x0c) | intensity) * 0x11;
 
-//		DrvPalette[i] = BurnHighCol(r, g, b, 0);
-        r =  (r >>3);
-        g =  (g >>3);
-        b =  (b >>3);
-
-		cram_lut[i] = RGB(r,g,b);
+		cram_lut[i] = BurnHighCol(r, g, b, 0);
 	}
 }
 //-------------------------------------------------------------------------------------------------

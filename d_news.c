@@ -76,15 +76,12 @@ int ovlInit(char *szShortName)
 
 /*static*/ void make_lut(void)
 {
-    unsigned short j;
-//    for(j = 0; j < 8192; j++)
+    UINT32 j;
 	for(j = 0; j < 4096; j++)
 	{
-		int r, g, b;
-
-		r = (j >> 8) & 0x0f;
-		g = (j >> 4) & 0x0f;
-		b = (j >> 0) & 0x0f;
+		UINT32 r = (j >> 8) & 0x0f;
+		UINT32 g = (j >> 4) & 0x0f;
+		UINT32 b = (j >> 0) & 0x0f;
 
 		r = (r << 4) | r;
 		g = (g << 4) | g;
@@ -93,9 +90,9 @@ int ovlInit(char *szShortName)
     }
 
 	j=0;
-	for (int my = 0; my < 64; my+=2) 
+	for (UINT32 my = 0; my < 64; my+=2) 
 	{
-		for (int mx = 0; mx < 64; mx+=2) 
+		for (UINT32 mx = 0; mx < 64; mx+=2) 
 		{
 			map_offset_lut[j] = (mx|(my<<6));
 			ss_map[map_offset_lut[j]+0x40] =  0x00;
@@ -194,8 +191,13 @@ int ovlInit(char *szShortName)
 	NewsFgVideoRam     = Next; Next += 0x00800;
 	NewsBgVideoRam     = Next; Next += 0x00800;
 	NewsPaletteRam       = Next; Next += 0x00200;
-	CZ80Context				= Next; Next += (0x1080*2);
+	CZ80Context				= Next; Next += 0x1080;
 	pBuffer						= (int *)Next; Next += nBurnSoundRate * sizeof(int);
+	cram_lut					= (UINT16*)Next; Next += (4096*2);
+	map_offset_lut			= (UINT16*)Next; Next += (0x400*2);
+	bg_dirtybuffer			= Next; Next += 1024;
+	fg_dirtybuffer				= Next; Next += 1024;
+
 	MemEnd = Next;
 
 	return 0;
@@ -204,9 +206,9 @@ int ovlInit(char *szShortName)
 // Driver Init and Exit Functions
 /*static*/ int NewsInit()
 {
- int TilePlaneOffsets[4]   = { 0, 1, 2, 3 };
- int TileXOffsets[8]       = { 0, 4, 8, 12, 16, 20, 24, 28 };
- int TileYOffsets[8]       = { 0, 32, 64, 96, 128, 160, 192, 224 };
+ UINT32 TilePlaneOffsets[4] = { 0, 1, 2, 3 };
+ UINT32 TileXOffsets[8]       = { 0, 4, 8, 12, 16, 20, 24, 28 };
+ UINT32 TileYOffsets[8]       = { 0, 32, 64, 96, 128, 160, 192, 224 };
 
 	int nRet = 0, nLen;
 	DrvInitSaturn();
@@ -222,12 +224,15 @@ int ovlInit(char *szShortName)
 
 	memset(Mem, 0, nLen);
 	MemIndex();
-
+#ifdef CACHE2
+	memset(bg_dirtybuffer,1,1024);
+#endif
+#ifdef CACHE
+	memset(fg_dirtybuffer,1,1024);
+#endif
 	make_lut();
 
 	unsigned char *NewsTempGfx = (unsigned char*)(0x00240000);
-//	memset(NewsTempGfx,0x00,0x80000);
-//	memset(cache,0x00,0x80000);
 
 	// Load Z80 Program Rom
 	nRet = BurnLoadRom(NewsRom, 0, 1); if (nRet != 0) return 1;
@@ -353,8 +358,6 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
 {
-//(Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
-//	Uint16* grey = (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
 	colBgAddr =(Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	colBgAddr2=(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 }
@@ -362,8 +365,6 @@ int ovlInit(char *szShortName)
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-//	nBurnSoundLen = 192;
-//	nBurnSoundLen = 392;
 	nBurnSprites  = 3;
 	
 	SS_MAP  = ss_map   = (Uint16 *)SCL_VDP2_VRAM_B1;
@@ -372,12 +373,7 @@ int ovlInit(char *szShortName)
 	SS_CACHE = cache     = (Uint8  *)SCL_VDP2_VRAM_A0;				
 	ss_BgPriNum     = (SclSpPriNumRegister *)SS_N0PRI;
 
-#ifdef CACHE2
-	memset(bg_dirtybuffer,1,1024);
-#endif
-#ifdef CACHE
-	memset(fg_dirtybuffer,1,1024);
-#endif
+
 	SS_SET_N0PRIN(7);
 	SS_SET_N2PRIN(5);
 	SS_SET_N1PRIN(4);
@@ -406,13 +402,15 @@ int ovlInit(char *szShortName)
 #else
 //	ZetExit();
 #endif
-	MSM6295ROM = NULL;
 	
 	nSoundBufferPos=0;
 	PCM_Task(pcm);
+	MSM6295ROM = NULL;
 
 	CZ80Context	= MemEnd = RamStart = NewsRom = NewsRam = NULL;
 	NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
+	bg_dirtybuffer = fg_dirtybuffer = NULL;
+	cram_lut = map_offset_lut = NULL;
 	pBuffer = NULL;
 	free(Mem);
 	Mem = NULL;
@@ -423,9 +421,9 @@ int ovlInit(char *szShortName)
 // Graphics Emulation
 /*static*/ void NewsRenderBgLayer()
 {
-	unsigned int Code, Colour, x, TileIndex = 0;
+	UINT32 Code, Colour, x;
 	
-	 for (TileIndex=0;TileIndex<0x400 ; TileIndex++)
+	 for (UINT32 TileIndex=0;TileIndex<0x400 ; TileIndex++)
 	 {
 #ifdef CACHE2
 		if (bg_dirtybuffer[TileIndex])
@@ -437,7 +435,7 @@ int ovlInit(char *szShortName)
 			Code &= 0x0fff;
 			if ((Code & 0x0e00) == 0xe00) Code = (Code & 0x1ff) | (BgPic << 9);
 
-			int x = map_offset_lut[TileIndex];
+			x = map_offset_lut[TileIndex];
 			ss_map2[x] = Colour;
 			ss_map2[x+1] =  Code;
 
@@ -449,9 +447,9 @@ int ovlInit(char *szShortName)
 
 /*static*/ void NewsRenderFgLayer()
 {
-	unsigned int Code, Colour, x, TileIndex = 0;
+	UINT32 Code, Colour, x;
 
-	for (TileIndex=0;TileIndex<0x400 ; TileIndex++)
+	for (UINT32 TileIndex=0;TileIndex<0x400 ; TileIndex++)
 	{
 
 #ifdef CACHE
@@ -463,12 +461,12 @@ int ovlInit(char *szShortName)
 			Colour = Code >> 12;
 			Code &= 0x0fff;
 
-			unsigned int x = map_offset_lut[TileIndex];
+			x = map_offset_lut[TileIndex];
 			ss_map[x] = Colour;
 			ss_map[x+1] =  Code;
 
 			ss_map[x+0x40] =  10;
-			ss_map[x+0x41] =  0x01;
+			ss_map[x+0x41] =  0x02;
 
 #ifdef CACHE
 		}
