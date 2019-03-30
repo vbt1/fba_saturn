@@ -105,6 +105,8 @@ int ovlInit(char *szShortName)
 	CZ80Context				= Next; Next += 0x1080;
 	map_offset_lut			= Next; Next += 2048 * sizeof(UINT16);
 	charaddr_lut				= Next; Next += 2048 * sizeof(UINT16);
+	map_lut						= Next; Next += 256 * sizeof(UINT16);
+	cram_lut					= Next; Next += 4096 * sizeof(UINT16);
 	pBuffer						= Next; Next += nBurnSoundRate * sizeof(int);
 //	RamStart               = Next;
 
@@ -840,9 +842,8 @@ static void dummy(void)
 	CZ80Context = MemEnd = DrvZ80Rom = DrvZ80Code = DrvSoundRom = DrvZ80Ram = NULL;
 	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam = NULL;
 	DrvChars = DrvSprites = MSM6295ROM = NULL;
-	charaddr_lut = map_offset_lut = NULL;
+	charaddr_lut = map_offset_lut = map_lut = cram_lut = NULL;
 	pBuffer = NULL;
-
 	free(Mem);
 //	free(Mem);
 	Mem = NULL;

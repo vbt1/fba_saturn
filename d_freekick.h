@@ -24,8 +24,6 @@
 /*static*/ INT16 DrvDial1 = 0;
 /*static*/ INT16 DrvDial2 = 0;
 /*static*/ UINT8 DrvReset = 0;
-
-///*static*/ UINT8 DrvRecalc;
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT8 *AllMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;

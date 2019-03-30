@@ -991,6 +991,8 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	spinner = 0;
 	sprite_number = 0;
 	nSoundBufferPos = 0;
+
+	DrvDial1 = DrvDial2 = 0; 
 	return 0;
 }
 

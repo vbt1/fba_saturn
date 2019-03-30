@@ -921,8 +921,8 @@ struct BurnDriver BurnDrvArkarea = {
 	{ "robokid.15a",	0x10000, 0x469204e7, 7 | BRF_GRA },           // 27
 	{ "robokid.16a",	0x10000, 0x4e340815, 7 | BRF_GRA },           // 28
 	{ "robokid.17a",	0x10000, 0xf0863106, 7 | BRF_GRA },           // 29
-	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30
-	
+//	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30 // trouver de la ram
+	{ "robokid.18a",	0x0a000, 0xfdff7441, 7 | BRF_GRA },           // 30	
 	{ "prom82s.129",	0x00100, 0x4dd96f67, 0 | BRF_OPT },
 };
 
@@ -1095,7 +1095,7 @@ struct BurnDriver BurnDrvRobokidj2 = {
 	{ "robokid.15a",	0x10000, 0x469204e7, 7 | BRF_GRA },           // 27
 	{ "robokid.16a",	0x10000, 0x4e340815, 7 | BRF_GRA },           // 28
 	{ "robokid.17a",	0x10000, 0xf0863106, 7 | BRF_GRA },           // 29
-	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30
+	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30 
 	
 	{ "prom82s129.cpu",	0x00100, 0x4dd96f67, 0 | BRF_OPT },
 };

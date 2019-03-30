@@ -3,7 +3,7 @@
 //#include "sc_saturn.h"
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR  0x060C8000
+#define OVLADDR  0x060CB000
 #define LOWADDR 0x00200000
 //#define DEBUG_DRV 1
 volatile SysPort	*__port;
@@ -323,8 +323,8 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-	unsigned char *Mem = malloc((unsigned char *)0xA7000);
-//	memset(Mem,0x00,0xA2000);
+	unsigned char *Mem = malloc((unsigned char *)0xAA000);
+//	memset(Mem,0x00,0xAA000);
 	free(Mem);
 	Mem=NULL;
 
