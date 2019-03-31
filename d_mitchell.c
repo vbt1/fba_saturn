@@ -590,7 +590,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x00000,  0, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x10000,  1, 1); if (nRet != 0) return 1;
 
-	memset(DrvTempRom, 0xff, 0x100000);
+	memset4_fast(DrvTempRom, 0xff, 0xc0000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000,  2, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x20000,  3, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x80000,  4, 1); if (nRet != 0) return 1;
@@ -599,8 +599,8 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	GfxDecode4Bpp(0x4000, 4, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
 
 //1024Ko en 4bpp/2048 en 8bpp 
-	memset(DrvTempRom, 0xff, 0x100000);
-	memset(DrvSprites, 0xff, 0x40000); // ou 0x80000
+	memset4_fast(DrvTempRom, 0xff, 0x40000);
+//	memset4_fast(DrvSprites, 0xff, 0x40000); // ou 0x80000
 	nRet = BurnLoadRom(DrvTempRom + 0x00000,  6, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x20000,  7, 1); if (nRet != 0) return 1;
 	GfxDecode4Bpp(0x0800, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x200, DrvTempRom, DrvSprites);
@@ -645,21 +645,20 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	PangMemIndex();
 	make_lut();
 
-//	DrvTempRom = (unsigned char *)malloc(0x100000);
 	unsigned char *DrvTempRom = (unsigned char *)0x00200000;
  // VBT à remettre
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x00000,  0, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x10000,  1, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x30000,  2, 1); if (nRet != 0) return 1;
 
-	memset(DrvTempRom, 0xff, 0x100000);
+	memset4_fast(DrvTempRom, 0xff, 0xc0000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000,  3, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x20000,  4, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x80000,  5, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0xa0000,  6, 1); if (nRet != 0) return 1;
 	GfxDecode4Bpp(0x4000, 4, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
 
-	memset(DrvTempRom, 0xff, 0x100000);
+	memset4_fast(DrvTempRom, 0xff, 0x40000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000,  7, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x20000,  8, 1); if (nRet != 0) return 1;
 

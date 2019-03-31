@@ -572,33 +572,22 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	countrunbmode = !strcmp(BurnDrvGetTextA(DRV_NAME), "countrnb");
 
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "countrnb") || 
-		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekick") ||
-		!strcmp(BurnDrvGetTextA(DRV_NAME), "freeka") ||
-		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekb1") ||
-		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekb2") ||
-		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekb3") 
+		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekick") 
 	) 
 	{
 		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return 1;
-		if (!strcmp(BurnDrvGetTextA(DRV_NAME), "freekb3")) {
-			if (BurnLoadRom(DrvMainROM + 0x08000,  rom_number++, 1)) return 1;
-		}
+
 		if (BurnLoadRom(DrvSndROM,   rom_number++, 1)) return 1;	// sound rom
 	}
 
-	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "pbillrd") ||
-		!strcmp(BurnDrvGetTextA(DRV_NAME), "pbillrdsa"))
+	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "pbillrd") 
+//	||	!strcmp(BurnDrvGetTextA(DRV_NAME), "pbillrdsa")
+		)
 	{
 		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return 1;
 		if (BurnLoadRom(DrvMainROM + 0x04000,  rom_number++, 1)) return 1;
 		memmove(DrvMainROM + 0x10000, DrvMainROM + 0x08000, 0x4000);
 		if (BurnLoadRom(DrvMainROM + 0x14000,  rom_number++, 1)) return 1;
-
-/*		if (!strcmp(BurnDrvGetTextA(DRV_NAME), "pbillrdsa")) {
-			if (BurnLoadRom(MC8123Key,  rom_number++, 1)) return 1;
-			mc8123_decrypt_rom(0, 2, DrvMainROM, DrvMainROMdec, MC8123Key);
-			use_encrypted = 1;
-		}*/
 	}
 
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "omega"))
@@ -633,7 +622,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	}
 	UINT8 *DrvGfxTMP0 = (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1 = (UINT8 *)0x00218000;
-
+	memset(DrvGfxTMP0, 0xff, 0x40000);
 	// Gfx char
 	if (BurnLoadRom(DrvGfxTMP0  + 0x00000,  rom_number++, 1)) return 1; // ( "4.3k", 0x00000, 0x04000
 	if (BurnLoadRom(DrvGfxTMP0  + 0x04000,  rom_number++, 1)) return 1; // ( "5.3h", 0x04000, 0x04000
@@ -678,21 +667,10 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
-//	AM_RANGE(0x0000, 0xcfff) AM_ROM
-	CZetMapArea(0x0000, 0xcfff, 0, DrvMainROM);
-	CZetMapArea(0x0000, 0xcfff, 2, DrvMainROM); //+0x10000,DrvMainROM);
-//	AM_RANGE(0xd000, 0xdfff) AM_RAM
-	CZetMapArea(0xd000, 0xdfff, 0, DrvRAM);
-	CZetMapArea(0xd000, 0xdfff, 1, DrvRAM);
-	CZetMapArea(0xd000, 0xdfff, 2, DrvRAM);
-//	AM_RANGE(0xe000, 0xe7ff) AM_RAM_WRITE(freek_videoram_w) AM_SHARE("videoram")    // tilemap
-	CZetMapArea(0xe000, 0xe7ff, 0, DrvVidRAM);
-	CZetMapArea(0xe000, 0xe7ff, 1, DrvVidRAM);
-	CZetMapArea(0xe000, 0xe7ff, 2, DrvVidRAM);
-//	AM_RANGE(0xe800, 0xe8ff) AM_RAM AM_SHARE("spriteram")   // sprites
-	CZetMapArea(0xe800, 0xe8ff, 0, DrvSprRAM);
-	CZetMapArea(0xe800, 0xe8ff, 1, DrvSprRAM);
-	CZetMapArea(0xe800, 0xe8ff, 2, DrvSprRAM);
+	CZetMapMemory(DrvMainROM,	0x0000, 0xcfff, MAP_ROM);
+	CZetMapMemory(DrvRAM,		0xd000, 0xdfff, MAP_RAM);
+	CZetMapMemory(DrvVidRAM,	0xe000, 0xe7ff, MAP_RAM);
+	CZetMapMemory(DrvSprRAM,	0xe800, 0xe8ff, MAP_RAM);
 
 	ppi8255_init(2);
 
@@ -769,23 +747,11 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 		}
 	}
 
+	CZetMapMemory(DrvRAM,		0xc000, 0xcfff, MAP_RAM);
+	CZetMapMemory(DrvVidRAM,	0xd000, 0xd7ff, MAP_RAM);
+	CZetMapMemory(DrvSprRAM,	0xd800, 0xd8ff, MAP_RAM);
+	CZetMapMemory(DrvRAM + 0x1000,	0xd900, 0xdfff, MAP_RAM);
 
-//	AM_RANGE(0xc000, 0xcfff) AM_RAM
-	CZetMapArea(0xc000, 0xcfff, 0, DrvRAM);
-	CZetMapArea(0xc000, 0xcfff, 1, DrvRAM);
-	CZetMapArea(0xc000, 0xcfff, 2, DrvRAM);
-//	AM_RANGE(0xd000, 0xd7ff) AM_RAM_WRITE(freek_videoram_w) AM_SHARE("videoram")
-	CZetMapArea(0xd000, 0xd7ff, 0, DrvVidRAM);
-	CZetMapArea(0xd000, 0xd7ff, 1, DrvVidRAM);
-	CZetMapArea(0xd000, 0xd7ff, 2, DrvVidRAM);
-//	AM_RANGE(0xd800, 0xd8ff) AM_RAM AM_SHARE("spriteram")
-	CZetMapArea(0xd800, 0xd8ff, 0, DrvSprRAM);
-	CZetMapArea(0xd800, 0xd8ff, 1, DrvSprRAM);
-	CZetMapArea(0xd800, 0xd8ff, 2, DrvSprRAM);
-//	AM_RANGE(0xd900, 0xdfff) AM_RAM
-	CZetMapArea(0xd900, 0xdfff, 0, DrvRAM + 0x1000);
-	CZetMapArea(0xd900, 0xdfff, 1, DrvRAM + 0x1000);
-	CZetMapArea(0xd900, 0xdfff, 2, DrvRAM + 0x1000);
 	ppi8255_init(1);
 
 	CZetSetReadHandler(gigas_read); // Memory
@@ -795,7 +761,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	CZetSetOutHandler(gigas_out);
 
 	CZetClose();
-
+	wait_vblank();
 	SN76489AInit(0, 12000000/4, 0);
 	SN76489AInit(1, 12000000/4, 1);
 	SN76489AInit(2, 12000000/4, 1);
@@ -965,11 +931,8 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
-//	SPR_InitSlaveSH();
-//	GenericTilesExit();
 	CZetExit2();
 	ppi8255_exit();
-//	SN76496Exit();
 
 	CZ80Context = MemEnd = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
 	DrvVidRAM = DrvSprRAM = DrvColRAM = DrvColPROM = NULL;
@@ -998,10 +961,6 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 
 /*static*/ INT32 DrvFrame()
 {
-	if (DrvReset) {
-		DrvDoReset();
-	}
-
 	sprite_number = 3;
 	DrvInputs[0] = 0xff; // Active LOW
 	DrvInputs[1] = 0xff;

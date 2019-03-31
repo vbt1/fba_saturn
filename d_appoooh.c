@@ -9,7 +9,6 @@
 #define nInterleave SOUND_LEN
 #define cycles nCyclesTotal / 60 / nInterleave
 INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate);
-UINT8 *is_fg_dirty; //[0x400];
 static void Set4PCM();
 
 int ovlInit(char *szShortName)
@@ -889,7 +888,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	MemEnd = AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
 	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvGfxROM0 = DrvGfxROM1 = NULL;
 	DrvGfxROM2 = DrvGfxROM3 = /*DrvGfxTMP0 = DrvGfxTMP1 =*/ DrvColPROM = DrvMainROM = NULL;
-	DrvSoundROM = DrvFetch = CZ80Context = NULL;
+	DrvSoundROM = DrvFetch = CZ80Context = is_fg_dirty = NULL;
 	MSM5205Context = /*DrvPalette =*/ map_offset_lut = charaddr_lut = NULL;
 
 	free (AllMem);

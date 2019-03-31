@@ -54,7 +54,7 @@ SFX sfx_sidarm[96] = {
 /*static*/ UINT16 *remap4to16_lut = NULL;
 /*static*/ UINT16 *map_lut = NULL;  //[256];
 /*static*/ UINT16 *map_offset_lut = NULL;  //[2048];
-/*static*/ UINT16 cram_lut[4096];
+/*static*/ UINT16 *cram_lut = NULL;  //[4096];
 
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT8 *AllMem= NULL;

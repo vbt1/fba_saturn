@@ -312,15 +312,15 @@ int ovlInit(char *szShortName)
 
 	RamEnd			= Next;
 
-	bgmap_lut	 		= 0x00200000; //Next; Next += 0x008000 * sizeof (UINT16);
+	bgmap_lut	 		= Next; Next += 0x020000 * sizeof (UINT16);
 //
 	bgmap_buf		= Next; Next += 0x800 * sizeof (UINT32);//bgmap_lut + 0x20000;
 //	bgmap_buf		= bgmap_lut + 0x20000;
 
 	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
 	map_lut				= Next; Next += 256 * sizeof (UINT16);
-	map_offset_lut	= Next; Next += 4096 * sizeof (UINT16);
-//	cram_lut			= Next; Next += 32768 * sizeof (UINT16);
+	map_offset_lut	= Next; Next += 8192 * sizeof (UINT16);
+	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
 //	charaddr_lut		= Next; Next += 0x800 * sizeof (UINT16);
 	MemEnd			= Next;
 
@@ -330,12 +330,12 @@ int ovlInit(char *szShortName)
 /*static*/ void DrvGfxDecode()
 {
 	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
-	INT32 Plane0[2]  = { 4, 0 };
-	INT32 Plane1[4]  = { 0x200000 + 4, 0x200000 + 0, 4, 0 };
-	INT32 Plane2[4]  = { 0x100000 + 4, 0x100000 + 0, 4, 0 };
-	INT32 XOffs0[16] = { STEP4(0,1), STEP4(8,1), STEP4(256,1), STEP4(256+8,1) };
-	INT32 XOffs1[32] = { STEP4(0,1), STEP4(8,1), STEP4(512,1), STEP4(512+8,1), STEP4(1024,1), STEP4(1024+8,1), STEP4(1536,1), STEP4(1536+8,1) };
-	INT32 YOffs[32]  = { STEP32(0,16) };
+	UINT32 Plane0[2]  = { 4, 0 };
+	UINT32 Plane1[4]  = { 0x200000 + 4, 0x200000 + 0, 4, 0 };
+	UINT32 Plane2[4]  = { 0x100000 + 4, 0x100000 + 0, 4, 0 };
+	UINT32 XOffs0[16] = { STEP4(0,1), STEP4(8,1), STEP4(256,1), STEP4(256+8,1) };
+	UINT32 XOffs1[32] = { STEP4(0,1), STEP4(8,1), STEP4(512,1), STEP4(512+8,1), STEP4(1024,1), STEP4(1024+8,1), STEP4(1536,1), STEP4(1536+8,1) };
+	UINT32 YOffs[32]  = { STEP32(0,16) };
 	UINT8 *DrvGfxROM1	 = (UINT8 *)(SS_CACHE + 0x4000);
 	UINT8 *DrvGfxROM0	 = (UINT8 *)SS_CACHE;
 	UINT8 *DrvGfxROM2	 = (UINT8 *)(ss_vram + 0x1100);
@@ -537,7 +537,7 @@ int ovlInit(char *szShortName)
 	stmClose(stm);
 
 	bgmap_buf = NULL;
-	bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = NULL;
+	cram_lut = bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = NULL;
 	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM0 = NULL;
 	DrvStarMap = DrvTileMap = DrvVidRAM = DrvSprBuf = DrvSprRAM = DrvPalRAM = DrvZ80RAM0 = bgscrollx = bgscrolly = NULL;
 	BurnFree (AllMem);
@@ -820,11 +820,10 @@ static void DrvInitSaturn()
 /*static*/ void make_lut(void)
 {
     UINT32 j=0,my;
+	UINT8 r,g,b;
 
    	for (UINT32 i = 0; i < 4096;i++) 
 	{
-		UINT8 r,g,b;
-
 		r = (i >> 4) & 0x0f;
 		g = (i >> 0) & 0x0f;
 		b = (i >> 8) & 0x0f;

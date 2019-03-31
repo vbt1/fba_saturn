@@ -213,26 +213,9 @@ UINT8 __fastcall pengo_read(UINT16 a)
 /*static*/ void pacman_palette_init()
 {
 	UINT32 t_pal[32];
-
-	for (UINT32 i = 0; i < 32; i++)
-	{
-		INT32 bit0 = (DrvColPROM[i] >> 0) & 0x01;
-		INT32 bit1 = (DrvColPROM[i] >> 1) & 0x01;
-		INT32 bit2 = (DrvColPROM[i] >> 2) & 0x01;
-		UINT8 r = (bit0 * 33) + (bit1 * 71) + (bit2 * 151);
-
-		bit0 = (DrvColPROM[i] >> 3) & 0x01;
-		bit1 = (DrvColPROM[i] >> 4) & 0x01;
-		bit2 = (DrvColPROM[i] >> 5) & 0x01;
-		UINT8 g = (bit0 * 33) + (bit1 * 71) + (bit2 * 151);
-
-		bit0 = (DrvColPROM[i] >> 6) & 0x01;
-		bit1 = (DrvColPROM[i] >> 7) & 0x01;
-		UINT8 b = (bit0 * 81) + (bit1 * 174);
-
-		t_pal[i] =	 RGB(r>>3,g>>3,b>>3);
-	}
 	UINT32 delta=0;
+
+	init_32_colors(t_pal,DrvColPROM);
 
 	for (UINT32 i = 0; i < 256; i++)
 	{
@@ -241,9 +224,6 @@ UINT8 __fastcall pengo_read(UINT16 a)
 		/*colAddr[i]=*/colBgAddr[delta] = /*Palette[0x000 + i] =*/ t_pal[ctabentry + 0x00];
 		/*colAddr[i+256]=*/colBgAddr[delta+1024] = /*Palette[0x100 + i] =*/ t_pal[ctabentry + 0x10];
 		delta++; if ((delta & 3) == 0) delta += 12;
-
-//		Palette[0x000 + i] = t_pal[ctabentry + 0x00];
-//		Palette[0x100 + i] = t_pal[ctabentry + 0x10];
 	}
 
 //	DrvRecalc = 1;
@@ -304,7 +284,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	ss_vram = NULL;
 	memset(tmp,0x00,size * 2);
 //	free(tmp);
-	tmp = NULL;
+//	tmp = NULL;
 }
 
 /*static*/ INT32 pacman_load()
@@ -389,13 +369,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	DrvColRAM		= Next; Next += 0x000400;
 
 	RamEnd			= Next;
-/*
-	pAY8910Buffer[0] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-*/
 	CZ80Context		= Next; Next += 0x1080;
-//	chip					= (struct namco_sound *)Next; Next += 1 * sizeof(struct namco_sound);
 	bg_dirtybuffer	= Next; Next += 0x400 * sizeof(UINT8);
 	map_offset_lut	= Next; Next += 0x400 * sizeof(UINT16);
 	ofst_lut				= Next; Next += 0x400 * sizeof(UINT16);
@@ -490,7 +464,6 @@ UINT8 __fastcall pengo_read(UINT16 a)
 
 	NamcoSoundInit(18432000 / 6 / 32, 3);
 	DrvDoReset(1);
-  //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset   after            ",10,20);	
 
 	return 0;
 }
@@ -602,16 +575,16 @@ void DrvInitSaturn()
 
 /*static*/ INT32 DrvExit()
 {
+	PCM_NotifyWriteSize(pcm, nSoundBufferPos);
+	PCM_Task(pcm);
+	nSoundBufferPos=0;
 	NamcoSoundExit();
 	CZetExit2();
 
 //	signed short *nSoundBuffer		= (signed short *)0x25a20000;
-//	memset(nSoundBuffer,0x00,0x4000);
-//	PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-//	PCM_Task(pcm);
-	nSoundBufferPos=0;
 
-	CZ80Context = DrvZ80ROM = DrvQROM = DrvColPROM = NULL;
+
+	CZ80Context = DrvZ80ROM = DrvQROM = DrvColPROM = NamcoSoundProm = NULL;
 	AllRam = DrvZ80RAM = DrvSprRAM = DrvSprRAM2 = NULL;
 	DrvColRAM= DrvVidRAM = RamEnd = NULL;
 	PengoStart = bg_dirtybuffer = MemEnd = NULL;

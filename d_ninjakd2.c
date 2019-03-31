@@ -139,7 +139,7 @@ int ovlInit(char *szShortName)
 	UINT8 *ram[3] = { DrvBgRAM0, DrvBgRAM1, DrvBgRAM2 };
 	INT32 off[2][3]  = { { 0xd800, 0xd400, 0xd000 }, { 0xc400, 0xc800, 0xcc00 } };
 
-	INT32 nBank = 0x400 * data;
+	UINT32 nBank = 0x400 * data;
 
 //	nZ80RamBank[sel&3] = data;
 
@@ -821,16 +821,16 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
-	SS_SET_S0PRIN(4);
-	SS_SET_N0PRIN(5);
+	SS_SET_S0PRIN(5);
+	SS_SET_N0PRIN(4);
 	SS_SET_N2PRIN(7);
 	SS_SET_N1PRIN(3);
 	SS_SET_N3PRIN(6);
 	initPosition();
 
-		initColors();
-		SCL_Open();
-		ss_reg->n1_move_x =  (0<<16) ;
+	initColors();
+	SCL_Open();
+	ss_reg->n1_move_x =  (0<<16) ;
 
 	initLayers();
 
@@ -933,7 +933,7 @@ INT16 previous_bank[3]={-1,-1,-1};
   }
   return p;
 }
-/*static*/  void draw_robokid_bg_layer(INT32 sel, UINT8 *ram, UINT8 *rom, INT32 width, INT32 transp)
+/*static*/  void draw_robokid_bg_layer(UINT32 sel, UINT8 *ram, UINT8 *rom, INT32 width, INT32 transp)
 {
 	if (tilemap_enable[sel] == 0) return;
 
@@ -941,11 +941,11 @@ INT16 previous_bank[3]={-1,-1,-1};
 
 	UINT16* tmp = (UINT16*)0x00200000;
 
-		UINT32 sx1 = (65 % wide);
-		UINT32 sy1 = (65 / wide);
+	UINT32 sx1 = (64 % wide);
+	UINT32 sy1 = (64 / wide);
 
-		UINT32 ofst1 = (sx1 & 0x0f) + (sy1 * 16) + ((sx1 & 0x70) * 0x20);
-		UINT32 attr1  = ram[ofst1 * 2 + 1];
+	UINT32 ofst1 = (sx1 & 0x0f) + (sy1 * 16) + ((sx1 & 0x70) * 0x20);
+	UINT32 attr1  = ram[ofst1 * 2 + 1];
 
 	if(previous_bank[sel]!=(((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5))		)
 	{
@@ -970,12 +970,12 @@ INT16 previous_bank[3]={-1,-1,-1};
 		UINT32 sx = (offs % wide);
 		UINT32 sy = (offs / wide);
 
-		INT32 ofst = (sx & 0x0f) + (sy * 16) + ((sx & 0x70) * 0x20);
-		INT32 attr  = ram[ofst * 2 + 1];
+		UINT32 ofst = (sx & 0x0f) + (sy * 16) + ((sx & 0x70) * 0x20);
+		UINT32 attr  = ram[ofst * 2 + 1];
 //		INT32 code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
 		UINT32 code  = ram[ofst * 2 + 0] + ((attr & 0xc0) << 2); // correct pour nbg1
 
-			int offs2 = (sx | sy <<5)*2;
+		UINT32 offs2 = (sx | sy <<5)*2;
 
 		switch(sel)
 		{
@@ -984,14 +984,14 @@ INT16 previous_bank[3]={-1,-1,-1};
 				ss_map2[offs2+1] = (0x400+(code<<2));
 				break;
 			case 1: // nbg0
-//				code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
+// correct juste pour le premier niveau 
+				code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
 				ss_font[offs2] = (attr & 0x0f);
 				ss_font[offs2+1] = (0x1400+((code)<<2));
 				break;
 			case 2://nbg3
 				ss_map3[offs2] = (attr & 0x0f);
-//				ss_map3[offs2+1] = (0x2400+((code)<<2)); // si 0x20000 pour bg2
-				ss_map3[offs2+1] = (0x2C00+((code)<<2));
+				ss_map3[offs2+1] = (0x2C00+((code)<<2)); // si 0x20000 pour bg2
 				break;
 		}
 	}

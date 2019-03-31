@@ -259,9 +259,9 @@ int ovlInit(char *szShortName)
 		SN76496Init(0, master_clock, 0);
 		SN76496Init(1, master_clock, 1);
 		SN76496Init(2, master_clock, 1);
-		SN76496SetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
-		SN76496SetRoute(1, 0.50, BURN_SND_ROUTE_BOTH);
-		SN76496SetRoute(2, 0.50, BURN_SND_ROUTE_BOTH);
+//		SN76496SetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
+//		SN76496SetRoute(1, 0.50, BURN_SND_ROUTE_BOTH);
+//		SN76496SetRoute(2, 0.50, BURN_SND_ROUTE_BOTH);
 	}
 
 //	GenericTilesInit();

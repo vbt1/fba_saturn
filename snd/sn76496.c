@@ -381,7 +381,7 @@ void SN76496Init(int Num, int Clock, int SignalAdd)
 {
 	return GenericStart(Num, Clock, 0x8000, 0x06, 0, SignalAdd);
 }
-
+/*
 void SN76496SetRoute(int Num, double nVolume, int nRouteDir)
 {
 #if defined FBA_DEBUG
@@ -401,7 +401,7 @@ void SN76496SetRoute(int Num, double nVolume, int nRouteDir)
 //	R->nOutputDir = nRouteDir;
 }
 
-/*
+
 void SN76496Exit()
 {
 	NumChips = 0;
