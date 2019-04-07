@@ -729,10 +729,14 @@ int ovlInit(char *szShortName)
 /*static*/ void initLayers()
 {
     Uint16	CycleTb[]={
-		0x4eff, 0x1fff, //A0
+//		0xff56, 0xffff, //A0
+		0xff56,0xff74,  //A0 // nbg1 et 2 ok
 		0xffff, 0xffff,	//A1
-		0x2f6f,0xf5ff,   //B0
-		0xffff, 0xffff  //B1
+//		0x15f2,0x4eff,   //B0 // nbg1 et 2 ok
+		0x1f2f, 0x3f0f,  //B1
+		0xffff,0xffff   //B0
+
+//		0x4eff, 0x1fff, //B1
 	};
  	SclConfig	scfg;
 
@@ -807,6 +811,7 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 {
 	cleanSprites();
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 100;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;

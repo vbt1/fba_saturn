@@ -145,11 +145,11 @@ int ovlInit(char *szShortName)
 	DrvBgColRAM	    = Next; Next += 0x800;
 	RamEnd			= Next;
 
+	MSM5205Context = (UINT16*)Next; Next += 0x4000;
 	DrvColPROM		= Next; Next += 0x00220;
 	DrvSoundROM	    = Next; Next += 0x0a000;
 //	DrvSoundROM	= (UINT8*)0x2F6000;
 	CZ80Context		= Next; Next += 0x1080;
-	MSM5205Context = (UINT16*)Next; Next += 0x4000;
 //	DrvPalette        = (UINT16*)colBgAddr;
 	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 	is_fg_dirty			=  Next; Next +=0x400;
@@ -614,6 +614,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	CZetSetOutHandler(appoooh_out);
 
 	CZetClose();
+	wait_vblank();
 	SN76489Init(0, 18432000 / 6, 0);
 	SN76489Init(1, 18432000 / 6, 0);
 	SN76489Init(2, 18432000 / 6, 0);
@@ -742,6 +743,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc ",4,80);
 
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
 	{
@@ -752,11 +754,19 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	MemIndex();
 
 	memset(CZ80Context,0x00,0x1080);
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms ",4,80);
 
 	if(DrvLoadRoms()) return 1;
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvPaletteInit ",4,80);
+
 	DrvPaletteInit();
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode ",4,80);
+
 	DrvGfxDecode();
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvCommonInit ",4,80);
+
 	DrvCommonInit();
+	wait_vblank();
 //	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
 	return 0;
 }
@@ -827,6 +837,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 /*static*/  void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
@@ -917,6 +928,8 @@ void RenderSlaveSound()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  INT32 DrvFrame()
 {
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame    ",4,80);
+
 	memset (DrvInputs, 0x00, 3);
 
 	for (UINT32 i = 0; i < 8; i++) {
@@ -931,23 +944,30 @@ void RenderSlaveSound()
 
 	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_RunSlaveSH1    ",4,80);
 	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205_vclk_callback, 0);
 		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
 			CZetNmi();
-		SPR_WaitEndSlaveSH();
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_WaitEndSlaveSH1    ",4,80);
+		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+			SPR_WaitEndSlaveSH();
 	}
 	CZetClose();
 
 	signed short *nSoundBuffer = (signed short *)(0x25a24000+nSoundBufferPos*(sizeof(signed short)));
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_RunSlaveSH2    ",4,80);
 
 	SPR_RunSlaveSH((PARA_RTN*)RenderSlaveSound, 0);
 
 	DrvDraw();
 	SN76496Update(2, nSoundBuffer+0x6000, SOUND_LEN);
 
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_WaitEndSlaveSH2    ",4,80);
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"MSM5205RenderDirect    ",4,80);
 
-	SPR_WaitEndSlaveSH();
 	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
 
 	nSoundBufferPos+=(SOUND_LEN); 
@@ -961,6 +981,8 @@ void RenderSlaveSound()
 		}
 		nSoundBufferPos=0;
 	}
+		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"frame end    ",4,80);
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
