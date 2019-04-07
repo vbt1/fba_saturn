@@ -214,6 +214,10 @@ static void resetLayers()
 	scfg.plate_addr[0]= (Uint32)NULL;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
+	scfg.dispenbl 	   = OFF;
+	scfg.plate_addr[0]= (Uint32)NULL;
+	SCL_SetConfig(SCL_NBG3, &scfg);
+
 	SCL_SetCycleTable(CycleTb);
 
     SCL_SET_S0PRIN(0);

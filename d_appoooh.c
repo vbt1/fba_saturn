@@ -592,7 +592,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM + 0x0000);
 	CZetMapArea(0x8000, 0x9fff, 0, DrvMainROM + 0x8000);
 	CZetMapArea(0x8000, 0x9fff, 2, DrvMainROM + 0x8000);
- 	bankswitch(0);
+	bankswitch(0);
 
 	if (game_select == 1) 
 	{ // map decoded fetch for robowres
@@ -614,13 +614,13 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	CZetSetOutHandler(appoooh_out);
 
 	CZetClose();
-	wait_vblank();
+
 	SN76489Init(0, 18432000 / 6, 0);
 	SN76489Init(1, 18432000 / 6, 0);
 	SN76489Init(2, 18432000 / 6, 0);
-
 //	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1, 0.50);
 	memset(MSM5205Context,0x00,0x4000);
+
 	MSM5205Init(0, MSM5205Context, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0, 0.50);
 	make_lut();
 	DrvDoReset();
@@ -721,7 +721,6 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	}
 	memset(AllMem, 0, nLen);
 	MemIndex();
-	memset(CZ80Context,0x00,0x1080);
 
 	if(DrvRobowresLoadRoms()) return 1;
 		
@@ -738,12 +737,10 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 {
 	nSoundBufferPos=0;
 	DrvInitSaturn();
-//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 	game_select = 0;
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc ",4,80);
 
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
 	{
@@ -753,21 +750,14 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
-	memset(CZ80Context,0x00,0x1080);
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvLoadRoms ",4,80);
-
 	if(DrvLoadRoms()) return 1;
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvPaletteInit ",4,80);
 
 	DrvPaletteInit();
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode ",4,80);
 
 	DrvGfxDecode();
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvCommonInit ",4,80);
 
 	DrvCommonInit();
-	wait_vblank();
-//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
+//	wait_vblank();
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -928,8 +918,6 @@ void RenderSlaveSound()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  INT32 DrvFrame()
 {
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame    ",4,80);
-
 	memset (DrvInputs, 0x00, 3);
 
 	for (UINT32 i = 0; i < 8; i++) {
@@ -944,29 +932,24 @@ void RenderSlaveSound()
 
 	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_RunSlaveSH1    ",4,80);
 	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205_vclk_callback, 0);
 		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
 			CZetNmi();
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_WaitEndSlaveSH1    ",4,80);
 		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 			SPR_WaitEndSlaveSH();
 	}
 	CZetClose();
 
 	signed short *nSoundBuffer = (signed short *)(0x25a24000+nSoundBufferPos*(sizeof(signed short)));
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_RunSlaveSH2    ",4,80);
 
 	SPR_RunSlaveSH((PARA_RTN*)RenderSlaveSound, 0);
 
 	DrvDraw();
 	SN76496Update(2, nSoundBuffer+0x6000, SOUND_LEN);
 
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"SPR_WaitEndSlaveSH2    ",4,80);
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"MSM5205RenderDirect    ",4,80);
 
 	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
 
@@ -981,8 +964,6 @@ void RenderSlaveSound()
 		}
 		nSoundBufferPos=0;
 	}
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"frame end    ",4,80);
-
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

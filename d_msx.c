@@ -2142,6 +2142,22 @@ static INT32 DrvExit()
 #endif
 	ppi8255_exit();
 
+	for(unsigned int i=0;i<8;i++)
+	{
+		RAM[i] = NULL;
+	}
+
+	for(UINT32 PSlot = 0; PSlot < 4; PSlot++)
+	{
+		for(UINT32 Page = 0; Page < 8; Page++)
+		{
+			MemMap[PSlot][Page] = NULL;
+		}
+		SRAMData[PSlot] = NULL;
+		ROMData[PSlot] = NULL;
+		RAMMapper[PSlot] = 0;
+	}
+
 	maincpu = game = game_sram = AllRam = main_mem = kanji_rom = NULL;
 	EmptyRAM = RAMData = MemEnd = RamEnd = NULL;
 
@@ -2152,6 +2168,7 @@ static INT32 DrvExit()
 #ifndef RAZE
 	/*tmpbmp =*/ CZ80Context		= NULL;
 #endif
+
 	free (AllMem);
 	AllMem = NULL;
 
@@ -2164,9 +2181,8 @@ static INT32 DrvExit()
 	CASMode = 0;
 #endif
 	VBlankKludge = 0;
-
+	SwapJoyports = Joyselect = Hertz60 = BiosmodeJapan = RAMMask = RAMPages = 0;
 	nSoundBufferPos=0;
-
 	return 0;
 }
 

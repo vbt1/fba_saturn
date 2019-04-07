@@ -197,6 +197,7 @@ void MSM5205RenderDirect(INT32 chip, INT16 *buffer, INT32 len)
 {
 	voice = &chips[chip];
 	INT16 *source = stream[chip];
+
 	MSM5205StreamUpdate(chip);
 	voice->streampos = 0;
 	

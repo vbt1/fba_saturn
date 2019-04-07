@@ -6,6 +6,11 @@ extern UINT32 *shared;
 #define SS_SPRAM *(&shared + 5)
 #define SS_FONT	 *(&shared + 3)
 
+int TMS9928A_palette[16] = {
+	0x000000, 0x000000, 0x21c842, 0x5edc78, 0x5455ed, 0x7d76fc, 0xd4524d, 0x42ebf5,
+	0xfc5554, 0xff7978, 0xd4c154, 0xe6ce80, 0x21b03b, 0xc95bba, 0xcccccc, 0xffffff
+};
+
 static void TMS89928aPaletteRecalc()
 {
 	for (unsigned int i = 0; i < 16; i++) 
@@ -102,7 +107,7 @@ static void change_register(INT32 reg, UINT8 val)
 
 void TMS9928AReset()
 {
-	for (INT32 i = 0; i < 8; i++)
+	for (UINT32 i = 0; i < 8; i++)
 		tms.Regs[i] = 0;
 
 	memset(tms.vMem, 0, tms.vramsize+1);
@@ -170,6 +175,9 @@ void TMS9928AInit(INT32 model, INT32 vram, INT32 borderx, INT32 bordery, void (*
 void TMS9928AExit()
 {
 	TMS9928AReset();
+	memset (tms.dirty,0x00,24*32*8*4);
+	memset (tms.color_2bpp_lut,0x00,0x400*sizeof(int));
+
 	tms.INTCallback = NULL;
 	tms.tmpbmp = NULL;
 }

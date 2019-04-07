@@ -266,7 +266,7 @@ void SN76496Write(int Num, int Data)
 /*static*/ void SN76496Init2(struct SN76496 *R, unsigned int Clock)
 {
 	unsigned int i;
-	R->UpdateStep = (unsigned int)(((double)STEP * nBurnSoundRate * 16) / Clock);
+	R->UpdateStep = (unsigned int)(((float)STEP * nBurnSoundRate * 16) / Clock);
 		
 	R->Volume[0] = R->Volume[1] = R->Volume[2] = R->Volume[3] = 0;
 
@@ -297,7 +297,7 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 0) {
 	//Chip0 = (struct SN76496*)malloc(sizeof(*Chip0));
-		memset(&Chip0, 0, sizeof(struct SN76496));
+		memset(&Chip0, 0, sizeof(Chip0));
 	
 		SN76496Init2(&Chip0, Clock);
 
@@ -311,7 +311,7 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 1) {
 //		Chip1 = (struct SN76496*)malloc(sizeof(*Chip1));
-		memset(&Chip1, 0, sizeof(struct SN76496));
+		memset(&Chip1, 0, sizeof(Chip1));
 	
 		SN76496Init2(&Chip1, Clock);
 		SN76496SetGain(&Chip1, 0);
@@ -324,7 +324,7 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 2) {
 //		Chip2 = (struct SN76496*)malloc(sizeof(*Chip2));
-		memset(&Chip2, 0, sizeof(struct SN76496));
+		memset(&Chip2, 0, sizeof(Chip2));
 	
 		SN76496Init2(&Chip2, Clock);
 		SN76496SetGain(&Chip2, 0);
@@ -337,7 +337,7 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 3) {
 //		Chip3 = (struct SN76496*)malloc(sizeof(*Chip3));
-		memset(&Chip3, 0, sizeof(struct SN76496));
+		memset(&Chip3, 0, sizeof(Chip3));
 	
 		SN76496Init2(&Chip3, Clock);
 		SN76496SetGain(&Chip3, 0);
@@ -350,7 +350,7 @@ void SN76496Write(int Num, int Data)
 	
 	if (Num == 4) {
 //		Chip4 = (struct SN76496*)malloc(sizeof(*Chip4));
-		memset(&Chip4, 0, sizeof(struct SN76496));
+		memset(&Chip4, 0, sizeof(Chip4));
 	
 		SN76496Init2(&Chip4, Clock);
 		SN76496SetGain(&Chip4, 0);

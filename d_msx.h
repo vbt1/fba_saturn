@@ -225,64 +225,64 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 #define DEFAULT_CARTSLOTB 2
 #define DEFAULT_RAMSLOT 3
 
-static UINT8 SwapJoyports = 0; // Swap Joyport DIP
-static UINT8 Joyselect = 0;    // read from Joystick 0 or 1? (internal)
-static UINT8 Hertz60 = 0;      // DIP setting.
-static UINT8 BiosmodeJapan = 0;// DIP setting.
+/*static*/  UINT8 SwapJoyports = 0; // Swap Joyport DIP
+/*static*/  UINT8 Joyselect = 0;    // read from Joystick 0 or 1? (internal)
+/*static*/  UINT8 Hertz60 = 0;      // DIP setting.
+/*static*/  UINT8 BiosmodeJapan = 0;// DIP setting.
 
 // Game-based kludges
 //static INT32 MapCursorToJoy1 = 0; // Map Cursor Keys & space to Joy1
 
-static INT32 VBlankKludge = 0; // For VoidRunner (joystick selection hangs)
+/*static*/  INT32 VBlankKludge = 0; // For VoidRunner (joystick selection hangs)
 #ifdef CASSETTE
-static INT32 CASMode = 0;      // Using .cas file?
-static INT32 CASPos = 0;       // Internal tape position counter
-static INT32 CASFrameCounter = 0; // for autoloading
-static INT32 CASSide = 0; // Tape Side, 0 = A, 1 = B
-static INT32 CASSideLast = 0; // used for detecting side changes
+/*static*/  INT32 CASMode = 0;      // Using .cas file?
+/*static*/  INT32 CASPos = 0;       // Internal tape position counter
+/*static*/  INT32 CASFrameCounter = 0; // for autoloading
+/*static*/  INT32 CASSide = 0; // Tape Side, 0 = A, 1 = B
+/*static*/  INT32 CASSideLast = 0; // used for detecting side changes
 #endif
-static INT32 BIOSSLOT = 0;      // Machine slot configuration
-static INT32 CARTSLOTA = 0;
-static INT32 CARTSLOTB = 0;
-static INT32 RAMSLOT = 0;
+/*static*/  INT32 BIOSSLOT = 0;      // Machine slot configuration
+/*static*/  INT32 CARTSLOTA = 0;
+/*static*/  INT32 CARTSLOTB = 0;
+/*static*/  INT32 RAMSLOT = 0;
 
-static UINT8 *RAM[8];          // Mapped address space
-static UINT8 *EmptyRAM = NULL; // Unmapped stuff points here
-static UINT8 *MemMap[4][8];    // [prislot] [page]
+/*static*/  UINT8 *RAM[8];          // Mapped address space
+/*static*/  UINT8 *EmptyRAM = NULL; // Unmapped stuff points here
+/*static*/  UINT8 *MemMap[4][8];    // [prislot] [page]
 
-static UINT8 *RAMData;         // main flat-chunk of ram
-static UINT8 RAMMapper[4];
-static UINT8 RAMMask;
-static INT32 RAMPages = 4;
+/*static*/  UINT8 *RAMData;         // main flat-chunk of ram
+/*static*/  UINT8 RAMMapper[4];
+/*static*/  UINT8 RAMMask;
+/*static*/  INT32 RAMPages = 4;
 
-static UINT8 *SRAMData[MAXSLOTS]; // ascii8/16 sram
+/*static*/  UINT8 *SRAMData[MAXSLOTS]; // ascii8/16 sram
 
-static UINT8 *ROMData[MAXSLOTS];  // flat chunk of cart-rom
-static UINT8 ROMMapper[MAXSLOTS][4];
-static UINT8 ROMMask[MAXSLOTS];
-static UINT8 ROMType[MAXSLOTS];
+/*static*/  UINT8 *ROMData[MAXSLOTS];  // flat chunk of cart-rom
+/*static*/  UINT8 ROMMapper[MAXSLOTS][4];
+/*static*/  UINT8 ROMMask[MAXSLOTS];
+/*static*/  UINT8 ROMType[MAXSLOTS];
 
 // Game-specific mappers
-static UINT8 dooly_prot;
-static UINT8 crossblaim_selected_bank;
-static UINT8 *crossblaim_bank_base[4];
-static UINT8 rtype_selected_bank;
-static UINT8 *rtype_bank_base[2];
+/*static*/  UINT8 dooly_prot;
+/*static*/  UINT8 crossblaim_selected_bank;
+/*static*/  UINT8 *crossblaim_bank_base[4];
+/*static*/  UINT8 rtype_selected_bank;
+/*static*/  UINT8 *rtype_bank_base[2];
 
-static INT32 CurRomSizeA = 0; // cart A
-static INT32 CurRomSizeB = 0; // cart B
+/*static*/  INT32 CurRomSizeA = 0; // cart A
+/*static*/  INT32 CurRomSizeB = 0; // cart B
 
-static UINT8 WriteMode[MAXSLOTS];
-static UINT8 PSL[MAXSLOTS]; // primary slot list
-static UINT8 PSLReg; // primary slot register
-static UINT8 SCCReg[MAXSLOTS]; // Konami-scc enable register
+/*static*/  UINT8 WriteMode[MAXSLOTS];
+/*static*/  UINT8 PSL[MAXSLOTS]; // primary slot list
+/*static*/  UINT8 PSLReg; // primary slot register
+/*static*/  UINT8 SCCReg[MAXSLOTS]; // Konami-scc enable register
 
-static UINT8 Kana, KanaByte; // Kanji-rom stuff
+/*static*/  UINT8 Kana, KanaByte; // Kanji-rom stuff
 
-static UINT8 ppiC_row;
-static UINT8 keyRows[12];
+/*static*/  UINT8 ppiC_row;
+/*static*/  UINT8 keyRows[12];
 #ifdef CASSETTE
-static INT32 charMatrix[][3] = {
+/*static*/  INT32 charMatrix[][3] = {
 	{'0', 0, 0}, {')', 0, 0}, {'1', 0, 1}, {'!', 0, 1}, {'2', 0, 2}, {'@', 0, 2},
 	{'3', 0, 3}, {'#', 0, 3}, {'4', 0, 4}, {'$', 0, 4}, {'5', 0, 5}, {'%', 0, 5},
 	{'6', 0, 6}, {'^', 0, 6}, {'7', 0, 7}, {'&', 0, 7},

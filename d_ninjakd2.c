@@ -8,7 +8,7 @@
 //#include "burn_ym2203.h"
 #define nScreenHeight 192
 #define nScreenWidth 256
-UINT16 *ss_map3;
+UINT16 *ss_map3 = NULL;
 
 int ovlInit(char *szShortName)
 {
@@ -586,9 +586,9 @@ int ovlInit(char *szShortName)
 	INT32 nLen = MemEnd - (UINT8 *)0;
 
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	memset(0x2F0000, 0, 0x9c00);
 	memset(AllMem, 0, nLen);
 	MemIndex();
-
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x20000,  1, 1)) return 1;
@@ -901,6 +901,7 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 	soundlatch = flipscreen = overdraw_enable = DrvReset = 0;
 	free(AllMem);
 	AllMem = NULL;
+	ss_map3 = NULL;
 
 	return 0;
 }

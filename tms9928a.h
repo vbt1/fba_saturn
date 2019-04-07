@@ -68,12 +68,7 @@ extern SprSpCmd *ss_sprite;
 #define TMS9928A_VERT_DISPLAY_START_PAL     16
 #define TMS9928A_VERT_DISPLAY_START_NTSC    16
 
-static int TMS9928A_palette[16] = {
-	0x000000, 0x000000, 0x21c842, 0x5edc78, 0x5455ed, 0x7d76fc, 0xd4524d, 0x42ebf5,
-	0xfc5554, 0xff7978, 0xd4c154, 0xe6ce80, 0x21b03b, 0xc95bba, 0xcccccc, 0xffffff
-};
-
-static TMS9928A tms;
+/*static*/ TMS9928A tms;
 
 void  TMS9928AInterrupt();
 void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallback)(int));

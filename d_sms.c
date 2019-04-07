@@ -180,6 +180,7 @@ static void	SetVblank2( void ){
 	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
 #ifdef GG
 	cram_lut		= Next; Next += 0x1000*sizeof(UINT16);
+	vram_dirty		= Next; Next += 0x200;
 #else
 	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
 #endif
@@ -347,6 +348,11 @@ static void	SetVblank2( void ){
 	bp_lut = NULL;
 	name_lut = NULL;
 	CZ80Context = NULL;
+
+#ifdef GG
+	vram_dirty =  NULL;
+	is_vram_dirty = 0;
+#endif
 
 	free(SaturnMem);
 	SaturnMem = NULL;
