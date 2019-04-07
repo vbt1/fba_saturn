@@ -358,6 +358,7 @@ static void make_lut(void)
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 51;//27;
 
 	SS_CACHE = cache      =(Uint8  *)SCL_VDP2_VRAM_A0;

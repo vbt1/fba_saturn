@@ -9,7 +9,7 @@
 //#include "psg.h"
 
 #define SOUND_LEN 192
-
+void dummy();
 /*static*/ void initColors();
 /*static*/ int NewsFrame();
 /*static*/ int NewsInit();

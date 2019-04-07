@@ -1,9 +1,10 @@
 #include "saturn.h"
 
 //#include "sc_saturn.h"
+//#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR  0x060CB000
+#define OVLADDR  0x060CC000
 #define LOWADDR 0x00200000
 //#define DEBUG_DRV 1
 volatile SysPort	*__port;
@@ -266,7 +267,6 @@ static void initSaturn()
 //	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00000000,0x80000);
 	resetLayers();
 
-	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
 
 	memset(pltrigger[0],0x00,sizeof(trigger_t));
 	memset(pltriggerE[0],0x00,sizeof(trigger_t));
@@ -277,6 +277,8 @@ static void initSaturn()
 
 	SetVblank();
 	SCL_SetLineParamNBG0(&lp);
+		memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
+
 wait_vblank();
 	play=1;
 
@@ -324,7 +326,7 @@ static void ss_main(void)
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
 	unsigned char *Mem = malloc((unsigned char *)0xAA000);
-//	memset(Mem,0x00,0xAA000);
+	memset(Mem,0x00,0xAA000);
 	free(Mem);
 	Mem=NULL;
 

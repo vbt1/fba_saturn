@@ -21,6 +21,7 @@ static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned
 static void Set14PCM();
 static PcmHn createHandle(PcmCreatePara *para);
 void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
+void dummy();
 
 #define nBurnSoundLen 128
 #define SOUNDRATE   7680L

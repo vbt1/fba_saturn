@@ -365,6 +365,7 @@ int ovlInit(char *szShortName)
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 3;
 	
 	SS_MAP  = ss_map   = (Uint16 *)SCL_VDP2_VRAM_B1;

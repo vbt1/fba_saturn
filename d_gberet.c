@@ -533,6 +533,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites = 51;
 	nSoundBufferPos = 0;
 

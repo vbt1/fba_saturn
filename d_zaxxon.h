@@ -12,6 +12,7 @@ int sZaxxonInit();
 int DrvExit();
 int DrvFrame();
 int DrvDraw();
+void dummy();
 
 /*static*/ UINT8 *SaturnMem = NULL;
 /*static*/ UINT8 *bitmap = NULL;

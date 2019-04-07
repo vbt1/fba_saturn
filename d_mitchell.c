@@ -809,6 +809,7 @@ static void dummy(void)
 	SS_SET_N0PRIN(6);
 	}
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 //	initScrolling(OFF);
 //	drawWindow(0,0,0,0,0);

@@ -702,6 +702,7 @@ static void initLayers()
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites = 259; //256;
 	nBurnLinescrollSize = 0;

@@ -885,14 +885,10 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void dummy()
-{
-
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites = 27;
 	nBurnLinescrollSize = 0x380;

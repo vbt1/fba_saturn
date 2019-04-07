@@ -18,6 +18,7 @@ static INT32 DrvZInit();
 static INT32 DrvExit();
 static INT32 DrvFrame();
 static INT32 DrvDoReset();
+void dummy();
 
 UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 UINT8 DrvJoy2[8] = {0, 0, 0, 0, 0, 0, 0, 0};

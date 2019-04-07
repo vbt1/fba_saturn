@@ -247,7 +247,7 @@ void K051649Init(INT32 clock, INT16 *SCCMixerBuffer, INT16 *SCCMixerTable)
 	/* build the mixer table */
 	make_mixer_table(5,SCCMixerTable);
 }
-
+/*
 void K051649SetRoute(double nVolume, INT32 nRouteDir)
 {
 	info = &Chips[0];
@@ -255,7 +255,7 @@ void K051649SetRoute(double nVolume, INT32 nRouteDir)
 	info->gain = nVolume;
 	info->output_dir = nRouteDir;
 }
-
+*/
 void K051649Exit()
 {
 //#if defined FBA_DEBUG
@@ -342,7 +342,7 @@ void K051649WaveformWrite(INT32 offset, INT32 data)
 	if (offset >= 0x60)
 		info->channel_list[4].waveform[offset&0x1f]=data;
 }
-
+/*
 UINT8 K051649WaveformRead(INT32 offset)
 {
 //#if defined FBA_DEBUG
@@ -352,7 +352,7 @@ UINT8 K051649WaveformRead(INT32 offset)
 	info = &Chips[0];
 	return info->channel_list[offset>>5].waveform[offset&0x1f];
 }
-
+*/
 /* SY 20001114: Channel 5 doesn't share the waveform with channel 4 on this chip */
 void K052539WaveformWrite(INT32 offset, INT32 data)
 {

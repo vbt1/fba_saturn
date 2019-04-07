@@ -18,7 +18,7 @@ PcmHn 			pcm6[6];
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L
-
+void dummy();
 static int DrvGfxDecode();
 static int DrvFrame();
 static int DrvExit();

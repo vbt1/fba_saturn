@@ -15,6 +15,7 @@ static INT32 tigerhInit();
 static INT32 tigerhExit();
 static INT32 tigerhFrame();
 static void Set6PCM();
+void dummy();
 
 typedef int bool;
 static bool bInterruptEnable = 0;

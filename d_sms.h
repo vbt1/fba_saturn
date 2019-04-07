@@ -5,7 +5,6 @@
 #include "saturn/ovl.h"
 #include "sega_int.h"
 #include "raze/raze.h"
-
 static UINT8 update_input1(void);
 static UINT8 update_input2(void);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
@@ -76,21 +75,21 @@ typedef struct
 }t_vdp;
 
 /* Global data */
-static t_cart cart;
-static t_sms sms;
-static t_vdp vdp;
-static int running=0;
-static unsigned int first = 1;
-static unsigned int vsynch = 0;
-static int scroll_x=0,scroll_y=0;
-static UINT8 *dummy_write  = NULL; //[0x100];
-static UINT8 *SaturnMem = NULL;
-static UINT8 *MemEnd = NULL;
-static UINT16 *name_lut = NULL;
-static UINT32 *bp_lut = NULL;//[0x10000];
-static UINT16 *cram_lut = NULL;//[0x40];
-static UINT16 *map_lut = NULL;
-static UINT8 *CZ80Context = NULL;
+/*static*/  t_cart cart;
+/*static*/  t_sms sms;
+/*static*/  t_vdp vdp;
+/*static*/  int running=0;
+/*static*/  unsigned int first = 1;
+/*static*/  unsigned int vsynch = 0;
+/*static*/  int scroll_x=0,scroll_y=0;
+/*static*/  UINT8 *dummy_write  = NULL; //[0x100];
+/*static*/  UINT8 *SaturnMem = NULL;
+/*static*/  UINT8 *MemEnd = NULL;
+/*static*/  UINT16 *name_lut = NULL;
+/*static*/  UINT32 *bp_lut = NULL;//[0x10000];
+/*static*/  UINT16 *cram_lut = NULL;//[0x40];
+/*static*/  UINT16 *map_lut = NULL;
+/*static*/  UINT8 *CZ80Context = NULL;
 //extern unsigned char play;
 extern int file_id;
 extern int file_max;
@@ -121,25 +120,25 @@ typedef	struct	SysDevice	{
 	UINT8	data[1];
 } SysDevice;
 
-static INT32 SMSInit();
-static INT32 SMSExit();
-static INT32 SMSDraw();
-static INT32 SMSFrame();
-static void z80_init(void);
-static void sms_init(void);
-static void sms_reset(void);
-static void sms_frame(void);
-static void vdp_run(t_vdp *vdp);
-static void vdp_reset(void);
-static void system_init(void);
-static void cpu_writemem8(unsigned int address, unsigned int data);
-static unsigned int cpu_readmem8(unsigned int address);
+/*static*/  INT32 SMSInit();
+/*static*/  INT32 SMSExit();
+/*static*/  INT32 SMSDraw();
+/*static*/  INT32 SMSFrame();
+/*static*/  void z80_init(void);
+/*static*/  void sms_init(void);
+/*static*/  void sms_reset(void);
+/*static*/  void sms_frame(void);
+/*static*/  void vdp_run(t_vdp *vdp);
+/*static*/  void vdp_reset(void);
+/*static*/  void system_init(void);
+/*static*/  void cpu_writemem8(unsigned int address, unsigned int data);
+/*static*/  unsigned int cpu_readmem8(unsigned int address);
 void PSG_Update(signed short *buffer, unsigned int length);
 void PSG_Init(unsigned int clock, unsigned int rate);
 void PSG_Write(unsigned int data);
 Sint32 getNbFiles();
 Sint32 GetFileSize(int file_id);
-static void load_rom(void);
+/*static*/  void load_rom(void);
 
 //INT32 SMSScan(INT32 nAction, INT32 *pnMin);
 /* Return values from the V counter */

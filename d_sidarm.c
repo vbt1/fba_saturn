@@ -614,11 +614,6 @@ void transfer_bg_layer()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void dummy()
-{
-
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ UINT32 SidearmsDraw()
 {
 	if (starfield_enable)
@@ -763,8 +758,8 @@ static void initColors()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
-	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 //	DMA_ScuInit();
 //    INT_ChgMsk(INT_MSK_DMA0, INT_MSK_NULL);
 //    INT_ChgMsk(INT_MSK_DMA1, INT_MSK_NULL);

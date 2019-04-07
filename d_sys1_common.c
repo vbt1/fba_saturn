@@ -1,4 +1,5 @@
 #define nInterleave 10
+void dummy();
 
 /*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
 {
@@ -632,9 +633,6 @@ void initLayers()
 
 //	p[23] = system1_ef_w;
 }
-void dummy()
-{
-}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
@@ -681,7 +679,7 @@ void dummy()
 	initColors();
 	initSpritesS1();
 	SPR_InitSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	if(flipscreen)
 		drawWindow(0,240,0,8,64);
 	else

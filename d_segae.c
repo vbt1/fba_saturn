@@ -1002,6 +1002,7 @@ static void astrofl_decode(void)
 /*static*/ void DrvInitSaturnS(UINT8 game)
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites  = 131;//27;
 	nBurnLinescrollSize = 0x340;

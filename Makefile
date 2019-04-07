@@ -229,7 +229,7 @@ MPOVLMSXFILE    = $(OVLMSX:.coff=.maps)
 LDOVLMSXFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMSXFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
 #SRCOVLMSX         = d_msx.c czet.c cz80/cz80.c tms9928a.c snd/k051649.c snd/ay8910.c 8255ppi.c saturn/ovl.c
 #SRCOVLMSX         = d_msx.c z80_intf.c z80/z80.c z80/z80daisy.c tms9928a.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
-SRCOVLMSX         = d_msx.c tms9928a.c snd/k051649.c snd/ay8910.c snd/dac.c 8255ppi.c load.c saturn/ovl.c
+SRCOVLMSX         = d_msx.c tms9928a.c snd/k051649.c snd/ay8910.c 8255ppi.c load.c saturn/ovl.c
 OBJOVLMSX         = $(SRCOVLMSX:.c=.o)
 
 OVLSEGAE                 = root/d_segae.coff

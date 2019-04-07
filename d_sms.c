@@ -81,7 +81,7 @@ static void	SetVblank2( void ){
 	__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initColors()
+/*static*/  void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
@@ -92,7 +92,7 @@ static void initColors()
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifndef OLD_SOUND
-static void sh2slave(unsigned int *nSoundBufferPos)
+/*static*/  void sh2slave(unsigned int *nSoundBufferPos)
 {
 	volatile signed short *nSoundBuffer = (signed short *)0x25a20000;
 //	PSG_Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
@@ -107,7 +107,7 @@ static void sh2slave(unsigned int *nSoundBufferPos)
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initLayers(void)
+/*static*/  void initLayers(void)
 {
 //    SclConfig	config;
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
@@ -166,14 +166,14 @@ static void initLayers(void)
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initPosition(void)
+/*static*/  void initPosition(void)
 {
 	SCL_Open();
 	ss_reg->n1_move_x = 0;
 	ss_reg->n1_move_y = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void SaturnInitMem()
+/*static*/  void SaturnInitMem()
 {
 	UINT8 *Next; Next = (UINT8 *)SaturnMem;
 	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
@@ -193,20 +193,9 @@ static void SaturnInitMem()
 	dummy_write = (unsigned *)malloc(0x100*sizeof(unsigned));	 */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-#ifndef OLD_SOUND
-void dummy()
+/*static*/  void DrvInitSaturn()
 {
-
-}
-#endif
-//-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvInitSaturn()
-{
-	SPR_InitSlaveSH();
-//	InitCDsms();
-#ifndef OLD_SOUND
-	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
-#endif
+//	SPR_InitSlaveSH();
 	nBurnSprites  = 67;//131;//27;
 	nBurnLinescrollSize = 0x340;
 	nSoundBufferPos = 0;//sound position à renommer
@@ -228,13 +217,18 @@ static void DrvInitSaturn()
 		//8;//aleste
 //	name_lut	= (UINT16 *)malloc(0x10000*sizeof(UINT16));
 //	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+
+	initLayers();
+	initColors();
+	initPosition();
+
+//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
 	SaturnMem = (UINT8 *)malloc(nLen);
 	SaturnInitMem();
-	memset(CZ80Context,0x00,0x1080);
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+	memset(SaturnMem,0x00,nLen);
+//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	make_lut();
 #ifdef TWO_WORDS
     SS_SET_N0PRIN(4);
@@ -249,10 +243,6 @@ static void DrvInitSaturn()
 #endif
 	SS_SET_N1PRIN(7);
 
-
-	initLayers();
-	initColors();
-	initPosition();
 		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
@@ -270,7 +260,7 @@ static void DrvInitSaturn()
 	SetVblank2();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void sms_start()
+/*static*/  void sms_start()
 {
 		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
@@ -308,7 +298,7 @@ static void sms_start()
 	running = 1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 SMSInit(void)
+/*static*/  INT32 SMSInit(void)
 {
 #ifndef RAZE
 #ifdef GG
@@ -323,13 +313,13 @@ static INT32 SMSInit(void)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 SMSExit(void)
+/*static*/  INT32 SMSExit(void)
 {
 	nBurnFunction = NULL;
 
 	SS_SET_N0SPRM(0);
 	ss_regs->specialcode=0x0000;
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
 	z80_add_read(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
@@ -339,13 +329,13 @@ static INT32 SMSExit(void)
 	z80_set_out((void (*)(short unsigned int, unsigned char))NULL);
 #endif
 #ifdef CZ80
-	CZetExit2();
 	CZetOpen(0);
 	CZetSetWriteHandler(NULL);
 	CZetSetReadHandler(NULL);
 	CZetSetInHandler(NULL);
 	CZetSetOutHandler(NULL);
 	CZetClose();
+	CZetExit2();
 #endif
 
 	cart.rom = NULL;
@@ -360,7 +350,6 @@ static INT32 SMSExit(void)
 
 	free(SaturnMem);
 	SaturnMem = NULL;
-
 	nSoundBufferPos=0;
 	running=0;
 	first = 1;
@@ -369,7 +358,7 @@ static INT32 SMSExit(void)
 	scroll_y=0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 SMSFrame(void)
+/*static*/  INT32 SMSFrame(void)
 {
 #ifdef GG0
 	cleanSpritesGG();
@@ -419,7 +408,7 @@ static INT32 SMSFrame(void)
 //__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void sms_frame(void)
+/*static*/  void sms_frame(void)
 {
 #if PROFILING
 //		TIM_FRT_SET_16(0);
@@ -512,7 +501,7 @@ static void sms_frame(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void load_rom(void)
+/*static*/  void load_rom(void)
 {
 	long fileSize;
 
@@ -523,7 +512,7 @@ static void load_rom(void)
 	GFS_Load(file_id, 0, cart.rom, fileSize);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void system_init()
+/*static*/  void system_init()
 {
     /* Initialize the VDP emulation */
     vdp_reset();
@@ -538,7 +527,7 @@ static void system_init()
 	PSG_Init(MASTER_CLOCK, 7680);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void sms_init(void)
+/*static*/  void sms_init(void)
 {
 	z80_init();
 	sms_reset();
@@ -551,13 +540,13 @@ int sms_irq_callback(int param)
 }		   */
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Reset VDP emulation */
-static void vdp_reset(void)
+/*static*/  void vdp_reset(void)
 {
     memset(&vdp, 0, sizeof(t_vdp));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Write data to the VDP's control port */
-static void vdp_ctrl_w(int data)
+/*static*/  void vdp_ctrl_w(int data)
 {
     /* Waiting for the reset of the command? */
     if(vdp.pending == 0)
@@ -625,7 +614,7 @@ static void vdp_ctrl_w(int data)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Read the status flags */
-static int vdp_ctrl_r(void)
+/*static*/  int vdp_ctrl_r(void)
 {
     /* Save the status flags */
     UINT8 temp = vdp.status;
@@ -642,7 +631,7 @@ static int vdp_ctrl_r(void)
     return (temp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void update_bg(t_vdp *vdp, int index)
+/*static*/  void update_bg(t_vdp *vdp, int index)
 {
 //				if(index>=vdp.ntab && index<vdp.ntab+0x700)
 // VBT 04/02/2007 : modif compilo
@@ -1017,7 +1006,7 @@ void vdp_data_w(INT32 offset, UINT8 data)
 #else
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Write data to the VDP's data port */
-static void vdp_data_w(INT32 offset, UINT8 data)
+/*static*/  void vdp_data_w(INT32 offset, UINT8 data)
 {
     int index;
     int delta;
@@ -1135,7 +1124,7 @@ static void vdp_data_w(INT32 offset, UINT8 data)
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Read data from the VDP's data port */
-static int vdp_data_r(void)
+/*static*/  int vdp_data_r(void)
 {
     UINT8 temp = 0;
     vdp.pending = 0;
@@ -1157,7 +1146,7 @@ static int vdp_data_r(void)
 */
 
 
-static void vdp_run(t_vdp *vdp)
+/*static*/  void vdp_run(t_vdp *vdp)
 {
 #ifdef GG
     if(vdp->line <= 0xC0)
@@ -1249,12 +1238,12 @@ static void vdp_run(t_vdp *vdp)
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static UINT8 vdp_vcounter_r(void)
+/*static*/  UINT8 vdp_vcounter_r(void)
 {
     return (vcnt[(vdp.line & 0x1FF)]);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static UINT8 vdp_hcounter_r(void)
+/*static*/  UINT8 vdp_hcounter_r(void)
 {
 //    int pixel = (((z80_ICount % CYCLES_PER_LINE) / 4) * 3) * 2;
 //  int pixel = (((Cz80_struc.CycleIO % CYCLES_PER_LINE) / 4) * 3) * 2;
@@ -1274,7 +1263,7 @@ static UINT8 vdp_hcounter_r(void)
     return (hcnt[((pixel >> 1) & 0x1FF)]);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static unsigned char cz80_z80_readport16(unsigned short PortNo)
+/*static*/  unsigned char cz80_z80_readport16(unsigned short PortNo)
 {
 #ifdef GG
 	UINT8 temp = 0xFF;
@@ -1339,7 +1328,7 @@ static unsigned char cz80_z80_readport16(unsigned short PortNo)
     return (0);      
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void cz80_z80_writeport16(unsigned short PortNo, unsigned char data)
+/*static*/  void cz80_z80_writeport16(unsigned short PortNo, unsigned char data)
 {
     switch(PortNo & 0xFF)
     {
@@ -1392,7 +1381,7 @@ static void cz80_z80_writeport16(unsigned short PortNo, unsigned char data)
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static UINT8 update_input1(void)
+/*static*/  UINT8 update_input1(void)
 {
 	unsigned int i=0,k;
 	UINT8 temp = 0xFF;
@@ -1499,7 +1488,7 @@ static UINT8 update_input1(void)
 	return temp;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static UINT8 update_input2(void)
+/*static*/  UINT8 update_input2(void)
 {
 	unsigned int i=0;
 	UINT8 temp = 0xFF;
@@ -1531,7 +1520,7 @@ static UINT8 update_input2(void)
 	return ((temp & 0x3F) | (sms.port_3F & 0xC0));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void sms_reset(void)
+/*static*/  void sms_reset(void)
 {
 #ifdef RAZE
 	z80_reset();
@@ -1599,7 +1588,7 @@ static void sms_reset(void)
     sms.fcr[3] = 0x00;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void cpu_writemem8(unsigned int address, unsigned int data)
+/*static*/  void cpu_writemem8(unsigned int address, unsigned int data)
 {
 	sms.ram[address & 0x1FFF] = data;
 
@@ -1692,7 +1681,7 @@ static void cpu_writemem16(unsigned int address, unsigned int data)
 }
 #endif	   */
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void z80_init(void)
+/*static*/  void z80_init(void)
 {
 #ifdef RAZE
 	z80_init_memmap();
@@ -1768,7 +1757,7 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_map_lut()
+/*static*/  void make_map_lut()
 {
 	unsigned int row,column;
 
@@ -1784,7 +1773,7 @@ static void make_map_lut()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_name_lut()
+/*static*/  void make_name_lut()
 {
 	unsigned int i, j;
 	for(j = 0; j < 0x10000; j++)
@@ -1810,7 +1799,7 @@ Bit 08 - 00 : Pattern Index
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_bp_lut(void)
+/*static*/  void make_bp_lut(void)
 {
 //	bp_lut = (UINT32 *)malloc(0x10000*sizeof(UINT32));
     unsigned int i, j;
@@ -1839,7 +1828,7 @@ static void make_bp_lut(void)
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_cram_lut(void)
+/*static*/  void make_cram_lut(void)
 {
 #ifdef GG
     for(unsigned int j = 0; j < 0x1000; j++)
@@ -1866,7 +1855,7 @@ static void make_cram_lut(void)
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut()
+/*static*/  void make_lut()
 {
 	make_name_lut();
 	make_bp_lut();

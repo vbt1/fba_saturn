@@ -732,15 +732,10 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void dummy()
-{
-
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 #ifdef USE_IDMA
 	DMA_ScuInit();
 #endif

@@ -1516,6 +1516,7 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	DMA_ScuInit();
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
 	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;

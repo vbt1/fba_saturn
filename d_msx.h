@@ -56,18 +56,19 @@ typedef	struct	SysDevice	{
 	UINT8	data[1];
 } SysDevice;
 
-//static INT16 *pAY8910Buffer[3];
 /*static*/  UINT16 *SCCMixerBuffer	= NULL;
 /*static*/  UINT16 *SCCMixerTable	= NULL;
 
-/*static*/  UINT8 *CZ80Context = NULL;
+/*static*/  //UINT8 *CZ80Context = NULL;
 /*static*/  UINT8 *AllMem	= NULL;
 /*static*/  UINT8 *MemEnd	= NULL;
 /*static*/  UINT8 *AllRam	= NULL;
 /*static*/  UINT8 *RamEnd	= NULL;
 /*static*/  UINT8 *maincpu	= NULL; // msx bios rom
 /*static*/  UINT8 *game      = NULL; // game cart rom, tape side A
+#ifdef CASSETTE
 /*static*/  UINT8 *game2     = NULL; // tape side B
+#endif
 /*static*/  UINT8 *main_mem	= NULL;
 /*static*/  UINT8 *kanji_rom = NULL;
 /*static*/  UINT8 *game_sram = NULL;
@@ -86,7 +87,7 @@ typedef	struct	SysDevice	{
 /*static*/  UINT8 DrvJoy1[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 /*static*/  UINT8 DrvJoy2[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 /*static*/  UINT8 DrvJoy4[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-/*static*/  UINT8 DrvDips[1];
+/*static*/  UINT8 DrvDips[1]={0};
 /*static*/  UINT8 DrvReset = 0;
 /*static*/  UINT8 DrvNMI = 0;
 
@@ -280,6 +281,7 @@ static UINT8 Kana, KanaByte; // Kanji-rom stuff
 
 static UINT8 ppiC_row;
 static UINT8 keyRows[12];
+#ifdef CASSETTE
 static INT32 charMatrix[][3] = {
 	{'0', 0, 0}, {')', 0, 0}, {'1', 0, 1}, {'!', 0, 1}, {'2', 0, 2}, {'@', 0, 2},
 	{'3', 0, 3}, {'#', 0, 3}, {'4', 0, 4}, {'$', 0, 4}, {'5', 0, 5}, {'%', 0, 5},
@@ -338,6 +340,7 @@ static INT32 charMatrix[][3] = {
 static struct BurnRomInfo emptyRomDesc[] = {
 	{ "",                    0,          0, 0 },
 };
+#endif 
 
 // MSX1 BIOS
 static struct BurnRomInfo msx_msxRomDesc[] = {

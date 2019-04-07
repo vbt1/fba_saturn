@@ -13,6 +13,7 @@
 /*static*/ INT32 DrvExit();
 /*static*/ int gberetInit();
 /*static*/ int mrgoemonInit();
+void dummy();
 void SN76496Update(int Num, short* pSoundBuf, int Length);
 void SN76496Write(int Num, int Data);
 void SN76489Init(int Num, int Clock, int SignalAdd);

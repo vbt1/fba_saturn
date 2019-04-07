@@ -18,6 +18,7 @@ UINT16 *map_offset_lut = NULL;
 /*static*/ INT32  DrvExit();
 /*static*/ INT32  DrvFrame();
 ///*static*/ INT32  DrvDraw();
+void dummy();
 
 /*static*/ void make_lut_r(int rotated);
 INT32 (*DrvDraw)();

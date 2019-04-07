@@ -1740,7 +1740,9 @@ static INT32 MemIndex()
 	SCCMixerBuffer	= (INT16*)Next; Next += 2 * 7680L * sizeof(INT16);
 	SCCMixerTable	= (INT16*)Next; Next += 512 * 5 * sizeof(INT16);
 #endif
+#ifndef RAZE
 	CZ80Context		= Next; Next += 0x1080;
+#endif
 	MemEnd			= Next;
 	return 0;
 }
@@ -2140,22 +2142,19 @@ static INT32 DrvExit()
 #endif
 	ppi8255_exit();
 
-//	for (int i = 0; i < 3; i++) {
-//		pAY8910Buffer[i] = NULL;
-//	}
-
-	maincpu = game = game_sram = AllRam = main_mem = NULL;
+	maincpu = game = game_sram = AllRam = main_mem = kanji_rom = NULL;
 	EmptyRAM = RAMData = MemEnd = RamEnd = NULL;
 
 #ifdef K051649
 	SCCMixerBuffer	= NULL;
 	SCCMixerTable	= NULL;
 #endif
+#ifndef RAZE
 	/*tmpbmp =*/ CZ80Context		= NULL;
-
-	BurnFree (AllMem);
+#endif
+	free (AllMem);
 	AllMem = NULL;
-	
+
 	DrvReset = 0;
 	DrvNMI = 0;
 
@@ -2166,11 +2165,8 @@ static INT32 DrvExit()
 #endif
 	VBlankKludge = 0;
 
-#ifdef BUILD_WIN32
-	cBurnerKeyCallback = NULL;
-	nReplayExternalDataCount = 0;
-	ReplayExternalData = NULL;
-#endif
+	nSoundBufferPos=0;
+
 	return 0;
 }
 
@@ -2363,11 +2359,6 @@ void initPosition(void)
 	SCL_Open();
 	ss_reg->n1_move_x = 0;
 	ss_reg->n1_move_y = 0;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void dummy()
-{
-
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()

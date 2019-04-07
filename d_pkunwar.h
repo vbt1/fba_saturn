@@ -6,7 +6,7 @@
 #include "saturn/ovl.h"
 
 #define SOUND_LEN 128
-
+void dummy();
 /*static*/ void updateSound();
 /*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8];
 /*static*/ unsigned char DrvDips[2]={0,0},DrvReset=0;

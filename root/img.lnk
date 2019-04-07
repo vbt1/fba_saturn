@@ -12,7 +12,7 @@ SECTIONS {
          	_stack = . ;
 	} > ram
 
-	.shared 0x6003500 (NOLOAD):
+	.shared 0x6003600 (NOLOAD):
 	{
 		root/sl.coff (".shared")
 		_play = .;

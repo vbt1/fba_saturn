@@ -12,6 +12,7 @@
 /*static*/  INT32 RobokidInit();
 /*static*/  INT32 DrvExit();
 /*static*/  INT32 DrvFrame();
+void dummy();
 
 /*static*/  UINT8 *AllMem = NULL;
 /*static*/  UINT8 *MemEnd = NULL;

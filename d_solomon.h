@@ -13,6 +13,7 @@ INT32 SolomonFrame();
 void SolomonCalcPalette();
 void updateSound();
 void CZetRunSlave(int *nCycles);
+void dummy();
 
 /*static*/ UINT8 SolomonInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 SolomonInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};

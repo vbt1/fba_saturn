@@ -8,7 +8,7 @@ extern UINT32 *shared;
 
 static void TMS89928aPaletteRecalc()
 {
-	for (int i = 0; i < 16; i++) 
+	for (unsigned int i = 0; i < 16; i++) 
 	{
 		colAddr[i] = RGB((TMS9928A_palette[i] >> 19)&31,(TMS9928A_palette[i] >> 11)&31,(TMS9928A_palette[i] /8)&31);
 	}

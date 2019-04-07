@@ -13,6 +13,7 @@ void sidearms_draw_starfield(int *starfield_enable);
 //void vblIn();
 static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 unsigned char current_pcm=255;
+void dummy();
 
 SFX sfx_sidarm[96] = {
 /*000.pcm*/{0,230400,10},

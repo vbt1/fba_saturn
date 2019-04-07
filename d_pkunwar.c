@@ -1311,6 +1311,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 {
 	cleanSprites();
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 67;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;

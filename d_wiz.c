@@ -733,6 +733,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites = 19;
 	nBurnLinescrollSize = 0x400;
 //	nBurnLinescrollSize1 = 0x400;

@@ -123,16 +123,10 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void dummy(INT32 *length2)
-{
-	asm("nop\n");
-	return;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites  = 24+4;//27;
 

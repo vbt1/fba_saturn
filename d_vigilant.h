@@ -22,6 +22,7 @@ int DrvInit();
 int DrvExit();
 void DrvFrame();
 void CZetRunSlave(int *nCycles);
+void dummy();
 
 /*static*/unsigned char DrvInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/unsigned char DrvInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};

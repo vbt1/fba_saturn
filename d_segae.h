@@ -28,6 +28,7 @@
 /*static*/ void update_bg(UINT8 chip, UINT32 index);
 /*static*/ void update_sprites(UINT8 chip, UINT32 index);
 void SCL_SetLineParamNBG1();
+void dummy();
 
 /*static*/ UINT8 DrvJoy0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};

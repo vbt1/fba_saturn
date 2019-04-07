@@ -43,7 +43,7 @@ typedef struct {
 	int bottom_border;
 	int vertical_size;
 
-unsigned int dirty[24*32*8*4];
+unsigned char dirty[24*32*8*4];
 #ifdef USE_LUT
 unsigned int color_2bpp_lut[0x400];
 #endif
