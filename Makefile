@@ -236,7 +236,7 @@ OVLSEGAE                 = root/d_segae.coff
 OVLSEGAE1               = root/d_segae.bin
 MPOVLSEGAEFILE    = $(OVLSEGAE:.coff=.maps)
 LDOVLSEGAEFLAGS = -m2 -s -O2 -Xlinker -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSEGAEFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
-SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c 
+SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c saturn/saturn_ext.c 
 OBJOVLSEGAE         = $(SRCOVLSEGAE:.c=.o)
 
 OVLSOLOMN                = root/d_solomn.coff

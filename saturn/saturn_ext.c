@@ -1,6 +1,9 @@
 #include <sl_def.h>
 #include "sega_scl2.h"
 #include "sega_dma.h"
+#include "..\globals.h"
+
+/*static*/ SclWinscl	*ss_regw = NULL;
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void SCL_SetWindowSub(Uint32 surfaces,Uint32 enable,Uint8 *contrl,Uint8 on,Uint8 off)
 {
@@ -37,21 +40,23 @@ void	SCL_SetWindow(Uint8 win,Uint32 logic,Uint32 enable,Uint32 area,
     Uint8	en_on,en_off;
     Uint8	ar_on,ar_off;
 
+	ss_regw = (SclWinscl *)SS_REGW;
+
     switch(win)
     {
 	case SCL_W0:
-		Scl_w_reg.linewin0_addr = 0;
-		sxy = &Scl_w_reg.win0_start[0];
-		exy = &Scl_w_reg.win0_end[0];
+		ss_regw->linewin0_addr = 0;
+		sxy = &ss_regw->win0_start[0];
+		exy = &ss_regw->win0_end[0];
 		en_on  = 0x02;
 		en_off = 0xfd;
 		ar_on  = 0x01;
 		ar_off = 0xfe;
 		break;
 	case SCL_W1:
-		Scl_w_reg.linewin1_addr = 0;
-		sxy = &Scl_w_reg.win1_start[0];
-		exy = &Scl_w_reg.win1_end[0];
+		ss_regw->linewin1_addr = 0;
+		sxy = &ss_regw->win1_start[0];
+		exy = &ss_regw->win1_end[0];
 		en_on  = 0x08;
 		en_off = 0xf7;
 		ar_on  = 0x04;
@@ -62,7 +67,7 @@ void	SCL_SetWindow(Uint8 win,Uint32 logic,Uint32 enable,Uint32 area,
 		break;
     }
 
-    contrl = (Uint8 *)&Scl_w_reg.wincontrl[0];
+    contrl = (Uint8 *)&ss_regw->wincontrl[0];
 
 	sxy[0] = sx*2;
 	exy[0] = ex*2;
@@ -75,8 +80,8 @@ void	SCL_SetWindow(Uint8 win,Uint32 logic,Uint32 enable,Uint32 area,
     if(area | enable)	SCL_SetWindowSub(area,enable,contrl,ar_on,ar_off);
 
     SCL_SetWindowSub(enable,0xffffffff,contrl,en_on,en_off);
-
-    if(SclProcess == 0)	SclProcess = 1;
+	SCL_Open();
+//    if(SclProcess == 0)	SclProcess = 1;
 }
 
 

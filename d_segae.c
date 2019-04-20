@@ -254,6 +254,8 @@ int ovlInit(char *szShortName)
 //					satb[chip] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
 //					if (segae_vdp_vrambank[chip])
 						satb[chip] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
+						satb[0] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
+
 //					else
 //						satb[chip] = (segae_vdp_regs[chip][regnumber] << 7) & 0x3F00;
 					break;
@@ -267,7 +269,7 @@ int ovlInit(char *szShortName)
 			}
 		}
 
-		if (regnumber == 1 && chip == 1) {
+		if (regnumber == 1) {
 			if ((segae_vdp_regs[chip][0x1]&0x20) && vintpending) {
 				CZetSetIRQLine(0, CZET_IRQSTATUS_HOLD);
 			} else {
@@ -571,16 +573,19 @@ static void astrofl_decode(void)
 	sega_decode_2(DrvMainROM, DrvMainROMFetch, opcode_xor,opcode_swap_select,data_xor,data_swap_select);
 }
 
-/*static*/ INT32 MemIndex()
+/*static*/ INT32 MemIndex(UINT32 game)
 {
 	UINT8 *Next; Next = AllMem;
 
-	DrvMainROM	 	    = (UINT8 *) 0x00200000;
-	DrvMainROMFetch= (UINT8 *) 0x00280000;
-	mc8123key           = Next; Next += 0x02000;
-	CZ80Context			= Next; Next += (0x1080*2);
+	DrvMainROM	 	    = (UINT8 *)Next; Next += 0x80000;// 0x00200000;
+	
+	if(game>2)
+		DrvMainROMFetch= (UINT8 *)0x00280000;
 
-	AllRam				= Next;
+	mc8123key           = Next; Next += 0x02000;
+	CZ80Context			= Next; Next += (0x1080);
+
+	AllRam					= Next;
 	DrvRAM			    = Next; Next += 0x10000;
 
 	segae_vdp_vram[0]	= Next; Next += 0x8000; /* 32kb (2 banks) */
@@ -594,10 +599,11 @@ static void astrofl_decode(void)
 
 	RamEnd			= Next;
 	
-	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
-	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
+	name_lut		= 0x00200000;//Next; Next += 0x10000*sizeof(UINT16);
+	bp_lut			= 0x00220000;//Next; Next += 0x10000*sizeof(UINT32);
 	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
-	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);	
+//	map_lut	 		= Next; Next += 0x3000*sizeof(UINT16);	
+	map_lut	 		= 0x00260000;	
 	
 	MemEnd			= Next;
 
@@ -633,15 +639,14 @@ static void astrofl_decode(void)
 
 	currentLine = mc8123 = 	mc8123_banked = hintcount = vintpending = hintpending = 0;
 
-// 	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
-// 	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
+ 	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
+ 	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
 	return 0;
 }
 
 /*static*/ INT32 DrvDoReset()
 {
 	memset (DrvRAM, 0, RamEnd - DrvRAM);
-
 	rombank = 0;
 	hintcount = 0;
 	vintpending = 0;
@@ -790,20 +795,16 @@ static void astrofl_decode(void)
 	DrvInitSaturnS(game);
 
 	AllMem = NULL;
-	MemIndex();
+	MemIndex(game);
 	INT32 nLen = MemEnd - (UINT8 *)0;
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) 
 	{
 		return 0;
 	}
 	memset(AllMem, 0, nLen);
-	memset(DrvMainROM, 0, 0x80000);
-	memset(DrvMainROMFetch, 0, 0x80000);
+	memset(cache, 0, 0x80000);
 
-	memset(SCL_VDP2_VRAM_A0, 0, 0x80000);
-
-	MemIndex();
-//	make_lut();
+	MemIndex(game);
 
 	switch (game) {
 		case 0:
@@ -826,6 +827,7 @@ static void astrofl_decode(void)
 			if (BurnLoadRom(DrvMainROM + 0x30000,  3, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x40000,  4, 1)) return 1;
 			if (BurnLoadRom(mc8123key  + 0x00000,  5, 1)) return 1;
+			memset(DrvMainROMFetch, 0, 0x80000);
 			mc8123_decrypt_rom(0, 0, DrvMainROM, DrvMainROMFetch, mc8123key);
 			mc8123 = 1;
 			break;
@@ -836,6 +838,7 @@ static void astrofl_decode(void)
 			if (BurnLoadRom(DrvMainROM + 0x20000,  3, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1;
 			if (BurnLoadRom(mc8123key  + 0x00000,  5, 1)) return 1;
+			memset(DrvMainROMFetch, 0, 0x80000);
 			mc8123_decrypt_rom(1, 8, DrvMainROM, DrvMainROMFetch, mc8123key);
 			mc8123 = 1;
 			mc8123_banked = 1;
@@ -1043,20 +1046,20 @@ static void astrofl_decode(void)
 	if(game==1)
 	{
 			initSprites(240-1,192-1,16,0,0,0);
-//		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17+8,0,240+8,191);
-//		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17+8,0,240+8,191);
+			SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17+8,0,240+8,191);
+			SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17+8,0,240+8,191);
 	}
 	else if(game==5 || game==3 || game==2)
 	{
 			initSprites(248-1,192-1,8,0,0,0);
-//		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,9,0,248,191);
-//		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,9,0,248,191);
+			SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,9,0,248,191);
+			SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,9,0,248,191);
 	}
 	else
 	{
 		initSprites(256-1,192-1,0,0,0,0);
-//		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,0,0,256,191);
-//		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,0,0,256,191);
+		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,0,0,256,191);
+		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,0,0,256,191);
 	}
 
 	initScrolling(ON,SCL_VDP2_VRAM_B0);
@@ -1188,7 +1191,8 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 		if( index<ntab+0x700)
 		{
 			UINT16 temp = *(UINT16 *)&segae_vdp_vram[chip][index&~1];
-			unsigned int delta = map_lut[index - ntab[chip]];
+//			unsigned int delta = map_lut[(index - ntab[chip])&0x7ff];
+			unsigned int delta = map_lut[(index - ntab[chip])];
 			UINT16 *map = (chip==0?&ss_map[delta]:&ss_map2[delta]); 
 
 #ifdef TWO_WORDS

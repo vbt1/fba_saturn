@@ -267,6 +267,7 @@ int ovlInit(char *szShortName)
 /*static*/ void Graphics_Decode(int *CharPlanes, int *CharXOffs, int *CharYOffs, int *SprPlanes, int *SprXOffs, int *SprYOffs, int SprMod)
 {
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	memset(cache,0x00,0x40000);
 	GfxDecode4Bpp(0x200, 4,  8,  8, CharPlanes, CharXOffs, CharYOffs, 0x100, Gfx0, cache);
 	GfxDecode4Bpp(0x200, 4, 16, 16, SprPlanes, SprXOffs, SprYOffs, SprMod, Gfx1, &ss_vram[0x1100]);
 }

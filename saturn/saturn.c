@@ -294,6 +294,7 @@ wait_vblank();
 	SS_REG   = &Scl_n_reg;
 	SS_REGD =	&Scl_d_reg;
 	SS_REGS =	&Scl_s_reg;
+	SS_REGW =	&Scl_w_reg;
 	SS_SPRAM = &aVRAM[0];
  	SS_N0PRI = &SclBgPriNum;
 	SS_SPPRI = &SclSpPriNum;

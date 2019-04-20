@@ -51,9 +51,6 @@ void dummy();
 /*static*/ UINT8 *DrvMainROM;
 /*static*/ UINT8 *DrvMainROMFetch;
 /*static*/ UINT8 *mc8123key;
-///*static*/ UINT32 *DrvPalette;
-///*static*/ UINT32 *Palette;
-///*static*/ UINT8 *cache_bitmap;
 
 /*static*/ UINT8 segae_8000bank = 0;
 /*static*/ UINT8 port_fa_last = 0;
