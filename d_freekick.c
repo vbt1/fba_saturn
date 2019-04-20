@@ -572,7 +572,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	countrunbmode = !strcmp(BurnDrvGetTextA(DRV_NAME), "countrnb");
 
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "countrnb") || 
-		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekick") 
+		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekb1") 
 	) 
 	{
 		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return 1;
