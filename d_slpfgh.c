@@ -7,6 +7,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvSlapBtJP = {
 		"slapfib1", "slpfgh",
 		"Slap Fight (bootleg set 1)",

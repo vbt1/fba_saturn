@@ -10,6 +10,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvNewsa = {
 		"newsa", "news",
 		"News (set 2)\0",

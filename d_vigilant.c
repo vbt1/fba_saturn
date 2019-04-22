@@ -18,6 +18,8 @@ INT16 oldScroll =0;
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvVigilant = {
 		"vigil", NULL,
 		"Vigilante (World)\0",

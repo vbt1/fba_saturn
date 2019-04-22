@@ -18,6 +18,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvWboyu = {
 		"wboyu",  "sys1",
 		"Wonder Boy (not encrypted)\0",

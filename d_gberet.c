@@ -8,6 +8,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvGberet = {
 		"gberet", NULL,
 		"Green Beret\0",

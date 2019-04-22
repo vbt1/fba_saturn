@@ -8,6 +8,7 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
 
 	struct BurnDriver nBurnDrvAtetris = {
 		"atetris", "tetris", 

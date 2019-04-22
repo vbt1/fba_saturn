@@ -14,6 +14,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvSidearms = {
 		"sidarm", NULL,
 		"Side Arms - Hyper Dyne (World, 861129)",

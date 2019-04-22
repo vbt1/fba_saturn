@@ -5,6 +5,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 /*	struct BurnDriver nBurnDrvCongo = {
 		"congo", "zaxxon",
 		"Congo Bongo\0",

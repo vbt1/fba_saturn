@@ -9,6 +9,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvWiz = {
 		"wiz", NULL,
 		"Wiz",

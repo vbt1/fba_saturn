@@ -12,6 +12,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvpengo2u = {
 		"pengo2u", "pacm",
 		"Pengo (set 2 not encrypted)\0",

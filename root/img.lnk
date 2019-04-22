@@ -54,9 +54,11 @@ SECTIONS {
  
   .overlaydma ALIGN(4) (NOLOAD):
   {
+	__bstarto = . ;
 	*(.bss)
 	*("COMMON")
 	. = ALIGN(4);
+	__bendo = . ;
 	_end = .;
   } > ram
 
@@ -64,6 +66,7 @@ SECTIONS {
         {
                 _ovlstart = .;
 		*(.boot)
+		*(.clean)
 		*(".text")
 		*(".strings")
 		. = ALIGN(4);

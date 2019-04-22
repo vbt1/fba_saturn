@@ -16,6 +16,8 @@ void vblIn()
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvSolomon = {
 		"solomon", "solomn",
 		"Solomon's Key (US)",

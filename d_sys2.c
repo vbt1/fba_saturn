@@ -17,6 +17,8 @@ UINT8 System1MC8123Key[0x2000];
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvChplftb = {
 		"chplftb", "sys2",
 		"Choplifter (Alternate)\0",

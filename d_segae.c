@@ -9,6 +9,8 @@ volatile SysPort	*ss_port;
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvHangonjr = {
 		"hangonjr", "segae", 
 		"Hang-On Jr.", 

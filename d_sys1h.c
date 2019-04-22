@@ -17,10 +17,8 @@ UINT8 System1MC8123Key[0x2000];
 
 int ovlInit(char *szShortName)
 {
-/*	Uint8	*dst;
-	for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)&_bend; dst++)
-		*dst = 0;
-*/
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvBlockgal = {
 		"blockgal", "sys1h",
 		"Block Gal (MC-8123B, 317-0029)\0",

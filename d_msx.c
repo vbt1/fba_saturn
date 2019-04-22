@@ -45,6 +45,8 @@ static void Set8PCM();
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvMSX_1942 = {
 		"msx", NULL,
 		"MSX1 System",
@@ -69,7 +71,7 @@ static void load_rom()
 	{
 		PCM_MeStop(pcm8[i]);
 	}
-	memset4_fast(SOUND_BUFFER,0x00,0x4000*9);
+	memset(SOUND_BUFFER,0x00,0x4000*9);
 
 	memset(game, 0xff, MAX_MSX_CARTSIZE);
 	DrvDips[0] = 0x11;
@@ -2171,7 +2173,7 @@ static INT32 DrvExit()
 
 	free (AllMem);
 	AllMem = NULL;
-
+/*
 	DrvReset = 0;
 	DrvNMI = 0;
 
@@ -2182,7 +2184,9 @@ static INT32 DrvExit()
 #endif
 	VBlankKludge = 0;
 	SwapJoyports = Joyselect = Hertz60 = BiosmodeJapan = RAMMask = RAMPages = 0;
+*/
 	nSoundBufferPos=0;
+
 	return 0;
 }
 

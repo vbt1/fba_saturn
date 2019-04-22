@@ -13,6 +13,8 @@ static void Set4PCM();
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+	
 	struct BurnDriver nBurnDrvAppoooh = {
 		"appoooh", "appooo",
 		"Appoooh", 
@@ -894,11 +896,6 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 
 	free (AllMem);
 	AllMem = NULL;
-
-	DrvReset = scroll_x = flipscreen = priority = interrupt_enable = 0;
-	adpcm_data = adpcm_address = 0;
-	game_select = 0;
-	DrvZ80Bank0 = 0;
 
 	nSoundBufferPos=0;
 	return 0;

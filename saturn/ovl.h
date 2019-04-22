@@ -9,6 +9,8 @@ extern Uint32 *shared;
 extern unsigned int  nSoundBufferPos;
 extern unsigned int nBurnSprites;
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
+void cleanBSS() __attribute__ ((boot,section(".clean")));
+
 void GfxDecode4Bpp(unsigned int num, unsigned int numPlanes, unsigned int xSize, unsigned int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 void initScrolling(Uint8 enabled,void *address);
@@ -136,3 +138,15 @@ static unsigned char *cache = NULL;
 #define SS_SET_N1SPRM(/* 2bits */ n1sprm) \
   (ss_OtherPri->SpecialPriorityMode \
    = (ss_OtherPri->SpecialPriorityMode & 0xFFF3) | ((n1sprm) << 2))
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+void cleanBSS()
+{
+	extern unsigned int _bstarto, _bendo;
+
+	for( unsigned char *dst = (unsigned char *)&_bstarto; dst < (unsigned char *)&_bendo; dst++ ) 
+	{
+		*dst = 0;
+	}	
+}
+//-------------------------------------------------------------------------------------------------------------------------------------

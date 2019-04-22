@@ -4,8 +4,12 @@
 //#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR  0x060CC000
+#define OVLADDR 0x060CC000
+#define OVLAEND 0x060FF000
+#define SIZEMAX  OVLAEND-OVLAEND //0x30000 //0x060FFC00-0x060CC000
 #define LOWADDR 0x00200000
+#define MALLOC_MAX 0xAA000
+
 //#define DEBUG_DRV 1
 volatile SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
@@ -330,8 +334,8 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-	unsigned char *Mem = malloc((unsigned char *)0xAA000);
-	memset(Mem,0x00,0xAA000);
+	unsigned char *Mem = malloc((unsigned char *)MALLOC_MAX);
+	memset(Mem,0x00,MALLOC_MAX);
 	free(Mem);
 	Mem=NULL;
 
@@ -459,16 +463,14 @@ static void display_menu(void)
 	{
 		if(!loaded)
 		{
+// nettoyage emplacement du driver
+			memset((Uint8 *)OVLADDR,0x00,SIZEMAX);
 // vbt à remette			
 #ifndef DEBUG_DRV
 			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			load_img(0);	
 #endif
 			loaded=1;
-
-//			char toto[100];
-//			sprintf (toto,"sbrk %08x",sbrk(0)) ;
-//			FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,211);
 		}
 		m=0;
 //		char page_header[50];

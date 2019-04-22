@@ -15,6 +15,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvPang = {
 		"pang", "mitch",
 		"Pang (World)",

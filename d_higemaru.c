@@ -7,6 +7,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvhigemaru = {
 		"higema", NULL,
 		"Pirate Ship Higemaru\0",

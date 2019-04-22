@@ -41,6 +41,8 @@ vbt> <Kale_> Ok, have you asked to Arbee?
 //---------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvBlktiger = {
 		"blktiger", "blktgr",
 		"Black Tiger",
@@ -752,8 +754,8 @@ static INT32 DrvExit()
 	soundlatch = flipscreen /*= coin_lockout*/ = NULL;
 	remap16_lut = remap4to16_lut	= cram_lut = fg_map_lut = bg_map_lut2x1 = bg_map_lut2x2 = NULL;
 	MemEnd = AllRam = RamEnd = NULL;
-	watchdog = 0;
-	coin_lockout = 0;
+//	watchdog = 0;
+//	coin_lockout = 0;
 
 	free (AllMem);
 	AllMem = NULL;

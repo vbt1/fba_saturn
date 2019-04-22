@@ -98,37 +98,9 @@ typedef	struct	SysDevice	{
 /*static*/ UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvDips[1]={0};
-/*static*/ UINT8 DrvReset = 0;
-/*
-static struct BurnInputInfo Sg1000InputList[] = {
-	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
-	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"	},
-	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"	},
-	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 right"	},
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"	},
-	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"	},
+/*static*/ //UINT8 DrvReset = 0;
 
-//	{"P2 Up",		BIT_DIGITAL,	DrvJoy1 + 6,	"p2 up"		},
-//	{"P2 Down",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 down"	},
-//	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 left"	},
-//	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 right"	},
-//	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 fire 1"	},
-//	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 2"	},
-
-//	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
-
-	{"P2 Up",		BIT_DIGITAL,	NULL,	"p2 up"		},
-	{"P2 Down",		BIT_DIGITAL,	NULL,	"p2 down"	},
-
-	{"P2 Left",		BIT_DIGITAL,	NULL,	"p2 left"	},
-	{"P2 Right",		BIT_DIGITAL,	NULL,	"p2 right"	},
-	{"P2 Button 1",		BIT_DIGITAL,	NULL,	"p2 fire 1"	},
-	{"P2 Button 2",		BIT_DIGITAL,	NULL,	"p2 fire 2"	},
-
-	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
-};
-*/
-static struct BurnInputInfo Sg1000InputList[] = {
+/*static*/ struct BurnInputInfo Sg1000InputList[] = {
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
 	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"	},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"	},
@@ -143,7 +115,7 @@ static struct BurnInputInfo Sg1000InputList[] = {
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 fire 1"	},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 2"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 };
 
 

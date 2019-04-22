@@ -9,6 +9,8 @@ UINT32 BgSel=0xFFFF;
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvBombjack = {
 		"bombja", NULL,
 		"Bomb Jack (set 1)",
@@ -819,7 +821,7 @@ static INT32 DrvExit()
 //	GenericTilesExit();
 	free(Mem);
 	Mem = NULL;
-	
+
 	return 0;
 }
 
@@ -835,12 +837,12 @@ static UINT32 CalcCol(UINT16 nColour)
 	g = (g << 4) | g;
 	b = (b << 4) | b;
 
-	return RGB(r>>3, g>>3, b>>3);
+	return BurnHighCol(r, g, b, 0);
 }
 
 static INT32 CalcAll()
 {
-	int delta=0;
+	UINT32 delta=0;
 	for (UINT32 i = 0; i < 0x100; i+=2) 
 	{
 		colAddr[i / 2] = colBgAddr[delta] = cram_lut[BjPalSrc[i] | (BjPalSrc[i+1] << 8)];

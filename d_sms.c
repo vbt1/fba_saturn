@@ -5,14 +5,14 @@
 #define TWO_WORDS 1
 //GfsDirName dir_name_sms[512];
 #ifdef GG0
-//unsigned char spr_table[256];
-unsigned char disp_spr[64];
+unsigned char *disp_spr = NULL;
 unsigned char curr_sprite=0;
 #endif
 /* Attribute expansion table */
-
+//-------------------------------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
 {
+		cleanBSS();
 //#define M_TRIM_THRESHOLD    -1
 //#define M_TOP_PAD           -2
 
@@ -184,6 +184,9 @@ static void	SetVblank2( void ){
 #else
 	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
 #endif
+#ifdef GG0
+	disp_spr		= Next; Next += 64;
+#endif
 	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
 	CZ80Context	= Next; Next += 0x1080;
@@ -349,19 +352,25 @@ static void	SetVblank2( void ){
 	name_lut = NULL;
 	CZ80Context = NULL;
 
+#ifdef GG0
+	disp_spr = NULL;
+#endif
+
 #ifdef GG
+	memset(ss_scl,0x00,192*4);
 	vram_dirty =  NULL;
-	is_vram_dirty = 0;
+//	is_vram_dirty = 0;
 #endif
 
 	free(SaturnMem);
 	SaturnMem = NULL;
-	nSoundBufferPos=0;
-	running=0;
+/*	running=0;
 	first = 1;
 	vsynch = 0;
 	scroll_x=0;
-	scroll_y=0;
+	scroll_y=0;*/
+
+	nSoundBufferPos=0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  INT32 SMSFrame(void)

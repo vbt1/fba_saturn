@@ -12,6 +12,8 @@ UINT16 *ss_map3 = NULL;
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvRobokid = {
 		"robokid", "ninkd2",
 		"Atomic Robo-kid (World, Type-2)", 
@@ -57,7 +59,7 @@ int ovlInit(char *szShortName)
 
 /*static*/  void ninjakd2_bankswitch(INT32 data)
 {
-	INT32 nBank = 0x10000 + (data * 0x4000);
+	UINT32 nBank = 0x10000 + (data * 0x4000);
 
 //	nZ80RomBank = data;
 
@@ -531,20 +533,7 @@ int ovlInit(char *szShortName)
 	DrvBgRAM	= 0x2F5800;//Next; Next += 0x002000;
 	DrvBgRAM1	= 0x2F7800;//Next; Next += 0x002000;
 	DrvBgRAM2	= 0x2F9800;//Next; Next += 0x002000;
-/*
-	DrvZ80RAM0	= Next; Next += 0x001a00;
-//	DrvZ80RAM1	= Next; Next += 0x000800; // vbt : récuperer ces 0x800 de ram
 
-	DrvSprRAM	= Next; Next += 0x000600;
-	DrvPalRAM	= Next; Next += 0x000800;
-	DrvFgRAM	= Next; Next += 0x000800;
-	DrvBgRAM0	= Next;
-	DrvBgRAM	= Next; Next += 0x002000;
-	DrvBgRAM1	= Next; Next += 0x002000;
-	DrvBgRAM2	= Next; Next += 0x002000;
-*/
-//	soundlatch	= Next; Next += 0x000001;
-//	flipscreen	= Next; Next += 0x000001;
 	RamEnd		= Next;
 
 	MemEnd		= Next;
@@ -891,17 +880,23 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 
 /*static*/  INT32 DrvExit()
 {
+	CZetOpen(0);
+	CZetSetWriteHandler(NULL);
+	CZetSetReadHandler(NULL);
+	CZetSetInHandler(NULL);
+	CZetSetOutHandler(NULL);
+	CZetClose();
 	CZetExit2();
-	nSoundBufferPos=0;
 
 	CZ80Context	=  NULL;
 	MemEnd = AllRam = RamEnd = DrvZ80ROM0 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
 	DrvGfxROM3 = DrvGfxROM4 = DrvGfxROM4Data1 = DrvZ80RAM0 = DrvSprRAM = DrvPalRAM = NULL;
 	DrvFgRAM = DrvBgRAM = DrvBgRAM0 = DrvBgRAM1 = DrvBgRAM2 = NULL;
-	soundlatch = flipscreen = overdraw_enable = DrvReset = 0;
 	free(AllMem);
 	AllMem = NULL;
 	ss_map3 = NULL;
+
+	nSoundBufferPos=0;
 
 	return 0;
 }

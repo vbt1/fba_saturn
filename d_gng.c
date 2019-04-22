@@ -15,6 +15,8 @@ UINT16 map_offset_lut_fg[1024];
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 struct BurnDriver nBurnDrvGng = {
 	"gng", NULL,
 	"Ghosts'n Goblins (World? set 1)\0",

@@ -8,6 +8,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvbankp	 = {
 	"bankp", NULL, 
 	"Bank Panic",  
@@ -525,8 +527,6 @@ static void DrvInitSaturn()
 
 	free(Mem);
 	Mem = NULL;
-
-	DrvReset = DrvDips = priority = flipscreen = interrupt_enable = 0;
 
 	return 0;
 }

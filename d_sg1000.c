@@ -14,6 +14,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvsg1k_wboy = {
 		"sg1000", NULL, 
 		"Sega SG-1000",
@@ -461,7 +463,8 @@ static int DrvExit()
 /*	tmpbmp =*/ CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
 	free (AllMem);
 	AllMem = NULL;
-	DrvReset = 0;
+//	DrvReset = 0;
+
 	nSoundBufferPos = 0;
 	return 0;
 }

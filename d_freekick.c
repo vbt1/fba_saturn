@@ -5,6 +5,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	 struct BurnDriver nBurnDrvPbillrd = {
 		"pbillrd", "freek",
 		"Perfect Billiard",
