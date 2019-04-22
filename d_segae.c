@@ -5,7 +5,6 @@
 #define nInterleave 262
 #define nCyclesTotal 10738635 / 2 / 60
 #define nCycleSegment nCyclesTotal / nInterleave
-Fixed32	ss_scl1[SCL_MAXLINE];
 volatile SysPort	*ss_port;
 
 int ovlInit(char *szShortName)
@@ -254,7 +253,7 @@ int ovlInit(char *szShortName)
 //					satb[chip] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
 //					if (segae_vdp_vrambank[chip])
 						satb[chip] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
-						satb[0] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
+//						satb[0] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
 
 //					else
 //						satb[chip] = (segae_vdp_regs[chip][regnumber] << 7) & 0x3F00;
@@ -597,15 +596,15 @@ static void astrofl_decode(void)
 	segae_vdp_cram[1]	= Next; Next += 0x20;
 	segae_vdp_regs[1]	= Next; Next += 0x20;
 
-	RamEnd			= Next;
+	RamEnd		= Next;
 	
 	name_lut		= 0x00200000;//Next; Next += 0x10000*sizeof(UINT16);
 	bp_lut			= 0x00220000;//Next; Next += 0x10000*sizeof(UINT32);
 	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
 //	map_lut	 		= Next; Next += 0x3000*sizeof(UINT16);	
 	map_lut	 		= 0x00260000;	
-	
-	MemEnd			= Next;
+	ss_scl1			= Next; Next += SCL_MAXLINE*sizeof(Fixed32);	
+	MemEnd		= Next;
 
 	return 0;
 }
@@ -632,15 +631,21 @@ static void astrofl_decode(void)
 	segae_vdp_cram[0] = segae_vdp_regs[0] = segae_vdp_cram[1] = segae_vdp_regs[1] = NULL;
 	name_lut = cram_lut = map_lut = NULL;
 	bp_lut = NULL;
+	ss_scl1 = NULL;
 	free(AllMem);
 	AllMem = NULL;
 	ss_port = NULL;
 	nBurnFunction = NULL;
 
-	currentLine = mc8123 = 	mc8123_banked = hintcount = vintpending = hintpending = 0;
+	DrvWheel = DrvAccel = 0;
+	segae_8000bank = port_fa_last = rombank = currentLine = mc8123 = mc8123_banked = hintcount = vintpending = hintpending = 0;
 
  	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
  	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
+	initScrollingNBG1(OFF,NULL);
+
+	nSoundBufferPos=0;
+
 	return 0;
 }
 
@@ -1088,7 +1093,15 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 
 	ss_reg->linecontrl = (temp <<8) & 0xff00 | temp;
 	addr = &ss_reg->lineaddr[1];
-	*addr = (address / 2) & 0x0007ffff;
+
+	if(enabled==ON)
+	{
+		*addr = (address / 2) & 0x0007ffff;
+	}
+	else
+	{
+		*addr =0x00;
+	}
 	SclProcess = 2;
 }
 #define INV 63

@@ -240,8 +240,6 @@ Allocate Memory
 	System1PromGreen       = Next; Next += 0x000100;
 	System1PromBlue        = Next; Next += 0x000100;
 
-
-
 //	System1Ram1            = Next; Next += 0x0020fd;
 	System1Ram1            = Next; Next += 0x002100;
 	System1Ram2            = Next; Next += 0x000800;
@@ -251,7 +249,6 @@ Allocate Memory
 //	System1VideoRam        = Next; Next += 0x000700;
 	System1VideoRam        = Next; Next += 0x004000;
 	RamStart1 = RamStart	= System1VideoRam-0xe800;
-//	RamStart16					= (UINT16 *)RamStart;
 	System1ScrollXRam	   = System1VideoRam + 0x7C0;
 	System1BgCollisionRam  = Next; Next += 0x000400;
 	System1SprCollisionRam = Next; Next += 0x000400;
@@ -261,17 +258,15 @@ Allocate Memory
 	System1ScrollX           = System1efRam + 0xfc;
 	System1f4Ram           = Next; Next += 0x000400;
 	System1fcRam           = Next; Next += 0x000400; // +3 pour avoir un code aligné pour SpriteOnScreenMap
-	SpriteOnScreenMap      = Next; Next += (256 * 256);
-//	SpriteOnScreenMap      = 0x002F0000;
-//	System1Sprites         = Next; Next += System1SpriteRomSize;
-	System1Tiles           = cache;//Next; Next += (System1NumTiles * 8 * 8);
+	SpriteOnScreenMap      = Next; Next += 0x10000;
+	System1Sprites         = Next; Next += System1SpriteRomSize;
 
 	width_lut			= Next; Next += 256 * sizeof(UINT8);
 	cram_lut			= Next; Next += 256 * sizeof(UINT16);
 	remap8to16_lut	= Next; Next += 512 * sizeof(UINT16);
 	map_offset_lut	= Next; Next += 0x800 * sizeof(UINT16);
 //	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
-	cpu_lut				= Next; Next += 10*sizeof(int);
+	cpu_lut				= Next; Next += 10*sizeof(UINT32);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
 	CZ80Context		= Next; Next += (0x1080*2);
 	MemEnd = Next;
@@ -300,7 +295,7 @@ Reset Functions
 	System1BgBank = 0;
 	System1BankedRom = 0;
 	System1BankSwitch =0;
-	System1Reset = 0;
+//	System1Reset = 0;
 
 	return 0;
 }
@@ -705,10 +700,8 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) 
 	{	
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
-//	if ((SpriteOnScreenMap = (UINT8 *)malloc(256 * 256)) == NULL) {return 1;}
 	memset(Mem, 0, nLen);
 	MemIndex();
 
@@ -723,28 +716,28 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	if (System1BankedRom)
 	{
-		memcpy(System1TempRom, System1Rom1, 0x40000);
+		memcpyl(System1TempRom, System1Rom1, 0x40000);
 		memset(System1Rom1, 0, 0x40000);
 
 		if (System1BankedRom == 1)
 		{ // Encrypted, banked
-			memcpy(System1Rom1 + 0x00000, System1TempRom + 0x00000, 0x8000);
-			memcpy(System1Rom1 + 0x10000, System1TempRom + 0x08000, 0x8000);
-			memcpy(System1Rom1 + 0x18000, System1TempRom + 0x10000, 0x8000);
+			memcpyl(System1Rom1 + 0x00000, System1TempRom + 0x00000, 0x8000);
+			memcpyl(System1Rom1 + 0x10000, System1TempRom + 0x08000, 0x8000);
+			memcpyl(System1Rom1 + 0x18000, System1TempRom + 0x10000, 0x8000);
 		}
 
 		if (System1BankedRom == 2)
 		{ // Unencrypted, banked
-			memcpy(System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
-			memcpy(System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
-			memcpy(System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
-			memcpy(System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
-			memcpy(System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
-			memcpy(System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
+			memcpyl(System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
+			memcpyl(System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
+			memcpyl(System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
+			memcpyl(System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
+			memcpyl(System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
+			memcpyl(System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
 
 			if ((UINT32)nZ80Rom1Size == (ri.nLen * 2))
 			{ // last rom half the size, reload it into the last slot
-				memcpy (System1Rom1 + 0x18000, System1TempRom + 0x20000, 0x8000);
+				memcpyl (System1Rom1 + 0x18000, System1TempRom + 0x20000, 0x8000);
 			}
 		}
 	}
@@ -766,35 +759,36 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
 	}
 
-	int TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
+	UINT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
 
-	int TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
-	int TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
+	UINT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	UINT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
 
 	if (System1NumTiles > 0x800)
 	{
-		int NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
-		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, NoboranbTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
+		UINT32 NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
+		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, NoboranbTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, cache);
 	}
 	else
-		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
+		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, cache);
 
 	System1TempRom = NULL;
 	
 	memset(&ss_map2[2048],0,768);
 
-	if(flipscreen==1)			rotate_tile(System1NumTiles,0,System1Tiles);
-	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,System1Tiles);
+	if(flipscreen==1)			rotate_tile(System1NumTiles,0,cache);
+	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,cache);
 
 	spriteCache = (UINT16*)(0x00200000);
 
 	memset((unsigned char *)spriteCache,0xFF,0x80000);
-	if(System1SpriteRomSize!=0x20000)
+/*	if(System1SpriteRomSize!=0x20000)
 		System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
 	else
 		System1Sprites = (UINT8 *)0x02E0000;
-
+*/
 	memset(System1Sprites, 0x00, System1SpriteRomSize);
+
 	// Load Sprite roms
 	RomOffset += nTileRomNum;
 	for (i = 0; i < nSpriteRomNum; i++) 
@@ -888,12 +882,13 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	z80_reset();
 
 //	memset4_fast(SpriteOnScreenMap, 255, 256 * 256); plante sur saturn
-	memset(SpriteOnScreenMap, 255, 256 * 256);
-	
+	memset(SpriteOnScreenMap, 255, 0x10000);
+
 	nCyclesTotal[0] = 2500000 / hz ;//3500000
 	nCyclesTotal[1] = 2500000 / hz ;//3500000
 
 	SN76489AInit(0, 2000000, 0);	  //2000000
+
 	SN76489AInit(1, 4000000, 1);//4000000
 	
 	make_lut();
@@ -941,7 +936,7 @@ System1BgRam = System1VideoRam = NULL;
 System1ScrollXRam = System1BgCollisionRam = NULL;
 System1SprCollisionRam = NULL;
 System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
-System1Tiles = SpriteOnScreenMap = NULL;
+/*System1Tiles =*/ SpriteOnScreenMap = NULL;
 System1Fetch1 = /*System1MC8123Key =*/ NULL;
 System1ScrollX = System1ScrollY = NULL;
 
@@ -954,8 +949,8 @@ width_lut = NULL;
 ss_vram = NULL;
 spriteCache = NULL;
 
-	if(System1SpriteRomSize!=0x20000)
-		free(System1Sprites);
+//	if(System1SpriteRomSize!=0x20000)
+//		free(System1Sprites);
 	System1Sprites = NULL;
 //	free(SpriteOnScreenMap);
 //	SpriteOnScreenMap = NULL;
@@ -977,7 +972,7 @@ spriteCache = NULL;
 	System1ColourProms = 0;
 	System1BankedRom = 0;
 	System1BankSwitch =0;
-	System1Reset = 0;
+//	System1Reset = 0;
 	
 	nCyclesTotal[0] = nCyclesTotal[1] = 0;
 
@@ -1057,16 +1052,15 @@ void renderSpriteCache(int *values)
 {
 //	Src,Height,Skip,Width, Bank,nextSprite
 	int Src = values[0];
-	unsigned int Height = values[1];
+	UINT32 Height = values[1];
 	INT16 Skip = values[2];
-	unsigned int Width  = values[3];
+	UINT32 Width  = values[3];
 	int Bank = values[4];
 	UINT16 aNextSprite = values[5];
 
-	int Row;
 	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(aNextSprite<<3)];
 
-	for (Row = 0; Row < Height; Row++) 
+	for (UINT32 Row = 0; Row < Height; Row++) 
 	{
 		int x=0, /*y,*/ Src2;
 		Src = Src2 = Src + Skip;
@@ -1204,11 +1198,11 @@ Frame functions
 ===============================================================================================*/
 int System1Frame()
 {
-	if (System1Reset) System1DoReset();
+//	if (System1Reset) System1DoReset();
 	MakeInputsFunction();
 	unsigned int nCyclesDone[2] = {0,0};
 	
-	for (unsigned int i = 0; i < nInterleave; i++) {
+	for (UINT32 i = 0; i < nInterleave; i++) {
 		
 		// Run Z80 #1
 #ifdef CZ80
@@ -1244,6 +1238,7 @@ int System1Frame()
 #endif
 		SPR_WaitEndSlaveSH();
 	}
+
 	System1Render();
 
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
@@ -1260,13 +1255,11 @@ int System1Frame()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_cram_lut(void)
 {
-    int j;
-
 	if (System1ColourProms) 
 	{
-		for (j = 0; j < 256; j++) 
+		for (UINT32 j = 0; j < 256; j++) 
 		{
-			int bit0, bit1, bit2, bit3, r, g, b, val;
+			UINT32 bit0, bit1, bit2, bit3, r, g, b, val;
 
 			val = System1PromRed[j];
 			bit0 = (val >> 0) & 0x01;
@@ -1289,15 +1282,12 @@ int System1Frame()
 			bit3 = (val >> 3) & 0x01;
 			b = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
 
-			r = (r >> 3);
-			g = (g >> 3);
-			b =  (b >> 3);
-			cram_lut[j] = RGB(r,g,b);		
+			cram_lut[j] = BurnHighCol(r, g, b, 0);	
 		}
 	}
 	else
 	{
-		for(j = 0; j < 256; j++)
+		for(UINT32 j = 0; j < 256; j++)
 		{
 			int r = (j >> 0) & 7;
 			int g = (j >> 3) & 7;

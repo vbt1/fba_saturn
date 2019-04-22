@@ -49,9 +49,8 @@ void dummy()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void GfxDecode4Bpp(unsigned int num, unsigned int numPlanes, unsigned int xSize, unsigned int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest)
 {
-	int c;
 //	wait_vblank();
-	for (c = 0; c < num; c++) {
+	for (unsigned int c = 0; c < num; c++) {
 		int plane, x, y;
 	
 		unsigned char *dp = pDest + (c * (xSize/2) * ySize);
@@ -109,13 +108,9 @@ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom)
 {
-	unsigned int i;
-//	unsigned int t_pal[32];
-//	unsigned char *color_prom = Prom;
-
-	for (i = 0;i < 32;i++)
+	for (unsigned int i = 0;i < 32;i++)
 	{
-		int bit0,bit1,bit2,r,g,b;
+		unsigned int bit0,bit1,bit2,r,g,b;
 
 		bit0 = (*color_prom >> 0) & 0x01;
 		bit1 = (*color_prom >> 1) & 0x01;
@@ -132,11 +127,7 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom)
 		bit2 = (*color_prom >> 7) & 0x01;
 		b = 0x21 * bit0 + 0x47 * bit1 + 0x97 * bit2;
 
-        r =  (r >>3);
-        g =  (g >>3);
-        b =  (b >>3);
-
-		t_pal[i] = RGB(r,g,b);
+		t_pal[i] = RGB(r>>3,g>>3,b>>3);
 		color_prom++;
 	}
 }

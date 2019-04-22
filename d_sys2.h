@@ -50,7 +50,7 @@ Input Definitions
 	{"P2 Fire 1"         , BIT_DIGITAL  , System1InputPort1 + 1, "p2 fire 1" },
 	{"P2 Fire 2"         , BIT_DIGITAL  , System1InputPort1 + 2, "p2 fire 2" },
 
-	{"Reset"             , BIT_DIGITAL  , &System1Reset        , "reset"     },
+	{"Reset"             , BIT_DIGITAL  , NULL        , "reset"     },
 	{"Service"           , BIT_DIGITAL  , System1InputPort2 + 3, "service"   },
 	{"Test"              , BIT_DIGITAL  , System1InputPort2 + 2, "diag"      },
 	{"Dip 1"             , BIT_DIPSWITCH, System1Dip + 0       , "dip"       },
@@ -124,7 +124,7 @@ static struct BurnInputInfo WbmlInputList[] = {
 	{"P2 Fire 1"         , BIT_DIGITAL  , System1InputPort1 + 1, "p2 fire 1" },
 	{"P2 Fire 2"         , BIT_DIGITAL  , System1InputPort1 + 2, "p2 fire 2" },
 
-	{"Reset"             , BIT_DIGITAL  , &System1Reset        , "reset"     },
+	{"Reset"             , BIT_DIGITAL  , NULL        , "reset"     },
 	{"Service"           , BIT_DIGITAL  , System1InputPort2 + 3, "service"   },
 	{"Test"              , BIT_DIGITAL  , System1InputPort2 + 2, "diag"      },
 	{"Dip 1"             , BIT_DIPSWITCH, System1Dip + 0       , "dip"       },

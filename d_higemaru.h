@@ -10,7 +10,7 @@
 #define nBurnSoundLen 128
 
 /*static*/// unsigned char 	bg_dirtybuffer[2048];
-UINT16 map_offset_lut[1024];
+UINT16 *map_offset_lut = NULL;//[1024];
 /*static*/ unsigned char *Mem = NULL, *MemEnd = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
 /*static*/ //short *pAY8910Buffer[6], *pFMBuffer = NULL;
 /*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvDips[3], DrvReset;

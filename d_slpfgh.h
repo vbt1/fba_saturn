@@ -11,55 +11,52 @@
 #define	false	0
 
 void updateSound();
-static INT32 tigerhInit();
-static INT32 tigerhExit();
-static INT32 tigerhFrame();
-static void Set6PCM();
+/*static*/  INT32 tigerhInit();
+/*static*/  INT32 tigerhExit();
+/*static*/  INT32 tigerhFrame();
+/*static*/  void Set6PCM();
 void dummy();
 
 typedef int bool;
-static bool bInterruptEnable = 0;
-static bool bSoundCPUEnable = 0;
-static bool bSoundNMIEnable = 0;
-//static bool bVBlank = 0;
+/*static*/  bool bInterruptEnable = 0;
+/*static*/  bool bSoundCPUEnable = 0;
+/*static*/  bool bSoundNMIEnable = 0;
+///*static*/  bool bVBlank = 0;
 
-static INT32 nWhichGame = 0;
-static UINT32 nStatusIndex = 0;
-static UINT32 nProtectIndex = 0;
+/*static*/  INT32 nWhichGame = 0;
+/*static*/  UINT32 nStatusIndex = 0;
+/*static*/  UINT32 nProtectIndex = 0;
 
-static INT32 nTigerHeliTileXPosLo = 0;
-static INT32 nTigerHeliTileXPosHi = 0;
-static INT32 nTigerHeliTileYPosLo = 0;
-static UINT32 nTigerHeliTileMask = 0; 
-static UINT32 nTigerHeliSpriteMask = 0;
-static UINT8 nPalettebank = 0;
-static UINT8 nFlipscreen = 0;
-static UINT8 tigerhReset = 0;
+/*static*/  INT32 nTigerHeliTileXPosLo = 0;
+/*static*/  INT32 nTigerHeliTileXPosHi = 0;
+/*static*/  INT32 nTigerHeliTileYPosLo = 0;
+/*static*/  UINT32 nTigerHeliTileMask = 0; 
+/*static*/  UINT32 nTigerHeliSpriteMask = 0;
+/*static*/  UINT8 nPalettebank = 0;
+/*static*/  UINT8 nFlipscreen = 0;
 
-static UINT8 *Mem = NULL;
-static UINT8 *MemEnd = NULL;
-static UINT8 *RamStart = NULL; 
-static UINT8 *RamEnd = NULL;
+/*static*/  UINT8 *Mem = NULL;
+/*static*/  UINT8 *MemEnd = NULL;
+/*static*/  UINT8 *RamStart = NULL; 
+/*static*/  UINT8 *RamEnd = NULL;
 
-static UINT8 *Rom01 = NULL;
-static UINT8 *Rom02 = NULL;
-static UINT8 *TigerHeliTileROM = NULL;
-static UINT8 *TigerHeliSpriteROM = NULL;
-static UINT8 *TigerHeliTextROM = NULL;
-static UINT8 *Ram01 = NULL;
-static UINT8 *RamShared = NULL;
-static UINT8 *TigerHeliTileRAM = NULL;
-static UINT8 *TigerHeliSpriteRAM = NULL;
-static UINT8 *TigerHeliSpriteBuf = NULL;
-static UINT8 *TigerHeliTextRAM = NULL;
-static UINT8 *CZ80Context = NULL;
-static UINT8 *TigerHeliPaletteROM = NULL;
-//static INT16 *pFMBuffer = NULL;
-//static INT16 *pAY8910Buffer[6];
-static UINT32 *TigerHeliPalette = NULL;
+/*static*/  UINT8 *Rom01 = NULL;
+/*static*/  UINT8 *Rom02 = NULL;
+/*static*/  UINT8 *TigerHeliTileROM = NULL;
+/*static*/  UINT8 *TigerHeliSpriteROM = NULL;
+/*static*/  UINT8 *TigerHeliTextROM = NULL;
+/*static*/  UINT8 *Ram01 = NULL;
+/*static*/  UINT8 *RamShared = NULL;
+/*static*/  UINT8 *TigerHeliTileRAM = NULL;
+/*static*/  UINT8 *TigerHeliSpriteRAM = NULL;
+/*static*/  UINT8 *TigerHeliSpriteBuf = NULL;
+/*static*/  UINT8 *TigerHeliTextRAM = NULL;
+/*static*/  UINT8 *CZ80Context = NULL;
+/*static*/  UINT8 *TigerHeliPaletteROM = NULL;
+/*static*/  UINT32 *TigerHeliPalette = NULL;
 
-static UINT16 *map_offset_lut = NULL;
-static UINT16 *map_offset_lut2 = NULL;
+/*static*/  UINT16 *map_offset_lut = NULL;
+/*static*/  UINT16 *map_offset_lut2 = NULL;
 
 PcmHn 			pcm6[6];
 #define	PCM_ADDR	((void*)0x25a20000)
@@ -68,9 +65,9 @@ PcmHn 			pcm6[6];
 // ---------------------------------------------------------------------------
 // Inputs
 
-static UINT8 tigerhInput[4] = {0,0,0,0};
-static UINT8 tigerhInpJoy1[8] = {0,0,0,0,0,0,0,0};
-static UINT8 tigerhInpMisc[8] = {0,0,0,0,0,0,0,0};
+/*static*/  UINT8 tigerhInput[4] = {0,0,0,0};
+/*static*/  UINT8 tigerhInpJoy1[8] = {0,0,0,0,0,0,0,0};
+/*static*/  UINT8 tigerhInpMisc[8] = {0,0,0,0,0,0,0,0};
 
 // Dip Switch and Input Definitions
 static struct BurnInputInfo tigerhInputList[] = {
@@ -92,7 +89,7 @@ static struct BurnInputInfo tigerhInputList[] = {
 	{"P2 Button 1",	BIT_DIGITAL,	tigerhInpMisc + 3,	"p2 fire 1"},
 	{"P2 Button 2",	BIT_DIGITAL,	tigerhInpMisc + 2,	"p2 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&tigerhReset,		"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,		"reset"},
 
 	{"Dip A",		BIT_DIPSWITCH,	tigerhInput + 2,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	tigerhInput + 3,	"dip"},

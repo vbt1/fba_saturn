@@ -17,7 +17,8 @@
 //#define SC_RELEASE 1
 
 typedef void (*write_func)(unsigned short a, UINT8 d);
-/*static*/ write_func p[36];
+write_func p[36] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+	NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 /*static*/ int System1CalcPalette();
 /*static*/ int System1Exit();
@@ -26,12 +27,12 @@ typedef void (*write_func)(unsigned short a, UINT8 d);
 /*static*/ UINT16 *remap8to16_lut = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
 ///*static*/ Uint16 *code_lut = NULL;
-/*static*/ int *cpu_lut = NULL;
-/*static*/ Uint16 *cram_lut = NULL;
-/*static*/ Uint8 *width_lut = NULL;
+/*static*/ UINT32 *cpu_lut = NULL;
+/*static*/ UINT16 *cram_lut = NULL;
+/*static*/ UINT8 *width_lut = NULL;
 /*static*/ UINT8 *ss_vram = NULL;
 /*static*/ UINT16 *spriteCache = NULL;
-static UINT8 *CZ80Context = NULL;
+/*static*/ UINT8 *CZ80Context = NULL;
 typedef int bool;
 
 typedef struct { UINT8 x, y, width, yend } sprite_collision; 
@@ -50,7 +51,7 @@ void *memset4_fast(void *, long, size_t);
 /*static*/ UINT8 System1InputPort2[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 System1Dip[2]           = {0, 0};
 /*static*/ UINT8 System1Input[3]         = {0x00, 0x00, 0x00 };
-/*static*/ UINT8 System1Reset            = 0;
+/*static*/ //UINT8 System1Reset            = 0;
 
 /*static*/ UINT8 *Mem                    = NULL;
 /*static*/ UINT8 *MemEnd                 = NULL;
@@ -74,7 +75,7 @@ void *memset4_fast(void *, long, size_t);
 /*static*/ UINT8 *System1efRam           = NULL;
 /*static*/ UINT8 *System1f4Ram           = NULL;
 /*static*/ UINT8 *System1fcRam           = NULL;
-/*static*/ UINT8 *System1Tiles           = NULL;
+/*static*/ //UINT8 *System1Tiles           = NULL;
 /*static*/ UINT8 *System1Sprites         = NULL;
 /*static*/ UINT8 *SpriteOnScreenMap      = NULL;
 /*static*/ UINT8 *System1Fetch1          = NULL;
@@ -129,7 +130,7 @@ Input Definitions
 	{"P2 Right"          , BIT_DIGITAL  , System1InputPort0 + 3, "p2 right"  },
 	{"P2 Fire 1"         , BIT_DIGITAL  , System1InputPort2 + 7, "p2 fire 1" },
 
-	{"Reset"             , BIT_DIGITAL  , &System1Reset        , "reset"     },
+	{"Reset"             , BIT_DIGITAL  , NULL        , "reset"     },
 	{"Service"           , BIT_DIGITAL  , System1InputPort2 + 3, "service"   },
 	{"Dip 1"             , BIT_DIPSWITCH, System1Dip + 0       , "dip"       },
 	{"Dip 2"             , BIT_DIPSWITCH, System1Dip + 1       , "dip"       },
@@ -157,7 +158,7 @@ STDINPUTINFO(Blockgal)
 	{"P2 Fire 1"         , BIT_DIGITAL  , System1InputPort1 + 1, "p2 fire 1" },
 	{"P2 Fire 2"         , BIT_DIGITAL  , System1InputPort1 + 2, "p2 fire 2" },
 
-	{"Reset"             , BIT_DIGITAL  , &System1Reset        , "reset"     },
+	{"Reset"             , BIT_DIGITAL  , NULL        , "reset"     },
 	{"Service"           , BIT_DIGITAL  , System1InputPort2 + 3, "service"   },
 	{"Test"              , BIT_DIGITAL  , System1InputPort2 + 2, "diag"      },
 	{"Dip 1"             , BIT_DIPSWITCH, System1Dip + 0       , "dip"       },

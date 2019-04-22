@@ -10,10 +10,11 @@
 #define nBurnSoundLen 128
 
 /*static*/ UINT16 *name_lut = NULL;
-/*static*/ UINT32 *bp_lut = NULL;//[0x10000];
-/*static*/ UINT16 *cram_lut = NULL;//[0x40];
+/*static*/ UINT32 *bp_lut = NULL;
+/*static*/ UINT16 *cram_lut = NULL;
 /*static*/ UINT16 *map_lut = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
+/*static*/ Fixed32 *ss_scl1 = NULL;
 
 /*static*/ INT32 DrvFantzn2Init();
 /*static*/ INT32 DrvOpaopaInit();
@@ -38,19 +39,18 @@ void dummy();
 
 /*static*/ UINT8 DrvInput[5] = {0,0,0,0,0};
 /*static*/ UINT8 DrvDip[2] = {0, 0};
-/*static*/ UINT8 DrvReset = 0;
 
 /*static*/ INT32 DrvWheel = 0;
 /*static*/ INT32 DrvAccel = 0;
 
-/*static*/ UINT8 *AllMem;
-/*static*/ UINT8 *MemEnd;
-/*static*/ UINT8 *AllRam;
-/*static*/ UINT8 *RamEnd;
-/*static*/ UINT8 *DrvRAM;
-/*static*/ UINT8 *DrvMainROM;
-/*static*/ UINT8 *DrvMainROMFetch;
-/*static*/ UINT8 *mc8123key;
+/*static*/ UINT8 *AllMem = NULL;
+/*static*/ UINT8 *MemEnd = NULL;
+/*static*/ UINT8 *AllRam = NULL;
+/*static*/ UINT8 *RamEnd = NULL;
+/*static*/ UINT8 *DrvRAM = NULL;
+/*static*/ UINT8 *DrvMainROM = NULL;
+/*static*/ UINT8 *DrvMainROMFetch = NULL;
+/*static*/ UINT8 *mc8123key = NULL;
 
 /*static*/ UINT8 segae_8000bank = 0;
 /*static*/ UINT8 port_fa_last = 0;
@@ -62,8 +62,6 @@ void dummy();
 UINT8 hintcount = 0;			/* line interrupt counter, decreased each scanline */
 UINT8 vintpending = 0;
 UINT8 hintpending = 0;
-
-//UINT8 m_port_select;
 UINT8 currentLine = 0;
 
 //UINT8 leftcolumnblank = 0; // most games need this, except tetris
@@ -124,7 +122,7 @@ typedef	struct	SysDevice	{
 	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"},
 	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Service",		BIT_DIGITAL,	DrvJoy0 + 3,	"service"},
 	{"Service Mode",		BIT_DIGITAL,	DrvJoy0 + 2,	"diag"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
@@ -151,7 +149,7 @@ STDINPUTINFO(Transfrm)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p2 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Service",		BIT_DIGITAL,	DrvJoy0 + 3,	"service"},
 	{"Service Mode",		BIT_DIGITAL,	DrvJoy0 + 2,	"diag"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
@@ -202,7 +200,7 @@ STDDIPINFO(Transfrm)
 	A("P1 Steering", BIT_ANALOG_REL, &DrvWheel,     "p1 x-axis"),
 	A("P1 Accelerate", BIT_ANALOG_REL, &DrvAccel,   "p1 z-axis"),
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	    "reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	    "reset"},
 	{"Service",		BIT_DIGITAL,	DrvJoy0 + 3,	"service"},
 	{"Service Mode",		BIT_DIGITAL,	DrvJoy0 + 2,	"diag"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	    "dip"},
@@ -244,7 +242,7 @@ STDDIPINFO(Hangonjr)
 	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"},
 	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Service",		BIT_DIGITAL,	DrvJoy0 + 3,	"service"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDip + 1,	"dip"},

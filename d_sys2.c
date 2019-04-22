@@ -476,25 +476,25 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1); if (nRet != 0) return 1;
 	}
 
-	GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
+	GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, cache);
 
 	System1TempRom = NULL;
 
 	memset(&ss_map2[2048],0,768);
 
-	if(flipscreen==1)			rotate_tile(System1NumTiles,0,System1Tiles);
-	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,System1Tiles);
+	if(flipscreen==1)			rotate_tile(System1NumTiles,0,cache);
+	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,cache);
 
 	spriteCache = (UINT16*)(0x00200000);
 
 	memset((unsigned char *)spriteCache,0xFF,0x80000);
-	if(System1SpriteRomSize!=0x20000)
+/*	if(System1SpriteRomSize!=0x20000)
 		System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
 	else
 		System1Sprites = (UINT8 *)0x02E0000;
 
 	memset(System1Sprites, 0x00, System1SpriteRomSize);
-
+*/
 	// Load Sprite roms
 	RomOffset += nTileRomNum;
 	for (i = 0; i < nSpriteRomNum; i++) 

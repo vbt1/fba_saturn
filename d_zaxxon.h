@@ -22,15 +22,8 @@ void dummy();
 /*static*/ UINT16 *charaddr_lut = NULL;
 /*static*/ UINT32 *colpromoffs_lut = NULL;
 /*static*/ UINT32 *map_lut = NULL;
-///*static*/ UINT32 srcxmask[240][256];
 /*static*/ UINT32 *srcxmask[240]; //[256];
 /*static*/ UINT32 *srcx_buffer = NULL;
-///*static*/ UINT32 srcymask[256][240];
-
-///*static*/ UINT32 **srcxmask;//[240][256];
-/*static*/ UINT32  zaxxon_bg_scroll_x2=0;
-///*static*/ UINT8 sound_state[3]={0,0,0};
-
 /*static*/ UINT8 *AllMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;
 /*static*/ UINT8 *AllRam = NULL;
@@ -38,10 +31,6 @@ void dummy();
 /*static*/ UINT8 *DrvZ80ROM = NULL;
 /*static*/ UINT8 *DrvZ80DecROM = NULL;
 /*static*/ UINT8 *DrvZ80ROM2 = NULL;
-/*static*/ UINT8 *DrvGfxROM0 = NULL;
-/*static*/ UINT8 *DrvGfxROM1 = NULL;
-/*static*/ UINT8 *DrvGfxROM2 = NULL;
-/*static*/ UINT8 *DrvGfxROM3 = NULL;
 /*static*/ UINT8 *DrvColPROM = NULL;
 /*static*/ UINT8 *DrvZ80RAM = NULL;
 /*static*/ UINT8 *DrvZ80RAM2 = NULL;
@@ -49,10 +38,6 @@ void dummy();
 /*static*/ UINT8 *DrvVidRAM = NULL;
 /*static*/ UINT8 *DrvColRAM = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ //UINT32  *DrvPalette;
-/*static*/ //UINT32  *Palette;
-
-/*static*/ //UINT8 DrvRecalc;
 
 /*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
@@ -60,32 +45,26 @@ void dummy();
 /*static*/ UINT8 DrvJoy4[8] = {0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvDips[2] = {0,0};
 /*static*/ UINT8 DrvInputs[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvReset = 0;
 
-
-/*static*/ UINT8 interrupt_enable = 0;
 
 /*static*/ UINT8 *zaxxon_fg_color = NULL;
 /*static*/ UINT8 *zaxxon_bg_color = NULL;
 /*static*/ UINT8 *zaxxon_bg_enable = NULL;
-/*static*/ UINT32  zaxxon_bg_scroll = 0;
-/*static*/ UINT8 zaxxon_flipscreen = 0;
 /*static*/ UINT8 *zaxxon_coin_enable = NULL;
 /*static*/ UINT8 *zaxxon_coin_status = NULL;
 /*static*/ UINT8 *zaxxon_coin_last = NULL;
+/*static*/ UINT8 *zaxxon_bg_pixmap = NULL;
+/*static*/ UINT8 *sound_state = NULL;
+
+/*static*/ UINT8 interrupt_enable = 0;
+/*static*/ UINT32  zaxxon_bg_scroll_x2=0;
+/*static*/ UINT32  zaxxon_bg_scroll = 0;
+/*static*/ UINT8 zaxxon_flipscreen = 0;
 
 /*static*/ //UINT8 *congo_color_bank = NULL;
 /*static*/// UINT8 *congo_fg_bank = NULL;
 /*static*/// UINT8 *congo_custom = NULL;
-
-/*static*/ UINT8 *zaxxon_bg_pixmap = NULL;
-
 /*static*/// UINT8 *soundlatch = NULL;
-
-/*static*/ UINT8 *sound_state = NULL;
-
-/*static*/ INT32 futspy_sprite = 0;
-/*static*/ INT32 hardware_type = 0;
 
 /*static*/ struct BurnInputInfo ZaxxonInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 coin"},
@@ -104,7 +83,7 @@ void dummy();
 	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 right"},
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Service",		BIT_DIGITAL,	DrvJoy4 + 2,	"service"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
@@ -129,7 +108,7 @@ STDINPUTINFO(Zaxxon)
 	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 right"},
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Service",		BIT_DIGITAL,	DrvJoy4 + 2,	"service"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},

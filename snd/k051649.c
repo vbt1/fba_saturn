@@ -26,7 +26,7 @@
 
 #define FREQBASEBITS	16
 
-static UINT32 nUpdateStep;
+/*static*/ UINT32 nUpdateStep = 0;
 
 /* this structure defines the parameters for a channel */
 typedef struct
@@ -46,7 +46,7 @@ struct _k051649_state
 
 	/* global sound parameters */
 	INT32 mclock,rate;
-	double gain;
+	float gain;
 	INT32 output_dir;
 
 	/* mixer tables and internal buffers */
@@ -236,7 +236,7 @@ void K051649Init(INT32 clock, INT16 *SCCMixerBuffer, INT16 *SCCMixerTable)
 	/* get stream channels */
 	info->rate = 7680L; ///clock/16; // vbt faux !!!
 	info->mclock = clock;
-	info->gain = 1.00;
+	info->gain = (float)1.00;
 	info->output_dir = BURN_SND_ROUTE_BOTH;
 	
 	nUpdateStep = (INT32)(((float)info->rate / nBurnSoundRate) * 32768);

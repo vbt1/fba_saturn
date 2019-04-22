@@ -624,23 +624,20 @@ UINT8 __fastcall congo_sound_read(UINT16 address)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 planeoffsets[], INT32 xoffsets[], INT32 yoffsets[], INT32 modulo, UINT8 *pSrc, UINT8 *pDest)
 {
-	INT32 c;
-	
-	for (c = 0; c < num; c++) {
-		INT32 plane, x, y;
+	for (UINT32 c = 0; c < num; c++) {
 	
 		UINT8 *dp = pDest + (c * xSize * ySize);
 		memset(dp, 0, xSize * ySize);
 	
-		for (plane = 0; plane < numPlanes; plane++) {
+		for (UINT32 plane = 0; plane < numPlanes; plane++) {
 			INT32 planebit = 1 << (numPlanes - 1 - plane);
 			INT32 planeoffs = (c * modulo) + planeoffsets[plane];
 		
-			for (y = 0; y < ySize; y++) {
+			for (UINT32 y = 0; y < ySize; y++) {
 				INT32 yoffs = planeoffs + yoffsets[y];
 				dp = pDest + (c * xSize * ySize) + (y * xSize);
 			
-				for (x = 0; x < xSize; x++) {
+				for (UINT32 x = 0; x < xSize; x++) {
 					if (readbit(pSrc, yoffs + xoffsets[x])) dp[x] |= planebit;
 				}
 			}
@@ -650,19 +647,26 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 /*static*/int DrvGfxDecode()
 {
-	int CharPlane[2] = { 0x4000 * 1, 0x4000 * 0 };
-	int TilePlane[3] = { 0x10000 * 2, 0x10000 * 1, 0x10000 * 0 };
-	int SpritePlane[3] = { 0x20000 * 2, 0x20000 * 1, 0x20000 * 0 };
-	int SpriteXOffs[32] = { 0, 1, 2, 3, 4, 5, 6, 7,
+	UINT32 CharPlane[2] = { 0x4000 * 1, 0x4000 * 0 };
+	UINT32 TilePlane[3] = { 0x10000 * 2, 0x10000 * 1, 0x10000 * 0 };
+	UINT32 SpritePlane[3] = { 0x20000 * 2, 0x20000 * 1, 0x20000 * 0 };
+	UINT32 SpriteXOffs[32] = { 0, 1, 2, 3, 4, 5, 6, 7,
 			8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7,
 			16*8+0, 16*8+1, 16*8+2, 16*8+3, 16*8+4, 16*8+5, 16*8+6, 16*8+7,
 			24*8+0, 24*8+1, 24*8+2, 24*8+3, 24*8+4, 24*8+5, 24*8+6, 24*8+7 };
-	int SpriteYOffs[32] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
+	UINT32 SpriteYOffs[32] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
 			32*8, 33*8, 34*8, 35*8, 36*8, 37*8, 38*8, 39*8,
 			64*8, 65*8, 66*8, 67*8, 68*8, 69*8, 70*8, 71*8,
 			96*8, 97*8, 98*8, 99*8, 100*8, 101*8, 102*8, 103*8 };
 
 	UINT8 *tmp = (UINT8*)0x00200000;//(UINT8*) size (0xc000);
+
+ 	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
+
+	UINT8 *DrvGfxROM0 = cache;
+	UINT8 *DrvGfxROM1	= (UINT8 *)0x25a60000;
+	UINT8 *DrvGfxROM2	= &ss_vram[0x1100];//Next; Next += 0x020000;
+	UINT8 *DrvGfxROM3	= (UINT8 *)DrvGfxROM1+0x010000;
 
 	memcpy (tmp, DrvGfxROM0, 0x1000);
 // foreground (text)
@@ -670,12 +674,9 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	rotate_tile(0x0100,0,cache);
 	memcpy (tmp, DrvGfxROM1, 0x6000);
 // background
-//	GfxDecode4Bpp(0x0400, 3,  8,  8, TilePlane,   SpriteXOffs, SpriteYOffs, 0x040, tmp, cache+0x10000);
 	GfxDecode(0x0400, 3,  8,  8, TilePlane,   SpriteXOffs, SpriteYOffs, 0x040, tmp, DrvGfxROM1);
- 
-	memcpy (tmp, DrvGfxROM2, 0xc000);
 
-//	GfxDecode4Bpp(0x0080, 3, 32, 32, SpritePlane, SpriteXOffs, SpriteYOffs, 0x400, tmp, DrvGfxROM2);
+	memcpy (tmp, DrvGfxROM2, 0xc000);
 // sprites
 	GfxDecode4Bpp(0x0080, 3, 32, 32, SpritePlane, SpriteXOffs, SpriteYOffs, 0x400, tmp, DrvGfxROM2);
 
@@ -691,7 +692,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 {
 	INT32 delta=0;
 
-	for (INT32 i = 0; i < len; i++)
+	for (UINT32 i = 0; i < len; i++)
 	{
 		INT32 bit0, bit1, bit2, r, g, b;
 
@@ -708,26 +709,23 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 		bit0 = (DrvColPROM[i] >> 6) & 0x01;
 		bit1 = (DrvColPROM[i] >> 7) & 0x01;
 		b = bit0 * 78 + bit1 * 168;
-
-        r =  (r >>3);
-        g =  (g >>3);
-        b =  (b >>3);
-
-		colBgAddr[delta] =RGB(r,g,b);
-		colBgAddr2[i]=RGB(r,g,b);
+		colBgAddr2[i]=colBgAddr[delta] =BurnHighCol(r, g, b, 0);
 		delta++; if ((delta & 7) == 0) delta += 8;
 	}
-
 	DrvColPROM += 0x100;
 }
 
 /*static*/void bg_layer_init()
 {
 	memset(zaxxon_bg_pixmap,0x01,0x100000);
-	INT32 len = (hardware_type == 2) ? 0x2000 : 0x4000;
+//	INT32 len = (hardware_type == 2) ? 0x2000 : 0x4000;
+	INT32 len = 0x4000;
 	INT32 mask = len-1;
 
-	for (INT32 offs = 0; offs < 32 * 512; offs++)
+	UINT8 *DrvGfxROM1	= (UINT8 *)0x25a60000;
+	UINT8 *DrvGfxROM3	= (UINT8 *)DrvGfxROM1+0x010000;
+
+	for (UINT32 offs = 0; offs < 32 * 512; offs++)
 	{
 		INT32 sx = (offs & 0x1f) << 3;
 		INT32 sy = (offs >> 5) << 3;
@@ -769,8 +767,6 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 /*static*/int DrvDoReset()
 {
-	DrvReset = 0;
-
 	memset (AllRam, 0, RamEnd - AllRam);
 
 #ifndef RAZE
@@ -797,10 +793,14 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	INT32 nLen = MemEnd - AllRam;
 	memset(AllMem, 0, nLen);
 	memset(bitmap,	 0x00,0xE000);
-	memset(DrvGfxROM2+0x00010000,0x00,0xE000);
-	DrvGfxROM1		= (UINT8 *)0x25a60000;
-	DrvGfxROM3		= (UINT8 *)DrvGfxROM1+0x010000;
+ 	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
 
+	UINT8 *DrvGfxROM0 = cache;
+	UINT8 *DrvGfxROM1	= (UINT8 *)0x25a60000;
+	UINT8 *DrvGfxROM2	= &ss_vram[0x1100];//Next; Next += 0x020000;
+	UINT8 *DrvGfxROM3	= (UINT8 *)DrvGfxROM1+0x010000;
+
+	memset(DrvGfxROM2+0x00010000,0x00,0xE000);
 	{
 		for (int i = 0; i < 3; i++) {
 			if (BurnLoadRom(DrvZ80ROM  + i * 0x2000,  0 + i, 1)) return 1;
@@ -823,8 +823,8 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 		bg_layer_init();
 
-		DrvGfxROM3 = NULL;
-		DrvGfxROM1 = NULL;
+//		DrvGfxROM3 = NULL;
+//		DrvGfxROM1 = NULL;
 
 	}
 #ifndef RAZE
@@ -881,7 +881,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 /*static*/INT32 DrvExit()
 {
 	SPR_InitSlaveSH();
-	nBurnFunction = NULL;
+
 	nBurnLinescrollSize = 1;
 	nSoundBufferPos = 0;
 #ifndef RAZE
@@ -895,30 +895,21 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 #else
 	z80_stop_emulating();
 #endif
-//	DMA_ScuInit();
-//	DMA_CpuAllStop();
-
-//	nBurnFunction = NULL;
-
-//    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
-//    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
-
+	cleanSprites();
 	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = DrvZ80ROM2 = NULL;
-	DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =DrvGfxROM3 = NULL;
 	DrvColPROM = DrvZ80RAM = DrvZ80RAM2 = DrvSprRAM = DrvVidRAM = DrvColRAM = NULL;
 	zaxxon_bg_pixmap = 	zaxxon_fg_color = zaxxon_bg_color= NULL;
-	zaxxon_bg_enable = /*congo_color_bank= congo_fg_bank = congo_custom =*/ NULL;
+	zaxxon_bg_enable = NULL;
 /*	zaxxon_flipscreen =*/ zaxxon_coin_enable = /*soundlatch =*/ NULL;
 	zaxxon_coin_status = zaxxon_coin_last = sound_state = NULL;
 	zaxxon_bg_scroll = 0;
 	zaxxon_flipscreen = 0;
 	interrupt_enable = 0;
-//	free (AllMem);
+	zaxxon_bg_scroll_x2 = 0;	
 	AllMem = NULL;
 
 	ss_map264 = NULL;
 	bitmap = NULL;
-
 	map_lut = NULL;
 	colpromoffs_lut = NULL;
 	sx_lut = NULL;
@@ -933,12 +924,6 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	free(SaturnMem);
 	SaturnMem = NULL;
 
-//	DrvPalette = 	Palette = NULL;
-//	futspy_sprite = 0;
-	hardware_type = 0;
-	zaxxon_bg_scroll_x2=0;
-	DrvReset = 0;
-//	GenericTilesExit();
 	return 0;
 }
 
@@ -1084,10 +1069,6 @@ int find_minimum_x(UINT8 value)
 
 /*static*/ int DrvFrame()
 {
-/*	if (DrvReset) {
-		DrvDoReset();
-	}
-*/
 	{
 		DrvInputs[0] = 0x00;
 		DrvInputs[1] = 0x00;
@@ -1375,6 +1356,10 @@ void copyBitmap()
 //	memcpyl(DrvGfxROM2+0x00010000,bitmap,0x10000);
 //	DMA_CpuMemCopy1(ss_map+264,bitmap,0x1C000);
 //	DMA_ScuMemCopy(DrvGfxROM2+0x00010000,bitmap+0xE80,0xD240);
+
+ 	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
+	UINT8 *DrvGfxROM2	= &ss_vram[0x1100];//Next; Next += 0x020000;
+
 	DMA_ScuMemCopy(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCA00);
 	while(DMA_ScuResult()==2);
 //	memcpyl(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCA00);
@@ -1469,10 +1454,10 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	DrvZ80DecROM	= Next; Next += 0x010000;
 	DrvZ80ROM2		= Next; Next += 0x010000;
 
-	DrvGfxROM0		= cache;
+//	DrvGfxROM0		= cache;
 
- 	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
-	DrvGfxROM2		= &ss_vram[0x1100];//Next; Next += 0x020000;
+//	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
+//	DrvGfxROM2		= &ss_vram[0x1100];//Next; Next += 0x020000;
 
 //	DrvGfxROM1		= Next; Next += 0x010000;
 //	DrvGfxROM3		= Next; Next += 0x010000;

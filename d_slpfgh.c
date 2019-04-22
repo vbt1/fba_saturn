@@ -31,7 +31,7 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 MemIndex()
+/*static*/  INT32 MemIndex()
 {
 	UINT8* Next; Next = Mem;
 	Rom01				= Next; Next += 0x012000;		// Z80 main program
@@ -65,7 +65,7 @@ static INT32 MemIndex()
 // ---------------------------------------------------------------------------
 //	Graphics
 
-static void TigerHeliPaletteInit()
+/*static*/  void TigerHeliPaletteInit()
 {
 	int delta=0;
 	for (INT32 i = 0; i < 0x0100; i++) {
@@ -349,25 +349,25 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 //	bprintf(PRINT_NORMAL, _T("Attempt by CPU1 to write port %02X -> %02X.\n"), a, d);
 }
 
-static UINT8 tigerhReadPort0(UINT32 data)
+/*static*/  UINT8 tigerhReadPort0(UINT32 data)
 {
 	return ~tigerhInput[0];
 }
-static UINT8 tigerhReadPort1(UINT32 data)
+/*static*/  UINT8 tigerhReadPort1(UINT32 data)
 {
 	return ~tigerhInput[1];
 }
-static UINT8 tigerhReadPort2(UINT32 data)
+/*static*/  UINT8 tigerhReadPort2(UINT32 data)
 {
 	return ~tigerhInput[2];
 }
-static UINT8 tigerhReadPort3(UINT32 data)
+/*static*/  UINT8 tigerhReadPort3(UINT32 data)
 {
 	return ~tigerhInput[3];
 }
 // ---------------------------------------------------------------------------
 
-static INT32 tigerhLoadROMs()
+/*static*/  INT32 tigerhLoadROMs()
 {
 	INT32 nRomOffset = 0;
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb2")) nRomOffset = 1;
@@ -636,7 +636,7 @@ static INT32 tigerhLoadROMs()
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initLayers()
+/*static*/  void initLayers()
 {
     Uint16	CycleTb[]={
 		0xfff4, 0x6fff, //A0
@@ -750,7 +750,7 @@ static void initLayers()
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 tigerhExit()
+/*static*/  INT32 tigerhExit()
 {
 	SPR_InitSlaveSH();
 	CZetExit2();
@@ -781,17 +781,15 @@ static INT32 tigerhExit()
 
 	nTigerHeliTileXPosLo = nTigerHeliTileXPosHi = nTigerHeliTileYPosLo = 0;
 	nTigerHeliTileMask = nTigerHeliSpriteMask = 0;	
-
 	nStatusIndex = nProtectIndex = nPalettebank = nFlipscreen = 0;
 
-//	memset(&ss_scl[0],0,240);
-//	drawWindow(0,256,0,4,68);
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
+	nSoundBufferPos = 0;
 
 	return 0;
 }
 
-static void tigerhDoReset()
+/*static*/  void tigerhDoReset()
 {
 	bInterruptEnable = false;
 	bSoundNMIEnable = false;
@@ -810,7 +808,7 @@ static void tigerhDoReset()
 	return;
 }
 
-static INT32 tigerhInit()
+/*static*/  INT32 tigerhInit()
 {
 	DrvInitSaturn();
 	INT32 nLen;
@@ -955,12 +953,12 @@ static INT32 tigerhInit()
 	return 0;
 }
 
-static inline void TigerHeliBufferSprites()
+/*static*/  inline void TigerHeliBufferSprites()
 {
 	memcpyl(TigerHeliSpriteBuf, TigerHeliSpriteRAM, 0x0800);
 }
 
-static void draw_sprites()
+/*static*/  void draw_sprites()
 {
 	UINT8 *ram = TigerHeliSpriteBuf;
 	SprSpCmd *ss_spritePtr = &ss_sprite[3];
@@ -986,12 +984,12 @@ static void draw_sprites()
 	}
 }
 
-static inline INT32 CheckSleep(INT32 duration)
+/*static*/  inline INT32 CheckSleep(INT32 duration)
 {
 	return 0;
 }
 
-static INT32 tigerhFrame()
+/*static*/  INT32 tigerhFrame()
 {
 	UINT32 nCyclesTotal[3] = {4000000 / 60,2000000 / 60};
 	INT32 nCyclesDone[3] = {0,0};
@@ -1106,7 +1104,8 @@ static INT32 tigerhFrame()
 	INT32 scrollx = (((nTigerHeliTileXPosHi << 8) + nTigerHeliTileXPosLo)) & 0x1ff;
 	INT32 scrolly = (nTigerHeliTileYPosLo + 15) & 0xff;
 	ss_reg->n2_move_y = -scrollx-283;
-	SPR_WaitEndSlaveSH();
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();
 	return 0;
 }
 
@@ -1166,7 +1165,7 @@ static INT32 tigerhFrame()
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut(void)
+/*static*/  void make_lut(void)
 {
 	unsigned int i;
 	int sx, sy;
@@ -1206,7 +1205,7 @@ static PcmHn createHandle(PcmCreatePara *para)
 	return pcm;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void Set6PCM()
+/*static*/ void Set6PCM()
 {
 	PcmCreatePara	para[6];
 	PcmInfo 		info[6];

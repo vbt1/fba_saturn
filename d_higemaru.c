@@ -119,7 +119,7 @@ static int MemIndex()
 {
 	unsigned char *Next; Next = Mem;
 
-	Rom            = Next; Next += 0x10000;
+	Rom           = Next; Next += 0x10000;
 	Gfx0           = Next; Next += 0x08000;
 	Gfx1           = Next; Next += 0x08000;
 //	Gfx0           = (unsigned char *)0x00200000;//Next; Next += 0x08000;
@@ -127,6 +127,7 @@ static int MemIndex()
 
 	Prom           = Next; Next += 0x00300;
 //	pFMBuffer      = (short*)Next; Next += (SOUND_LEN * 6 * sizeof(short));
+	map_offset_lut = Next; Next += 1024 * sizeof(UINT16);
 	MemEnd         = Next;
 
 	return 0;
@@ -285,7 +286,7 @@ static int DrvInit()
 	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 
-
+	make_lut();
 	DrvDoReset();
 	return 0;
 }
@@ -379,7 +380,6 @@ static void DrvInitSaturn()
 	initLayers();
 	initPosition();
 	initColors();
-	make_lut();
 //	memset(bg_dirtybuffer,1,1024);
 	initSprites(256+8-1,224-1,0,0,8,-16);
 	PCM_MeStop(pcm);
@@ -409,6 +409,7 @@ static int DrvExit()
 	}
 
 	MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
+	map_offset_lut = NULL;
 //	for (i = 0; i < 6; i++) {
 //		pAY8910Buffer[i] = NULL;
 //	}	

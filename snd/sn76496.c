@@ -243,13 +243,13 @@ void SN76496Write(int Num, int Data)
 
 /*static*/ void SN76496SetGain(struct SN76496 *R,int Gain)
 {
-	double Out;
+	float Out;
 	Gain &= 0xff;
 
 	/* increase max output basing on gain (0.2 dB per step) */
 	Out = MAX_OUTPUT / 3;
 	while (Gain-- > 0)
-		Out *= 1.023292992;	/* = (10 ^ (0.2/20)) */
+		Out *= ((float)1.023292992);	/* = (10 ^ (0.2/20)) */
 
 	/* build volume table (2dB per step) */
 	for (unsigned int i = 0;i < 15;i++)
@@ -258,7 +258,7 @@ void SN76496Write(int Num, int Data)
 		if (Out > MAX_OUTPUT / 3) R->VolTable[i] = MAX_OUTPUT / 3;
 		else R->VolTable[i] = (INT32)Out;
 
-		Out /= 1.258925412;	/* = 10 ^ (2/20) = 2dB */
+		Out /= ((float)1.258925412);	/* = 10 ^ (2/20) = 2dB */
 	}
 	R->VolTable[15] = 0;
 }

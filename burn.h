@@ -66,7 +66,8 @@ typedef unsigned int UINT32;
 //extern int (__cdecl *BurnExtLoadRom)(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor);
 
 // Application-defined colour conversion function
-extern unsigned int (__cdecl *BurnHighCol) (int r, int g, int b, int i);
+//extern unsigned int (__cdecl *BurnHighCol) (int r, int g, int b, int i);
+#define BurnHighCol(r,g,b,z)  RGB(r>>3,g>>3,b>>3)
 
 // ---------------------------------------------------------------------------
 // Driver info structures

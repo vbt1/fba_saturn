@@ -246,41 +246,41 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 /*static*/  INT32 CARTSLOTB = 0;
 /*static*/  INT32 RAMSLOT = 0;
 
-/*static*/  UINT8 *RAM[8];          // Mapped address space
+/*static*/  UINT8 *RAM[8]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL}; // Mapped address space
 /*static*/  UINT8 *EmptyRAM = NULL; // Unmapped stuff points here
 /*static*/  UINT8 *MemMap[4][8];    // [prislot] [page]
 
-/*static*/  UINT8 *RAMData;         // main flat-chunk of ram
-/*static*/  UINT8 RAMMapper[4];
-/*static*/  UINT8 RAMMask;
+/*static*/  UINT8 *RAMData = NULL;         // main flat-chunk of ram
+/*static*/  UINT8 RAMMapper[4]={0,0,0,0};
+/*static*/  UINT8 RAMMask = 0;
 /*static*/  INT32 RAMPages = 4;
 
-/*static*/  UINT8 *SRAMData[MAXSLOTS]; // ascii8/16 sram
+/*static*/  UINT8 *SRAMData[MAXSLOTS]={NULL,NULL,NULL,NULL}; // ascii8/16 sram
 
-/*static*/  UINT8 *ROMData[MAXSLOTS];  // flat chunk of cart-rom
+/*static*/  UINT8 *ROMData[MAXSLOTS]={NULL,NULL,NULL,NULL};  // flat chunk of cart-rom
 /*static*/  UINT8 ROMMapper[MAXSLOTS][4];
-/*static*/  UINT8 ROMMask[MAXSLOTS];
-/*static*/  UINT8 ROMType[MAXSLOTS];
+/*static*/  UINT8 ROMMask[MAXSLOTS]={0,0,0,0};
+/*static*/  UINT8 ROMType[MAXSLOTS]={0,0,0,0};
 
 // Game-specific mappers
-/*static*/  UINT8 dooly_prot;
-/*static*/  UINT8 crossblaim_selected_bank;
-/*static*/  UINT8 *crossblaim_bank_base[4];
-/*static*/  UINT8 rtype_selected_bank;
-/*static*/  UINT8 *rtype_bank_base[2];
+/*static*/  UINT8 dooly_prot = 0;
+/*static*/  UINT8 crossblaim_selected_bank = 0;
+/*static*/  UINT8 *crossblaim_bank_base[4]={NULL,NULL,NULL,NULL};
+/*static*/  UINT8 rtype_selected_bank = 0;
+/*static*/  UINT8 *rtype_bank_base[2]={NULL,NULL};
 
 /*static*/  INT32 CurRomSizeA = 0; // cart A
 /*static*/  INT32 CurRomSizeB = 0; // cart B
 
-/*static*/  UINT8 WriteMode[MAXSLOTS];
-/*static*/  UINT8 PSL[MAXSLOTS]; // primary slot list
-/*static*/  UINT8 PSLReg; // primary slot register
-/*static*/  UINT8 SCCReg[MAXSLOTS]; // Konami-scc enable register
+/*static*/  UINT8 WriteMode[MAXSLOTS]={0,0,0,0};
+/*static*/  UINT8 PSL[MAXSLOTS]={0,0,0,0}; // primary slot list
+/*static*/  UINT8 PSLReg=0; // primary slot register
+/*static*/  UINT8 SCCReg[MAXSLOTS]={0,0,0,0}; // Konami-scc enable register
 
-/*static*/  UINT8 Kana, KanaByte; // Kanji-rom stuff
+/*static*/  UINT8 Kana=0, KanaByte=0; // Kanji-rom stuff
 
-/*static*/  UINT8 ppiC_row;
-/*static*/  UINT8 keyRows[12];
+/*static*/  UINT8 ppiC_row=0;
+/*static*/  UINT8 keyRows[12]={0,0,0,0,0,0,0,0,0,0,0,0};
 #ifdef CASSETTE
 /*static*/  INT32 charMatrix[][3] = {
 	{'0', 0, 0}, {')', 0, 0}, {'1', 0, 1}, {'!', 0, 1}, {'2', 0, 2}, {'@', 0, 2},
