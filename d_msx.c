@@ -101,7 +101,7 @@ static void load_rom()
 	z80_set_out((void (*)(unsigned short, unsigned char))&msx_write_port);
 #else
 	CZetExit2();
-	memset(CZ80Context,0x00,0x1080);
+	memset(CZ80Context,0x00,sizeof(cz80_struc));
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0x3fff, 0, maincpu);
@@ -122,7 +122,7 @@ static void load_rom()
 	}
 
 	TMS9928AExit();
-	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt);
+	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt, TMSContext);
 
 	ppi8255_init(1);
 	PPI0PortReadB	= msx_ppi8255_portB_read;
@@ -1743,8 +1743,9 @@ static INT32 MemIndex()
 	SCCMixerTable	= (INT16*)Next; Next += 512 * 5 * sizeof(INT16);
 #endif
 #ifndef RAZE
-	CZ80Context		= Next; Next += 0x1080;
+	CZ80Context		= Next; Next += sizeof(cz80_struc);
 #endif
+	TMSContext		= Next; Next += (0x4000+0x6000+0x1000);
 	MemEnd			= Next;
 	return 0;
 }
@@ -2013,7 +2014,7 @@ static INT32 DrvInit()
 #endif
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"TMS9928AInit      ",26,210);
 
-	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt);
+	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt, TMSContext);
 
 	ppi8255_init(1);
 	PPI0PortReadB	= msx_ppi8255_portB_read;
@@ -2161,7 +2162,7 @@ static INT32 DrvExit()
 	}
 
 	maincpu = game = game_sram = AllRam = main_mem = kanji_rom = NULL;
-	EmptyRAM = RAMData = MemEnd = RamEnd = NULL;
+	TMSContext = EmptyRAM = RAMData = MemEnd = RamEnd = NULL;
 
 #ifdef K051649
 	SCCMixerBuffer	= NULL;
@@ -2185,6 +2186,9 @@ static INT32 DrvExit()
 	VBlankKludge = 0;
 	SwapJoyports = Joyselect = Hertz60 = BiosmodeJapan = RAMMask = RAMPages = 0;
 */
+	cleanDATA();
+	cleanBSS();
+
 	nSoundBufferPos=0;
 
 	return 0;

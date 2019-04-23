@@ -3,24 +3,24 @@
 
 #define MAX_PPIS		3
 
-PPIPortRead PPI0PortReadA;
-PPIPortRead PPI0PortReadB;
-PPIPortRead PPI0PortReadC;
-PPIPortWrite PPI0PortWriteA;
-PPIPortWrite PPI0PortWriteB;
-PPIPortWrite PPI0PortWriteC;
-PPIPortRead PPI1PortReadA;
-PPIPortRead PPI1PortReadB;
-PPIPortRead PPI1PortReadC;
-PPIPortWrite PPI1PortWriteA;
-PPIPortWrite PPI1PortWriteB;
-PPIPortWrite PPI1PortWriteC;
-PPIPortRead PPI2PortReadA;
-PPIPortRead PPI2PortReadB;
-PPIPortRead PPI2PortReadC;
-PPIPortWrite PPI2PortWriteA;
-PPIPortWrite PPI2PortWriteB;
-PPIPortWrite PPI2PortWriteC;
+PPIPortRead PPI0PortReadA = NULL;
+PPIPortRead PPI0PortReadB = NULL;
+PPIPortRead PPI0PortReadC = NULL;
+PPIPortWrite PPI0PortWriteA = NULL;
+PPIPortWrite PPI0PortWriteB = NULL;
+PPIPortWrite PPI0PortWriteC = NULL;
+PPIPortRead PPI1PortReadA = NULL;
+PPIPortRead PPI1PortReadB = NULL;
+PPIPortRead PPI1PortReadC = NULL;
+PPIPortWrite PPI1PortWriteA = NULL;
+PPIPortWrite PPI1PortWriteB = NULL;
+PPIPortWrite PPI1PortWriteC = NULL;
+PPIPortRead PPI2PortReadA = NULL;
+PPIPortRead PPI2PortReadB = NULL;
+PPIPortRead PPI2PortReadC = NULL;
+PPIPortWrite PPI2PortWriteA = NULL;
+PPIPortWrite PPI2PortWriteB = NULL;
+PPIPortWrite PPI2PortWriteC = NULL;
 
 typedef struct
 {
@@ -47,10 +47,10 @@ typedef struct
 	UINT8 output[3];	/* actual output data */
 } ppi8255;
 
-static ppi8255 chips[MAX_PPIS];
-static INT32 nNumChips = 0;
+/*static*/ ppi8255 chips[MAX_PPIS];
+/*static*/ INT32 nNumChips = 0;
 
-static void ppi8255_get_handshake_signals(ppi8255 *chip, UINT8 *result)
+/*static*/ void ppi8255_get_handshake_signals(ppi8255 *chip, UINT8 *result)
 {
 	UINT8 handshake = 0x00;
 	UINT8 mask = 0x00;
@@ -100,7 +100,7 @@ static void ppi8255_get_handshake_signals(ppi8255 *chip, UINT8 *result)
 	*result |= handshake & mask;
 }
 
-static void ppi8255_write_port(ppi8255 *chip, INT32 port, INT32 chipnum)
+/*static*/ void ppi8255_write_port(ppi8255 *chip, INT32 port, INT32 chipnum)
 {
 	UINT8 write_data;
 
@@ -147,7 +147,7 @@ static void ppi8255_write_port(ppi8255 *chip, INT32 port, INT32 chipnum)
 	}
 }
 
-static void ppi8255_input(ppi8255 *chip, INT32 port, UINT8 data, INT32 which)
+/*static*/ void ppi8255_input(ppi8255 *chip, INT32 port, UINT8 data, INT32 which)
 {
 	INT32 changed = 0;
 
@@ -181,7 +181,7 @@ static void ppi8255_input(ppi8255 *chip, INT32 port, UINT8 data, INT32 which)
 	}
 }
 
-static UINT8 ppi8255_read_port(ppi8255 *chip, INT32 port, INT32 chipnum)
+/*static*/ UINT8 ppi8255_read_port(ppi8255 *chip, INT32 port, INT32 chipnum)
 {
 	UINT8 result = 0x00;
 
@@ -262,7 +262,7 @@ UINT8 ppi8255_r(UINT32 which, UINT32 offset)
 	return result;
 }
 
-static void set_mode(INT32 which, INT32 data, INT32 call_handlers)
+/*static*/ void set_mode(INT32 which, INT32 data, INT32 call_handlers)
 {
 	ppi8255 *chip = &chips[which];
 

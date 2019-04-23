@@ -98,7 +98,7 @@ SFX sfx_spang[60] = {
 /*static*/ unsigned char DrvInputPort11[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ unsigned char DrvInput[12]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 /*static*/ unsigned char DrvDip[2]         = {0, 0};
-/*static*/ unsigned char DrvReset          = 0;
+/*static*/ //unsigned char DrvReset          = 0;
 
 extern unsigned char* MSM6295ROM;
 extern int* pBuffer;
@@ -114,8 +114,8 @@ extern int* pBuffer;
 /*static*/  unsigned char *DrvAttrRam          = NULL;
 /*static*/  unsigned char *DrvVideoRam         = NULL;
 /*static*/  unsigned char *DrvSpriteRam        = NULL;
-/*static*/  unsigned char *DrvChars            = NULL;
-/*static*/  unsigned char *DrvSprites          = NULL;
+/*static*/  //unsigned char *DrvChars            = NULL;
+/*static*/  //unsigned char *DrvSprites          = NULL;
 /*static*/  UINT8 *CZ80Context = NULL;
 
 /*static*/  unsigned char DrvRomBank = 0;
@@ -149,7 +149,7 @@ static struct BurnInputInfo PangInputList[] =
 	{"P2 Fire 1"         , BIT_DIGITAL  , DrvInputPort2  + 3, "p2 fire 1" },
 	{"P2 Fire 2"         , BIT_DIGITAL  , DrvInputPort2  + 2, "p2 fire 2" },
 
-	{"Reset"             , BIT_DIGITAL  , &DrvReset         , "reset"     },
+	{"Reset"             , BIT_DIGITAL  , NULL         , "reset"     },
 	{"Service"           , BIT_DIGITAL  , DrvInputPort0  + 6, "service"   },
 	{"Diagnostics"       , BIT_DIGITAL  , DrvInputPort3  + 1, "diag"      },
 };

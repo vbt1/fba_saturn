@@ -23,7 +23,6 @@
 /*static*/ UINT8 DrvDip[3] = {0,0,0};
 /*static*/ INT16 DrvDial1 = 0;
 /*static*/ INT16 DrvDial2 = 0;
-/*static*/ UINT8 DrvReset = 0;
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT8 *AllMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;
@@ -75,7 +74,7 @@ UINT32 sprite_number = 3;
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDip + 1,	"dip"},
 };
@@ -169,7 +168,7 @@ STDDIPINFO(Pbillrd)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDip + 1,	"dip"},
 	{"Dip C",		BIT_DIPSWITCH,    DrvDip + 2,    "dip"},
@@ -405,7 +404,7 @@ STDDIPINFO(Omega)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDip + 1,	"dip"},
 	{"Dip C",		BIT_DIPSWITCH,	DrvDip + 2,	"dip"},
@@ -515,7 +514,7 @@ STDDIPINFO(Freekck)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDip + 1,	"dip"},
 	{"Dip C",		BIT_DIPSWITCH,	DrvDip + 2,	"dip"},

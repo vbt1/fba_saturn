@@ -41,7 +41,7 @@ int ovlInit(char *szShortName)
 	DrvZ80Rom1             = Next; Next += 0x28000;
 	DrvZ80Rom2             = Next; Next += 0x10000;
 	DrvSamples             = Next; Next += 0x10000;
-	CZ80Context			  = Next; Next += (0x1080*2);
+	CZ80Context			  = Next; Next += (sizeof(cz80_struc)*2);
 	RamStart               = Next;
 
 	DrvZ80Ram1             = Next; Next += 0x02000;

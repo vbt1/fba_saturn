@@ -72,7 +72,10 @@ SECTIONS {
 		. = ALIGN(4);
 		*(.dtors)
 		. = ALIGN(4);
+		__dstarto = . ;
 		*(.data)
 		. = ALIGN(4);
+		__dendo = . ;
+
         } > ram2
 }

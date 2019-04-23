@@ -189,7 +189,7 @@ static void	SetVblank2( void ){
 #endif
 	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
-	CZ80Context	= Next; Next += 0x1080;
+	CZ80Context	= Next; Next += sizeof(cz80_struc);
 	MemEnd		= Next;	
 	 
 /*	name_lut	= (UINT16 *)malloc(0x10000*sizeof(UINT16)); 
@@ -316,10 +316,18 @@ static void	SetVblank2( void ){
 
 	return 0;
 }
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+static void wait_vblank(void)
+{
+     while((TVSTAT & 8) == 0);
+     while((TVSTAT & 8) == 8);
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  INT32 SMSExit(void)
 {
 	nBurnFunction = NULL;
+	wait_vblank();
 
 	SS_SET_N0SPRM(0);
 	ss_regs->specialcode=0x0000;
@@ -333,14 +341,9 @@ static void	SetVblank2( void ){
 	z80_set_out((void (*)(short unsigned int, unsigned char))NULL);
 #endif
 #ifdef CZ80
-	CZetOpen(0);
-	CZetSetWriteHandler(NULL);
-	CZetSetReadHandler(NULL);
-	CZetSetInHandler(NULL);
-	CZetSetOutHandler(NULL);
-	CZetClose();
 	CZetExit2();
 #endif
+	vdp_reset();
 
 	cart.rom = NULL;
 	__port = NULL;
@@ -359,16 +362,12 @@ static void	SetVblank2( void ){
 #ifdef GG
 	memset(ss_scl,0x00,192*4);
 	vram_dirty =  NULL;
-//	is_vram_dirty = 0;
 #endif
 
 	free(SaturnMem);
 	SaturnMem = NULL;
-/*	running=0;
-	first = 1;
-	vsynch = 0;
-	scroll_x=0;
-	scroll_y=0;*/
+	cleanDATA();
+	cleanBSS();
 
 	nSoundBufferPos=0;
 }

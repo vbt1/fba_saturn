@@ -7,7 +7,7 @@ int ovlInit(char *szShortName)
 {
 	cleanBSS();
 
-	 struct BurnDriver nBurnDrvPbillrd = {
+	struct BurnDriver nBurnDrvPbillrd = {
 		"pbillrd", "freek",
 		"Perfect Billiard",
 		pbillrdRomInfo, pbillrdRomName, PbillrdInputInfo, PbillrdDIPInfo,
@@ -478,15 +478,11 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 /*static*/ INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
-//	DrvMainROM	 	= Next; Next += 0x40000;
 	DrvMainROM	 	= Next; Next += 0x40000;
 	DrvMainROMdec   = Next; Next += 0x20000;
-//	DrvMainROMdec   = Next; Next += 0x10000;
 	DrvSndROM		= Next; Next += 0x10000;
 	MC8123Key		= Next; Next += 0x02000;
 	DrvColPROM		= Next; Next += 0x00600;
-	CZ80Context		= Next; Next += 0x1080;
-	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 	AllRam				= Next;
 
 	DrvRAM			= Next; Next += 0x02000; // 0x0e000 - 0x0c000
@@ -495,6 +491,9 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	DrvColRAM		= Next; Next += 0x00600;
 
 	RamEnd			= Next;
+
+	CZ80Context		= Next; Next += sizeof(cz80_struc);
+	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 
 	MemEnd			= Next;
 
@@ -950,14 +949,17 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	pbillrdmode = 0;
 	use_encrypted = 0;
 	DrvZ80Bank0 = 0;
-	DrvReset = 0;
 	romaddr = 0;
 	coin = 0;
 	spinner = 0;
 	sprite_number = 0;
+	DrvDial1 = DrvDial2 = 0; 
+
+	cleanDATA();
+	cleanBSS();
+
 	nSoundBufferPos = 0;
 
-	DrvDial1 = DrvDial2 = 0; 
 	return 0;
 }
 

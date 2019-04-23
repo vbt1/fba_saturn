@@ -127,9 +127,7 @@ static void set_memory_map(int mapper)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void load_rom()
 {
-//	DrvReset = 1;
 	int mapper = MAPPER_NONE;
-//	memset(AllMem, 0, MemEnd-AllMem);
 	memset (AllRam, 0, RamEnd - AllRam);
 
 //	ppi8255_exit();
@@ -191,12 +189,10 @@ static UINT8 update_input1(void)
 		if((pltriggerE[0] & PER_DGT_S)!=0)
 		{
 			load_rom();
-//			DrvDoReset();
 		}
 
 		for(i=10;i<12;i++)
 		{
-//			if((pltrigger[0] & pad_asign[i])!=0)
 			if((pltriggerE[0] & pad_asign[i])!=0)
 			{
 				switch(pltriggerE[0] & pad_asign[i] )
@@ -332,14 +328,10 @@ static int MemIndex()
 
 	AllRam				= DrvZ80ROM + 0x0c000;
 	DrvZ80RAM		= DrvZ80ROM + 0x0c000;
-//	AllRam			= Next;
-
-//	DrvZ80RAM		= Next; Next += 0x010400;
 
 	RamEnd			= Next;
-	CZ80Context		= Next; Next += 0x1080;
-//	tmpbmp				= Next; Next += (256*192);
-
+	CZ80Context		= Next; Next += sizeof(cz80_struc);
+	TMSContext		= Next; Next += (0x4000+0x6000+0x1000);
 	MemEnd			= Next;
 
 	return 0;
@@ -414,33 +406,31 @@ static int DrvInit()
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
-	memset(CZ80Context,0x00,0x1080);
+//	memset(CZ80Context,0x00,0x1080);
 
 	#ifndef RAZE
 	CZetInit2(1,CZ80Context);
 	#endif
 
-// 	set_memory_map(0);
-//	PCM_MeStop(pcm);
-//	PCM_MeStart(pcm);
 	SN76489AInit(0, 3579545, 0);
 
-	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt);
+	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt,TMSContext);
 
 	ppi8255_init(1);
 	PPI0PortReadA	= sg1000_ppi8255_portA_read;
 	PPI0PortReadB	= sg1000_ppi8255_portB_read;
 	PPI0PortReadC	= sg1000_ppi8255_portC_read;
 	PPI0PortWriteC	= sg1000_ppi8255_portC_write;
-
-	DrvDoReset();
 	load_rom();
+
 	return 0;
 }
 
 static int DrvExit()
 {
 	nBurnFunction = NULL;
+	wait_vblank();
+
 #ifdef RAZE
 	z80_stop_emulating();
 
@@ -454,16 +444,19 @@ static int DrvExit()
 
 	z80_add_read(0x2000, 0x3fff, 1, (void *)NULL);
 	z80_add_write(0x2000, 0x3fff, 1, (void *)NULL);
-
 #else
 	CZetExit2();
 #endif
 	ppi8255_exit();
 	TMS9928AExit();
-/*	tmpbmp =*/ CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
+
+	CZ80Context = TMSContext = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
+	__port = NULL;
 	free (AllMem);
 	AllMem = NULL;
-//	DrvReset = 0;
+
+	cleanDATA();
+	cleanBSS();
 
 	nSoundBufferPos = 0;
 	return 0;
@@ -471,7 +464,6 @@ static int DrvExit()
 
 static int DrvFrame()
 {
-
 	{ // Compile Inputs
 		memset (DrvInputs, 0xff, 2);
 		for (UINT32 i = 0; i < 8; i++) {
@@ -513,25 +505,20 @@ static int DrvFrame()
 //	DMA_ScuIndirectMemCopy((ss_vram+0x1100+0x10000),tmpbmp,0x4000,0);
 
 // Make sure the buffer is entirely filled.
-	
-//	if (pBurnSoundOut) {
-		int nSegmentLength2 = nBurnSoundLen - nSoundBufferPos2;
-		if (nSegmentLength2) 
-		{
-			INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
-			SN76496Update(0, pSoundBuf, nSegmentLength2);
-			nSoundBufferPos += nSegmentLength2;
-		}	   
-		
-//	} 
+	int nSegmentLength2 = nBurnSoundLen - nSoundBufferPos2;
+	if (nSegmentLength2) 
+	{
+		INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
+		SN76496Update(0, pSoundBuf, nSegmentLength2);
+		nSoundBufferPos += nSegmentLength2;
+	}	   
 
-		if(nSoundBufferPos>=RING_BUF_SIZE/2.5)
-		{
-			PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-			nSoundBufferPos=0;
-//				PCM_Task(pcm); // bon emplacement
-		}
-	PCM_Task(pcm); 
+	if(nSoundBufferPos>=RING_BUF_SIZE/2.5)
+	{
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
+		nSoundBufferPos=0;
+			PCM_Task(pcm); // bon emplacement sinon le pcm stoppe
+	}
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

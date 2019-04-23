@@ -887,12 +887,6 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	nBurnLinescrollSize = 1;
 	nSoundBufferPos = 0;
 #ifndef RAZE
-	CZetOpen(0);
-	CZetSetWriteHandler(NULL);
-	CZetSetReadHandler(NULL);
-	CZetSetInHandler(NULL);
-	CZetSetOutHandler(NULL);
-	CZetClose();
 	CZetExit2();
 #else
 	z80_stop_emulating();
@@ -1447,7 +1441,7 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	sy_lut				= Next; Next += 256*sizeof(INT16);
 	charaddr_lut		= Next; Next += 256*sizeof(UINT16);
 	srcx_buffer		= Next; Next += 256*240*sizeof(UINT32);
-	CZ80Context		= Next; Next += 0x1080;
+	CZ80Context		= Next; Next += sizeof(cz80_struc);
 
 
 //--------------
@@ -1546,7 +1540,7 @@ void DrvInitSaturn()
 	{
 		srcxmask[i] = srcx_buffer + (256*i);
 	}
-	memset(CZ80Context,0x00,0x1080);
+	memset(CZ80Context,0x00,sizeof(cz80_struc));
 
 	make_lut();
 //3 nbg

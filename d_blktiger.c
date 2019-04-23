@@ -504,7 +504,7 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 #ifdef CZET
-	CZ80Context		= Next; Next += (0x1080*2);
+	CZ80Context		= Next; Next += (sizeof(cz80_struc)*2);
 #endif
 	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
 	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
@@ -759,6 +759,10 @@ static INT32 DrvExit()
 
 	free (AllMem);
 	AllMem = NULL;
+
+	cleanDATA();
+	cleanBSS();
+
 	nSoundBufferPos=0;
 
 	return 0;

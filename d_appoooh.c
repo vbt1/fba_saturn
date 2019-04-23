@@ -155,14 +155,6 @@ int ovlInit(char *szShortName)
 //	DrvPalette        = (UINT16*)colBgAddr;
 	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 	is_fg_dirty			=  Next; Next +=0x400;
-//	DrvGfxTMP0		= (UINT8 *)0x00200000;
-//	DrvGfxTMP1		= (UINT8 *)0x00218000;
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	DrvGfxROM0		= SS_CACHE;
-	DrvGfxROM1		= SS_CACHE + 0x30000;
-	DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);
-	DrvGfxROM3		= DrvGfxROM2 + 0x18000;
-
 	MemEnd			= Next;
 
 	return 0;
@@ -176,6 +168,12 @@ int ovlInit(char *szShortName)
 
 	UINT8 *DrvGfxTMP0		= (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1		= (UINT8 *)0x00218000;
+	
+	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	UINT8 *DrvGfxROM0		= SS_CACHE;
+	UINT8 *DrvGfxROM1		= SS_CACHE + 0x30000;
+	UINT8 *DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);
+	UINT8 *DrvGfxROM3		= DrvGfxROM2 + 0x18000;
 
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP0, DrvGfxROM0); // modulo 0x040 to verify !!!
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP1, DrvGfxROM1); // modulo 0x040 to verify !!!
@@ -196,6 +194,12 @@ int ovlInit(char *szShortName)
 
 	UINT8 *DrvGfxTMP0		= (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1		= (UINT8 *)0x00218000;
+
+	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	UINT8 *DrvGfxROM0		= SS_CACHE;
+	UINT8 *DrvGfxROM1		= SS_CACHE + 0x30000;
+	UINT8 *DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);
+	UINT8 *DrvGfxROM3		= DrvGfxROM2 + 0x18000;
 
 	GfxDecode4Bpp(0x1000, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP0, DrvGfxROM0);
 	GfxDecode4Bpp(0x1000, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP1, DrvGfxROM1);
@@ -623,7 +627,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 //	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1, 0.50);
 	memset(MSM5205Context,0x00,0x4000);
 
-	MSM5205Init(0, MSM5205Context, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0, 0.50);
+	MSM5205Init(0, MSM5205Context, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0, (float)0.50);
 	make_lut();
 	DrvDoReset();
 	return 0;
@@ -718,7 +722,6 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	INT32 nLen = MemEnd - (UINT8 *)0;
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) 
 	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
 	memset(AllMem, 0, nLen);
@@ -746,7 +749,6 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 
 	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
 	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
 	memset(AllMem, 0, nLen);
@@ -889,14 +891,15 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	}
 
 	MemEnd = AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
-	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvGfxROM0 = DrvGfxROM1 = NULL;
-	DrvGfxROM2 = DrvGfxROM3 = /*DrvGfxTMP0 = DrvGfxTMP1 =*/ DrvColPROM = DrvMainROM = NULL;
+	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvColPROM = DrvMainROM = NULL;
 	DrvSoundROM = DrvFetch = CZ80Context = is_fg_dirty = NULL;
-	MSM5205Context = /*DrvPalette =*/ map_offset_lut = charaddr_lut = NULL;
+	MSM5205Context = map_offset_lut = charaddr_lut = NULL;
 
 	free (AllMem);
 	AllMem = NULL;
 
+	cleanDATA();
+	cleanBSS();
 	nSoundBufferPos=0;
 	return 0;
 }
@@ -923,7 +926,7 @@ void RenderSlaveSound()
 		DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 	}
 
-	CZetNewFrame();
+//	CZetNewFrame();
 
 	CZetOpen(0);
 

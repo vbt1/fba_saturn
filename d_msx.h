@@ -60,6 +60,7 @@ typedef	struct	SysDevice	{
 /*static*/  UINT16 *SCCMixerTable	= NULL;
 
 /*static*/  //UINT8 *CZ80Context = NULL;
+/*static*/  UINT8 *TMSContext = NULL;
 /*static*/  UINT8 *AllMem	= NULL;
 /*static*/  UINT8 *MemEnd	= NULL;
 /*static*/  UINT8 *AllRam	= NULL;

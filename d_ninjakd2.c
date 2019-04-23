@@ -519,7 +519,6 @@ int ovlInit(char *szShortName)
 	DrvGfxROM3	 	= (UINT8 *)cache+0x28000;//bg2  //Next; Next += 0x100000;
 	DrvGfxROM4		= (UINT8 *)cache+0x58000;//bg3 // Next; Next += 0x100000;
 
-//	CZ80Context	= Next; Next += (0x1080);
 	CZ80Context	= 0x2FB800;
 
 	AllRam			= Next;

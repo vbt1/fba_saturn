@@ -20,12 +20,10 @@ void dummy();
 /*static*/ UINT8 SolomonInputPort2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 SolomonDip[2]        = {0, 0};
 /*static*/ UINT8 SolomonInput[3]      = {0x00, 0x00, 0x00};
-/*static*/ UINT8 SolomonReset         = 0;
 
 /*static*/ UINT8 *Mem                 = NULL;
 /*static*/ UINT8 *MemEnd              = NULL;
 /*static*/ UINT8 *RamStart            = NULL;
-/*static*/ UINT8 *RamEnd              = NULL;
 /*static*/ UINT8 *SolomonZ80Rom1      = NULL;
 /*static*/ UINT8 *SolomonZ80Rom2      = NULL;
 /*static*/ UINT8 *SolomonZ80Ram1      = NULL;
@@ -47,11 +45,11 @@ UINT16 *cram_lut = NULL;
 
 /*static*/ INT32 SolomonIrqFire = 0;
 
-/*static*/ INT32 SolomonFlipScreen = 0;
+/*static*/ //INT32 SolomonFlipScreen = 0;
 
 /*static*/ INT32 SolomonSoundLatch = 0;
-/*static*/ INT16* pFMBuffer;
-/*static*/ INT16* pAY8910Buffer[9];
+/*static*/ INT16* pFMBuffer = NULL;
+/*static*/ INT16* pAY8910Buffer[9] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 /*static*/ struct BurnInputInfo SolomonInputList[] =
 {
@@ -74,7 +72,7 @@ UINT16 *cram_lut = NULL;
 	{"Fire 1 (Cocktail)" , BIT_DIGITAL  , SolomonInputPort1 + 5, "p2 fire 1" },
 	{"Fire 2 (Cocktail)" , BIT_DIGITAL  , SolomonInputPort1 + 4, "p2 fire 2" },
 
-	{"Reset"             , BIT_DIGITAL  , &SolomonReset        , "reset"     },
+	{"Reset"             , BIT_DIGITAL  , NULL        , "reset"     },
 	{"Dip 1"             , BIT_DIPSWITCH, SolomonDip + 0       , "dip"       },
 	{"Dip 2"             , BIT_DIPSWITCH, SolomonDip + 1       , "dip"       },
 };

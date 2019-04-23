@@ -371,7 +371,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	DrvColRAM		= Next; Next += 0x000400;
 
 	RamEnd			= Next;
-	CZ80Context		= Next; Next += 0x1080;
+	CZ80Context		= Next; Next += sizeof(cz80_struc);
 	bg_dirtybuffer	= Next; Next += 0x400 * sizeof(UINT8);
 	map_offset_lut	= Next; Next += 0x400 * sizeof(UINT16);
 	ofst_lut				= Next; Next += 0x400 * sizeof(UINT16);

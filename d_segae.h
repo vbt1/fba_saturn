@@ -68,20 +68,20 @@ UINT8 currentLine = 0;
 
 #define CHIPS 2							/* There are 2 VDP Chips */
 
-UINT8  segae_vdp_cmdpart[CHIPS];		/* VDP Command Part Counter */
-UINT16 segae_vdp_command[CHIPS];		/* VDP Command Word */
+UINT8  segae_vdp_cmdpart[CHIPS]={0,0};		/* VDP Command Part Counter */
+UINT16 segae_vdp_command[CHIPS]={0,0};		/* VDP Command Word */
 
-UINT8  segae_vdp_accessmode[CHIPS];		/* VDP Access Mode (VRAM, CRAM) */
-UINT16 segae_vdp_accessaddr[CHIPS];		/* VDP Access Address */
-UINT8  segae_vdp_readbuffer[CHIPS];		/* VDP Read Buffer */
+UINT8  segae_vdp_accessmode[CHIPS]={0,0};		/* VDP Access Mode (VRAM, CRAM) */
+UINT16 segae_vdp_accessaddr[CHIPS]={0,0};		/* VDP Access Address */
+UINT8  segae_vdp_readbuffer[CHIPS]={0,0};		/* VDP Read Buffer */
 
 UINT8 *segae_vdp_vram[CHIPS];			/* Pointer to VRAM */
 UINT8 *segae_vdp_cram[CHIPS];			/* Pointer to the VDP's CRAM */
 UINT8 *segae_vdp_regs[CHIPS];			/* Pointer to the VDP's Registers */
 
-UINT8 segae_vdp_vrambank[CHIPS];		/* Current VRAM Bank number (from writes to Port 0xf7) */
-UINT32 ntab[CHIPS];
-UINT32 satb[CHIPS];
+UINT8 segae_vdp_vrambank[CHIPS]={0,0};		/* Current VRAM Bank number (from writes to Port 0xf7) */
+UINT32 ntab[CHIPS]={0,0};
+UINT32 satb[CHIPS]={0,0};
 /*static*/ int scroll_x[CHIPS]={0,0};
 /*static*/ int scroll_y[CHIPS]={0,0};
 
@@ -92,7 +92,7 @@ PER_DGT_U,PER_DGT_D,PER_DGT_R,PER_DGT_L,PER_DGT_A,PER_DGT_B,
 PER_DGT_C,PER_DGT_S,PER_DGT_X,PER_DGT_Y,PER_DGT_TR,PER_DGT_TL,
 };
 
-trigger_t	pltrigger[2],pltriggerE[2];
+trigger_t	pltrigger[2]={0,0},pltriggerE[2]={0,0};
 
 #define	SZ_PERIPHERAL	20
 typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];

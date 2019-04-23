@@ -32,7 +32,8 @@ typedef struct {
 	unsigned int colourmask;
 	unsigned int patternmask;
 
-	unsigned char vMem[0x4000];
+//	unsigned char vMem[0x4000];
+	unsigned char *vMem;
 	unsigned char *tmpbmp;
 	int vramsize;
 	int model;
@@ -43,9 +44,11 @@ typedef struct {
 	int bottom_border;
 	int vertical_size;
 
-unsigned char dirty[24*32*8*4];
+//unsigned char dirty[24*32*8*4];
+unsigned char *dirty;
 #ifdef USE_LUT
-unsigned int color_2bpp_lut[0x400];
+//unsigned int color_2bpp_lut[0x400];
+unsigned int *color_2bpp_lut;
 #endif
 	void (*INTCallback)(int);
 } TMS9928A;
@@ -71,7 +74,7 @@ extern SprSpCmd *ss_sprite;
 /*static*/ TMS9928A tms;
 
 void  TMS9928AInterrupt();
-void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallback)(int));
+void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallback)(int), unsigned char *TMSContext);
 void TMS9928AReset();
 void TMS9928AExit();
 void TMS9928ADraw();

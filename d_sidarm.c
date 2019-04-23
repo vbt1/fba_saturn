@@ -290,7 +290,7 @@ int ovlInit(char *szShortName)
 	UINT8 *Next; 
 	Next						= AllMem;
 //	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
-	CZ80Context			= Next; Next += (0x1080*1);
+	CZ80Context			= Next; Next += sizeof(cz80_struc);
 	DrvZ80ROM0		= Next; Next += 0x018000;
 #ifdef SOUND
 	DrvZ80ROM1		= Next; Next += 0x008000;
@@ -524,12 +524,6 @@ int ovlInit(char *szShortName)
 #ifdef RAZE
 
 #else
-	CZetOpen(0);
-	CZetSetWriteHandler(NULL);
-	CZetSetReadHandler(NULL);
-	CZetSetInHandler(NULL);
-	CZetSetOutHandler(NULL);
-	CZetClose();
 	CZetExit2();
 #endif
 

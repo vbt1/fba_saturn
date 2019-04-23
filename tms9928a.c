@@ -2,7 +2,7 @@
 #include "burn.h"
 
 extern UINT32 *shared;
-
+//extern UINT8 *TMSContext ;
 #define SS_SPRAM *(&shared + 5)
 #define SS_FONT	 *(&shared + 3)
 
@@ -15,7 +15,7 @@ static void TMS89928aPaletteRecalc()
 {
 	for (unsigned int i = 0; i < 16; i++) 
 	{
-		colAddr[i] = RGB((TMS9928A_palette[i] >> 19)&31,(TMS9928A_palette[i] >> 11)&31,(TMS9928A_palette[i] /8)&31);
+		colAddr[i] = RGB((TMS9928A_palette[i] >> 19)&31,(TMS9928A_palette[i] >> 11)&31,(TMS9928A_palette[i] >>3)&31);
 	}
 }
 
@@ -146,13 +146,10 @@ static void make_lut()
 #endif
 
 //extern UINT8 *tmpbmp;
-void TMS9928AInit(INT32 model, INT32 vram, INT32 borderx, INT32 bordery, void (*INTCallback)(int))
+void TMS9928AInit(INT32 model, INT32 vram, INT32 borderx, INT32 bordery, void (*INTCallback)(int), UINT8 *TMSContext)
 {
 //	GenericTilesInit();
 	memset(&tms, 0, sizeof(tms));
-#ifdef USE_LUT
-	make_lut();
-#endif
 	tms.model = model;
 	tms.revA = 1;
 
@@ -163,10 +160,15 @@ void TMS9928AInit(INT32 model, INT32 vram, INT32 borderx, INT32 bordery, void (*
 	tms.vertical_size   = TMS9928A_TOTAL_VERT_NTSC;
 
 	tms.vramsize = vram -1;
-	unsigned char *ss_vram = (unsigned char *)SS_SPRAM;
-	tms.tmpbmp	= (ss_vram+0x1100+0x10000);
-//	tms.tmpbmp	= tmpbmp;
+	unsigned char *ss_vram = (UINT8 *)SS_SPRAM;
+	tms.tmpbmp			 = (ss_vram+0x1100+0x10000);
+	tms.vMem				 = (UINT8 *)TMSContext;
+	tms.dirty				 = (UINT8 *)TMSContext+0x4000;
+	tms.color_2bpp_lut	 = (UINT32 *)(TMSContext+0xA000);
 
+#ifdef USE_LUT
+	make_lut();
+#endif
 	TMS89928aPaletteRecalc();
 	TMS9928AReset ();
 	tms.LimitSprites = 1;
@@ -175,11 +177,13 @@ void TMS9928AInit(INT32 model, INT32 vram, INT32 borderx, INT32 bordery, void (*
 void TMS9928AExit()
 {
 	TMS9928AReset();
-	memset (tms.dirty,0x00,24*32*8*4);
-	memset (tms.color_2bpp_lut,0x00,0x400*sizeof(int));
-
-	tms.INTCallback = NULL;
-	tms.tmpbmp = NULL;
+//	memset (tms.dirty,0x00,24*32*8*4);
+//	memset (tms.color_2bpp_lut,0x00,0x400*sizeof(int));
+	tms.tmpbmp			 = NULL;
+	tms.vMem				 = NULL;
+	tms.dirty				 = NULL;
+	tms.color_2bpp_lut	 = NULL;
+	tms.INTCallback	 = NULL;
 }
 
 void TMS9928APostLoad()
@@ -351,7 +355,7 @@ static void draw_mode12(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tms
 //	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 12 not supported    ",16,150);
 	 return;
 
-	fg = tms.Regs[7] / 16;
+	fg = tms.Regs[7] >> 4;
 	bg = tms.Regs[7] & 15;
 
 	for (y = 0; y < 191; y++) {
@@ -440,7 +444,7 @@ static void draw_mode3(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmst
             name++;
             patternptr = tms.vMem+tms.pattern+charcode*8+(y&3)*2;
             for (yy=0;yy<2;yy++) {
-                fg = (*patternptr / 16);
+                fg = (*patternptr >> 4);
                 bg = ((*patternptr++) & 15);
                 for (yyy=0;yyy<4;yyy++) {
 			bitmap[(y*8+yy*4+yyy) * 256 + (x*8+0)] = fg;
@@ -473,7 +477,7 @@ static void draw_mode23(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tms
             patternptr = tms.vMem + tms.pattern +
                 ((charcode+(y&3)*2+(y/8)*256)&tms.patternmask)*8;
             for (yy=0;yy<2;yy++) {
-                fg = (*patternptr / 16);
+                fg = (*patternptr >> 4);
                 bg = ((*patternptr++) & 15);
                 for (yyy=0;yyy<4;yyy++) {
 			bitmap[(y*8+yy*4+yyy) * 256 + (x*8+0)] = fg;
@@ -498,7 +502,7 @@ static void draw_modebogus(unsigned char *bitmap,unsigned char *vmem, TMS9928A *
 //	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode bogus not supported    ",16,150);
 	 return;
 
-    fg = tms.Regs[7] / 16;
+    fg = tms.Regs[7] >> 4;
     bg = tms.Regs[7] & 15;
 
     for (y=0;y<192;y++) {
@@ -825,7 +829,7 @@ static void TMS9928AScanline_INT(INT32 vpos)
 
 					if(pattern!=0)
 					{
-						fg = colour /16;
+						fg = colour >> 4;
 						tab[1] = fg|(*tab&0xf0);
 						tab[2] = colour;
 						tab[3] = fg|(colour&0xf0);

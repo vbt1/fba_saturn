@@ -25,8 +25,6 @@ PcmHn 			pcm4[4];
 /*static*/ UINT8 DrvInputs[3]={0,0,0};
 /*static*/ UINT8 DrvDip[2]={0,0};
 /*static*/ INT32 DrvZ80Bank0 = 0;
-/*static*/ UINT8 DrvReset=0;
-///*static*/ UINT8 DrvRecalc;
 
 /*static*/ INT16 *MSM5205Context = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
@@ -43,26 +41,19 @@ PcmHn 			pcm4[4];
 /*static*/ UINT8 *DrvSprRAM1 = NULL;
 /*static*/ UINT8 *DrvFgColRAM = NULL;
 /*static*/ UINT8 *DrvBgColRAM = NULL;
-/*static*/ UINT8 *DrvGfxROM0 = NULL;
-/*static*/ UINT8 *DrvGfxROM1 = NULL;
-/*static*/ UINT8 *DrvGfxROM2 = NULL;
-/*static*/ UINT8 *DrvGfxROM3 = NULL;
-/*static*/ //UINT8 *DrvGfxTMP0 = NULL;
-/*static*/ //UINT8 *DrvGfxTMP1 = NULL;
 /*static*/ UINT8 *DrvColPROM = NULL;
 /*static*/ UINT8 *DrvMainROM = NULL;
 /*static*/ UINT8 *DrvSoundROM = NULL;
 /*static*/ UINT8 *DrvFetch = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
 /*static*/ UINT16 *charaddr_lut = NULL;
-/*static*/ UINT8 *is_fg_dirty = NULL; //[0x400];
+/*static*/ UINT8 *is_fg_dirty = NULL;
 /*static*/ UINT8 scroll_x = 0;
 /*static*/ UINT8 flipscreen = 0;
 /*static*/ UINT8 priority = 0;
 /*static*/ UINT8 interrupt_enable = 0;
 /*static*/ UINT32 adpcm_data = 0;
 /*static*/ UINT32 adpcm_address = 0;
-/*static*/ //INT32 nCyclesTotal = 0;
 /*static*/ INT32 game_select = 0; // 1 = robowres
 
 static struct BurnInputInfo AppooohInputList[] = {
@@ -86,7 +77,7 @@ static struct BurnInputInfo AppooohInputList[] = {
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 7,	"p2 fire 2"},
 	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 fire 3"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
 };
 

@@ -44,7 +44,7 @@ int ovlInit(char *szShortName)
 	TigerHeliSpriteROM	= &ss_vram[0x2200]; //Next; Next += 3 * 16 * 16 * 256; // 3 banks, 16x16 tiles, 256 tiles (sprites)
 //		= 0x00240000;//Next; Next += 0x040000;
 	TigerHeliTileROM	= (UINT8 *)(SS_CACHE+0x8000); //0x00280000;//Next; Next += 0x040000;
-	CZ80Context			= Next; Next += (0x1080*2);
+	CZ80Context			= Next; Next += (sizeof(cz80_struc)*2);
 	RamStart				= Next;
 	Ram01					= Next; Next += 0x000800;		// Z80 main work RAM
 	RamShared			= Next; Next += 0x000800;		// Shared RAM

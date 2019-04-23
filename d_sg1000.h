@@ -92,13 +92,12 @@ typedef	struct	SysDevice	{
 /*static*/ UINT8 *DrvZ80RAM	= NULL;
 /*static*/ UINT8 *DrvZ80ExtRAM = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ //UINT8 *tmpbmp = NULL;
+/*static*/ UINT8 *TMSContext = NULL;
 
 /*static*/ UINT8 DrvInputs[2]={0,0};
 /*static*/ UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvDips[1]={0};
-/*static*/ //UINT8 DrvReset = 0;
 
 /*static*/ struct BurnInputInfo Sg1000InputList[] = {
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},

@@ -193,7 +193,7 @@ int ovlInit(char *szShortName)
 	NewsFgVideoRam     = Next; Next += 0x00800;
 	NewsBgVideoRam     = Next; Next += 0x00800;
 	NewsPaletteRam       = Next; Next += 0x00200;
-	CZ80Context				= Next; Next += 0x1080;
+	CZ80Context				= Next; Next += sizeof(cz80_struc);
 	pBuffer						= (int *)Next; Next += nBurnSoundRate * sizeof(int);
 	cram_lut					= (UINT16*)Next; Next += (4096*2);
 	map_offset_lut			= (UINT16*)Next; Next += (0x400*2);

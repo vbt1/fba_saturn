@@ -486,10 +486,13 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	Mem=NULL;
 
 	_30_HZ=0;
-	game_type = 0;
+/*	game_type = 0;
 	nSoundBufferPos = 0;
 	DrvReset = 0;
 	nBurnLinescrollSize = 1;
+*/
+	cleanDATA();
+	cleanBSS();
 
 	return 0;
 }

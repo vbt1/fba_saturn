@@ -322,7 +322,8 @@ int ovlInit(char *szShortName)
 	cram_lut = map_offset_lut = NULL;
 	free(SaturnMem);
 	SaturnMem = NULL;
-
+	cleanDATA();
+	cleanBSS();
 	return 0;
 }
 

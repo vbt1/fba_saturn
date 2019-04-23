@@ -5,7 +5,7 @@
 #define nInterleave 262
 #define nCyclesTotal 10738635 / 2 / 60
 #define nCycleSegment nCyclesTotal / nInterleave
-volatile SysPort	*ss_port;
+volatile SysPort	*ss_port = NULL;
 
 int ovlInit(char *szShortName)
 {
@@ -314,20 +314,24 @@ int ovlInit(char *szShortName)
 /*static*/ UINT8 segae_vdp_counter_r (UINT8 chip, UINT8 offset)
 {
 	UINT8 temp = 0;
-	UINT16 sline;
-
+//	UINT16 sline;
+/*
 	switch (offset)
 	{
-		case 0: /* port 0x7e, Vert Position (in scanlines) */
+		case 0: // port 0x7e, Vert Position (in scanlines) 
 			sline = currentLine;
-//			if (sline > 0xDA) sline -= 6;
-//			temp = sline-1 ;
 			if (sline > 0xDA) sline -= 5;
 			temp = sline ;
 			break;
-		case 1: /* port 0x7f, Horz Position (in pixel clock cycles)  */
-			/* unhandled for now */
+		case 1: // port 0x7f, Horz Position (in pixel clock cycles)  
+			// unhandled for now *
 			break;
+	}
+*/
+	if(offset==0)
+	{
+		temp = currentLine;
+		if (temp > 0xDA) temp -= 5;
 	}
 	return temp;
 }
@@ -489,11 +493,11 @@ int ovlInit(char *szShortName)
 	}
 }
 
-static void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],const INT32 opcode_swap_select[64],
+/*static*/ void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],const INT32 opcode_swap_select[64],
 		const UINT8 data_xor[64],const INT32 data_swap_select[64])
 {
 	INT32 A;
-	static const UINT8 swaptable[24][4] =
+	/*static*/ const UINT8 swaptable[24][4] =
 	{
 		{ 6,4,2,0 }, { 4,6,2,0 }, { 2,4,6,0 }, { 0,4,2,6 },
 		{ 6,2,4,0 }, { 6,0,2,4 }, { 6,4,0,2 }, { 2,6,4,0 },
@@ -534,7 +538,7 @@ static void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[
 
 static void astrofl_decode(void)
 {
-	static const UINT8 opcode_xor[64] =
+	/*static*/ const UINT8 opcode_xor[64] =
 	{
 		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
 		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,0x41,0x00,0x54,0x45,
@@ -544,7 +548,7 @@ static void astrofl_decode(void)
 		0x04,0x51,0x40,0x01,0x55,0x44,0x05,0x50,
 	};
 
-	static const UINT8 data_xor[64] =
+	/*static*/ const UINT8 data_xor[64] =
 	{
 		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
 		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,0x45,0x50,0x11,0x40,
@@ -554,7 +558,7 @@ static void astrofl_decode(void)
 		0x54,0x15,0x44,0x51,0x10,0x41,0x55,0x14,
 	};
 
-	static const INT32 opcode_swap_select[64] =
+	/*static*/ const INT32 opcode_swap_select[64] =
 	{
 		0,0,1,1,1,2,2,3,3,4,4,4,5,5,6,6,
 		6,7,7,8,8,9,9,9,10,10,11,11,11,12,12,13,
@@ -563,7 +567,7 @@ static void astrofl_decode(void)
 		14,15,15,16,16,17,17,17,18,18,19,19,19,20,20,21,
 	};
 
-	static const INT32 data_swap_select[64] =
+	/*static*/ const INT32 data_swap_select[64] =
 	{
 		0,0,1,1,2,2,2,3,3,4,4,5,5,5,6,6,
 		7,7,7,8,8,9,9,10,10,10,11,11,12,12,12,13,
@@ -615,8 +619,8 @@ static void astrofl_decode(void)
 /*static*/ INT32 DrvExit()
 {
 	nBurnFunction = NULL;
-	nBurnLinescrollSize = 1;
-	nSoundBufferPos = 0;
+	wait_vblank();
+
 	CZetOpen(0);
 	CZetSetWriteHandler(NULL);
 	CZetSetReadHandler(NULL);
@@ -624,6 +628,7 @@ static void astrofl_decode(void)
 	CZetSetOutHandler(NULL);
 	CZetClose();
 	CZetExit2();
+
 	memset(ss_scl,0x00,192*4);
 	memset(ss_scl1,0x00,192*4);
 	SCL_SetLineParamNBG1();
@@ -639,15 +644,14 @@ static void astrofl_decode(void)
 	ss_port = NULL;
 	nBurnFunction = NULL;
 
-	DrvWheel = DrvAccel = 0;
-	segae_8000bank = port_fa_last = rombank = currentLine = mc8123 = mc8123_banked = hintcount = vintpending = hintpending = 0;
-
- 	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
+	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
  	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
 	initScrollingNBG1(OFF,NULL);
 
-	nSoundBufferPos=0;
+	cleanDATA();
+	cleanBSS();
 
+	nSoundBufferPos=0;
 	return 0;
 }
 
@@ -1048,7 +1052,7 @@ static void astrofl_decode(void)
 	initLayers();
 	initColors();
 	initPosition();
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
 	if(game==1)
 	{
@@ -1072,7 +1076,7 @@ static void astrofl_decode(void)
 	initScrolling(ON,SCL_VDP2_VRAM_B0);
 	initScrollingNBG1(ON,SCL_VDP2_VRAM_B0+0x8000);
 
-	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+//	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	nBurnFunction = SCL_SetLineParamNBG1;
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;

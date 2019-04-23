@@ -3,10 +3,10 @@
 #include "globals.h"
 //#define ACB_DRIVER_DATA	 (64)
 
-/*static*/ cz80_struc* CZetCPUContext = NULL;
+static cz80_struc* CZetCPUContext = NULL;
 //static 
 //cz80_struc CZetCPUContext[2];
-/*static*/ cz80_struc* lastCZetCPUContext = NULL;
+static cz80_struc* lastCZetCPUContext = NULL;
 
 /*static*/ int nOpenedCPU = -1;
 /*static*/ int nCPUCount = 0;
@@ -292,7 +292,8 @@ void CZetExit2()
 		CZetOpen(i);
 		CZetRunEnd();
 		CZetClose();
-		Cz80_Init( &CZetCPUContext[i] );
+//		Cz80_Init( &CZetCPUContext[i] );
+		memset(&CZetCPUContext[i], 0, sizeof(cz80_struc));
 		CZetCPUContext[i].nInterruptLatch = -1;
 
 		CZetCPUContext[i].Read_Byte = NULL;

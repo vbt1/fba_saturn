@@ -822,6 +822,9 @@ static INT32 DrvExit()
 	free(Mem);
 	Mem = NULL;
 
+	cleanDATA();
+	cleanBSS();
+
 	return 0;
 }
 

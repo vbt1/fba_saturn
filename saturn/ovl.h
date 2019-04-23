@@ -10,6 +10,7 @@ extern unsigned int  nSoundBufferPos;
 extern unsigned int nBurnSprites;
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 void cleanBSS() __attribute__ ((boot,section(".clean")));
+void cleanDATA() __attribute__ ((boot,section(".clean")));
 
 void GfxDecode4Bpp(unsigned int num, unsigned int numPlanes, unsigned int xSize, unsigned int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
@@ -138,7 +139,17 @@ static unsigned char *cache = NULL;
 #define SS_SET_N1SPRM(/* 2bits */ n1sprm) \
   (ss_OtherPri->SpecialPriorityMode \
    = (ss_OtherPri->SpecialPriorityMode & 0xFFF3) | ((n1sprm) << 2))
+//-------------------------------------------------------------------------------------------------------------------------------------
+void cleanDATA()
+{
+	extern unsigned int _dstarto, _dendo;
 
+	for( unsigned char *dst = (unsigned char *)&_dstarto; dst < (unsigned char *)&_dendo; dst++ ) 
+	{
+		*dst = 0;
+	}
+//	int size = ((unsigned char *)&_bendo)-((unsigned char *)&_bstarto);
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 void cleanBSS()
 {
@@ -147,6 +158,7 @@ void cleanBSS()
 	for( unsigned char *dst = (unsigned char *)&_bstarto; dst < (unsigned char *)&_bendo; dst++ ) 
 	{
 		*dst = 0;
-	}	
+	}
+//	int size = ((unsigned char *)&_bendo)-((unsigned char *)&_bstarto);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
