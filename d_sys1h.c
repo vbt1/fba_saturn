@@ -150,7 +150,6 @@ Driver Inits
 {
 	int nRet;
 	flipscreen = 1;
-//	System1MC8123Key = (UINT8*)malloc(0x2000);
 	BurnLoadRom(System1MC8123Key, 14, 1);
 
 	DecodeFunction = blockgal_decode;

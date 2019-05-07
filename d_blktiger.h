@@ -27,7 +27,7 @@ void dummy();
 #define SOUNDRATE   7680L
 //---------------------------------------------------------------------------------------------------------------
 unsigned char current_pcm=255;
-char *itoa(int i);
+//char *itoa(int i);
 
 PCM_INFO pcm_info[14];
 

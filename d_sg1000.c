@@ -403,7 +403,7 @@ static int DrvInit()
 	AllMem = NULL;
 	MemIndex();
 	int nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
 //	memset(CZ80Context,0x00,0x1080);

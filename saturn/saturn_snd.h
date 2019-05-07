@@ -39,7 +39,7 @@ typedef struct
 void SetStreamPCM();
 void PlayStreamPCM(unsigned char d, unsigned char current_pcm);
 void wait_vblank(void);
-char *itoa(int i);
+//char *itoa(int i);
 
 void errGfsFunc(void *obj, Sint32 ec);
 void errStmFunc(void *obj, Sint32 ec);

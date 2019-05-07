@@ -53,7 +53,7 @@ INT32 (*DrvDraw)();
 /*static*/ UINT8 *char_bank_select = NULL;
 /*static*/ UINT8 *screen_flip = NULL;
 /*static*/ UINT8 *background_color = NULL;
-
+/*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ INT16* pFMBuffer = NULL;
 /*static*/ INT16* pAY8910Buffer[9];
 

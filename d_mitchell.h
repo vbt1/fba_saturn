@@ -235,7 +235,7 @@ STD_ROM_FN(Spang)
 STD_ROM_PICK(Block)
 STD_ROM_FN(Block)
 */
-static const eeprom_interface MitchellEEPROMIntf =
+/*static*/ const eeprom_interface MitchellEEPROMIntf =
 {
 	6,
 	16,

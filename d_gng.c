@@ -433,7 +433,7 @@ inline double DrvGetTime()
 
 	MemIndex();
 	nLen = MemEnd - (unsigned char *)0;
-	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) return 1;
+	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	MemIndex();
 

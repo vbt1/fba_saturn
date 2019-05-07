@@ -20,7 +20,7 @@ int ovlInit(char *szShortName)
 	ss_reg          = (SclNorscl *)SS_REG;
 }
 
-static void __fastcall higemaru_write(unsigned short address, unsigned char data)
+/*static*/  void __fastcall higemaru_write(unsigned short address, unsigned char data)
 {
 	switch (address)
 	{
@@ -53,7 +53,7 @@ static void __fastcall higemaru_write(unsigned short address, unsigned char data
 }
 
 #ifdef RAZE
-static void __fastcall higemaru_write_d000(unsigned short address, unsigned char data)
+/*static*/  void __fastcall higemaru_write_d000(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
@@ -64,7 +64,7 @@ static void __fastcall higemaru_write_d000(unsigned short address, unsigned char
 #endif
 
 
-static unsigned char __fastcall higemaru_read(unsigned short address)
+/*static*/  unsigned char __fastcall higemaru_read(unsigned short address)
 {
 	unsigned char ret;
 	unsigned int i;
@@ -117,7 +117,7 @@ static unsigned char __fastcall higemaru_read(unsigned short address)
 	return 0;
 }
 
-static int MemIndex()
+/*static*/  int MemIndex()
 {
 	unsigned char *Next; Next = Mem;
 
@@ -127,15 +127,15 @@ static int MemIndex()
 //	Gfx0           = (unsigned char *)0x00200000;//Next; Next += 0x08000;
 //	Gfx1           = (unsigned char *)0x00208000;//Next; Next += 0x08000;
 
-	Prom           = Next; Next += 0x00300;
-//	pFMBuffer      = (short*)Next; Next += (SOUND_LEN * 6 * sizeof(short));
-	map_offset_lut = Next; Next += 1024 * sizeof(UINT16);
-	MemEnd         = Next;
+	Prom					= Next; Next += 0x00300;
+	CZ80Context		= Next; Next += sizeof(cz80_struc);
+	map_offset_lut	= Next; Next += 1024 * sizeof(UINT16);
+	MemEnd			= Next;
 
 	return 0;
 }
 
-static int DrvDoReset()
+/*static*/  int DrvDoReset()
 {
 	memset (Rom + 0xd000, 0, 0x2000);
 
@@ -153,7 +153,7 @@ static int DrvDoReset()
 	return 0;
 }
 
-static void DrvPaletteInit()
+/*static*/  void DrvPaletteInit()
 {
 	unsigned int tmp[0x20];
 	unsigned int i;
@@ -186,7 +186,7 @@ for (i = 0; i < 0x80; i+=4)
 	//colAddr[0x000] = RGB(10,10,10);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int DrvGfxDecode()
+/*static*/  int DrvGfxDecode()
 {
 	/*static*/ int Planes[4] = { 0x10004, 0x10000, 0x00004, 0x00000 };
 	/*static*/ int XOffs[16] = { 0x000, 0x001, 0x002, 0x003, 0x008, 0x009, 0x00a, 0x00b,
@@ -210,7 +210,7 @@ static int DrvGfxDecode()
 	return 0;
 }
 
-static int DrvInit()
+/*static*/  int DrvInit()
 {
 	int nLen;
 	unsigned int i;
@@ -220,7 +220,7 @@ static int DrvInit()
 	Mem = NULL;
 	MemIndex();
 	nLen = MemEnd - (unsigned char *)0;
-	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) return 1;
+	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	MemIndex();
 
@@ -245,7 +245,7 @@ static int DrvInit()
 		DrvPaletteInit();
 	}
 #ifdef CZ80
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0x7fff, 0, Rom + 0x0000);
 	CZetMapArea(0x0000, 0x7fff, 2, Rom + 0x0000);
@@ -293,7 +293,7 @@ static int DrvInit()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initLayers()
+/*static*/  void initLayers()
 {
     Uint16	CycleTb[]={
 		0x1f5f, 0xffff, //A0
@@ -329,7 +329,7 @@ static void initLayers()
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initPosition()
+/*static*/  void initPosition()
 {
 	SCL_Open();
 	ss_reg->n1_move_x =  (-8<<16) ;
@@ -337,7 +337,7 @@ static void initPosition()
 	SCL_Close();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initColors()
+/*static*/  void initColors()
 {
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
@@ -345,7 +345,7 @@ static void initColors()
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut(void)
+/*static*/  void make_lut(void)
 {
 	unsigned int i,delta=0;
 	int sx, sy, row,col;
@@ -358,7 +358,7 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvInitSaturn()
+/*static*/  void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
@@ -389,7 +389,7 @@ static void DrvInitSaturn()
 	drawWindow(0,224,0,2,62); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int DrvExit()
+/*static*/  int DrvExit()
 {
 	SPR_InitSlaveSH();
 #ifdef RAZE
@@ -398,7 +398,7 @@ static int DrvExit()
 	z80_add_write(0xc800, 0xc804, 1, (void *)NULL);
 	z80_add_read (0xc000, 0xc004, 1, (void *)NULL);
 #else
-	CZetExit();
+	CZetExit2();
 #endif
 
 	AY8910Exit(0);
@@ -410,25 +410,20 @@ static int DrvExit()
 		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
 
-	MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
+	CZ80Context = MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
 	map_offset_lut = NULL;
-//	for (i = 0; i < 6; i++) {
-//		pAY8910Buffer[i] = NULL;
-//	}	
-	
-//	pFMBuffer = NULL;
+
 	free (Mem);
 	Mem = NULL;
 
-	nSoundBufferPos=0;
+	cleanDATA();
+	cleanBSS();
 
-//	flipscreen = 0;
-//	DrvRecalc = 0;
-	//cleanSprites();
+	nSoundBufferPos = 0;
 	return 0;
 }
 
-static inline void DrvDrawSprites()
+/*static*/  inline void DrvDrawSprites()
 {
 	 // sprites
 	for (int offs = 0x170; offs >= 0; offs -= 16)
@@ -452,7 +447,7 @@ static inline void DrvDrawSprites()
 		ss_sprite[delta].color      = (color<<4);		
 	}
 }
-static void DrvDrawBackground()
+/*static*/  void DrvDrawBackground()
 {
  // back ground
 	for (int offs = 0x40; offs < 0x3c0; offs++)
@@ -476,7 +471,7 @@ static void DrvDrawBackground()
 }
 
 
-static int DrvFrame()
+/*static*/  int DrvFrame()
 {
 //	if (DrvReset) {
 //		DrvDoReset();

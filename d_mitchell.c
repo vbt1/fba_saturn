@@ -575,7 +575,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	PangMemIndex();
 
 	nLen = MemEnd - (unsigned char *)0;
-	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) 
+	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
 	{
 //		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;

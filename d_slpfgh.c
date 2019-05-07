@@ -777,13 +777,8 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 	free(Mem);
 	Mem = NULL;
 
-	nWhichGame = 0;
-	bInterruptEnable = bSoundNMIEnable = bSoundCPUEnable = 0;
-	nStatusIndex = nProtectIndex = 0;
-
-	nTigerHeliTileXPosLo = nTigerHeliTileXPosHi = nTigerHeliTileYPosLo = 0;
-	nTigerHeliTileMask = nTigerHeliSpriteMask = 0;	
-	nStatusIndex = nProtectIndex = nPalettebank = nFlipscreen = 0;
+	cleanDATA();
+	cleanBSS();
 
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 	nSoundBufferPos = 0;
@@ -830,7 +825,7 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 	nLen = MemEnd - (UINT8*)0;
 //		sprintf(tmp0,"before malloc      ");
 
-	if ((Mem = (UINT8*)BurnMalloc(nLen)) == NULL) 
+	if ((Mem = (UINT8*)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
 //		sprintf(tmp0,"malloc failed      ");
 		return 1;

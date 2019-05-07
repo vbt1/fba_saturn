@@ -11,6 +11,7 @@
 
 UINT16 *map_offset_lut = NULL;
 UINT16 *mapbg_offset_lut = NULL;
+UINT8 *CZ80Context = NULL;
 UINT16 *cram_lut = NULL;
 static UINT32 CalcCol(UINT16 nColour);
 static INT32 DrvInit();

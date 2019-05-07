@@ -219,7 +219,7 @@ int ovlInit(char *szShortName)
 	Mem = NULL;
 	MemIndex();
 	nLen = MemEnd - (unsigned char *)0;
-	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) 
+	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
 	{	
 		return 1;
 	}

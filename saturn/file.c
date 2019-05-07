@@ -79,15 +79,12 @@ void ChangeDir(char *dirname)
 #ifndef ACTION_REPLAY	
     Sint32 fid;
 	GfsDirTbl dirtbl; 
-//	char *dir_upr =malloc(strlen(dirname));
 	char dir_upr[12];
 	char *ptr=&dir_upr[0];
 	strcpy(dir_upr,dirname);
 	ptr = strupr(ptr);
     fid = GFS_NameToId((Sint8 *)dir_upr);
 	ptr = NULL;
-//	free(dir_upr);
-//	dir_upr = NULL;
 
 	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
 	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;

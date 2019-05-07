@@ -588,7 +588,7 @@ static void astrofl_decode(void)
 		DrvMainROMFetch= (UINT8 *)0x00280000;
 
 	mc8123key           = Next; Next += 0x02000;
-	CZ80Context			= Next; Next += (0x1080);
+	CZ80Context			= Next; Next += sizeof(cz80_struc);
 
 	AllRam					= Next;
 	DrvRAM			    = Next; Next += 0x10000;
@@ -620,18 +620,19 @@ static void astrofl_decode(void)
 {
 	nBurnFunction = NULL;
 	wait_vblank();
-
+/*
 	CZetOpen(0);
 	CZetSetWriteHandler(NULL);
 	CZetSetReadHandler(NULL);
 	CZetSetInHandler(NULL);
 	CZetSetOutHandler(NULL);
-	CZetClose();
+	CZetClose();*/
 	CZetExit2();
 
 	memset(ss_scl,0x00,192*4);
 	memset(ss_scl1,0x00,192*4);
 	SCL_SetLineParamNBG1();
+	wait_vblank();
 
 	CZ80Context = mc8123key = DrvMainROM	=DrvMainROMFetch = AllRam = DrvRAM = RamEnd = MemEnd = NULL;
 	segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
@@ -642,7 +643,7 @@ static void astrofl_decode(void)
 	free(AllMem);
 	AllMem = NULL;
 	ss_port = NULL;
-	nBurnFunction = NULL;
+//	nBurnFunction = NULL;
 
 	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
  	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
@@ -808,7 +809,7 @@ static void astrofl_decode(void)
 	AllMem = NULL;
 	MemIndex(game);
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) 
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
 		return 0;
 	}
@@ -1278,7 +1279,6 @@ Bit 08 - 00 : Pattern Index
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_bp_lut(void)
 {
-//	bp_lut = (UINT32 *)malloc(0x10000*sizeof(UINT32));
     for(UINT32 j = 0; j < 0x10000; j++)
     {
         UINT32 row = 0;

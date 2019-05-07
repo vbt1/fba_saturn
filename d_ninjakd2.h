@@ -12,6 +12,9 @@
 /*static*/  INT32 RobokidInit();
 /*static*/  INT32 DrvExit();
 /*static*/  INT32 DrvFrame();
+/*static*/  void DrvCalculatePalette();
+/*static*/ void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+void cleanSprites();
 void dummy();
 
 /*static*/  UINT8 *AllMem = NULL;

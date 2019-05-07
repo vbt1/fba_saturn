@@ -415,7 +415,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	MemIndex();
 	nLen = MemEnd - (UINT8 *)0;
 
-	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) 
+	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
 	{	
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;

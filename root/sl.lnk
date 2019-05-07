@@ -52,8 +52,11 @@ SECTIONS {
 
 	.rodata ALIGN(4) :			
 	{			
-		*(.rodata)	
+	   __rodata_start = .;
+	   *(.rodata)
+	   __rodata_end = .;
 	} > ram
+
 	
 	.bss  ALIGN(4) (NOLOAD):
 	{

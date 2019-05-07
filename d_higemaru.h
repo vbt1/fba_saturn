@@ -12,8 +12,14 @@
 /*static*/// unsigned char 	bg_dirtybuffer[2048];
 UINT16 *map_offset_lut = NULL;//[1024];
 /*static*/ unsigned char *Mem = NULL, *MemEnd = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
+UINT8 *CZ80Context = NULL;
 /*static*/ //short *pAY8910Buffer[6], *pFMBuffer = NULL;
-/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvDips[3], DrvReset;
+/*static*/ 
+unsigned char DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+unsigned char DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+unsigned char DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+unsigned char DrvDips[3] = {0,0,0}; 
+
 PcmHn 			pcm6[6];
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
@@ -44,7 +50,7 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 	{"P2 Up"        , BIT_DIGITAL  , DrvJoy2 + 3, 	"p2 up"    },
 	{"P2 Button 1"  , BIT_DIGITAL  , DrvJoy3 + 1,	"p2 fire 1"},
 
-	{"Reset"        , BIT_DIGITAL  , &DrvReset  ,	"reset"    },
+	{"Reset"        , BIT_DIGITAL  , NULL  ,	"reset"    },
 	{"Dip 1"        , BIT_DIPSWITCH, DrvDips + 0,   "dip 1"    },
 	{"Dip 2"        , BIT_DIPSWITCH, DrvDips + 1,   "dip 2"    },
 	{"Dip 3"        , BIT_DIPSWITCH, DrvDips + 2,   "dip 3"    },

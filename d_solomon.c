@@ -271,9 +271,9 @@ void __fastcall SolomonPortWrite2(UINT16 a, UINT8 d)
 	SolomonZ80Rom1         = Next; Next += 0x10000;
 	SolomonZ80Rom2         = Next; Next += 0x04000;
 #ifdef RAZE0
-	CZ80Context					= Next; Next += (0x1080);
+	CZ80Context					= Next; Next += sizeof(cz80_struc);
 #else
-	CZ80Context					= Next; Next += (0x1080*2);
+	CZ80Context					= Next; Next += sizeof(cz80_struc)*2;
 #endif
 	RamStart               = Next;
 	Next += 0x0B800;// vbt pour alignement
@@ -317,7 +317,7 @@ INT32 SolomonInit()
 	Mem = NULL;
 	SolomonMemIndex();
 	nLen = MemEnd - (UINT8 *)0;
-	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	SolomonMemIndex();
 	make_lut();
@@ -479,6 +479,8 @@ INT32 SolomonInit()
 INT32 SolomonExit()
 {
 	nBurnFunction = NULL;
+	wait_vblank();
+
 	SPR_InitSlaveSH();
 
 	z80_stop_emulating();
@@ -511,6 +513,14 @@ INT32 SolomonExit()
 
 	free(Mem);
 	Mem = NULL;
+
+	SS_Z80CY = 0;
+	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
+
+	cleanDATA();
+	cleanBSS();
+
+	nSoundBufferPos=0;
 	return 0;
 }
 

@@ -546,7 +546,7 @@ int ovlInit(char *szShortName)
 	UINT32 XOffs1[16] = { STEP8(0,4), STEP8(64*8,4) };
 	UINT32 YOffs1[16] = { STEP16(0,32) };
 
-	UINT8 *tmp = (UINT8*)0x00200000; //malloc(0x40000);
+	UINT8 *tmp = (UINT8*)0x00200000;
 	
 	if(type==2)
 	{	// decode pour sprites
@@ -573,7 +573,7 @@ int ovlInit(char *szShortName)
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
 
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
 	memset(0x2F0000, 0, 0x9c00);
 	memset(AllMem, 0, nLen);
 	MemIndex();
@@ -910,29 +910,6 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 
 INT16 previous_bank[3]={-1,-1,-1};
 
-#define INT_DIGITS 19
- char *itoa(i)
-     int i;
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}
 /*static*/  void draw_robokid_bg_layer(UINT32 sel, UINT8 *ram, UINT8 *rom, INT32 width, INT32 transp)
 {
 	if (tilemap_enable[sel] == 0) return;

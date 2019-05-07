@@ -55,7 +55,7 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
     int nLoadLen=0;
 
     // Allocate space for the file
-    Load=(unsigned char *)0x00200000;//malloc(nLen);
+    Load=(unsigned char *)0x00200000;
 //    if (Load==NULL) 
 //	  {
 //	return 1;

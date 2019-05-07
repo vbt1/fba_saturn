@@ -720,7 +720,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) 
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
 	{
 		return 1;
 	}
@@ -747,7 +747,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
 
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
 	{
 		return 1;
 	}

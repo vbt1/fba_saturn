@@ -93,7 +93,7 @@ Slam Masters                             54321076  65432107    3131     19
 //#include "cps.h"
 
 
-static int bitswap1(int src,int key,int select)
+/*static*/ int bitswap1(int src,int key,int select)
 {
 	if (select & (1 << ((key >> 0) & 7)))
 		src = (src & 0xfc) | ((src & 0x01) << 1) | ((src & 0x02) >> 1);
@@ -107,7 +107,7 @@ static int bitswap1(int src,int key,int select)
 	return src;
 }
 
-static int bitswap2(int src,int key,int select)
+/*static*/ int bitswap2(int src,int key,int select)
 {
 	if (select & (1 << ((key >>12) & 7)))
 		src = (src & 0xfc) | ((src & 0x01) << 1) | ((src & 0x02) >> 1);
@@ -121,7 +121,7 @@ static int bitswap2(int src,int key,int select)
 	return src;
 }
 
-static int bytedecode(int src,int swap_key1,int swap_key2,int xor_key,int select)
+/*static*/ int bytedecode(int src,int swap_key1,int swap_key2,int xor_key,int select)
 {
 	src = bitswap1(src,swap_key1 & 0xffff,select & 0xff);
 	src = ((src & 0x7f) << 1) | ((src & 0x80) >> 7);

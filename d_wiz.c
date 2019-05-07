@@ -336,6 +336,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	background_color= Next; Next += 0x000001;
 
 	RamEnd			= Next;
+	CZ80Context		= Next; Next += sizeof(cz80_struc)*2;
 	map_offset_lut = (UINT16*)Next; Next += 1024 * sizeof(UINT16);
 	pFMBuffer	= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 	MemEnd			= Next;
@@ -354,7 +355,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	INT32 YOffs1[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
 
 	UINT8 *tmp0 = (UINT8*)0x00200000;
-	UINT8 *tmp1 = (UINT8*)malloc(0xc000);
+	UINT8 *tmp1 = (UINT8*)0x00210000;
 
 	memcpy (tmp0, DrvGfxROM0, 0x6000);
 	memcpy (tmp1, DrvGfxROM1, 0xc000);
@@ -398,10 +399,8 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp0 + 0x0000, DrvGfxROM1 + 0 * 16 * 8 * 256);
 	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp1 + 0x0000, DrvGfxROM1 + 1 * 16 * 8 * 256);
 	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp1 + 0x6000, DrvGfxROM1 + 2 * 16 * 8 * 256);
- 
-	//free (tmp0);
+
 	tmp0=NULL;
-	free (tmp1);
 	tmp1 = NULL;
 }
 
@@ -534,7 +533,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 		DrvPaletteInit();
 	}
 
-	CZetInit(2);
+	CZetInit2(2,CZ80Context);
 
 #ifdef RAZE0
 	z80_init_memmap();
@@ -800,7 +799,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	z80_add_read(0x3000, 0x300f, 1, (void *)NULL);
 	z80_add_read(0x7000, 0x700f, 1, (void *)NULL);
 #endif	
-	CZetExit();
+	CZetExit2();
 
 	AY8910Exit(2);
 	AY8910Exit(1);
@@ -812,7 +811,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 
 	pFMBuffer = NULL;
 
-	MemEnd = AllRam = RamEnd = DrvZ80ROM0 = DrvZ80Dec = DrvZ80ROM1 = DrvGfxROM0 = NULL;
+	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM0 = DrvZ80Dec = DrvZ80ROM1 = DrvGfxROM0 = NULL;
 	DrvGfxROM0b = DrvGfxROM1 = DrvColPROM = DrvZ80RAM0 = DrvZ80RAM1 = DrvVidRAM0 = NULL;
 	DrvVidRAM1 = DrvColRAM0  = DrvColRAM1 = DrvSprRAM0 = DrvSprRAM1 = NULL;
 

@@ -698,7 +698,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	MemIndex();
 	nLen = MemEnd - (UINT8 *)0;
 
-	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) 
+	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
 	{	
 		return 1;
 	}
@@ -782,11 +782,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	spriteCache = (UINT16*)(0x00200000);
 
 	memset((unsigned char *)spriteCache,0xFF,0x80000);
-/*	if(System1SpriteRomSize!=0x20000)
-		System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
-	else
-		System1Sprites = (UINT8 *)0x02E0000;
-*/
+
 	memset(System1Sprites, 0x00, System1SpriteRomSize);
 
 	// Load Sprite roms

@@ -75,7 +75,7 @@ static INT32 DrvInit()
 	MemIndex();
 	nLen = MemEnd - (unsigned char *)0;
 
-	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) 
+	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
 	{
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
@@ -135,7 +135,7 @@ static INT32 DrvInit()
 	z80_set_in((unsigned char (*)(unsigned short))&bankp_in);
 	z80_set_out((void (*)(unsigned short, unsigned char))&bankp_out);
 #else
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetSetInHandler(bankp_in);
 	CZetSetOutHandler(bankp_out);
@@ -517,7 +517,8 @@ static void DrvInitSaturn()
 	z80_set_in((unsigned char (*)(unsigned short))NULL);
 	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
 #else
-	CZetExit();
+	CZetExit2();
+	CZ80Context = NULL;
 #endif	
 //	SN76496Exit();
 

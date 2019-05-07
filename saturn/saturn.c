@@ -1,7 +1,7 @@
 #include "saturn.h"
 
 //#include "sc_saturn.h"
-#define HEAP_WALK 1
+//#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
 #define OVLADDR 0x060CC000
@@ -99,7 +99,7 @@ static void	_spr2_initialize( void )
 	SPR_Initial(&aVRAM);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ __inline__ void	_spr2_transfercommand()
+/*static*/ void	_spr2_transfercommand()
 {
 	  memcpyl(aVRAM,smsSprite,(nBurnSprites<<5) ) ;
 }
@@ -334,10 +334,10 @@ static void ss_main(void)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
 	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
-	unsigned char *Mem = malloc((unsigned char *)MALLOC_MAX);
-	memset(Mem,0x00,MALLOC_MAX);
-	free(Mem);
-	Mem=NULL;
+//	unsigned char *Mem = malloc((unsigned char *)MALLOC_MAX);
+//	memset(Mem,0x00,MALLOC_MAX);
+//	free(Mem);
+//	Mem=NULL;
 
 	while(1)
 	{
@@ -1627,8 +1627,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+				 //if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 		else
@@ -1640,8 +1640,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 	}

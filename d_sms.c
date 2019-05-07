@@ -191,10 +191,6 @@ static void	SetVblank2( void ){
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
 	CZ80Context	= Next; Next += sizeof(cz80_struc);
 	MemEnd		= Next;	
-	 
-/*	name_lut	= (UINT16 *)malloc(0x10000*sizeof(UINT16)); 
-	cram_lut	= (UINT16 *)malloc(0x40*sizeof(UINT16));
-	dummy_write = (unsigned *)malloc(0x100*sizeof(unsigned));	 */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void DrvInitSaturn()
@@ -219,9 +215,6 @@ static void	SetVblank2( void ){
 	file_id			= 2; // bubble bobble
 //	file_max		= getNbFiles();
 		//8;//aleste
-//	name_lut	= (UINT16 *)malloc(0x10000*sizeof(UINT16));
-//	bp_lut		= (UINT32 *)malloc(0x10000*sizeof(UINT32));
-
 	initLayers();
 	initColors();
 	initPosition();
@@ -229,7 +222,7 @@ static void	SetVblank2( void ){
 //		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
-	SaturnMem = (UINT8 *)malloc(nLen);
+	SaturnMem = (UINT8 *)malloc(MALLOC_MAX);
 	SaturnInitMem();
 	memset(SaturnMem,0x00,nLen);
 //		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	

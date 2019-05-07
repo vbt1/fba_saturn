@@ -651,7 +651,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
@@ -894,7 +894,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	ss_BgColMix	= (SclBgColMixRegister *)SS_BGMIX;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-	ss_scl			= (Fixed32 *)SS_SCL;
+//	ss_scl			= (Fixed32 *)SS_SCL;
 
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 64+3;
@@ -942,18 +942,6 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	DrawSprite = NULL;
 	free (AllMem);
 	AllMem = NULL;
-
-	ff_data = 0;
-	nmi_enable = 0;
-	countrunbmode = 0;
-	pbillrdmode = 0;
-	use_encrypted = 0;
-	DrvZ80Bank0 = 0;
-	romaddr = 0;
-	coin = 0;
-	spinner = 0;
-	sprite_number = 0;
-	DrvDial1 = DrvDial2 = 0; 
 
 	cleanDATA();
 	cleanBSS();

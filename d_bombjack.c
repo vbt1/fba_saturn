@@ -299,7 +299,7 @@ void __fastcall bombjack_sound_write_port(UINT16 port, UINT8 data)
 static INT32 DrvZInit()
 {
 	// Init the z80
-	CZetInit(2);
+	CZetInit2(2,CZ80Context);
 	// Main CPU setup
 #ifdef RAZE
 	z80_init_memmap();
@@ -374,7 +374,6 @@ static INT32 DrvZInit()
 	CZetSetWriteHandler(BjMemWrite);
 	CZetClose();
 #endif
-//	CZetInit(1);
 	CZetOpen(1);
 	CZetMapArea    (0x0000,0x1fff,0,SndRom); // Direct Read from ROM
 	CZetMapArea    (0x0000,0x1fff,2,SndRom); // Direct Fetch from ROM
@@ -723,6 +722,7 @@ static INT32 MemIndex()
 
 	sprites	  = &ss_vram[0x1100];//Next; Next += 1024 * 8 * 8;
 	tiles		  = (UINT8 *)SCL_VDP2_VRAM_B0;//+0x10000;//Next; Next += 1024 * 8 * 8;
+	CZ80Context					= Next; Next += sizeof(cz80_struc)*2;
 	pFMBuffer	= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 //	BjPalReal	= (UINT32*)Next; Next += 0x0080 * sizeof(UINT32);
 	map_offset_lut = (UINT16*)Next; Next += 1024 * sizeof(UINT16);
@@ -741,7 +741,7 @@ static INT32 DrvInit()
 	Mem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) return 1;
+	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	MemIndex();
 	make_lut();
@@ -802,14 +802,14 @@ static INT32 DrvExit()
 	z80_add_write(0xb800, 0xb800, 1, (void *)NULL);
 #endif
 
-	CZetExit();
+	CZetExit2();
 
 	AY8910Exit(0);
 	AY8910Exit(1);
 	AY8910Exit(2);
 
 	cram_lut = map_offset_lut = mapbg_offset_lut = NULL;
-	MemEnd = RamStart = RamEnd = BjGfx = BjMap = BjRom = BjRam = BjColRam = NULL;
+	CZ80Context = MemEnd = RamStart = RamEnd = BjGfx = BjMap = BjRom = BjRam = BjColRam = NULL;
 	BjVidRam = BjSprRam = SndRom = SndRam = text = sprites = tiles = BjPalSrc = NULL;
 
 	for (int i = 0; i < 9; i++) {

@@ -559,7 +559,7 @@ static INT32 DrvGfxDecode()
 	INT32 YOffs[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16,
 			8*16, 9*16, 10*16, 11*16, 12*16, 13*16, 14*16, 15*16 };
 
-	UINT8 *tmp = (UINT8*)0x00200000; //malloc(0x40000);
+	UINT8 *tmp = (UINT8*)0x00200000;
 // texte
 	memcpyl (tmp, DrvGfxROM0, 0x08000);
 	GfxDecode4Bpp(0x0800, 2,  8,  8, Plane + 2, XOffs, YOffs, 0x080, tmp, DrvGfxROM0);
@@ -632,7 +632,7 @@ static INT32 DrvInit()
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
 #if  1
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
 	{
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;

@@ -1527,7 +1527,7 @@ void DrvInitSaturn()
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
 
-	SaturnMem = (UINT8 *)malloc(nLen);
+	SaturnMem = (UINT8 *)malloc(MALLOC_MAX);
 	if(SaturnMem==NULL)
 	{
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc SaturnMem failed",4,50);

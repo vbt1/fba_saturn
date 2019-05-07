@@ -25,6 +25,8 @@
 //#include "ovl.h"
 #include "../globals.h"
 
+void _spr2_transfercommand();
+void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 void PCM_MeVblIn(void);
 void	PCM_MeSetLoop( PcmHn	hn, Sint32	cnt_loop );
 void PCM_MeSetVolume(PcmHn hn, Uint32 level);
@@ -140,7 +142,7 @@ SclDataset	Scl_d_reg;
 SclWinscl	Scl_w_reg;
 SclOtherPriRegister  SclOtherPri;
 SclSpPriNumRegister  SclSpPriNum;
-SclBgPriNumRegister  SclBgPriNum;
+SclBgPriNumRegister SclBgPriNum;
 SclBgColMixRegister  SclBgColMix;
 //SclPriBuffDirtyFlags SclPriBuffDirty;
 //-------------------------------------------------------------------------------------------------------------------------------------

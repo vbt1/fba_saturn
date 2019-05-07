@@ -26,6 +26,7 @@
 
 int CZetInit(int nCount);
 void CZetExit();
+void CZetExit2();
 void CZetNewFrame();
 int CZetOpen(int nCPU);
 void CZetClose();

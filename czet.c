@@ -57,33 +57,6 @@ void CZetNewFrame()
 	}
 }
 
-int CZetInit(int nCount)
-{
-	CZetCPUContext = (cz80_struc*)malloc(nCount * sizeof(cz80_struc));
-	if (CZetCPUContext == NULL) {
-//	FNT_Print256_2bpp((volatile Uint8 *)0x25e40000,(Uint8 *)"CZetInit  malloc failed             ",12,12);
-		return 1;
-	}
-	Cz80_InitFlags();
-
-	unsigned int i;
-
-	for (i = 0; i < nCount; i++) {
-		Cz80_Init( &CZetCPUContext[i] );
-		CZetCPUContext[i].nInterruptLatch = -1;
-
-		CZetCPUContext[i].Read_Byte = CZetDummyReadHandler;
-		CZetCPUContext[i].Write_Byte = CZetDummyWriteHandler;
-		CZetCPUContext[i].Read_Word = CZetDummyReadHandler;
-		CZetCPUContext[i].Write_Word = CZetDummyWriteHandler;
-		CZetCPUContext[i].IN_Port = CZetDummyInHandler;
-		CZetCPUContext[i].OUT_Port = CZetDummyOutHandler;
-	}
-	CZetOpen(0);
-	nCPUCount = nCount;
-	return 0;
-}
-
 int CZetInit2(int nCount,UINT8 *addr)
 {
 	CZetCPUContext = (cz80_struc*)addr;
@@ -305,38 +278,6 @@ void CZetExit2()
 	}	
 	CZetCPUContext = NULL;
 
-	lastCZetCPUContext = NULL;
-	nOpenedCPU = -1;
-	nCPUCount = 0;
-}
-
-void CZetExit()
-{
-	unsigned int i;
-
-	for (i = 0; i < nCPUCount; i++) {
-		CZetOpen(i);
-		CZetRunEnd();
-		CZetClose();
-		Cz80_Init( &CZetCPUContext[i] );
-		CZetCPUContext[i].nInterruptLatch = -1;
-
-		CZetCPUContext[i].Read_Byte = NULL;
-		CZetCPUContext[i].Write_Byte = NULL;
-		CZetCPUContext[i].Read_Word = NULL;
-		CZetCPUContext[i].Write_Word = NULL;
-		CZetCPUContext[i].IN_Port = NULL;
-		CZetCPUContext[i].OUT_Port = NULL;
-	}	
-//	if(lastCZetCPUContext!=NULL)
-//		free(lastCZetCPUContext);
-//	lastCZetCPUContext = NULL;
-	if (CZetCPUContext!=NULL)
-//	while(CZetCPUContext!=NULL)
-	{
-		free( CZetCPUContext );
-		CZetCPUContext = NULL;
-	}
 	lastCZetCPUContext = NULL;
 	nOpenedCPU = -1;
 	nCPUCount = 0;

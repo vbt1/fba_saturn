@@ -399,7 +399,7 @@ int ovlInit(char *szShortName)
 	UINT8 *DrvGfxROM1	 = (UINT8 *)(SS_CACHE + 0x4000);
 	UINT8 *DrvGfxROM2	 = (UINT8 *)(ss_vram + 0x1100);
 
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) 
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
 		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc failed   ",24,30);
 		return 1;
@@ -516,11 +516,10 @@ int ovlInit(char *szShortName)
 
 /*static*/ INT32 DrvExit()
 {
-	nBurnLinescrollSize = 1;
-	SPR_InitSlaveSH();
-	nSoundBufferPos=0;
 	nBurnFunction = NULL;
-//	GenericTilesExit();
+	wait_vblank();
+
+	SPR_InitSlaveSH();
 #ifdef RAZE
 
 #else
@@ -539,18 +538,10 @@ int ovlInit(char *szShortName)
 	BurnFree (AllMem);
 	AllMem = NULL;
 
-	enable_watchdog = 0;
-	watchdog = 0;
-	vblank  = 0;
-	sprite_enable = 0;
-	bglayer_enable = 0;
-	bank_data = 0;
+	cleanDATA();
+	cleanBSS();
 
-	starfield_enable = 0;
-	starscrollx = 0;
-	starscrolly = 0;
-	DrvReset = 0;
-
+	nSoundBufferPos=0;
 	return 0;
 }
 

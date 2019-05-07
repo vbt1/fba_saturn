@@ -1,6 +1,6 @@
 #ifndef _OVL_H_
 #define _OVL_H_
-
+#define MALLOC_MAX 0xAA000
 //extern Uint32   _bstart, _bend;
 extern Uint32 *shared;
 //extern struct BurnDriver* pDriver[];

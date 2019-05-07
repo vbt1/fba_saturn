@@ -274,7 +274,6 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	UINT32 size = (game_select == PENGO) ? 0x2000 : 0x1000;
 
 	UINT8 *tmp = (UINT8*)0x00200000;
-//	UINT8 *tmp = (UINT8*)malloc(size * 2);
 	memset(tmp,0x00,size * 2);
 
 	memcpy (tmp, cache, size * 2);
@@ -439,7 +438,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
 	{
 		return 1;
 	}
@@ -595,16 +594,9 @@ void DrvInitSaturn()
 	free (AllMem);
 	AllMem = NULL;
 
-	game_select = 0;
-	interrupt_mode = 0;
-	interrupt_mask = 0;
-	colortablebank = 0;
-	palettebank = 0;
-	spritebank = 0;
-	charbank = 0;
-	//nPacBank = 0;
-	watchdog = 0;
-	DrvReset = 0;
+	cleanDATA();
+	cleanBSS();
+
 	nSoundBufferPos=0;
 
 	return 0;

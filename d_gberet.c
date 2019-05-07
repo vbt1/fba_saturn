@@ -341,7 +341,7 @@ int ovlInit(char *szShortName)
 	MemIndex();
 	nLen = MemEnd - (unsigned char *)0;
 
-	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) return 1;
+	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	MemIndex();
 	if (GetRoms()) return 1;
@@ -475,7 +475,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	z80_add_read (0xf400, 0xf400, 1, (void *)NULL);
 	z80_add_read (0xf600, 0xf603, 1, (void *)NULL);
 #else
-	CZetExit();
+	CZetExit2();
 #endif	
 	nBurnSprites=128;
 	cleanSprites();

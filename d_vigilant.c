@@ -376,29 +376,7 @@ UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
 
 	return 0;
 }
-#define INT_DIGITS 19
-static char *itoa(i)
-     int i;
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}
+
 
 void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 {
@@ -529,7 +507,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	Mem = NULL;
 	MemIndex();
 	nLen = MemEnd - (UINT8 *)0;
-	if ((Mem = (UINT8 *)malloc(nLen)) == NULL) return 1;
+	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, nLen);
 	MemIndex();
 
