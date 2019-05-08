@@ -147,7 +147,7 @@ int ovlInit(char *szShortName)
 	DrvBgColRAM	    = Next; Next += 0x800;
 	RamEnd			= Next;
 
-	MSM5205Context = (UINT16*)Next; Next += 0x4000;
+	MSM5205Context = (INT16*)Next; Next += 0x4000;
 	DrvColPROM		= Next; Next += 0x00220;
 	DrvSoundROM	    = Next; Next += 0x0a000;
 //	DrvSoundROM	= (UINT8*)0x2F6000;
@@ -624,10 +624,9 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	SN76489Init(0, 18432000 / 6, 0);
 	SN76489Init(1, 18432000 / 6, 0);
 	SN76489Init(2, 18432000 / 6, 0);
-//	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 1, 0.50);
 	memset(MSM5205Context,0x00,0x4000);
 
-	MSM5205Init(0, MSM5205Context, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0, (float)0.50);
+	MSM5205Init(0, MSM5205Context, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0);
 	make_lut();
 	DrvDoReset();
 	return 0;
@@ -879,6 +878,8 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  INT32 DrvExit()
 {
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();	
 	SPR_InitSlaveSH();
 	CZetExit2();
 
@@ -886,14 +887,16 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 
 	for(UINT32 i=0;i<4;i++)
 	{
+		PCM_Task(pcm4[i]); 
 		PCM_MeStop(pcm4[i]);
-		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+//		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
 
 	MemEnd = AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
 	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvColPROM = DrvMainROM = NULL;
 	DrvSoundROM = DrvFetch = CZ80Context = is_fg_dirty = NULL;
-	MSM5205Context = map_offset_lut = charaddr_lut = NULL;
+	map_offset_lut = charaddr_lut = NULL;
+	MSM5205Context = NULL;	
 
 	free (AllMem);
 	AllMem = NULL;
@@ -1012,7 +1015,7 @@ static void Set4PCM()
 		PCM_SetInfo(pcm4[i], &info[i]);
 		PCM_ChangePcmPara(pcm4[i]);
 
-		PCM_MeSetLoop(pcm4[i], 0);
+//		PCM_MeSetLoop(pcm4[i], 0);
 		PCM_Start(pcm4[i]);
 	}
 }

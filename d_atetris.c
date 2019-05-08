@@ -562,7 +562,7 @@ void initLayers()
 
 	SaturnInitMem();
 	int nLen = MemEnd - (UINT8 *)0;
-	SaturnMem = (UINT8 *)malloc(nLen); 
+	SaturnMem = (UINT8 *)malloc(MALLOC_MAX); 
 	SaturnInitMem();
 	make_lut();
 //	spriteCache =(UINT16*)malloc(0x20000*sizeof(UINT16));

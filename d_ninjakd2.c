@@ -511,7 +511,7 @@ int ovlInit(char *szShortName)
 
 	DrvZ80ROM0				= Next; Next += 0x050000;
 //	DrvZ80ROM1				= Next; Next += 0x020000;
-	DrvGfxROM4Data1		= Next; Next += 0x05A000;
+	DrvGfxROM4Data1		= Next; Next += 0x060000;
 
 	DrvGfxROM0	 	= (UINT8 *)cache;// fg //Next; Next += 0x010000;
 	DrvGfxROM1		= (UINT8 *)(ss_vram+0x1100); // sprites //(UINT8*)cache+0x010000;//Next; Next += 0x080000;
@@ -661,7 +661,7 @@ int ovlInit(char *szShortName)
 		if (BurnLoadRom(tmp + 0x40000, 29, 1)) return 1;
 		if (BurnLoadRom(tmp + 0x50000, 30, 1)) return 1;
 
-		DrvGfxDecode((UINT8*)tmp, 0x5A000, 3);
+		DrvGfxDecode((UINT8*)tmp, 0x60000, 3);
 
 		for (UINT32 i=0;i<0x5A000;i++ )
 		{

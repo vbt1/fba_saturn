@@ -1,6 +1,10 @@
 #ifndef _OVL_H_
 #define _OVL_H_
-#define MALLOC_MAX 0xAA000
+#define OVLADDR 0x060DA000
+#define MAINEND 0x06022000
+#define MALLOC_MAX  OVLADDR-MAINEND-1600 //0x30000 //0x060FFC00-0x060CC000
+#define LOWADDR 0x00200000
+
 //extern Uint32   _bstart, _bend;
 extern Uint32 *shared;
 //extern struct BurnDriver* pDriver[];

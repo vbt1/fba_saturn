@@ -33,16 +33,6 @@ int ovlInit(char *szShortName)
 	ss_reg          = (SclNorscl *)SS_REG;
 }
 
-/*static*/ inline void NewsClearOpposites(unsigned char* nJoystickInputs)
-{
-	if ((*nJoystickInputs & 0x0c) == 0x0c) {
-		*nJoystickInputs &= ~0x0c;
-	}
-	if ((*nJoystickInputs & 0x30) == 0x30) {
-		*nJoystickInputs &= ~0x30;
-	}
-}
-
 /*static*/ void NewsMakeInputs()
 {
 	// Reset Inputs
@@ -54,7 +44,12 @@ int ovlInit(char *szShortName)
 	}
 
 	// Clear Opposites
-	NewsClearOpposites(&NewsInput[0]);
+	if ((NewsInput[0] & 0x0c) == 0x0c) {
+		NewsInput[0] &= ~0x0c;
+	}
+	if ((NewsInput[0] & 0x30) == 0x30) {
+		NewsInput[0] &= ~0x30;
+	}	
 }
 
 // Misc Driver Functions and Memory Handlers
@@ -185,21 +180,21 @@ int ovlInit(char *szShortName)
 {
 	unsigned char *Next; Next = Mem;
 
-	NewsRom              = Next; Next += 0x10000;
-//	MSM6295ROM           = Next; Next += 0x40000;
+	NewsRom			= Next; Next += 0x10000;
+//	MSM6295ROM		= Next; Next += 0x40000;
 
-	NewsRam                 = Next; Next += 0x02000;
-	RamStart					= Next-0x8000;
-	NewsFgVideoRam     = Next; Next += 0x00800;
-	NewsBgVideoRam     = Next; Next += 0x00800;
-	NewsPaletteRam       = Next; Next += 0x00200;
-	CZ80Context				= Next; Next += sizeof(cz80_struc);
-	pBuffer						= (int *)Next; Next += nBurnSoundRate * sizeof(int);
-	cram_lut					= (UINT16*)Next; Next += (4096*2);
-	map_offset_lut			= (UINT16*)Next; Next += (0x400*2);
-	bg_dirtybuffer			= Next; Next += 1024;
-	fg_dirtybuffer				= Next; Next += 1024;
-
+	NewsRam			= Next; Next += 0x02000;
+	RamStart		= Next-0x8000;
+	NewsFgVideoRam	= Next; Next += 0x00800;
+	NewsBgVideoRam	= Next; Next += 0x00800;
+	NewsPaletteRam	= Next; Next += 0x00200;
+	CZ80Context		= Next; Next += sizeof(cz80_struc);
+	pBuffer			= (int *)Next; Next += nBurnSoundRate * sizeof(int);
+	cram_lut		= (UINT16*)Next; Next += (4096*2);
+	map_offset_lut	= (UINT16*)Next; Next += (0x400*2);
+	bg_dirtybuffer	= Next; Next += 1024;
+	fg_dirtybuffer	= Next; Next += 1024;
+	MSM6295Context	= (int *)Next; Next += 4 * 0x1000 * sizeof(int);
 	MemEnd = Next;
 
 	return 0;
@@ -299,7 +294,7 @@ int ovlInit(char *szShortName)
 	z80_end_memmap();   
 #endif
 	// Setup the OKIM6295 emulation
-	MSM6295Init(0, 8000, 100, 0);
+	MSM6295Init(0, 8000, 100, 0, MSM6295Context);
 	// Reset the driver
 	NewsDoReset();
 
@@ -409,7 +404,7 @@ int ovlInit(char *szShortName)
 	nSoundBufferPos=0;
 	PCM_Task(pcm);
 	MSM6295ROM = NULL;
-
+	MSM6295Context = NULL;
 	CZ80Context	= MemEnd = RamStart = NewsRom = NewsRam = NULL;
 	NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
 	bg_dirtybuffer = fg_dirtybuffer = NULL;

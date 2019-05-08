@@ -10,16 +10,16 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile
 #CCFLAGS =  -mhitachi -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
-CCFLAGS2 = -m2 -Os -flto-report -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I.
+CCFLAGS2 = -m2 -Os -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I.
 #CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O0 -fomit-frame-pointer -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -m2 -mrenesas  -std=gnu99 -Wfatal-errors -Os -D_SH -DMODEL_S -c
 # pour asm 
 #CCOVLFLAGS = -S -fverbose-asm -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
-CCOVLFLAGS = -m2 -flto-report -fuse-linker-plugin -O2 -flto -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
+CCOVLFLAGS = -m2 -O2 -fuse-linker-plugin -flto -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
 #LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles  -nostdlib
-LDCMNFLAGS = -m2 -O2 -Xlinker -flto-report -Xlinker -n -Xlinker -flto -Xlinker
+LDCMNFLAGS = -m2 -O2 -Xlinker -n -Xlinker -flto -Xlinker
 
 TARGET    = root/sl.coff
 TARGET1  = root/sl.bin

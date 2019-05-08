@@ -933,7 +933,7 @@ System1ScrollXRam = System1BgCollisionRam = NULL;
 System1SprCollisionRam = NULL;
 System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
 /*System1Tiles =*/ SpriteOnScreenMap = NULL;
-System1Fetch1 = /*System1MC8123Key =*/ NULL;
+System1Fetch1 = System1MC8123Key = NULL;
 System1ScrollX = System1ScrollY = NULL;
 
 remap8to16_lut = NULL;

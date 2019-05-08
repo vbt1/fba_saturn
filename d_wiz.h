@@ -4,6 +4,7 @@
 #include "burnint.h"
 #include "saturn/ovl.h"
 #include "snd/ay8910.h"
+#include "raze/raze.h"
 
 #define nBurnSoundLen 128
 
@@ -18,6 +19,7 @@ UINT16 *map_offset_lut = NULL;
 /*static*/ INT32  DrvExit();
 /*static*/ INT32  DrvFrame();
 ///*static*/ INT32  DrvDraw();
+void cleanSprites();
 void dummy();
 
 /*static*/ void make_lut_r(int rotated);

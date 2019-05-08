@@ -37,6 +37,7 @@
 /*static*/ UINT16 *map_offset_lut = NULL;
 /*static*/ UINT16 *ofst_lut = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
+/*static*/ UINT8 *NamcoContext = NULL;
 
 /*static*/ UINT8 DrvReset = 0;
 /*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};

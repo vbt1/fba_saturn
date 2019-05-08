@@ -13,7 +13,7 @@
 #include "d_sys2.h"
 #include "d_sys1_common.c"
 
-UINT8 System1MC8123Key[0x2000];
+//UINT8 System1MC8123Key[0x2000];
 
 int ovlInit(char *szShortName)
 {
@@ -420,7 +420,6 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
-//	if ((SpriteOnScreenMap = (UINT8 *)malloc(256 * 256)) == NULL) {return 1;}
 	memset(Mem, 0, nLen);
 	MemIndex();
 
@@ -653,7 +652,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	System1BankedRom = 1;
 
 	DecodeFunction = wbml_decode;
-
+	System1MC8123Key = (UINT8*)0x002FC000;
 	BurnLoadRom(System1MC8123Key, 15, 1);
 	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
 	CommonWbmlInit();

@@ -79,7 +79,7 @@ void *memset4_fast(void *, long, size_t);
 /*static*/ UINT8 *System1Sprites         = NULL;
 /*static*/ UINT8 *SpriteOnScreenMap      = NULL;
 /*static*/ UINT8 *System1Fetch1          = NULL;
-/*static*/ //UINT8 *System1MC8123Key       = NULL;
+/*static*/ UINT8 *System1MC8123Key       = NULL;
 /*static*/ UINT8  *System1ScrollX = NULL;
 /*static*/ UINT8  *System1ScrollY = NULL;
 

@@ -1,10 +1,10 @@
 #include "saturn.h"
 
 //#include "sc_saturn.h"
-//#define HEAP_WALK 1
+#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR 0x060CC000
+#define OVLADDR 0x060DA000
 #define OVLAEND 0x060FF000
 #define SIZEMAX  OVLAEND-OVLAEND //0x30000 //0x060FFC00-0x060CC000
 #define LOWADDR 0x00200000
@@ -1623,12 +1623,11 @@ static void run_fba_emulator()
 				Frame();
 	 
 				SCL_SetLineParamNBG0(&lp);
-//				SCL_SetLineParamNBG1(&lp);
 				_spr2_transfercommand();
 				frame_x++;
 
-				 //if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 		else
@@ -1640,8 +1639,8 @@ static void run_fba_emulator()
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 	}

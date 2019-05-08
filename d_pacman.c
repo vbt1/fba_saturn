@@ -371,6 +371,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 
 	RamEnd			= Next;
 	CZ80Context		= Next; Next += sizeof(cz80_struc);
+	NamcoContext	= Next; Next += sizeof(*chip);
 	bg_dirtybuffer	= Next; Next += 0x400 * sizeof(UINT8);
 	map_offset_lut	= Next; Next += 0x400 * sizeof(UINT16);
 	ofst_lut				= Next; Next += 0x400 * sizeof(UINT16);
@@ -463,7 +464,7 @@ UINT8 __fastcall pengo_read(UINT16 a)
 	CZetClose();
 
 
-	NamcoSoundInit(18432000 / 6 / 32, 3);
+	NamcoSoundInit(18432000 / 6 / 32, 3, NamcoContext);
 	DrvDoReset(1);
 
 	return 0;
@@ -585,7 +586,7 @@ void DrvInitSaturn()
 //	signed short *nSoundBuffer		= (signed short *)0x25a20000;
 
 
-	CZ80Context = DrvZ80ROM = DrvQROM = DrvColPROM = NamcoSoundProm = NULL;
+	NamcoContext = CZ80Context = DrvZ80ROM = DrvQROM = DrvColPROM = NamcoSoundProm = NULL;
 	AllRam = DrvZ80RAM = DrvSprRAM = DrvSprRAM2 = NULL;
 	DrvColRAM= DrvVidRAM = RamEnd = NULL;
 	PengoStart = bg_dirtybuffer = MemEnd = NULL;

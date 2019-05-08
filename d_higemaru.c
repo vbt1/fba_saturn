@@ -423,7 +423,7 @@ for (i = 0; i < 0x80; i+=4)
 	return 0;
 }
 
-/*static*/  inline void DrvDrawSprites()
+/*static*/  void DrvDrawSprites()
 {
 	 // sprites
 	for (int offs = 0x170; offs >= 0; offs -= 16)

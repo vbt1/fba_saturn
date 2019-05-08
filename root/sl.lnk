@@ -68,7 +68,7 @@ SECTIONS {
 		_end = .;
  	} > ram
 	
-	.overlay 0x060CC000:
+	.overlay 0x060DA000:
         {
                 _overlaystart = .;
         } > ram

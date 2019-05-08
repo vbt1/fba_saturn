@@ -672,7 +672,7 @@ static void astrofl_decode(void)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ inline void DrvClearOpposites(UINT8* nJoystickInputs)
+/*static*/  void DrvClearOpposites(UINT8* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x03) == 0x03) {
 		*nJoystickInputs &= ~0x03;
@@ -682,7 +682,7 @@ static void astrofl_decode(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ inline void DrvMakeInputs()
+/*static*/  void DrvMakeInputs()
 {
 	// Reset Inputs
 	DrvInput[0] = DrvInput[1] = DrvInput[2] = DrvInput[3] = DrvInput[4] = 0x00;

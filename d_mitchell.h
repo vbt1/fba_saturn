@@ -103,20 +103,21 @@ SFX sfx_spang[60] = {
 extern unsigned char* MSM6295ROM;
 extern int* pBuffer;
 
-/*static*/  unsigned char *Mem                 = NULL;
-/*static*/  unsigned char *MemEnd              = NULL;
-/*static*/  unsigned char *RamStart            = NULL;
-/*static*/  unsigned char *DrvZ80Rom           = NULL;
-/*static*/  unsigned char *DrvZ80Code          = NULL;
-/*static*/  unsigned char *DrvSoundRom         = NULL;
-/*static*/  unsigned char *DrvZ80Ram           = NULL;
-/*static*/  unsigned char *DrvPaletteRam       = NULL;
-/*static*/  unsigned char *DrvAttrRam          = NULL;
-/*static*/  unsigned char *DrvVideoRam         = NULL;
-/*static*/  unsigned char *DrvSpriteRam        = NULL;
+/*static*/  unsigned char *Mem				= NULL;
+/*static*/  unsigned char *MemEnd			= NULL;
+/*static*/  unsigned char *RamStart			= NULL;
+/*static*/  unsigned char *DrvZ80Rom		= NULL;
+/*static*/  unsigned char *DrvZ80Code		= NULL;
+/*static*/  unsigned char *DrvSoundRom		= NULL;
+/*static*/  unsigned char *DrvZ80Ram		= NULL;
+/*static*/  unsigned char *DrvPaletteRam	= NULL;
+/*static*/  unsigned char *DrvAttrRam		= NULL;
+/*static*/  unsigned char *DrvVideoRam		= NULL;
+/*static*/  unsigned char *DrvSpriteRam		= NULL;
 /*static*/  //unsigned char *DrvChars            = NULL;
 /*static*/  //unsigned char *DrvSprites          = NULL;
-/*static*/  UINT8 *CZ80Context = NULL;
+/*static*/  UINT8 *CZ80Context				= NULL;
+/*static*/  INT32 *MSM6295Context			= NULL;
 
 /*static*/  unsigned char DrvRomBank = 0;
 /*static*/  unsigned char DrvPaletteRamBank = 0;

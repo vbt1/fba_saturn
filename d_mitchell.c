@@ -98,25 +98,23 @@ int ovlInit(char *szShortName)
 /*static*/ int PangMemIndex()
 {
 	UINT8 *Next; Next = Mem;
-	DrvZ80Rom				= Next; Next += 0x50000;
-	DrvZ80Code				= (unsigned char *)0x00200000;//Next; Next += 0x50000;
+	DrvZ80Rom			= Next; Next += 0x50000;
+	DrvZ80Code			= (unsigned char *)0x00200000;//Next; Next += 0x50000;
 	DrvSoundRom			= (unsigned char *)0x00250000; //Next; Next += 0x20000;
-	DrvZ80Ram               = Next; Next += 0x02000;
-	DrvPaletteRam          = Next; Next += 0x01000;
-	DrvAttrRam               = Next; Next += 0x00800;
-	RamStart                  = Next-0xd000;
-	DrvVideoRam            = Next; Next += 0x01000;
-	DrvSpriteRam           = Next; Next += 0x01000;
+	DrvZ80Ram			= Next; Next += 0x02000;
+	DrvPaletteRam		= Next; Next += 0x01000;
+	DrvAttrRam			= Next; Next += 0x00800;
+	RamStart			= Next-0xd000;
+	DrvVideoRam			= Next; Next += 0x01000;
+	DrvSpriteRam		= Next; Next += 0x01000;
 
-	CZ80Context				= Next; Next += sizeof(cz80_struc)*2;
-	map_offset_lut			= Next; Next += 2048 * sizeof(UINT16);
-	charaddr_lut				= Next; Next += 2048 * sizeof(UINT16);
-	map_lut						= Next; Next += 256 * sizeof(UINT16);
-	cram_lut					= Next; Next += 4096 * sizeof(UINT16);
-	pBuffer						= (int *)Next; Next += nBurnSoundRate * sizeof(int);
-	//	RamStart               = Next;
-
-
+	CZ80Context			= Next; Next += sizeof(cz80_struc)*2;
+	map_offset_lut		= Next; Next += 2048 * sizeof(UINT16);
+	charaddr_lut		= Next; Next += 2048 * sizeof(UINT16);
+	map_lut				= Next; Next += 256 * sizeof(UINT16);
+	cram_lut			= Next; Next += 4096 * sizeof(UINT16);
+	pBuffer				= (int *)Next; Next += nBurnSoundRate * sizeof(int);
+	MSM6295Context		= (int *)Next; Next += 4 * 0x1000 * sizeof(int);
 // allocation de 808960 octets, 790ko
 //	RamEnd                  = Next;
 	MemEnd                 = Next;
@@ -554,7 +552,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 
 //	MSM6295Init(0, 1000000 / 132, 10.0, 1);
 //	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
-	MSM6295Init(0, 1000000 / 132, 10.0, 0);// à remettre
+	MSM6295Init(0, 1000000 / 132, 10.0, 0, MSM6295Context);// à remettre
 //	MSM6295Init(0, 8000, 100, 0);
 	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
 
@@ -643,7 +641,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	PangMemIndex();
 
 	nLen = MemEnd - (unsigned char *)0;
-	if ((Mem = (unsigned char *)malloc(nLen)) == NULL) 
+	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
 	{
 //		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
@@ -839,6 +837,7 @@ static void dummy(void)
 	PCM_DestroyStmHandle(pcmStream);
 	stmClose(stm);
 
+	MSM6295Context = NULL;
 	CZ80Context = MemEnd = DrvZ80Rom = DrvZ80Code = DrvSoundRom = DrvZ80Ram = NULL;
 	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam = MSM6295ROM = NULL;
 	charaddr_lut = map_offset_lut = map_lut = cram_lut = NULL;

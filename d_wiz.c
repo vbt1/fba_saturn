@@ -519,7 +519,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	AllMem = NULL;
 	MemIndex();
 	UINT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL)
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
 	{
 		return 1;
 	}

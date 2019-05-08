@@ -22,6 +22,7 @@ int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength);
 #ifdef CACHE2
 /*static*/ unsigned char 	*bg_dirtybuffer = NULL;
 /*static*/ unsigned char 	*fg_dirtybuffer = NULL;
+/*static*/ int	 			*MSM6295Context	= NULL;
 #endif
 extern unsigned char* MSM6295ROM;
 extern int* pBuffer;
