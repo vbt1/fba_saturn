@@ -174,7 +174,7 @@ void freekick_draw_sprite(INT32 offs)
 	}
 }
 
-/*static*/ INT32 DrvDraw()
+/*static*/ void DrvDraw()
 {
 	// Draw tiles
 	for (INT32 offs = 0x3ff; offs >= 0; offs--)
@@ -191,7 +191,6 @@ void freekick_draw_sprite(INT32 offs)
 	{
 		DrawSprite(offs);
 	}
-	return 0;
 }
 
 /*static*/ void __fastcall freekick_write(UINT16 address, UINT8 data)
@@ -650,9 +649,8 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	DrawSprite = freekick_draw_sprite;
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	LoadRoms();
@@ -707,12 +705,11 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) 
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
 	return 1;
 	}
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	LoadRoms();
 
@@ -940,13 +937,14 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	MC8123Key = NULL;
 	map_offset_lut = NULL;
 	DrawSprite = NULL;
+
 	free (AllMem);
 	AllMem = NULL;
 
 	cleanDATA();
 	cleanBSS();
 
-	nSoundBufferPos = 0;
+//	sprite_number = nSoundBufferPos = 0;
 
 	return 0;
 }

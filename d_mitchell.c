@@ -567,18 +567,17 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int PangInit()
 {
-	int nRet = 0, nLen;
+	int nRet = 0;
 	DrvInitSaturn();
 	sfx_list = &sfx_pang[0];
 	PangMemIndex();
 
-	nLen = MemEnd - (unsigned char *)0;
 	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
 	{
 //		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	PangMemIndex();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut   ",80,130);	
 	make_lut();
@@ -633,20 +632,19 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 
 /*static*/ int SpangInit()
 {
-	int nRet = 0, nLen;
+	int nRet = 0;
 	DrvInitSaturn();
 	sfx_list = &sfx_spang[0];
 	
 //	Mem = NULL;
 	PangMemIndex();
 
-	nLen = MemEnd - (unsigned char *)0;
 	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
 	{
 //		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	PangMemIndex();
 	make_lut();
 

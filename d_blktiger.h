@@ -29,7 +29,7 @@ void dummy();
 unsigned char current_pcm=255;
 //char *itoa(int i);
 
-PCM_INFO pcm_info[14];
+PCM_INFO pcm_info[8];
 
 SFX sfx_blktiger[68]=
 {

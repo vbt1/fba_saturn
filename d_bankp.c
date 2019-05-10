@@ -39,7 +39,7 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 
-static INT32 DrvChInit()
+/*static*/ INT32 DrvChInit()
 {
 	DrvInit();
 	ss_reg->n2_move_y =  0;//(0<<16) ;
@@ -57,23 +57,21 @@ static INT32 MemIndex()
 	Gfx1 = (UINT8 *)(Gfx0+0x20000);
 //	Gfx1 = Next; Next += 0x20000;
 	Prom = Next; Next += 0x300;
-	Palette = (int *)Next; Next += 0x800;
+	Palette = (UINT32 *)Next; Next += 0x100 * sizeof(UINT32);
 	map_offset_lut	= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
 	MemEnd         = Next;
 
 	return 0;
 }
 
-static INT32 DrvInit()
+/*static*/ INT32 DrvInit()
 {
 //	flipscreen = 0;
 	nSoundBufferPos=0;
 	DrvInitSaturn();
 
-	int nLen;
 	Mem = NULL;
 	MemIndex();
-	nLen = MemEnd - (unsigned char *)0;
 
 	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
 	{
@@ -84,8 +82,7 @@ static INT32 DrvInit()
 
 	make_lut();
 
-	unsigned int i;
-	for (i = 0; i < 4; i++)
+	for (UINT32 i = 0; i < 4; i++)
 	{
 		if (BurnLoadRom(Rom + i * 0x4000, i +  0, 1)) return 1;
 	}
@@ -93,7 +90,7 @@ static INT32 DrvInit()
 	if (BurnLoadRom(Gfx0 + 0x2000, 5, 1)) return 1;
 
 	
-	for (i = 0; i < 6; i++)
+	for (UINT32 i = 0; i < 6; i++)
 	{
 		if (BurnLoadRom(Gfx1 + i * 0x2000, i +  6, 1)) return 1;
 	}
@@ -207,7 +204,7 @@ static INT32 DrvInit()
 	}
 }
 #else
-static void __fastcall bankp_write(unsigned short address, unsigned char data)
+/*static*/ void __fastcall bankp_write(unsigned short address, unsigned char data)
 {
 	if (address >= 0xf000 && address <= 0xf7ff) 
 	{
@@ -234,7 +231,7 @@ static void __fastcall bankp_write(unsigned short address, unsigned char data)
 #endif
 #endif
 
-static UINT8 __fastcall bankp_in(UINT16 address)
+/*static*/ UINT8 __fastcall bankp_in(UINT16 address)
 {
 	UINT8 ret = 0;
 
@@ -276,7 +273,7 @@ static UINT8 __fastcall bankp_in(UINT16 address)
 	return 0;
 }
 
-static void __fastcall bankp_out(UINT16 address, UINT8 data)
+/*static*/ void __fastcall bankp_out(UINT16 address, UINT8 data)
 {
 	switch (address & 0xff)
 	{
@@ -325,10 +322,8 @@ static void __fastcall bankp_out(UINT16 address, UINT8 data)
 	}
 }
 
-static INT32 DrvDoReset()
+/*static*/ void DrvDoReset()
 {
-	DrvReset = 0;
-
 	memset (Mem + 0xe000, 0, 0x2000);
 #ifdef RAZE
 //	z80_reset();
@@ -340,10 +335,10 @@ static INT32 DrvDoReset()
 	/*scroll_x = 0, */priority = 0;// flipscreen = 0;
 	interrupt_enable = 0;
 
-	return 0;
+//	return 0;
 }
 
-static INT32 bankp_palette_init()
+/*static*/ INT32 bankp_palette_init()
 {
 	unsigned int t_pal[32];
 	unsigned int i;
@@ -369,13 +364,13 @@ static INT32 bankp_palette_init()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int bankp_gfx_decode()
+/*static*/ int bankp_gfx_decode()
 {
-	 int Char1PlaneOffsets[2] = { 0x00, 0x04 };
-	 int Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
-	 int Char1XOffsets[8]     = { 0x43, 0x42, 0x41, 0x40, 0x03, 0x02, 0x01, 0x00 };
-	 int Char2XOffsets[8]     = { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
-	 int CharYOffsets[8]      = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
+	 UINT32 Char1PlaneOffsets[2] = { 0x00, 0x04 };
+	 UINT32 Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
+	 UINT32 Char1XOffsets[8]     = { 0x43, 0x42, 0x41, 0x40, 0x03, 0x02, 0x01, 0x00 };
+	 UINT32 Char2XOffsets[8]     = { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
+	 UINT32 CharYOffsets[8]      = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
 
 	GfxDecode4Bpp(0x400, 2, 8, 8, Char1PlaneOffsets, Char1XOffsets, CharYOffsets, 0x080, Gfx0, cache+0x10000);
 	GfxDecode4Bpp(0x800, 3, 8, 8, Char2PlaneOffsets, Char2XOffsets, CharYOffsets, 0x040, Gfx1, cache);
@@ -384,18 +379,18 @@ static int bankp_gfx_decode()
 		rotate_tile(0x400,0,cache+0x10000);
 		rotate_tile(0x800,0,cache);
 	}
-	unsigned int i;
+
 //nbg2  
-	for (i=0x10000;i<0x20000;i++ )
+	for (UINT32 i=0x10000;i<0x20000;i++ )
 		cache[i+0x20000] = cache[i]+0x44;
  //nbg1
-	for (i=0x00000;i<0x10000;i++ )
+	for (UINT32 i=0x00000;i<0x10000;i++ )
 		cache[i+0x50000] = cache[i]+0x88;
 
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initLayers()
+/*static*/ void initLayers()
 {
     Uint16	CycleTb[]={
 		0x1f56, 0xffff, //A0
@@ -436,7 +431,7 @@ static void initLayers()
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initPosition()
+/*static*/ void initPosition()
 {
 	SCL_Open();
 	ss_reg->n1_move_y =  16 <<16;
@@ -444,7 +439,7 @@ static void initPosition()
 	SCL_Close();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initColors()
+/*static*/ void initColors()
 {
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
@@ -453,12 +448,11 @@ static void initColors()
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut(void)
+/*static*/ void make_lut(void)
 {
-	unsigned int i,delta=0;
-	int sx, sy;
+	UINT32 sx, sy;
 
-	for (i = 0; i < 0x400;i++) 
+	for (UINT32 i = 0; i < 0x400;i++) 
 	{
 		if(!flipscreen)
 		{
@@ -475,7 +469,7 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvInitSaturn()
+/*static*/ void DrvInitSaturn()
 {
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
 	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
@@ -506,7 +500,6 @@ static void DrvInitSaturn()
 /*static*/ INT32 DrvBpExit()
 {
 //	InpExit();
-		nSoundBufferPos=0;
 #ifdef RAZE
 	z80_stop_emulating();
 	z80_add_read(0x0000, 0xffff, 1, (void *)NULL);
@@ -520,23 +513,28 @@ static void DrvInitSaturn()
 	CZetExit2();
 	CZ80Context = NULL;
 #endif	
-//	SN76496Exit();
+//	SN76489Init(0, 0, 0);
+//	SN76489Init(1, 0, 0);
+//	SN76489Init(2, 0, 0);
 
 	MemEnd = Rom  = 	Gfx0 = Gfx1 = Prom = NULL;
 	Palette = NULL;
-	 map_offset_lut = /*bg_dirtybuffer = fg_dirtybuffer =*/ NULL;
+	map_offset_lut = /*bg_dirtybuffer = fg_dirtybuffer =*/ NULL;
 
 	free(Mem);
 	Mem = NULL;
-
+//DrvDips=priority=flipscreen=interrupt_enable=0;
 	cleanDATA();
 	cleanBSS();
+
+	nSoundBufferPos=0;
+		
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void 	 bg_line(UINT16 offs,UINT16 flipx)
 {
-	INT32 code, color, x;
+	UINT32 code, color, x;
 	code = Rom[0xf800+offs] | ((Rom[0xfc00+offs] & 7) << 8);
 	color = (Rom[0xfc00+offs] >> 4) & 0x0f;
 
@@ -551,7 +549,7 @@ static void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void 	 fg_line(UINT16 offs,UINT16 flipx)
 {
-	INT32 code, color, x;
+	UINT32 code, color, x;
 	code = Rom[0xf000+offs] | ((Rom[0xf400+offs] & 3) << 8);
 	color = (Rom[0xf400+offs] >> 3) & 0x1f;
 
@@ -566,9 +564,6 @@ static void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvFrame()
 {
-	if (DrvReset) {
-		DrvDoReset();
-	}
 #ifdef RAZE
 	z80_emulate(2578000 / 60);
 //z80_emulate(3867120 / 60);

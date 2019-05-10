@@ -33,6 +33,7 @@ write_func p[36] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 /*static*/ UINT8 *ss_vram = NULL;
 /*static*/ UINT16 *spriteCache = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
+/*static*/ UINT32 *map_cache = NULL;
 typedef int bool;
 
 typedef struct { UINT8 x, y, width, yend } sprite_collision; 

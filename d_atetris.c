@@ -213,9 +213,8 @@ int ovlInit(char *szShortName)
 {
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
 	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	{
@@ -561,13 +560,9 @@ void initLayers()
 //	ss_scl      = (Fixed32 *)SS_SCL;
 
 	SaturnInitMem();
-	int nLen = MemEnd - (UINT8 *)0;
 	SaturnMem = (UINT8 *)malloc(MALLOC_MAX); 
 	SaturnInitMem();
 	make_lut();
-//	spriteCache =(UINT16*)malloc(0x20000*sizeof(UINT16));
-//	memset(spriteCache,0xFF,0x20000*sizeof(UINT16));
-//	memset(&ss_vram[0x1100],0x00,0x7EF00);
 	
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(5);

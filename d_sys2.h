@@ -25,6 +25,8 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ int System1Frame();
 /*static*/ int WbmlInit();
 /*static*/ int WbmljbInit();
+/*static*/ void initLayers2();
+/*static*/ void initColors2();
 
 /*==============================================================================================
 Input Definitions

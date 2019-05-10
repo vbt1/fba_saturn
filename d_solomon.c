@@ -302,7 +302,7 @@ void __fastcall SolomonPortWrite2(UINT16 a, UINT8 d)
 INT32 SolomonInit()
 {
 	DrvInitSaturn();
-	INT32 nRet = 0, nLen;
+	INT32 nRet = 0;
 
 	UINT32 TilePlaneOffsets[4]   = { 0, 1, 2, 3 };
 	UINT32 TileXOffsets[8]       = { 0, 4, 8, 12, 16, 20, 24, 28 };
@@ -316,9 +316,8 @@ INT32 SolomonInit()
 	SS_Z80CY = 0;
 	Mem = NULL;
 	SolomonMemIndex();
-	nLen = MemEnd - (UINT8 *)0;
 	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	SolomonMemIndex();
 	make_lut();
 

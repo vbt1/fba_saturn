@@ -207,19 +207,18 @@ int ovlInit(char *szShortName)
  UINT32 TileXOffsets[8]       = { 0, 4, 8, 12, 16, 20, 24, 28 };
  UINT32 TileYOffsets[8]       = { 0, 32, 64, 96, 128, 160, 192, 224 };
 
-	int nRet = 0, nLen;
+	int nRet = 0;
 	DrvInitSaturn();
 
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-	nLen = MemEnd - (unsigned char *)0;
+	MemEnd - (unsigned char *)0;
 	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
 	{	
 		return 1;
 	}
-
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 #ifdef CACHE2
 	memset(bg_dirtybuffer,1,1024);

@@ -394,8 +394,7 @@ int ovlInit(char *szShortName)
 
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	UINT8 *ss_vram			 = (UINT8 *)SS_SPRAM;
+	UINT8 *ss_vram		 = (UINT8 *)SS_SPRAM;
 	UINT8 *DrvGfxROM1	 = (UINT8 *)(SS_CACHE + 0x4000);
 	UINT8 *DrvGfxROM2	 = (UINT8 *)(ss_vram + 0x1100);
 
@@ -404,7 +403,7 @@ int ovlInit(char *szShortName)
 		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc failed   ",24,30);
 		return 1;
 	}
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;

@@ -13,12 +13,12 @@
 #include "raze\raze.h"
 #endif
 
-static int DrvInit();
-static int DrvExit();
-static int DrvFrame();
-static int DrvDoReset();
-static UINT8 update_input1(void);
-static UINT8 __fastcall sg1000_read_port(unsigned short port);
+/*static*/ int DrvInit();
+/*static*/ int DrvExit();
+/*static*/ int DrvFrame();
+/*static*/ int DrvDoReset();
+/*static*/ UINT8 update_input1(void);
+/*static*/ UINT8 __fastcall sg1000_read_port(unsigned short port);
 void __fastcall sg1000_write_port(unsigned short port, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_0000(UINT16 address);
 static void __fastcall sg1000_write(UINT16 address, UINT8 data);
@@ -34,11 +34,11 @@ static void __fastcall sg1000_write(UINT16 address, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_write_ext2(UINT16 address, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_ext2(UINT16 address);
 #endif
-static void vdp_interrupt(int state);
-static void sg1000_ppi8255_portC_write(UINT8 data);
-static UINT8 sg1000_ppi8255_portA_read();
-static UINT8 sg1000_ppi8255_portB_read();
-static UINT8 sg1000_ppi8255_portC_read();
+/*static*/ void vdp_interrupt(int state);
+/*static*/ void sg1000_ppi8255_portC_write(UINT8 data);
+/*static*/ UINT8 sg1000_ppi8255_portA_read();
+/*static*/ UINT8 sg1000_ppi8255_portB_read();
+/*static*/ UINT8 sg1000_ppi8255_portC_read();
 
 extern int file_id;
 extern int file_max;
@@ -61,7 +61,7 @@ typedef	struct	SysPort	{
 	SysPeripheral	*peripheral;
 } SysPort;
 
-static SysPort	*__port;
+/*static*/ SysPort	*__port;
 
 typedef	struct	SysDevice	{
 	UINT8	type;

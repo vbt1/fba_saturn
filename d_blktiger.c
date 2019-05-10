@@ -630,7 +630,6 @@ static INT32 DrvInit()
 	AllMem = NULL;
 
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
 #if  1
 	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
 	{
@@ -638,7 +637,7 @@ static INT32 DrvInit()
 		return 1;
 	}
 #endif
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	make_lut();
 	{
@@ -738,11 +737,11 @@ static INT32 DrvExit()
 #ifdef CZET
 	CZetExit2();
 #endif
-	for(unsigned int i=0;i<14;i++)
+	for(unsigned int i=0;i<8;i++)
 	{
 		PCM_MeStop(pcm14[i]);
 	}
-	memset(SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*14);
+	memset(SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);
 	STM_ResetTrBuf(stm);
 	PCM_DestroyStmHandle(pcm14[0]);
 	stmClose(stm);

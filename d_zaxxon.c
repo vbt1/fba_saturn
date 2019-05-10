@@ -792,8 +792,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 /*static*/INT32 DrvInit()
 {
 	DrvInitSaturn();
-	INT32 nLen = MemEnd - AllRam;
-	memset(AllMem, 0, nLen);
+//	memset(AllMem, 0, MALLOC_MAX);
 	memset(bitmap,	 0x00,0xE000);
  	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
 
@@ -1525,7 +1524,6 @@ void DrvInitSaturn()
 	initPosition();
 	initColors();	
 	SaturnInitMem();
-	int nLen = MemEnd - (UINT8 *)0;
 
 	SaturnMem = (UINT8 *)malloc(MALLOC_MAX);
 	if(SaturnMem==NULL)
@@ -1533,14 +1531,14 @@ void DrvInitSaturn()
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc SaturnMem failed",4,50);
 		return 1;
 	}
-
+	memset(SaturnMem, 0, MALLOC_MAX);
 	SaturnInitMem();
 
 	for(unsigned int i = 0;i<240;i++)
 	{
 		srcxmask[i] = srcx_buffer + (256*i);
 	}
-	memset(CZ80Context,0x00,sizeof(cz80_struc));
+//	memset(CZ80Context,0x00,sizeof(cz80_struc));
 
 	make_lut();
 //3 nbg

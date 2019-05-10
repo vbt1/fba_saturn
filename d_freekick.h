@@ -14,7 +14,9 @@
 /*static*/ INT32 pbillrdInit();
 /*static*/ INT32 DrvExit();
 /*static*/ INT32 DrvFrame();
-/*static*/ INT32 DrvDraw();
+/*static*/ void DrvDraw();
+/*static*/ void DrvPaletteInit();
+/*static*/ void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target);
 
 /*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
@@ -37,8 +39,9 @@
 /*static*/ UINT8 *DrvColRAM = NULL;
 /*static*/ UINT8 *DrvColPROM = NULL;
 /*static*/ UINT8 *MC8123Key = NULL;
+/*static*/ UINT16 *map_offset_lut = NULL;
 typedef void (*RenderSprite)(INT32);
-/*static*/ RenderSprite DrawSprite;
+/*static*/ RenderSprite DrawSprite = NULL;
 
 /*static*/ UINT8 DrvZ80Bank0 = 0;
 /*static*/ UINT8 nmi_enable = 0;
@@ -50,10 +53,8 @@ typedef void (*RenderSprite)(INT32);
 /*static*/ UINT8 use_encrypted = 0;
 /*static*/ UINT8 countrunbmode = 0;
 /*static*/ UINT8 pbillrdmode = 0;
-/*static*/ UINT16 *map_offset_lut = NULL;
-UINT32 sprite_number = 3;
 
-/*static*/ void DrvPaletteInit();
+UINT32 sprite_number = 3;
 
 /*static*/ struct BurnInputInfo PbillrdInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 coin"},

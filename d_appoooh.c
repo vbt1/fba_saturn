@@ -718,12 +718,11 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	game_select = 1;
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
 	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
 	{
 		return 1;
 	}
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	if(DrvRobowresLoadRoms()) return 1;
@@ -744,13 +743,12 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	game_select = 0;
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
 
 	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
 	{
 		return 1;
 	}
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	if(DrvLoadRoms()) return 1;

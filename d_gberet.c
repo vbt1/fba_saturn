@@ -336,13 +336,10 @@ int ovlInit(char *szShortName)
 {
 	DrvInitSaturn();
 
-	int nLen;
 	Mem = NULL;
 	MemIndex();
-	nLen = MemEnd - (unsigned char *)0;
-
 	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 	if (GetRoms()) return 1;
 	/*if (game_type == 1) {

@@ -30,7 +30,7 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void	SetVblank2( void ){
+/*static*/ void	SetVblank2( void ){
 	int			imask;
 
 
@@ -47,7 +47,7 @@ static void	SetVblank2( void ){
 	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void set_memory_map(int mapper)
+/*static*/ void set_memory_map(int mapper)
 {
 
 #ifdef RAZE
@@ -125,7 +125,7 @@ static void set_memory_map(int mapper)
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void load_rom()
+/*static*/ void load_rom()
 {
 	int mapper = MAPPER_NONE;
 	memset (AllRam, 0, RamEnd - AllRam);
@@ -172,9 +172,8 @@ static void load_rom()
 	PCM_MeStart(pcm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static UINT8 update_input1(void)
+/*static*/ UINT8 update_input1(void)
 {
-	unsigned int i=0,k;
 	UINT8 temp = 0xFF;
 	SysDevice	*device;
 //	__port = PER_OpenPort();
@@ -191,7 +190,7 @@ static UINT8 update_input1(void)
 			load_rom();
 		}
 
-		for(i=10;i<12;i++)
+		for(UINT32 i=10;i<12;i++)
 		{
 			if((pltriggerE[0] & pad_asign[i])!=0)
 			{
@@ -252,7 +251,7 @@ static UINT8 update_input1(void)
 	}
 }
 
-static UINT8 __fastcall sg1000_read_port(unsigned short port)
+/*static*/ UINT8 __fastcall sg1000_read_port(unsigned short port)
 {
 	switch (port & 0xff)
 	{
@@ -280,16 +279,16 @@ static UINT8 __fastcall sg1000_read_port(unsigned short port)
 	return 0;
 }
 
-static UINT8 sg1000_ppi8255_portA_read() { return DrvInputs[0]; }
-static UINT8 sg1000_ppi8255_portB_read() { return DrvInputs[1]; }
-static UINT8 sg1000_ppi8255_portC_read() { return DrvDips[0]; }
+/*static*/ UINT8 sg1000_ppi8255_portA_read() { return DrvInputs[0]; }
+/*static*/ UINT8 sg1000_ppi8255_portB_read() { return DrvInputs[1]; }
+/*static*/ UINT8 sg1000_ppi8255_portC_read() { return DrvDips[0]; }
 
-static void sg1000_ppi8255_portC_write(UINT8 data)
+/*static*/ void sg1000_ppi8255_portC_write(UINT8 data)
 {
 	data &= 0x01; // coin counter
 }
 
-static void vdp_interrupt(int state)
+/*static*/ void vdp_interrupt(int state)
 {
 #ifdef RAZE
 	if(state)
@@ -301,7 +300,7 @@ static void vdp_interrupt(int state)
 #endif
 }
 
-static int DrvDoReset()
+/*static*/ int DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 
@@ -319,7 +318,7 @@ static int DrvDoReset()
 	return 0;
 }
 
-static int MemIndex()
+/*static*/ int MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
@@ -337,7 +336,7 @@ static int MemIndex()
 	return 0;
 }
 
-static void __fastcall sg1000_write(UINT16 address, UINT8 data)
+/*static*/ void __fastcall sg1000_write(UINT16 address, UINT8 data)
 {
 
 }
@@ -396,15 +395,13 @@ static void __fastcall sg1000_write(UINT16 address, UINT8 data)
 	return 0xff;
 }
 
-static int DrvInit()
+/*static*/ int DrvInit()
 {
 	DrvInitSaturn();
-
 	AllMem = NULL;
 	MemIndex();
-	int nLen = MemEnd - (UINT8 *)0;
 	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 //	memset(CZ80Context,0x00,0x1080);
 
@@ -426,7 +423,7 @@ static int DrvInit()
 	return 0;
 }
 
-static int DrvExit()
+/*static*/ int DrvExit()
 {
 	nBurnFunction = NULL;
 	wait_vblank();
@@ -447,22 +444,26 @@ static int DrvExit()
 #else
 	CZetExit2();
 #endif
-	ppi8255_exit();
 	TMS9928AExit();
-
+	ppi8255_exit();
+	SN76489AInit(0, 0, 0);	
+	
+//	memset(SOUND_BUFFER,0x00,0x20000);
+	
 	CZ80Context = TMSContext = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
-	__port = NULL;
+//	__port = NULL;
 	free (AllMem);
 	AllMem = NULL;
 
 	cleanDATA();
 	cleanBSS();
 
-	nSoundBufferPos = 0;
+	nSoundBufferPos=0;	
+
 	return 0;
 }
 
-static int DrvFrame()
+/*static*/ int DrvFrame()
 {
 	{ // Compile Inputs
 		memset (DrvInputs, 0xff, 2);
@@ -590,8 +591,6 @@ void initPosition(void)
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	file_id			= 2; // bubble bobble
-
-	int nLen = MemEnd - (UINT8 *)0;
 
 	ss_sprite[3].ax = 0;
 	ss_sprite[3].ay = 0;

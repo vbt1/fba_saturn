@@ -492,23 +492,22 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 {
 	DrvInitSaturn();
 
-	INT32 nRet = 0, nLen;
-/*static*/INT32 CharPlaneOffsets[4]         = { 0x80000, 0x80004, 0, 4 };
-/*static*/INT32 CharXOffsets[8]             = { 0, 1, 2, 3, 64, 65, 66, 67 };
-/*static*/INT32 CharYOffsets[8]             = { 0, 8, 16, 24, 32, 40, 48, 56 };
-/*static*/INT32 SpritePlaneOffsets[4]       = { 0x200000, 0x200004, 0, 4 };
-/*static*/INT32 SpriteXOffsets[16]          = { 0, 1, 2, 3, 128, 129, 130, 131, 256, 257, 258, 259, 384, 385, 386, 387 };
-/*static*/INT32 SpriteYOffsets[16]          = { 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120 };
-/*static*/INT32 BackTilePlaneOffsets[4]     = { 0, 2, 4, 6 };
-/*static*/INT32 BackTileXOffsets[32]        = { 1, 0, 9, 8, 17, 16, 25, 24, 33, 32, 41, 40, 49, 48, 57, 56, 65, 64, 73, 72, 81, 80, 89, 88, 97, 96, 105, 104, 113, 112, 121, 120 };
-/*static*/INT32 BackTileYOffsets[1]         = { 0 };
+	INT32 nRet = 0;
+/*static*/UINT32 CharPlaneOffsets[4]         = { 0x80000, 0x80004, 0, 4 };
+/*static*/UINT32 CharXOffsets[8]             = { 0, 1, 2, 3, 64, 65, 66, 67 };
+/*static*/UINT32 CharYOffsets[8]             = { 0, 8, 16, 24, 32, 40, 48, 56 };
+/*static*/UINT32 SpritePlaneOffsets[4]       = { 0x200000, 0x200004, 0, 4 };
+/*static*/UINT32 SpriteXOffsets[16]          = { 0, 1, 2, 3, 128, 129, 130, 131, 256, 257, 258, 259, 384, 385, 386, 387 };
+/*static*/UINT32 SpriteYOffsets[16]          = { 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120 };
+/*static*/UINT32 BackTilePlaneOffsets[4]     = { 0, 2, 4, 6 };
+/*static*/UINT32 BackTileXOffsets[32]        = { 1, 0, 9, 8, 17, 16, 25, 24, 33, 32, 41, 40, 49, 48, 57, 56, 65, 64, 73, 72, 81, 80, 89, 88, 97, 96, 105, 104, 113, 112, 121, 120 };
+/*static*/UINT32 BackTileYOffsets[1]         = { 0 };
 
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-	nLen = MemEnd - (UINT8 *)0;
 	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 	vbmap[0] = vb_buffer + (0x1000*0);

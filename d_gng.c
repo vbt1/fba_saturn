@@ -424,7 +424,7 @@ inline double DrvGetTime()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int DrvInit()
 {
-	int nRet = 0, nLen;
+	int nRet = 0;
 
 	DrvInitSaturn();
 
@@ -432,9 +432,8 @@ inline double DrvGetTime()
 	Mem = NULL;
 
 	MemIndex();
-	nLen = MemEnd - (unsigned char *)0;
 	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 	unsigned char *	DrvTempRom = (unsigned char *)0x00200000;

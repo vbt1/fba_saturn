@@ -740,9 +740,8 @@ static INT32 DrvInit()
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
 	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 	make_lut();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc                  ",10,70);

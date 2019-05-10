@@ -16,14 +16,47 @@
 
 #define nBurnSoundLen 128  // div par 2 car utilisation integer
 
-static void DrvFrame();
-static int DrvExit();
-static INT32 BasicDrvInit();
-static int DrvInit();
-static void DrvDoReset();
+/*static*/ void DrvFrame();
+/*static*/ int DrvExit();
+/*static*/ INT32 BasicDrvInit();
+/*static*/ int DrvInit();
+/*static*/ void DrvDoReset();
+void dummy();
 
 extern int file_id;
 extern int file_max;
+#ifdef RAZE
+#include "raze\raze.h"
+/*static*/ void __fastcall msx_write_konami4(UINT16 address, UINT8 data);
+/*static*/ void __fastcall msx_write_konami4scc(UINT16 address, UINT8 data);
+/*static*/ void __fastcall msx_write_scc(UINT16 address, UINT8 data);
+/*static*/ void __fastcall msx_write_scc2(UINT16 address, UINT8 data);
+/*static*/ void __fastcall msx_write_ascii8(UINT16 address, UINT8 data);
+#endif
+/*static*/ UINT8 msx_ppi8255_portB_read();
+/*static*/ void msx_ppi8255_portA_write(UINT8 data);
+/*static*/ void msx_ppi8255_portC_write(UINT8 data);
+/*static*/ UINT8 ay8910portAread(UINT32 offset);
+/*static*/ void ay8910portAwrite(UINT32 offset, UINT32 data);
+/*static*/ void ay8910portBwrite(UINT32 offset, UINT32 data);
+
+/*static*/ void InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot);
+/*static*/ void PageMap(INT32 CartSlot, const char *cMap); //("0:0:0:0:0:0:0:0")
+/*static*/ void MapMegaROM(UINT8 nSlot, UINT8 nPg0, UINT8 nPg1, UINT8 nPg2, UINT8 nPg3);
+
+/*static*/ void SetSlot(UINT8 nSlot);
+/*static*/ void setFetch(UINT32 I, UINT8 *ram);
+/*static*/ void vdp_interrupt(INT32 state);
+
+/*static*/ void __fastcall msx_write(UINT16 address, UINT8 data);
+
+/*static*/ UINT8 __fastcall msx_read_port(UINT16 port);
+/*static*/ void __fastcall msx_write_port(UINT16 port, UINT8 data);
+
+/*static*/ void updateSlaveSound();
+/*static*/ void updateSlaveSoundSCC();
+/*static*/ void Set8PCM();
+
 
 PcmHn 			pcm8[8];
 #define	PCM_ADDR	((void*)0x25a20000)
@@ -79,7 +112,7 @@ typedef	struct	SysDevice	{
 /*static*/  UINT8 *curtape   = NULL; // pointer(only) to currently inserted tape.
 /*static*/  INT32 curtapelen = 0;
 #endif
-
+/*static*/	UINT8 stop 			= 0;
 /*static*/  UINT8 use_kanji     = 0;
 /*static*/  UINT8 msx_basicmode = 0;
 
@@ -89,7 +122,7 @@ typedef	struct	SysDevice	{
 /*static*/  UINT8 DrvJoy2[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 /*static*/  UINT8 DrvJoy4[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 /*static*/  UINT8 DrvDips[1]={0};
-/*static*/  UINT8 DrvReset = 0;
+/*static*///  UINT8 DrvReset = 0;
 /*static*/  UINT8 DrvNMI = 0;
 
 static struct BurnInputInfo MSXInputList[] = {
@@ -119,7 +152,7 @@ static struct BurnInputInfo MSXInputList[] = {
 	{"Key LEFT",	BIT_DIGITAL,	DrvJoy4 + 11,	"p1 KEYLEFT" },
 	{"Key RIGHT",	BIT_DIGITAL,	DrvJoy4 + 12,	"p1 KEYRIGHT" },
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	    "reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	    "reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 };
 

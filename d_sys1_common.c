@@ -269,6 +269,7 @@ Allocate Memory
 	cpu_lut				= Next; Next += 10*sizeof(UINT32);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
 	CZ80Context		= Next; Next += (0x1080*2);
+	map_cache		= Next; Next += (0x800*4) * sizeof(UINT32);
 	MemEnd = Next;
 
 	return 0;
@@ -683,7 +684,7 @@ void initLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2Size, int nTileRomNum, int nTileRomSize, int nSpriteRomNum, int nSpriteRomSize, bool bReset)
 {
-	int nRet = 0, nLen, i, RomOffset;
+	int nRet = 0, n, i, RomOffset;
 	struct BurnRomInfo ri;
 
 	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
@@ -696,13 +697,12 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-	nLen = MemEnd - (UINT8 *)0;
 
 	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
 	{	
 		return 1;
 	}
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 	UINT8 *	System1TempRom = (UINT8*)0x00200000;
@@ -944,6 +944,7 @@ cram_lut = NULL;
 width_lut = NULL;
 ss_vram = NULL;
 spriteCache = NULL;
+map_cache = NULL;
 
 //	if(System1SpriteRomSize!=0x20000)
 //		free(System1Sprites);
@@ -953,7 +954,7 @@ spriteCache = NULL;
 
 	free(Mem);
 	Mem = NULL;
-
+/*
 	System1SoundLatch = 0;
 	System1BgScrollX = 0;
 	System1BgScrollY = 0;
@@ -974,12 +975,17 @@ spriteCache = NULL;
 
 	nextSprite=0;
 	flipscreen=0;
-
+*/
 	DecodeFunction = NULL;
 	MakeInputsFunction = NULL;
 	CollisionFunction = NULL;
 
 	SPR_InitSlaveSH();
+	
+	cleanDATA();
+	cleanBSS();
+
+	nSoundBufferPos=0;	
 	return 0;
 }
 /*==============================================================================================

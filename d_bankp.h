@@ -10,18 +10,20 @@
 /*static*/ UINT8 *MemEnd = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
 /*static*/ UINT8 *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
-/*static*/ int *Palette = NULL;
-/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvReset=0, DrvDips=0;
-/*static*/ unsigned char /*scroll_x,*/ priority=0, flipscreen=0, interrupt_enable=0;
+/*static*/ UINT32 *Palette = NULL;
+/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+/*static*/ UINT8 DrvDips=0;
+/*static*/ UINT8 /*scroll_x,*/ priority=0, flipscreen=0, interrupt_enable=0;
 
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
-static unsigned char __fastcall bankp_in(unsigned short address);
+/*static*/ unsigned char __fastcall bankp_in(unsigned short address);
 /*static*/ void 	 bg_line(UINT16 offs,UINT16 flipx);
 /*static*/ void 	 fg_line(UINT16 offs,UINT16 flipx);
-static void __fastcall bankp_out(unsigned short address, unsigned char data);
-static void __fastcall bankp_write(unsigned short address, unsigned char data);
-
+/*static*/ void __fastcall bankp_write(unsigned short address, unsigned char data);
+/*static*/ void __fastcall bankp_out(UINT16 address, UINT8 data);
 /*static*/ void __fastcall bankp_write_f000(unsigned short address, unsigned char data);
 /*static*/ void __fastcall bankp_write_f400(unsigned short address, unsigned char data);
 /*static*/ void __fastcall bankp_write_f800(unsigned short address, unsigned char data);
@@ -30,13 +32,13 @@ static void __fastcall bankp_write(unsigned short address, unsigned char data);
 //void 	 bg_line(INT32 offs,INT32 flipx);
 //void 	 fg_line(INT32 offs,INT32 flipx);
 
-static int bankp_palette_init();
-static int bankp_gfx_decode();
-static INT32 DrvDoReset();
+/*static*/ INT32 bankp_palette_init();
+/*static*/ INT32 bankp_gfx_decode();
+/*static*/ void DrvDoReset();
 /*static*/ INT32 DrvBpExit();
-static INT32 DrvFrame();
-static INT32 DrvInit();
-static INT32 DrvChInit();
+/*static*/ INT32 DrvFrame();
+/*static*/ INT32 DrvInit();
+/*static*/ INT32 DrvChInit();
 
 /*static*/ struct BurnInputInfo bankpInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy1 + 5,	"p1 coin"  },
@@ -57,7 +59,7 @@ static INT32 DrvChInit();
 	{"P2 Button 2"  , BIT_DIGITAL  , DrvJoy2 + 4,	"p2 fire 2"},
 	{"P2 Button 3"  , BIT_DIGITAL  , DrvJoy3 + 1,	"p2 fire 3"},
 
-	{"Reset"        , BIT_DIGITAL  , &DrvReset  ,	"reset"    },
+	{"Reset"        , BIT_DIGITAL  , NULL  ,	"reset"    },
 	{"Dip 1"        , BIT_DIPSWITCH, &DrvDips,      "dip"      },
 };
 
@@ -82,7 +84,7 @@ STDINPUTINFO(bankp)
 	{"P2 Button 2"  , BIT_DIGITAL  , DrvJoy2 + 4,	"p2 fire 2"},
 	{"P2 Button 3"  , BIT_DIGITAL  , DrvJoy3 + 1,	"p2 fire 3"},
 
-	{"Reset"        , BIT_DIGITAL  , &DrvReset  ,	"reset"    },
+	{"Reset"        , BIT_DIGITAL  , NULL  ,	"reset"    },
 	{"Dip 1"        , BIT_DIPSWITCH, &DrvDips,      "dip"      },
 
 };

@@ -571,11 +571,10 @@ int ovlInit(char *szShortName)
 
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
 
 	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
 	memset(0x2F0000, 0, 0x9c00);
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  0, 1)) return 1;

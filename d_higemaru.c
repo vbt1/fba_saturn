@@ -212,16 +212,12 @@ for (i = 0; i < 0x80; i+=4)
 
 /*static*/  int DrvInit()
 {
-	int nLen;
-	unsigned int i;
-
 	DrvInitSaturn();
 
 	Mem = NULL;
 	MemIndex();
-	nLen = MemEnd - (unsigned char *)0;
 	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 //	for (i = 0; i < 6; i++) {
@@ -229,7 +225,7 @@ for (i = 0; i < 0x80; i+=4)
 //	}
 
 	{
-		for (i = 0; i < 4; i++) {
+		for (UINT32 i = 0; i < 4; i++) {
 			if (BurnLoadRom(Rom + i * 0x2000, i + 0, 1)) return 1;
 		}
 
@@ -237,7 +233,7 @@ for (i = 0; i < 0x80; i+=4)
 		if (BurnLoadRom(Gfx1 + 0x0000, 5, 1)) return 1;
 		if (BurnLoadRom(Gfx1 + 0x2000, 6, 1)) return 1;
 
-		for (i = 0; i < 3; i++) {
+		for (UINT32 i = 0; i < 3; i++) {
 			if (BurnLoadRom(Prom + i * 0x100, i + 7, 1)) return 1;
 		}
 
@@ -401,8 +397,8 @@ for (i = 0; i < 0x80; i+=4)
 	CZetExit2();
 #endif
 
-	AY8910Exit(0);
 	AY8910Exit(1);
+	AY8910Exit(0);
 
 	for(unsigned int i=0;i<6;i++)
 	{
@@ -506,7 +502,7 @@ for (i = 0; i < 0x80; i+=4)
 
 	updateSound();
 	DrvDrawSprites();
-
+if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
 	SPR_WaitEndSlaveSH();
 //	sc_check();
 	return 0;

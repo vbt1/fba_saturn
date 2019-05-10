@@ -808,12 +808,11 @@ static void astrofl_decode(void)
 
 	AllMem = NULL;
 	MemIndex(game);
-	INT32 nLen = MemEnd - (UINT8 *)0;
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
 		return 0;
 	}
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	memset(cache, 0, 0x80000);
 
 	MemIndex(game);

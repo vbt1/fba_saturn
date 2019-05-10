@@ -221,10 +221,9 @@ static void	SetVblank2( void ){
 
 //		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	SaturnInitMem();
-	int nLen = MemEnd - (UINT8 *)0;
 	SaturnMem = (UINT8 *)malloc(MALLOC_MAX);
 	SaturnInitMem();
-	memset(SaturnMem,0x00,nLen);
+	memset(SaturnMem,0x00,MALLOC_MAX);
 //		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	make_lut();
 #ifdef TWO_WORDS
@@ -311,7 +310,7 @@ static void	SetVblank2( void ){
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void wait_vblank(void)
+/*static*/  void wait_vblank(void)
 {
      while((TVSTAT & 8) == 0);
      while((TVSTAT & 8) == 8);

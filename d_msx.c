@@ -6,42 +6,13 @@
 // Oddities:
 //  VoidRunner and Milk Race freeze when selecting between kbd/joy. (VoidRunner has a kludge, but it doesn't work for Milk Race)
 //  Krakout any key starts, can't get into settings
+#define RAZE 1
+#define K051649 1
 #include    "machine.h"
 #include "d_msx.h"
-void dummy();
-#define K051649 1
 //#define CASSETTE 1
 //#define KANJI 1
 //#define DAC 1
-#define RAZE 1
-
-#ifdef RAZE
-#include "raze\raze.h"
-static void __fastcall msx_write_konami4(UINT16 address, UINT8 data);
-static void __fastcall msx_write_konami4scc(UINT16 address, UINT8 data);
-static void __fastcall msx_write_scc(UINT16 address, UINT8 data);
-static void __fastcall msx_write_scc2(UINT16 address, UINT8 data);
-static void __fastcall msx_write_ascii8(UINT16 address, UINT8 data);
-#endif
-static UINT8 msx_ppi8255_portB_read();
-static void msx_ppi8255_portA_write(UINT8 data);
-static void msx_ppi8255_portC_write(UINT8 data);
-static UINT8 ay8910portAread(UINT32 offset);
-static void ay8910portAwrite(UINT32 offset, UINT32 data);
-static void ay8910portBwrite(UINT32 offset, UINT32 data);
-
-static void SetSlot(UINT8 nSlot);
-static void setFetch(UINT32 I, UINT8 *ram);
-static void vdp_interrupt(INT32 state);
-
-static void __fastcall msx_write(UINT16 address, UINT8 data);
-
-static UINT8 __fastcall msx_read_port(UINT16 port);
-static void __fastcall msx_write_port(UINT16 port, UINT8 data);
-
-static void updateSlaveSound();
-static void updateSlaveSoundSCC();
-static void Set8PCM();
 
 int ovlInit(char *szShortName)
 {
@@ -62,8 +33,7 @@ int ovlInit(char *szShortName)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #if 1
-int stop =0;
-static void load_rom()
+/*static*/ void load_rom()
 {
 	stop=0;
 
@@ -71,7 +41,7 @@ static void load_rom()
 	{
 		PCM_MeStop(pcm8[i]);
 	}
-	memset(SOUND_BUFFER,0x00,0x4000*9);
+	memset(SOUND_BUFFER,0x00,0x20000);
 
 	memset(game, 0xff, MAX_MSX_CARTSIZE);
 	DrvDips[0] = 0x11;
@@ -151,6 +121,7 @@ static void load_rom()
 		{
 			stop=1;
 			SPR_InitSlaveSH();
+			SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 			return;
 		}
 
@@ -190,7 +161,7 @@ static void load_rom()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void	SetVblank2( void ){
+/*static*/ void	SetVblank2( void ){
 	int			imask;
 
 	imask = get_imask();
@@ -205,24 +176,21 @@ static void	SetVblank2( void ){
 	__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static UINT8 keyRowGet(INT32 row) { // for ppi to read
+/*static*/ UINT8 keyRowGet(INT32 row) { // for ppi to read
 	if (row > 11) return 0xff;
 	return ~keyRows[row];
 }
-static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot);
-static void PageMap(INT32 CartSlot, const char *cMap); //("0:0:0:0:0:0:0:0")
-static void MapMegaROM(UINT8 nSlot, UINT8 nPg0, UINT8 nPg1, UINT8 nPg2, UINT8 nPg3);
 
 #ifdef CASSETTE
-static inline void intkeyOn(INT32 row, INT32 bit) {
+/*static*/ inline void intkeyOn(INT32 row, INT32 bit) {
 	keyRows[row] = ((keyRows[row] & 0xff) | (1 << bit));
 }
 
-static inline void intkeyOff(INT32 row, INT32 bit) {
+/*static*/ inline void intkeyOff(INT32 row, INT32 bit) {
 	keyRows[row] = ((keyRows[row] & 0xff) & ~(1 << bit));
 }
 
-static void keyInput(UINT8 kchar, UINT8 onoff) { // input from emulator
+/*static*/ void keyInput(UINT8 kchar, UINT8 onoff) { // input from emulator
 
 	INT32 i = 0;
 	INT32 gotkey = 0;
@@ -247,16 +215,16 @@ static void keyInput(UINT8 kchar, UINT8 onoff) { // input from emulator
 #define CAS_CLOADRR 4
 #define CAS_WRONGSIDE 5
 
-static const char *CASAutoLoadTypes[] =
+/*static*/ const char *CASAutoLoadTypes[] =
 {
 	"bload \"cas:\", r\x0d", "run \"cas:\"\x0d", "cload\x0drun\x0d",
 	"cload\x0drun\x0drun\x0d", "rem Set Tape Side-A in DIPs & reboot!\x0d"
 };
 
-static INT32 CASAutoLoadPos = 0;
-static INT32 CASAutoLoadTicker = 0;
+/*static*/ INT32 CASAutoLoadPos = 0;
+/*static*/ INT32 CASAutoLoadTicker = 0;
 
-static void CASSideChange()
+/*static*/ void CASSideChange()
 {
 	curtape = (CASSide) ? game2 : game;
 	curtapelen = (CASSide) ? CurRomSizeB : CurRomSizeA;
@@ -264,7 +232,7 @@ static void CASSideChange()
 	CASSideLast = CASSide;
 }
 
-static void CASAutoLoad()
+/*static*/ void CASAutoLoad()
 {
 	CASAutoLoadPos = 0;
 	CASAutoLoadTicker = 0;
@@ -272,7 +240,7 @@ static void CASAutoLoad()
 	CASPos = 0;
 }
 
-static void CASAutoLoadTick()
+/*static*/ void CASAutoLoadTick()
 {
 	if (CASAutoLoadPos == 0xff) return;
 
@@ -290,7 +258,7 @@ static void CASAutoLoadTick()
 	CASAutoLoadTicker++;
 }
 
-static void CASPatchBIOS(UINT8 *bios)
+/*static*/ void CASPatchBIOS(UINT8 *bios)
 {
 	UINT8 PatchBytes[] = { 0xe1, 0xe4, 0xe7, 0xea, 0xed, 0xf0, 0xf3, 0x00 };
 	UINT8 i = 0;
@@ -320,7 +288,7 @@ void msxinit(INT32 cart_len)
 	CARTSLOTB = DEFAULT_CARTSLOTB;
 	RAMSLOT = DEFAULT_RAMSLOT;
 
-	memset4_fast(EmptyRAM, 0xff, 0x4000); // bus is pulled high for unmapped reads
+	memset(EmptyRAM, 0xff, 0x4000); // bus is pulled high for unmapped reads
 
 	unsigned int *nSoundBuffer = (unsigned int *)0x25a28000;
 	memset(nSoundBuffer[0x8000],0x00,nBurnSoundLen * sizeof(INT16) * 8 * 8);
@@ -352,7 +320,7 @@ void msxinit(INT32 cart_len)
 	PageMap(BIOSSLOT, "0:1:2:3:e:e:e:e");
 
 //	if (!msx_basicmode)
-		InsertCart(game, cart_len, CARTSLOTA);
+	InsertCart(game, cart_len, CARTSLOTA);
 
 	PSLReg = 99;
 
@@ -381,7 +349,7 @@ void msxinit(INT32 cart_len)
 		}
 }
 
-static void rtype_do_bank(UINT8 *romdata)
+/*static*/ void rtype_do_bank(UINT8 *romdata)
 {
 	rtype_bank_base[0] = romdata + 15 * 0x4000;
 	if (rtype_selected_bank & 0x10)
@@ -391,7 +359,7 @@ static void rtype_do_bank(UINT8 *romdata)
 	rtype_bank_base[1] = romdata + rtype_selected_bank * 0x4000;
 }
 
-static void crossblaim_do_bank(UINT8 *romdata)
+/*static*/ void crossblaim_do_bank(UINT8 *romdata)
 {
 	crossblaim_bank_base[0] = ( crossblaim_selected_bank & 2 ) ? NULL : romdata + ( crossblaim_selected_bank & 0x03 ) * 0x4000;
 	crossblaim_bank_base[1] = romdata;
@@ -399,7 +367,7 @@ static void crossblaim_do_bank(UINT8 *romdata)
 	crossblaim_bank_base[3] = ( crossblaim_selected_bank & 2 ) ? NULL : romdata + ( crossblaim_selected_bank & 0x03 ) * 0x4000;
 }
 
-static void Mapper_write(UINT16 address, UINT8 data)
+/*static*/ void Mapper_write(UINT16 address, UINT8 data)
 {
 	UINT8 Page = address >> 14; // pg. num
 	UINT8 PSlot = PSL[Page];
@@ -621,7 +589,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
-static void Mapper_write_scc(UINT16 address, UINT8 data)
+/*static*/ void Mapper_write_scc(UINT16 address, UINT8 data)
 {
 	UINT8 Page = address >> 14; // pg. num
 	UINT8 PSlot = PSL[Page];
@@ -1141,7 +1109,7 @@ And the address to change banks:
 #endif
 }
 //-----------------------------------------------------------------------------------------------------------------------------
-static void setFetch(UINT32 I, UINT8 *ram)
+/*static*/ void setFetch(UINT32 I, UINT8 *ram)
 {
 	UINT32 addr1=0x2000*I;
 #ifndef RAZE
@@ -1155,7 +1123,7 @@ static void setFetch(UINT32 I, UINT8 *ram)
 }
 //-----------------------------------------------------------------------------------------------------------------------------
 
-static void SetSlot(UINT8 nSlot)
+/*static*/ void SetSlot(UINT8 nSlot)
 {
 	UINT32 I, J;
 
@@ -1175,7 +1143,7 @@ static void SetSlot(UINT8 nSlot)
 	}
 }
 
-static void PageMap(INT32 CartSlot, const char *cMap)
+/*static*/ void PageMap(INT32 CartSlot, const char *cMap)
 {
 	for (INT32 i = 0; i < 8; i++) {
 		switch (cMap[i << 1]) {
@@ -1194,7 +1162,7 @@ static void PageMap(INT32 CartSlot, const char *cMap)
 	}
 }
 
-static void MapMegaROM(UINT8 nSlot, UINT8 nPg0, UINT8 nPg1, UINT8 nPg2, UINT8 nPg3)
+/*static*/ void MapMegaROM(UINT8 nSlot, UINT8 nPg0, UINT8 nPg1, UINT8 nPg2, UINT8 nPg3)
 {
   if (nSlot >= MAXSLOTS) return;
 
@@ -1214,7 +1182,7 @@ static void MapMegaROM(UINT8 nSlot, UINT8 nPg0, UINT8 nPg1, UINT8 nPg2, UINT8 nP
   ROMMapper[nSlot][3] = nPg3;
 }
 
-static INT32 GuessROM(UINT8 *buf, INT32 Size)
+/*static*/ INT32 GuessROM(UINT8 *buf, INT32 Size)
 {
 	INT32 i, j;
 	INT32 ROMCount[MAXMAPPERS];
@@ -1276,16 +1244,16 @@ static INT32 GuessROM(UINT8 *buf, INT32 Size)
 	return i;
 }
 
-static INT32 IsBasicROM(UINT8 *rom)
+/*static*/ INT32 IsBasicROM(UINT8 *rom)
 {
 	return (rom[2] == 0 && rom[3] == 0 && rom[8] && rom[9]);
 }
 
-static UINT16 GetRomStart(UINT8* romData, INT32 size)
+/*static*/ UINT16 GetRomStart(UINT8* romData, INT32 size)
 {
     INT32 pages[3] = { 0, 0, 0 };
 
-    for (INT32 startPage = 0; startPage < 2; startPage++) {
+    for (UINT32 startPage = 0; startPage < 2; startPage++) {
         UINT8* romPtr = romData + 0x4000 * startPage;
 
         if (size < 0x4000 * startPage + 0x10) {
@@ -1321,12 +1289,12 @@ static UINT16 GetRomStart(UINT8* romData, INT32 size)
 	return 0x0000;
 }
 
-static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
+/*static*/ void InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 {
 	INT32 Len, Pages, Flat64, BasicROM;
 	UINT8 ca, cb;
 
-	if (nSlot >= MAXSLOTS) return 0;
+	if (nSlot >= MAXSLOTS) return;
 
 	Len = cartsize >> 13; // Len, in 8k pages
 
@@ -1356,7 +1324,7 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 
 	if ((ca != 'A') || (cb != 'B')) {
 //		bprintf(0, _T("MSX Cartridge signature not found!\n"));
-		return 0;
+		return;
 	}
 
 	if (Len < Pages) { // rom isn't a valid page-length, so mirror
@@ -1372,7 +1340,7 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 		ROMType[nSlot] = GuessROM(ROMData[nSlot], 0x2000 * (ROMMask[nSlot] + 1));
 	}
 
-	UINT8 filename[12];
+	UINT8 filename[13];
 
 	strcpy(filename,GFS_IdToName(file_id));	
 	if (   strcmp(filename, "VALIS.ROM") == 0
@@ -1465,11 +1433,11 @@ static INT32 InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot)
 	{
 		MapMegaROM(nSlot, 0, 1, ROMMask[nSlot] - 1, ROMMask[nSlot]);
 	}
-	return 1;
+//	return;
 }
 
 
-static void __fastcall msx_write_port(UINT16 port, UINT8 data)
+/*static*/ void __fastcall msx_write_port(UINT16 port, UINT8 data)
 {
 	port &= 0xff;
 	switch (port)
@@ -1509,7 +1477,7 @@ static void __fastcall msx_write_port(UINT16 port, UINT8 data)
 	}
 }
 
-static UINT8 __fastcall msx_read_port(UINT16 port)
+/*static*/ UINT8 __fastcall msx_read_port(UINT16 port)
 {
 	port &= 0xff;
 
@@ -1545,17 +1513,17 @@ static UINT8 __fastcall msx_read_port(UINT16 port)
 	return 0xff;
 }
 
-static UINT8 msx_ppi8255_portB_read()
+/*static*/ UINT8 msx_ppi8255_portB_read()
 {
 	return keyRowGet(ppiC_row);
 }
 
-static void msx_ppi8255_portA_write(UINT8 data)
+/*static*/ void msx_ppi8255_portA_write(UINT8 data)
 {
 	SetSlot(data);
 }
 
-static void msx_ppi8255_portC_write(UINT8 data)
+/*static*/ void msx_ppi8255_portC_write(UINT8 data)
 {
 	ppiC_row = data & 0x0f;
 #ifdef DAC
@@ -1566,7 +1534,7 @@ static void msx_ppi8255_portC_write(UINT8 data)
 #endif
 }
 
-static UINT8 ay8910portAread(UINT32 offset)
+/*static*/ UINT8 ay8910portAread(UINT32 offset)
 {
 	if (SwapJoyports) {
 		return (Joyselect) ? DrvInputs[0] : DrvInputs[1];
@@ -1575,18 +1543,18 @@ static UINT8 ay8910portAread(UINT32 offset)
 	}
 }
 
-static void ay8910portAwrite(UINT32 offset, UINT32 data)
+/*static*/ void ay8910portAwrite(UINT32 offset, UINT32 data)
 {
 	//bprintf(0, _T("8910 portAwrite %X:%X\n"), offset, data);
 }
 
-static void ay8910portBwrite(UINT32 offset, UINT32 data)
+/*static*/ void ay8910portBwrite(UINT32 offset, UINT32 data)
 {
 	//bprintf(0, _T("B %X:%X\n"), offset, data);
 	Joyselect = (data & 0x40) ? 1 : 0;
 }
 
-static void vdp_interrupt(INT32 state)
+/*static*/ void vdp_interrupt(INT32 state)
 {
 #ifdef RAZE
 	if(state)
@@ -1598,7 +1566,7 @@ static void vdp_interrupt(INT32 state)
 #endif
 }
 
-static void DrvDoReset()
+/*static*/ void DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 
@@ -1715,7 +1683,7 @@ static void DrvDoReset()
 #endif
 }
 
-static INT32 MemIndex()
+/*static*/ INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 	maincpu		    = Next; Next += 0x020000;
@@ -1750,7 +1718,7 @@ static INT32 MemIndex()
 	return 0;
 }
 #ifdef RAZE
-static void __fastcall msx_write_konami4(UINT16 address, UINT8 data)
+/*static*/ void __fastcall msx_write_konami4(UINT16 address, UINT8 data)
 {
 	UINT32 Page = address >> 14; // pg. num
 	UINT32 PSlot = PSL[Page];
@@ -1770,7 +1738,7 @@ static void __fastcall msx_write_konami4(UINT16 address, UINT8 data)
 	}
 }
 
-static void __fastcall msx_write_scc(UINT16 address, UINT8 data)
+/*static*/ void __fastcall msx_write_scc(UINT16 address, UINT8 data)
 {
 	UINT8 Page = address >> 14; // pg. num
 	UINT32 PSlot = PSL[Page];
@@ -1823,7 +1791,7 @@ static void __fastcall msx_write_scc(UINT16 address, UINT8 data)
 #endif
 }
 
-static void __fastcall msx_write_konami4scc(UINT16 address, UINT8 data)
+/*static*/ void __fastcall msx_write_konami4scc(UINT16 address, UINT8 data)
 {
 	UINT32 Page = address >> 14; // pg. num
 	UINT32 PSlot = PSL[Page];
@@ -1845,7 +1813,7 @@ static void __fastcall msx_write_konami4scc(UINT16 address, UINT8 data)
 	}
 }
 
-static void __fastcall msx_write_ascii8(UINT16 address, UINT8 data)
+/*static*/ void __fastcall msx_write_ascii8(UINT16 address, UINT8 data)
 {
 	UINT32 Page = address >> 14; // pg. num
 	UINT32 PSlot = PSL[Page];
@@ -1893,7 +1861,7 @@ static void __fastcall msx_write_ascii8(UINT16 address, UINT8 data)
 }
 #endif
 
-static void __fastcall msx_write(UINT16 address, UINT8 data)
+/*static*/ void __fastcall msx_write(UINT16 address, UINT8 data)
 {
 	if (WriteMode[address >> 14]) 
 	{
@@ -1907,7 +1875,7 @@ static void __fastcall msx_write(UINT16 address, UINT8 data)
 	}
 }
 
-static void __fastcall msx_write_scc2(UINT16 address, UINT8 data)
+/*static*/ void __fastcall msx_write_scc2(UINT16 address, UINT8 data)
 {
 	if (WriteMode[address >> 14]) 
 	{
@@ -1922,7 +1890,7 @@ static void __fastcall msx_write_scc2(UINT16 address, UINT8 data)
 }
 
 #ifdef DAC
-static INT32 DrvSyncDAC()
+/*static*/ INT32 DrvSyncDAC()
 {
 #ifdef RAZE
 	return (INT32)(float)(nBurnSoundLen * (z80_get_cycles_elapsed() / (3579545.000 / ((Hertz60) ? 60.0 : 50.0))));
@@ -1932,15 +1900,14 @@ static INT32 DrvSyncDAC()
 }
 #endif
 
-static INT32 DrvInit()
+/*static*/ INT32 DrvInit()
 {
 	DrvInitSaturn();
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
 
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	{
@@ -2114,7 +2081,7 @@ void cleanmemmap()
 }
 */
 
-static INT32 DrvExit()
+/*static*/ INT32 DrvExit()
 {
 	nBurnFunction = NULL;
 #ifdef RAZE
@@ -2133,7 +2100,7 @@ static INT32 DrvExit()
 	{
 		PCM_MeStop(pcm8[i]);
 	}
-	memset4_fast(SOUND_BUFFER,0x00,0x4000*9);
+	memset(SOUND_BUFFER,0x00,0x20000);
 
 	TMS9928AExit();
 #ifdef K051649
@@ -2194,7 +2161,7 @@ static INT32 DrvExit()
 	return 0;
 }
 
-static void DrvFrame()
+/*static*/ void DrvFrame()
 {
 	//	SPR_InitSlaveSH();
 
@@ -2290,7 +2257,7 @@ static void DrvFrame()
 		load_rom();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void updateSlaveSound()
+/*static*/ void updateSlaveSound()
 {
 	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+deltaSlave;
@@ -2314,7 +2281,7 @@ static void updateSlaveSound()
 	TMS9928ADraw();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void updateSlaveSoundSCC()
+/*static*/ void updateSlaveSoundSCC()
 {
 	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+deltaSlave;
@@ -2429,7 +2396,7 @@ void initPosition(void)
 	wait_vblank();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static PcmHn createHandle(PcmCreatePara *para)
+/*static*/ PcmHn createHandle(PcmCreatePara *para)
 {
 	PcmHn pcm;
 
@@ -2440,7 +2407,7 @@ static PcmHn createHandle(PcmCreatePara *para)
 	return pcm;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void Set8PCM()
+/*static*/ void Set8PCM()
 {
 	PcmCreatePara	para[8];
 	PcmInfo 		info[8];
@@ -2474,7 +2441,7 @@ static void Set8PCM()
 		PCM_SetInfo(pcm8[i], &info[i]);
 		PCM_ChangePcmPara(pcm8[i]);
 
-		PCM_MeSetLoop(pcm8[i], 0);//SOUNDRATE*120);
+		//PCM_MeSetLoop(pcm8[i], 0);//SOUNDRATE*120);
 		PCM_Start(pcm8[i]);
 	}
 }

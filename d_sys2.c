@@ -400,7 +400,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	INT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
 	INT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
 	INT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
-	INT32 nRet = 0, nLen, i, RomOffset;
+	INT32 nRet = 0, i, RomOffset;
 	struct BurnRomInfo ri;
 
 	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
@@ -413,14 +413,13 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-	nLen = MemEnd - (UINT8 *)0;
 
 	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
 	{	
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
-	memset(Mem, 0, nLen);
+	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 	UINT8 *	System1TempRom = (UINT8*)0x00200000;
@@ -489,13 +488,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	spriteCache = (UINT16*)(0x00200000);
 
 	memset((unsigned char *)spriteCache,0xFF,0x80000);
-/*	if(System1SpriteRomSize!=0x20000)
-		System1Sprites = (UINT8 *)malloc(System1SpriteRomSize);
-	else
-		System1Sprites = (UINT8 *)0x02E0000;
 
-	memset(System1Sprites, 0x00, System1SpriteRomSize);
-*/
 	// Load Sprite roms
 	RomOffset += nTileRomNum;
 	for (i = 0; i < nSpriteRomNum; i++) 
@@ -672,7 +665,7 @@ void renderTile(UINT32 offs,UINT32 code,UINT32 current_map)
 	map[1] = code;// & 0xfff;
 }
 
-unsigned int map_cache[4][0x800];
+//unsigned int map_cache[4][0x800];
 
 static void wbml_draw_bg()
 {
@@ -688,7 +681,7 @@ static void wbml_draw_bg()
 		unsigned int current_map=v[page];
 //		UINT8 *source = System1VideoRam + (System1VideoRam[0x0740 + page*2] & 0x07)*0x800;
 		UINT16 *source = (UINT16 *)(System1VideoRam + ((((System1VideoRam[0x0740 + page*2] & 0x07)*0x800))));
-		UINT32 *curr_cache = map_cache[page];
+		UINT32 *curr_cache = map_cache[page<<11];
 
 		for(UINT32 offs = 0; offs <0x400;)
 		{

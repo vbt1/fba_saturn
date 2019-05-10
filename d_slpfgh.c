@@ -808,7 +808,6 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 /*static*/  INT32 tigerhInit()
 {
 	DrvInitSaturn();
-	INT32 nLen;
 	nWhichGame = -1;
 
 	if (strcmp(BurnDrvGetTextA(DRV_NAME), "tigerh") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhj") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhb1") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhb2") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhb3") == 0) {
@@ -822,7 +821,6 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 	// Find out how much memory is needed
 	Mem = NULL;
 	MemIndex();
-	nLen = MemEnd - (UINT8*)0;
 //		sprintf(tmp0,"before malloc      ");
 
 	if ((Mem = (UINT8*)BurnMalloc(MALLOC_MAX)) == NULL) 
@@ -830,7 +828,7 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 //		sprintf(tmp0,"malloc failed      ");
 		return 1;
 	}
-	memset(Mem, 0, nLen);										   	// blank all memory
+	memset(Mem, 0, MALLOC_MAX);										   	// blank all memory
 	MemIndex();													   	// Index the allocated memory
 //		sprintf(tmp0,"malloc done      ");
 	make_lut();

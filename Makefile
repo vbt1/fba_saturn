@@ -264,20 +264,19 @@ OBJOVLNINKD2         = $(SRCOVLNINKD2:.c=.o)
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
-../../SBL6/SEGALIB/LIB/elf/sega_gfs.a \
-../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a \
-../../SBL6/SEGALIB/SPR/vbtelf1/spr_slv.o \
-../../SBL6/SEGALIB/INT/elf/int.o ../../SBL6/SEGALIB/INT/elf/int_trmp.o \
-../../SBL6/SEGALIB/PCM/pcm_lib.o \
- ../../SBL6/SEGALIB/PCM/pcm_mp.o ../../SBL6/SEGALIB/PCM/pcm_audi.o \
-../../SBL6/SEGALIB/PCM/pcm_drv.o ../../SBL6/SEGALIB/PCM/pcm_time.o \
-../../SBL6/SEGALIB/PCM/pcm_etc.o ../../SBL6/SEGALIB/PCM/pcm_aif.o\
-../../SBL6/SEGALIB/PCM/pcm_gfs.o \
- cdc/cdcrep.a
+../../SBL6/SEGALIB/LIB/vbtelf2/sega_gfs.a \
+../../SBL6/SEGALIB/SPR/vbtelf2/spr_slv.o \
+../../SBL6/SEGALIB/LIB/vbtelf2/sega_int.a \
+../../SBL6/SEGALIB/LIB/vbtelf2/cdcrep.a \
+../../SBL6/SEGALIB/PCM/vbtelf2/pcm_lib.o \
+../../SBL6/SEGALIB/PCM/vbtelf2/pcm_mp.o ../../SBL6/SEGALIB/PCM/vbtelf2/pcm_audi.o \
+../../SBL6/SEGALIB/PCM/vbtelf2/pcm_drv.o ../../SBL6/SEGALIB/PCM/vbtelf2/pcm_time.o \
+../../SBL6/SEGALIB/PCM/vbtelf2/pcm_etc.o ../../SBL6/SEGALIB/PCM/vbtelf2/pcm_aif.o \
+../../SBL6/SEGALIB/PCM/vbtelf2/pcm_gfs.o
 
- LIBSTM = ../../SBL6/SEGALIB/PCM/pcm_stm.o ../../SBL6/SEGALIB/LIB/elf/sega_stm.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_dma.a
+ LIBSTM = ../../SBL6/SEGALIB/PCM/vbtelf2/pcm_stm.o ../../SBL6/SEGALIB/LIB/vbtelf2/sega_stm.a ../../SBL6/SEGALIB/LIB/vbtelf2/sega_dma.a
 
-LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf1/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf1/sega_dma.a
+LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf2/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf2/sega_dma.a
 
 all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \
