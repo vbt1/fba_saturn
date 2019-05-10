@@ -264,8 +264,6 @@ void NamcoSoundWrite(UINT32 offset, UINT8 data)
 		size = 32 * 8;		/* 32 samples, 8 waveforms */
 	}
 
-//	p = (INT16*)malloc(size * MAX_VOLUME * sizeof (INT16));
-
 	for (UINT32 v = 0; v < MAX_VOLUME; v++)
 	{
 		chip->waveform[v] = p;
@@ -282,17 +280,16 @@ void NamcoSoundWrite(UINT32 offset, UINT8 data)
 	return 0;
 }
 
-void NamcoSoundInit(INT32 clock, INT32 num_voices)
+void NamcoSoundInit(INT32 clock, INT32 num_voices, UINT8 *Namcocontext)
 {
 //	DebugSnd_NamcoSndInitted = 1;
 	
 	INT32 clock_multiple;
 	sound_channel *voice;
 	
-	chip = (struct namco_sound*)malloc(sizeof(*chip));
+	chip = (struct namco_sound*)Namcocontext;
 	memset(chip, 0, sizeof(*chip));
 	
-//	namco_soundregs = (UINT8*)malloc(0x40);
 	memset(namco_soundregs, 0, 0x40);
 
 	chip->num_voices = num_voices;
@@ -355,11 +352,11 @@ void NamcoSoundExit()
 //		namco_soundregs = NULL;
 //	}
 
-	if (chip) {
-		memset(chip, 0, sizeof(*chip));
-		free(chip);
+//	if (chip) {
+//		memset(chip, 0, sizeof(*chip));
+//		free(chip);
 		chip = NULL;
-	}
+//	}
 	
 //	DebugSnd_NamcoSndInitted = 0;
 }

@@ -26,7 +26,7 @@ struct SN76496
 	int bSignalAdd;
 };
 
-/*static*/ int NumChips;
+/*static*/ //int NumChips = 0;
 /*static*/struct SN76496 Chip0;// = NULL;
 /*static*/ struct SN76496 Chip1;// = NULL;
 /*static*/ struct SN76496 Chip2;// = NULL;
@@ -294,7 +294,7 @@ void SN76496Write(int Num, int Data)
 {
 	if (Num >= MAX_SN76496_CHIPS) return;
 	
-	NumChips = Num;
+	//NumChips = Num;
 	
 	if (Num == 0) {
 	//Chip0 = (struct SN76496*)malloc(sizeof(*Chip0));

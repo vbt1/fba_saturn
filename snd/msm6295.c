@@ -364,14 +364,8 @@ float powerf(float x, int y)
             return (temp*temp)/x; 
     } 
 }  
-int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, bool bAddSignal)
+int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, bool bAddSignal, int *MSM6295Context)
 {
-//	if (nBurnSoundRate > 0) {
-//		if (pBuffer == NULL) {
-//			pBuffer = (int*)malloc(nBurnSoundRate * sizeof(int));
-//		}
-//	}
-
 	bAdd = bAddSignal;
 
 	// Convert volume from percentage
@@ -431,7 +425,8 @@ int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, bool bAddSignal)
 	}
 	unsigned int nChannel;
 	for (nChannel = 0; nChannel < 4; nChannel++) {
-		MSM6295ChannelData[nChip][nChannel] = (int*)malloc(0x1000 * sizeof(int));
+		MSM6295ChannelData[nChip][nChannel] = (int*)(MSM6295Context+(nChannel * 0x1000 * sizeof(int)));
+//		(int*)malloc(0x1000 * sizeof(int));
 	}
 
 	memset (pBankPointer[nChip], 0, (0x40000/0x100) * sizeof(UINT8*));

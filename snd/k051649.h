@@ -14,3 +14,4 @@ void K052539WaveformWrite(INT32 offset, INT32 data);
 void K051649VolumeWrite(INT32 offset, INT32 data);
 void K051649FrequencyWrite(INT32 offset, INT32 data);
 void K051649KeyonoffWrite(INT32 data);
+void K051649UpdateDirect(INT16 *pBuf, INT32 samples);

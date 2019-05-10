@@ -83,6 +83,6 @@ void TMS9928ASetSpriteslimit(int limit);
 
 void TMS9928AWriteRegs(int data);
 unsigned char TMS9928AReadRegs();
-
+unsigned char SG_TMS9928AReadVRAM();
 void TMS9928AWriteVRAM(int data);
-static unsigned char TMS9928AReadVRAM(TMS9928A *tms);
+unsigned char TMS9928AReadVRAM(TMS9928A *tms);

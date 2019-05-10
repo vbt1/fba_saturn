@@ -6,6 +6,8 @@
 
 int ovlInit(char *szShortName)
 {
+	cleanBSS();
+
 	struct BurnDriver nBurnDrvpkunwar = {
 		"pkunw", NULL,
 		"Penguin-Kun Wars (US)\0",
@@ -865,7 +867,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	pFMBuffer	= Next; Next += SOUND_LEN * 6 * sizeof(short);
 	offs_lut = (UINT32 *)Next; Next += 0x400 * (sizeof(UINT32));
 	cram_lut = (UINT16 *)Next; Next += 256 * (sizeof(UINT16));
-	CZ80Context	= Next; Next += (0x1080*2);
+	CZ80Context	= Next; Next += sizeof(cz80_struc);
 	MemEnd	= Next;
 }
 
@@ -875,13 +877,12 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (unsigned char *)0;
-	if ((AllMem = (unsigned char *)malloc(nLen)) == NULL) 
+	if ((AllMem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
 	{	
 		return 1;
 	}
 
-	memset(AllMem, 0, nLen);
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	DrvBgRAM = DrvMainROM + 0x8000;
@@ -945,9 +946,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	DrvInitSaturn(1);
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	
 	DrvFgRAM = DrvMainROM + 0xa000;
@@ -958,7 +958,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	make_nova_lut();
 	if (NovaLoadRoms()) return 1;
 
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetSetReadHandler(nova2001_read);
 	CZetSetWriteHandler(nova2001_write);
@@ -1014,9 +1014,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	DrvInitSaturn(3);
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	DrvFgRAM = DrvMainROM + 0xc000;
 	DrvBgRAM = DrvMainROM + 0xc800;
@@ -1028,7 +1027,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	make_nova_lut();
 	NinjakunLoadRoms();
 
-	CZetInit(2);
+	CZetInit2(2,CZ80Context);
 	CZetOpen(0);
 	CZetSetReadHandler(ninjakun_main_read);
 	CZetSetWriteHandler(ninjakun_main_write);
@@ -1137,9 +1136,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
+	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	DrvSprRAM = DrvMainROM + 0x8000;
@@ -1152,7 +1150,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	make_nova_lut();
 	if (Raiders5LoadRoms()) return 1;
 
-	CZetInit(2);
+	CZetInit2(2,CZ80Context);
 	CZetOpen(0);
 	CZetSetInHandler(raiders5_in);
 	CZetSetReadHandler(raiders5_main_read);
@@ -1193,7 +1191,6 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	z80_end_memmap();
 #else
-//	CZetInit(1);
 	CZetOpen(1);
 	CZetSetInHandler(raiders5_in); // a verifier
 	CZetSetReadHandler(raiders5_sub_read);
@@ -1355,7 +1352,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	AY8910Exit(1);
 	AY8910Exit(0);
 #ifndef RAZE
-	CZetExit();
+	CZetExit2();
 #endif
 
 	DrvMainROM = DrvGfxROM0 = DrvGfxROM1 = DrvColPROM = DrvMainRAM = NULL;
@@ -1825,3 +1822,4 @@ void make_nova_lut()
 	}
 }
 //-------------------------------------------------------------------------------------------------
+

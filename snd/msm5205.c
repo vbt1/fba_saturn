@@ -121,7 +121,7 @@ void MSM5205StreamUpdate(INT32 chip)
 		{
 			INT32 i = 0;
 
-			INT32 volval = (INT32)((voice->signal * 16) * voice->volume);
+			INT32 volval = (INT32)((voice->signal * 16)); // * voice->volume);
 			INT16 val = volval;
 			while (len)
 			{
@@ -246,7 +246,7 @@ void MSM5205Reset()
 	}
 }
 
-void MSM5205Init(INT32 chip, INT16 *addr, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd, float nVolume)
+void MSM5205Init(INT32 chip, INT16 *addr, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd)
 {
 //	DebugSnd_MSM5205Initted = 1;
 
@@ -260,7 +260,7 @@ void MSM5205Init(INT32 chip, INT16 *addr, INT32 (*stream_sync)(INT32), INT32 clo
 	voice->clock		= clock;
 	voice->bAdd		= bAdd;
 //	voice->volume	= 1.00;
-	voice->volume	= nVolume;
+//	voice->volume	= nVolume;
 //	voice->output_dir = BURN_SND_ROUTE_BOTH;
 	
 	stream[chip]		= (INT16*)addr;

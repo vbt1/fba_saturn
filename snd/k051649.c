@@ -44,12 +44,12 @@ struct _k051649_state
 {
 	k051649_sound_channel channel_list[5];
 
-	/* global sound parameters */
+	// global sound parameters
 	INT32 mclock,rate;
-	float gain;
+//	float gain;
 	INT32 output_dir;
 
-	/* mixer tables and internal buffers */
+	// mixer tables and internal buffers 
 	INT16 *mixer_table;
 	INT16 *mixer_lookup;
 	INT16 *mixer_buffer;
@@ -57,8 +57,8 @@ struct _k051649_state
 	INT32 f[10];
 };
 
-static k051649_state Chips[1]; // ok?
-static k051649_state *info;
+/*static*/ k051649_state Chips[1]; // ok?
+/*static*/ k051649_state *info=NULL;
 
 /* build a table to divide by the number of voices */
 static void make_mixer_table(INT32 voices, INT16 *SCCMixerTable)
@@ -236,7 +236,7 @@ void K051649Init(INT32 clock, INT16 *SCCMixerBuffer, INT16 *SCCMixerTable)
 	/* get stream channels */
 	info->rate = 7680L; ///clock/16; // vbt faux !!!
 	info->mclock = clock;
-	info->gain = (float)1.00;
+//	info->gain = (float)1.00;
 	info->output_dir = BURN_SND_ROUTE_BOTH;
 	
 	nUpdateStep = (INT32)(((float)info->rate / nBurnSoundRate) * 32768);

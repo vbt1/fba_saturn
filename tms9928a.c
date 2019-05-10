@@ -203,7 +203,7 @@ UINT8 SG_TMS9928AReadVRAM()
 	return b;
 }
 
-static UINT8 TMS9928AReadVRAM(TMS9928A *tms)
+/*static*/ UINT8 TMS9928AReadVRAM(TMS9928A *tms)
 {
 	UINT32 b = tms->ReadAhead;
 	tms->ReadAhead = tms->vMem[tms->Addr];

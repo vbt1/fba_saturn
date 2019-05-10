@@ -2,7 +2,7 @@
 #define _OVL_H_
 #define OVLADDR 0x060DA000
 #define MAINEND 0x06022000
-#define MALLOC_MAX  OVLADDR-MAINEND-1600 //0x30000 //0x060FFC00-0x060CC000
+#define MALLOC_MAX  OVLADDR-MAINEND-0x4000 //0x30000 //0x060FFC00-0x060CC000
 #define LOWADDR 0x00200000
 
 //extern Uint32   _bstart, _bend;
@@ -28,6 +28,7 @@ static void initLayers();
 static void initColors();
 static void DrvInitSaturn();
 static void make_lut(void);
+void wait_vblank(void);
 
 /*static*/ SclNorscl *ss_reg = NULL;
 /*static*/ SclSysreg	*ss_regs = NULL;

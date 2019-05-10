@@ -2,7 +2,7 @@
 
 #define MAX_MSM6295 (2)
 
-int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, char bAddSignal);
+int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, char bAddSignal, int *MSM6295Context);
 void MSM6295Reset(int nChip);
 void MSM6295Exit(int nChip);
 int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength);
