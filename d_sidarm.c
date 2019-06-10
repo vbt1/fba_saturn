@@ -12,6 +12,11 @@
 #define nSegment (nCyclesTotal / nInterleave)
 //#define RAZE 1
 
+// idée de Dink : tester le starfield qui est dans ce commit :
+// https://github.com/dinkc64/FBAlphaFB/commit/e70c09bcce851c8ece3d7c48f2bce0233394b333
+// version améliorée
+// https://github.com/dinkc64/FBAlphaFB/commit/ddd14379a7aa37e356e40067b0b8186b96947836
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();

@@ -17,7 +17,13 @@
 /*static*/ int DrvExit();
 /*static*/ int DrvFrame();
 /*static*/ int DrvDoReset();
-/*static*/ UINT8 update_input1(void);
+
+void PCM_MeInit(void);
+void PCM_MeStart(PcmHn hn);
+void PCM_MeStop(PcmHn hn);
+void *memset4_fast(void *, long, size_t);
+
+/*static*/ void update_input1(void);
 /*static*/ UINT8 __fastcall sg1000_read_port(unsigned short port);
 void __fastcall sg1000_write_port(unsigned short port, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_0000(UINT16 address);
@@ -31,7 +37,7 @@ static void __fastcall sg1000_write(UINT16 address, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_2000(UINT16 address);
 /*static*/ UINT8 /*__fastcall*/ sg1000_write_2000(UINT16 address, UINT8 data);
 #else
-/*static*/ UINT8 /*__fastcall*/ sg1000_write_ext2(UINT16 address, UINT8 data);
+/*static*/ void /*__fastcall*/ sg1000_write_ext2(UINT16 address, UINT8 data);
 /*static*/ UINT8 /*__fastcall*/ sg1000_read_ext2(UINT16 address);
 #endif
 /*static*/ void vdp_interrupt(int state);
@@ -42,6 +48,12 @@ static void __fastcall sg1000_write(UINT16 address, UINT8 data);
 
 extern int file_id;
 extern int file_max;
+
+typedef	struct	SysDevice	{
+	Uint8	type;
+	Uint8	size;
+	Uint8	data[1];
+} SysDevice;
 
 typedef UINT16	trigger_t;
 
@@ -61,13 +73,11 @@ typedef	struct	SysPort	{
 	SysPeripheral	*peripheral;
 } SysPort;
 
-/*static*/ SysPort	*__port;
+static SysPort	*__port;
 
-typedef	struct	SysDevice	{
-	UINT8	type;
-	UINT8	size;
-	UINT8	data[1];
-} SysDevice;
+const SysDevice	*PER_GetDeviceR( const SysPort	*port, Uint32	n );
+SysPort	*PER_OpenPort( void );
+trigger_t	PER_GetTrigger( const SysDevice	*this );
 
 #define MAPPER_NONE        (0x00)
 #define MAPPER_TEREBI      (0x01)

@@ -5,23 +5,29 @@
 #include "saturn/ovl.h"
 #include "sega_int.h"
 
-#include "z80_intf.h"
-#include "driver.h"
+//#include "z80_intf.h"
+//#include "driver.h"
 #include "tms9928a.h"
 #include "8255ppi.h"
-#include "bitswap.h"
-//#include "k051649.h"
+//#include "bitswap.h"
+#include "snd/k051649.h"
 //#include "dac.h"
 #include "snd/ay8910.h"
 
 #define nBurnSoundLen 128  // div par 2 car utilisation integer
 
-/*static*/ void DrvFrame();
+/*static*/ INT32 DrvFrame();
 /*static*/ int DrvExit();
 /*static*/ INT32 BasicDrvInit();
 /*static*/ int DrvInit();
 /*static*/ void DrvDoReset();
+
+void PCM_MeInit(void);
+void PCM_MeStart(PcmHn hn);
+void PCM_MeStop(PcmHn hn);
+void *memset4_fast(void *, long, size_t);
 void dummy();
+INT32 GetFileSize(int file_id);
 
 extern int file_id;
 extern int file_max;
@@ -63,6 +69,12 @@ PcmHn 			pcm8[8];
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L //
 
+typedef	struct	SysDevice	{
+	Uint8	type;
+	Uint8	size;
+	Uint8	data[1];
+} SysDevice;
+
 typedef UINT16	trigger_t;
 
 static UINT16 pad_asign[]={
@@ -83,11 +95,9 @@ typedef	struct	SysPort	{
 
 static SysPort	*__port;
 
-typedef	struct	SysDevice	{
-	UINT8	type;
-	UINT8	size;
-	UINT8	data[1];
-} SysDevice;
+const SysDevice	*PER_GetDeviceR( const SysPort	*port, Uint32	n );
+SysPort	*PER_OpenPort( void );
+trigger_t	PER_GetTrigger( const SysDevice	*this );
 
 /*static*/  UINT16 *SCCMixerBuffer	= NULL;
 /*static*/  UINT16 *SCCMixerTable	= NULL;

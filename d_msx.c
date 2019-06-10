@@ -6,8 +6,8 @@
 // Oddities:
 //  VoidRunner and Milk Race freeze when selecting between kbd/joy. (VoidRunner has a kludge, but it doesn't work for Milk Race)
 //  Krakout any key starts, can't get into settings
-#define RAZE 1
 #define K051649 1
+#define RAZE 1
 #include    "machine.h"
 #include "d_msx.h"
 //#define CASSETTE 1
@@ -41,7 +41,7 @@ int ovlInit(char *szShortName)
 	{
 		PCM_MeStop(pcm8[i]);
 	}
-	memset(SOUND_BUFFER,0x00,0x20000);
+	memset((void *)SOUND_BUFFER,0x00,0x20000);
 
 	memset(game, 0xff, MAX_MSX_CARTSIZE);
 	DrvDips[0] = 0x11;
@@ -83,14 +83,6 @@ int ovlInit(char *szShortName)
 	CZetSetWriteHandler(msx_write);
 //	CZetClose();
 #endif
-	nSoundBufferPos=0;
-	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
-	
-	for(unsigned int i=0;i<8;i++)
-	{
-		PCM_MeStart(pcm8[i]);
-	}
-
 	TMS9928AExit();
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt, TMSContext);
 
@@ -103,7 +95,7 @@ int ovlInit(char *szShortName)
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ UINT8 update_input1(void)
+/*static*/ void update_input1(void)
 {
 	unsigned int i=0,k;
 	UINT8 temp = 0xFF;
@@ -158,7 +150,7 @@ int ovlInit(char *szShortName)
 	}
 	else	pltrigger[0] = pltriggerE[0] = 0;
 
-	return 0;
+//	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void	SetVblank2( void ){
@@ -287,12 +279,20 @@ void msxinit(INT32 cart_len)
 	CARTSLOTA = DEFAULT_CARTSLOTA;
 	CARTSLOTB = DEFAULT_CARTSLOTB;
 	RAMSLOT = DEFAULT_RAMSLOT;
-
+//-----------------------------------------------------------------------------------------------
 	memset(EmptyRAM, 0xff, 0x4000); // bus is pulled high for unmapped reads
 
-	unsigned int *nSoundBuffer = (unsigned int *)0x25a28000;
-	memset(nSoundBuffer[0x8000],0x00,nBurnSoundLen * sizeof(INT16) * 8 * 8);
+	unsigned int *nSoundBuffer = (unsigned int *)0x25a28000+0x8000;
+	memset((void *)nSoundBuffer,0x00,nBurnSoundLen * sizeof(INT16) * 8 * 8);
 
+	nSoundBufferPos=0;
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
+	
+	for(unsigned int i=0;i<8;i++)
+	{
+		PCM_MeStart(pcm8[i]);
+	}
+//-----------------------------------------------------------------------------------------------
 	for(UINT32 PSlot = 0; PSlot < 4; PSlot++) // Point all pages there by default
 	{
 		for(UINT32 Page = 0; Page < 8; Page++)
@@ -649,7 +649,7 @@ void msxinit(INT32 cart_len)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
-setFetchKonGen8()
+void setFetchKonGen8()
 {
 #ifndef RAZE
 // bank 1 ---------------------------------------------------------------------------
@@ -1905,7 +1905,7 @@ And the address to change banks:
 	DrvInitSaturn();
 	AllMem = NULL;
 	MemIndex();
-
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnMalloc		",24,40);
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
@@ -1920,7 +1920,8 @@ And the address to change banks:
 		SwapJoyports = (DrvDips[0] & 0x20) ? 1 : 0;
 
 //		if (BurnLoadRom(maincpu, 0x80 + BiosmodeJapan, 1)) return 1; // BIOS
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom		",24,40);
 
 		if (BurnLoadRom(maincpu, 1 + BiosmodeJapan, 1)) return 1; // BIOS
 #ifdef KANJI
@@ -1932,7 +1933,7 @@ And the address to change banks:
 
 		BurnDrvGetRomInfo(&ri, 0);
 		ri.nLen = GetFileSize(file_id);
-
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"GFS_Load		",24,40);
 		GFS_Load(file_id, 0, game, ri.nLen);
 		CurRomSizeA = ri.nLen;
 
@@ -1970,6 +1971,8 @@ And the address to change banks:
 	CZetSetWriteHandler(msx_write);
 	CZetClose();
 #endif
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"AY8910Init		",24,40);
+
 	AY8910Init(0, 3579545/2, nBurnSoundRate, ay8910portAread, NULL, ay8910portAwrite, ay8910portBwrite);
 
 #ifdef K051649
@@ -1980,6 +1983,7 @@ And the address to change banks:
 	DACInit(0, 0, 1, DrvSyncDAC);
 #endif
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"TMS9928AInit      ",26,210);
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AInit		",24,40);
 
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt, TMSContext);
 
@@ -1992,7 +1996,7 @@ And the address to change banks:
 
 	DrvDoReset();
 //FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"after reset        ",4,80);
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
 
 	return 0;
 }
@@ -2100,7 +2104,7 @@ void cleanmemmap()
 	{
 		PCM_MeStop(pcm8[i]);
 	}
-	memset(SOUND_BUFFER,0x00,0x20000);
+	memset((void *)SOUND_BUFFER,0x00,0x20000);
 
 	TMS9928AExit();
 #ifdef K051649
@@ -2161,7 +2165,7 @@ void cleanmemmap()
 	return 0;
 }
 
-/*static*/ void DrvFrame()
+/*static*/ INT32 DrvFrame()
 {
 	//	SPR_InitSlaveSH();
 
@@ -2255,12 +2259,13 @@ void cleanmemmap()
 	}
 	else
 		load_rom();
+	return 1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void updateSlaveSound()
 {
 	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+deltaSlave;
+	unsigned short *nSoundBuffer1 = (unsigned short *)(0x25a24000+deltaSlave);
 //	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"updateSlaveSound   ",24,50);
 
 	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
@@ -2284,7 +2289,7 @@ void cleanmemmap()
 /*static*/ void updateSlaveSoundSCC()
 {
 	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+deltaSlave;
+	INT16 *nSoundBuffer1 = (INT16 *)0x25a24000+deltaSlave;
 
 	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
 #ifdef K051649 

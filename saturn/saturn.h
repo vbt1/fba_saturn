@@ -32,6 +32,8 @@ void	PCM_MeSetLoop( PcmHn	hn, Sint32	cnt_loop );
 void PCM_MeSetVolume(PcmHn hn, Uint32 level);
 void PCM_DrvChangePcmPara(PcmHn hn, Sint32 level, Sint32 pan);
 void PCM_MeInit(void);
+void PCM_MeStart(PcmHn hn);
+void PCM_MeStop(PcmHn hn);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
 void  FNT_Print256_2bppSel(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
 static void initSound();
@@ -39,6 +41,9 @@ void memcpyb(void *, void *, int);
 void memcpyw(void *, void *, int);
 void memcpyl(void *, void *, int);
 void *memset4_fast(void *, long, size_t);
+void CSH_Init(Uint16 sw);
+void ChangeDir(char *dirname);
+void InitCD();
 
 #define	AD_SMPC_COMREG	0x2010001F
 #define	SMPC_COMREG		(*( volatile Uint8 * )AD_SMPC_COMREG)
@@ -260,7 +265,7 @@ static Uint8 GetComBlockAdr(void);
 static void CopyMem(void *,void *,Uint32);
 static void DmaClrZero(void *, Uint32);
 static void InpMake(unsigned int key[]);
-static void run_fba_emulator(void);
+/*static*/ void run_fba_emulator(void);
 static void wait_vblank(void);
 static void do_keypad(void);
 static unsigned char update_input(unsigned int *current_page, unsigned char *loaded, unsigned char *modified);
@@ -274,7 +279,7 @@ static void SCL_ParametersInit(void);
 static void ss_main(void);
 static void VDP2_InitVRAM(void);
 //void displayMenu(void);
-trigger_t	PER_GetTrigger( const SysDevice	*this );
+//trigger_t	PER_GetTrigger( const SysDevice	*this );
 
 	static inline int	PER_GetID( const SysDevice	*this ){
 		return	( int )( this->type | this->size );

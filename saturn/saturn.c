@@ -10,11 +10,15 @@
 #define LOWADDR 0x00200000
 #define MALLOC_MAX 0xAA000
 
+#ifdef HEAP_WALK
+void heapWalk(void);
+#endif
+
 //#define DEBUG_DRV 1
-volatile SysPort	*__port;
+/*volatile*/ SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
 extern unsigned char play;
-unsigned char drvquit;
+unsigned char drvquit = 0;
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	UsrVblankIn( void )
 {
@@ -113,7 +117,7 @@ void initScrolling(Uint8 enabled,void *address)
     lp.h_enbl=enabled;
 	if(enabled==ON)
 	{
-		lp.line_addr=(Uint32 )&address[0];//SCL_VDP2_VRAM_B0+0x4000;
+		lp.line_addr=(Uint32 )address;//SCL_VDP2_VRAM_B0+0x4000;
 		SclAddrLsTbl[0] = lp.line_addr;//+0x20;
 		SclAddrLsTbl[1] = (Uint32 )&ls_tbl[0];
 	}
@@ -121,7 +125,7 @@ void initScrolling(Uint8 enabled,void *address)
 	{
 		lp.line_addr=0x00;
 		SclAddrLsTbl[0] = 0x00;
-		SclAddrLsTbl[1] = NULL;
+		SclAddrLsTbl[1] = (Uint32)NULL;
 		nBurnLinescrollSize = 1;
 	}
 
@@ -193,9 +197,9 @@ static void resetLayers()
 	};
  	SclConfig	scfg;
 
-	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_MAP  = (Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_MAP2 = (Uint16 *)SCL_VDP2_VRAM_A0;
+	SS_FONT = (Uint32 *)SCL_VDP2_VRAM_A1;
+	SS_MAP  = (Uint32 *)SCL_VDP2_VRAM_B0;
+	SS_MAP2 = (Uint32 *)SCL_VDP2_VRAM_A0;
 
 	SCL_ParametersInit();
 
@@ -259,7 +263,7 @@ static void resetSound()
 
 	PCM_MeStop(pcm);
 //	PCM_MeReset(pcm);
-	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*16);
+	memset((int *)SOUND_BUFFER,0x00,RING_BUF_SIZE*16);
 	nSoundBufferPos=0;
 	PCM_MeStart(pcm);
 }
@@ -276,8 +280,8 @@ static void initSaturn()
 	resetLayers();
 
 
-	memset(pltrigger[0],0x00,sizeof(trigger_t));
-	memset(pltriggerE[0],0x00,sizeof(trigger_t));
+//	memset(pltrigger[0],0x00,sizeof(trigger_t));
+//	memset(pltriggerE[0],0x00,sizeof(trigger_t));
 
 	play = 0;
 	resetColors();
@@ -295,18 +299,18 @@ wait_vblank();
 	play = 0;
 	wait_vblank();
 
-	SS_REG   = &Scl_n_reg;
-	SS_REGD =	&Scl_d_reg;
-	SS_REGS =	&Scl_s_reg;
-	SS_REGW =	&Scl_w_reg;
-	SS_SPRAM = &aVRAM[0];
- 	SS_N0PRI = &SclBgPriNum;
-	SS_SPPRI = &SclSpPriNum;
-	SS_OTHR  = &SclOtherPri;
-	SS_BGMIX = &SclBgColMix;
-	SS_SPRIT = &smsSprite[0];
-	SS_SCL	 = &ls_tbl[0];
-	SS_PORT  = (SysPort *)__port;
+	SS_REG	=	(Uint32 *)&Scl_n_reg;
+	SS_REGD =	(Uint32 *)&Scl_d_reg;
+	SS_REGS =	(Uint32 *)&Scl_s_reg;
+	SS_REGW =	(Uint32 *)&Scl_w_reg;
+	SS_SPRAM = 	(Uint32 *)aVRAM;
+ 	SS_N0PRI =	(Uint32 *)&SclBgPriNum;
+	SS_SPPRI =	(Uint32 *)&SclSpPriNum;
+	SS_OTHR  =	(Uint32 *)&SclOtherPri;
+	SS_BGMIX =	(Uint32 *)&SclBgColMix;
+	SS_SPRIT = 	(Uint32 *)smsSprite;
+	SS_SCL	 = 	(Uint32 *)ls_tbl;
+	SS_PORT  =	(Uint32 *)__port;
 //	SS_SCL1	 = &ls_tbl1[0];
 
 	col[0]=0;
@@ -364,7 +368,7 @@ static void load_img(int id)
 
 	if(id!=0)
 	{
-	 	wait_key(PER_DGT_B);
+	 	wait_key((Uint8)PER_DGT_B);
 		load_img(0);
 	}
 }
@@ -1450,8 +1454,8 @@ static void InpDIP()
 {
 	struct BurnDIPInfo bdi;
 	struct GameInp* pgi;
-	int i;  ///, j;
-	int nDIPOffset = 0;
+	unsigned int i;  ///, j;
+	unsigned int nDIPOffset = 0;
 
 	// get dip switch offset 
 	for (i = 0; BurnDrvGetDIPInfo(&bdi, i) == 0; i++)
@@ -1463,7 +1467,7 @@ static void InpDIP()
 	// set DIP to default
 	i = 0;
 //	j = 40;
-	char bDifficultyFound = 0;
+//	char bDifficultyFound = 0;
 	while (BurnDrvGetDIPInfo(&bdi, i) == 0) 
 	{
 //		char toto[100];
@@ -1496,7 +1500,7 @@ static int nDrvInit(int nDrvNum)
 //	DrvExit(); // Make sure exited
 	nBurnDrvSelect = nDrvNum; // set the driver number
 
-	shared   = pDriver[nBurnDrvSelect];
+	shared   = (Uint32 *)pDriver[nBurnDrvSelect];
 
 	if(BurnDrvGetTextA(DRV_PARENT)==NULL)
 		sprintf(drv_file,"d_%s.bin",BurnDrvGetTextA(DRV_NAME));
@@ -1589,7 +1593,7 @@ static void do_keypad()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void run_fba_emulator()
+/*static*/ void run_fba_emulator()
 {
 	nBurnSoundRate = SOUNDRATE;
 	ChangeDir("GAMES");
@@ -1597,7 +1601,7 @@ static void run_fba_emulator()
 	if (nDrvInit(nBurnDrvSelect) != 0) 
 	{
 		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Driver initialisation failed! Likely causes are:",1,180);
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Corrupt/Missing ROM(s)\n- I/O Error\n- Memory error\n\n",1,190);
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Corrupt/Missing ROM(s)\n- I/O Error\n- Memory error\n\n",1,190);
 //		while(1);
 	}
 	else
@@ -1614,7 +1618,7 @@ static void run_fba_emulator()
 		SetVblank(); // a garder
 
 		int (*Frame)();
-		Frame = (int *)pDriver[nBurnDrvSelect]->Frame;
+		Frame = pDriver[nBurnDrvSelect]->Frame;
 
 		if(lp.h_enbl)
 		{

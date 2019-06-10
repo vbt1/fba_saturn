@@ -70,6 +70,6 @@ SECTIONS {
 	
 	.overlay 0x060DA000:
         {
-                _overlaystart = .;
+			boot = .;
         } > ram
 }

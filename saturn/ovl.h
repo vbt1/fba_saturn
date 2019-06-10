@@ -12,9 +12,9 @@ extern Uint32 *shared;
 //static Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
 extern unsigned int  nSoundBufferPos;
 extern unsigned int nBurnSprites;
-int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
-void cleanBSS() __attribute__ ((boot,section(".clean")));
-void cleanDATA() __attribute__ ((boot,section(".clean")));
+int ovlInit(char *szShortName) __attribute__ ((section(".boot")));
+void cleanBSS() __attribute__ ((section(".clean")));
+void cleanDATA() __attribute__ ((section(".clean")));
 
 void GfxDecode4Bpp(unsigned int num, unsigned int numPlanes, unsigned int xSize, unsigned int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);

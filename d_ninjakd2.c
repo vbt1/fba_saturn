@@ -33,11 +33,11 @@ int ovlInit(char *szShortName)
 {
 	offset &= 0x7fe;
 
-	INT32 p = (DrvPalRAM[offset+0] * 256) + DrvPalRAM[offset+1];
+	UINT32 p = (DrvPalRAM[offset+0] << 8) + DrvPalRAM[offset+1];
 
-	INT32 r = p >> 12;
-	INT32 g = (p >> 8) & 0xf;
-	INT32 b = (p >> 4) & 0xf;
+	UINT32 r = p >> 12;
+	UINT32 g = (p >> 8) & 0xf;
+	UINT32 b = (p >> 4) & 0xf;
 
 	r |= r << 4;
 	g |= g << 4;
@@ -519,19 +519,19 @@ int ovlInit(char *szShortName)
 	DrvGfxROM3	 	= (UINT8 *)cache+0x28000;//bg2  //Next; Next += 0x100000;
 	DrvGfxROM4		= (UINT8 *)cache+0x58000;//bg3 // Next; Next += 0x100000;
 
-	CZ80Context	= 0x2FB800;
+	CZ80Context	= (UINT8 *)0x2FB800;
 
 	AllRam			= Next;
 
-	DrvZ80RAM0	= 0x2F0000;//Next; Next += 0x001a00;
+	DrvZ80RAM0	= (UINT8 *)0x2F0000;//Next; Next += 0x001a00;
 //	DrvZ80RAM1	= 0x2F1a00;//Next; Next += 0x000800; // vbt : r?cuperer ces 0x800 de ram
-	DrvSprRAM	= 0x2F2200;//Next; Next += 0x000600;
-	DrvPalRAM	= 0x2F2800;//Next; Next += 0x000800;
-	DrvFgRAM	= 0x2F3000;//Next; Next += 0x000800;
-	DrvBgRAM0	= 0x2F3800;//Next;
-	DrvBgRAM	= 0x2F5800;//Next; Next += 0x002000;
-	DrvBgRAM1	= 0x2F7800;//Next; Next += 0x002000;
-	DrvBgRAM2	= 0x2F9800;//Next; Next += 0x002000;
+	DrvSprRAM	= (UINT8 *)0x2F2200;//Next; Next += 0x000600;
+	DrvPalRAM	= (UINT8 *)0x2F2800;//Next; Next += 0x000800;
+	DrvFgRAM	= (UINT8 *)0x2F3000;//Next; Next += 0x000800;
+	DrvBgRAM0	= (UINT8 *)0x2F3800;//Next;
+	DrvBgRAM	= (UINT8 *)0x2F5800;//Next; Next += 0x002000;
+	DrvBgRAM1	= (UINT8 *)0x2F7800;//Next; Next += 0x002000;
+	DrvBgRAM2	= (UINT8 *)0x2F9800;//Next; Next += 0x002000;
 
 	RamEnd		= Next;
 
@@ -573,7 +573,7 @@ int ovlInit(char *szShortName)
 	MemIndex();
 
 	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
-	memset(0x2F0000, 0, 0x9c00);
+	memset((void *)0x2F0000, 0, 0x9c00);
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	{
@@ -717,12 +717,11 @@ int ovlInit(char *szShortName)
 {
     Uint16	CycleTb[]={
 //		0xff56, 0xffff, //A0
-		0xff56,0xff74,  //A0 // nbg1 et 2 ok
+		0xffff,0x4567,  //A0 // nbg1 et 2 ok
 		0xffff, 0xffff,	//A1
 //		0x15f2,0x4eff,   //B0 // nbg1 et 2 ok
-		0x1f2f, 0x3f0f,  //B1
+		0x0123, 0xffff,  //B1
 		0xffff,0xffff   //B0
-
 //		0x4eff, 0x1fff, //B1
 	};
  	SclConfig	scfg;
@@ -767,7 +766,7 @@ int ovlInit(char *szShortName)
 
 	SCL_SetCycleTable(CycleTb);
 
-	memset(SCL_VDP2_VRAM_B0,0x00,0x2000);
+	memset((void *)SCL_VDP2_VRAM_B0,0x00,0x2000);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initPosition()

@@ -167,12 +167,12 @@ int ovlInit(char *szShortName)
 	z80_set_reg(Z80_REG_IRQVector,0xff);
 #endif	
 	PCM_MeStop(pcm);
-	memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
+	memset((void *)SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
 	nSoundBufferPos=0;
 	PCM_MeStart(pcm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ UINT8 update_input1(void)
+/*static*/ void update_input1(void)
 {
 	UINT8 temp = 0xFF;
 	SysDevice	*device;
@@ -222,8 +222,6 @@ int ovlInit(char *szShortName)
 		}
 	}
 	else	pltrigger[0] = pltriggerE[0] = 0;
-
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
  void __fastcall sg1000_write_port(unsigned short port, UINT8 data)
@@ -379,7 +377,7 @@ int ovlInit(char *szShortName)
 }
 
  // $2000-$3FFF mapped to 8k external RAM
-/*static*/ UINT8 /*__fastcall*/ sg1000_write_ext2(UINT16 address, UINT8 data)
+/*static*/ void /*__fastcall*/ sg1000_write_ext2(UINT16 address, UINT8 data)
 {
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"sg1000_write_ext2     ",26,180);
 
@@ -426,7 +424,7 @@ int ovlInit(char *szShortName)
 /*static*/ int DrvExit()
 {
 	nBurnFunction = NULL;
-	wait_vblank();
+//	wait_vblank();
 
 #ifdef RAZE
 	z80_stop_emulating();
@@ -442,13 +440,15 @@ int ovlInit(char *szShortName)
 	z80_add_read(0x2000, 0x3fff, 1, (void *)NULL);
 	z80_add_write(0x2000, 0x3fff, 1, (void *)NULL);
 #else
+	CZetSetWriteHandler((void *)NULL);
+	CZetSetReadHandler((void *)NULL);	
 	CZetExit2();
 #endif
 	TMS9928AExit();
 	ppi8255_exit();
-	SN76489AInit(0, 0, 0);	
-	
-//	memset(SOUND_BUFFER,0x00,0x20000);
+//	SN76489AInit(0, 0, 0);	
+
+	memset((void *)SOUND_BUFFER,0x00,0x20000);
 	
 	CZ80Context = TMSContext = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
 //	__port = NULL;
@@ -514,7 +514,7 @@ int ovlInit(char *szShortName)
 		nSoundBufferPos += nSegmentLength2;
 	}	   
 
-	if(nSoundBufferPos>=RING_BUF_SIZE/2.5)
+	if(nSoundBufferPos>=RING_BUF_SIZE>>1)
 	{
 		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		nSoundBufferPos=0;

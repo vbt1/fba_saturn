@@ -48,13 +48,11 @@ SECTIONS {
 		root/sl.coff ("COMMON")
 		. = ALIGN(4);
 		__bend = . ;
-		_end = .;
 	} > ram
 
         .overlay 0x060DA000 :
         {
 		. = ALIGN(4);
-                _overlaystart = .;
 		*(.boot)
 		*(.clean)
 		*(".text")
@@ -69,7 +67,7 @@ SECTIONS {
 		*(.bss)
 		*("COMMON")
 		__bendo = . ;
-		_end = .;
+
 	
         } > ram
  }

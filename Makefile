@@ -10,7 +10,7 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile
 #CCFLAGS =  -mhitachi -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
-CCFLAGS2 = -m2 -Os -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I.
+CCFLAGS2 = -m2 -O2 -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I.
 #CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O0 -fomit-frame-pointer -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -m2 -mrenesas  -std=gnu99 -Wfatal-errors -Os -D_SH -DMODEL_S -c
@@ -18,7 +18,7 @@ CCFLAGS2 = -m2 -Os -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-gcse -
 #CCOVLFLAGS = -S -fverbose-asm -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
 CCOVLFLAGS = -m2 -O2 -fuse-linker-plugin -flto -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
-#LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles  -nostdlib
+#LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker boot -nostartfiles  -nostdlib
 LDCMNFLAGS = -m2 -O2 -Xlinker -n -Xlinker -flto -Xlinker
 
 TARGET    = root/sl.coff
@@ -40,7 +40,7 @@ OBJOVLIMG         = $(SRCOVLIMG:.c=.o)
 OVERLAY	       = root/d_bankp.coff
 OVERLAY1     = root/d_bankp.bin
 MPOVLFILE    = $(OVERLAY:.coff=.maps)
-LDOVLFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVL         = d_bankp.c snd/sn76496.c load.c saturn/ovl.c
 #SRCOVL         = d_bankp.c czet.c cz80/cz80.c snd/sn76496.c saturn/ovl.c
 OBJOVL         = $(SRCOVL:.c=.o)
@@ -48,70 +48,70 @@ OBJOVL         = $(SRCOVL:.c=.o)
 OVLNEWS                 = root/d_news.coff
 OVLNEWS1               = root/d_news.bin
 MPOVLNEWSFILE    = $(OVLNEWS:.coff=.maps)
-LDOVLNEWSFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNEWSFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLNEWSFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNEWSFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLNEWS         = d_news.c czet.c cz80/cz80.c snd/msm6295.c burn_sound_c.c load.c saturn/ovl.c
 OBJOVLNEWS         = $(SRCOVLNEWS:.c=.o)
 
 OVLGBERET                 = root/d_gberet.coff
 OVLGBERET1               = root/d_gberet.bin
 MPOVLGBERETFILE    = $(OVLGBERET:.coff=.maps)
-LDOVLGBERETFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGBERETFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLGBERETFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGBERETFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLGBERET         = d_gberet.c snd/sn76496.c load.c saturn/ovl.c 
 OBJOVLGBERET         = $(SRCOVLGBERET:.c=.o)
 
 OVLHIGEMARU                 = root/d_higemaru.coff
 OVLHIGEMARU1               = root/d_higema.bin
 MPOVLHIGEMARUFILE    = $(OVLHIGEMARU:.coff=.maps)
-LDOVLHIGEMARUFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLHIGEMARUFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLHIGEMARUFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLHIGEMARUFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLHIGEMARU         = d_higemaru.c czet.c cz80/cz80.c snd/ay8910.c  load.c saturn/ovl.c
 OBJOVLHIGEMARU         = $(SRCOVLHIGEMARU:.c=.o)
 
 OVLPKUNW                 = root/d_pkunw.coff
 OVLPKUNW1               = root/d_pkunw.bin
 MPOVLPKUNWFILE    = $(OVLPKUNW:.coff=.maps)
-LDOVLPKUNWFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPKUNWFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLPKUNWFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPKUNWFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLPKUNW         = d_pkunwar.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c
 OBJOVLPKUNW         = $(SRCOVLPKUNW:.c=.o)
 
 OVLMITCH                 = root/d_mitch.coff
 OVLMITCH1               = root/d_mitch.bin
 MPOVLMITCHFILE    = $(OVLMITCH:.coff=.maps)
-LDOVLMITCHFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMITCHFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLMITCHFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMITCHFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c snd/msm6295.c burn_sound_c.c eeprom.c load.c saturn/ovl.c saturn/saturn_snd.c
 OBJOVLMITCH         = $(SRCOVLMITCH:.c=.o)
 
 OVLGNG                 = root/d_gng.coff
 OVLGNG1               = root/d_gng.bin
 MPOVLGNGFILE    = $(OVLGNG:.coff=.maps)
-LDOVLGNGFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGNGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLGNGFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGNGFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLGNG         = m6809_intf.c m6809.c  d_gng.c load.c saturn/ovl.c
 OBJOVLGNG         = $(SRCOVLGNG:.c=.o)
 
 OVLSYS1                 = root/d_sys1.coff
 OVLSYS11               = root/d_sys1.bin
 MPOVLSYS1FILE    = $(OVLSYS1:.coff=.maps)
-LDOVLSYS1FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSYS1FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1FILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSYS1         = d_sys1.c czet.c cz80/cz80.c snd/sn76496.c load.c saturn/ovl.c
 OBJOVLSYS1         = $(SRCOVLSYS1:.c=.o)
 
 OVLSYS1H                 = root/d_SYS1H.coff
 OVLSYS1H1               = root/d_SYS1H.bin
 MPOVLSYS1HFILE    = $(OVLSYS1H:.coff=.maps)
-LDOVLSYS1HFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1HFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSYS1HFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1HFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSYS1H         = d_sys1h.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c
 OBJOVLSYS1H         = $(SRCOVLSYS1H:.c=.o)
 
 OVLSYS2                 = root/d_sys2.coff
 OVLSYS21               = root/d_sys2.bin
 MPOVLSYS2FILE    = $(OVLSYS2:.coff=.maps)
-LDOVLSYS2FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS2FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSYS2FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS2FILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSYS2         = d_sys2.c czet.c cz80/cz80.c snd/sn76496.c 8255ppi.c mc8123.c load.c saturn/ovl.c
 OBJOVLSYS2         = $(SRCOVLSYS2:.c=.o)
 
 OVLPACM                 = root/d_pacm.coff
 OVLPACM1               = root/d_pacm.bin
 MPOVLPACMFILE    = $(OVLPACM:.coff=.maps)
-LDOVLPACMFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPACMFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLPACMFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPACMFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLPACM         = d_pacman.c czet.c snd/namco_snd.c cz80/cz80.c load.c saturn/ovl.c
 #SRCOVLPACM         = d_pacman_zet.c zet.c z80.c z80daisy.c namco_snd.c 
 OBJOVLPACM         = $(SRCOVLPACM:.c=.o)
@@ -119,35 +119,35 @@ OBJOVLPACM         = $(SRCOVLPACM:.c=.o)
 OVLSMS                 = root/d_sms.coff 
 OVLSMS1               = root/d_sms.bin
 MPOVLSMSFILE    = $(OVLSMS:.coff=.maps)
-LDOVLSMSFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSMSFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSMS         = d_sms.c psg_sms.c
 OBJOVLSMS         = $(SRCOVLSMS:d_sms.c=sms/d_sms.o)
 
 OVLSMSCZ80                 = root/d_smscz.coff
 OVLSMSCZ801               = root/d_smscz.bin
 MPOVLSMSCZ80FILE    = $(OVLSMSCZ80:.coff=.maps)
-LDOVLSMSCZ80FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSCZ80FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSMSCZ80FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSCZ80FILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c cz80/cz80.c
 OBJOVLSMSCZ80         = $(SRCOVLSMSCZ80:.c=.o)
 
 OVLGG                = root/d_gg.coff
 OVLGG1              = root/d_gg.bin
 MPOVLGGFILE    = $(OVLGG:.coff=.maps)
-LDOVLGGFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLGGFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLGG         = d_sms.c psg_sms.c 
 OBJOVLGG         = $(SRCOVLSMS:d_sms.c=gg/d_sms.o)
 
 OVLGGCZ                = root/d_ggcz.coff
 OVLGGCZ1              = root/d_ggcz.bin
 MPOVLGGCZFILE    = $(OVLGGCZ:.coff=.maps)
-LDOVLGGCZFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGCZFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLGGCZFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGCZFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLGGCZ         = d_sms.c psg_sms.c czet.c cz80/cz80.c
 OBJOVLGGCZ         = $(SRCOVLSMS:d_sms.c=ggcz/d_sms.o)
 
 OVLZAXXON                 = root/d_zaxxon.coff
 OVLZAXXON1               = root/d_zaxxon.bin
 MPOVLZAXXONFILE    = $(OVLZAXXON:.coff=.maps)
-LDOVLZAXXONFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLZAXXONFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLZAXXONFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLZAXXONFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c load.c saturn/ovl.c
 #SRCOVLZAXXON       = d_ZAXXON.c saturn/ovl.c d_zaxxon.s
 OBJOVLZAXXON         = $(SRCOVLZAXXON:.c=.o)
@@ -155,7 +155,7 @@ OBJOVLZAXXON         = $(SRCOVLZAXXON:.c=.o)
 OVLTETRIS                 = root/d_tetris.coff
 OVLTETRIS1               = root/d_TETRIS.bin
 MPOVLTETRISFILE    = $(OVLTETRIS:.coff=.maps)
-LDOVLTETRISFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLTETRISFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLTETRISFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLTETRISFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLTETRIS         = d_atetris_crab6502.c crab6502/crab6502.c crab6502/m6502_intf.c snd/sn76496.c slapstic.c
 SRCOVLTETRIS         = d_atetris_mame6502.c m6502.new/m6502.c m6502.new/m6502_intf.c snd/sn76496.c slapstic.c load.c saturn/ovl.c
 #SRCOVLTETRIS         = d_atetris.c m6502/m6502.c m6502_intf.c snd/sn76496.c slapstic.c
@@ -166,7 +166,7 @@ OBJOVLTETRIS         = $(SRCOVLTETRIS:.c=.o)
 OVLVIGIL                 = root/d_vigil.coff
 OVLVIGIL1               = root/d_vigil.bin
 MPOVLVIGILFILE    = $(OVLVIGIL:.coff=.maps)
-LDOVLVIGILFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLVIGILFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLVIGILFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLVIGILFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c snd/dac.c load.c saturn/ovl.c
 #SRCOVLVIGIL         = d_vigilant.c z80_intf.c z80.c z80daisy.c burn_ym2151.c ym2151.c dac.c burn_sound_c.c load.c saturn/ovl.c
 OBJOVLVIGIL         = $(SRCOVLVIGIL:.c=.o)
@@ -174,7 +174,7 @@ OBJOVLVIGIL         = $(SRCOVLVIGIL:.c=.o)
 OVLSG1000                 = root/d_sg1000.coff
 OVLSG10001               = root/d_sg1000.bin
 MPOVLSG1000FILE    = $(OVLSG1000:.coff=.maps)
-LDOVLSG1000FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSG1000FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSG1000FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSG1000FILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c snd/sn76496.c czet.c cz80/cz80.c load.c saturn/ovl.c
 #SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c snd/sn76496.c saturn/ovl.c
 OBJOVLSG1000         = $(SRCOVLSG1000:.c=.o)
@@ -182,21 +182,21 @@ OBJOVLSG1000         = $(SRCOVLSG1000:.c=.o)
 OVLBOMBJACK                 = root/d_bombja.coff
 OVLBOMBJACK1               = root/d_bombja.bin
 MPOVLBOMBJACKFILE    = $(OVLBOMBJACK:.coff=.maps)
-LDOVLBOMBJACKFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBOMBJACKFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLBOMBJACKFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBOMBJACKFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLBOMBJACK         = d_bombjack.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c
 OBJOVLBOMBJACK         = $(SRCOVLBOMBJACK:.c=.o)
 
 OVLAPPOOO                 = root/d_appooo.coff
 OVLAPPOOO1               = root/d_appooo.bin
 MPOVLAPPOOOFILE    = $(OVLAPPOOO:.coff=.maps)
-LDOVLAPPOOOFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLAPPOOOFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLAPPOOOFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLAPPOOOFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLAPPOOO         = d_appoooh.c czet.c cz80/cz80.c snd/sn76496.c snd/msm5205.c load.c saturn/ovl.c
 OBJOVLAPPOOO         = $(SRCOVLAPPOOO:.c=.o)
 
 OVLBLKTGR                 = root/d_blktgr.coff
 OVLBLKTGR1               = root/d_blktgr.bin
 MPOVLBLKTGRFILE    = $(OVLBLKTGR:.coff=.maps)
-LDOVLBLKTGRFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBLKTGRFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLBLKTGRFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBLKTGRFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c snd/timer.c snd/ay8910.c snd/fm.c snd/burn_ym2203.c load.c saturn/ovl.c
 SRCOVLBLKTGR         = d_blktiger.c load.c saturn/ovl.c  saturn/saturn_snd.c
 #SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c snd/timer.c load.c saturn/ovl.c
@@ -205,28 +205,28 @@ OBJOVLBLKTGR         = $(SRCOVLBLKTGR:.c=.o)
 OVLWIZ                = root/d_wiz.coff
 OVLWIZ1              = root/d_wiz.bin
 MPOVLWIZFILE    = $(OVLWIZ:.coff=.maps)
-LDOVLWIZFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLWIZFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLWIZFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLWIZFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLWIZ         = d_wiz.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c saturn/saturn_ext.c
 OBJOVLWIZ         = $(SRCOVLWIZ:.c=.o)
 
 OVLSLPFGHT                = root/d_slpfgh.coff
 OVLSLPFGHT1              = root/d_slpfgh.bin
 MPOVLSLPFGHTFILE    = $(OVLSLPFGHT:.coff=.maps)
-LDOVLSLPFGHTFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSLPFGHTFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSLPFGHTFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSLPFGHTFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSLPFGHT         = d_slpfgh.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c
 OBJOVLSLPFGHT         = $(SRCOVLSLPFGHT:.c=.o)
 
 OVLFREEK                 = root/d_freek.coff
 OVLFREEK1               = root/d_freek.bin
 MPOVLFREEKFILE    = $(OVLFREEK:.coff=.maps)
-LDOVLFREEKFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFREEKFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLFREEKFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFREEKFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLFREEK         = d_freekick.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c 8255ppi.c load.c saturn/ovl.c
 OBJOVLFREEK         = $(SRCOVLFREEK:.c=.o)
 
 OVLMSX                 = root/d_msx.coff
 OVLMSX1               = root/d_msx.bin
 MPOVLMSXFILE    = $(OVLMSX:.coff=.maps)
-LDOVLMSXFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMSXFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLMSXFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMSXFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLMSX         = d_msx.c czet.c cz80/cz80.c tms9928a.c snd/k051649.c snd/ay8910.c 8255ppi.c saturn/ovl.c
 #SRCOVLMSX         = d_msx.c z80_intf.c z80/z80.c z80/z80daisy.c tms9928a.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
 SRCOVLMSX         = d_msx.c tms9928a.c snd/k051649.c snd/ay8910.c 8255ppi.c load.c saturn/ovl.c
@@ -235,28 +235,28 @@ OBJOVLMSX         = $(SRCOVLMSX:.c=.o)
 OVLSEGAE                 = root/d_segae.coff
 OVLSEGAE1               = root/d_segae.bin
 MPOVLSEGAEFILE    = $(OVLSEGAE:.coff=.maps)
-LDOVLSEGAEFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSEGAEFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSEGAEFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSEGAEFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c saturn/saturn_ext.c 
 OBJOVLSEGAE         = $(SRCOVLSEGAE:.c=.o)
 
 OVLSOLOMN                = root/d_solomn.coff
 OVLSOLOMN1              = root/d_solomn.bin
 MPOVLSOLOMNFILE    = $(OVLSOLOMN:.coff=.maps)
-LDOVLSOLOMNFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSOLOMNFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSOLOMNFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSOLOMNFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSOLOMN         = d_solomon.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c
 OBJOVLSOLOMN         = $(SRCOVLSOLOMN:.c=.o)
 
 OVLSIDARM                 = root/d_sidarm.coff
 OVLSIDARM1               = root/d_sidarm.bin
 MPOVLSIDARMFILE    = $(OVLSIDARM:.coff=.maps)
-LDOVLSIDARMFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSIDARMFILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLSIDARMFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSIDARMFILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLSIDARM         = d_SIDARM.c czet.c cz80/cz80.c saturn/ovl.c load.c saturn/saturn_snd.c saturn/saturn_ext.c
 OBJOVLSIDARM         = $(SRCOVLSIDARM:.c=.o)
 
 OVLNINKD2                 = root/d_ninkd2.coff
 OVLNINKD21               = root/d_ninkd2.bin
 MPOVLNINKD2FILE    = $(OVLNINKD2:.coff=.maps)
-LDOVLNINKD2FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNINKD2FILE) -Xlinker -e -Xlinker _overlaystart -nostartfiles
+LDOVLNINKD2FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNINKD2FILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLNINKD2         = d_ninjakd2.c czet.c cz80/cz80.c mc8123.c load.c saturn/ovl.c
 OBJOVLNINKD2         = $(SRCOVLNINKD2:.c=.o)
 

@@ -47,7 +47,7 @@ struct _k051649_state
 	// global sound parameters
 	INT32 mclock,rate;
 //	float gain;
-	INT32 output_dir;
+	//INT32 output_dir;
 
 	// mixer tables and internal buffers 
 	INT16 *mixer_table;
@@ -237,7 +237,7 @@ void K051649Init(INT32 clock, INT16 *SCCMixerBuffer, INT16 *SCCMixerTable)
 	info->rate = 7680L; ///clock/16; // vbt faux !!!
 	info->mclock = clock;
 //	info->gain = (float)1.00;
-	info->output_dir = BURN_SND_ROUTE_BOTH;
+	//info->output_dir = BURN_SND_ROUTE_BOTH;
 	
 	nUpdateStep = (INT32)(((float)info->rate / nBurnSoundRate) * 32768);
 
@@ -335,7 +335,6 @@ void K051649WaveformWrite(INT32 offset, INT32 data)
 //#if defined FBA_DEBUG
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649WaveformWrite called without init\n"));
 //#endif
-
 	info = &Chips[0];
 	info->channel_list[offset>>5].waveform[offset&0x1f]=data;
 	/* SY 20001114: Channel 5 shares the waveform with channel 4 */

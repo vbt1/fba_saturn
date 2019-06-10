@@ -2,6 +2,7 @@
 #include "SEGA_DMA.H"
 #include "SEGA_SPR.H"
 #include    "machine.h"
+#include <string.h>
 
 struct SprSpCmd {                       /* Sprite Command Table             */
     Uint16  control;                    /* control word                     */
@@ -54,7 +55,7 @@ void dummy()
 		int plane, x, y;
 	
 		unsigned char *dp = pDest + (c * (xSize/2) * ySize);
-		memset(dp, 0, (xSize/2) * ySize);
+		memset((void *)dp, 0, (xSize/2) * ySize);
 	
 		for (plane = 0; plane < numPlanes; plane++) {
 			int planebit = 1 << (numPlanes - 1 - plane);
@@ -188,7 +189,7 @@ void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt, Uint32 channel)
     DMA_ScuStart(channel);
 
 	set_imask(msk);
-    set_imask(msk);                                         /* Š„‚èž‚ÝPOP   */
+//    set_imask(msk);                                         /* Š„‚èž‚ÝPOP   */
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------

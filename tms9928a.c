@@ -1,6 +1,6 @@
 #include "tms9928a.h"
 #include "burn.h"
-
+#include <string.h>
 extern UINT32 *shared;
 //extern UINT8 *TMSContext ;
 #define SS_SPRAM *(&shared + 5)
@@ -21,7 +21,7 @@ static void TMS89928aPaletteRecalc()
 
 static void check_interrupt()
 {
-	INT32 b = (tms.StatusReg & 0x80 && tms.Regs[1] & 0x20) ? 1 : 0;
+	UINT32 b = (tms.StatusReg & 0x80 && tms.Regs[1] & 0x20) ? 1 : 0;
 	if (b != tms.INT) {
 		tms.INT = b;
 		if (tms.INTCallback) tms.INTCallback (tms.INT);
@@ -110,10 +110,10 @@ void TMS9928AReset()
 	for (UINT32 i = 0; i < 8; i++)
 		tms.Regs[i] = 0;
 
-	memset(tms.vMem, 0, tms.vramsize+1);
+	memset((void *)tms.vMem, 0, tms.vramsize+1);
 
-	memset(tms.tmpbmp, 0, 256 * 192 * sizeof(char));
-	memset(tms.dirty,0xFF,192*128);
+	memset((void *)tms.tmpbmp, 0, 256 * 192 * sizeof(char));
+	memset((void *)tms.dirty,0xFF,192*128);
 
 	tms.StatusReg = 0;
 	tms.FifthSprite = 31;
@@ -269,7 +269,7 @@ static void draw_mode0(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmst
 	unsigned char *vbt;
 	unsigned int *dirtyptr;
 
-	dirtyptr=(unsigned char *)tms.dirty;
+	dirtyptr=(unsigned int *)tms.dirty;
 
 	for (unsigned int y = 0; y < 24; y++)
 	{
@@ -380,7 +380,6 @@ static void draw_mode12(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tms
         }
     }
 }
-
 static void draw_mode2(unsigned short *bitmap,unsigned char *vmem, TMS9928A *tms, unsigned int *color_2bpp_lut)
 {
 //	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Draw Mode 2 supported    ",16,150);
@@ -391,12 +390,12 @@ static void draw_mode2(unsigned short *bitmap,unsigned char *vmem, TMS9928A *tms
 	{
 		unsigned int val = ((y /8)<<8);
 
-		for (unsigned int x=0;x<32;x++) 
+		for (unsigned int x=0;x<64;x+=2) 
 		{
 			unsigned int charcode     = (*vmem++)+val;
 			unsigned short pattern    = (charcode&tms->patternmask)*8;
 			unsigned int colour     = (charcode&tms->colourmask)*8;
-			unsigned short *vbt		  = bitmap + (x<<1);
+			unsigned short *vbt		  = bitmap + x;
 			unsigned char *patternptr = tms->vMem+tms->pattern+colour;
 			unsigned char *colourptr  = tms->vMem+tms->colour+pattern;
 
@@ -494,7 +493,7 @@ static void draw_mode23(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tms
     }
 }
 
-static void draw_modebogus(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmstmp)
+static void draw_modebogus(unsigned char *bitmap,unsigned char *vmem, TMS9928A *tmstmp, unsigned int *v)
 {
     unsigned char fg,bg;
     int x,y,n,xx;
