@@ -7,9 +7,6 @@
 #include "raze/raze.h"
 #include "machine.h"
 
-INT32 BurnTimerUpdate(INT32 *nCycles);
-void BurnTimerEndFrame(INT32 *nCycles);
-//INT32 BurnTimerUpdate(INT32 nCycles);
 static INT32 DrvInit();
 static INT32 DrvFMInit();
 static INT32 DrvFMFrame();
@@ -22,6 +19,8 @@ static void Set14PCM();
 static PcmHn createHandle(PcmCreatePara *para);
 void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
 void dummy();
+void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
+Sint32 GetFileSize(int file_id);
 
 #define nBurnSoundLen 128
 #define SOUNDRATE   7680L

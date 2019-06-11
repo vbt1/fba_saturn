@@ -35,7 +35,7 @@ int ovlInit(char *szShortName)
 		memcpy(shared,&nBurnDrvcombh,sizeof(struct BurnDriver));
 	}
 
-	ss_reg    = (SclNorscl *)SS_REG;
+	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 
@@ -499,7 +499,6 @@ static INT32 MemIndex()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvBpExit()
 {
-//	InpExit();
 #ifdef RAZE
 	z80_stop_emulating();
 	z80_add_read(0x0000, 0xffff, 1, (void *)NULL);
@@ -513,17 +512,18 @@ static INT32 MemIndex()
 	CZetExit2();
 	CZ80Context = NULL;
 #endif	
-//	SN76489Init(0, 0, 0);
-//	SN76489Init(1, 0, 0);
-//	SN76489Init(2, 0, 0);
+	SN76489Init(0, 0, 0);
+	SN76489Init(1, 0, 0);
+	SN76489Init(2, 0, 0);
 
 	MemEnd = Rom  = 	Gfx0 = Gfx1 = Prom = NULL;
 	Palette = NULL;
-	map_offset_lut = /*bg_dirtybuffer = fg_dirtybuffer =*/ NULL;
+	map_offset_lut = NULL;
 
 	free(Mem);
 	Mem = NULL;
-//DrvDips=priority=flipscreen=interrupt_enable=0;
+	DrvDips=priority=flipscreen=interrupt_enable=0;
+	
 	cleanDATA();
 	cleanBSS();
 

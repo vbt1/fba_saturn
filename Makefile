@@ -10,7 +10,7 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile
 #CCFLAGS =  -mhitachi -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
-CCFLAGS2 = -m2 -O2 -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I.
+CCFLAGS2 = -m2 -Os -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I.
 #CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O0 -fomit-frame-pointer -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -m2 -mrenesas  -std=gnu99 -Wfatal-errors -Os -D_SH -DMODEL_S -c

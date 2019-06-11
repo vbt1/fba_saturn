@@ -8,6 +8,7 @@ void MSM6295Exit(int nChip);
 int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength);
 int MSM6295Render(int nChip, short* pSoundBuf, int nSegmenLength);
 void MSM6295Command(int nChip, unsigned char nCommand);
+void MSM6295SetBank(INT32 nChip, UINT8 *pRomData, INT32 nStart, INT32 nEnd);
 //int MSM6295Scan(int nChip, int nAction);
 void BurnSoundCopyClamp_Mono_C(int *Src, short *Dest, int Len);
 //extern unsigned char* MSM6295ROM;

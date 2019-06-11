@@ -20,6 +20,7 @@ void GfxDecode4Bpp(unsigned int num, unsigned int numPlanes, unsigned int xSize,
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 void initScrolling(Uint8 enabled,void *address);
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
+void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void memcpyl(void *, void *, int);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
 void  FNT_Print256_2bppSel(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);

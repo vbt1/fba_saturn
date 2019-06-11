@@ -8,7 +8,7 @@
 #include "saturn/saturn_snd.h"
 //#include "saturn/sc_saturn.h"
 //#include "burn_ym2413.h"
-//#include "msm6295.h"
+#include "snd/msm6295.h"
 /*static*/ int DrvFrame();
 /*static*/ int DrvExit();
 /*static*/ int SpangInit();

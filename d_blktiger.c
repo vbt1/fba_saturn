@@ -504,16 +504,16 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 #ifdef CZET
-	CZ80Context		= Next; Next += (sizeof(cz80_struc)*2);
+	CZ80Context		= (UINT8 *)Next; Next += (sizeof(cz80_struc)*2);
 #endif
-	remap16_lut		= Next; Next += 768 * sizeof (UINT16);
-	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
-	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
-	fg_map_lut		= Next; Next += 0x400 * sizeof (UINT16);
-	bg_map_lut2x1	= Next; Next += 0x2000 * sizeof (UINT16);
-	bg_map_lut2x2	= Next; Next += 0x2000 * sizeof (UINT16);
+	remap16_lut		= (UINT16 *)Next; Next += 768 * sizeof (UINT16);
+	remap4to16_lut	= (UINT16 *)Next; Next += 256 * sizeof (UINT16);
+	cram_lut		= (UINT16 *)Next; Next += 4096 * sizeof (UINT16);
+	fg_map_lut		= (UINT16 *)Next; Next += 0x400 * sizeof (UINT16);
+	bg_map_lut2x1	= (UINT16 *)Next; Next += 0x2000 * sizeof (UINT16);
+	bg_map_lut2x2	= (UINT16 *)Next; Next += 0x2000 * sizeof (UINT16);
 #ifdef SND
-	ym_buffer			= (INT16*)Next; Next += 4096 * 4 * 2 * sizeof(INT16);
+	ym_buffer		= (INT16*)Next; Next += 4096 * 4 * 2 * sizeof(INT16);
 #endif
 	MemEnd			= Next;
 
@@ -524,7 +524,7 @@ static INT32 DrvDoReset(INT32 full_reset)
 {
 	if (full_reset) {
 		memset (AllRam, 0, RamEnd - AllRam);
-		memset(SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
+		memset((void *)SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
 	}
 
 #ifdef RAZE0
@@ -553,10 +553,10 @@ static INT32 DrvDoReset(INT32 full_reset)
 
 static INT32 DrvGfxDecode()
 {
-	INT32 Plane[4] = { ((0x40000 * 8) / 2) + 4, ((0x40000 * 8) / 2) + 0, 4, 0 };
-	INT32 XOffs[16] = { 0, 1, 2, 3, 8+0, 8+1, 8+2, 8+3,
+	UINT32 Plane[4] = { ((0x40000 * 8) / 2) + 4, ((0x40000 * 8) / 2) + 0, 4, 0 };
+	UINT32 XOffs[16] = { 0, 1, 2, 3, 8+0, 8+1, 8+2, 8+3,
 			16*16+0, 16*16+1, 16*16+2, 16*16+3, 16*16+8+0, 16*16+8+1, 16*16+8+2, 16*16+8+3 };
-	INT32 YOffs[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16,
+	UINT32 YOffs[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16,
 			8*16, 9*16, 10*16, 11*16, 12*16, 13*16, 14*16, 15*16 };
 
 	UINT8 *tmp = (UINT8*)0x00200000;
@@ -741,7 +741,7 @@ static INT32 DrvExit()
 	{
 		PCM_MeStop(pcm14[i]);
 	}
-	memset(SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);
+	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);
 	STM_ResetTrBuf(stm);
 	PCM_DestroyStmHandle(pcm14[0]);
 	stmClose(stm);

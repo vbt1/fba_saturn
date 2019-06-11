@@ -473,7 +473,9 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	z80_add_read (0xf600, 0xf603, 1, (void *)NULL);
 #else
 	CZetExit2();
-#endif	
+#endif
+	SN76489Init(0, 0, 0);
+	
 	nBurnSprites=128;
 	cleanSprites();
 	memset(ss_scl,0x00,nBurnLinescrollSize);

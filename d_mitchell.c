@@ -108,11 +108,11 @@ int ovlInit(char *szShortName)
 	DrvVideoRam			= Next; Next += 0x01000;
 	DrvSpriteRam		= Next; Next += 0x01000;
 
-	CZ80Context			= Next; Next += sizeof(cz80_struc)*2;
-	map_offset_lut		= Next; Next += 2048 * sizeof(UINT16);
-	charaddr_lut		= Next; Next += 2048 * sizeof(UINT16);
-	map_lut				= Next; Next += 256 * sizeof(UINT16);
-	cram_lut			= Next; Next += 4096 * sizeof(UINT16);
+	CZ80Context			= (UINT8 *)Next; Next += sizeof(cz80_struc);
+	map_offset_lut		= (UINT16 *)Next; Next += 2048 * sizeof(UINT16);
+	charaddr_lut		= (UINT16 *)Next; Next += 2048 * sizeof(UINT16);
+	map_lut				= (UINT16 *)Next; Next += 256 * sizeof(UINT16);
+	cram_lut			= (UINT16 *)Next; Next += 4096 * sizeof(UINT16);
 	pBuffer				= (int *)Next; Next += nBurnSoundRate * sizeof(int);
 	MSM6295Context		= (int *)Next; Next += 4 * 0x1000 * sizeof(int);
 // allocation de 808960 octets, 790ko
@@ -470,13 +470,6 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 /*static*/ void spang_decode()    { mitchell_decode(0x45670123, 0x45670123, 0x5852, 0x43); }
 /*static*/ void block_decode()    { mitchell_decode(0x02461357, 0x64207531, 0x0002, 0x01); }
 
-/*static*/ UINT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
-/*static*/ UINT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
-/*static*/ UINT32 CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
-/*static*/ UINT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };
-/*static*/ UINT32 SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
-/*static*/ UINT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
-
 /*static*/ const unsigned char spang_default_eeprom[128] = {
 	0x00, 0x02, 0x00, 0x01, 0x01, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x01,
 	0xCD, 0x81, 0x0E, 0x10, 0xFD, 0x78, 0x88, 0x81, 0x4D, 0x2E, 0x53, 0xC9, 0xC9, 0xC9, 0xC9, 0xC9,
@@ -582,6 +575,13 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut   ",80,130);	
 	make_lut();
 
+/*static*/ UINT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
+/*static*/ UINT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
+/*static*/ UINT32 CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
+/*static*/ UINT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };
+/*static*/ UINT32 SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
+/*static*/ UINT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
+
 	unsigned char *DrvTempRom = (unsigned char *)0x00200000;
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom   ",80,130);	
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x00000,  0, 1); if (nRet != 0) return 1;
@@ -648,20 +648,27 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	PangMemIndex();
 	make_lut();
 
+/*static*/ UINT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
+/*static*/ UINT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
+/*static*/ UINT32 CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
+/*static*/ UINT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };
+/*static*/ UINT32 SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
+/*static*/ UINT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
+
 	unsigned char *DrvTempRom = (unsigned char *)0x00200000;
  // VBT à remettre
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x00000,  0, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x10000,  1, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x30000,  2, 1); if (nRet != 0) return 1;
 
-	memset4_fast(DrvTempRom, 0xff, 0xc0000);
+	memset(DrvTempRom, 0xff, 0xc0000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000,  3, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x20000,  4, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x80000,  5, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0xa0000,  6, 1); if (nRet != 0) return 1;
 	GfxDecode4Bpp(0x4000, 4, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, cache);
 
-	memset4_fast(DrvTempRom, 0xff, 0x40000);
+	memset(DrvTempRom, 0xff, 0x40000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000,  7, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x20000,  8, 1); if (nRet != 0) return 1;
 
@@ -1009,28 +1016,6 @@ static void dummy(void)
 //			z80_emulate(0);
 		}
 #endif
-/*		if (pBurnSoundOut) 
-		{*/
-//			int nSegmentLength = nBurnSoundLen / nInterleave;
-//			signed short *nSoundBuffer = (signed short *)0x25a20000;
-//			MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nSegmentLength);
-//			nSoundBufferPos+=nSegmentLength;
-
-//			nSoundBufferPos+=nSegmentLength*2;
-
-
-
-//	if (pBurnSoundOut) 
-/*		{
-		int nSegmentLength = nBurnSoundLen - nSoundBufferPos;
-		short* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-
-		if (nSegmentLength) {
-			BurnYM2413Render(pSoundBuf, nSegmentLength);
-			MSM6295Render(0, pSoundBuf, nSegmentLength);
-		}
-
-*/
 	}
 #ifdef PCM_MUSIC
 	playMusic(&pcmStream);

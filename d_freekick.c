@@ -11,42 +11,42 @@ int ovlInit(char *szShortName)
 		"pbillrd", "freek",
 		"Perfect Billiard",
 		pbillrdRomInfo, pbillrdRomName, PbillrdInputInfo, PbillrdDIPInfo,
-		pbillrdInit, DrvExit, DrvFrame, DrvDraw
+		pbillrdInit, DrvExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvFreekickb1 = {
 		"freekb1", "freek",
 		"Free Kick (bootleg set 1)",
 		freekickb1RomInfo, freekickb1RomName, FreekckInputInfo, FreekckDIPInfo,
-		DrvFreeKickInit, DrvExit, DrvFrame, DrvDraw
+		DrvFreeKickInit, DrvExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvCountrunb = {
 		"countrnb", "freek",
 		"Counter Run (bootleg set 1)",
 		countrunbRomInfo, countrunbRomName, CountrunInputInfo, CountrunDIPInfo,
-		DrvFreeKickInit, DrvExit, DrvFrame, DrvDraw
+		DrvFreeKickInit, DrvExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvGigasb = {
 		"gigasb", "freek",
 		"Gigas (bootleg)",
 		gigasbRomInfo, gigasbRomName, GigasInputInfo, GigasDIPInfo,
-		DrvInit, DrvExit, DrvFrame, DrvDraw
+		DrvInit, DrvExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvGigasm2 = {
 		"gigasm2b", "freek",
 		"Gigas Mark II", 
 		 gigasm2RomInfo, gigasm2RomName, GigasInputInfo, Gigasm2DIPInfo,
-		DrvInit, DrvExit, DrvFrame, DrvDraw
+		DrvInit, DrvExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvOmega = {
 		"omega", "freek",
 		"Omega",
 		omegaRomInfo, omegaRomName, GigasInputInfo, OmegaDIPInfo,
-		DrvInit, DrvExit, DrvFrame, DrvDraw
+		DrvInit, DrvExit, DrvFrame, NULL
 	};
 
 	if (strcmp(nBurnDrvPbillrd.szShortName, szShortName) == 0) 
@@ -482,7 +482,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	DrvSndROM		= Next; Next += 0x10000;
 	MC8123Key		= Next; Next += 0x02000;
 	DrvColPROM		= Next; Next += 0x00600;
-	AllRam				= Next;
+	AllRam			= Next;
 
 	DrvRAM			= Next; Next += 0x02000; // 0x0e000 - 0x0c000
 	DrvVidRAM		= Next; Next += 0x00800;
@@ -491,8 +491,8 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 
 	RamEnd			= Next;
 
-	CZ80Context		= Next; Next += sizeof(cz80_struc);
-	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
+	CZ80Context		= (UINT8 *)Next; Next += sizeof(cz80_struc);
+	map_offset_lut  = (UINT16 *)Next; Next +=0x400*sizeof(UINT16);
 
 	MemEnd			= Next;
 
@@ -880,9 +880,9 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 {
 //	SPR_InitSlaveSH();
 
- 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
+ 	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum	 = (SclSpPriNumRegister *)SS_N0PRI;
@@ -908,7 +908,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	initSprites(256-1,256-1,0,0,0,0);
 	ss_reg->n1_move_y =  16 <<16;
 
-	memset((Uint8 *)ss_map  ,0,0x2000);
+	memset((Uint8 *)ss_map ,0,0x2000);
 	memset((Uint8 *)ss_map2,0,0x2000);
 
 	SprSpCmd *ss_spritePtr;
@@ -932,6 +932,11 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	CZetExit2();
 	ppi8255_exit();
 
+	SN76489Init(0, 0, 0);
+	SN76489Init(1, 0, 0);
+	SN76489Init(2, 0, 0);
+	SN76489Init(3, 0, 0);	
+
 	CZ80Context = MemEnd = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
 	DrvVidRAM = DrvSprRAM = DrvColRAM = DrvColPROM = NULL;
 	MC8123Key = NULL;
@@ -944,8 +949,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	cleanDATA();
 	cleanBSS();
 
-//	sprite_number = nSoundBufferPos = 0;
-
+	nSoundBufferPos = 0;
 	return 0;
 }
 
@@ -1004,7 +1008,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 		nSoundBufferPos=0;
 	}
 
-		DrvDraw();
+	DrvDraw();
 
 	return 0;
 }

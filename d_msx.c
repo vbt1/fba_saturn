@@ -1971,7 +1971,7 @@ And the address to change banks:
 	CZetSetWriteHandler(msx_write);
 	CZetClose();
 #endif
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"AY8910Init		",24,40);
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)" ",24,40); // nécessaire
 
 	AY8910Init(0, 3579545/2, nBurnSoundRate, ay8910portAread, NULL, ay8910portAwrite, ay8910portBwrite);
 
@@ -1983,7 +1983,7 @@ And the address to change banks:
 	DACInit(0, 0, 1, DrvSyncDAC);
 #endif
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"TMS9928AInit      ",26,210);
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AInit		",24,40);
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)" ",24,40); // nécessaire
 
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt, TMSContext);
 
@@ -1997,6 +1997,10 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"TMS9928AInit		",24,40);
 	DrvDoReset();
 //FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"after reset        ",4,80);
 //	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
+
+	PCM_MeStop(pcm);
+	nSoundBufferPos=0;	
+	Set8PCM();
 
 	return 0;
 }
@@ -2390,8 +2394,6 @@ void initPosition(void)
 
 	initLayers();
 	initColors();
-
-	Set8PCM();
 
 	nBurnFunction = update_input1;
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;

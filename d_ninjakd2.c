@@ -1,14 +1,11 @@
 // FB Alpha UPL (Ninja Kid 2) driver module
 // Based on MAME driver by Roberto Ventura, Leandro Dardini, Yochizo, Nicola Salmoria
 
-//#include "tiles_generic.h"
-//#include "z80_intf.h"
 #include "d_ninjakd2.h"
-//#include "mc8123.h"
-//#include "burn_ym2203.h"
-#define nScreenHeight 192
-#define nScreenWidth 256
-UINT16 *ss_map3 = NULL;
+
+#define nInterleave 10
+#define nCyclesTotal 6000000 / 60
+#define nCycleSegment nCyclesTotal / nInterleave
 
 int ovlInit(char *szShortName)
 {
@@ -25,8 +22,8 @@ int ovlInit(char *szShortName)
 	memcpy(shared,&nBurnDrvRobokid,sizeof(struct BurnDriver));
 
 	ss_reg   = (SclNorscl *)SS_REG;
-	ss_regs = (SclSysreg *)SS_REGS;
-	ss_regd = (SclDataset *)SS_REGD;
+	ss_regs  = (SclSysreg *)SS_REGS;
+	ss_regd  = (SclDataset *)SS_REGD;
 }
 
 /*static*/  void DrvPaletteUpdate(INT32 offset)
@@ -164,14 +161,14 @@ int ovlInit(char *szShortName)
 
 		case 0xdc01:
 		{
-			if (data & 0x10) {
-		/*		CZetClose();
+		/*	if (data & 0x10) {
+				CZetClose();
 				CZetOpen(1);
 				CZetReset();
 				CZetClose();
-				CZetOpen(0);*/
+				CZetOpen(0);
 			}
-
+		*/
 			flipscreen = data & 0x80;
 		}
 		return;
@@ -734,8 +731,8 @@ int ovlInit(char *szShortName)
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
 	scfg.patnamecontrl =  0x0000;// VRAM A0 ?~I?t?Z?b?g 
-	scfg.plate_addr[0] = ss_map;
-	scfg.plate_addr[1] = ss_map;
+	scfg.plate_addr[0] = (Uint32)ss_map;
+	scfg.plate_addr[1] = (Uint32)ss_map;
 	SCL_SetConfig(SCL_NBG2, &scfg); // fg
 
 	scfg.pnamesize   = SCL_PN2WORD;
@@ -782,15 +779,10 @@ int ovlInit(char *szShortName)
 /*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-//	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
-//	SCL_AllocColRam(SCL_NBG2,OFF);
-SCL_AllocColRam(SCL_NBG3,OFF);
-SCL_AllocColRam(SCL_SPR,OFF);   // 0x200 pour sprites atomic robokid
-SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
-//SCL_AllocColRam(SCL_NBG0,OFF); 
-
-//	SCL_SetColRam(SCL_NBG0,8,8,palette);
+	SCL_AllocColRam(SCL_NBG3,OFF);
+	SCL_AllocColRam(SCL_SPR,OFF);   // 0x200 pour sprites atomic robokid
+	SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn(INT32 i)
@@ -877,21 +869,19 @@ SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid
 
 /*static*/  INT32 DrvExit()
 {
-	CZetOpen(0);
-	CZetSetWriteHandler(NULL);
-	CZetSetReadHandler(NULL);
-	CZetSetInHandler(NULL);
-	CZetSetOutHandler(NULL);
-	CZetClose();
 	CZetExit2();
 
 	CZ80Context	=  NULL;
+	
 	MemEnd = AllRam = RamEnd = DrvZ80ROM0 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
 	DrvGfxROM3 = DrvGfxROM4 = DrvGfxROM4Data1 = DrvZ80RAM0 = DrvSprRAM = DrvPalRAM = NULL;
 	DrvFgRAM = DrvBgRAM = DrvBgRAM0 = DrvBgRAM1 = DrvBgRAM2 = NULL;
 	free(AllMem);
 	AllMem = NULL;
 	ss_map3 = NULL;
+
+	cleanDATA();
+	cleanBSS();
 
 	nSoundBufferPos=0;
 
@@ -1151,10 +1141,6 @@ DrvZ80ROM0[0x13566]=0x30;
 		if (previous_coin[0] >= 4) DrvInputs[0] |= 0x40;
 		if (previous_coin[1] >= 4) DrvInputs[0] |= 0x80;
 	}
-
-	UINT32 nInterleave = 10;
-	UINT32 nCyclesTotal = 6000000 / 60;
-	UINT32	nCycleSegment = nCyclesTotal / nInterleave;
 
 	for (UINT32 i = 0; i < nInterleave; i++)
 	{

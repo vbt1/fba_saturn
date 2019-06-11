@@ -38,6 +38,8 @@ typedef struct
 
 void SetStreamPCM();
 void PlayStreamPCM(unsigned char d, unsigned char current_pcm);
+void UpdateStreamPCM(Uint8 data, PcmHn *hn, PcmCreatePara *para);
+void playMusic(PcmHn *hn);
 void wait_vblank(void);
 //char *itoa(int i);
 

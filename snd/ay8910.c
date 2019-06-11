@@ -10,8 +10,7 @@
 
 ***************************************************************************/
 
-//#include "driver.h"
-//#include "state.h"
+#include <string.h>
 #include "ay8910.h"
 
 #define MAX_OUTPUT 0x4fff
@@ -20,8 +19,8 @@
 
 /*static*/ void (*AYStreamUpdate)(void);
 
-int ay8910_index_ym = 0;
-/*static*/ int num = 0, ym_num = 0;
+//int ay8910_index_ym = 0;
+/*static*/ int num = 0;//, ym_num = 0;
 
 /*static*/ //double AY8910Volumes[3 * 6];
 /*static*/ //int AY8910RouteDirs[3 * 6];
@@ -914,7 +913,7 @@ void AY8910_set_clock(int chip, int clock)
 
 void AY8910Reset(int chip)
 {
-	int i;
+	unsigned int i;
 	struct AY8910 *PSG = &AYPSG[chip];
 
 	PSG->register_latch = 0;
@@ -935,9 +934,9 @@ void AY8910Exit(int chip)
 	(void)chip;
 
 	num = 0;
-	ym_num = 0;
+//	ym_num = 0;
 
-	ay8910_index_ym = 0;
+//	ay8910_index_ym = 0;
 }
 
 /*static*/ void dummy_callback(void)
@@ -957,7 +956,7 @@ int AY8910Init(int chip, int clock, int sample_rate,
 		return 1;
 	}
 
-	memset(PSG, 0, sizeof(struct AY8910));
+	memset((void *)PSG, 0, sizeof(struct AY8910));
 	PSG->SampleRate = sample_rate;
 	PSG->PortAread = portAread;
 	PSG->PortBread = portBread;
