@@ -580,17 +580,17 @@ static void astrofl_decode(void)
 
 /*static*/ INT32 MemIndex(UINT32 game)
 {
-	UINT8 *Next; Next = AllMem;
+	UINT8 *Next; Next	= AllMem;
 
 	DrvMainROM	 	    = (UINT8 *)Next; Next += 0x80000;// 0x00200000;
 	
 	if(game>2)
-		DrvMainROMFetch= (UINT8 *)0x00280000;
+		DrvMainROMFetch	= (UINT8 *)0x00280000;
 
 	mc8123key           = Next; Next += 0x02000;
 	CZ80Context			= Next; Next += sizeof(cz80_struc);
 
-	AllRam					= Next;
+	AllRam				= Next;
 	DrvRAM			    = Next; Next += 0x10000;
 
 	segae_vdp_vram[0]	= Next; Next += 0x8000; /* 32kb (2 banks) */
@@ -604,12 +604,12 @@ static void astrofl_decode(void)
 
 	RamEnd		= Next;
 	
-	name_lut		= 0x00200000;//Next; Next += 0x10000*sizeof(UINT16);
-	bp_lut			= 0x00220000;//Next; Next += 0x10000*sizeof(UINT32);
-	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
-//	map_lut	 		= Next; Next += 0x3000*sizeof(UINT16);	
-	map_lut	 		= 0x00260000;	
-	ss_scl1			= Next; Next += SCL_MAXLINE*sizeof(Fixed32);	
+	name_lut	= (UINT16 *)0x00200000;//Next; Next += 0x10000*sizeof(UINT16);
+	bp_lut		= (UINT32 *)0x00220000;//Next; Next += 0x10000*sizeof(UINT32);
+	cram_lut	= (UINT16 *)Next; Next += 0x40*sizeof(UINT16);
+//	map_lut	 	= Next; Next += 0x3000*sizeof(UINT16);	
+	map_lut	 	= (UINT16 *)0x00260000;	
+	ss_scl1		= (Fixed32 *)Next; Next += SCL_MAXLINE*sizeof(Fixed32);	
 	MemEnd		= Next;
 
 	return 0;
@@ -620,15 +620,11 @@ static void astrofl_decode(void)
 {
 	nBurnFunction = NULL;
 	wait_vblank();
-/*
-	CZetOpen(0);
-	CZetSetWriteHandler(NULL);
-	CZetSetReadHandler(NULL);
-	CZetSetInHandler(NULL);
-	CZetSetOutHandler(NULL);
-	CZetClose();*/
+	DrvDoReset();
 	CZetExit2();
-
+	SN76489Init(0, 0, 0);
+	SN76489Init(1, 0, 0);
+	
 	memset(ss_scl,0x00,192*4);
 	memset(ss_scl1,0x00,192*4);
 	SCL_SetLineParamNBG1();
@@ -645,9 +641,9 @@ static void astrofl_decode(void)
 	ss_port = NULL;
 //	nBurnFunction = NULL;
 
-	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
- 	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
-	initScrollingNBG1(OFF,NULL);
+	SCL_SetWindow(SCL_W0,(UINT32)NULL,(UINT32)NULL,(UINT32)NULL,0,0,0,0);
+ 	SCL_SetWindow(SCL_W1,(UINT32)NULL,(UINT32)NULL,(UINT32)NULL,0,0,0,0);
+	initScrollingNBG1(OFF,(UINT32)NULL);
 
 	cleanDATA();
 	cleanBSS();
@@ -985,13 +981,13 @@ static void astrofl_decode(void)
 	scfg.datatype	= SCL_CELL;
 // vbt : active le prioritybit en mode 1word
 	scfg.patnamecontrl =  0x0000;// VRAM A0
-	scfg.plate_addr[0] = ss_map;
+	scfg.plate_addr[0] = (Uint32)ss_map;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
 //	scfg.dispenbl		= OFF;
 
 	scfg.patnamecontrl =  0x0002;// VRAM A0 + 0x10000
-	scfg.plate_addr[0] = ss_map2;
+	scfg.plate_addr[0] = (Uint32)ss_map2;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 /********************************************/	
 
@@ -1001,7 +997,7 @@ static void astrofl_decode(void)
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
-	scfg.plate_addr[0] = ss_font;
+	scfg.plate_addr[0] = (Uint32)ss_font;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }
@@ -1022,9 +1018,9 @@ static void astrofl_decode(void)
 	nBurnLinescrollSize = 0x340;
 	nSoundBufferPos = 0;//sound position à renommer
 
- 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
+ 	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
+	SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
@@ -1073,8 +1069,8 @@ static void astrofl_decode(void)
 		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,0,0,256,191);
 	}
 
-	initScrolling(ON,SCL_VDP2_VRAM_B0);
-	initScrollingNBG1(ON,SCL_VDP2_VRAM_B0+0x8000);
+	initScrolling(ON, (void *)SCL_VDP2_VRAM_B0);
+	initScrollingNBG1(ON, (UINT32)SCL_VDP2_VRAM_B0+0x8000);
 
 //	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	nBurnFunction = SCL_SetLineParamNBG1;

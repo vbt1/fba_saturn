@@ -27,11 +27,15 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 /*static*/ unsigned int _30_HZ=0;
 
 /*static*/ unsigned char *Mem, *MemEnd, *Rom, *Gfx0, *Gfx1, *Prom;
-/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvDips[4], DrvReset;
+/*static*/ unsigned char DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+/*static*/ unsigned char DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+/*static*/ unsigned char DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+/*static*/ unsigned char DrvDips[4] = {0,0,0,0};
+/*static*/ //unsigned char DrvReset = 0;
 
-/*static*/ unsigned char nmi_enable, irq_enable;
-/*static*/ unsigned char gberet_spritebank;
-/*static*/ int mrgoemon_bank;
+/*static*/ unsigned char nmi_enable = 0, irq_enable = 0;
+/*static*/ unsigned char gberet_spritebank = 0;
+/*static*/ int mrgoemon_bank = 0;
 
 /*static*/ int game_type = 0; // 0 gberet / rushatck, 1 gberetb, 2 mrgoemon
 
@@ -57,7 +61,7 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 
 	{"Service"      , BIT_DIGITAL  , DrvJoy3 + 2,	"service"   },
  
-	{"Reset"        , BIT_DIGITAL  , &DrvReset  ,	"reset"     },
+	{"Reset"        , BIT_DIGITAL  , NULL  ,	"reset"     },
 	{"Dip 1"        , BIT_DIPSWITCH, DrvDips + 0, "dip"       },
 	{"Dip 2"        , BIT_DIPSWITCH, DrvDips + 1, "dip"       },
 	{"Dip 3"        , BIT_DIPSWITCH, DrvDips + 2, "dip"       },

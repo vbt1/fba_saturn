@@ -4,6 +4,7 @@
 #include "burnint.h"
 #include "snd/ay8910.h"
 #include "saturn/ovl.h"
+#include "raze/raze.h"
 
 #define nBurnSoundLen 128
 
@@ -44,9 +45,6 @@ UINT16* map_offset_lut      = NULL;
 UINT16 *cram_lut = NULL;
 
 /*static*/ INT32 SolomonIrqFire = 0;
-
-/*static*/ //INT32 SolomonFlipScreen = 0;
-
 /*static*/ INT32 SolomonSoundLatch = 0;
 /*static*/ INT16* pFMBuffer = NULL;
 /*static*/ INT16* pAY8910Buffer[9] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};

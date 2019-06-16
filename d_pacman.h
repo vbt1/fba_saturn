@@ -39,7 +39,6 @@
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT8 *NamcoContext = NULL;
 
-/*static*/ UINT8 DrvReset = 0;
 /*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvInputs[2] = {0,0};
@@ -76,7 +75,7 @@ extern struct namco_sound *chip;
 	{"P2 Right",	  	  BIT_DIGITAL,	DrvJoy2 + 2, "p2 right"},
 	{"P2 Down",		  BIT_DIGITAL,	DrvJoy2 + 3, "p2 down"},
 
-	{"Reset",		  BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		  BIT_DIGITAL,	NULL,	"reset"},
 	{"Service Mode",	  BIT_DIGITAL,	DrvJoy1 + 7,	"diag"},
 
 	{"Dip Switches 1 ",	BIT_DIPSWITCH,	DrvDips + 2,	"dip"},
@@ -104,7 +103,7 @@ STDINPUTINFO(Drv)
 	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 right"},
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 7,	"p2 fire 1"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 	{"Dip C",		BIT_DIPSWITCH,	DrvDips + 2,	"dip"},

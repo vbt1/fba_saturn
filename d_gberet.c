@@ -190,7 +190,7 @@ int ovlInit(char *szShortName)
 
 /*static*/ int DrvDoReset()
 {
-	DrvReset = 0;
+//	DrvReset = 0;
 
 //	flipscreen = 0;
 	nmi_enable = 0;
@@ -454,6 +454,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 
 /*static*/ INT32 DrvExit()
 {
+	DrvDoReset();
 	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
@@ -485,11 +486,6 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	Mem=NULL;
 
 	_30_HZ=0;
-/*	game_type = 0;
-	nSoundBufferPos = 0;
-	DrvReset = 0;
-	nBurnLinescrollSize = 1;
-*/
 	cleanDATA();
 	cleanBSS();
 
@@ -566,7 +562,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	initSprites(256-1,224-1,8,0,0,-16);
 	//play=1;
 //	drawWindow(0,240,0,2,66);
-	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
 //	memset(&ss_scl[0],16<<16,64);
 	memset(&ss_scl[0],16<<16,128);
 	drawWindow(0,240,0,2,66);
@@ -653,9 +649,10 @@ void renderSound(unsigned int *nSoundBufferPos)
 /*static*/ int DrvFrame()
 {
 	unsigned int nInterleave = game_type ? 16 : 32;
-	if (DrvReset) {
+/*	if (DrvReset) {
 		DrvDoReset();
 	}
+	*/
 #ifdef CZ80
 	if(game_type & 2)
 		CZetOpen(0);

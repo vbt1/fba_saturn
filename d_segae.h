@@ -25,9 +25,11 @@
 /*static*/ INT32 DrvAstroflInit();
 /*static*/ INT32 DrvExit();
 /*static*/ INT32 DrvFrame();
+/*static*/ INT32 DrvDoReset();
 /*static*/ void DrvInitSaturnS(UINT8 game);
 /*static*/ void update_bg(UINT8 chip, UINT32 index);
 /*static*/ void update_sprites(UINT8 chip, UINT32 index);
+void initScrollingNBG1(UINT8 enabled,UINT32 address);
 void SCL_SetLineParamNBG1();
 void dummy();
 
@@ -75,9 +77,9 @@ UINT8  segae_vdp_accessmode[CHIPS]={0,0};		/* VDP Access Mode (VRAM, CRAM) */
 UINT16 segae_vdp_accessaddr[CHIPS]={0,0};		/* VDP Access Address */
 UINT8  segae_vdp_readbuffer[CHIPS]={0,0};		/* VDP Read Buffer */
 
-UINT8 *segae_vdp_vram[CHIPS];			/* Pointer to VRAM */
-UINT8 *segae_vdp_cram[CHIPS];			/* Pointer to the VDP's CRAM */
-UINT8 *segae_vdp_regs[CHIPS];			/* Pointer to the VDP's Registers */
+UINT8 *segae_vdp_vram[CHIPS] = {NULL,NULL};		/* Pointer to VRAM */
+UINT8 *segae_vdp_cram[CHIPS] = {NULL,NULL};		/* Pointer to the VDP's CRAM */
+UINT8 *segae_vdp_regs[CHIPS] = {NULL,NULL};		/* Pointer to the VDP's Registers */
 
 UINT8 segae_vdp_vrambank[CHIPS]={0,0};		/* Current VRAM Bank number (from writes to Port 0xf7) */
 UINT32 ntab[CHIPS]={0,0};

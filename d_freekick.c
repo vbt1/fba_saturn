@@ -929,6 +929,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
+	DrvDoReset();
 	CZetExit2();
 	ppi8255_exit();
 

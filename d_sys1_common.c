@@ -706,7 +706,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	MemIndex();
 
 	UINT8 *	System1TempRom = (UINT8*)0x00200000;
-	memset(System1TempRom, 0, 0x40000);
+	memset((void *)System1TempRom, 0, 0x40000);
 	// Load Z80 #1 Program roms
 	RomOffset = 0;
 	for (i = 0; i < nZ80Rom1Num; i++) {
@@ -1125,7 +1125,7 @@ void reset_sprite_colli(unsigned int Num)
  	{
  		for (unsigned int i=sprites_collision[Num].y; i<=sprites_collision[Num].yend; i++)
  		{
-			memset(SpriteOnScreenMap[(i<<8)+sprites_collision[Num].x],0xff,sprites_collision[Num].width);
+			memset((void *)SpriteOnScreenMap[(i<<8)+sprites_collision[Num].x],0xff,sprites_collision[Num].width);
 		}		 
  	}
 }

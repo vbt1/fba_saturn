@@ -58,8 +58,9 @@ inline void SolomonMakeInputs()
 
 INT32 SolomonDoReset()
 {
+	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
+	SS_Z80CY = 0;
 	SolomonIrqFire = 0;
-//	SolomonFlipScreen = 0;
 	SolomonSoundLatch = 0;
 
 #ifdef RAZE0	 
@@ -312,8 +313,6 @@ INT32 SolomonInit()
 	UINT32 SpriteYOffsets[16]    = { 0, 8, 16, 24, 32, 40, 48, 56, 128, 136, 144, 152, 160, 168, 176, 184 };
 
 	// Allocate and Blank all required memory
-	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
-	SS_Z80CY = 0;
 	Mem = NULL;
 	SolomonMemIndex();
 	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
@@ -323,10 +322,10 @@ INT32 SolomonInit()
 
 //	SolomonTempRom = (UINT8 *)BurnMalloc(0x10000);
 	UINT8 *SolomonTempRom	= (UINT8 *)0x00200000;
-	UINT8 *ss_vram					= (UINT8 *)SS_SPRAM;
-	UINT8 *SolomonBgTiles		= (UINT8 *)cache;
-	UINT8 *SolomonFgTiles		= (UINT8 *)cache+0x10000;
-	UINT8 *SolomonSprites		= &ss_vram[0x1100];
+	UINT8 *ss_vram			= (UINT8 *)SS_SPRAM;
+	UINT8 *SolomonBgTiles	= (UINT8 *)cache;
+	UINT8 *SolomonFgTiles	= (UINT8 *)cache+0x10000;
+	UINT8 *SolomonSprites	= &ss_vram[0x1100];
 	memset(SolomonTempRom, 0, 0x10000);
 	// Load Z80 #1 Program Roms
 	nRet = BurnLoadRom(SolomonZ80Rom1, 0, 1); if (nRet != 0) return 1;
@@ -440,7 +439,6 @@ INT32 SolomonInit()
 
 	CZetOpen(0);
 #endif
-
 	CZetSetReadHandler(SolomonRead2);
 	CZetSetOutHandler(SolomonPortWrite2);
 	CZetMapArea(0x0000, 0x3fff, 0, SolomonZ80Rom2         );
@@ -479,9 +477,8 @@ INT32 SolomonExit()
 {
 	nBurnFunction = NULL;
 	wait_vblank();
-
 	SPR_InitSlaveSH();
-
+	
 	z80_stop_emulating();
 	z80_add_read(0xe600, 0xe60f, 1, (void *)NULL);
 	z80_add_write(0xd000, 0xd3ff, 1, (void *)NULL);
@@ -490,7 +487,7 @@ INT32 SolomonExit()
 	z80_add_write(0xdc00, 0xdfff,  1, (void *)NULL);
 	z80_add_write(0xe600, 0xe60f, 1, (void *)NULL);
 	z80_add_write(0xe800, 0xe80f, 1, (void *)NULL);
-
+	SolomonDoReset();
 	CZetExit2();
 
 	for (UINT32 i = 0; i < 3; i++) {
@@ -500,6 +497,7 @@ INT32 SolomonExit()
 	SolomonZ80Ram1 = SolomonZ80Ram2 = SolomonColourRam = SolomonVideoRam = NULL;
 	SolomonBgColourRam = SolomonBgVideoRam = SolomonSpriteRam = NULL;
 	SolomonPaletteRam = CZ80Context = NULL;
+	
 #ifdef USE_IDMA
 	bgmap_buf = bgmap2_buf = NULL;
 #endif
@@ -512,9 +510,6 @@ INT32 SolomonExit()
 
 	free(Mem);
 	Mem = NULL;
-
-	SS_Z80CY = 0;
-	*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY) = 0;
 
 	cleanDATA();
 	cleanBSS();
