@@ -590,6 +590,5 @@ static INT32 MemIndex()
 		nSoundBufferPos=0;
 	}
 
-//	DrvDraw();
 	return 0;
 }

@@ -919,6 +919,10 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	free(SaturnMem);
 	SaturnMem = NULL;
 
+	cleanDATA();
+	cleanBSS();
+
+	nSoundBufferPos=0;
 	return 0;
 }
 

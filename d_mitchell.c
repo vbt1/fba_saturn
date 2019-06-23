@@ -1029,7 +1029,7 @@ static void dummy(void)
 	{
 		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		nSoundBufferPos=0;
-				PCM_Task(pcm); // bon emplacement
+		PCM_Task(pcm); // bon emplacement
 	}
 //	PCM_Task(pcm); 
 

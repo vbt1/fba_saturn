@@ -1430,16 +1430,15 @@ static void InpMake(unsigned int key[])
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void InpInit()
 {
-  unsigned int i=0; 
-  int nRet=0;
+ // int nRet=0;
 //  bInputOk = 0;
   // Count the number of inputs
  nGameInpCount=0;
- for (i=0;i<0x1000;i++) 
+ for (unsigned int i=0;i<0x1000;i++) 
 	  {
 //    nRet = BurnDrvGetInputInfo(NULL,i);
-	nRet = pDriver[nBurnDrvSelect]->GetInputInfo(NULL, i);
-    if (nRet!=0) {   // end of input list
+//	nRet = pDriver[nBurnDrvSelect]->GetInputInfo(NULL, i);
+    if (pDriver[nBurnDrvSelect]->GetInputInfo(NULL, i)!=0) {   // end of input list
     	nGameInpCount=i; 
     	break; 
     }
@@ -1656,7 +1655,7 @@ static void do_keypad()
 		initSaturn();
 		BurnDrvAssignList();
 	}
-	asm("nop\n");
+//	asm("nop\n");
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
@@ -1695,10 +1694,10 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright)
 {
-	Uint16 *VRAM;    
-	Uint32 x,j;  
+	Uint16 *VRAM = (Uint16 *)SS_FONT;    
+	Uint32 x=0,j=0;  
 	col[0]=10;
-    VRAM = (Uint16 *)SS_FONT;
+
 // barre horizontale haut
 	for( x = 0; x < l1; x++ ) // 2 lignes
     {

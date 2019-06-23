@@ -288,7 +288,7 @@ void __fastcall SolomonPortWrite2(UINT16 a, UINT8 d)
 	SolomonSpriteRam       = Next; Next += 0x00080;
 	SolomonPaletteRam      = Next; Next += 0x00200;
 
-	pFMBuffer					= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
+	pFMBuffer				= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 	map_offset_lut			= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
 	cram_lut					= (UINT16*)Next; Next += 4096 * sizeof(UINT16);
 #ifdef USE_IDMA
@@ -475,9 +475,9 @@ INT32 SolomonInit()
 
 INT32 SolomonExit()
 {
+	SPR_InitSlaveSH();	
 	nBurnFunction = NULL;
 	wait_vblank();
-	SPR_InitSlaveSH();
 	
 	z80_stop_emulating();
 	z80_add_read(0xe600, 0xe60f, 1, (void *)NULL);
@@ -497,7 +497,7 @@ INT32 SolomonExit()
 	SolomonZ80Ram1 = SolomonZ80Ram2 = SolomonColourRam = SolomonVideoRam = NULL;
 	SolomonBgColourRam = SolomonBgVideoRam = SolomonSpriteRam = NULL;
 	SolomonPaletteRam = CZ80Context = NULL;
-	
+
 #ifdef USE_IDMA
 	bgmap_buf = bgmap2_buf = NULL;
 #endif
@@ -561,12 +561,6 @@ void SolomonCalcPalette()
 	}
 }
 
-inline void SolomonDraw()
-{
-//	SolomonCalcPalette();
-	SolomonRenderSpriteLayer();
-}
-
 INT32 SolomonFrame()
 {
 	SolomonMakeInputs();
@@ -593,21 +587,13 @@ INT32 SolomonFrame()
 	nNext = nCyclesTotal1 - nCyclesDone1;
 	CZetRunSlave(&nNext);
 
-	SolomonDraw();
+	SolomonRenderSpriteLayer();
 	SPR_WaitEndSlaveSH();
 	CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 
 //	updateSound();
 	return 0;
 }
-
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*
-void AY8910Update1Slave()
-{
-	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
-}
-*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void updateSound()
 {
@@ -729,7 +715,7 @@ voir plutot p355 vdp2
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut(void)
+/*static*/ void make_lut(void)
 {
 	for (UINT32 i = 0; i < 1024;i++) 
 	{

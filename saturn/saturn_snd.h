@@ -1,5 +1,8 @@
 //#include "../burn.h"
 //#define SC_RELEASE 1
+#include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
 #define		_SPR3_
 #include "sega_spr.h"
 #include "sega_scl2.h"

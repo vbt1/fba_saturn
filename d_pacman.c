@@ -599,7 +599,6 @@ void DrvInitSaturn()
 	cleanBSS();
 
 	nSoundBufferPos=0;
-
 	return 0;
 }
 

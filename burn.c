@@ -53,9 +53,9 @@ int BurnDrvInit()
 // Exit game emulation
 int BurnDrvExit()
 {
-	if (pDriver[nBurnDrvSelect]->Exit) {
+//	if (pDriver[nBurnDrvSelect]->Exit) {
 		return pDriver[nBurnDrvSelect]->Exit();			// Forward to drivers function
-	}
+//	}
 }
 
 void BurnDrvAssignList()
@@ -136,27 +136,27 @@ void BurnDrvAssignList()
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
-BurnDrvsms_akmw.szParent=NULL;
+//BurnDrvsms_akmw.szParent=NULL;
 
 BurnDrvsms_cz80.szShortName="smscz";
 BurnDrvsms_cz80.szFullNameA="Sega Master System (CZ80)";
-BurnDrvsms_cz80.szParent=NULL;
+//BurnDrvsms_cz80.szParent=NULL;
 
 BurnDrvsms_gg.szShortName="gg";
 BurnDrvsms_gg.szFullNameA="Sega Game Gear (Faze)";
-BurnDrvsms_gg.szParent=NULL;
+//BurnDrvsms_gg.szParent=NULL;
 
 BurnDrvsms_ggcz.szShortName="ggcz";
 BurnDrvsms_ggcz.szFullNameA="Sega Game Gear (CZ80)";
-BurnDrvsms_ggcz.szParent=NULL;
+//BurnDrvsms_ggcz.szParent=NULL;
 
 BurnDrvsg1k_wboy.szShortName="sg1000";
 BurnDrvsg1k_wboy.szFullNameA="Sega SG-1000";
-BurnDrvsg1k_wboy.szParent=NULL;
+//BurnDrvsg1k_wboy.szParent=NULL;
 
 BurnDrvbankp.szShortName="bankp";
 BurnDrvbankp.szFullNameA="Bank Panic";
-BurnDrvbankp.szParent=NULL;
+//BurnDrvbankp.szParent=NULL;
 
 BurnDrvcombh.szShortName="combh";
 BurnDrvcombh.szFullNameA="Combat Hawk";
@@ -168,11 +168,11 @@ BurnDrvNewsa.szParent="news";
 
 BurnDrvNews.szShortName="news";
 BurnDrvNews.szFullNameA="News (set 1)";
-BurnDrvNews.szParent=NULL;
+//BurnDrvNews.szParent=NULL;
 
 BurnDrvGberet.szShortName="gberet";
 BurnDrvGberet.szFullNameA="Green Beret";
-BurnDrvGberet.szParent=NULL;
+//BurnDrvGberet.szParent=NULL;
 
 BurnDrvMrgoemon.szShortName="mrgoemon";
 BurnDrvMrgoemon.szFullNameA="Mr. Goemon (Japan)";
@@ -180,11 +180,11 @@ BurnDrvMrgoemon.szParent="gberet";
 
 BurnDrvhigemaru.szShortName="higema";
 BurnDrvhigemaru.szFullNameA="Pirate Ship Higemaru";
-BurnDrvhigemaru.szParent=NULL;
+//BurnDrvhigemaru.szParent=NULL;
 
 BurnDrvpkunwar.szShortName="pkunw";
 BurnDrvpkunwar.szFullNameA="Penguin-Kun Wars (US)";
-BurnDrvpkunwar.szParent=NULL;
+//BurnDrvpkunwar.szParent=NULL;
 
 BurnDrvPang.szShortName="pang";
 BurnDrvPang.szFullNameA="Pang (World)";
@@ -256,7 +256,7 @@ BurnDrvRaflesia.szParent="sys1h";
 
 BurnDrvZaxxon.szShortName="zaxxon";
 BurnDrvZaxxon.szFullNameA="Zaxxon (set 1)";
-BurnDrvZaxxon.szParent=NULL;
+//BurnDrvZaxxon.szParent=NULL;
 
 //BurnDrvZaxxonb.szShortName="zaxxonb";
 //BurnDrvZaxxonb.szFullNameA="Jackson";
@@ -268,11 +268,11 @@ BurnDrvSzaxxon.szParent="zaxxon";
 
 BurnDrvVigilant.szShortName="vigil";
 BurnDrvVigilant.szFullNameA="Vigilante (World)";
-BurnDrvVigilant.szParent=NULL;
+//BurnDrvVigilant.szParent=NULL;
 
 BurnDrvBombjack.szShortName="bombja";
 BurnDrvBombjack.szFullNameA="Bomb Jack (set 1)";
-BurnDrvBombjack.szParent=NULL;
+//BurnDrvBombjack.szParent=NULL;
 
 BurnDrvNova2001u.szShortName="nova2001";
 BurnDrvNova2001u.szFullNameA="Nova 2001 (US)";
@@ -312,7 +312,7 @@ BurnDrvBlktiger.szParent="blktgr";
 
 BurnDrvWiz.szShortName="wiz";
 BurnDrvWiz.szFullNameA="Wiz";
-BurnDrvWiz.szParent=NULL;
+//BurnDrvWiz.szParent=NULL;
 
 BurnDrvKungfut.szShortName="kungfut";
 BurnDrvKungfut.szFullNameA="Kung-Fu Taikun";
@@ -360,7 +360,7 @@ BurnDrvSlapFigh.szParent="slpfgh";
 
 BurnDrvMSX_1942.szShortName="msx";
 BurnDrvMSX_1942.szFullNameA="MSX1 System";
-BurnDrvMSX_1942.szParent=NULL;
+//BurnDrvMSX_1942.szParent=NULL;
 
 BurnDrvHangonjr.szShortName="hangonjr";
 BurnDrvHangonjr.szFullNameA="Hang-On Jr.";
@@ -396,7 +396,7 @@ BurnDrvSolomon.szParent="solomn";
 
 BurnDrvSidearms.szShortName="sidarm";
 BurnDrvSidearms.szFullNameA="Side Arms - Hyper Dyne (World, 861129)";
-BurnDrvSidearms.szParent=NULL;	
+//BurnDrvSidearms.szParent=NULL;	
 
 BurnDrvRobokid.szShortName="robokid";
 BurnDrvRobokid.szFullNameA="Atomic Robo-kid (World, Type-2)";

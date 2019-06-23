@@ -1,6 +1,5 @@
 //#define DEBUG 1
 #include "saturn_snd.h"
-#include <stdarg.h>
 PcmHn 	pcmStream;
 PcmCreatePara	paraStream;
 unsigned char stm_work[STM_WORK_SIZE(12, 24)];

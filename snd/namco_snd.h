@@ -34,7 +34,7 @@ typedef struct
 	INT32 waveform_select;
 } sound_channel;
 
-struct namco_sound
+typedef struct namco_sound
 {
 	sound_channel channel_list[MAX_VOICES];
 	sound_channel *last_channel;
@@ -53,5 +53,5 @@ struct namco_sound
 	
 //	double gain[2];
 //	INT32 output_dir[2];
-};
+} namco_sound;
 

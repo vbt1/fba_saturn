@@ -12,7 +12,7 @@
 UINT8* NamcoSoundProm = NULL;
 INT16 *p = (INT16*)0x00200000;
 
-/*static*/ UINT8 namco_soundregs[0x40];
+/*static*/ UINT8 namco_soundregs[0x40]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 /*static*/ UINT8 *namco_wavedata = NULL;
 
 /*static*/// struct namco_sound chip[1];// = NULL;
@@ -342,7 +342,7 @@ void NamcoSoundExit()
 	{
 		chip->waveform[v] = NULL;
 	}
-
+	chip->last_channel = NULL;
 //	free(p);
 //	memset(p,0x00,0x30000);
 	p = NULL;

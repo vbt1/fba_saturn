@@ -1372,6 +1372,10 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	xscroll = yscroll = 0;
 	ninjakun_ioctrl = 0;
 
+	cleanDATA();
+	cleanBSS();
+
+	nSoundBufferPos=0;
 	return 0;
 }
 

@@ -826,6 +826,11 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 
  	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
  	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
+
+	cleanDATA();
+	cleanBSS();
+
+	nSoundBufferPos=0;
 	return 0;
 }
 
