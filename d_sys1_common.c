@@ -697,15 +697,15 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc                     ",20,100);
 	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
 	{	
 		return 1;
 	}
 	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
-
-	UINT8 *	System1TempRom = (UINT8*)0x00200000;
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"memset                     ",20,100);
+	UINT8 *System1TempRom = (UINT8*)0x00200000;
 	memset((void *)System1TempRom, 0, 0x40000);
 	// Load Z80 #1 Program roms
 	RomOffset = 0;
@@ -742,7 +742,8 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		}
 	}
 
-	memset(System1Rom2, 0, 0x10000);
+	memset((void *)System1Rom2, 0, 0x10000);
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DecodeFunction                     ",20,100);
 
 	if (DecodeFunction) DecodeFunction();
 	
@@ -763,6 +764,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	UINT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
 	UINT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"GfxDecode4Bpp                     ",20,100);
 
 	if (System1NumTiles > 0x800)
 	{
@@ -774,9 +776,10 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	System1TempRom = NULL;
 	
-	memset(&ss_map2[2048],0,768);
+	memset((void *)&ss_map2[2048],0,768);
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"rotate_tile                     ",20,100);
 
-	if(flipscreen==1)			rotate_tile(System1NumTiles,0,cache);
+	if(flipscreen==1)		rotate_tile(System1NumTiles,0,cache);
 	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,cache);
 
 	spriteCache = (UINT16*)(0x00200000);
@@ -923,6 +926,10 @@ int System1Exit()
     while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
 
 MemEnd  = CZ80Context = NULL;
+
+	SN76489Init(0, 0, 0);
+	SN76489Init(1, 0, 0);
+
 RamStart1 = RamStart               = NULL;
 System1Rom1 = System1Rom2 = NULL;
 System1PromRed = System1PromGreen = System1PromBlue = NULL;

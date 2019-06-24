@@ -17,7 +17,7 @@
 
 #define STEP 0x8000
 
-/*static*/ void (*AYStreamUpdate)(void);
+/*static*/// void (*AYStreamUpdate)(void) = NULL;
 
 //int ay8910_index_ym = 0;
 /*static*/ int num = 0;//, ym_num = 0;
@@ -939,18 +939,18 @@ void AY8910Exit(int chip)
 //	ay8910_index_ym = 0;
 }
 
-/*static*/ void dummy_callback(void)
+/*static*//* void dummy_callback(void)
 {
 	return;
 }
-
+*/
 int AY8910Init(int chip, int clock, int sample_rate,
 		read8_handler portAread, read8_handler portBread,
 		write8_handler portAwrite, write8_handler portBwrite)
 {
 	struct AY8910 *PSG = &AYPSG[chip];
 
-	AYStreamUpdate = dummy_callback;
+//	AYStreamUpdate = dummy_callback;
 
 	if (chip != num) {
 		return 1;

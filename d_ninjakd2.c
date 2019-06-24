@@ -539,9 +539,9 @@ int ovlInit(char *szShortName)
 
 /*static*/  INT32 DrvGfxDecode(UINT8 *rom, UINT32 len, UINT32 type)
 {
-	UINT32 Plane[4]   = { STEP4(0,1) };
-	UINT32 XOffs1[16] = { STEP8(0,4), STEP8(64*8,4) };
-	UINT32 YOffs1[16] = { STEP16(0,32) };
+	const UINT32 Plane[4]   = { STEP4(0,1) };
+	const UINT32 XOffs1[16] = { STEP8(0,4), STEP8(64*8,4) };
+	const UINT32 YOffs1[16] = { STEP16(0,32) };
 
 	UINT8 *tmp = (UINT8*)0x00200000;
 	
@@ -712,7 +712,7 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initLayers()
 {
-    Uint16	CycleTb[]={
+    const Uint16	CycleTb[]={
 //		0xff56, 0xffff, //A0
 		0xffff,0x4567,  //A0 // nbg1 et 2 ok
 		0xffff, 0xffff,	//A1

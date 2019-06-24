@@ -97,7 +97,6 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void update_input1(void)
 {
-	unsigned int i=0,k;
 	UINT8 temp = 0xFF;
 	SysDevice	*device;
 //	__port = PER_OpenPort();
@@ -117,7 +116,7 @@ int ovlInit(char *szShortName)
 			return;
 		}
 
-		for(i=10;i<12;i++)
+		for(UINT32 i=10;i<12;i++)
 		{
 			if((pltriggerE[0] & pad_asign[i])!=0)
 			{
@@ -184,7 +183,7 @@ int ovlInit(char *szShortName)
 
 /*static*/ void keyInput(UINT8 kchar, UINT8 onoff) { // input from emulator
 
-	INT32 i = 0;
+	UINT32 i = 0;
 	INT32 gotkey = 0;
 
 	while (charMatrix[i][0] != '\0') {
@@ -386,7 +385,7 @@ void msxinit(INT32 cart_len)
 
 
 		if (offset < 0x80) {
-			cnt++;
+//			cnt++;
 			K051649WaveformWrite(offset, data);
 		}
 		else
@@ -394,11 +393,11 @@ void msxinit(INT32 cart_len)
 			offset &= 0xf;
 
 			if (offset < 0xa) {
-				cnt2++;
+//				cnt2++;
 				K051649FrequencyWrite(offset, data);
 			}
 			else if (offset < 0xf) {
-				cnt3++;
+//				cnt3++;
 				K051649VolumeWrite(offset - 0xa, data);
 			}
 			else {
@@ -1499,7 +1498,11 @@ And the address to change banks:
 			return ppi8255_r(0, port & 3);
 
 		case 0xd9: {
+#ifdef KANJI			
 			UINT8 Kan = (use_kanji) ? kanji_rom[Kana + KanaByte] : 0xff;
+#else
+			UINT8 Kan = 0;
+#endif			
 			KanaByte = (KanaByte + 1) & 0x1f;
 			return Kan;
 		}
@@ -1562,15 +1565,15 @@ And the address to change banks:
 	else
 		z80_lower_IRQ();
 #else
-	CZetSetIRQLine(0, state ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE);
+	CZetSetIRQLine(0, state ? CZET_IRQSTATUS_ACK : CZET_IRQSTATUS_NONE);
 #endif
 }
 
 /*static*/ void DrvDoReset()
 {
-	memset (AllRam, 0, RamEnd - AllRam);
+//	memset (AllRam, 0, RamEnd - AllRam);
 
-	memset(&keyRows, 0, sizeof(keyRows));
+	memset(keyRows, 0, sizeof(keyRows));
 	ppiC_row = 0;
 
 	Kana = 0;
@@ -2092,9 +2095,10 @@ void cleanmemmap()
 /*static*/ INT32 DrvExit()
 {
 	nBurnFunction = NULL;
+	DrvDoReset();
 #ifdef RAZE
 	z80_stop_emulating();
-	z80_add_write(0x4000, 0xffff, 1, (void *)NULL);
+	z80_add_write(0x0000, 0xffff, 1, (void *)NULL);
 	z80_set_in((unsigned char (*)(unsigned short))NULL);
 	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
 
@@ -2133,12 +2137,15 @@ void cleanmemmap()
 		}
 		SRAMData[PSlot] = NULL;
 		ROMData[PSlot] = NULL;
-		RAMMapper[PSlot] = 0;
+//		RAMMapper[PSlot] = 0;
 	}
 
-	maincpu = game = game_sram = AllRam = main_mem = kanji_rom = NULL;
+	maincpu = game = game_sram = AllRam = main_mem = NULL;
 	TMSContext = EmptyRAM = RAMData = MemEnd = RamEnd = NULL;
 
+#ifdef KANJI
+	kanji_rom = NULL;
+#endif
 #ifdef K051649
 	SCCMixerBuffer	= NULL;
 	SCCMixerTable	= NULL;
@@ -2327,7 +2334,7 @@ void initLayers(void)
 //    SclConfig	config;
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
 
-	Uint16	CycleTb[]={
+	const Uint16	CycleTb[]={
 		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
 		0xff5e, 0xffff, //A1
 		0xffff, 0xffff,	//A0

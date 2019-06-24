@@ -125,7 +125,7 @@ struct BurnDIPInfo {
 
 // ---------------------------------------------------------------------------
 int BurnDrvInit();
-int BurnDrvExit();
+void BurnDrvExit();
 // ---------------------------------------------------------------------------
 // Retrieve driver information
 

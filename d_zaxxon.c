@@ -1533,7 +1533,7 @@ void DrvInitSaturn()
 	if(SaturnMem==NULL)
 	{
 		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc SaturnMem failed",4,50);
-		return 1;
+		return;
 	}
 	memset(SaturnMem, 0, MALLOC_MAX);
 	SaturnInitMem();

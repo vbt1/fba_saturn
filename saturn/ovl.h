@@ -2,7 +2,7 @@
 #define _OVL_H_
 #define OVLADDR 0x060DA000
 #define MAINEND 0x06022000
-#define MALLOC_MAX  OVLADDR-MAINEND-0x4000 //0x30000 //0x060FFC00-0x060CC000
+#define MALLOC_MAX  OVLADDR-MAINEND-0x3000 //0x30000 //0x060FFC00-0x060CC000
 #define LOWADDR 0x00200000
 
 //extern Uint32   _bstart, _bend;
@@ -155,6 +155,13 @@ void cleanDATA()
 		*dst = 0;
 	}
 //	int size = ((unsigned char *)&_bendo)-((unsigned char *)&_bstarto);
+
+	extern unsigned int _rodata_start, _rodata_end;
+	
+	for( unsigned char *dst = (unsigned char *)&_rodata_start; dst < (unsigned char *)&_rodata_end; dst++ ) 
+	{
+		*dst = 0;
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void cleanBSS()

@@ -8,7 +8,7 @@
 #define OVLAEND 0x060FF000
 #define SIZEMAX  OVLAEND-OVLAEND //0x30000 //0x060FFC00-0x060CC000
 #define LOWADDR 0x00200000
-#define MALLOC_MAX 0xAA000
+//#define MALLOC_MAX 0xAA000
 
 #ifdef HEAP_WALK
 void heapWalk(void);
@@ -1245,9 +1245,10 @@ static int DoInputBlank(int bDipSwitch)
 		{
 			DIPInfo.nFirstDIP = i;
 			DIPInfo.nDIP = nGameInpCount - i;
-			if (DIPInfo.DIPData== NULL)
-				DIPInfo.DIPData = (struct GameInp *)malloc(DIPInfo.nDIP * sizeof(struct GameInp));
-			memset(DIPInfo.DIPData,0,DIPInfo.nDIP * sizeof(struct GameInp));
+//			if (DIPInfo.DIPData== NULL)
+//				DIPInfo.DIPData = (struct GameInp *)malloc(DIPInfo.nDIP * sizeof(struct GameInp));
+//			memset(DIPInfo.DIPData,0,DIPInfo.nDIP * sizeof(struct GameInp));
+			memset(DIPInfo.DIPData,0,4 * sizeof(struct GameInp));
 		}
 		DIPInfo.DIPData[i-DIPInfo.nFirstDIP].pVal = bii.pVal;
 		DIPInfo.DIPData[i-DIPInfo.nFirstDIP].nType = bii.nType;
@@ -1379,12 +1380,13 @@ static void InpExit()
 //  nGameInpCount = 0;
   if (DIPInfo.nDIP!=NULL)
 	{
-	memset(DIPInfo.DIPData,0,DIPInfo.nDIP * sizeof(struct GameInp));
-		if (DIPInfo.DIPData!=NULL)
-			free (DIPInfo.DIPData);
+//	memset(DIPInfo.DIPData,0,DIPInfo.nDIP * sizeof(struct GameInp));
+	memset(DIPInfo.DIPData,0,4 * sizeof(struct GameInp));
+//		if (DIPInfo.DIPData!=NULL)
+//			free (DIPInfo.DIPData);
 	}
 	nGameInpCount = 0;
-  DIPInfo.DIPData=NULL;
+//  DIPInfo.DIPData=NULL;
 //  return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

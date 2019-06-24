@@ -51,10 +51,16 @@ int BurnDrvInit()
 }
 
 // Exit game emulation
-int BurnDrvExit()
+void BurnDrvExit()
 {
 //	if (pDriver[nBurnDrvSelect]->Exit) {
-		return pDriver[nBurnDrvSelect]->Exit();			// Forward to drivers function
+		pDriver[nBurnDrvSelect]->Exit();			// Forward to drivers function
+	extern unsigned int _start_ram;
+
+	for( unsigned char *dst = (unsigned char *)&_start_ram; dst < (unsigned char *)0x060FF000; dst++ ) 
+	{
+		*dst = 0;
+	}
 //	}
 }
 
@@ -414,14 +420,14 @@ pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvMSX_1942;
+pDriver[i++] = &BurnDrvAppoooh;
+pDriver[i++] = &BurnDrvAstrofl;
 pDriver[i++] = &BurnDrvRobokid;
 //pDriver[i++] = &BurnDrvGnga;
 //pDriver[i++] = &BurnDrvOpaopa;
 //pDriver[i++] = &BurnDrvKungfut;
 //pDriver[i++] = &BurnDrvStinger;
 //pDriver[i++] = &BurnDrvScion;
-pDriver[i++] = &BurnDrvAppoooh;
-pDriver[i++] = &BurnDrvAstrofl;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlktiger;
 pDriver[i++] = &BurnDrvBlockgal;

@@ -162,9 +162,9 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void DrvGfxDecode()
 {
-	UINT32 Planes0[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
-	UINT32 XOffs0[8] = {7, 6, 5, 4, 3, 2, 1, 0};
-	UINT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
+	const UINT32 Planes0[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
+	const UINT32 XOffs0[8] = {7, 6, 5, 4, 3, 2, 1, 0};
+	const UINT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
 
 	UINT8 *DrvGfxTMP0		= (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1		= (UINT8 *)0x00218000;
@@ -178,19 +178,19 @@ int ovlInit(char *szShortName)
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP0, DrvGfxROM0); // modulo 0x040 to verify !!!
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP1, DrvGfxROM1); // modulo 0x040 to verify !!!
 
-	UINT32 Planes1[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
-	UINT32 XOffs1[16] = {7, 6, 5, 4, 3, 2, 1, 0 , 8*8+7,8*8+6,8*8+5,8*8+4,8*8+3,8*8+2,8*8+1,8*8+0};
-	UINT32 YOffs1[16] = {0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8};
+//	const UINT32 Planes1[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
+	const UINT32 XOffs1[16] = {7, 6, 5, 4, 3, 2, 1, 0 , 8*8+7,8*8+6,8*8+5,8*8+4,8*8+3,8*8+2,8*8+1,8*8+0};
+	const UINT32 YOffs1[16] = {0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8};
 
-	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP0, DrvGfxROM2);
-	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM3);
+	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes0, XOffs1, YOffs1, 0x100, DrvGfxTMP0, DrvGfxROM2);
+	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes0, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM3);
 }
 
 /*static*/  void DrvRobowresGfxDecode()
 {
-	INT32 Planes0[3] = { RGN_FRAC(0x18000, 2,3), RGN_FRAC(0x18000, 1,3), RGN_FRAC(0x18000, 0,3) };
-	INT32 XOffs0[8] = { 7, 6, 5, 4, 3, 2, 1, 0 };
-	INT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
+	const INT32 Planes0[3] = { RGN_FRAC(0x18000, 2,3), RGN_FRAC(0x18000, 1,3), RGN_FRAC(0x18000, 0,3) };
+	const INT32 XOffs0[8] = { 7, 6, 5, 4, 3, 2, 1, 0 };
+	const INT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
 
 	UINT8 *DrvGfxTMP0		= (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1		= (UINT8 *)0x00218000;
@@ -204,13 +204,13 @@ int ovlInit(char *szShortName)
 	GfxDecode4Bpp(0x1000, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP0, DrvGfxROM0);
 	GfxDecode4Bpp(0x1000, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP1, DrvGfxROM1);
 
-	INT32 Planes1[3] = { RGN_FRAC(0x18000, 2,3),RGN_FRAC(0x18000, 1,3),RGN_FRAC(0x18000, 0,3) };
-	INT32 XOffs1[16] = { 7, 6, 5, 4, 3, 2, 1, 0, 8*8+7, 8*8+6, 8*8+5, 8*8+4, 8*8+3, 8*8+2, 8*8+1, 8*8+0 };
-	INT32 YOffs1[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
+//	const INT32 Planes1[3] = { RGN_FRAC(0x18000, 2,3),RGN_FRAC(0x18000, 1,3),RGN_FRAC(0x18000, 0,3) };
+	const INT32 XOffs1[16] = { 7, 6, 5, 4, 3, 2, 1, 0, 8*8+7, 8*8+6, 8*8+5, 8*8+4, 8*8+3, 8*8+2, 8*8+1, 8*8+0 };
+	const INT32 YOffs1[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
 
-	GfxDecode4Bpp(0x0400, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP0, &DrvGfxTMP1[0x30000]);
+	GfxDecode4Bpp(0x0400, 3, 16, 16, Planes0, XOffs1, YOffs1, 0x100, DrvGfxTMP0, &DrvGfxTMP1[0x30000]);
 	memcpy(DrvGfxROM2,&DrvGfxTMP1[0x40000],0x18000);
-	GfxDecode4Bpp(0x0400, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, &DrvGfxTMP1[0x30000]);
+	GfxDecode4Bpp(0x0400, 3, 16, 16, Planes0, XOffs1, YOffs1, 0x100, DrvGfxTMP1, &DrvGfxTMP1[0x30000]);
 	memcpy(DrvGfxROM3,&DrvGfxTMP1[0x40000],0x18000);
 }
 
@@ -743,14 +743,12 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	game_select = 0;
 	AllMem = NULL;
 	MemIndex();
-
 	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
 	{
 		return 1;
 	}
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
-
 	if(DrvLoadRoms()) return 1;
 
 	DrvPaletteInit();
@@ -764,7 +762,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void initLayers()
 {
-    Uint16	CycleTb[]={
+    const Uint16	CycleTb[]={
 		0xff56, 0xffff, //A0
 		0xffff, 0xffff,	//A1
 		0x15f2,0x4eff,   //B0
@@ -876,6 +874,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  INT32 DrvExit()
 {
+	DrvDoReset();
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();	
 	SPR_InitSlaveSH();

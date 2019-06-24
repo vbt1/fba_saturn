@@ -102,7 +102,8 @@ struct GameInp {
 struct DIPInfo{
 	unsigned char nDIP;
 	unsigned short nFirstDIP;
-	struct GameInp *DIPData;
+//	struct GameInp *DIPData[4];
+	struct GameInp DIPData[4];
 } DIPInfo;
 
 static    Uint16 pad_asign[]={

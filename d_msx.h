@@ -101,8 +101,9 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
 
 /*static*/  UINT16 *SCCMixerBuffer	= NULL;
 /*static*/  UINT16 *SCCMixerTable	= NULL;
-
-/*static*/  //UINT8 *CZ80Context = NULL;
+#ifndef RAZE
+/*static*/  UINT8 *CZ80Context = NULL;
+#endif
 /*static*/  UINT8 *TMSContext = NULL;
 /*static*/  UINT8 *AllMem	= NULL;
 /*static*/  UINT8 *MemEnd	= NULL;
@@ -114,7 +115,9 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
 /*static*/  UINT8 *game2     = NULL; // tape side B
 #endif
 /*static*/  UINT8 *main_mem	= NULL;
+#ifdef KANJI
 /*static*/  UINT8 *kanji_rom = NULL;
+#endif
 /*static*/  UINT8 *game_sram = NULL;
 /*static*/// UINT8 *tmpbmp = NULL;
 
@@ -135,7 +138,7 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
 /*static*///  UINT8 DrvReset = 0;
 /*static*/  UINT8 DrvNMI = 0;
 
-static struct BurnInputInfo MSXInputList[] = {
+/*static*/ struct BurnInputInfo MSXInputList[] = {
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"},
 	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"},
@@ -168,7 +171,7 @@ static struct BurnInputInfo MSXInputList[] = {
 
 STDINPUTINFO(MSX)
 
-static struct BurnDIPInfo MSXDIPList[]=
+/*static*/ struct BurnDIPInfo MSXDIPList[]=
 {
 	//{0x17, 0xff, 0xff, 0x10, NULL		},
 
@@ -197,42 +200,42 @@ static struct BurnDIPInfo MSXDIPList[]=
 	{0x17, 0x01, 0x40, 0x40, "Side B"	},
 };
 
-static struct BurnDIPInfo MSXDefaultDIPList[]=
+/*static*/ struct BurnDIPInfo MSXDefaultDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x10, NULL		},
 };
 
-static struct BurnDIPInfo MSXJBIOSDIPList[]=
+/*static*/ struct BurnDIPInfo MSXJBIOSDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x11, NULL		},
 };
 
-static struct BurnDIPInfo MSX50hzJoySwapDIPList[]=
+/*static*/ struct BurnDIPInfo MSX50hzJoySwapDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x20, NULL		},
 };
 
-static struct BurnDIPInfo MSX50hzDIPList[]=
+/*static*/ struct BurnDIPInfo MSX50hzDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x20, NULL		},
 };
 
-static struct BurnDIPInfo MSXJoySwapDIPList[]=
+/*static*/ struct BurnDIPInfo MSXJoySwapDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x30, NULL		},
 };
 
-static struct BurnDIPInfo MSXMapCursorToJoy1DIPList[]=
+/*static*/ struct BurnDIPInfo MSXMapCursorToJoy1DIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x80, NULL		},
 };
 
-static struct BurnDIPInfo MSXMapCursorToJoy1_60hzDIPList[]=
+/*static*/ struct BurnDIPInfo MSXMapCursorToJoy1_60hzDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x80+0x10, NULL		},
 };
 
-static struct BurnDIPInfo MSXKeyClickerDACDIPList[]=
+/*static*/ struct BurnDIPInfo MSXKeyClickerDACDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x02, NULL		},
 };
@@ -292,7 +295,10 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 
 /*static*/  UINT8 *RAM[8]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL}; // Mapped address space
 /*static*/  UINT8 *EmptyRAM = NULL; // Unmapped stuff points here
-/*static*/  UINT8 *MemMap[4][8];    // [prislot] [page]
+/*static*/  UINT8 *MemMap[4][8]={{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},
+								{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},
+								{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},
+								{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL}};    // [prislot] [page]
 
 /*static*/  UINT8 *RAMData = NULL;         // main flat-chunk of ram
 /*static*/  UINT8 RAMMapper[4]={0,0,0,0};
@@ -302,7 +308,7 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 /*static*/  UINT8 *SRAMData[MAXSLOTS]={NULL,NULL,NULL,NULL}; // ascii8/16 sram
 
 /*static*/  UINT8 *ROMData[MAXSLOTS]={NULL,NULL,NULL,NULL};  // flat chunk of cart-rom
-/*static*/  UINT8 ROMMapper[MAXSLOTS][4];
+/*static*/  UINT8 ROMMapper[MAXSLOTS][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
 /*static*/  UINT8 ROMMask[MAXSLOTS]={0,0,0,0};
 /*static*/  UINT8 ROMType[MAXSLOTS]={0,0,0,0};
 
@@ -326,7 +332,7 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 /*static*/  UINT8 ppiC_row=0;
 /*static*/  UINT8 keyRows[12]={0,0,0,0,0,0,0,0,0,0,0,0};
 #ifdef CASSETTE
-/*static*/  INT32 charMatrix[][3] = {
+/*static*/ INT32 charMatrix[][3] = {
 	{'0', 0, 0}, {')', 0, 0}, {'1', 0, 1}, {'!', 0, 1}, {'2', 0, 2}, {'@', 0, 2},
 	{'3', 0, 3}, {'#', 0, 3}, {'4', 0, 4}, {'$', 0, 4}, {'5', 0, 5}, {'%', 0, 5},
 	{'6', 0, 6}, {'^', 0, 6}, {'7', 0, 7}, {'&', 0, 7},
@@ -381,13 +387,13 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 	{'\0', 0, 0} // NULL/END.
 };
 
-static struct BurnRomInfo emptyRomDesc[] = {
+/*static*/ struct BurnRomInfo emptyRomDesc[] = {
 	{ "",                    0,          0, 0 },
 };
 #endif 
 
 // MSX1 BIOS
-static struct BurnRomInfo msx_msxRomDesc[] = {
+/*static*/ struct BurnRomInfo msx_msxRomDesc[] = {
     { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios
     { "msxj.rom",    0x8000, 0x071135e0, BRF_BIOS | BRF_OPT }, // 0x81 - japanese bios
 //    { "kanji.rom",   0x40000, 0x1f6406fb, BRF_BIOS | BRF_OPT }, // 0x82 - kanji support
@@ -398,7 +404,7 @@ STD_ROM_FN(msx_msx)
 
 // 1942 (Jpn)
 
-static struct BurnRomInfo MSX_1942RomDesc[] = {
+/*static*/ struct BurnRomInfo MSX_1942RomDesc[] = {
 //	{ "1942.rom",	0x2000, 0xa27787af, BRF_PRG | BRF_ESS },
 	{ "1942.rom",	0x20000, 0xa27787af, BRF_PRG | BRF_ESS },
     { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios

@@ -628,7 +628,7 @@ static void astrofl_decode(void)
 	memset(ss_scl,0x00,192*4);
 	memset(ss_scl1,0x00,192*4);
 	SCL_SetLineParamNBG1();
-	wait_vblank();
+//	wait_vblank();
 
 	CZ80Context = mc8123key = DrvMainROM	=DrvMainROMFetch = AllRam = DrvRAM = RamEnd = MemEnd = NULL;
 	segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
