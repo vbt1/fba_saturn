@@ -136,7 +136,7 @@ int ovlInit(char *szShortName)
 /*static*/  void robokid_rambank(INT32 sel, UINT8 data)
 {
 	UINT8 *ram[3] = { DrvBgRAM0, DrvBgRAM1, DrvBgRAM2 };
-	INT32 off[2][3]  = { { 0xd800, 0xd400, 0xd000 }, { 0xc400, 0xc800, 0xcc00 } };
+	UINT32 off[2][3]  = { { 0xd800, 0xd400, 0xd000 }, { 0xc400, 0xc800, 0xcc00 } };
 
 	UINT32 nBank = 0x400 * data;
 
@@ -169,7 +169,7 @@ int ovlInit(char *szShortName)
 				CZetOpen(0);
 			}
 		*/
-			flipscreen = data & 0x80;
+//			flipscreen = data & 0x80;
 		}
 		return;
 
@@ -343,7 +343,7 @@ int ovlInit(char *szShortName)
 				CZetOpen(0);
 			}
 
-			flipscreen = data & 0x80;
+//			flipscreen = data & 0x80;
 		}
 		return;
 
@@ -638,7 +638,7 @@ int ovlInit(char *szShortName)
 
 		DrvGfxDecode((UINT8*)tmp, 0x70000, 3);
 
-		for (UINT32 i=0;i<0x60000;i++ )
+		for (UINT32 i=0;i<0x70000;i++ )
 		{
 			if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
 			else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
@@ -659,7 +659,7 @@ int ovlInit(char *szShortName)
 
 		DrvGfxDecode((UINT8*)tmp, 0x60000, 3);
 
-		for (UINT32 i=0;i<0x5A000;i++ )
+		for (UINT32 i=0;i<0x60000;i++ )
 		{
 			if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
 			else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
@@ -788,8 +788,8 @@ int ovlInit(char *szShortName)
 /*static*/ void DrvInitSaturn(INT32 i)
 {
 	cleanSprites();
-	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_InitSlaveSH();
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 100;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
@@ -869,6 +869,7 @@ int ovlInit(char *szShortName)
 
 /*static*/  INT32 DrvExit()
 {
+	DrvDoReset();
 	CZetExit2();
 
 	CZ80Context	=  NULL;

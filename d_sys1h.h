@@ -7,6 +7,8 @@
 /*static*/  INT32 StarjackInit();
 /*static*/  INT32 RaflesiaInit();
 /*static*/  INT32 BlockgalInit();
+/*static*/ void gardia_decode();
+/*static*/ void blockgal_decode();
 
 /*==============================================================================================
 Input Definitions

@@ -256,20 +256,21 @@ Allocate Memory
 	System1efRam           = Next; Next += 0x000100;
 	System1ScrollY          = System1efRam + 0xbd;
 	System1ScrollX           = System1efRam + 0xfc;
+
 	System1f4Ram           = Next; Next += 0x000400;
 	System1fcRam           = Next; Next += 0x000400; // +3 pour avoir un code aligné pour SpriteOnScreenMap
 	SpriteOnScreenMap      = Next; Next += 0x10000;
 	System1Sprites         = Next; Next += System1SpriteRomSize;
 
 	width_lut			= Next; Next += 256 * sizeof(UINT8);
-	cram_lut			= Next; Next += 256 * sizeof(UINT16);
-	remap8to16_lut	= Next; Next += 512 * sizeof(UINT16);
-	map_offset_lut	= Next; Next += 0x800 * sizeof(UINT16);
+	cram_lut			= (UINT16 *)Next; Next += 256 * sizeof(UINT16);
+	remap8to16_lut		= (UINT16 *)Next; Next += 512 * sizeof(UINT16);
+	map_offset_lut		= (UINT16 *)Next; Next += 0x800 * sizeof(UINT16);
 //	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
-	cpu_lut				= Next; Next += 10*sizeof(UINT32);
+	cpu_lut				= (UINT32 *)Next; Next += 10*sizeof(UINT32);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
-	CZ80Context		= Next; Next += (0x1080*2);
-	map_cache		= Next; Next += (0x800*4) * sizeof(UINT32);
+	map_cache			= (UINT32 *)Next; Next += (0x800*4) * sizeof(UINT32);
+	CZ80Context			= Next; Next += 2*sizeof(cz80_struc);
 	MemEnd = Next;
 
 	return 0;
@@ -744,7 +745,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	memset((void *)System1Rom2, 0, 0x10000);
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DecodeFunction                     ",20,100);
-
+//wait_vblank();
 	if (DecodeFunction) DecodeFunction();
 	
 	// Load Z80 #2 Program roms
@@ -760,15 +761,15 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
 	}
 
-	UINT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
+	const UINT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
 
-	UINT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
-	UINT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
+	const UINT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	const UINT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"GfxDecode4Bpp                     ",20,100);
 
 	if (System1NumTiles > 0x800)
 	{
-		UINT32 NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
+		const UINT32 NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
 		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, NoboranbTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, cache);
 	}
 	else
@@ -895,10 +896,14 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	MakeInputsFunction = System1MakeInputs;
 	
 	// Reset the driver
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1DoReset                     ",20,100);
+
 	if (bReset) 
 	{	
 		System1DoReset();
 	}
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1CalcPalette                     ",20,100);
+	
 	System1CalcPalette();
 
 	System1efRam[0xfe] = 0x4f;
@@ -912,6 +917,7 @@ int System1Exit()
 	SS_SET_N2SPRM(0);
 	ss_regs->specialcode=0x0000;
 	nBurnFunction = NULL;
+	System1DoReset();
 	CZetExit2();
 
 	z80_stop_emulating();

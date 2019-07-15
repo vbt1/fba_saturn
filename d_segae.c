@@ -536,7 +536,7 @@ int ovlInit(char *szShortName)
 	memcpy(pDestDec + 0x8000, pDest + 0x8000, 0x4000);
 }
 
-static void astrofl_decode(void)
+/*static*/ void astrofl_decode(void)
 {
 	/*static*/ const UINT8 opcode_xor[64] =
 	{
@@ -622,12 +622,11 @@ static void astrofl_decode(void)
 	wait_vblank();
 	DrvDoReset();
 	CZetExit2();
-	SN76489Init(0, 0, 0);
-	SN76489Init(1, 0, 0);
 	
 	memset(ss_scl,0x00,192*4);
 	memset(ss_scl1,0x00,192*4);
 	SCL_SetLineParamNBG1();
+	initPosition();
 //	wait_vblank();
 
 	CZ80Context = mc8123key = DrvMainROM	=DrvMainROMFetch = AllRam = DrvRAM = RamEnd = MemEnd = NULL;
@@ -636,6 +635,10 @@ static void astrofl_decode(void)
 	name_lut = cram_lut = map_lut = NULL;
 	bp_lut = NULL;
 	ss_scl1 = NULL;
+	
+	SN76489Init(0, 0, 0);
+	SN76489Init(1, 0, 0);
+
 	free(AllMem);
 	AllMem = NULL;
 	ss_port = NULL;
@@ -660,11 +663,15 @@ static void astrofl_decode(void)
 	vintpending = 0;
 	hintpending = 0;
 //	SN76496Reset();
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetOpen                    ",24,40);
 	CZetOpen(0);
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"segae_bankswitch                    ",24,40);
 	segae_bankswitch();
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetReset                    ",24,40);
 	CZetReset();
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetClose                    ",24,40);
 	CZetClose();
-	
+	nSoundBufferPos=0;	
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -860,7 +867,6 @@ static void astrofl_decode(void)
 			astrofl_decode();
 			break;
 	}
-
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetMapMemory(DrvMainROM, 0x0000, 0x7fff, MAP_ROM);
@@ -876,18 +882,20 @@ static void astrofl_decode(void)
 	CZetSetOutHandler(systeme_main_out);
 
 	CZetClose();
+// ajout pour eviter plantage apres appooh	
+wait_vblank();
 
 	SN76489Init(0, 10738635 / 3, 0);
 	SN76489Init(1, 10738635 / 3, 1);
+	
 
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset                    ",24,40);	
+	make_lut();	
 	for (UINT32 i = 0; i < 0x40; i++) 
 	{
 		colAddr[i] = colBgAddr[i] = colBgAddr[i+256] = cram_lut[i];
-	}
-
-	DrvDoReset();
-
-	make_lut();
+	}	
+	DrvDoReset();	
 //	drawWindow(0,192,192,2,66);
 	return 0;
 }
@@ -1011,8 +1019,8 @@ static void astrofl_decode(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturnS(UINT8 game)
 {
-	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_InitSlaveSH();
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites  = 131;//27;
 	nBurnLinescrollSize = 0x340;

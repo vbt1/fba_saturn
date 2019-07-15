@@ -501,15 +501,15 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvGfxDecode()
 {
-	UINT32 Planes0[3] = { RGN_FRAC(0xc000, 2,3), RGN_FRAC(0xc000, 1,3), RGN_FRAC(0xc000, 0,3) };
-	UINT32 XOffs0[8]  = {0, 1, 2, 3, 4, 5, 6, 7};
-	UINT32 YOffs0[8]  = {STEP8(0, 8)};
+	const UINT32 Planes0[3] = { RGN_FRAC(0xc000, 2,3), RGN_FRAC(0xc000, 1,3), RGN_FRAC(0xc000, 0,3) };
+	const UINT32 XOffs0[8]  = {0, 1, 2, 3, 4, 5, 6, 7};
+	const UINT32 YOffs0[8]  = {STEP8(0, 8)};
 
-	UINT32 Planes1[3] = { RGN_FRAC(0xc000, 0,3),RGN_FRAC(0xc000, 2,3),RGN_FRAC(0xc000, 1,3) };
-	UINT32 XOffs1[16] = {0, 1, 2, 3, 4, 5, 6, 7,128+0,128+1,128+2,128+3,128+4,128+5,128+6,128+7};
+	const UINT32 Planes1[3] = { RGN_FRAC(0xc000, 0,3),RGN_FRAC(0xc000, 2,3),RGN_FRAC(0xc000, 1,3) };
+	const UINT32 XOffs1[16] = {0, 1, 2, 3, 4, 5, 6, 7,128+0,128+1,128+2,128+3,128+4,128+5,128+6,128+7};
 
 //	INT32 YOffs1[16] = {0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 8*8, 9*8, 10*8, 11*8,12*8,13*8,14*8,15*8};
-	UINT32 YOffs1[16] = {15*8, 14*8, 13*8, 12*8, 11*8, 10*8, 9*8, 8*8, 7*8, 6*8, 5*8, 4*8,3*8,2*8,1*8,0*8};
+	const UINT32 YOffs1[16] = {15*8, 14*8, 13*8, 12*8, 11*8, 10*8, 9*8, 8*8, 7*8, 6*8, 5*8, 4*8,3*8,2*8,1*8,0*8};
 	UINT8 *DrvGfxTMP0 = (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1 = (UINT8 *)0x00218000;
 
@@ -707,7 +707,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	MemIndex();
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
-	return 1;
+		return 1;
 	}
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
@@ -860,7 +860,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 {
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
-		UINT32	sx, sy;
+		INT32	sx, sy;
 
 		if(countrunbmode || pbillrdmode)
 		{
@@ -929,10 +929,13 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
+	DrawSprite = NULL;
 	DrvDoReset();
 	CZetExit2();
 	ppi8255_exit();
-
+	PCM_NotifyWriteSize(pcm, nSoundBufferPos);	
+	PCM_Task(pcm);
+	
 	SN76489Init(0, 0, 0);
 	SN76489Init(1, 0, 0);
 	SN76489Init(2, 0, 0);
@@ -942,10 +945,12 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	DrvVidRAM = DrvSprRAM = DrvColRAM = DrvColPROM = NULL;
 	MC8123Key = NULL;
 	map_offset_lut = NULL;
-	DrawSprite = NULL;
 
 	free (AllMem);
 	AllMem = NULL;
+
+	DrvZ80Bank0 = use_encrypted = countrunbmode = pbillrdmode = 0;
+	sprite_number = 0;
 
 	cleanDATA();
 	cleanBSS();

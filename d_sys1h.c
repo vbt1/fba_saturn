@@ -128,11 +128,11 @@ Driver Inits
 /*static*/ INT32 GardiaInit()
 {
 	int nRet;
-	
+
 	System1ColourProms = 1;
 	System1BankedRom = 1;
 	flipscreen = 2;
-	
+
 	DecodeFunction = gardia_decode;
 	
 	nRet = System1Init(3, 0x8000, 1, 0x4000, 3, 0x4000, 4, 0x8000, 0);

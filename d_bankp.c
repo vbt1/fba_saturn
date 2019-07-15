@@ -366,11 +366,11 @@ static INT32 MemIndex()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int bankp_gfx_decode()
 {
-	 UINT32 Char1PlaneOffsets[2] = { 0x00, 0x04 };
-	 UINT32 Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
-	 UINT32 Char1XOffsets[8]     = { 0x43, 0x42, 0x41, 0x40, 0x03, 0x02, 0x01, 0x00 };
-	 UINT32 Char2XOffsets[8]     = { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
-	 UINT32 CharYOffsets[8]      = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
+	 const UINT32 Char1PlaneOffsets[2] = { 0x00, 0x04 };
+	 const UINT32 Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
+	 const UINT32 Char1XOffsets[8]     = { 0x43, 0x42, 0x41, 0x40, 0x03, 0x02, 0x01, 0x00 };
+	 const UINT32 Char2XOffsets[8]     = { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
+	 const UINT32 CharYOffsets[8]      = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
 
 	GfxDecode4Bpp(0x400, 2, 8, 8, Char1PlaneOffsets, Char1XOffsets, CharYOffsets, 0x080, Gfx0, cache+0x10000);
 	GfxDecode4Bpp(0x800, 3, 8, 8, Char2PlaneOffsets, Char2XOffsets, CharYOffsets, 0x040, Gfx1, cache);
@@ -499,6 +499,7 @@ static INT32 MemIndex()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvBpExit()
 {
+	DrvDoReset();
 #ifdef RAZE
 	z80_stop_emulating();
 	z80_add_read(0x0000, 0xffff, 1, (void *)NULL);

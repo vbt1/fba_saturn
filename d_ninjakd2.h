@@ -15,7 +15,7 @@
 /*static*/  void DrvCalculatePalette();
 /*static*/ void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 void cleanSprites();
-void dummy();
+//void dummy();
 
 /*static*/  UINT8 *AllMem = NULL;
 /*static*/  UINT8 *MemEnd = NULL;
@@ -39,7 +39,7 @@ void dummy();
 /*static*/  UINT8 *CZ80Context = NULL;
 /*static*/  UINT16 *ss_map3 = NULL;
 /*static*/  UINT8 soundlatch = 0;
-/*static*/  UINT8 flipscreen = 0;
+/*static*/  //UINT8 flipscreen = 0;
 
 /*static*/  UINT16 scrollx[3] = {0,0,0};
 /*static*/  UINT16 scrolly[3] = {0,0,0};
@@ -56,7 +56,7 @@ void dummy();
 /*static*/  UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
 /*static*/  UINT8 DrvDips[2] = {0,0};
 /*static*/  UINT8 DrvInputs[3] = {0,0,0};
-/*static*/  UINT8 DrvReset = 0;
+/*static*/ // UINT8 DrvReset = 0;
 
 /*static*/  INT32 previous_coin[2] = {0,0};
 
@@ -79,7 +79,7 @@ void dummy();
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"	},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };
@@ -105,7 +105,7 @@ STDINPUTINFO(Drv)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"	},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };
@@ -131,7 +131,7 @@ STDINPUTINFO(Drv2)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"	},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 	{"Service",		BIT_DIGITAL,	DrvJoy1 + 5,	"service"	},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
@@ -921,8 +921,7 @@ struct BurnDriver BurnDrvArkarea = {
 	{ "robokid.15a",	0x10000, 0x469204e7, 7 | BRF_GRA },           // 27
 	{ "robokid.16a",	0x10000, 0x4e340815, 7 | BRF_GRA },           // 28
 	{ "robokid.17a",	0x10000, 0xf0863106, 7 | BRF_GRA },           // 29
-//	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30 // trouver de la ram
-	{ "robokid.18a",	0x0a000, 0xfdff7441, 7 | BRF_GRA },           // 30	
+	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30	
 	{ "prom82s.129",	0x00100, 0x4dd96f67, 0 | BRF_OPT },
 };
 

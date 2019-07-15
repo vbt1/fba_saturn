@@ -56,7 +56,7 @@ void BurnDrvExit()
 //	if (pDriver[nBurnDrvSelect]->Exit) {
 		pDriver[nBurnDrvSelect]->Exit();			// Forward to drivers function
 	extern unsigned int _start_ram;
-
+	SPR_InitSlaveSH();
 	for( unsigned char *dst = (unsigned char *)&_start_ram; dst < (unsigned char *)0x060FF000; dst++ ) 
 	{
 		*dst = 0;

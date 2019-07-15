@@ -7,16 +7,16 @@
 #include "raze/raze.h"
 #include "machine.h"
 
-static INT32 DrvInit();
-static INT32 DrvFMInit();
-static INT32 DrvFMFrame();
-static INT32 DrvExit();
-static INT32 DrvFrame();
-static INT32 DrvDraw();
-static void draw_sprites();
-static void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
-static void Set14PCM();
-static PcmHn createHandle(PcmCreatePara *para);
+/*static*/ INT32 DrvInit();
+/*static*/ INT32 DrvFMInit();
+/*static*/ INT32 DrvFMFrame();
+/*static*/ INT32 DrvExit();
+/*static*/ INT32 DrvFrame();
+/*static*/ INT32 DrvDraw();
+/*static*/ void draw_sprites();
+/*static*/ void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+/*static*/ void Set14PCM();
+/*static*/ PcmHn createHandle(PcmCreatePara *para);
 void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
 void dummy();
 void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);

@@ -52,9 +52,9 @@ SECTIONS {
 
 	.rodata ALIGN(4) :			
 	{			
-	   __rodata_start = .;
+/*	   __rodata_start = .;*/
 	   *(.rodata)
-	   __rodata_end = .;
+/*	   __rodata_end = .;*/
 	} > ram
 
 	
@@ -70,7 +70,7 @@ SECTIONS {
 	
 	.overlay 0x060DA000:
         {
+		__start_ram = .;		
 			boot = .;
         } > ram
-
 }
