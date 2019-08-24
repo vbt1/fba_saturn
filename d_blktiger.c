@@ -609,9 +609,8 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 
 	MemIndex();
 #if  1
-	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL)
 	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
 #endif

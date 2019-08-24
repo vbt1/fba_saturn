@@ -216,7 +216,7 @@ for (i = 0; i < 0x80; i+=4)
 
 	Mem = NULL;
 	MemIndex();
-	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) return 1;
+	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 

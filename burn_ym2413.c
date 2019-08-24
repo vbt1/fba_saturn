@@ -139,7 +139,7 @@ int BurnYM2413Init(int nClockFrequency, float nVolume)
 
 	YM2413Init(1, nClockFrequency, nBurnYM2413SoundRate);
 
-	pBuffer = (short*)malloc(65536 * 2 * sizeof(short));
+	pBuffer = (short*)BurnMalloc(65536 * 2 * sizeof(short));
 	memset(pBuffer, 0, 65536 * 2 * sizeof(short));
 
 	nSampleSize = (unsigned int)nBurnYM2413SoundRate * (1 << 16) / nBurnSoundRate;

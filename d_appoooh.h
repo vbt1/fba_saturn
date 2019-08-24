@@ -46,7 +46,6 @@ PcmHn 			pcm4[4];
 /*static*/ UINT8 *DrvSoundROM = NULL;
 /*static*/ UINT8 *DrvFetch = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
-/*static*/ UINT16 *charaddr_lut = NULL;
 /*static*/ UINT8 *is_fg_dirty = NULL;
 /*static*/ UINT8 scroll_x = 0;
 /*static*/ UINT8 flipscreen = 0;

@@ -297,7 +297,7 @@ void SN76496Write(int Num, int Data)
 	//NumChips = Num;
 	
 	if (Num == 0) {
-	//Chip0 = (struct SN76496*)malloc(sizeof(*Chip0));
+	//Chip0 = (struct SN76496*)BurnMalloc(sizeof(*Chip0));
 		memset(&Chip0, 0, sizeof(Chip0));
 	
 		SN76496Init2(&Chip0, Clock);
@@ -311,7 +311,7 @@ void SN76496Write(int Num, int Data)
 	}
 	
 	if (Num == 1) {
-//		Chip1 = (struct SN76496*)malloc(sizeof(*Chip1));
+//		Chip1 = (struct SN76496*)BurnMalloc(sizeof(*Chip1));
 		memset(&Chip1, 0, sizeof(Chip1));
 	
 		SN76496Init2(&Chip1, Clock);
@@ -324,7 +324,7 @@ void SN76496Write(int Num, int Data)
 	}
 	
 	if (Num == 2) {
-//		Chip2 = (struct SN76496*)malloc(sizeof(*Chip2));
+//		Chip2 = (struct SN76496*)BurnMalloc(sizeof(*Chip2));
 		memset(&Chip2, 0, sizeof(Chip2));
 	
 		SN76496Init2(&Chip2, Clock);
@@ -337,7 +337,7 @@ void SN76496Write(int Num, int Data)
 	}
 	
 	if (Num == 3) {
-//		Chip3 = (struct SN76496*)malloc(sizeof(*Chip3));
+//		Chip3 = (struct SN76496*)BurnMalloc(sizeof(*Chip3));
 		memset(&Chip3, 0, sizeof(Chip3));
 	
 		SN76496Init2(&Chip3, Clock);
@@ -350,7 +350,7 @@ void SN76496Write(int Num, int Data)
 	}
 	
 	if (Num == 4) {
-//		Chip4 = (struct SN76496*)malloc(sizeof(*Chip4));
+//		Chip4 = (struct SN76496*)BurnMalloc(sizeof(*Chip4));
 		memset(&Chip4, 0, sizeof(Chip4));
 	
 		SN76496Init2(&Chip4, Clock);

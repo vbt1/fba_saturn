@@ -432,7 +432,7 @@ inline double DrvGetTime()
 	Mem = NULL;
 
 	MemIndex();
-	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) return 1;
+	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
@@ -671,7 +671,7 @@ voir plutot p355 vdp2
 /*static*/ void DrvInitSaturn()
 {
 	nBurnSprites  = 131;
-	//pBurnSoundOut = (short *)malloc (nBurnSoundLen * sizeof(short)*4);
+	//pBurnSoundOut = (short *)BurnMalloc (nBurnSoundLen * sizeof(short)*4);
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;

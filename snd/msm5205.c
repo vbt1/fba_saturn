@@ -2,7 +2,7 @@
 #include "msm5205.h"
 #include "math.h"
 #define SOUND_LEN 192
-#define MAX_MSM5205	 2
+#define MAX_MSM5205	 1
 /*static*/ INT32 nNumChips = 0;
 #define HZ 60
 

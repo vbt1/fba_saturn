@@ -518,7 +518,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 
 	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL)
 	{
 		return 1;
 	}

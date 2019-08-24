@@ -569,7 +569,7 @@ int ovlInit(char *szShortName)
 	AllMem = NULL;
 	MemIndex();
 
-	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset((void *)0x2F0000, 0, 0x9c00);
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();

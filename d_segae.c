@@ -142,12 +142,7 @@ int ovlInit(char *szShortName)
 
 	if(( device = PER_GetDeviceR( &ss_port[0], 0 )) != NULL )
 	{
-//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"button pushed ",0,180);	
-
-//		pltriggerE[0] = pltrigger[0];
 		pltrigger[0] = PER_GetTrigger( device );
-//		pltriggerE[0] = (pltrigger[0]) ^ (pltriggerE[0]);
-//		pltriggerE[0] = (pltrigger[0]) & (pltriggerE[0]);
 	}
 	else
 	{
@@ -623,8 +618,8 @@ int ovlInit(char *szShortName)
 	DrvDoReset();
 	CZetExit2();
 	
-	memset(ss_scl,0x00,192*4);
-	memset(ss_scl1,0x00,192*4);
+	memset(ss_scl,0x00,SCL_MAXLINE*sizeof(Fixed32));
+	memset(ss_scl1,0x00,SCL_MAXLINE*sizeof(Fixed32));
 	SCL_SetLineParamNBG1();
 	initPosition();
 //	wait_vblank();
@@ -662,14 +657,9 @@ int ovlInit(char *szShortName)
 	hintcount = 0;
 	vintpending = 0;
 	hintpending = 0;
-//	SN76496Reset();
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetOpen                    ",24,40);
 	CZetOpen(0);
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"segae_bankswitch                    ",24,40);
 	segae_bankswitch();
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetReset                    ",24,40);
 	CZetReset();
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetClose                    ",24,40);
 	CZetClose();
 	nSoundBufferPos=0;	
 	return 0;
@@ -811,9 +801,10 @@ int ovlInit(char *szShortName)
 
 	AllMem = NULL;
 	MemIndex(game);
+	
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
-		return 0;
+		return 1;
 	}
 	memset(AllMem, 0, MALLOC_MAX);
 	memset(cache, 0, 0x80000);
@@ -883,13 +874,9 @@ int ovlInit(char *szShortName)
 
 	CZetClose();
 // ajout pour eviter plantage apres appooh	
-wait_vblank();
-
 	SN76489Init(0, 10738635 / 3, 0);
 	SN76489Init(1, 10738635 / 3, 1);
 	
-
-//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset                    ",24,40);	
 	make_lut();	
 	for (UINT32 i = 0; i < 0x40; i++) 
 	{
@@ -1019,9 +1006,6 @@ wait_vblank();
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturnS(UINT8 game)
 {
-//	SPR_InitSlaveSH();
-//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-
 	nBurnSprites  = 131;//27;
 	nBurnLinescrollSize = 0x340;
 	nSoundBufferPos = 0;//sound position à renommer
@@ -1056,7 +1040,6 @@ wait_vblank();
 	initLayers();
 	initColors();
 	initPosition();
-//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
 	if(game==1)
 	{
@@ -1080,14 +1063,13 @@ wait_vblank();
 	initScrolling(ON, (void *)SCL_VDP2_VRAM_B0);
 	initScrollingNBG1(ON, (UINT32)SCL_VDP2_VRAM_B0+0x8000);
 
-//	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
-	nBurnFunction = SCL_SetLineParamNBG1;
-
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	memset(&ss_vram[0x1100],0,0x12000);
+	
 // vbt : remis
-	memset(ss_scl,0xff,192*4);
-	memset(ss_scl1,0xff,192*4);
+	memset(ss_scl,0xff,SCL_MAXLINE*sizeof(Fixed32));
+	memset(ss_scl1,0xff,SCL_MAXLINE*sizeof(Fixed32));
+	nBurnFunction = SCL_SetLineParamNBG1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SCL_SetLineParamNBG1()

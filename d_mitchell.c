@@ -565,9 +565,8 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	sfx_list = &sfx_pang[0];
 	PangMemIndex();
 
-	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
+	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
 	memset(Mem, 0, MALLOC_MAX);
@@ -639,9 +638,8 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 //	Mem = NULL;
 	PangMemIndex();
 
-	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
+	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
-//		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
 	memset(Mem, 0, MALLOC_MAX);

@@ -134,7 +134,7 @@ void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt)
     msk = get_imask();
     set_imask(15);
 
-    TC_transfer *tc = (TC_transfer *)malloc (16*sizeof(TC_transfer));
+    TC_transfer *tc = (TC_transfer *)BurnMalloc (16*sizeof(TC_transfer));
 
     tc->size = cnt;
     tc->source = &src[0];

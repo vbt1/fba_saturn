@@ -698,8 +698,8 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc                     ",20,100);
-	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnMalloc                     ",20,100);
+	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{	
 		return 1;
 	}

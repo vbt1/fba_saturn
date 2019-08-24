@@ -426,7 +426,7 @@ int MSM6295Init(int nChip, int nSamplerate, double fMaxVolume, bool bAddSignal, 
 	unsigned int nChannel;
 	for (nChannel = 0; nChannel < 4; nChannel++) {
 		MSM6295ChannelData[nChip][nChannel] = (int*)(MSM6295Context+(nChannel * 0x1000 * sizeof(int)));
-//		(int*)malloc(0x1000 * sizeof(int));
+//		(int*)BurnMalloc(0x1000 * sizeof(int));
 	}
 
 	memset (pBankPointer[nChip], 0, (0x40000/0x100) * sizeof(UINT8*));

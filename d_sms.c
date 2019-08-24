@@ -221,7 +221,7 @@ static void	SetVblank2( void ){
 
 //		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	SaturnInitMem();
-	SaturnMem = (UINT8 *)malloc(MALLOC_MAX);
+	SaturnMem = (UINT8 *)BurnMalloc(MALLOC_MAX);
 	SaturnInitMem();
 	memset(SaturnMem,0x00,MALLOC_MAX);
 //		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	

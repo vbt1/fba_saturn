@@ -1529,10 +1529,9 @@ void DrvInitSaturn()
 	initColors();	
 	SaturnInitMem();
 
-	SaturnMem = (UINT8 *)malloc(MALLOC_MAX);
+	SaturnMem = (UINT8 *)BurnMalloc(MALLOC_MAX);
 	if(SaturnMem==NULL)
 	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc SaturnMem failed",4,50);
 		return;
 	}
 	memset(SaturnMem, 0, MALLOC_MAX);
@@ -1676,6 +1675,6 @@ void make_lut()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*
 <Guillaume> int ** t;
-<Guillaume> t = malloc(sizeof(int **) * size1);
-<Guillaume> for(i = 0;i < size1;i++) t[i] = malloc(sizeof(int *) * size2);
+<Guillaume> t = BurnMalloc(sizeof(int **) * size1);
+<Guillaume> for(i = 0;i < size1;i++) t[i] = BurnMalloc(sizeof(int *) * size2);
 */

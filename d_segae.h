@@ -26,6 +26,7 @@
 /*static*/ INT32 DrvExit();
 /*static*/ INT32 DrvFrame();
 /*static*/ INT32 DrvDoReset();
+/*static*/ void initPosition(void);
 /*static*/ void DrvInitSaturnS(UINT8 game);
 /*static*/ void update_bg(UINT8 chip, UINT32 index);
 /*static*/ void update_sprites(UINT8 chip, UINT32 index);

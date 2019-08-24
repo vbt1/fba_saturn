@@ -506,7 +506,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 

@@ -147,11 +147,11 @@ int ovlInit(char *szShortName)
 	DrvBgColRAM	    = Next; Next += 0x800;
 	RamEnd			= Next;
 
-	MSM5205Context = (INT16*)Next; Next += 0x4000;
+	MSM5205Context = (INT16*)Next; Next += 0x4000*sizeof(UINT16);
 	DrvColPROM		= Next; Next += 0x00220;
 	DrvSoundROM	    = Next; Next += 0x0a000;
 //	DrvSoundROM	= (UINT8*)0x2F6000;
-	CZ80Context		= Next; Next += 0x1080;
+	CZ80Context		= (UINT8 *)Next; Next += (sizeof(cz80_struc));
 //	DrvPalette        = (UINT16*)colBgAddr;
 	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 	is_fg_dirty			=  Next; Next +=0x400;
@@ -457,8 +457,8 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 
 /*static*/  void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 {
-	UINT32 i = 3 + spriteoffset;
-
+	SprSpCmd *ss_spritePtr = &ss_sprite[3 + spriteoffset];
+	
 	for (INT32 offs = 0x20 - 4; offs >= 0; offs -= 4)
 	{
 		INT32 sy    = 240 - sprite[offs + 0];
@@ -472,12 +472,12 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 		if(sx >= 248)
 			sx -= 256;
 
-		ss_sprite[i].ax		= sx;
-		ss_sprite[i].ay		= sy;
-		ss_sprite[i].control    = ( JUMP_NEXT | FUNC_NORMALSP | flipx);
-		ss_sprite[i].charAddr = 0x220 +(code << 4); //charaddr_lut[code&0x3ff]; //0x220 +(code << 4);//
-		ss_sprite[i].color     = (color<<4);
-		++i;
+		ss_spritePtr->ax		= sx;
+		ss_spritePtr->ay		= sy;
+		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | flipx);
+		ss_spritePtr->charAddr 	= 0x220 +(code << 4);
+		ss_spritePtr->color     = (color<<4);
+		ss_spritePtr++;
 	}
 }
 
@@ -624,7 +624,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	SN76489Init(0, 18432000 / 6, 0);
 	SN76489Init(1, 18432000 / 6, 0);
 	SN76489Init(2, 18432000 / 6, 0);
-	memset(MSM5205Context,0x00,0x4000);
+	memset(MSM5205Context,0x00,0x4000*sizeof(UINT16));
 
 	MSM5205Init(0, MSM5205Context, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0);
 	make_lut();
@@ -718,7 +718,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	game_select = 1;
 	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
 		return 1;
 	}
@@ -743,7 +743,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	game_select = 0;
 	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL)
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL)
 	{
 		return 1;
 	}
@@ -876,7 +876,8 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 {
 	DrvDoReset();
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		SPR_WaitEndSlaveSH();	
+		SPR_WaitEndSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	SPR_InitSlaveSH();
 	CZetExit2();
 
@@ -892,7 +893,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	MemEnd = AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
 	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvColPROM = DrvMainROM = NULL;
 	DrvSoundROM = DrvFetch = CZ80Context = is_fg_dirty = NULL;
-	map_offset_lut = charaddr_lut = NULL;
+	map_offset_lut = NULL;
 	MSM5205Context = NULL;	
 
 	free (AllMem);

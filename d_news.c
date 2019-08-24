@@ -214,7 +214,7 @@ int ovlInit(char *szShortName)
 	Mem = NULL;
 	MemIndex();
 	MemEnd - (unsigned char *)0;
-	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
+	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{	
 		return 1;
 	}

@@ -1946,7 +1946,7 @@ static YM2413 *OPLLCreate(int clock, int rate)
 	state_size  = sizeof(YM2413);
 
 	/* allocate memory block */
-	ptr = malloc(state_size);
+	ptr = BurnMalloc(state_size);
 
 	if (ptr==NULL)
 		return NULL;

@@ -46,7 +46,7 @@ titi=itoa(length);
 		memset (lBuffer, 0, nBurnSoundLen * sizeof(INT16));
 	}*/
 /*	if (rBuffer == NULL) {	// delay buffer allocation for cases when fps is not 60
-		if((rBuffer = (INT16*)malloc(nBurnSoundLen * sizeof(INT16)))==NULL)
+		if((rBuffer = (INT16*)BurnMalloc(nBurnSoundLen * sizeof(INT16)))==NULL)
 		{
 			while(1);
 		}

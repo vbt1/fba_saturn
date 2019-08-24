@@ -2303,7 +2303,7 @@ int YM2203Init(int num, int clock, int rate,
 	YM2203NumChips = num;
 
 	/* allocate ym2203 state space */
-	if( (FM2203 = (YM2203 *)malloc(sizeof(YM2203) * YM2203NumChips))==NULL)
+	if( (FM2203 = (YM2203 *)BurnMalloc(sizeof(YM2203) * YM2203NumChips))==NULL)
 		return (-1);
 	/* clear */
 	memset(FM2203,0,sizeof(YM2203) * YM2203NumChips);

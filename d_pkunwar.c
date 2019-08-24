@@ -877,7 +877,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
+	if ((AllMem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{	
 		return 1;
 	}
@@ -946,7 +946,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	DrvInitSaturn(1);
 	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	
@@ -1014,7 +1014,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	DrvInitSaturn(3);
 	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	DrvFgRAM = DrvMainROM + 0xc000;
@@ -1136,7 +1136,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 

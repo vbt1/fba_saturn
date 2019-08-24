@@ -821,16 +821,15 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 	// Find out how much memory is needed
 	Mem = NULL;
 	MemIndex();
-//		sprintf(tmp0,"before malloc      ");
+//		sprintf(tmp0,"before BurnMalloc      ");
 
 	if ((Mem = (UINT8*)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
-//		sprintf(tmp0,"malloc failed      ");
 		return 1;
 	}
 	memset(Mem, 0, MALLOC_MAX);										   	// blank all memory
 	MemIndex();													   	// Index the allocated memory
-//		sprintf(tmp0,"malloc done      ");
+//		sprintf(tmp0,"BurnMalloc done      ");
 	make_lut();
 
 	// Load the roms into memory

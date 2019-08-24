@@ -740,11 +740,11 @@ static INT32 DrvInit()
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
-	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 	make_lut();
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc                  ",10,70);
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnMalloc                  ",10,70);
 	
 	INT32 RomOffset = 0;
 

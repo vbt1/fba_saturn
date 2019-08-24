@@ -73,9 +73,8 @@ static INT32 MemIndex()
 	Mem = NULL;
 	MemIndex();
 
-	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) 
+	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
 	MemIndex();

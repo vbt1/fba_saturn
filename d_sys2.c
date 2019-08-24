@@ -414,9 +414,8 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	Mem = NULL;
 	MemIndex();
 
-	if ((Mem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) 
+	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{	
-		FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"malloc failed",4,80);
 		return 1;
 	}
 	memset(Mem, 0, MALLOC_MAX);

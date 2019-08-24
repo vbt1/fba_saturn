@@ -1743,7 +1743,7 @@ void heapWalk(void)
     UINT32 heapEnd = _sbrk(0);
     
 //    printf("Heap Size: %lu\n", heapEnd - chunkCurr);
-    char toto[200];
+    char toto[100];
 //	sprintf (toto,"Heap Size: %d  e%08x s%08x                     \n", heapEnd - chunkCurr,heapEnd, chunkCurr) ;
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,12,216);
 

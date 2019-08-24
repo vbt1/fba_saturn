@@ -100,7 +100,7 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 	nM6502Count++;
 	nActiveCPU = -1;
 
-//	m6502CPUContext[cpu] = (M6502Ext*)malloc(sizeof(M6502Ext));
+//	m6502CPUContext[cpu] = (M6502Ext*)BurnMalloc(sizeof(M6502Ext));
 
 	pCurrentCPU = &m6502CPUContext;
 

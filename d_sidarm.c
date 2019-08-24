@@ -405,7 +405,6 @@ int ovlInit(char *szShortName)
 
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"malloc failed   ",24,30);
 		return 1;
 	}
 	memset(AllMem, 0, MALLOC_MAX);

@@ -398,7 +398,7 @@ int ovlInit(char *szShortName)
 	DrvInitSaturn();
 	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (UINT8 *)malloc(MALLOC_MAX)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 //	memset(CZ80Context,0x00,0x1080);
