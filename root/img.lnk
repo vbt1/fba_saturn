@@ -46,7 +46,7 @@ SECTIONS {
 	{
 		__bstart = . ;
 		root/sl.coff (.bss)
-		root/sl.coff ("COMMON")
+		root/sl.coff (COMMON)
 		. = ALIGN(4);
 		__bend = . ;
 		_end = .;

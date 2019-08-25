@@ -45,7 +45,7 @@ SECTIONS {
 	{
 		__bstart = . ;
 		root/sl.coff (.bss)
-		root/sl.coff ("COMMON")
+		root/sl.coff (COMMON)
 		. = ALIGN(4);
 		__bend = . ;
 	} > ram
@@ -70,7 +70,7 @@ SECTIONS {
 		__dendo = . ;
 		__bstarto = . ;
 		*(.bss)
-		*("COMMON")
+		*(COMMON)
 		__bendo = . ;
 
 	

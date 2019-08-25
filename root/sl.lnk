@@ -62,7 +62,7 @@ SECTIONS {
 	{
 		__bstart = . ;
 		*(.bss)
-		*("COMMON")
+		*(COMMON)
 		. = ALIGN(4);
 		__bend = . ;
 		_end = .;
