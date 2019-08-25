@@ -1,6 +1,7 @@
 // Z80 (Zed Eight-Ty) Interface
 #include "burnint.h"
 #include "globals.h"
+#include "czet.h"
 //#define ACB_DRIVER_DATA	 (64)
 
 static cz80_struc* CZetCPUContext = NULL;

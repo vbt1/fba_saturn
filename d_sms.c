@@ -12,14 +12,7 @@ unsigned char curr_sprite=0;
 //-------------------------------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
 {
-		cleanBSS();
-//#define M_TRIM_THRESHOLD    -1
-//#define M_TOP_PAD           -2
-
-//	mallopt(M_TOP_PAD, 0);
-//	mallopt(M_TRIM_THRESHOLD, 8);
-
-//	struct BurnDriver *fba_drv = NULL;
+	cleanBSS();
 #ifdef RAZE
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"sms", NULL,

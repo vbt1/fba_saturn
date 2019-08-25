@@ -64,7 +64,7 @@ extern int file_max;
 /*static*/ void Set8PCM();
 
 
-PcmHn 			pcm8[8];
+PcmHn 			pcm8[8] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L //

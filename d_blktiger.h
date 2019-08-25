@@ -28,7 +28,7 @@ Sint32 GetFileSize(int file_id);
 unsigned char current_pcm=255;
 //char *itoa(int i);
 
-PCM_INFO pcm_info[8];
+PCM_INFO pcm_info[8] = {NULL};
 
 SFX sfx_blktiger[68]=
 {
@@ -335,8 +335,8 @@ static void pcm_Wait(int cnt);
 static Uint8 GetComBlockAdr(void);
 static Uint16 ChgPan(SndPan pan);
 
-PcmHn 	pcm14[8];
-PcmCreatePara	para[8];
+PcmHn 	pcm14[8] = {NULL};
+PcmCreatePara	para[8] = {NULL};
 
 //---------------------------------------------------------------------------------------------------------------
 //PcmInfo 		info[14];

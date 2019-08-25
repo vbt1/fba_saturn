@@ -39,6 +39,7 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 /*static*/ INT32 DrvFrame();
 /*static*/ INT32 DrvInit();
 /*static*/ INT32 DrvChInit();
+/*static*/ INT32 MemIndex();
 
 /*static*/ struct BurnInputInfo bankpInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy1 + 5,	"p1 coin"  },

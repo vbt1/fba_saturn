@@ -5,6 +5,7 @@
 #include "burnint.h"
 #include "saturn/ovl.h"
 #include "snd/ay8910.h"
+#include "czet.h"
 
 #define nBurnSoundLen 128
 #define	true	1
@@ -58,7 +59,7 @@ typedef int bool;
 /*static*/  UINT16 *map_offset_lut = NULL;
 /*static*/  UINT16 *map_offset_lut2 = NULL;
 
-PcmHn 			pcm6[6];
+PcmHn 			pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L

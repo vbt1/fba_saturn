@@ -57,7 +57,7 @@ struct _k051649_state
 	INT32 f[10];
 };
 
-/*static*/ k051649_state Chips[1]; // ok?
+/*static*/ k051649_state Chips[1] = {{.mclock = 0, .rate = NULL}}; // ok?
 /*static*/ k051649_state *info=NULL;
 
 /* build a table to divide by the number of voices */

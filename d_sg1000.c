@@ -5,7 +5,6 @@
 
 #include    "machine.h"
 #include "d_sg1000.h"
-
 #define SAMPLE 7680L
 #define nBurnSoundLen 128
 #define nInterleave 16

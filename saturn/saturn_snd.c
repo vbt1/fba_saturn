@@ -1,11 +1,11 @@
 //#define DEBUG 1
 #include "saturn_snd.h"
-PcmHn 	pcmStream;
-PcmCreatePara	paraStream;
-unsigned char stm_work[STM_WORK_SIZE(12, 24)];
-StmHn stm;
-StmGrpHn grp_hd;
-SFX *sfx_list;
+PcmHn 	pcmStream = NULL;
+PcmCreatePara	paraStream = {.ring_size = 0, .pcm_size = 0, .ring_addr = NULL, .pcm_addr = NULL};
+unsigned char stm_work[STM_WORK_SIZE(12, 24)] = {NULL};
+StmHn stm = NULL;
+StmGrpHn grp_hd = NULL;
+SFX *sfx_list = NULL;
 
 void vout(char *string, char *fmt, ...)                                         
 {                                                                               

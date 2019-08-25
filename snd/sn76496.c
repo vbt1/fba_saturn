@@ -26,12 +26,11 @@ struct SN76496
 	int bSignalAdd;
 };
 
-/*static*/ //int NumChips = 0;
-/*static*/struct SN76496 Chip0;// = NULL;
-/*static*/ struct SN76496 Chip1;// = NULL;
-/*static*/ struct SN76496 Chip2;// = NULL;
-/*static*/ struct SN76496 Chip3;// = NULL;
-/*static*/ struct SN76496 Chip4;// = NULL;
+/*static*/ struct SN76496 Chip0 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
+/*static*/ struct SN76496 Chip1 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
+/*static*/ struct SN76496 Chip2 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
+/*static*/ struct SN76496 Chip3 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
+/*static*/ struct SN76496 Chip4 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
 
 void SN76496Update(int Num, short* pSoundBuf, int Length)
 {

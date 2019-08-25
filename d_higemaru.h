@@ -4,9 +4,9 @@
 #include "burnint.h"
 #include "snd/ay8910.h"
 #include "saturn/ovl.h"
-#include "raze/raze.h"
+//#include "raze/raze.h"
 //#include "saturn/sc_saturn.h"
-
+#include "czet.h"
 #define nBurnSoundLen 128
 
 /*static*/// unsigned char 	bg_dirtybuffer[2048];
@@ -20,7 +20,7 @@ unsigned char DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 unsigned char DrvJoy3[8] = {0,0,0,0,0,0,0,0};
 unsigned char DrvDips[3] = {0,0,0}; 
 
-PcmHn 			pcm6[6];
+PcmHn 			pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L

@@ -9,6 +9,7 @@
 //#include "ay8910.h"
 //}
 #include "saturn/ovl.h"
+#include "czet.h"
 
 /*static*/ INT32 mspacmanInit();
 /*static*/ INT32 puckmanInit();

@@ -33,9 +33,9 @@ typedef struct
 	INT32 diff_lookup[49*16];
 } _MSM5205_state;
 
-INT16 *stream[MAX_MSM5205];
-/*static*/ _MSM5205_state chips[MAX_MSM5205];
-/*static*/ _MSM5205_state *voice;
+INT16 *stream[MAX_MSM5205] = {NULL};
+/*static*/ _MSM5205_state chips[MAX_MSM5205] = {{.data = 0, .volume = 0, .step = 0},{.data = 0, .volume = 0, .step = 0}};
+/*static*/ _MSM5205_state *voice = NULL;
 
 /*static*/ void MSM5205_playmode(INT32 chip, INT32 select);
 

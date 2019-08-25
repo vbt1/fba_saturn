@@ -4,6 +4,7 @@
 #include "burnint.h"
 #include "snd/msm6295.h"
 #include "saturn/ovl.h"
+#include "czet.h"
 
 //#include "saturn/sc_saturn.h"
 //#include "psg.h"

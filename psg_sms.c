@@ -57,12 +57,12 @@ fprintf(psg_debug_file, (x), (a), (b), (c), (d));
 /* Variables */
 void PSG_Reset();
 //void PSG_RestoreState(void);
-unsigned int PSG_Step_Table[1024];
-unsigned int PSG_Volume_Table[16];
-unsigned int PSG_Noise_Step_Table[4];
+unsigned int PSG_Step_Table[1024] = {0};
+unsigned int PSG_Volume_Table[16] = {0};
+unsigned int PSG_Noise_Step_Table[4] = {0};
 //unsigned int PSG_Save[8];
 
-struct _psg PSG;
+struct _psg PSG = {.Current_Channel = 0, .Current_Register = 0, .Noise = 0};
 
 #if PSG_DEBUG_LEVEL > 0
 FILE *psg_debug_file = NULL;

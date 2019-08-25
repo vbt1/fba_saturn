@@ -5,6 +5,7 @@
 #include "snd/ay8910.h"
 #include "saturn/ovl.h"
 #include "raze/raze.h"
+#include "czet.h"
 
 #define nBurnSoundLen 128
 

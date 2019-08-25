@@ -4,6 +4,7 @@
 #include "burnint.h"
 #include "saturn/ovl.h"
 #include "saturn/saturn_snd.h"
+#include "czet.h"
 
 #define VDP2_BASE           0x25e00000
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)

@@ -7,11 +7,11 @@
 #define CLIP(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 typedef char bool;
 
-unsigned char* MSM6295ROM;
+unsigned char* MSM6295ROM=NULL;
 //unsigned char* MSM6295SampleInfo[MAX_MSM6295][4];
 //unsigned char* MSM6295SampleData[MAX_MSM6295][4];
 
-unsigned int nMSM6295Status[MAX_MSM6295];
+unsigned int nMSM6295Status[MAX_MSM6295]={0,0};
 
 typedef struct {
 	int nOutput;

@@ -4,6 +4,7 @@
 //#define CZ80 1
 #define RAZE 1
 #define CACHE 1
+#define nCyclesTotal 2578000 / 60
 #include "d_bankp.h"
 
 int ovlInit(char *szShortName)
@@ -37,6 +38,7 @@ int ovlInit(char *szShortName)
 
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+	ss_regd  = (SclDataset *)SS_REGD;
 }
 
 /*static*/ INT32 DrvChInit()
@@ -46,18 +48,15 @@ int ovlInit(char *szShortName)
 	ss_reg->n2_move_x =  0;
 }
 
-static INT32 MemIndex()
+/*static*/ INT32 MemIndex()
 {
-//	Mem = (UINT8 *)0x00200000;
 	unsigned char *Next; Next = Mem;
 
-	Rom = Next; Next += 0x10000;
-//	Gfx0 = Next; Next += 0x10000;
-	Gfx0 = (UINT8 *)0x00200000;
-	Gfx1 = (UINT8 *)(Gfx0+0x20000);
-//	Gfx1 = Next; Next += 0x20000;
-	Prom = Next; Next += 0x300;
-	Palette = (UINT32 *)Next; Next += 0x100 * sizeof(UINT32);
+	Rom  = (UINT8 *)Next; Next += 0x10000;
+	Gfx0 = (UINT8 *)Next; Next += 0x10000;
+	Gfx1 = (UINT8 *)Next; Next += 0x20000;
+	Prom = (UINT8 *)Next; Next += 0x200;
+	Palette = (UINT32 *)Next; Next += 0x200 * sizeof(UINT32);
 	map_offset_lut	= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
 	MemEnd         = Next;
 
@@ -66,20 +65,16 @@ static INT32 MemIndex()
 
 /*static*/ INT32 DrvInit()
 {
-//	flipscreen = 0;
 	nSoundBufferPos=0;
 	DrvInitSaturn();
 
-	Mem = NULL;
 	MemIndex();
-
 	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
 		return 1;
 	}
+	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
-
-	make_lut();
 
 	for (UINT32 i = 0; i < 4; i++)
 	{
@@ -98,10 +93,9 @@ static INT32 MemIndex()
 	if (BurnLoadRom(Prom + 0x0020, 13, 1)) return 1;
 	if (BurnLoadRom(Prom + 0x0120, 14, 1)) return 1;
 	if (bankp_gfx_decode()) return 1;
-	bankp_palette_init();
 
-	memset(Gfx0, 0, 0x20000);
-	memset(Gfx1, 0, 0x20000);
+	wait_vblank();
+	bankp_palette_init();
 
 #ifdef RAZE
 	z80_init_memmap();
@@ -110,15 +104,9 @@ static INT32 MemIndex()
 	z80_map_fetch (0xe000, 0xefff, Rom + 0xe000);
 	z80_map_read  (0xe000, 0xefff, Rom + 0xe000);
 	z80_map_write (0xe000, 0xefff, Rom + 0xe000);
-//	z80_map_fetch (0xf000, 0xffff, Rom + 0xf000);
-	z80_map_read  (0xf000, 0xffff, Rom + 0xf000);
+	z80_map_read  (0xf000, 0xffff, Rom + 0xf000);	
+	z80_map_fetch (0xf000, 0xffff, Rom + 0xf000);
 
-#ifdef CACHE
-//	z80_map_write (0xf800, 0xffff, Rom + 0xf800); //1 write
-#else
-	z80_map_write (0xf000, 0xffff, Rom + 0xf000); //1 write
-#endif
-	
 	z80_end_memmap();
 
 #ifdef CACHE
@@ -126,8 +114,9 @@ static INT32 MemIndex()
 	z80_add_write(0xf400, 0xf7ff, 1, (void *)&bankp_write_f400);
 	z80_add_write(0xf800, 0xfbff, 1, (void *)&bankp_write_f800);
 	z80_add_write(0xfc00, 0xffff, 1, (void *)&bankp_write_fc00);
+#else
+	z80_map_write (0xf000, 0xffff, Rom + 0xf000); //1 write
 #endif
-
 	z80_set_in((unsigned char (*)(unsigned short))&bankp_in);
 	z80_set_out((void (*)(unsigned short, unsigned char))&bankp_out);
 #else
@@ -152,12 +141,8 @@ static INT32 MemIndex()
 	SN76489Init(0, 15468000 / 6, 0);
 	SN76489Init(1, 15468000 / 6, 1);
 	SN76489Init(2, 15468000 / 6, 1);
-//	PSG_Init(0, 15468000 / 6, 0);
-//	PSG_Init(1, 15468000 / 6, 0);
-//	PSG_Init(2, 15468000 / 6, 0);
-
+	make_lut();
 	DrvDoReset();
-
 	return 0;
 }
 
@@ -314,8 +299,6 @@ static INT32 MemIndex()
 			else
 		//		SCL_SetPriority(SCL_NBG1,4);
 				SCL_SET_N1PRIN(4);
-
-//			flipscreen = data & 0x20;
 		}
 		break;
 	}
@@ -333,8 +316,6 @@ static INT32 MemIndex()
 #endif
 	/*scroll_x = 0, */priority = 0;// flipscreen = 0;
 	interrupt_enable = 0;
-
-//	return 0;
 }
 
 /*static*/ INT32 bankp_palette_init()
@@ -480,14 +461,13 @@ static INT32 MemIndex()
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri     = (SclOtherPriRegister *)SS_OTHR;
 	ss_BgColMix		= (SclBgColMixRegister *)SS_BGMIX;
-	nBurnLinescrollSize = 0x300;
+	nBurnLinescrollSize = 1;
 	nBurnSprites = 3;
 
 //3 nbg
 	SS_SET_N0PRIN(7);
 	SS_SET_N1PRIN(4);
 	SS_SET_N2PRIN(5);
-//	SCL_SET_N1PRIN(6);
 
 	initLayers();
 	initPosition();
@@ -501,7 +481,7 @@ static INT32 MemIndex()
 	DrvDoReset();
 #ifdef RAZE
 	z80_stop_emulating();
-	z80_add_read(0x0000, 0xffff, 1, (void *)NULL);
+	//z80_add_read(0x0000, 0xffff, 1, (void *)NULL);
 	z80_add_write(0xf000, 0xf3ff, 1, (void *)NULL);
 	z80_add_write(0xf400, 0xf7ff, 1, (void *)NULL);
 	z80_add_write(0xf800, 0xfbff, 1, (void *)NULL);
@@ -516,7 +496,7 @@ static INT32 MemIndex()
 	SN76489Init(1, 0, 0);
 	SN76489Init(2, 0, 0);
 
-	MemEnd = Rom  = 	Gfx0 = Gfx1 = Prom = NULL;
+	MemEnd = Rom  = Gfx0 = Gfx1 = Prom = NULL;
 	Palette = NULL;
 	map_offset_lut = NULL;
 
@@ -565,13 +545,13 @@ static INT32 MemIndex()
 /*static*/ INT32 DrvFrame()
 {
 #ifdef RAZE
-	z80_emulate(2578000 / 60);
+	z80_emulate(nCyclesTotal);
 //z80_emulate(3867120 / 60);
 //3867120
 	if (interrupt_enable) z80_cause_NMI();
 #else
 //	CZetOpen(0);
-	CZetRun(2578000 / 60);
+	CZetRun(nCyclesTotal);
 	if (interrupt_enable) CZetNmi();
 //	CZetClose();
 #endif	
@@ -589,6 +569,5 @@ static INT32 MemIndex()
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}
-
 	return 0;
 }

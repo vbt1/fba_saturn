@@ -6,6 +6,7 @@
 #include "sega_spr.h"
 #include "sega_pcm.h"
 #include "saturn/ovl.h"
+#include "czet.h"
 
 #define nBurnSoundLen 128
 
@@ -25,14 +26,11 @@ UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 UINT8 DrvJoy2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 UINT8 DrvJoy3[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 UINT8 DrvDips[2] = {0, 0};
-UINT8 DrvInputs[3];
+UINT8 DrvInputs[3] = {0, 0, 0};
 
 static UINT8 DrvReset = 0;
 static INT32 nmi_mask = 0;
 static UINT8 soundlatch = 0;
-
-//static INT32 nCyclesDone[2], nCyclesTotal[2];
-//static INT32 nCyclesSegment = 0;
 
 static UINT8 *Mem = NULL;
 static UINT8 *MemEnd = NULL;

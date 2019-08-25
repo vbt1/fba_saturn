@@ -20,19 +20,17 @@ void SN76489Init(int Num, int Clock, int SignalAdd);
 void cleanSprites();
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 #ifdef CACHE
-/*static*/ unsigned char 	bg_dirtybuffer[2048];
+/*static*/ unsigned char 	bg_dirtybuffer[2048]={1};
 #endif
 
 /*static*/ unsigned short *Palette = NULL;
 /*static*/ unsigned int _30_HZ=0;
 
-/*static*/ unsigned char *Mem, *MemEnd, *Rom, *Gfx0, *Gfx1, *Prom;
+/*static*/ unsigned char *Mem = NULL, *MemEnd = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
 /*static*/ unsigned char DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 /*static*/ unsigned char DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 /*static*/ unsigned char DrvJoy3[8] = {0,0,0,0,0,0,0,0};
 /*static*/ unsigned char DrvDips[4] = {0,0,0,0};
-/*static*/ //unsigned char DrvReset = 0;
-
 /*static*/ unsigned char nmi_enable = 0, irq_enable = 0;
 /*static*/ unsigned char gberet_spritebank = 0;
 /*static*/ int mrgoemon_bank = 0;

@@ -4,6 +4,7 @@
 #include "burnint.h"
 #include "saturn/ovl.h"
 #include "snd/sn76496.h"
+#include "czet.h"
 
 int CongoInit();
 int DrvInit();
@@ -22,7 +23,7 @@ void dummy();
 /*static*/ UINT16 *charaddr_lut = NULL;
 /*static*/ UINT32 *colpromoffs_lut = NULL;
 /*static*/ UINT32 *map_lut = NULL;
-/*static*/ UINT32 *srcxmask[240]; //[256];
+/*static*/ UINT32 *srcxmask[240] = {NULL}; //[256];
 /*static*/ UINT32 *srcx_buffer = NULL;
 /*static*/ UINT8 *AllMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;

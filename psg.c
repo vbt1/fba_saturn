@@ -58,9 +58,9 @@ fprintf(psg_debug_file, (x), (a), (b), (c), (d));
 /* Variables */
 void PSG_Reset(unsigned int nb);
 //void PSG_RestoreState(void);
-unsigned int PSG_Step_Table[4][1024];
-unsigned int PSG_Volume_Table[4][16];
-unsigned int PSG_Noise_Step_Table[4][4];
+unsigned int PSG_Step_Table[4][1024] = {0};
+unsigned int PSG_Volume_Table[4][16] = {0};
+unsigned int PSG_Noise_Step_Table[4][4] = {0};
 //unsigned int PSG_Save[8];
 
 struct _psg PSG[4];

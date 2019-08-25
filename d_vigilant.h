@@ -8,8 +8,9 @@
 #include "sega_scl2.h"
 #include "sega_pcm.h"
 #include "saturn/ovl.h"
+#include "czet.h"
 
-PcmHn 			pcm8[8];
+PcmHn 			pcm8[8] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L //
@@ -53,19 +54,19 @@ unsigned int *vb_buffer							= NULL;
 //INT16 *lBuffer = NULL;
 extern INT16 *lBuffer;
 
-/*static*/unsigned char DrvRomBank;
-/*static*/unsigned char DrvSoundLatch;
-/*static*/unsigned char DrvIrqVector;
+/*static*/unsigned char DrvRomBank = 0;
+/*static*/unsigned char DrvSoundLatch = 0;
+/*static*/unsigned char DrvIrqVector = 0;
 
-/*static*/int DrvRearColour;
-/*static*/int DrvRearDisable;
-/*static*/int DrvHorizScrollLo;
-/*static*/int DrvHorizScrollHi;
-/*static*/int DrvRearHorizScrollLo;
-/*static*/int DrvRearHorizScrollHi;
-/*static*/int DrvSampleAddress;
+/*static*/int DrvRearColour = 0;
+/*static*/int DrvRearDisable = 0;
+/*static*/int DrvHorizScrollLo = 0;
+/*static*/int DrvHorizScrollHi = 0;
+/*static*/int DrvRearHorizScrollLo = 0;
+/*static*/int DrvRearHorizScrollHi = 0;
+/*static*/int DrvSampleAddress = 0;
 
-/*static*/int nCyclesDone[2], nCyclesTotal[2];
+/*static*/int nCyclesDone[2] = {0,0}, nCyclesTotal[2] = {0,0};
 /*static*///int nCyclesSegment;
 
 /*static*/unsigned char DrvHasYM2203 = 0;

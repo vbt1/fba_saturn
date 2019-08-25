@@ -5,7 +5,7 @@
 #include "saturn/ovl.h"
 #include "snd/ay8910.h"
 #include "raze/raze.h"
-
+#include "czet.h"
 #define nBurnSoundLen 128
 
 UINT16 *map_offset_lut = NULL;
@@ -23,7 +23,7 @@ void cleanSprites();
 void dummy();
 
 /*static*/ void make_lut_r(int rotated);
-INT32 (*DrvDraw)();
+INT32 (*DrvDraw)() = NULL;
 
 /*static*/ UINT8 *AllMem = NULL;
 /*static*/ UINT8 *MemEnd = NULL;
@@ -57,7 +57,7 @@ INT32 (*DrvDraw)();
 /*static*/ UINT8 *background_color = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ INT16* pFMBuffer = NULL;
-/*static*/ INT16* pAY8910Buffer[9];
+/*static*/ INT16* pAY8910Buffer[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 /*static*/ UINT8 DrvInputs[2] = {0,0};
 /*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};

@@ -91,7 +91,7 @@ extern unsigned int nBurnDrvSelect;	// Which game driver is selected
 // ---------------------------------------------------------------------------
 
 // CPU emulation interfaces
-#include "czet.h"
+//#include "czet.h"
 typedef union {
 #ifdef LSB_FIRST
 	struct { UINT8 l,h,h2,h3; } b;
@@ -102,7 +102,6 @@ typedef union {
 #endif
 	UINT32 d;
 }	PAIR;
-
 // ---------------------------------------------------------------------------
 // Driver information
 

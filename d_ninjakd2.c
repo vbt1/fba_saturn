@@ -6,6 +6,7 @@
 #define nInterleave 10
 #define nCyclesTotal 6000000 / 60
 #define nCycleSegment nCyclesTotal / nInterleave
+unsigned int vbt=0;
 
 int ovlInit(char *szShortName)
 {
@@ -494,6 +495,8 @@ int ovlInit(char *szShortName)
 	memset (scrollx, 0, 3 * sizeof(INT16));
 	memset (scrolly, 0, 3 * sizeof(INT16));
 
+	vbt = 0;
+	soundlatch = 0;
 	overdraw_enable = 0;
 	memset (tilemap_enable, 0, 3);
 	previous_coin[0] = previous_coin[1] = 0;
@@ -506,9 +509,9 @@ int ovlInit(char *szShortName)
 	UINT8 *Next; Next = AllMem;
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 
-	DrvZ80ROM0				= Next; Next += 0x050000;
-//	DrvZ80ROM1				= Next; Next += 0x020000;
-	DrvGfxROM4Data1		= Next; Next += 0x060000;
+	DrvZ80ROM0		= (UINT8 *)Next; Next += 0x050000;
+//	DrvZ80ROM1		= Next; Next += 0x020000;
+	DrvGfxROM4Data1	= (UINT8 *)Next; Next += 0x060000;
 
 	DrvGfxROM0	 	= (UINT8 *)cache;// fg //Next; Next += 0x010000;
 	DrvGfxROM1		= (UINT8 *)(ss_vram+0x1100); // sprites //(UINT8*)cache+0x010000;//Next; Next += 0x080000;
@@ -592,10 +595,10 @@ int ovlInit(char *szShortName)
 
 		for (UINT32 i=0;i<0x40000;i++ )
 		{
-			if ((DrvGfxROM1[i]& 0x0f)     ==0x00)DrvGfxROM1[i] = DrvGfxROM1[i] & 0xf0 | 0xf;
+			if ((DrvGfxROM1[i]& 0x0f)     ==0x00) DrvGfxROM1[i] = DrvGfxROM1[i] & 0xf0 | 0xf;
 			else if ((DrvGfxROM1[i]& 0x0f)==0x0f) DrvGfxROM1[i] = DrvGfxROM1[i] & 0xf0;
 
-			if ((DrvGfxROM1[i]& 0xf0)       ==0x00)DrvGfxROM1[i] = 0xf0 | DrvGfxROM1[i] & 0x0f;
+			if ((DrvGfxROM1[i]& 0xf0)     ==0x00) DrvGfxROM1[i] = 0xf0 | DrvGfxROM1[i] & 0x0f;
 			else if ((DrvGfxROM1[i]& 0xf0)==0xf0) DrvGfxROM1[i] = DrvGfxROM1[i] & 0x0f;
 		}
 //DrvGfxROM3
@@ -613,10 +616,10 @@ int ovlInit(char *szShortName)
 		DrvGfxDecode((UINT8*)tmp, 0x80000, 3);
 		for (UINT32 i=0;i<0x80000;i++ )
 		{
-			if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
+			if ((tmp[i]& 0x0f)     ==0x00) tmp[i] = tmp[i] & 0xf0 | 0xf;
 			else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
 
-			if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
+			if ((tmp[i]& 0xf0)     ==0x00) tmp[i] = 0xf0 | tmp[i] & 0x0f;
 			else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
 		}
 // tile 0xc00 à vider 
@@ -640,10 +643,10 @@ int ovlInit(char *szShortName)
 
 		for (UINT32 i=0;i<0x70000;i++ )
 		{
-			if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
+			if ((tmp[i]& 0x0f)     ==0x00) tmp[i] = tmp[i] & 0xf0 | 0xf;
 			else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
 
-			if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
+			if ((tmp[i]& 0xf0)     ==0x00) tmp[i] = 0xf0 | tmp[i] & 0x0f;
 			else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
 		}
 
@@ -661,10 +664,10 @@ int ovlInit(char *szShortName)
 
 		for (UINT32 i=0;i<0x60000;i++ )
 		{
-			if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
+			if ((tmp[i]& 0x0f)     ==0x00) tmp[i] = tmp[i] & 0xf0 | 0xf;
 			else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
 
-			if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
+			if ((tmp[i]& 0xf0)     ==0x00) tmp[i] = 0xf0 | tmp[i] & 0x0f;
 			else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
 		}
 /*
@@ -675,10 +678,10 @@ int ovlInit(char *szShortName)
 
 		for (UINT32 i=0;i<0x10000;i++ )
 		{
-			if ((DrvGfxROM0[i]& 0x0f)     ==0x00)DrvGfxROM0[i] = DrvGfxROM0[i] & 0xf0 | 0xf;
+			if ((DrvGfxROM0[i]& 0x0f)     ==0x00) DrvGfxROM0[i] = DrvGfxROM0[i] & 0xf0 | 0xf;
 			else if ((DrvGfxROM0[i]& 0x0f)==0x0f) DrvGfxROM0[i] = DrvGfxROM0[i] & 0xf0;
 
-			if ((DrvGfxROM0[i]& 0xf0)       ==0x00)DrvGfxROM0[i] = 0xf0 | DrvGfxROM0[i] & 0x0f;
+			if ((DrvGfxROM0[i]& 0xf0)     ==0x00) DrvGfxROM0[i] = 0xf0 | DrvGfxROM0[i] & 0x0f;
 			else if ((DrvGfxROM0[i]& 0xf0)==0xf0) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x0f;
 		}
 	}
@@ -688,14 +691,14 @@ int ovlInit(char *szShortName)
 	CZetInit2(1,CZ80Context);
 //CZetInit(1);
 	CZetOpen(0);
-	CZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, MAP_ROM);
-	CZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, MAP_ROM);
+	CZetMapMemory(DrvZ80ROM0,			0x0000, 0x7fff, MAP_ROM);
+	CZetMapMemory(DrvZ80ROM0 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	CZetMapMemory(DrvPalRAM,			0xc000, 0xc7ff, MAP_ROM);
-	CZetMapMemory(DrvFgRAM,			0xc800, 0xcfff, MAP_RAM);
+	CZetMapMemory(DrvFgRAM,				0xc800, 0xcfff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM2,			0xd000, 0xd3ff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM1,			0xd400, 0xd7ff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM0,			0xd800, 0xdbff, MAP_RAM);
-	CZetMapMemory(DrvZ80RAM0,		0xe000, 0xf9ff, MAP_RAM);
+	CZetMapMemory(DrvZ80RAM0,			0xe000, 0xf9ff, MAP_RAM);
 	CZetMapMemory(DrvSprRAM,			0xfa00, 0xffff, MAP_RAM);
 	CZetSetWriteHandler(robokid_main_write);
 	CZetSetReadHandler(ninjakd2_main_read);
@@ -797,10 +800,10 @@ int ovlInit(char *szShortName)
 
 	ss_sprite           = (SprSpCmd *)SS_SPRIT;
 
- 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;		    // fg
+ 	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;		    // fg
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x1000;			// bg0
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
-	ss_map3						=(Uint16 *)SCL_VDP2_VRAM_B1+0xa000;			// bg2
+	SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
+	ss_map3				=(Uint16 *)SCL_VDP2_VRAM_B1+0xa000;			// bg2
 
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
@@ -839,7 +842,7 @@ int ovlInit(char *szShortName)
 
 			for (i=0;i<32;i+=4,j+=8)
 			{
-				if(reverse)
+				//if(reverse)
 				{
 					dpM[i]=new_tile[j];
 					dpM[i+1]=new_tile[j+1];
@@ -850,7 +853,7 @@ int ovlInit(char *szShortName)
 					dpM[i+34]=new_tile[j+6];
 					dpM[i+35]=new_tile[j+7];
 				}
-				else
+				/*else
 				{
 					dpM[i+32]=new_tile[j];
 					dpM[i+33]=new_tile[j+1];
@@ -860,7 +863,7 @@ int ovlInit(char *szShortName)
 					dpM[i+1]=new_tile[j+5];
 					dpM[i+2]=new_tile[j+6];
 					dpM[i+3]=new_tile[j+7];
-				}
+				}*/
 			}
 		}
 	}
@@ -904,8 +907,6 @@ INT16 previous_bank[3]={-1,-1,-1};
 	if (tilemap_enable[sel] == 0) return;
 
 	UINT32 wide = (width) ? 128 : 32;
-
-	UINT16* tmp = (UINT16*)0x00200000;
 
 	UINT32 sx1 = (64 % wide);
 	UINT32 sy1 = (64 / wide);
@@ -1097,7 +1098,7 @@ INT16 previous_bank[3]={-1,-1,-1};
 		*nJoystickInputs |= 0x0c;
 	}
 }
-unsigned int vbt=0;
+
 /*static*/  INT32 DrvFrame()
 {
 //	if (DrvReset) {

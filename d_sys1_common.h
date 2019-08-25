@@ -6,6 +6,7 @@
 #include "bitswap.h"
 #include "mc8123.h"
 #include "raze/raze.h"
+#include "czet.h"
 //#include "saturn/sc_saturn.h"
 #include "saturn/ovl.h"
 
@@ -37,7 +38,7 @@ write_func p[36] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 typedef int bool;
 
 typedef struct { UINT8 x, y, width, yend } sprite_collision; 
-sprite_collision sprites_collision[32];
+sprite_collision sprites_collision[32]={0};
 /*static*/ UINT16 nextSprite=0;
 /*static*/ UINT8 flipscreen=0;
 /*static*/ void make_cram_lut(void);
@@ -92,26 +93,26 @@ void *memset4_fast(void *, long, size_t);
 /*static*/ int            System1RomBank = 0;
 /*static*/ int            System1BankSwitch = 0;
 
-/*static*/ UINT8 System1BgBankLatch;
-/*static*/ UINT8 System1BgBank;
+/*static*/ UINT8 System1BgBankLatch = 0;
+/*static*/ UINT8 System1BgBank = 0;
 
-/*static*/ UINT8  BlockgalDial1;
-/*static*/ UINT8  BlockgalDial2;
+/*static*/ UINT8  BlockgalDial1 = 0;
+/*static*/ UINT8  BlockgalDial2 = 0;
 
-/*static*/ unsigned int System1SpriteRomSize;
-/*static*/ unsigned int System1NumTiles;
+/*static*/ unsigned int System1SpriteRomSize = 0;
+/*static*/ unsigned int System1NumTiles = 0;
 /*static*/ unsigned int System1ColourProms = 0;
 /*static*/ unsigned int System1BankedRom = 0;
 
 typedef void (*Decode)();
-/*static*/ Decode DecodeFunction;
+/*static*/ Decode DecodeFunction = NULL;
 /*static*/ void System1Render();
 typedef void (*Collision)(int *);
-Collision CollisionFunction;
+Collision CollisionFunction = NULL;
 typedef void (*MakeInputs)();
-/*static*/ MakeInputs MakeInputsFunction;
+/*static*/ MakeInputs MakeInputsFunction = NULL;
 
-/*static*/unsigned int nCyclesTotal[2];
+/*static*/unsigned int nCyclesTotal[2] = {0,0};
 
 /*==============================================================================================
 Input Definitions

@@ -1494,7 +1494,7 @@ static int DoLibInit() // Do Init of Burn library driver
 	return (BurnDrvInit()) ? 3 : 0 ;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int nDrvInit(int nDrvNum)
+/*static*/ int nDrvInit(int nDrvNum)
 {
 	void (*fp)(char *);
 	char drv_file[14];
@@ -1526,7 +1526,7 @@ static int nDrvInit(int nDrvNum)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void check_exit(Uint16 data)
+/*static*/ void check_exit(Uint16 data)
 {
 	 if(            ((data & PER_DGT_S) != 0) 
 			   && ((data & PER_DGT_X) != 0) 
@@ -1546,7 +1546,7 @@ static void check_exit(Uint16 data)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void do_keypad()
+/*static*/ void do_keypad()
 {
 	FBA_KEYPAD[0] = 0;
 	FBA_KEYPAD[1] = 0;

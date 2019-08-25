@@ -1,7 +1,7 @@
 #ifndef AY8910_H
 #define AY8910_H
 
-#define MAX_8910 5
+#define MAX_8910 3
 #define ALL_8910_CHANNELS -1
 #define ACB_DRIVER_DATA	 (64)
 

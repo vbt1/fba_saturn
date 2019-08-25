@@ -45,7 +45,7 @@ typedef struct {
 	int vertical_size;
 
 //unsigned char dirty[24*32*8*4];
-unsigned char *dirty;
+	unsigned char *dirty;
 #ifdef USE_LUT
 //unsigned int color_2bpp_lut[0x400];
 unsigned int *color_2bpp_lut;
@@ -71,7 +71,7 @@ extern SprSpCmd *ss_sprite;
 #define TMS9928A_VERT_DISPLAY_START_PAL     16
 #define TMS9928A_VERT_DISPLAY_START_NTSC    16
 
-/*static*/ TMS9928A tms;
+/*static*/ //TMS9928A tms = {.mode = 0, .ReadAhead = 0, .StatusReg = 0, .FifthSprite = 0, .FirstByte = 0, .latch = 0};
 
 void  TMS9928AInterrupt();
 void TMS9928AInit(int model, int vram, int borderx, int bordery, void (*INTCallback)(int), unsigned char *TMSContext);

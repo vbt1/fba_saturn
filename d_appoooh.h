@@ -5,6 +5,7 @@
 #include "saturn/ovl.h"
 #include "snd/sn76496.h"
 #include "snd/msm5205.h"
+#include "czet.h"
 #define SOUND_LEN 128
 /*static*/ INT32 DrvInit();
 /*static*/ INT32 DrvRobowresInit();
@@ -14,7 +15,7 @@
 static void Set4PCM();
 void dummy();
 
-PcmHn 			pcm4[4];
+PcmHn 			pcm4[4] = {NULL, NULL, NULL, NULL};
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L

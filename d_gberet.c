@@ -231,16 +231,11 @@ int ovlInit(char *szShortName)
 {
 	unsigned char *Next; Next = Mem;
 
-	Rom            = Next; Next += 0x14000;
-
-//	Gfx0		   = (unsigned char *)0x00200000;
-//	Gfx1		   = (unsigned char *)0x00218000;
-	Gfx0           = Next; Next += 0x08000;
-	Gfx1           = Next; Next += 0x20000;
-	Prom           = Next; Next += 0x00220;
-	Palette	       = (unsigned short*)colBgAddr;//(unsigned int*)Next; Next += 0x00200 * sizeof(unsigned int);
-//	DrvPalette     = (unsigned int*)Next; Next += 0x00200 * sizeof(unsigned int);
-
+	Rom            = (UINT8 *)Next; Next += 0x14000;
+	Gfx0           = (UINT8 *)Next; Next += 0x08000;
+	Gfx1           = (UINT8 *)Next; Next += 0x20000;
+	Prom           = (UINT8 *)Next; Next += 0x00220;
+	Palette	       = (UINT16 *)colBgAddr;//(unsigned int*)Next; Next += 0x00200 * sizeof(unsigned int);
 	MemEnd         = Next;
 
 	return 0;
@@ -550,7 +545,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
 #ifdef CACHE
-	memset(bg_dirtybuffer,1,2048);
+//	memset(bg_dirtybuffer,1,2048);
 #endif
 
 	SS_SET_S0PRIN(6);

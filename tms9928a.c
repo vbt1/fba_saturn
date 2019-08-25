@@ -6,6 +6,8 @@ extern UINT32 *shared;
 #define SS_SPRAM *(&shared + 5)
 #define SS_FONT	 *(&shared + 3)
 
+TMS9928A tms = {.mode = 0, .ReadAhead = 0, .StatusReg = 0, .FifthSprite = 0, .FirstByte = 0, .latch = 0};
+
 int TMS9928A_palette[16] = {
 	0x000000, 0x000000, 0x21c842, 0x5edc78, 0x5455ed, 0x7d76fc, 0xd4524d, 0x42ebf5,
 	0xfc5554, 0xff7978, 0xd4c154, 0xe6ce80, 0x21b03b, 0xc95bba, 0xcccccc, 0xffffff

@@ -4,14 +4,15 @@
 #include "burnint.h"
 #include "snd/ay8910.h"
 #include "saturn/ovl.h"
+#include "czet.h"
 
 #define SOUND_LEN 128
 void dummy();
 /*static*/ void updateSound();
-/*static*/ unsigned char DrvJoy1[8], DrvJoy2[8], DrvJoy3[8];
+/*static*/ unsigned char DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0}, DrvJoy2[8] = {0, 0, 0, 0, 0, 0, 0, 0}, DrvJoy3[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ unsigned char DrvDips[2]={0,0},DrvReset=0;
 /*static*/ UINT8 DrvInputs[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ short *pAY8910Buffer[6], *pFMBuffer = NULL;
+/*static*/ short *pAY8910Buffer[6]= {NULL, NULL, NULL, NULL, NULL, NULL}, *pFMBuffer = NULL;
 /*static*/ unsigned char *Mem = NULL;
 /*static*/ UINT8 *DrvMainROM = NULL;
 /*static*/ UINT8 *DrvSubROM = NULL;

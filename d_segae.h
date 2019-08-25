@@ -6,6 +6,7 @@
 #include "snd/sn76496.h"
 #include "bitswap.h"
 #include "mc8123.h"
+#include "czet.h"
 
 #define nBurnSoundLen 128
 

@@ -68,9 +68,10 @@ struct AY8910
 #define AY_PORTB	(15)
 
 
-/*static*/ struct AY8910 AYPSG[MAX_8910];		/* array of PSG's */
-
-
+/*static*/ struct AY8910 AYPSG[MAX_8910] = {
+	{ .Channel = 0, .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0},
+	{ .Channel = 0, .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0},
+	{ .Channel = 0, .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0}};		/* array of PSG's */
 
 /*static*/ inline void _AYWriteReg(int n, int r, int v)
 {

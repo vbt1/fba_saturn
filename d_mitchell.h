@@ -9,6 +9,7 @@
 //#include "saturn/sc_saturn.h"
 //#include "burn_ym2413.h"
 #include "snd/msm6295.h"
+#include "czet.h"
 /*static*/ int DrvFrame();
 /*static*/ int DrvExit();
 /*static*/ int SpangInit();

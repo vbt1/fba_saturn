@@ -7,6 +7,7 @@
 #include "bitswap.h"
 #include "mc8123.h"
 #include "8255ppi.h"
+#include "czet.h"
 
 #define nBurnSoundLen 128
 /*static*/ INT32 DrvInit();

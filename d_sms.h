@@ -5,6 +5,7 @@
 #include "saturn/ovl.h"
 #include "sega_int.h"
 #include "raze/raze.h"
+#include "czet.h"
 static UINT8 update_input1(void);
 static UINT8 update_input2(void);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
@@ -75,9 +76,9 @@ typedef struct
 }t_vdp;
 
 /* Global data */
-/*static*/  t_cart cart;
-/*static*/  t_sms sms;
-/*static*/  t_vdp vdp;
+/*static*/  t_cart cart = {.rom = NULL, .pages = 0};
+/*static*/  t_sms sms = {.paused = 0, .port_3F = 0, .port_F2 = 0, .irq = 0};
+/*static*/  t_vdp vdp = {.status = 0, .latch = 0, .pending = 0, .buffer = 0};
 /*static*/  int running=0;
 /*static*/  unsigned int first = 1;
 /*static*/  unsigned int vsynch = 0;

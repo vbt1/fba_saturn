@@ -11,6 +11,8 @@
 #include "snd/sn76496.h"
 #ifdef RAZE
 #include "raze\raze.h"
+#else
+#include "czet.h"	
 #endif
 
 /*static*/ int DrvInit();
