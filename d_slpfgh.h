@@ -11,8 +11,8 @@
 #define	false	0
 
 void updateSound();
-INT32 tigerhInit();
-INT32 tigerhExit();
+INT32 DrvInit();
+INT32 DrvExit();
 INT32 DrvFrame();
 void DrvDoReset();
 void Set6PCM();
@@ -33,19 +33,12 @@ INT32 nTigerHeliTileXPosHi = 0;
 INT32 nTigerHeliTileYPosLo = 0;
 UINT32 nTigerHeliTileMask = 0; 
 UINT32 nTigerHeliSpriteMask = 0;
-UINT8 nPalettebank = 0;
-UINT8 nFlipscreen = 0;
+//UINT8 nPalettebank = 0;
+//UINT8 nFlipscreen = 0;
 
 UINT8 *Mem = NULL;
-UINT8 *MemEnd = NULL;
-UINT8 *RamStart = NULL; 
-UINT8 *RamEnd = NULL;
-
 UINT8 *Rom01 = NULL;
 UINT8 *Rom02 = NULL;
-UINT8 *TigerHeliTileROM = NULL;
-UINT8 *TigerHeliSpriteROM = NULL;
-UINT8 *TigerHeliTextROM = NULL;
 UINT8 *Ram01 = NULL;
 UINT8 *RamShared = NULL;
 UINT8 *TigerHeliTileRAM = NULL;
@@ -54,8 +47,6 @@ UINT8 *TigerHeliSpriteBuf = NULL;
 UINT8 *TigerHeliTextRAM = NULL;
 UINT8 *CZ80Context = NULL;
 UINT8 *TigerHeliPaletteROM = NULL;
-UINT32 *TigerHeliPalette = NULL;
-
 UINT16 *map_offset_lut = NULL;
 UINT16 *map_offset_lut2 = NULL;
 

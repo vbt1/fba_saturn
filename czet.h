@@ -24,6 +24,7 @@
  #define CZetRaiseIrq(n) CZetSetIRQLine(n, CZET_IRQSTATUS_AUTO)
  #define CZetLowerIrq() CZetSetIRQLine(0, CZET_IRQSTATUS_NONE)
 
+int CZetGetPC(int n);
 int CZetInit2(int nCount,UINT8 *addr);
 void CZetExit2();
 void CZetNewFrame();

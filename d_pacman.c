@@ -7,6 +7,7 @@
 #define nBurnSoundLen 192
 #define nInterleave 192 //264
 #define nCyclesTotal  (18432000 / 6) / 60
+#define runCycles nCyclesTotal / nInterleave
 #define nSegmentLength 1 //nBurnSoundLen / nInterleave
 #define CACHE 1
 
@@ -125,8 +126,6 @@ void __fastcall pengo_write(UINT16 a, UINT8 d)
 			return;
 	}
 #endif
-	////	CZetMapArea(0x8400, 0x87ff, 1, DrvColRAM);
-
 	if ((a & 0xffe0) == 0x9000) {
 		NamcoSoundWrite(a & 0x1f, d);
 		return;
@@ -286,7 +285,7 @@ void convert_gfx()
 
 INT32 pacman_load()
 {
-	char* pRomName = "";
+	char* pRomName = NULL;
 	struct BurnRomInfo ri;
 
 	INT32 pOffset = 0;
@@ -403,20 +402,13 @@ void StandardMap()
 {
 	for (UINT32 i = 0; i <= 0x8000; i += 0x8000)// mirror
 	{
-		CZetMapArea(0x0000 + i, 0x3fff + i, 0, DrvZ80ROM);
-		CZetMapArea(0x0000 + i, 0x3fff + i, 2, DrvZ80ROM);
+		CZetMapMemory(DrvZ80ROM,	0x0000 + i, 0x3fff + i, MAP_ROM);
 
 		for (UINT32 j = 0; j <= 0x2000; j+= 0x2000) // mirrors
 		{
-			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 0, DrvVidRAM);
-			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 1, DrvVidRAM);
-			CZetMapArea(0x4000 + i + j, 0x43ff + i + j, 2, DrvVidRAM);
-			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 0, DrvColRAM);
-			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 1, DrvColRAM);
-			CZetMapArea(0x4400 + i + j, 0x47ff + i + j, 2, DrvColRAM);
-			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 0, DrvZ80RAM + 0x0400);
-			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 1, DrvZ80RAM + 0x0400);
-			CZetMapArea(0x4c00 + i + j, 0x4fff + i + j, 2, DrvZ80RAM + 0x0400);
+			CZetMapMemory(DrvVidRAM,	0x4000 + i + j, 0x43ff + i + j, MAP_RAM);			
+			CZetMapMemory(DrvColRAM,	0x4400 + i + j, 0x47ff + i + j, MAP_RAM);	
+			CZetMapMemory(DrvZ80RAM + 0x0400,	0x4c00 + i + j, 0x4fff + i + j, MAP_RAM);
 		}
 	}
 
@@ -458,7 +450,7 @@ INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 select)
 	mapCallback = NULL;
 	CZetClose();
 
-	NamcoSoundInit(18432000 / 6 / 32, 3, NamcoContext);
+	NamcoSoundInit(3072000 / 32, 3, NamcoContext);
 	DrvDoReset(1);
 	return 0;
 }
@@ -544,7 +536,6 @@ void DrvInitSaturn()
 
 	ss_BgPriNum      = (SclSpPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum      = (SclSpPriNumRegister *)SS_SPPRI;
-	ss_OtherPri      = (SclOtherPriRegister *)SS_OTHR;
 
 	ss_sprite  = (SprSpCmd *)SS_SPRIT;
 	ss_regs->tvmode = 0x80d1;
@@ -559,7 +550,6 @@ void DrvInitSaturn()
 	SS_SET_N0PRIN(7);
 	SS_SET_S0PRIN(6);
 	SS_SET_N1PRIN(4);
-//	SS_SET_N2PRIN(5);
 
 	initLayers();
 	
@@ -571,13 +561,19 @@ void DrvInitSaturn()
 INT32 DrvExit()
 {
 	DrvDoReset(1);
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-	SPR_InitSlaveSH();	
+	CZetSetWriteHandler(NULL);
+	CZetSetReadHandler(NULL);
+	CZetSetOutHandler(NULL);
+	CZetSetInHandler(NULL);
+	
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_InitSlaveSH();	
 	
 	nSoundBufferPos=0;
 	NamcoSoundExit();
 	CZetExit2();
-	memset(bg_dirtybuffer,0,sizeof(bg_dirtybuffer));
+//	memset(bg_dirtybuffer,0,sizeof(bg_dirtybuffer));
+//	game_select = PACMAN;
 //	signed short *nSoundBuffer		= (signed short *)0x25a20000;
 	NamcoContext = NULL;
 	CZ80Context = DrvZ80ROM = DrvQROM = DrvColPROM = NamcoSoundProm = NULL;
@@ -704,19 +700,13 @@ INT32 DrvFrame()
 
 		DrvInputs[0] ^= DrvDips[0];
 		DrvInputs[1] ^= DrvDips[1];
-
-		nAnalogAxis[0] -= DrvAxis[0];
-		nAnalogAxis[1] -= DrvAxis[1];
-		
-		nCharAxis[0] = (DrvAxis[0] >> 12) & 0x0f;
-		nCharAxis[1] = (DrvAxis[1] >> 12) & 0x0f;
 	}
 
 	CZetOpen(0);
 	
 	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
-		CZetRun(nCyclesTotal / nInterleave);
+		CZetRun(runCycles);
 		
 		if (i == (nInterleave-1) && interrupt_mask) 
 		{
@@ -728,19 +718,7 @@ INT32 DrvFrame()
 		Sint16 *nSoundBuffer = (Sint16 *)0x25a20000;
 		NamcoSoundUpdate(&nSoundBuffer[nSoundBufferPos], nSegmentLength);
 		nSoundBufferPos += nSegmentLength;
-//		nSoundBufferPos1 += nSegmentLength;
 	}
-/*	INT32 nSoundBufferPos1 = 0;
-	
-	INT32 nSegmentLength2 = nBurnSoundLen - nSoundBufferPos1;
-
-	if (nSegmentLength2) 
-	{
-		Sint16 *nSoundBuffer = (Sint16 *)0x25a20000;
-		NamcoSoundUpdate(&nSoundBuffer[nSoundBufferPos], nSegmentLength2);
-		nSoundBufferPos += nSegmentLength2;
-	}
-	*/
 	CZetClose();
 
     DrvDrawPacMan();

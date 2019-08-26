@@ -40,9 +40,6 @@ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvInputs[2] = {0,0};
 UINT8 DrvDips[4] = {0,0,0,0};
-INT16 DrvAxis[2] = { 0, 0 };
-INT16 nAnalogAxis[2] = {0,0};
-UINT8 nCharAxis[2] = {0,0};
 
 enum { PACMAN=0, PENGO };
 
