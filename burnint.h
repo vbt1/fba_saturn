@@ -125,7 +125,7 @@ struct BurnDriver {
 int BurnByteswap(UINT8* pm,int nLen);
 void BurnDrvAssignList();
 char* BurnDrvGetTextA(unsigned int i);
-
+void ShutdownSlave(void);
 // load.cpp
 int BurnLoadRom(UINT8* Dest,int i, int nGap);
 int BurnXorRom(UINT8* Dest,int i, int nGap);

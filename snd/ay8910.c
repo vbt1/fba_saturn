@@ -593,10 +593,12 @@ void AY8910Update(int chip, signed short **buffer, int length)
 }
 
 
+#define OPEN_CSH_VAR(a) (((int)&a | 0x20000000))
 
 void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 {
 	struct AY8910 *PSG = &AYPSG[chip];
+//	struct AY8910 *PSG = OPEN_CSH_VAR(AYPSG[chip]);
 	signed short *buf1,*buf2,*buf3;
 	int outn;
 
@@ -617,6 +619,10 @@ void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 	/* Setting the output to 1 is necessary because a disabled channel is locked */
 	/* into the ON state (see above); and it has no effect if the volume is 0. */
 	/* If the volume is 0, increase the counter, but don't touch the output. */
+char toto[80];
+sprintf(toto,"length : %d",length);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)toto,4,60);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"1 ",4,80);	
 	if (PSG->Regs[AY_ENABLE] & 0x01)
 	{
 		if (PSG->CountA <= length*STEP) PSG->CountA += length*STEP;
@@ -629,6 +635,7 @@ void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 		/* interferencies when the program is rapidly modulating the volume. */
 		if (PSG->CountA <= length*STEP) PSG->CountA += length*STEP;
 	}
+FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"2 ",4,80);	
 	if (PSG->Regs[AY_ENABLE] & 0x02)
 	{
 		if (PSG->CountB <= length*STEP) PSG->CountB += length*STEP;
@@ -638,6 +645,7 @@ void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 	{
 		if (PSG->CountB <= length*STEP) PSG->CountB += length*STEP;
 	}
+FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"3 ",4,80);		
 	if (PSG->Regs[AY_ENABLE] & 0x04)
 	{
 		if (PSG->CountC <= length*STEP) PSG->CountC += length*STEP;
@@ -647,12 +655,12 @@ void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 	{
 		if (PSG->CountC <= length*STEP) PSG->CountC += length*STEP;
 	}
-
+FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"4 ",4,80);
 	/* for the noise channel we must not touch OutputN - it's also not necessary */
 	/* since we use outn. */
 	if ((PSG->Regs[AY_ENABLE] & 0x38) == 0x38)	/* all off */
 		if (PSG->CountN <= length*STEP) PSG->CountN += length*STEP;
-
+FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)"5 ",4,80);
 	outn = (PSG->OutputN | PSG->Regs[AY_ENABLE]);
 										 /*
 <MartinMan> if (length != 0) {
@@ -668,6 +676,8 @@ void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 	/* buffering loop */
 	while (length)
 	{
+sprintf(toto,"length : %d",length);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)toto,4,70);		
 		int vola,volb,volc;
 		int left;
 
@@ -857,6 +867,8 @@ void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 				if (PSG->EnvelopeC) PSG->VolC = PSG->VolE;
 			}
 		}
+sprintf(toto,"a: %d b: %d c: %d     ",(vola * PSG->VolA) >> 16,(volb * PSG->VolB) >> 16,(volc * PSG->VolC) >> 16);
+FNT_Print256_2bpp((volatile unsigned char *)0x25e60000,(unsigned char *)toto,4,90);		
 
 		*(buf1++) = (vola * PSG->VolA) >> 16;
 		*(buf2++) = (volb * PSG->VolB) >> 16;

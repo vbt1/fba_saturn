@@ -10,7 +10,7 @@
 #define BURN_SND_CLIPVBT(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 
 UINT8* NamcoSoundProm = NULL;
-INT16 *p = (INT16*)0x00200000;
+INT16 *p = NULL; //(INT16*)0x00200000;
 
 /*static*/ UINT8 namco_soundregs[0x40]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 /*static*/ UINT8 *namco_wavedata = NULL;
@@ -65,7 +65,7 @@ void NamcoSoundUpdate(INT16* buffer, INT32 length)
 
 	/* zap the contents of the buffer */
 //	memset(buffer, 0, length * sizeof(*buffer) * 2);
-	memset(buffer, 0, length * 4);
+	memset(&buffer[0], 0, length * 2);
 
 
 	/* if no sound, we're done */
@@ -336,28 +336,21 @@ void NamcoSoundExit()
 #endif
 	namco_wavedata = NULL;
 	NamcoSoundProm = NULL;
-	chip->last_channel = NULL;
+	if(chip->last_channel)
+		chip->last_channel = NULL;
 
 	for (UINT32 v = 0; v < MAX_VOLUME; v++)
 	{
 		chip->waveform[v] = NULL;
 	}
-	chip->last_channel = NULL;
+
 //	free(p);
 //	memset(p,0x00,0x30000);
-	p = NULL;
+//	p = NULL;
 
-//	if (namco_soundregs) {
-//		free(namco_soundregs);
-//		namco_soundregs = NULL;
-//	}
-
-//	if (chip) {
-//		memset(chip, 0, sizeof(*chip));
-//		free(chip);
+	if (chip) {
+		memset(chip, 0, sizeof(*chip));
 		chip = NULL;
-//	}
-	
-//	DebugSnd_NamcoSndInitted = 0;
+	}
 }
 

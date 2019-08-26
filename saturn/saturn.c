@@ -1,7 +1,7 @@
 #include "saturn.h"
 
 //#include "sc_saturn.h"
-#define HEAP_WALK 1
+//#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
 #define OVLADDR 0x060DA000
@@ -266,6 +266,21 @@ static void resetSound()
 	memset((int *)SOUND_BUFFER,0x00,RING_BUF_SIZE*16);
 	nSoundBufferPos=0;
 	PCM_MeStart(pcm);
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void ShutdownSlave(void)
+{
+	volatile Uint8 *SMPC_COM = (Uint8 *)0x2010001F;   /* SMPC command register */
+	volatile Uint8 *SMPC_SF  = (Uint8 *)0x20100063;   /* SMPC status flag */     
+	const Uint8 SMPC_SSHOFF  = 0x03;          		  /* SMPC slave SH off command */  
+	
+    while((*SMPC_SF & 0x01) == 0x01);
+
+    *SMPC_SF = 1;
+
+    *SMPC_COM = SMPC_SSHOFF;
+
+    while((*SMPC_SF & 0x01) == 0x01);           
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initSaturn()

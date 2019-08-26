@@ -3,11 +3,7 @@
 
 #include "burnint.h"
 #include "bitswap.h"
-//#include "sn76496.h"
 #include "snd/namco_snd.h"
-//extern "C" {
-//#include "ay8910.h"
-//}
 #include "saturn/ovl.h"
 #include "czet.h"
 
@@ -79,13 +75,14 @@ extern struct namco_sound *chip;
 	{"Reset",		  BIT_DIGITAL,	NULL,	"reset"},
 	{"Service Mode",	  BIT_DIGITAL,	DrvJoy1 + 7,	"diag"},
 
-	{"Dip Switches 1 ",	BIT_DIPSWITCH,	DrvDips + 2,	"dip"},
+	{"Dip Switches 1",	BIT_DIPSWITCH,	DrvDips + 2,	"dip"},
 	{"Dip Switches 2",	BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 	{"Dip Switches 3",	BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 	{"Dip Switches 4",	BIT_DIPSWITCH,	DrvDips + 3,	"dip"},
 };
 
 STDINPUTINFO(Drv)
+
 
 /*static*/ struct BurnInputInfo PengoInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 coin"},

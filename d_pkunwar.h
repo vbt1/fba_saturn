@@ -59,6 +59,7 @@ void dummy();
 /*static*/ void bg_line(UINT16 offs,UINT8 *ram_base);
 /*static*/ void fg_line(UINT16 offs,UINT8 *ram_base);
 /*static*/ void nova_draw_sprites(INT32 color_base);
+/*static*/ void make_nova_lut();
 //-------------------------------------------------------------------------------------------------
 // Input Handlers
 /*static*/ struct BurnInputInfo DrvInputList[] = {
