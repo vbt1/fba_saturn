@@ -1,7 +1,7 @@
 #include "saturn.h"
 
 //#include "sc_saturn.h"
-//#define HEAP_WALK 1
+#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
 #define OVLADDR 0x060DA000

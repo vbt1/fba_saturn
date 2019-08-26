@@ -7,56 +7,56 @@
 #include "saturn/ovl.h"
 #include "czet.h"
 
-/*static*/ INT32 mspacmanInit();
-/*static*/ INT32 puckmanInit();
-/*static*/// INT32 pengoInit();
-/*static*/ INT32 pengouInit();
-/*static*/ //INT32 pengobInit();
-/*static*/ INT32 DrvExit();
-/*static*/ INT32 DrvFrame();
-/*static*/ INT32 DrvDraw();
-/*static*/ INT32 DrvDrawPacMan();
+void dummy();
+INT32 mspacmanInit();
+INT32 puckmanInit();
+INT32 pengouInit();
+//INT32 pengobInit();
+INT32 DrvExit();
+INT32 DrvFrame();
+INT32 DrvDraw();
+INT32 DrvDrawPacMan();
+void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 
-/*static*/ UINT8 *AllMem = NULL;
-/*static*/ UINT8 *MemEnd = NULL;
-/*static*/ UINT8 *AllRam = NULL;
-/*static*/ UINT8 *RamEnd = NULL;
-/*static*/ UINT8 *PengoStart = NULL;
-/*static*/ UINT8 *DrvZ80ROM = NULL;
-/*static*/ UINT8 *DrvQROM = NULL;
-/*static*/ UINT8 *DrvZ80RAM = NULL;
-/*static*/ UINT8 *DrvVidRAM = NULL;
-/*static*/ UINT8 *DrvColRAM = NULL;
-/*static*/ UINT8 *DrvSprRAM = NULL;
-/*static*/ UINT8 *DrvSprRAM2 = NULL;
-/*static*/ UINT8 *DrvColPROM = NULL;
-/*static*/ UINT8 *bg_dirtybuffer = NULL;
-/*static*/ UINT16 *map_offset_lut = NULL;
-/*static*/ UINT16 *ofst_lut = NULL;
-/*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ UINT8 *NamcoContext = NULL;
+UINT8 *AllMem = NULL;
+UINT8 *AllRam = NULL;
+UINT8 *RamEnd = NULL;
+UINT8 *PengoStart = NULL;
+UINT8 *DrvZ80ROM = NULL;
+UINT8 *DrvQROM = NULL;
+UINT8 *DrvZ80RAM = NULL;
+UINT8 *DrvVidRAM = NULL;
+UINT8 *DrvColRAM = NULL;
+UINT8 *DrvSprRAM = NULL;
+UINT8 *DrvSprRAM2 = NULL;
+UINT8 *DrvColPROM = NULL;
+UINT8 *bg_dirtybuffer = NULL;
+UINT16 *map_offset_lut = NULL;
+UINT16 *ofst_lut = NULL;
+UINT8 *CZ80Context = NULL;
+UINT8 *NamcoContext = NULL;
 
-/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvInputs[2] = {0,0};
-/*static*/ UINT8 DrvDips[4] = {0,0,0,0};
-/*static*/ INT16 DrvAxis[2] = { 0, 0 };
-/*static*/ INT16 nAnalogAxis[2] = {0,0};
-/*static*/ UINT8 nCharAxis[2] = {0,0};
+UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvInputs[2] = {0,0};
+UINT8 DrvDips[4] = {0,0,0,0};
+INT16 DrvAxis[2] = { 0, 0 };
+INT16 nAnalogAxis[2] = {0,0};
+UINT8 nCharAxis[2] = {0,0};
 
 enum { PACMAN=0, PENGO };
 
 extern struct namco_sound *chip;
-/*static*/ UINT8 game_select = 0;
-/*static*/ UINT8 interrupt_mode = 0;
-/*static*/ UINT8 interrupt_mask = 0;
-/*static*/ UINT8 colortablebank = 0;
-/*static*/ UINT8 palettebank = 0;
-/*static*/ UINT8 spritebank = 0;
-/*static*/ UINT8 charbank = 0;
-/*static*/ UINT32 watchdog = 0;
+UINT8 game_select = 0;
+UINT8 interrupt_mode = 0;
+UINT8 interrupt_mask = 0;
+UINT8 colortablebank = 0;
+UINT8 palettebank = 0;
+UINT8 spritebank = 0;
+UINT8 charbank = 0;
+UINT32 watchdog = 0;
 //------------------------------------------------------------------------------------------------------
-/*static*/ struct BurnInputInfo DrvInputList[] = {
+struct BurnInputInfo DrvInputList[] = {
 	{"Coin 1",		  BIT_DIGITAL,	DrvJoy1 + 5,	"p1 coin"},
 	{"Coin 2",		  BIT_DIGITAL,	DrvJoy1 + 6,	"p2 coin"},
 	{"Start 1",		  BIT_DIGITAL,	DrvJoy2 + 5,	"p1 start"},
@@ -84,7 +84,7 @@ extern struct namco_sound *chip;
 STDINPUTINFO(Drv)
 
 
-/*static*/ struct BurnInputInfo PengoInputList[] = {
+struct BurnInputInfo PengoInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"},
@@ -110,7 +110,7 @@ STDINPUTINFO(Drv)
 
 STDINPUTINFO(Pengo)
 
-/*static*/ struct BurnDIPInfo PengoDIPList[]=
+struct BurnDIPInfo PengoDIPList[]=
 {
 	{0x0f, 0xff, 0xff, 0xff, NULL				},
 	{0x10, 0xff, 0xff, 0xff, NULL				},
@@ -187,7 +187,7 @@ STDINPUTINFO(Pengo)
 
 STDDIPINFO(Pengo)
 
-/*static*/ struct BurnDIPInfo DrvDIPList[]=
+struct BurnDIPInfo DrvDIPList[]=
 {
 	{0x0e, 0xff, 0xff, 0xc9, NULL                     },
 	{0x0f, 0xff, 0xff, 0xff, NULL                     },
@@ -232,7 +232,7 @@ STDDIPINFO(Drv)
 
 // Pengo (set 2 not encrypted)
 
-/*static*/ struct BurnRomInfo pengo2uRomDesc[] = {
+struct BurnRomInfo pengo2uRomDesc[] = {
 	{ "epr5128.u8",   0x1000, 0x3dfeb20e, 1 | BRF_ESS | BRF_PRG },	//  0 Z80 Code
 	{ "epr5129.u7",   0x1000, 0x1db341bd, 1 | BRF_ESS | BRF_PRG },	//  1
 	{ "epr5130.u15",  0x1000, 0x7c2842d5, 1 | BRF_ESS | BRF_PRG },	//  2
@@ -258,7 +258,7 @@ STD_ROM_FN(pengo2u)
 
 // Puck Man (Japan set 1)
 
-/*static*/ struct BurnRomInfo puckmanRomDesc[] = {
+struct BurnRomInfo puckmanRomDesc[] = {
 	{ "pm1prg1.6e",  0x0800, 0xf36e88ab, 1 | BRF_ESS | BRF_PRG },	//  0 Z80 Code
 	{ "pm1prg2.6k",  0x0800, 0x618bd9b3, 1 | BRF_ESS | BRF_PRG },	//  1
 	{ "pm1prg3.6f",  0x0800, 0x7d177853, 1 | BRF_ESS | BRF_PRG },	//  2

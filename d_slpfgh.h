@@ -13,7 +13,8 @@
 void updateSound();
 INT32 tigerhInit();
 INT32 tigerhExit();
-INT32 tigerhFrame();
+INT32 DrvFrame();
+void DrvDoReset();
 void Set6PCM();
 void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target);
 void dummy();
@@ -65,10 +66,10 @@ PcmHn 			pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 // ---------------------------------------------------------------------------
 // Inputs
 
-UINT8 DrvDips[4] = {0,0,0,0};
+UINT8 DrvDips[2] = {0,0};
 UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-
+UINT8 DrvInputs[2] = {0,0};
 // Dip Switch and Input Definitions
 
 /*static*/ struct BurnInputInfo SlapfighInputList[] = {

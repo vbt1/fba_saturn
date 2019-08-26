@@ -7,20 +7,20 @@
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
-*((short*) 0xFFFFFE92) = *((short*) 0xFFFFFE92)&~0x1;
+//*((short*) 0xFFFFFE92) = *((short*) 0xFFFFFE92)&~0x1;
 
 	struct BurnDriver nBurnDrvSlapBtJP = {
 		"slapfib1", "slpfgh",
 		"Slap Fight (bootleg set 1)",
 		slapbtjpRomInfo, slapbtjpRomName, SlapfighInputInfo, SlapfighDIPInfo,
-		tigerhInit, tigerhExit, tigerhFrame, NULL
+		tigerhInit, tigerhExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver nBurnDrvTigerHB1 = {
 		"tigerhb1", "slpfgh", 			
 		"Tiger Heli (bootleg, set 1)",
 		tigerhb1RomInfo, tigerhb1RomName, TigerhInputInfo, TigerhDIPInfo,
-		tigerhInit, tigerhExit, tigerhFrame, NULL
+		tigerhInit, tigerhExit, DrvFrame, NULL
 	};
 
 	if (strcmp(nBurnDrvSlapBtJP.szShortName, szShortName) == 0) 
@@ -349,19 +349,19 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 
 /*static*/  UINT8 tigerhReadPort0(UINT32 data)
 {
-	return ~DrvDips[0];
+	return DrvInputs[0];
 }
 /*static*/  UINT8 tigerhReadPort1(UINT32 data)
 {
-	return ~DrvDips[1];
+	return DrvInputs[1];
 }
 /*static*/  UINT8 tigerhReadPort2(UINT32 data)
 {
-	return ~DrvDips[2];
+	return DrvDips[0];
 }
 /*static*/  UINT8 tigerhReadPort3(UINT32 data)
 {
-	return ~DrvDips[3];
+	return DrvDips[1];
 }
 // ---------------------------------------------------------------------------
 
@@ -723,6 +723,7 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 	ss_reg->n0_move_x = 16<<16;
 	ss_reg->n2_move_x = 4;
 
+	PCM_MeStop(pcm);
 	Set6PCM();
 
 	drawWindow(0,256,0,2,68);
@@ -731,6 +732,11 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  INT32 tigerhExit()
 {
+	DrvDoReset();
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	SPR_InitSlaveSH();	
 	CZetExit2();
 	AY8910Exit(1);
 	AY8910Exit(0);
@@ -762,7 +768,7 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 	return 0;
 }
 
-/*static*/  void tigerhDoReset()
+/*static*/  void DrvDoReset()
 {
 	bInterruptEnable = false;
 	bSoundNMIEnable = false;
@@ -910,7 +916,7 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 	AY8910Init(1, 1500000, nBurnSoundRate, &tigerhReadPort2, &tigerhReadPort3, NULL, NULL);
 
 	TigerHeliPaletteInit();
-	tigerhDoReset();
+	DrvDoReset();
 
 	return 0;
 }
@@ -951,7 +957,7 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 	return 0;
 }
 
-/*static*/  INT32 tigerhFrame()
+/*static*/  INT32 DrvFrame()
 {
 	UINT32 nCyclesTotal[3] = {4000000 / 60,2000000 / 60,0};
 	INT32 nCyclesDone[3] = {0,0,0};
@@ -960,28 +966,14 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 	CZetNewFrame();
 
 	// Compile digital inputs
-	DrvDips[0] = 0x00;
-	DrvDips[1] = 0x00;
-	for (INT32 i = 0; i < 8; i++) {
-		DrvDips[0] |= (DrvJoy1[i] & 1) << i;
-		if (nWhichGame == 0 && i < 4) {
-			DrvDips[1] |= (DrvJoy2[i] & 1) << (i ^ 1);
-		} else {
-			DrvDips[1] |= (DrvJoy2[i] & 1) << i;
-		}
-	}
+	{
+		DrvInputs[0] = 0xff;
+		DrvInputs[1] = 0xff;
 
-	if ((DrvDips[0] & 0x03) == 0x03) {
-		DrvDips[0] &= ~0x03;
-	}
-	if ((DrvDips[0] & 0x0C) == 0x0C) {
-		DrvDips[0] &= ~0x0C;
-	}
-	if ((DrvDips[0] & 0x30) == 0x30) {
-		DrvDips[0] &= ~0x30;
-	}
-	if ((DrvDips[0] & 0xC0) == 0xC0) {
-		DrvDips[0] &= ~0xC0;
+		for (INT32 i = 0; i < 8; i++) {
+			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
+			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
+		}
 	}
 
 	UINT32 nSoundNMIMask = 0;
@@ -1109,7 +1101,7 @@ void __fastcall tigerhOutCPU1(UINT16 a, UINT8 d)
 {
 //	int deltaSlave    = *(int*)OPEN_CSH_VAR(nSoundBufferPos);
 //	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+deltaSlave;
-*((short*) 0xFFFFFE92) = *((short*) 0xFFFFFE92)&~0x1;
+//*((short*) 0xFFFFFE92) = *((short*) 0xFFFFFE92)&~0x1;
 	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+nSoundBufferPos;
 	
 //char toto[80];
