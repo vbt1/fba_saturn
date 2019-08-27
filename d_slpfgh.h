@@ -16,6 +16,7 @@ INT32 DrvExit();
 INT32 DrvFrame();
 void DrvDoReset();
 void Set6PCM();
+void PCM_MeStop(PcmHn hn);
 void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target);
 void dummy();
 

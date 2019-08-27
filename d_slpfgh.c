@@ -741,7 +741,7 @@ INT32 DrvExit()
 	for(int i=0;i<6;i++)
 	{
 		PCM_MeStop(pcm6[i]);
-		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+		memset((Sint8 *)SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
 
 // Deallocate all used memory

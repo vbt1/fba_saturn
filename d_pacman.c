@@ -261,15 +261,15 @@ void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *targe
 //-------------------------------------------------------------------------------------------------------------------------------------
 void convert_gfx()
 {
-	UINT32 PlaneOffsets[2]  = { 0, 4 };
-	UINT32 CharXOffsets[8]  = { 64, 65, 66, 67, 0, 1, 2, 3 };
-	UINT32 SpriXOffsets[16] = { 8*8, 8*8+1, 8*8+2, 8*8+3, 16*8+0, 16*8+1, 16*8+2, 16*8+3, 24*8+0, 24*8+1, 24*8+2, 24*8+3, 0, 1, 2, 3 };
-	UINT32 YOffsets[16]     = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 32*8, 33*8, 34*8, 35*8, 36*8, 37*8, 38*8, 39*8 };
+	const UINT32 PlaneOffsets[2]  = { 0, 4 };
+	const UINT32 CharXOffsets[8]  = { 64, 65, 66, 67, 0, 1, 2, 3 };
+	const UINT32 SpriXOffsets[16] = { 8*8, 8*8+1, 8*8+2, 8*8+3, 16*8+0, 16*8+1, 16*8+2, 16*8+3, 24*8+0, 24*8+1, 24*8+2, 24*8+3, 0, 1, 2, 3 };
+	const UINT32 YOffsets[16]     = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 32*8, 33*8, 34*8, 35*8, 36*8, 37*8, 38*8, 39*8 };
 
 	UINT32 size = (game_select == PENGO) ? 0x2000 : 0x1000;
 
 	UINT8 *tmp = (UINT8*)0x00200000;
-	memset(tmp,0x00,size * 2);
+//	memset(tmp,0x00,size * 2);
 
 	memcpy (tmp, cache, size * 2);
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
@@ -277,8 +277,8 @@ void convert_gfx()
 	GfxDecode4Bpp(((size * 4) / 0x100), 2, 16, 16, PlaneOffsets, SpriXOffsets + 0, YOffsets, 0x200, tmp + size, &ss_vram[0x1100]);//DrvGfxROM + 0x8000);
 	rotate_tile(((size * 4) / 0x040),0,cache);
 	rotate_tile16x16(((size * 4) / 0x100),0,&ss_vram[0x1100]);
-	ss_vram = NULL;
-	memset(tmp,0x00,size * 2);
+//	ss_vram = NULL;
+//	memset(tmp,0x00,size * 2);
 //	free(tmp);
 //	tmp = NULL;
 }
@@ -476,9 +476,6 @@ void initLayers()
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
-// 3 nbg
-//	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	SCL_SetConfig(SCL_NBG2, &scfg);
 
 	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	   = SCL_BITMAP;
@@ -488,9 +485,6 @@ void initLayers()
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 	SCL_SetCycleTable(CycleTb);
-	
-	scfg.dispenbl      = OFF;
-	SCL_SetConfig(SCL_NBG2, &scfg);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void initColors()
