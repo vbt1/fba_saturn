@@ -208,7 +208,7 @@ static Uint8	FntAsciiFontData2bpp[] = {
 #define FONT_ADDR &FntAsciiFontData2bpp[0]
 #else
 //
-Uint8	*FntAsciiFontData2bpp;
+Uint8	*FntAsciiFontData2bpp = NULL;
 //Uint8	FntAsciiFontData2bpp[1600];
 #define FONT_ADDR &FntAsciiFontData2bpp[0]
 #endif
@@ -232,7 +232,7 @@ static	void  FNT_Print1Char256_8x8_2bpp(volatile Uint8 *vram,Uint8 code,Uint16 x
 	Uint8	*codep = ((Uint8 *)(FONT_ADDR+((Uint32 )(code-0x20)<<4)));//FNT_SerchFont8_2bpp(code);
 	Uint8 *vramL = &vram[x	+ (y<<8)];
 
-	for(Uint8 i=0;i<0x10;i++) 
+	for(Uint32 i=0;i<0x10;i++) 
 	{
 		*(vramL++)= (Uint8 )((col[ (codep[i]>>6 ) & (0x03)]<<4) |col[(codep[i]>>4) & (0x03)]);
 		*(vramL++)= (Uint8 )((col[ (codep[i]>>2 ) & (0x03)]<<4) |col[(codep[i]>>0) & (0x03)]);
@@ -249,7 +249,7 @@ static	void  FNT_Print1Char256_8x8_2bppSel(volatile Uint8 *vram,Uint8 code,Uint1
 	Uint8	*codep = ((Uint8 *)(FONT_ADDR+((Uint32 )(code-0x20)<<4)));//FNT_SerchFont8_2bpp(code);
 	Uint8 *vramL = &vram[x	+ (y<<8)];
 
-	for(Uint8 i=0;i<0x10;i++) 
+	for(Uint32 i=0;i<0x10;i++) 
 	{
 		*(vramL++)= (Uint8 )((col[ (codep[i]>>6 ) & (0x03)]<<4) |col[(codep[i]>>4) & (0x03)]);
 		*(vramL++)= (Uint8 )((col[ (codep[i]>>2 ) & (0x03)]<<4) |col[(codep[i]>>0) & (0x03)]);

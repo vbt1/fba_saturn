@@ -53,15 +53,23 @@ int BurnDrvInit()
 // Exit game emulation
 void BurnDrvExit()
 {
-//	if (pDriver[nBurnDrvSelect]->Exit) {
+	if (pDriver[nBurnDrvSelect]->Exit) {
 		pDriver[nBurnDrvSelect]->Exit();			// Forward to drivers function
-	extern unsigned int _start_ram;
-	ShutdownSlave();
-	for( unsigned char *dst = (unsigned char *)&_start_ram; dst < (unsigned char *)0x060FF000; dst++ ) 
-	{
-		*dst = 0;
+
+		extern unsigned int shared, shared_end;
+		extern unsigned int _start_ram;		
+//		ShutdownSlave();
+		for( unsigned char *dst = (unsigned char *)&_start_ram; dst < (unsigned char *)0x060FF000; dst++ ) 
+		{
+			*dst = 0;
+		}
+		
+		for( unsigned char *dst = (unsigned char *)&shared; dst < (unsigned char *)&shared_end; dst++ ) 
+		{
+			*dst = 0;
+		}		
+		SPR_InitSlaveSH();
 	}
-//	}
 }
 
 void BurnDrvAssignList()

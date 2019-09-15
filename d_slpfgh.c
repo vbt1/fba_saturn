@@ -923,13 +923,13 @@ inline void draw_sprites()
 	UINT8 *ram = TigerHeliSpriteBuf;
 	SprSpCmd *ss_spritePtr = &ss_sprite[3];
 
-	for (INT32 i = 3; i < 259; i++)
+	for (UINT32 i = 3; i < 259; i++)
 	{
 			ss_sprite[i].ax    = -48;
 			ss_sprite[i].ay    = -32;
 	}
 
-	for (INT32 offs = 0; offs < 0x800; offs += 4)
+	for (UINT32 offs = 0; offs < 0x800; offs += 4)
 	{
 		if( (ram[offs + 3] - 15) > -7)
 		{
@@ -962,7 +962,7 @@ INT32 DrvFrame()
 		DrvInputs[0] = 0xff;
 		DrvInputs[1] = 0xff;
 
-		for (INT32 i = 0; i < 8; i++) {
+		for (UINT32 i = 0; i < 8; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		}

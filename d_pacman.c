@@ -32,10 +32,10 @@ int ovlInit(char *szShortName)
 	};
 
 
-	if (strcmp(nBurnDrvpuckman.szShortName, szShortName) == 0) 
+//	if (strcmp(nBurnDrvpuckman.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvpuckman,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvpengo2u.szShortName, szShortName) == 0) 
-	memcpy(shared,&nBurnDrvpengo2u,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvpengo2u.szShortName, szShortName) == 0) 
+//	memcpy(shared,&nBurnDrvpengo2u,sizeof(struct BurnDriver));
 
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -196,6 +196,8 @@ INT32 DrvDoReset(INT32 clear_ram)
 	CZetOpen(0);
 	CZetReset();
 	CZetClose();
+
+	NamcoSoundReset();
 
 	interrupt_mode = 0;
 	interrupt_mask = 0;
@@ -425,6 +427,7 @@ INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 select)
 
 	AllMem = NULL;
 	MemIndex();
+	
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL)
 	{
 		return 1;
@@ -433,25 +436,29 @@ INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 select)
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
+
+
 	make_lut();
 	memset(bg_dirtybuffer,1,sizeof(bg_dirtybuffer));
 	pacman_load();
 
 	if (pInitCallback) {
 		pInitCallback();
-		pInitCallback = NULL;
+//		pInitCallback = NULL;
 	}
 	convert_gfx();
 	pacman_palette_init();
 
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
-	mapCallback();
-	mapCallback = NULL;
+	if (mapCallback)	
+		mapCallback();
+//	mapCallback = NULL;
 	CZetClose();
 
 	NamcoSoundInit(3072000 / 32, 3, NamcoContext);
 	DrvDoReset(1);
+	
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

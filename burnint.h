@@ -36,7 +36,7 @@ x;})
 
 extern void (*nBurnFunction)();
 extern Uint32 SclColRamAlloc256[8];
-extern SclLineparam lp;
+//extern SclLineparam lp;
 
 #define OPEN_CSH_VAR(a) (((int)&a | 0x20000000))
 #define	RGB( r, g, b )		(0x8000U|((b) << 10)|((g) << 5 )|(r))

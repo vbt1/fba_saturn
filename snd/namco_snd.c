@@ -49,7 +49,8 @@ INT16 *p = NULL; //(INT16*)0x00200000;
 		nLeftSample = BURN_SND_CLIPVBT(nLeftSample);
 		
 		*buffer++ += nLeftSample;
-		counter += freq * chip->update_step;
+//		counter += freq * chip->update_step;
+		counter += (UINT32)((double)freq * chip->update_step);
 	}
 
 	return counter;
@@ -280,6 +281,25 @@ void NamcoSoundWrite(UINT32 offset, UINT8 data)
 	return 0;
 }
 
+void NamcoSoundReset()
+{
+	sound_channel *voice;
+
+	/* reset all the voices */
+	for (voice = chip->channel_list; voice < chip->last_channel; voice++)
+	{
+		voice->frequency = 0;
+		voice->volume[0] = voice->volume[1] = 0;
+		voice->waveform_select = 0;
+		voice->counter = 0;
+		voice->noise_sw = 0;
+		voice->noise_state = 0;
+		voice->noise_seed = 1;
+		voice->noise_counter = 0;
+		voice->noise_hold = 0;
+	}
+}
+
 void NamcoSoundInit(INT32 clock, INT32 num_voices, UINT8 *Namcocontext)
 {
 //	DebugSnd_NamcoSndInitted = 1;
@@ -288,7 +308,7 @@ void NamcoSoundInit(INT32 clock, INT32 num_voices, UINT8 *Namcocontext)
 	sound_channel *voice;
 	
 	chip = (struct namco_sound*)Namcocontext;
-	memset(chip, 0, sizeof(*chip));
+	memset(chip, 0, sizeof(namco_sound));
 	
 	memset(namco_soundregs, 0, 0x400);
 
@@ -325,8 +345,10 @@ void NamcoSoundInit(INT32 clock, INT32 num_voices, UINT8 *Namcocontext)
 		voice->noise_counter = 0;
 		voice->noise_hold = 0;
 	}
-	voice = NULL;
-	chip->update_step = INTERNAL_RATE / SOUNDRATE;
+//	voice = NULL; 
+//	chip->update_step = INTERNAL_RATE / SOUNDRATE;
+	chip->update_step = ((double)INTERNAL_RATE / (double)SOUNDRATE);
+
 }
 
 void NamcoSoundExit()

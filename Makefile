@@ -56,7 +56,7 @@ OVLGBERET                 = root/d_gberet.coff
 OVLGBERET1               = root/d_gberet.bin
 MPOVLGBERETFILE    = $(OVLGBERET:.coff=.maps)
 LDOVLGBERETFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGBERETFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLGBERET         = d_gberet.c snd/sn76496.c load.c saturn/ovl.c 
+SRCOVLGBERET         = d_gberet.c czet.c cz80/cz80.c snd/sn76496.c load.c saturn/ovl.c 
 OBJOVLGBERET         = $(SRCOVLGBERET:.c=.o)
 
 OVLHIGEMARU                 = root/d_higemaru.coff
@@ -323,7 +323,7 @@ $(OVLNEWS1) : $(OBJOVLNEWS) $(MAKEFILE) $(LDOVLNEWSFILE)
 	$(CONV) -O binary $(OVLNEWS) $(OVLNEWS1)
 
 $(OVLGBERET) : $(OBJOVLGBERET) $(MAKEFILE) $(OBJOVLGBERET) $(LDOVLGBERETFILE)
-	$(CC) $(LDOVLGBERETFLAGS) $(OBJOVLGBERET) $(LIBSOVL) raze/raze.o -o $@
+	$(CC) $(LDOVLGBERETFLAGS) $(OBJOVLGBERET) $(LIBSOVL) -o $@
 
 $(OVLGBERET1) : $(OBJOVLGBERET) $(MAKEFILE) $(LDOVLGBERETFILE)
 	$(CONV) -O binary $(OVLGBERET) $(OVLGBERET1)

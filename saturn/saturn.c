@@ -16,9 +16,9 @@ void heapWalk(void);
 
 //#define DEBUG_DRV 1
 /*volatile*/ SysPort	*__port;
-static trigger_t	pltrigger[2],pltriggerE[2];
+static trigger_t	pltrigger[2]={0,0},pltriggerE[2]={0,0};
 extern unsigned char play;
-unsigned char drvquit = 0;
+static unsigned char drvquit = 0;
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	UsrVblankIn( void )
 {
@@ -1616,11 +1616,14 @@ static int DoLibInit() // Do Init of Burn library driver
 
 	if (nDrvInit(nBurnDrvSelect) != 0) 
 	{
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Driver initialisation failed! Likely causes are:",1,180);
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Corrupt/Missing ROM(s)\n- I/O Error\n- Memory error\n\n",1,190);
-//		while(1);
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Driver initialisation failed! Causes are:",1,150);
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Corrupt/Missing ROM(s)",3,160);
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- I/O Error",3,170);		
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Memory error",3,180);
+		
+		wait_key((Uint8)PER_DGT_A);
 	}
-	else
+//	else
 	{
 		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
 		InpInit();

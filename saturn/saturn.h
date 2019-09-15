@@ -134,32 +134,32 @@ static unsigned int frame_displayed=0;
 unsigned char hz=0;
 #endif
 
-static Uint8        *aVRAM;
+static Uint8        *aVRAM; // = NULL;
 static SprSpCmd     smsSprite[256+3];
-SclLineparam lp;
+static SclLineparam lp; // = {.v_enbl=0,.h_enbl=0};
 
-static Uint32	SclAddrLsTbl[2];
-static Fixed32	ls_tbl[SCL_MAXLINE];
+Uint32	SclAddrLsTbl[2]; //={NULL,NULL};
+static Fixed32	ls_tbl[SCL_MAXLINE]; // = {0};
 extern Uint16	SclProcess;
 extern unsigned char col[4];
-SclSysreg	Scl_s_reg;
-SclNorscl	Scl_n_reg;
-SclDataset	Scl_d_reg;
-SclWinscl	Scl_w_reg;
-SclOtherPriRegister  SclOtherPri;
-SclSpPriNumRegister  SclSpPriNum;
-SclBgPriNumRegister SclBgPriNum;
-SclBgColMixRegister  SclBgColMix;
+SclSysreg	Scl_s_reg; //={NULL};
+SclNorscl	Scl_n_reg; //={NULL};
+SclDataset	Scl_d_reg; //={NULL};
+SclWinscl	Scl_w_reg; //={NULL};
+SclOtherPriRegister  SclOtherPri; //={NULL};
+SclSpPriNumRegister  SclSpPriNum; //={NULL};
+SclBgPriNumRegister SclBgPriNum; //={NULL};
+SclBgColMixRegister  SclBgColMix; //={NULL};
 //SclPriBuffDirtyFlags SclPriBuffDirty;
 //-------------------------------------------------------------------------------------------------------------------------------------
 extern Uint8	*FntAsciiFontData2bpp;
 extern PcmHn 			pcm;
 
 extern Uint32   _bstart, _bend;
-static Uint32 intrflag;
+static Uint32 intrflag = 0;
 //-------------------------------------------------------------------------------------------------------------------------------------
-static volatile Uint8 *adr_host_int_work;    
-static volatile Uint8 *adr_com_block;           
+static volatile Uint8 *adr_host_int_work = NULL;    
+static volatile Uint8 *adr_com_block = NULL;           
 
 #define COM_CHG_PCM_PRM    0x8a                 /* PCM parameter change      */
 #define COM_START_PCM      0x85                 /* PCM start                 */
