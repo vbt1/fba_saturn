@@ -58,7 +58,7 @@ int ovlInit(char *szShortName)
 	Prom = (UINT8 *)Next; Next += 0x200;
 	Palette = (UINT32 *)Next; Next += 0x200 * sizeof(UINT32);
 	map_offset_lut	= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
-	MemEnd         = Next;
+	MemEnd         	= Next;
 
 	return 0;
 }

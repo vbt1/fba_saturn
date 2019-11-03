@@ -16,30 +16,19 @@ SECTIONS {
 		root/sl.coff (".shared")
 		_play = .;
 		_hz = . + 2;
-		_file_id = . + 4;		
-		_file_max = . + 8;
-		_col = . + 12;
-		_pcm = . + 16; /* pointer size 4 */		
-/*		_palette = . + 20;  size 16 */
-		_nBurnDrvCount = . + 36;
-		_nBurnDrvSelect = . + 40;
-		_nBurnSoundRate = . + 44;
-		_nBurnSprites = . + 48;
-		_nBurnLinescrollSize = . + 52;
-		_nBurnFunction = . + 56;
-		_nSoundBufferPos = . + 60;
-		_SclProcess = . + 64;
-		_SclColRamAlloc256 = . + 68; /* size 32 */
-/*		_SclBgColMix = . + 100;  size 8 */
-/*		_SclBgPriNum = . + 106;  size 6 */
-/*		_SclOtherPri = . + 122;  size 16 */
-/*		_SclSpPriNum = . + 130;  size 8 */
-		_SclAddrLsTbl = . + 138; /* size 8 */
-		_SPR_SlaveParam = . + 146; /* pointer size 4 */
-		_SPR_SlaveState = . + 150; /* pointer size 4 */
-		_SPR_SlaveCommand = . + 154; /* pointer size 4 */
-		_shared = . + 158;
-		_shared_end = . + 230; /* shared size is 72 */
+		_file_max = . + 4;
+		_col = . + 8;
+		_pcm = . + 24;
+		_nBurnDrvCount = . + 28;
+		_nBurnDrvSelect = . + 32;
+		_nBurnSoundRate = . + 36;
+		_nBurnSprites = . + 40;
+		_nBurnLinescrollSize = . + 44;
+		_nBurnFunction = . + 48;
+		_nSoundBufferPos = . + 52;
+		_SclProcess = . + 56;
+		_SclColRamAlloc256 = . + 60;
+		_shared = . + 92;
 	} > ram
 
 	.entry 0x6004000  (NOLOAD):
@@ -56,7 +45,7 @@ SECTIONS {
 	{
 		__bstart = . ;
 		root/sl.coff (.bss)
-		root/sl.coff (COMMON)
+		root/sl.coff ("COMMON")
 		. = ALIGN(4);
 		__bend = . ;
 	} > ram
@@ -81,7 +70,7 @@ SECTIONS {
 		__dendo = . ;
 		__bstarto = . ;
 		*(.bss)
-		*(COMMON)
+		*("COMMON")
 		__bendo = . ;
 
 	

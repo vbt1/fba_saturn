@@ -1,6 +1,6 @@
 // FB Alpha Green Beret driver module
 // Based on MAME driver by Nicola Salmoria
-//#define CZ80 1
+#define CZ80 1
 //#define RAZE 1
 #define CACHE 1
 #include "d_gberet.h"
@@ -32,10 +32,26 @@ int ovlInit(char *szShortName)
 
 void __fastcall gberet_write(UINT16 address, UINT8 data)
 {
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gberet_write                 ",4,50);	
 	if ((address & 0xffc0) == 0xe000) {
 		DrvScrollRAM[address & 0x3f] = data;
 		return;
 	}
+
+#ifdef CACHE
+	if (address >= 0xc000 && address <= 0xcfff) 
+//	ZetMapMemory(DrvColRAM,		0xc000, 0xc7ff, MAP_RAM);
+//	ZetMapMemory(DrvVidRAM,		0xc800, 0xcfff, MAP_RAM);
+	{
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"update BG RAM                ",4,50);			
+//		if(DrvColRAM[address&0xfff]!=data)
+		{
+			bg_dirtybuffer[address&0x7ff] = 1;
+			DrvColRAM[address&0xfff] = data;
+		}
+		return;
+	}
+#endif
 
 	switch (address)
 	{
@@ -76,27 +92,11 @@ void __fastcall gberet_write(UINT16 address, UINT8 data)
 
 
 	}
-
-#ifdef CACHE
-	if (address >= 0xc000 && address <= 0xcfff) 
-//	ZetMapMemory(DrvColRAM,		0xc000, 0xc7ff, MAP_RAM);
-//	ZetMapMemory(DrvVidRAM,		0xc800, 0xcfff, MAP_RAM);
-	{
-		if(DrvColRAM[address&0x7ff]!=data)
-		{
-			bg_dirtybuffer[address&0x7ff] = 1;
-			DrvColRAM[address&0x7ff] = data;
-		}
-		return;
-	}
-#endif
 }
 
 UINT8 __fastcall gberet_read(UINT16 address)
 {
-
-	unsigned char nRet = 0xff;
-	unsigned int i;
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"gberet_read                 ",4,50);			
 
 	switch (address)
 	{
@@ -125,6 +125,7 @@ UINT8 __fastcall gberet_read(UINT16 address)
 
 void bankswitch(INT32 data)
 {
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"bankswitch                 ",4,50);	
 	z80_bank = data | 0x80;
 
 	CZetMapMemory(DrvZ80ROM + 0xc000 + (data & 7) * 0x800, 0xf800, 0xffff, MAP_ROM);
@@ -132,6 +133,8 @@ void bankswitch(INT32 data)
 
 void __fastcall mrgoemon_write(UINT16 address, UINT8 data)
 {
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"mrgoemon_write                 ",4,50);	
+	
 	switch (address)
 	{
 		case 0xf000:
@@ -144,14 +147,17 @@ void __fastcall mrgoemon_write(UINT16 address, UINT8 data)
 
 INT32 DrvDoReset(INT32 clear_mem)
 {
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDoReset                 ",4,50);
+
 	if (clear_mem) {
 		memset (AllRam, 0, RamEnd - AllRam);
+#ifdef CACHE
+		memset(bg_dirtybuffer,1,2048);
+#endif		
 	}
-#ifdef CZ80
 	CZetOpen(0);
 	CZetReset();
 	CZetClose();
-#endif
 
 	irq_mask = 0;
 	irq_timer = 0;
@@ -174,8 +180,7 @@ INT32 MemIndex()
 
 	DrvColPROM		= Next; Next += 0x000220;
 
-	DrvPalette	       = (UINT16 *)colBgAddr;//(unsigned int*)Next; Next += 0x00200 * sizeof(unsigned int);
-
+	DrvPalette	    = (UINT16 *)colBgAddr;//(unsigned int*)Next; Next += 0x00200 * sizeof(unsigned int);
 	AllRam			= Next;
 
 	DrvZ80RAM		= Next; Next += 0x001000;
@@ -185,7 +190,8 @@ INT32 MemIndex()
 	DrvSprRAM1		= Next; Next += 0x000100;
 	DrvSprRAM2		= Next; Next += 0x000200;
 	DrvScrollRAM	= Next; Next += 0x000100;
-
+	CZ80Context		= Next; Next += (sizeof(cz80_struc));
+	bg_dirtybuffer	= Next; Next += 2048;
 	RamEnd			= Next;
 
 	MemEnd			= Next;
@@ -199,7 +205,6 @@ void DrvGfxDecode()
 	INT32 XOffs[16] = { STEP8(0,4), STEP8(256,4) };
 	INT32 YOffs[16] = { STEP8(0,32), STEP8(512,32) };
 
-	Graphics_Decode(Plane, XOffs, YOffs, Plane, XOffs, YOffs, 0x400);
 	UINT8 *tmp = (UINT8*)0x00200000;
 
 	memcpy (tmp, DrvGfxROM0, 0x04000);
@@ -214,7 +219,7 @@ void DrvGfxDecode()
 INT32 DrvInit(INT32 game_select)
 {
 	DrvInitSaturn();
-
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"BurnMalloc                 ",4,50);
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
@@ -224,6 +229,7 @@ INT32 DrvInit(INT32 game_select)
 
 	if (game_select == 0) // gberet
 	{
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"game_select == 0                 ",4,50);		
 		INT32 k = 0;
 		if (BurnLoadRom(DrvZ80ROM  + 0x00000,  k++, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM  + 0x04000,  k++, 1)) return 1;
@@ -239,6 +245,7 @@ INT32 DrvInit(INT32 game_select)
 		if (BurnLoadRom(DrvColPROM + 0x00000,  k++, 1)) return 1;
 		if (BurnLoadRom(DrvColPROM + 0x00020,  k++, 1)) return 1;
 		if (BurnLoadRom(DrvColPROM + 0x00120,  k++, 1)) return 1;
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvGfxDecode                 ",4,50);	
 
 		DrvGfxDecode();
 	}
@@ -259,15 +266,11 @@ INT32 DrvInit(INT32 game_select)
 
 		DrvGfxDecode();
 	}
-
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvPaletteInit                 ",4,50);	
 	DrvPaletteInit();
 
-#ifdef CZ80
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
-	CZetSetReadHandler(gberet_read);
-//	CZetSetWriteHandler(gberet_write);
-
 
 	CZetMapMemory(DrvZ80ROM,	0x0000, 0xbfff, MAP_ROM);
 	CZetMapMemory(DrvColRAM,	0xc000, 0xc7ff, MAP_ROM);
@@ -277,13 +280,13 @@ INT32 DrvInit(INT32 game_select)
 	CZetMapMemory(DrvZ80RAM,	0xd200, 0xdfff, MAP_RAM);
 	CZetMapMemory(DrvScrollRAM,	0xe000, 0xe0ff, MAP_ROM); // handler
 	CZetMapMemory(DrvSprRAM2,	0xe800, 0xe9ff, MAP_RAM); // 100-1ff (bootleg)
-	CZetSetWriteHandler((game_select == 1) ? mrgoemon_write : ((game_select == 2) ? gberetb_write : gberet_write));	
+	CZetSetWriteHandler((game_select == 1) ? mrgoemon_write : gberet_write);	
 	CZetSetReadHandler(gberet_read);
 
-	CZetMemEnd();
 	CZetClose();
-#endif
+
 	SN76489Init(0, 18432000 / 12, 0);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDoReset                 ",4,50);	
 	DrvDoReset(1);
 
 	return 0;
@@ -291,8 +294,9 @@ INT32 DrvInit(INT32 game_select)
 
 INT32 DrvExit()
 {
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvExit                 ",4,50);	
 	DrvDoReset(1);
-	SPR_InitSlaveSH();
+	//SPR_InitSlaveSH();
 	CZetExit2();
 	SN76489Init(0, 0, 0);
 	
@@ -319,15 +323,15 @@ void DrvPaletteInit()
 
 	init_32_colors(tab,DrvColPROM);
 
-	DrvColPROM += 0x20;
+//	DrvColPROM += 0x20;
 
 	for (UINT32 i = 0; i < 0x100; i++)
 	{
 		unsigned char ctabentry;
 
-		ctabentry = (DrvColPROM[0x000 + i] & 0x0f) | 0x10;
+		ctabentry = (DrvColPROM[0x020 + i] & 0x0f) | 0x10;
 		colBgAddr2[i]=DrvPalette[0x000 + i] = tab[ctabentry];
-		ctabentry = (DrvColPROM[0x100 + i] & 0x0f);
+		ctabentry = (DrvColPROM[0x120 + i] & 0x0f);
 		colBgAddr2[0x100 +i ]=DrvPalette[0x100 + i] = tab[ctabentry];
 	}
 }
@@ -374,8 +378,8 @@ void initColors()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
-	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+	//SPR_InitSlaveSH();
+	//SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites = 51;
 	nSoundBufferPos = 0;
 
@@ -388,9 +392,6 @@ void DrvInitSaturn()
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
-#ifdef CACHE
-	memset(bg_dirtybuffer,1,2048);
-#endif
 
 	SS_SET_S0PRIN(6);
 	SS_SET_N1PRIN(7);
@@ -399,19 +400,24 @@ void DrvInitSaturn()
 
 	initLayers();
 	initPosition();
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"initColors                 ",4,50);		
+	
 	initColors();
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"initSprites                 ",4,50);	
 	initSprites(256-1,224-1,8,0,0,-16);
 	//play=1;
-//	drawWindow(0,240,0,2,66);
+	drawWindow(0,240,0,2,66);
 	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
 //	memset(&ss_scl[0],16<<16,64);
 	memset(&ss_scl[0],16<<16,128);
-	drawWindow(0,240,0,2,66);
+//	drawWindow(0,240,0,2,66);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void draw_sprites()
 {
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"draw_sprites                 ",4,50);		
+	
 	UINT8 *ram = (sprite_bank & 8) ? DrvSprRAM1 : DrvSprRAM0;
 	SprSpCmd *ss_spritePtr;
 	ss_spritePtr = &ss_sprite[3];
@@ -438,9 +444,10 @@ void draw_sprites()
 
 int DrvDraw()
 {
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDraw                 ",4,50);		
 	INT32 scroll = DrvScrollRAM[0] | (DrvScrollRAM[32] << 8);
 
-	memset4_fast(&ss_scl[16],scroll | (scroll<<16),0x340);
+//	memset4_fast(&ss_scl[16],scroll | (scroll<<16),0x340);
 
 	for (UINT32 offs = 0x40; offs < 0x7c0; offs++)
 	{
@@ -461,50 +468,75 @@ int DrvDraw()
 	}
 	return 0;
 }
+
+inline void irq_timer_update()
+{
+	INT32 timer_mask = ~irq_timer & (irq_timer + 1);
+	irq_timer++;
+
+	if (timer_mask & irq_mask & 0x01)
+		CZetSetIRQLine(0x20, CZET_IRQSTATUS_ACK);
+
+	if (timer_mask & (irq_mask << 2) & 0x18)
+		CZetSetIRQLine(0x00, CZET_IRQSTATUS_ACK);
+}
+
 int DrvFrame()
 {
-	unsigned int nInterleave = game_type ? 16 : 32;
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame                 ",4,50);	
+//	unsigned int nInterleave = 16; //game_type ? 16 : 32;
 
-#ifdef CZ80
-	if(game_type & 2)
-		CZetOpen(0);
-#endif
-	unsigned int nCyclesDone = 0, nCyclesTotal;
+	{
+		memset (DrvInputs, 0xff, 3);
+
+		for (INT32 i = 0; i < 8; i++) {
+			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
+			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
+			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
+		}
+	}
+
+	CZetNewFrame();
+	CZetOpen(0);
+	/*unsigned int nCyclesDone = 0, nCyclesTotal;
 
 if (_30_HZ)
 	nCyclesTotal = 3072000 / 3 / (6000 / 256);
 else
 	nCyclesTotal = 3072000 / 9 / (6000 / 256);
+*/
+	INT32 nInterleave = 16;
+	INT32 nCyclesTotal = (3072000 / 60);
+	INT32 nCyclesDone = 0;
+char toto[50];
 
-	for (unsigned int i = 0; i < nInterleave; i++)
+	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		nCyclesDone += CZetRun(nCyclesTotal / nInterleave);
-
-		if (irq_enable && i == (nInterleave - 1)) {
-			CZetRaiseIrq(0);
-		}
-
-		if (nmi_enable && (i & 1)) {
-			CZetNmi();
-		}
+		sprintf(toto,"CZetRun %d %d           ",i,((i + 1) * nCyclesTotal / nInterleave) - nCyclesDone);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)toto,4,50);			
+		nCyclesDone += CZetRun(((i + 1) * nCyclesTotal / nInterleave) - nCyclesDone);
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"irq_timer_update                 ",4,50);			
+		irq_timer_update();
 	}
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"CZetClose                 ",4,50);			
 
-
-	if(game_type & 2)
+//	if(game_type & 2)
 		CZetClose();
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDraw                 ",4,50);			
 
-	SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
+	//SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
 	DrvDraw();
 
 	cleanSprites();
 	draw_sprites();
-	SPR_WaitEndSlaveSH();
+	
+	//SPR_WaitEndSlaveSH();
 
 	return 0;
 }
 int gberetInit()
 {
-	game_type = 0;
+//	game_type = 0;
 	_30_HZ =1;
 	nBurnLinescrollSize = 0x360;
 //	nBurnSprites = 51;
@@ -513,7 +545,7 @@ int gberetInit()
 
 int mrgoemonInit()
 {
-	game_type = 2;
+	//game_type = 2;
 	_30_HZ=0;
 	nBurnLinescrollSize = 0x380;
 //	nBurnSprites = 51;

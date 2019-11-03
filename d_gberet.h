@@ -21,7 +21,7 @@ void renderSound(unsigned int *nSoundBufferPos);
 void cleanSprites();
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 #ifdef CACHE
-unsigned char 	bg_dirtybuffer[2048];
+unsigned char 	*bg_dirtybuffer = NULL;
 #endif
 
 unsigned short *DrvPalette = NULL;
@@ -42,6 +42,7 @@ UINT8 *DrvSprRAM0 = NULL;
 UINT8 *DrvSprRAM1 = NULL;
 UINT8 *DrvSprRAM2 = NULL;
 UINT8 *DrvScrollRAM = NULL;
+UINT8 *CZ80Context = NULL;
 
 UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
@@ -54,9 +55,9 @@ INT32 z80_bank = 0;
 INT32 irq_mask = 0;
 INT32 irq_timer = 0;
 INT32 soundlatch = 0;
-INT32 mrgoemon_bank = 0;
+//INT32 mrgoemon_bank = 0;
 
-INT32 game_type = 0; // 0 gberet / rushatck, 1 gberetb, 2 mrgoemon
+//INT32 game_type = 0; // 0 gberet / rushatck, 1 gberetb, 2 mrgoemon
 
 struct BurnInputInfo GberetInputList[] = {
 	{"P1 Coin",			BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"	},
