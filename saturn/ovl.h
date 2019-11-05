@@ -57,7 +57,7 @@ static unsigned char *cache = NULL;
 #define TVSTAT      (*(volatile Uint16 *)0x25F80004)
 #define TVOFF   TVMD &= 0x7fff
 #define TVON     TVMD |= 0x8000
-/*
+
 #define FBA_DRV	 shared
 #define SS_MAP	 *(&shared + 1)
 #define SS_MAP2	 *(&shared + 2)
@@ -78,7 +78,7 @@ static unsigned char *cache = NULL;
 #define SS_PORT *(&shared + 16)
 #define SS_SCL *(&shared + 17)
 //#define SS_Z80CY (unsigned int*)0x00200000
-*/
+/* // old
 #define FBA_DRV	 shared
 #define SS_MAP	 *(&shared + 1)
 #define SS_MAP2	 *(&shared + 2)
@@ -98,7 +98,7 @@ static unsigned char *cache = NULL;
 //#define SS_SCL1 *(&shared + 16)
 #define SS_Z80CY *(&shared + 16)
 #define SS_PORT *(&shared + 17)
-
+*/
 #endif
 
 #define SS_SET_N0PRIN(/* 3 bits */ n0prin) \

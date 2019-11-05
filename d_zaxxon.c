@@ -1577,12 +1577,12 @@ void DrvInitSaturn()
 		ss_sprite[j].charSize   = 0x420;
 	}
 
-    ss_sprite[nBurnSprites-1].control			= CTRL_END;
-    ss_sprite[nBurnSprites-1].link				= 0;        
+    ss_sprite[nBurnSprites-1].control	= CTRL_END;
+    ss_sprite[nBurnSprites-1].link		= 0;        
     ss_sprite[nBurnSprites-1].drawMode	= 0;                
-    ss_sprite[nBurnSprites-1].color			= 0;                
-    ss_sprite[nBurnSprites-1].charAddr		= 0;                
-    ss_sprite[nBurnSprites-1].charSize		= 0;
+    ss_sprite[nBurnSprites-1].color		= 0;                
+    ss_sprite[nBurnSprites-1].charAddr	= 0;                
+    ss_sprite[nBurnSprites-1].charSize	= 0;
 
 	drawWindow(0,240,0,4,68);
 }

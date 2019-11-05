@@ -798,13 +798,14 @@ static void dummy(void)
 	initSprites(352-1,240-1,0,0,-80,-16);
 
 	SprSpCmd *ss_spritePtr;
+	ss_spritePtr = &ss_sprite[3];
 	
-	for (UINT32 i = 3; i <nBurnSprites; i++) 
+	for (UINT32 i = 0; i <128; i++) 
 	{
-		ss_spritePtr				= &ss_sprite[i];
 		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
+		*ss_spritePtr++;		
 	}
 
 	{
@@ -935,10 +936,9 @@ static void dummy(void)
 #endif
 /*static*/ void DrvRenderSpriteLayer()
 {
-//	SprSpCmd *ss_spritePtr = &ss_sprite[3];
-	unsigned int i = 3;
-	UINT16 Code ;
-	UINT8 Attr ;
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
+	UINT32 Code ;
+	UINT32 Attr ;
 
 	for (int Offset = 0x1000 - 0x40; Offset >= 0; Offset -= 0x20) 
 	{
@@ -946,12 +946,11 @@ static void dummy(void)
 		Attr = DrvSpriteRam[Offset + 1];
 		Code += (Attr & 0xe0) << 3;
 
-		ss_sprite[i].ax		= DrvSpriteRam[Offset + 3] + ((Attr & 0x10) << 4);
-		ss_sprite[i].ay		= ((DrvSpriteRam[Offset + 2] + 8) & 0xff);// - 8;
-		ss_sprite[i].charAddr = charaddr_lut[Code];
-		ss_sprite[i].color     = (Attr & 0x0f)<<4;
-		++i;
-		
+		ss_spritePtr->ax		= DrvSpriteRam[Offset + 3] + ((Attr & 0x10) << 4);
+		ss_spritePtr->ay		= ((DrvSpriteRam[Offset + 2] + 8) & 0xff);// - 8;
+		ss_spritePtr->charAddr	= charaddr_lut[Code];
+		ss_spritePtr->color     = (Attr & 0x0f)<<4;
+		*ss_spritePtr++;
 	}
 }
 #ifdef LOOP

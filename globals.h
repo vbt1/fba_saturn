@@ -1,4 +1,4 @@
-/*
+
 extern Uint32 *shared;
 extern unsigned int  nSoundBufferPos;
 #define FBA_DRV	 shared
@@ -21,7 +21,8 @@ extern unsigned int  nSoundBufferPos;
 #define SS_PORT *(&shared + 16)
 #define SS_SCL *(&shared + 17)
 //#define SS_Z80CY (unsigned int*)0x00200000
-*/
+
+/* // old
 extern Uint32 *shared;
 extern unsigned int  nSoundBufferPos;
 #define FBA_DRV	 shared
@@ -43,3 +44,4 @@ extern unsigned int  nSoundBufferPos;
 //#define SS_SCL1 *(&shared + 16)
 #define SS_Z80CY *(&shared + 16)
 #define SS_PORT *(&shared + 17)
+*/

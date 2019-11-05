@@ -32,10 +32,10 @@ int ovlInit(char *szShortName)
 	};
 
 
-//	if (strcmp(nBurnDrvpuckman.szShortName, szShortName) == 0) 
+	if (strcmp(nBurnDrvpuckman.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvpuckman,sizeof(struct BurnDriver));
-//	if (strcmp(nBurnDrvpengo2u.szShortName, szShortName) == 0) 
-//	memcpy(shared,&nBurnDrvpengo2u,sizeof(struct BurnDriver));
+	if (strcmp(nBurnDrvpengo2u.szShortName, szShortName) == 0) 
+	memcpy(shared,&nBurnDrvpengo2u,sizeof(struct BurnDriver));
 
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -261,7 +261,7 @@ void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *targe
 	}	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void convert_gfx()
+void convert_gfx(UINT32 game_select)
 {
 	const UINT32 PlaneOffsets[2]  = { 0, 4 };
 	const UINT32 CharXOffsets[8]  = { 64, 65, 66, 67, 0, 1, 2, 3 };
@@ -285,16 +285,16 @@ void convert_gfx()
 //	tmp = NULL;
 }
 
-INT32 pacman_load()
+INT32 pacman_load(UINT32 game_select)
 {
 	char* pRomName = NULL;
 	struct BurnRomInfo ri;
 
-	INT32 pOffset = 0;
+	UINT32 pOffset = 0;
 	UINT8 *gLoad = cache;
 	UINT8 *cLoad = DrvColPROM;
 	UINT8 *sLoad = NamcoSoundProm;
-	UINT8 *qLoad = DrvQROM;
+	UINT8 *qLoad = (UINT8*)0x00200000;
 
 	for (UINT32 i = 0; !BurnDrvGetRomName(&pRomName, i, 0); i++) {
 
@@ -354,7 +354,6 @@ INT32 MemIndex()
 
 	DrvZ80ROM		= (UINT8 *)Next; Next += 0x020000;
 
-	DrvQROM			= (UINT8 *)Next;
 	DrvColPROM		= (UINT8 *)Next; Next += 0x000500;
 	NamcoSoundProm	= (UINT8 *)Next; Next += 0x000200;
 	AllRam			= (UINT8 *)Next;
@@ -367,8 +366,8 @@ INT32 MemIndex()
 	DrvColRAM		= (UINT8 *)Next; Next += 0x000400;
 
 	RamEnd			= (UINT8 *)Next;
-	CZ80Context		= (UINT8 *)Next; Next += sizeof(cz80_struc);
-	NamcoContext	= (UINT8 *)Next; Next += sizeof(namco_sound);
+	CZ80Context		= (UINT8 *)Next; Next += sizeof(cz80_struc)*2;
+	NamcoContext	= (UINT8 *)Next; Next += sizeof(namco_sound);	
 	bg_dirtybuffer	= (UINT8 *)Next; Next += 0x400 * sizeof(UINT8);
 	map_offset_lut	= (UINT16 *)Next; Next += 0x400 * sizeof(UINT16);
 	ofst_lut		= (UINT16 *)Next; Next += 0x400 * sizeof(UINT16);
@@ -402,6 +401,11 @@ void PengoMap()
 
 void StandardMap()
 {
+	CZetSetWriteHandler(pacman_write);
+	CZetSetReadHandler(pacman_read);
+	CZetSetOutHandler(pacman_out_port);
+	CZetSetInHandler(pacman_in_port);
+	
 	for (UINT32 i = 0; i <= 0x8000; i += 0x8000)// mirror
 	{
 		CZetMapMemory(DrvZ80ROM,	0x0000 + i, 0x3fff + i, MAP_ROM);
@@ -413,17 +417,11 @@ void StandardMap()
 			CZetMapMemory(DrvZ80RAM + 0x0400,	0x4c00 + i + j, 0x4fff + i + j, MAP_RAM);
 		}
 	}
-
-	CZetSetWriteHandler(pacman_write);
-	CZetSetReadHandler(pacman_read);
-	CZetSetOutHandler(pacman_out_port);
-	CZetSetInHandler(pacman_in_port);
 }
 
-INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 select)
+INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), UINT32 select)
 {
 	DrvInitSaturn();
-	game_select = select;
 
 	AllMem = NULL;
 	MemIndex();
@@ -436,17 +434,15 @@ INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), INT32 select)
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
-
-
 	make_lut();
 	memset(bg_dirtybuffer,1,sizeof(bg_dirtybuffer));
-	pacman_load();
+	pacman_load(select);
 
 	if (pInitCallback) {
 		pInitCallback();
 //		pInitCallback = NULL;
 	}
-	convert_gfx();
+	convert_gfx(select);
 	pacman_palette_init();
 
 	CZetInit2(1,CZ80Context);
@@ -555,18 +551,26 @@ void DrvInitSaturn()
 	initLayers();
 	
 	initColors();
+	
 	initSprites(256-1,240-1,0,0,0,0);
+    ss_sprite[nBurnSprites-1].control	= CTRL_END;
+    ss_sprite[nBurnSprites-1].link		= 0;        
+    ss_sprite[nBurnSprites-1].drawMode	= 0;                
+    ss_sprite[nBurnSprites-1].color		= 0;                
+    ss_sprite[nBurnSprites-1].charAddr	= 0;                
+    ss_sprite[nBurnSprites-1].charSize	= 0;
+	
 	drawWindow(0,240,0,2,70);
 }
 
 INT32 DrvExit()
 {
 	DrvDoReset(1);
-	CZetSetWriteHandler(NULL);
+	/*CZetSetWriteHandler(NULL);
 	CZetSetReadHandler(NULL);
 	CZetSetOutHandler(NULL);
 	CZetSetInHandler(NULL);
-	
+	*/
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 //	SPR_InitSlaveSH();	
 	
@@ -577,7 +581,7 @@ INT32 DrvExit()
 //	game_select = PACMAN;
 //	signed short *nSoundBuffer		= (signed short *)0x25a20000;
 	NamcoContext = NULL;
-	CZ80Context = DrvZ80ROM = DrvQROM = DrvColPROM = NamcoSoundProm = NULL;
+	CZ80Context = DrvZ80ROM = DrvColPROM = NamcoSoundProm = NULL;
 	AllRam = DrvZ80RAM = DrvSprRAM = DrvSprRAM2 = NULL;
 	DrvColRAM= DrvVidRAM = RamEnd = NULL;
 	PengoStart = bg_dirtybuffer = NULL;
@@ -587,7 +591,6 @@ INT32 DrvExit()
 	free (AllMem);
 	AllMem = NULL;
 
-	game_select = 0;
 	cleanDATA();
 	cleanBSS();
 
@@ -670,7 +673,6 @@ INT32 DrvDraw()
 
 INT32 DrvDrawPacMan()
 {
-	
 	DrawPacManBackground();
 	DrawSprites();
 
@@ -679,6 +681,7 @@ INT32 DrvDrawPacMan()
 
 INT32 DrvFrame()
 {
+	
 	watchdog++;
 	if (watchdog >= 16) {
 		DrvDoReset(0);
@@ -723,6 +726,8 @@ INT32 DrvFrame()
 	CZetClose();
 
     DrvDrawPacMan();
+	
+	
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
 	{
 		PCM_NotifyWriteSize(pcm, nSoundBufferPos);

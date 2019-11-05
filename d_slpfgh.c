@@ -2,7 +2,8 @@
 
 #include "d_slpfgh.h"
 #define nVBlankCycles 248 * 4000000 / 60 / 262
-#define nInterleave 12
+//#define nInterleave 12
+#define nInterleave 64
 
 int ovlInit(char *szShortName)
 {
@@ -77,11 +78,11 @@ void TigerHeliPaletteInit()
 // ---------------------------------------------------------------------------
 UINT8 __fastcall tigerhReadCPU0(UINT16 a)
 {
-	if (a >= 0xc800 && a <= 0xcfff) {
+/*	if (a >= 0xc800 && a <= 0xcfff) {
 		if (CZetGetPC(-1) == 0x6d34) return 0xff;
 		return RamShared[a - 0xc800];
 	}
-	
+*/	
 	switch (a) {
 		case 0xE803: {
 			
@@ -99,11 +100,11 @@ UINT8 __fastcall tigerhReadCPU0(UINT16 a)
 
 UINT8 __fastcall tigerhReadCPU0_tigerhb1(UINT16 a)
 {
-	if (a >= 0xc800 && a <= 0xcfff) {
+/*	if (a >= 0xc800 && a <= 0xcfff) {
 		if (CZetGetPC(-1) == 0x6d34) return 0xff;
 		return RamShared[a - 0xc800];
 	}
-	
+*/	
 	switch (a) {
 		case 0xE803: {
 			return 0x83;
@@ -238,26 +239,26 @@ UINT8 __fastcall tigerhInCPU0_gtstarba(UINT16 a)
 	return 0;
 }
 
-void __fastcall tigerhOutCPU0(UINT16 a, UINT8  d)
+void __fastcall perfrman_write_port(UINT16 a, UINT8  d)
 {
 	a &= 0xFF;
 
 	switch (a) {
 		case 0x00:					// Assert reset line on sound CPU
 
-			if (bSoundCPUEnable) {
+//			if (bSoundCPUEnable) {
 				CZetClose();
 				CZetOpen(1);
 				CZetReset();
 				CZetClose();
 				CZetOpen(0);
 
-				bSoundCPUEnable = false;
-			}
+				sound_nmi_enable = 0;
+//			}
 
 			break;
 		case 0x01:					// Release reset line on sound CPU
-			bSoundCPUEnable = true;
+//			bSoundCPUEnable = true;
 			break;
 
 		case 0x02:
@@ -267,12 +268,12 @@ void __fastcall tigerhOutCPU0(UINT16 a, UINT8  d)
 
 		case 0x06:					// Disable interrupts
 
-			bInterruptEnable = false;
+			irq_enable = 0;
 			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 			break;
 		case 0x07:					// Enable interrupts
 
-			bInterruptEnable = true;
+			irq_enable = 1;
 			break;
 
 		case 0x08:
@@ -323,7 +324,7 @@ void __fastcall tigerhWriteCPU1(UINT16 a, UINT8 d)
 			AY8910Write(1, 1, d);
 			break;
 		case 0xA0E0:
-			bSoundNMIEnable = true;
+			sound_nmi_enable = true;
 			break;
 	}
 }
@@ -681,8 +682,8 @@ void initColors()
 void DrvInitSaturn()
 {
 //-------------------------------------------------	
-	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);	
+//	SPR_InitSlaveSH();
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);	
 //-------------------------------------------------		
 	nBurnSprites = 259;
 	nBurnLinescrollSize = 0;
@@ -733,7 +734,7 @@ INT32 DrvExit()
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-	SPR_InitSlaveSH();	
+	//SPR_InitSlaveSH();	
 	CZetExit2();
 	AY8910Exit(1);
 	AY8910Exit(0);
@@ -766,9 +767,8 @@ INT32 DrvExit()
 
 void DrvDoReset()
 {
-	bInterruptEnable = false;
-	bSoundNMIEnable = false;
-	bSoundCPUEnable = true;
+	irq_enable = 0;
+	sound_nmi_enable = 0;
 	
 	nStatusIndex = nProtectIndex /*= nPalettebank = nFlipscreen*/ = 0;
 
@@ -780,6 +780,7 @@ void DrvDoReset()
 	CZetReset();
 	CZetClose();
 
+	cleanSprites();
 	return;
 }
 
@@ -789,10 +790,12 @@ INT32 DrvInit()
 	nWhichGame = -1;
 
 	if (strcmp(BurnDrvGetTextA(DRV_NAME), "tigerh") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhj") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhb1") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhb2") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "tigerhb3") == 0) {
+		nSndIrqFrame = 6;
 		nWhichGame = 0;
 	}
 
 	if (strcmp(BurnDrvGetTextA(DRV_NAME), "alcon") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfigh") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfib1") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb2") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "slapfighb3") == 0) {
+		nSndIrqFrame = 3;
 		nWhichGame = 2;
 	}
 
@@ -836,7 +839,7 @@ INT32 DrvInit()
 
 		// Shared RAM
 //		if (strcmp(BurnDrvGetTextA(DRV_NAME), "getstarb1")) {
-//			CZetMapArea(0xC800, 0xCFFF, 0, RamShared);
+		CZetMapArea(0xC800, 0xCFFF, 0, RamShared);
 //		}
 		CZetMapArea(0xC800, 0xCFFF, 1, RamShared);
 		CZetMapArea(0xC800, 0xCFFF, 2, RamShared);
@@ -879,12 +882,17 @@ INT32 DrvInit()
 			CZetSetInHandler(tigerhInCPU0);
 //		}
 		
-		CZetSetOutHandler(tigerhOutCPU0);
+		CZetSetOutHandler(perfrman_write_port);
 
 		CZetClose();
 
 		// Sound CPU setup
 		CZetOpen(1);
+		
+		CZetSetReadHandler(tigerhReadCPU1);
+		CZetSetWriteHandler(tigerhWriteCPU1);
+		CZetSetInHandler(tigerhInCPU1);
+		CZetSetOutHandler(tigerhOutCPU1);		
 
 		// Program ROM
 		CZetMapArea(0x0000, 0x1FFF, 0, Rom02);
@@ -895,12 +903,6 @@ INT32 DrvInit()
 		CZetMapArea(0xC800, 0xCFFF, 1, RamShared);
 		CZetMapArea(0xC800, 0xCFFF, 2, RamShared);
 
-
-		CZetSetReadHandler(tigerhReadCPU1);
-		CZetSetWriteHandler(tigerhWriteCPU1);
-		CZetSetInHandler(tigerhInCPU1);
-		CZetSetOutHandler(tigerhOutCPU1);
-
 		CZetClose();
 	}
 
@@ -908,6 +910,10 @@ INT32 DrvInit()
 	AY8910Init(1, 1500000, nBurnSoundRate, &tigerhReadPort2, &tigerhReadPort3, NULL, NULL);
 
 	TigerHeliPaletteInit();
+	
+	SPR_InitSlaveSH();
+	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);	
+	
 	DrvDoReset();
 
 	return 0;
@@ -981,60 +987,38 @@ INT32 DrvFrame()
 
 	bool bVBlank = false;
 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
+
+	int vblank = 1;
 	
-	for (UINT32 i = 0; i < nInterleave; i++) 
+	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		INT32 nNext, nCyclesSegment;
 		CZetOpen(0);
+		nCyclesDone[0] += CZetRun(((i + 1) * nCyclesTotal[0] / nInterleave) - nCyclesDone[0]);
 
-		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
+//		if (i == 15) {
+		if (i == 3) {
+			vblank = 0;
+		}
 
-		if (nNext > nVBlankCycles && !bVBlank) 
-		{
-			nCyclesDone[0] += CZetRun(nNext - nVBlankCycles);
+//		if (i == 255) {
+			if (i == 63) {
+			if (irq_enable) CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
+			vblank = 1;
 			TigerHeliBufferSprites();
-			bVBlank = true;
-
-			if (bInterruptEnable) 
-			{
-				CZetSetIRQLine(0xff, CZET_IRQSTATUS_AUTO);
-			}
-		}
-
-		nCyclesSegment = nNext - nCyclesDone[0];
-		if (bVBlank || (!CheckSleep(0))) 
-		{					// See if this CPU is busywaiting
-			nCyclesDone[0] += CZetRun(nCyclesSegment);
-		} 
-		else 
-		{
-			nCyclesDone[0] += nCyclesSegment;
+//			memcpy (DrvSprBuf, DrvSprRAM, 0x800);
 		}
 		CZetClose();
 
-		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[1];
+		CZetOpen(1);
+		nCyclesDone[1] += CZetRun(((i + 1) * nCyclesTotal[1] / nInterleave) - nCyclesDone[1]);
 
-		if (bSoundCPUEnable) 
-		{
-			CZetOpen(1);
-
-			if ((i & nSoundNMIMask) == 0) 
-			{
-				if (bSoundNMIEnable) 
-				{
-					CZetNmi();
-				}
-			}
-			nCyclesDone[1] += CZetRun(nCyclesSegment);
-			CZetClose();
-		} 
-		else 
-		{
-			nCyclesDone[1] += nCyclesSegment;
+		if (((i % (nInterleave / nSndIrqFrame)) == ((nInterleave / nSndIrqFrame) - 1)) && sound_nmi_enable) {
+			CZetNmi();
 		}
 		CZetClose();
+
 	}
+	
 //	draw_sprites();
 	INT32 scrollx = (((nTigerHeliTileXPosHi << 8) + nTigerHeliTileXPosLo)) & 0x1ff;
 	INT32 scrolly = (nTigerHeliTileYPosLo + 15) & 0xff;

@@ -16,20 +16,34 @@ SECTIONS {
 	{
 		root/sl.coff (".shared")
 		_play = .;
-		_hz = . + 2;
-		_file_max = . + 4;
-		_col = . + 8;
-		_pcm = . + 24;
-		_nBurnDrvCount = . + 28;
-		_nBurnDrvSelect = . + 32;
-		_nBurnSoundRate = . + 36;
-		_nBurnSprites = . + 40;
-		_nBurnLinescrollSize = . + 44;
-		_nBurnFunction = . + 48;
-		_nSoundBufferPos = . + 52;
-		_SclProcess = . + 56;
-		_SclColRamAlloc256 = . + 60;
-		_shared = . + 92;
+		_hz = _play + 2;
+		_file_id2 = _hz + 2;
+		_file_max = _file_id2 + 4;
+		_col = _file_max + 4; /* size 16 */
+/*		_palette = _col + 16;*/ /* size 16 */		
+		_pcm = _col + 16; /* pointer size 4 */		
+		_nBurnDrvCount = _pcm + 16;
+		_nBurnDrvSelect = _nBurnDrvCount + 4;
+		_nBurnSoundRate = _nBurnDrvSelect + 4;
+		_nBurnSprites = _nBurnSoundRate + 4;
+		_nBurnLinescrollSize = _nBurnSprites + 4;
+		_nBurnFunction = _nBurnLinescrollSize + 4;
+		_nSoundBufferPos = _nBurnFunction + 4;
+		_SclProcess = _nSoundBufferPos + 4;
+		_SclColRamAlloc256 = _SclProcess + 4; /* size 32 */
+
+		_SPR_SlaveParam = _SclColRamAlloc256 + 32; /* pointer size 4 */
+		_SPR_SlaveState = _SPR_SlaveParam + 4; /* pointer size 4 */
+		_SPR_SlaveCommand = _SPR_SlaveState + 4; /* pointer size 4 */
+
+		_shared = _SPR_SlaveCommand + 4; /* shared size is 17*4 + 384*4 */
+		_shared_end = _shared + 1604; /* 17*4 + 384*4 */
+
+/*		_SclAddrLsTbl = _SclColRamAlloc256 + 32; */ /* size 8 */
+/*		_SclBgColMix = . + 112;  size 8 */
+/*		_SclBgPriNum = . + 120;  size 6 */
+/*		_SclOtherPri = . + 126;  size 16 */
+/*		_SclSpPriNum = . + 130;  size 8 */
 	} > ram
 
 	.entry 0x6004000  (NOLOAD):
@@ -46,7 +60,7 @@ SECTIONS {
 	{
 		__bstart = . ;
 		root/sl.coff (.bss)
-		root/sl.coff ("COMMON")
+		root/sl.coff (COMMON)
 		. = ALIGN(4);
 		__bend = . ;
 		_end = .;

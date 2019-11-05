@@ -21,13 +21,14 @@ void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *targe
 void dummy();
 
 typedef int bool;
-bool bInterruptEnable = 0;
-bool bSoundCPUEnable = 0;
-bool bSoundNMIEnable = 0;
+bool irq_enable = 0;
+//bool bSoundCPUEnable = 0;
+bool sound_nmi_enable = 0;
 
 INT32 nWhichGame = 0;
 UINT32 nStatusIndex = 0;
 UINT32 nProtectIndex = 0;
+INT32 nSndIrqFrame = 0; //tigerh 6, slapf 3, perfr 4
 
 INT32 nTigerHeliTileXPosLo = 0;
 INT32 nTigerHeliTileXPosHi = 0;

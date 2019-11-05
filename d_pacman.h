@@ -7,7 +7,7 @@
 #include "saturn/ovl.h"
 #include "czet.h"
 
-void dummy();
+//void dummy();
 INT32 mspacmanInit();
 INT32 puckmanInit();
 INT32 pengouInit();
@@ -16,6 +16,9 @@ INT32 DrvExit();
 INT32 DrvFrame();
 INT32 DrvDraw();
 INT32 DrvDrawPacMan();
+INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), UINT32 select);
+INT32 pacman_load(UINT32 game_select);
+void convert_gfx(UINT32 game_select);
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 
 UINT8 *AllMem = NULL;
@@ -23,7 +26,6 @@ UINT8 *AllRam = NULL;
 UINT8 *RamEnd = NULL;
 UINT8 *PengoStart = NULL;
 UINT8 *DrvZ80ROM = NULL;
-UINT8 *DrvQROM = NULL;
 UINT8 *DrvZ80RAM = NULL;
 UINT8 *DrvVidRAM = NULL;
 UINT8 *DrvColRAM = NULL;
@@ -44,7 +46,7 @@ UINT8 DrvDips[4] = {0,0,0,0};
 enum { PACMAN=0, PENGO };
 
 extern struct namco_sound *chip;
-UINT8 game_select = 0;
+//UINT8 game_select = 0;
 UINT8 interrupt_mode = 0;
 UINT8 interrupt_mask = 0;
 UINT8 colortablebank = 0;
