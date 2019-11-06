@@ -764,6 +764,13 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	initColors();
 
 	initSprites(240-1,256-1,16,0,16,0);
+    ss_sprite[nBurnSprites-1].control	= CTRL_END;
+    ss_sprite[nBurnSprites-1].link		= 0;        
+    ss_sprite[nBurnSprites-1].drawMode	= 0;                
+    ss_sprite[nBurnSprites-1].color		= 0;                
+    ss_sprite[nBurnSprites-1].charAddr	= 0;                
+    ss_sprite[nBurnSprites-1].charSize	= 0;
+	
 	initScrolling(ON,SCL_VDP2_VRAM_B1);
 	memset((Uint8 *)ss_map, 0x11,0x4000);
 	memset((Uint8 *)ss_map2,0x11,0x4000);

@@ -12,8 +12,9 @@ int ZaxxonbInit();
 int sZaxxonInit();
 int DrvExit();
 int DrvFrame();
-int DrvDraw();
+inline void DrvDraw();
 void dummy();
+inline void copyBitmap();
 
 /*static*/ UINT8 *SaturnMem = NULL;
 /*static*/ UINT8 *bitmap = NULL;
@@ -26,7 +27,7 @@ void dummy();
 /*static*/ UINT32 *srcxmask[240] = {NULL}; //[256];
 /*static*/ UINT32 *srcx_buffer = NULL;
 /*static*/ UINT8 *AllMem = NULL;
-/*static*/ UINT8 *MemEnd = NULL;
+/*static*/ //UINT8 *MemEnd = NULL;
 /*static*/ UINT8 *AllRam = NULL;
 /*static*/ UINT8 *RamEnd = NULL;
 /*static*/ UINT8 *DrvZ80ROM = NULL;
@@ -48,14 +49,14 @@ void dummy();
 /*static*/ UINT8 DrvInputs[8] = {0,0,0,0,0,0,0,0};
 
 
-/*static*/ UINT8 *zaxxon_fg_color = NULL;
-/*static*/ UINT8 *zaxxon_bg_color = NULL;
+/*static*/ //UINT8 *zaxxon_fg_color = NULL;
+/*static*/ //UINT8 *zaxxon_bg_color = NULL;
 /*static*/ UINT8 *zaxxon_bg_enable = NULL;
 /*static*/ UINT8 *zaxxon_coin_enable = NULL;
 /*static*/ UINT8 *zaxxon_coin_status = NULL;
 /*static*/ UINT8 *zaxxon_coin_last = NULL;
 /*static*/ UINT8 *zaxxon_bg_pixmap = NULL;
-/*static*/ UINT8 *sound_state = NULL;
+/*static*/ //UINT8 *sound_state = NULL;
 
 /*static*/ UINT8 interrupt_enable = 0;
 /*static*/ UINT32  zaxxon_bg_scroll_x2=0;

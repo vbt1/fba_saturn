@@ -1,19 +1,25 @@
 #define BMP 1
 //#define SOUND 1
-#define CZ80 1
+//#define CZ80 1
 //#define RAZE1 1
 #define RAZE0 1
 #define USE_MAP 1
-#define CZET_SLAVE 1
+//#define CZET_SLAVE 1
+
+#include "d_vigilant.h"
+
 #define nInterleave 256//140 // dac needs 128 NMIs
 #define nCPUClockspeed 3579645 
 #define nSegmentLength nBurnSoundLen / nInterleave
+#define nCyclesTotal nCPUClockspeed / 55
+#define nCyclesSegment nCyclesTotal / nInterleave
 
-#include "d_vigilant.h"
+#ifdef SOUND
 void YM2151UpdateOneSlave();
 static void Set8PCM();
 
 UINT32 nBurnCurrentYM2151Register;
+#endif
 INT16 oldScroll =0;
 
 int ovlInit(char *szShortName)
@@ -22,7 +28,7 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvVigilant = {
 		"vigil", NULL,
-		"Vigilante (World)\0",
+		"Vigilante (World)",
 		DrvRomInfo, DrvRomName, DrvInputInfo, DrvDIPInfo,
 		DrvInit, DrvExit, DrvFrame, NULL //NULL
 	};
@@ -32,38 +38,37 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/void DrvInitSaturn();
-
 /*static*/int MemIndex()
 {
 	UINT8 *Next; Next = Mem;
 
-	DrvZ80Rom1             = Next; Next += 0x28000;
-	DrvZ80Rom2             = Next; Next += 0x10000;
-	DrvSamples             = Next; Next += 0x10000;
-	CZ80Context			  = Next; Next += (sizeof(cz80_struc)*2);
-	RamStart               = Next;
+	DrvZ80Rom1      = Next; Next += 0x28000;
+	DrvZ80Rom2      = Next; Next += 0x10000;
+	DrvSamples      = Next; Next += 0x10000;
+	CZ80Context		= Next; Next += (sizeof(cz80_struc)*2);
+//	RamStart        = Next;
 
-	DrvZ80Ram1             = Next; Next += 0x02000;
-	DrvZ80Ram2             = Next; Next += 0x01000;
-	DrvSpriteRam           = Next; Next += 0x00100;
-	DrvPaletteRam          = Next; Next += 0x00800;
-	DrvVideoRam            = Next; Next += 0x01000;
-//	DrvPalette             = (UINT32*)Next; Next += (512 + 32) * sizeof(UINT32);
-
-	RamEnd                 = Next;
+	DrvZ80Ram1      = Next; Next += 0x02000;
+	DrvZ80Ram2      = Next; Next += 0x01000;
+	DrvSpriteRam    = Next; Next += 0x00100;
+	DrvPaletteRam	= Next; Next += 0x00800;
+	DrvVideoRam     = Next; Next += 0x01000;
+//	DrvPalette      = (UINT32*)Next; Next += (512 + 32) * sizeof(UINT32);
+//	RamEnd          = Next;
 	
-	vb_buffer				 = Next; Next += 0x4000 * sizeof(UINT32);
-	DrvChars               = cache;//Next; Next += 0x1000 * 8 * 8;
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	DrvSprites             = &ss_vram[0x1100];//Next; Next += 0x1000 * 16 * 16;
+	vb_buffer		= (UINT16*)Next; Next += 0x4000 * sizeof(UINT16);
+	DrvChars        = cache;//Next; Next += 0x1000 * 8 * 8;
+	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
+	DrvSprites      = &ss_vram[0x1100];//Next; Next += 0x1000 * 16 * 16;
 #ifndef BMP
-	DrvBackTiles          = cache+0x20000;//Next; Next += 0x4000 * 32;
+	DrvBackTiles    = cache+0x20000;//Next; Next += 0x4000 * 32;
 #else
-	DrvBackTiles          = cache+0x30000;//Next; Next += 0x4000 * 32;
+	DrvBackTiles    = cache+0x30000;//Next; Next += 0x4000 * 32;
 #endif
-	lBuffer					 = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16) * 10;
-	MemEnd                = Next;
+#ifdef SOUND
+	lBuffer			= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16) * 10;
+#endif	
+	MemEnd          = Next;
 	return 0;
 }
 
@@ -116,11 +121,12 @@ int ovlInit(char *szShortName)
 
 /*static*/INT32 DrvDoReset()
 {
-	for (INT32 i = 0; i < 2; i++) {
+	for (UINT32 i = 0; i < 2; i++) {
 		CZetOpen(i);
 		CZetReset();
-	
+#ifdef SOUND	
 	memset (lBuffer, 0, nBurnSoundLen * sizeof(INT16));
+#endif
 
 #ifdef RAZE0
 		 z80_reset();
@@ -136,7 +142,7 @@ int ovlInit(char *szShortName)
 	DACReset();
 #endif
 	
-	DrvRomBank = 0;
+//	DrvRomBank = 0;
 	DrvSoundLatch = 0;
 	DrvRearColour = 0;
 	DrvRearDisable = 0;
@@ -268,7 +274,7 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 		}
 		
 		case 0x04: {
-			DrvRomBank = d & 0x07;
+			unsigned char DrvRomBank = d & 0x07;
 
 #ifdef RAZE0
 			z80_map_read  (0x8000, 0xbfff, DrvZ80Rom1 + 0x10000 + (DrvRomBank * 0x4000));
@@ -440,7 +446,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		}
 	}
 }
-
+#ifdef SOUND
 /*static*/void VigilantYM2151IrqHandler(INT32 Irq)
 {
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
@@ -456,43 +462,17 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		DrvSetVector(YM2151_CLEAR);
 	}
 }
-//int aaa = 10;
+
 /*static*/ INT32 VigilantSyncDAC()
 {
-//#ifdef CZET_SLAVE
-/*		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			//SPR_WaitEndSlaveSH();
-		}
-//		nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
-//		CZetOpen(1);
-#endif
-//	if(aaa < 200)
-	{
-		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)itoa(
-			
-		(INT32)(float)	(nBurnSoundLen * (nCyclesDone[1] / ((nCPUClockspeed) / (6000 / 100.0000))))
-		),10,20);	
-
-		
-		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)itoa(
-			
-		(INT32)(float)	(nBurnSoundLen * (CZetTotalCycles() / ((nCPUClockspeed) / (6000 / 100.0000))))
-		),80,20);	
-		
-		
-		
-	//	aaa+=10;
-	}*/
-	return 		(INT32)(float)	(nBurnSoundLen * (CZetTotalCycles() / ((nCPUClockspeed) / (600000.00))))
-	;
+	return 		(INT32)(float)	(nBurnSoundLen * (CZetTotalCycles() / ((nCPUClockspeed) / (600000.00))));
 }
+#endif
 
 /*static*/INT32 DrvInit()
 {
 	DrvInitSaturn();
 
-	INT32 nRet = 0;
 /*static*/UINT32 CharPlaneOffsets[4]         = { 0x80000, 0x80004, 0, 4 };
 /*static*/UINT32 CharXOffsets[8]             = { 0, 1, 2, 3, 64, 65, 66, 67 };
 /*static*/UINT32 CharYOffsets[8]             = { 0, 8, 16, 24, 32, 40, 48, 56 };
@@ -502,56 +482,52 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 /*static*/UINT32 BackTilePlaneOffsets[4]     = { 0, 2, 4, 6 };
 /*static*/UINT32 BackTileXOffsets[32]        = { 1, 0, 9, 8, 17, 16, 25, 24, 33, 32, 41, 40, 49, 48, 57, 56, 65, 64, 73, 72, 81, 80, 89, 88, 97, 96, 105, 104, 113, 112, 121, 120 };
 /*static*/UINT32 BackTileYOffsets[1]         = { 0 };
-
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	MemIndex();
 	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
+	
+	PrecalcBgMap();
 
-	vbmap[0] = vb_buffer + (0x1000*0);
-	vbmap[1] = vb_buffer + (0x1000*1);
-	vbmap[2] = vb_buffer + (0x1000*2);
-	vbmap[3] = vb_buffer + (0x1000*3);
-
-	DrvTempRom = (UINT8 *)(0x00200000);
+	unsigned char *DrvTempRom = (UINT8 *)(0x00200000);
 //FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom                 ",10,100);
 	// Load Z80 #1 Program Roms
-	nRet = BurnLoadRom(DrvZ80Rom1 + 0x00000,  0, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvZ80Rom1 + 0x10000,  1, 1); if (nRet != 0) return 1;
+	if (BurnLoadRom(DrvZ80Rom1 + 0x00000,  0, 1)) return 1;
+	if (BurnLoadRom(DrvZ80Rom1 + 0x10000,  1, 1)) return 1;
 	
 	// Load Z80 #2 Program Roms
-	nRet = BurnLoadRom(DrvZ80Rom2 + 0x00000,  2, 1); if (nRet != 0) return 1;
+	if (BurnLoadRom(DrvZ80Rom2 + 0x00000,  2, 1)) return 1;
 	
 	// Load and decode the chars
-	nRet = BurnLoadRom(DrvTempRom + 0x00000,  3, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x10000,  4, 1); if (nRet != 0) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x00000,  3, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x10000,  4, 1)) return 1;
 	GfxDecode4Bpp(0x1000, 4, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
 
 	// Load and decode the sprites
 	memset(DrvTempRom, 0, 0x80000);
-	nRet = BurnLoadRom(DrvTempRom + 0x00000,  5, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x10000,  6, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x20000,  7, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x30000,  8, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x40000,  9, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x50000, 10, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x60000, 11, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x70000, 12, 1); if (nRet != 0) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x00000,  5, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x10000,  6, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x20000,  7, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x30000,  8, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x40000,  9, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x50000, 10, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x60000, 11, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x70000, 12, 1)) return 1;
 	GfxDecode4Bpp(0x1000, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x200, DrvTempRom, DrvSprites);
 
 	// Load and decode the bg tiles
 	memset(DrvTempRom, 0, 0x80000);
-	nRet = BurnLoadRom(DrvTempRom + 0x00000, 13, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x10000, 14, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x20000, 15, 1); if (nRet != 0) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x00000, 13, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x10000, 14, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x20000, 15, 1)) return 1;
 	GfxDecode4Bpp(0x4000, 4, 32, 1, BackTilePlaneOffsets, BackTileXOffsets, BackTileYOffsets, 0x80, DrvTempRom, DrvBackTiles);
 
 	Bitmap2Tile(DrvBackTiles);
 	
 	// Load sample Roms
-	nRet = BurnLoadRom(DrvSamples + 0x00000, 16, 1); if (nRet != 0) return 1;
+	if (BurnLoadRom(DrvSamples + 0x00000, 16, 1)) return 1;
 //FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom done                ",10,100);
 	// Setup the Z80 emulation
 	CZetInit2(2,CZ80Context);
@@ -594,9 +570,6 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	CZetMemEnd();
 //	CZetClose();
 #endif
-
-	nCyclesTotal[0] = nCPUClockspeed / 55;
-	nCyclesTotal[1] = nCPUClockspeed / 55;
 	
 #ifdef SOUND
 //	BurnYM2151Init(3579645);
@@ -605,7 +578,6 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 
 //	DACInit(0, 0, 1, VigilantSyncDAC);
 	DACInit(0, 0, 0, VigilantSyncDAC);
-//	DACSetRoute(0, 0.45, BURN_SND_ROUTE_BOTH);
 #endif
 	DrvDoReset();
 
@@ -614,9 +586,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 
 void xxx(int *i)
 {
-	const int cyc = nCPUClockspeed / 55 / nInterleave;
-
-	z80_emulate(cyc);
+	z80_emulate(nCyclesSegment);
 	if (i[0] == (nInterleave - 1)) 
 	{
 		z80_raise_IRQ(0);
@@ -636,46 +606,29 @@ void xxx(int *i)
 	{
 		// Run Z80 #1
 #ifdef RAZE0
-//		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
-//		nCyclesSegment = nNext - nCyclesDone[0];
-		int nCyclesSegment = nCyclesTotal[0] / nInterleave;
-
-//		xxx(&i);
-	SPR_RunSlaveSH((PARA_RTN*)xxx,&i);
-/*		nCyclesDone[0] += z80_emulate(nCyclesSegment);
-
-		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		{
-			//SPR_WaitEndSlaveSH();
-		}
-
-		if (i == (nInterleave - 1)) 
-		{
-			z80_raise_IRQ(0);
-			z80_emulate(1);
-		}
-*/
+		xxx(&i);
+//	SPR_RunSlaveSH((PARA_RTN*)xxx,&i);
 #endif
 
 #if CZET_SLAVE
 
 		CZetOpen(1);
 
-			int nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
-			int nCyclesSegment2 = nNext - nCyclesDone[1];
-			nCyclesDone[1] += CZetRun(nCyclesSegment2);
+		int nNext = (i + 1) * nCyclesSegment;
+		int nCyclesSegment2 = nNext - nCyclesDone[1];
+		nCyclesDone[1] += CZetRun(nCyclesSegment2);
 
 
 		if (i & 1) 
 		{
 			CZetNmi();
 		}
-/*
+
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 	{
 		SPR_WaitEndSlaveSH();
 	}		
-*/
+
 		CZetOpen(1);
 #ifdef SOUND
 		YM2151UpdateOneSlave();
@@ -785,15 +738,20 @@ void DrvRenderDrawSound()
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-
 void PrecalcBgMap(void)
 {
+//	unsigned int *vbmap[4];
+	vbmap[0] = vb_buffer + (0x1000*0);
+	vbmap[1] = vb_buffer + (0x1000*1);
+	vbmap[2] = vb_buffer + (0x1000*2);
+	vbmap[3] = vb_buffer + (0x1000*3);	
+	
 #ifndef BMP
 	int tile_start = 0x1000;
 #else
 	int tile_start = 0x1800;
 #endif
-
+	
 	for(int i=0;i<0x1000;i+=2)
 	{
 		if( ((i>>1)/64)*8 <128)
@@ -805,7 +763,7 @@ void PrecalcBgMap(void)
 
 		if(sx>=48)
 		{
-			vbmap[0][(i>>1)]    =vbmap[0][(i>>1)-48]+0x180;     // ok
+			vbmap[0][(i>>1)]    = vbmap[0][(i>>1)-48]+0x180;     // ok
 			vbmap[1][(i>>1)]    = tile_start+(i>>1)+0x180;		  // ok
 			vbmap[1][(i>>1)-48] = tile_start+(i>>1)+0x180;		  // ok
 		}
@@ -813,16 +771,18 @@ void PrecalcBgMap(void)
 		{
 			vbmap[0][(i>>1)]    = tile_start+(i>>1)+0x180;		  // ok
 		}
-
+		
 		if(sx<16)
 		{
 //			vbmap[2][(i>>1)+32] = 0x1000+(64*32*2)+(i>>1);// ok // fin de map 2, 32 a 48 // ou prendre tout ?
 		}
+		
 		if(sx>=16) // &&
 		{
 			vbmap[3][(i>>1)-16]   = tile_start+(64*32*2)+(i>>1)+0x180; // map 3 de 0 a 48
 //			if(sx<32)
 //				vbmap[3][(i>>1)+32]= vbmap[3][(i>>1)-16]; // map 3 de 48 a 64
+			
 		}
 
 		if(sx<32)
@@ -831,6 +791,7 @@ void PrecalcBgMap(void)
 			vbmap[2][(i>>1)+32] = tile_start+(64*32*2)+(i>>1)+0x180;
 //			vbmap[2][(i>>1)+32] = (64*32*2)+(i>>1);// ok
 //			vbmap[3][(i>>1)]    = (64*32*3)+(i>>1);
+			
 		}
 		else
 		{
@@ -872,12 +833,12 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 	nBurnSprites = 27;
 	nBurnLinescrollSize = 0x380;
 
-	SS_MAP  = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_MAP  = ss_map  = (Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = ss_map2 = (Uint16 *)SCL_VDP2_VRAM_A1+0x8000;
 #ifdef BMP
 	SS_FONT = ss_font = (SCL_VDP2_VRAM_A1+0x00000); //(Uint16 *)SCL_VDP2_VRAM_A1;//(Uint16 *)SCL_VDP2_VRAM_B0;
 #endif
-	SS_CACHE= cache   =(Uint8 *)SCL_VDP2_VRAM_A0;
+	SS_CACHE= cache   = (Uint8 *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -921,27 +882,27 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 
 	Uint16 *vbt = ((Uint16*)ss_scl);
 
-	for (int Offset = 0; Offset < 96; Offset += 2) 
+	for (unsigned int Offset = 0; Offset < 96; Offset += 2) 
 	{
 		vbt[Offset]=128;
 	}
 
-	SprSpCmd *ss_spritePtr;
-	
-	for (int i = 3; i <27; i++) 
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];	
+	for (unsigned int i = 0; i <24; i++) 
 	{
-		ss_spritePtr				= &ss_sprite[i];
+
 		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
-		ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+		ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);
+		*ss_spritePtr++;		
 //		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
 
-	PrecalcBgMap();
+#ifdef SOUND	
 	Set8PCM();
-#ifdef SOUND
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 #endif
 }
+#ifdef SOUND
 //-------------------------------------------------------------------------------------------------------------------------------------
 static PcmHn createHandle(PcmCreatePara *para)
 {
@@ -992,14 +953,15 @@ static void Set8PCM()
 		PCM_Start(pcm8[i]);
 	}
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	CZetExit2();
 
 #ifdef SOUND
-	for(int i=0;i<8;i++)
+	for(unsigned int i=0;i<8;i++)
 	{
 		PCM_MeStop(pcm8[i]);
 		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
@@ -1012,11 +974,13 @@ static void Set8PCM()
 #endif
 
 	CZ80Context = NULL;
-	MemEnd = RamEnd = DrvZ80Rom1 = DrvZ80Rom2 = DrvZ80Ram1 = DrvZ80Ram2 = NULL;
+	MemEnd = DrvZ80Rom1 = DrvZ80Rom2 = DrvZ80Ram1 = DrvZ80Ram2 = NULL;
 	DrvVideoRam = DrvSpriteRam = DrvPaletteRam = DrvChars = DrvBackTiles = DrvSprites = NULL;
-	DrvSamples = DrvTempRom = CZ80Context = NULL;
+	DrvSamples = CZ80Context = NULL;
 	vbmap[0] = vbmap[1] = vbmap[2] = vbmap[3] = NULL;
-	/*DrvPalette =*/ lBuffer = NULL;
+#ifdef SOUND	
+	lBuffer = NULL;
+#endif	
 	vb_buffer = NULL;
 
 	if (Mem) {
@@ -1024,7 +988,7 @@ static void Set8PCM()
 		Mem = NULL;
 	}
 	
-	DrvRomBank = 0;
+//	DrvRomBank = 0;
 	DrvSoundLatch = 0;
 	DrvIrqVector = 0;
 	DrvRearColour = 0;
@@ -1035,8 +999,8 @@ static void Set8PCM()
 	DrvRearHorizScrollHi = 0;
 	DrvSampleAddress = 0;
 	
-	DrvHasYM2203 = 0;
-	DrvKikcubicDraw = 0;
+//	DrvHasYM2203 = 0;
+//	DrvKikcubicDraw = 0;
 
 	cleanDATA();
 	cleanBSS();
@@ -1059,7 +1023,7 @@ static void Set8PCM()
 	if (bg!=-Scroll/384)
 	{
 		bg=-Scroll/384;
-		unsigned int *map1 = (unsigned int *)(vbmap[bg]); //+0x180);
+		unsigned short *map1 = (unsigned short *)(vbmap[bg]); // + (0x1000*bg)); //+0x180);
 
 		for (unsigned int Offset = 0x300; Offset < 0x1000;Offset+=16) 
 		{
@@ -1070,9 +1034,9 @@ static void Set8PCM()
 			map2[5] = *map1++;
 			map2[7] = *map1++;
 			map2[9] = *map1++;
-			map2[11] = *map1++;
-			map2[13] = *map1++;
-			map2[15] = *map1++;
+			map2[11] =*map1++;
+			map2[13] =*map1++;
+			map2[15] =*map1++;
 		}
 	}
 }

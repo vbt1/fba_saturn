@@ -10,13 +10,13 @@
 #include "saturn/ovl.h"
 #include "czet.h"
 
+#ifdef SOUND
 PcmHn 			pcm8[8] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+#endif
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L //
 #define nBurnSoundLen 192 //128//7680/55.0
-//unsigned int vbmap[4][0x1000];
-unsigned int *vbmap[4];
 int bg=-1;
 
 int DrvInit();
@@ -30,27 +30,31 @@ void dummy();
 /*static*/unsigned char DrvInputPort2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/unsigned char DrvDip[3]        = {0, 0, 0};
 /*static*/unsigned char DrvInput[3]      = {0x00, 0x00, 0x00};
-/*static*/unsigned char DrvReset         = 0;
+/*static*///unsigned char DrvReset         = 0;
 
-/*static*/unsigned char *Mem					= NULL;
+/*static*/unsigned char *Mem			= NULL;
 /*static*/unsigned char *MemEnd			= NULL;
-/*static*/unsigned char *RamStart			= NULL;
-/*static*/unsigned char *RamEnd				= NULL;
+/*static*///unsigned char *RamStart		= NULL;
+/*static*///unsigned char *RamEnd		= NULL;
 /*static*/unsigned char *DrvZ80Rom1		= NULL;
 /*static*/unsigned char *DrvZ80Rom2		= NULL;
 /*static*/unsigned char *DrvZ80Ram1		= NULL;
 /*static*/unsigned char *DrvZ80Ram2		= NULL;
-/*static*/unsigned char *DrvVideoRam		= NULL;
-/*static*/unsigned char *DrvSpriteRam		= NULL;
+/*static*/unsigned char *DrvVideoRam	= NULL;
+/*static*/unsigned char *DrvSpriteRam	= NULL;
 /*static*/unsigned char *DrvPaletteRam	= NULL;
-/*static*/unsigned char *DrvChars			= NULL;
-/*static*/unsigned char *DrvBackTiles		= NULL;
-/*static*/unsigned char *DrvSprites			= NULL;
+/*static*/unsigned char *DrvChars		= NULL;
+/*static*/unsigned char *DrvBackTiles	= NULL;
+/*static*/unsigned char *DrvSprites		= NULL;
 /*static*/unsigned char *DrvSamples		= NULL;
-/*static*/unsigned char *DrvTempRom		= NULL;
-/*static*///unsigned int  *DrvPalette			= NULL;
-unsigned char *CZ80Context					= NULL;
-unsigned int *vb_buffer							= NULL;
+/*static*///unsigned char *DrvTempRom	= NULL;
+/*static*///unsigned int  *DrvPalette	= NULL;
+unsigned char *CZ80Context				= NULL;
+//unsigned int *vb_buffer				= NULL;
+unsigned short *vb_buffer				= NULL;//[0x4000];
+//unsigned short vb_buffer[0x4000];//[0x4000];
+//unsigned int vbmap[4][0x1000];
+unsigned short *vbmap[4] = {NULL,NULL,NULL,NULL};
 //INT16 *lBuffer = NULL;
 extern INT16 *lBuffer;
 
@@ -66,11 +70,11 @@ extern INT16 *lBuffer;
 /*static*/int DrvRearHorizScrollHi = 0;
 /*static*/int DrvSampleAddress = 0;
 
-/*static*/int nCyclesDone[2] = {0,0}, nCyclesTotal[2] = {0,0};
+/*static*/int nCyclesDone[2] = {0,0};//, nCyclesTotal[2] = {0,0};
 /*static*///int nCyclesSegment;
 
-/*static*/unsigned char DrvHasYM2203 = 0;
-/*static*/unsigned char DrvKikcubicDraw = 0;
+/*static*///unsigned char DrvHasYM2203 = 0;
+/*static*///unsigned char DrvKikcubicDraw = 0;
 
 #define VECTOR_INIT		0
 #define YM2151_ASSERT		1
@@ -99,7 +103,7 @@ extern INT16 *lBuffer;
 	{"Fire 1 (Cocktail)" , BIT_DIGITAL  , DrvInputPort2 + 5, "p2 fire 1" },
 	{"Fire 2 (Cocktail)" , BIT_DIGITAL  , DrvInputPort2 + 7, "p2 fire 2" },
 
-	{"Reset"             , BIT_DIGITAL  , &DrvReset        , "reset"     },
+	{"Reset"             , BIT_DIGITAL  , NULL        , "reset"     },
 	{"Service"           , BIT_DIGITAL  , DrvInputPort0 + 2, "service"   },
 	{"Dip 1"             , BIT_DIPSWITCH, DrvDip + 0       , "dip"       },
 	{"Dip 2"             , BIT_DIPSWITCH, DrvDip + 1       , "dip"       },
