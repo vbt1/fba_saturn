@@ -303,7 +303,7 @@ int ovlInit(char *szShortName)
 				Bit ^= 0x01;
 			}
 			
-			if (DrvPort5Kludge) Bit ^= 0x08;
+//			if (DrvPort5Kludge) Bit ^= 0x08;
 			
 			return ((0xff - DrvInput[3]) & 0x76) | Bit;
 		}
@@ -825,6 +825,7 @@ static void dummy(void)
 	wait_vblank();
 	MSM6295Exit(0);
 	SPR_InitSlaveSH();
+	DrvDoReset();
 #ifdef CZ80
 	CZetExit2();
 //	CZetExit();

@@ -1300,7 +1300,8 @@ int YM2151Init(int num, int clock, int rate)
 
 	YMNumChips = num;
 
-	YMPSG = (YM2151 *)BurnMalloc(sizeof(YM2151) * YMNumChips);
+//	YMPSG = (YM2151 *)BurnMalloc(sizeof(YM2151) * YMNumChips);
+	YMPSG = (YM2151 *)malloc(sizeof(YM2151) * YMNumChips);
 	if (YMPSG == NULL)
 		return 1;
 
@@ -1877,7 +1878,7 @@ inline void advance_eg(void)
 }
 
 
-inline void advance(void)
+/*inline*/ void advance(void)
 {
 	YM2151Operator *op;
 	unsigned int i;

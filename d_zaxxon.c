@@ -292,7 +292,7 @@ void CongoPPIWriteC(UINT8 data)
 	}
 }
 #endif
-
+#ifdef RAZE
 void __fastcall zaxxon_write8000(UINT16 address, UINT8 data)
 {
 	// set up mirroring
@@ -313,7 +313,7 @@ void __fastcall zaxxon_writeA000(UINT16 address, UINT8 data)
 {
 	DrvSprRAM[address & 0xff] = data;
 }
-
+#endif
 /*static*/ void zaxxon_coin_inserted(UINT8 param)
 {
 	if (zaxxon_coin_last[param] != DrvJoy4[param])
@@ -358,23 +358,9 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 	}
 #endif
 
-	if (address >= 0xff3c && address <= 0xff3f) 
-	{
-		address-= 0x1f00;
-	}
-	else
-	{
-		if ((address & 0xe700) == 0xc000) address &= ~0x18f8;
-		if ((address & 0xe000) == 0xe000) address &= ~0x1f00;
-	}
-
-	if (address >= 0xe03c && address <= 0xe03f) {
-//		bprintf (PRINT_NORMAL, _T("2 zaxxon_sound_write %4.4x %2.2x\n"), address, data);
-//		zaxxon_sound_write(address & 0x0c);
-//		ppi8255_w(0, address  & 0x03, data);
-//bprintf (PRINT_NORMAL, _T("2 ppi8255_w done\n"));
-		return;
-	}
+	// address mirroring
+	if ((address & 0xe700) == 0xc000) address &= ~0x18f8;
+	if ((address & 0xe000) == 0xe000) address &= ~0x1f00;
 
 	switch (address)
 	{
@@ -426,24 +412,23 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 		case 0xe0f8:
 			zaxxon_bg_scroll &= 0xf00;
 			zaxxon_bg_scroll |= data;
-			zaxxon_bg_scroll_x2 = ((zaxxon_bg_scroll <<1)^ 0xfff) + 1;
-	return;
+			zaxxon_bg_scroll_x2 = ((zaxxon_bg_scroll <<1)^ 0xfff) + 1;			
+		return;
 
 		case 0xe0f9:
 			zaxxon_bg_scroll &= 0x0ff;
 			zaxxon_bg_scroll |= (data & 0x07) << 8;
-			zaxxon_bg_scroll_x2 = ((zaxxon_bg_scroll <<1)^ 0xfff) + 1;
+			zaxxon_bg_scroll_x2 = ((zaxxon_bg_scroll <<1)^ 0xfff) + 1;			
 		return; 
 			
 		case 0xe0fa:
 //			*zaxxon_bg_color = data << 7;
 			ss_sprite[3].color          = 0x400+data*128;//ou * 256 ?
-
 //			ss_sprite[3].color = data;
 		return;
 
 		case 0xe0fb:
-			*zaxxon_bg_enable = data & 1;
+			zaxxon_bg_enable = data & 1;
 		return;
 	}
 }
@@ -692,7 +677,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 /*static*/void DrvPaletteInit(INT32 len)
 {
-	INT32 delta=0;
+	UINT32 delta=0;
 
 	for (UINT32 i = 0; i < len; i++)
 	{
@@ -719,6 +704,7 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 /*static*/void bg_layer_init()
 {
+	UINT8 *zaxxon_bg_pixmap = (UINT8*)0x00200000;
 	memset(zaxxon_bg_pixmap,0x01,0x100000);
 //	INT32 len = (hardware_type == 2) ? 0x2000 : 0x4000;
 	INT32 len = 0x4000;
@@ -732,10 +718,10 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 		INT32 sx = (offs & 0x1f) << 3;
 		INT32 sy = (offs >> 5) << 3;
 
-		INT32 moffs = offs & mask;
+		UINT32 moffs = offs & mask;
 
-		INT32 code = (DrvGfxROM3[moffs]) | ((DrvGfxROM3[moffs | len] & 3) << 8);
-		INT32 color = (DrvGfxROM3[moffs | len] & 0xf0) >> 1;
+		UINT32 code = (DrvGfxROM3[moffs]) | ((DrvGfxROM3[moffs | len] & 3) << 8);
+		UINT32 color = (DrvGfxROM3[moffs | len] & 0xf0) >> 1;
 
 		UINT8 *src = DrvGfxROM1 + (code << 6);
 
@@ -881,6 +867,11 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 
 /*static*/INT32 DrvExit()
 {
+	DrvDoReset();
+	while(0 != DMA_ScuResult());
+	
+	memset4_fast(bitmap,0x00000000,0xf000);
+	memset(ss_map2,0x00,0x20000);
 //	SPR_InitSlaveSH();
 
 //	nBurnLinescrollSize = 1;
@@ -893,14 +884,13 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 //	cleanSprites();
 	CZ80Context = /*MemEnd =*/ AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = DrvZ80ROM2 = NULL;
 	DrvColPROM = DrvZ80RAM = DrvZ80RAM2 = DrvSprRAM = DrvVidRAM = DrvColRAM = NULL;
-	zaxxon_bg_pixmap = /*	zaxxon_fg_color = zaxxon_bg_color=*/ NULL;
-	zaxxon_bg_enable = NULL;
 	zaxxon_coin_enable = zaxxon_coin_status = zaxxon_coin_last = NULL;
+	zaxxon_bg_enable = 0;
 	zaxxon_bg_scroll = 0;
 	zaxxon_flipscreen = 0;
 	interrupt_enable = 0;
 	zaxxon_bg_scroll_x2 = 0;	
-	AllMem = NULL;
+//	AllMem = NULL;
 
 	ss_map264 = NULL;
 	bitmap = NULL;
@@ -926,12 +916,12 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 }
 
 // ajouter srcxmask en param
-/*static*/void draw_background_test2_no_color(/*UINT32 *srcmask,*/ UINT8 *ss_map264,UINT8 *zaxxon_bg_pixmap,unsigned int yoffset)
+/*static*/void draw_background_test2_no_color(/*UINT32 *srcmask,*/ UINT8 *ss_map264,unsigned int yoffset)
 {
+	UINT8 *zaxxon_bg_pixmap = (UINT8*)0x00200000;
 	/* loop over visible rows */
 	for (unsigned int y = 0; y < 224; ++y)
 	{
-//		UINT8 *src = zaxxon_bg_pixmap + (((y + yoffset) & 4095) << 8);
 		UINT8 *src = zaxxon_bg_pixmap + (((y + yoffset) & 4095) << 8);
 		UINT32 *srcptr = (UINT32 *)srcxmask[y];
 		memcpy(&ss_map264[y*240],&src[*srcptr],216);
@@ -953,13 +943,13 @@ vbt> thanks for help & good night =)
 INT32 find_minimum_y(UINT8 value)
 {
 	INT32 flipmask = 0x00;//*zaxxon_flipscreen ? 0xff : 0x00;
-	INT32 flipconst = 0xf1;//*zaxxon_flipscreen ? 0xef : 0xf1;
+	INT32 flipconst = 0xf2;//*zaxxon_flipscreen ? 0xef : 0xf1;
 	INT32 y;
 
 	/* first find a 16-pixel bucket where we hit */
 	for (y = 0; y < 256; y += 16)
 	{
-		INT32 sum = (value + flipconst + 1) + (y ^ flipmask);
+		INT32 sum = (value + flipconst) + (y ^ flipmask);
 		if ((sum & 0xe0) == 0xe0)
 			break;
 	}
@@ -967,7 +957,7 @@ INT32 find_minimum_y(UINT8 value)
 	/* then scan backwards until we no longer match */
 	while (1)
 	{
-		INT32 sum = (value + flipconst + 1) + ((y - 1) ^ flipmask);
+		INT32 sum = (value + flipconst) + ((y - 1) ^ flipmask);
 		if ((sum & 0xe0) != 0xe0)
 			break;
 		y--;
@@ -985,7 +975,7 @@ int find_minimum_x(UINT8 value)
 
 	/* the sum of the X position plus a constant specifies the address within */
 	/* the line bufer; if we're flipped, we will write backwards */
-	x = (value + 0xef + 1) ^ flipmask;
+	x = (value + 0xf0) ^ flipmask;
 	if (flipmask)
 		x -= 31;
 	return x & 0xff;
@@ -1034,15 +1024,17 @@ int find_minimum_x(UINT8 value)
 {
 	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );
 		SPR_RunSlaveSH((PARA_RTN*)draw_sprites, NULL);
-	if (*zaxxon_bg_enable)
+		
+	copyBitmap();		
+	if (zaxxon_bg_enable)
 	{
-		draw_background_test2_no_color(/*(UINT32 *)srcxmask,*/ss_map264,zaxxon_bg_pixmap,zaxxon_bg_scroll_x2);
+		draw_background_test2_no_color(/*(UINT32 *)srcxmask,*/ss_map264,zaxxon_bg_scroll_x2);
 	}
 	else
 	{
 		memset4_fast(bitmap+0xE80,0x10101010,0xCA00);
 	}
-	copyBitmap();
+
 
 	SPR_WaitEndSlaveSH();
 //	return 0;
@@ -1081,7 +1073,6 @@ int find_minimum_x(UINT8 value)
 		DrvInputs[2] ^= (DrvJoy3[3] & 1) << 3;   //  start 2
 		zaxxon_coin_lockout();
 	}
-
 #ifndef RAZE
 	CZetOpen(0);
 	CZetRun(38016);//(3041250 / 60);
@@ -1099,9 +1090,7 @@ int find_minimum_x(UINT8 value)
 //		z80_emulate(0);
 	}
 #endif
-
 	DrvDraw();
-	
 	return 0;
 }
 
@@ -1356,7 +1345,8 @@ inline void copyBitmap()
 	UINT8 *DrvGfxROM2	= &ss_vram[0x1100];//Next; Next += 0x020000;
 
 	DMA_ScuMemCopy(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCA00);
-	while(DMA_ScuResult()==2);
+//	while(DMA_ScuResult()==2);
+	while(0 != DMA_ScuResult());
 //	memcpyl(DrvGfxROM2+0x00010000,bitmap+0xE80,0xCA00);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1413,18 +1403,11 @@ void initPosition()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void initColors()
 {
-	/*unsigned short palette[8]=
-{
-RGB( 164>>3, 181>>3, 197>>3),RGB( 0,0,0 ),RGB( 164>>3, 181>>3, 197>>3),RGB( 214>>3, 230>>3, 247>>3 ),
-RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 148>>3 ),
-};*/
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-//	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);	  //ON
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-//	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);//OFF);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
@@ -1432,34 +1415,21 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 /*static*/ void SaturnInitMem()
 {
 	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-//	bitmap				= Next; Next += 0x10000;
-	bitmap				= Next; Next += 0xE000;
-	map_lut	 			= Next; Next += 0x400*sizeof(UINT32);
+	bitmap			= Next; Next += 0xE000;
+	map_lut	 		= Next; Next += 0x400*sizeof(UINT32);
 	colpromoffs_lut	= Next; Next += 0x400*sizeof(UINT32);
-	sx_lut				= Next; Next += 256*sizeof(INT16);
-	sy_lut				= Next; Next += 256*sizeof(INT16);
-	charaddr_lut		= Next; Next += 256*sizeof(UINT16);
+	sx_lut			= Next; Next += 256*sizeof(INT16);
+	sy_lut			= Next; Next += 256*sizeof(INT16);
+	charaddr_lut	= Next; Next += 256*sizeof(UINT16);
 	srcx_buffer		= Next; Next += 256*240*sizeof(UINT32);
 	CZ80Context		= Next; Next += sizeof(cz80_struc);
 
 
 //--------------
-	AllMem					= Next;
-	DrvZ80ROM			= Next; Next += 0x010000;
+	DrvZ80ROM		= Next; Next += 0x010000;
 	DrvZ80DecROM	= Next; Next += 0x010000;
 	DrvZ80ROM2		= Next; Next += 0x010000;
-
-//	DrvGfxROM0		= cache;
-
-//	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
-//	DrvGfxROM2		= &ss_vram[0x1100];//Next; Next += 0x020000;
-
-//	DrvGfxROM1		= Next; Next += 0x010000;
-//	DrvGfxROM3		= Next; Next += 0x010000;
-
 	DrvColPROM		= Next; Next += 0x000200;
-
-	zaxxon_bg_pixmap = (UINT8*)0x00200000;
 
 	AllRam			= Next;
 
@@ -1469,24 +1439,12 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 164>>3, 247>>3, 197>>3 ),RGB( 99>>3, 197>>3, 14
 	DrvVidRAM		= Next; Next += 0x000400;
 	DrvColRAM		= Next; Next += 0x000400;
 
-//	interrupt_enable	= Next; Next += 0x000001;
-
-//	zaxxon_fg_color		= Next; Next += 0x000001;
-//	zaxxon_bg_color		= Next; Next += 0x000001;
-	zaxxon_bg_enable	= Next; Next += 0x000002;
-//	congo_color_bank	= Next; Next += 0x000001;
-//	congo_fg_bank		= Next; Next += 0x000001;
-//	congo_custom		= Next; Next += 0x000004;
-//	zaxxon_flipscreen	= Next; Next += 0x000001;
 	zaxxon_coin_enable	= Next; Next += 0x000004;
 	zaxxon_coin_status	= Next; Next += 0x000004;
 	zaxxon_coin_last	= Next; Next += 0x000004;
 
-//	zaxxon_bg_scroll	= (UINT32*)Next; Next += 0x000001 * sizeof(INT32);
-
 //	soundlatch		= Next; Next += 0x000001;
-
-/*	sound_state		= Next; Next += 0x000001;*/
+//	sound_state		= Next; Next += 0x000001;
 
 	RamEnd		= Next;
 //--------------
@@ -1641,12 +1599,14 @@ void make_lut()
 		int sx = (i & 0x1f);
 		int sy = (i >> 5);
 
-		colpromoffs_lut[i] = (sx | ((sy >> 2) << 5));
+		if ((sx | ((sy >> 2) << 5)) < 0x200)
+			colpromoffs_lut[i] = (sx | ((sy >> 2) << 5));
 
 		sx = sx <<7;
 		sy = (32-sy)<<1;
 
-		map_lut[i]= sx|sy;
+		if (sy>=0)
+			map_lut[i]= sx|sy;
 	}
 
 	int flipoffs = 0x3f;

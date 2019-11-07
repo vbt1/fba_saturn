@@ -174,7 +174,7 @@ void freekick_draw_sprite(INT32 offs)
 	}
 }
 
-/*static*/ void DrvDraw()
+/*static*/ inline void DrvDraw()
 {
 	// Draw tiles
 	for (INT32 offs = 0x3ff; offs >= 0; offs--)
@@ -494,7 +494,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	CZ80Context		= (UINT8 *)Next; Next += sizeof(cz80_struc);
 	map_offset_lut  = (UINT16 *)Next; Next +=0x400*sizeof(UINT16);
 
-	MemEnd			= Next;
+//	MemEnd			= Next;
 
 	return 0;
 }
@@ -598,7 +598,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 		if (BurnLoadRom(MC8123Key,  rom_number++, 1)) return 1;
 
 		mc8123_decrypt_rom(0, 1, DrvMainROM, DrvMainROMdec, MC8123Key);
-		use_encrypted = 1;
+		//use_encrypted = 1;
 	}
 
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "gigasb")) 
@@ -739,7 +739,8 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 		CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
 		CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROM + 0x10000, DrvMainROM);
 
-		if (use_encrypted) {
+//		if (use_encrypted) {
+		if (!strcmp(BurnDrvGetTextA(DRV_NAME), "omega")) {	
 			CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
 			CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROMdec, DrvMainROM); // fetch ops(encrypted), opargs(unencrypted)
 		}
@@ -872,7 +873,9 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 			sx = (31-((i) & 0x1f))<<6;//% 32;
 			sy = ((i >> 5)) & 0x3f;
 		}
-		map_offset_lut[i] = (sx | sy)<<1;
+		
+		if (sx >=0 && sy >= 0);
+			map_offset_lut[i] = (sx | sy)<<1;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -941,7 +944,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	SN76489Init(2, 0, 0);
 	SN76489Init(3, 0, 0);	
 
-	CZ80Context = MemEnd = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
+	CZ80Context = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
 	DrvVidRAM = DrvSprRAM = DrvColRAM = DrvColPROM = NULL;
 	MC8123Key = NULL;
 	map_offset_lut = NULL;
@@ -949,7 +952,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	free (AllMem);
 	AllMem = NULL;
 
-	DrvZ80Bank0 = use_encrypted = countrunbmode = pbillrdmode = 0;
+	DrvZ80Bank0 = countrunbmode = pbillrdmode = 0;
 	sprite_number = 0;
 
 	cleanDATA();

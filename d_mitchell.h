@@ -126,7 +126,7 @@ extern int* pBuffer;
 /*static*/  unsigned char DrvFlipScreen = 0;
 /*static*/  unsigned char DrvVideoBank = 0;
 /*static*/  unsigned char DrvInput5Toggle = 0;
-/*static*/  unsigned char DrvPort5Kludge = 0;
+/*static*///  unsigned char DrvPort5Kludge = 0;
 /*static*/  unsigned char DrvHasEEPROM = 0;
 
 #define DRV_INPUT_TYPE_BLOCK		2

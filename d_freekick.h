@@ -15,7 +15,7 @@
 /*static*/ INT32 pbillrdInit();
 /*static*/ INT32 DrvExit();
 /*static*/ INT32 DrvFrame();
-/*static*/ void DrvDraw();
+/*static*/ inline void DrvDraw();
 /*static*/ void DrvPaletteInit();
 /*static*/ void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target);
 
@@ -28,7 +28,7 @@
 /*static*/ INT16 DrvDial2 = 0;
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT8 *AllMem = NULL;
-/*static*/ UINT8 *MemEnd = NULL;
+/*static*/// UINT8 *MemEnd = NULL;
 /*static*/ UINT8 *AllRam = NULL;
 /*static*/ UINT8 *RamEnd = NULL;
 /*static*/ UINT8 *DrvRAM = NULL;
@@ -51,7 +51,7 @@ typedef void (*RenderSprite)(INT32);
 /*static*/ UINT8 ff_data = 0;
 /*static*/ UINT16 romaddr = 0;
 
-/*static*/ UINT8 use_encrypted = 0;
+/*static*/// UINT8 use_encrypted = 0;
 /*static*/ UINT8 countrunbmode = 0;
 /*static*/ UINT8 pbillrdmode = 0;
 
