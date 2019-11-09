@@ -19,14 +19,14 @@ int ovlInit(char *szShortName)
 		"appoooh", "appooo",
 		"Appoooh", 
 		appooohRomInfo, appooohRomName, AppooohInputInfo, AppooohDIPInfo,
-		DrvInit, DrvExit, DrvFrame, DrvDraw //, DrvScan, &DrvRecalc, 512,
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvRobowres = {
 		"robowres", "appooo",
 		"Robo Wres 2001",
 		robowresRomInfo, robowresRomName, AppooohInputInfo, RobowresDIPInfo,
-		DrvRobowresInit, DrvExit, DrvFrame, NULL//,DrvDraw, DrvScan, &DrvRecalc, 512,
+		DrvRobowresInit, DrvExit, DrvFrame
 	};
 
 	if (strcmp(nBurnDrvAppoooh.szShortName, szShortName) == 0) 
@@ -155,7 +155,6 @@ int ovlInit(char *szShortName)
 //	DrvPalette        = (UINT16*)colBgAddr;
 	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
 	is_fg_dirty			=  Next; Next +=0x400;
-	MemEnd			= Next;
 
 	return 0;
 }
@@ -450,7 +449,6 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 		break;
 
 		case 0x05:
-			scroll_x = data; // not used.
 		break;
 	}
 }
@@ -477,7 +475,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | flipx);
 		ss_spritePtr->charAddr 	= 0x220 +(code << 4);
 		ss_spritePtr->color     = (color<<4);
-		ss_spritePtr++;
+		*ss_spritePtr++;
 	}
 }
 
@@ -509,7 +507,6 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 	DrvZ80Bank0 = 0;
-	scroll_x = 0;
 	flipscreen = 0;
 	adpcm_address = 0xffffffff;
 	adpcm_data = 0;
@@ -589,7 +586,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	return 0;
 }
 
-/*static*/  INT32 DrvCommonInit()
+/*static*/  INT32 DrvCommonInit(UINT8 game_select)
 {
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
@@ -715,7 +712,6 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 {
 	nSoundBufferPos=0;
 	DrvInitSaturn();
-	game_select = 1;
 	AllMem = NULL;
 	MemIndex();
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
@@ -730,7 +726,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
  	sega_decode_315( DrvMainROM, DrvFetch );
 	DrvRobowresPaletteInit();
 	DrvRobowresGfxDecode();
-	DrvCommonInit();
+	DrvCommonInit(1);
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
 
 	return 0;
@@ -740,7 +736,6 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 {
 	nSoundBufferPos=0;
 	DrvInitSaturn();
-	game_select = 0;
 	AllMem = NULL;
 	MemIndex();
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL)
@@ -755,7 +750,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 
 	DrvGfxDecode();
 
-	DrvCommonInit();
+	DrvCommonInit(0);
 //	wait_vblank();
 	return 0;
 }
@@ -878,7 +873,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	CZetExit2();
 
 	MSM5205Exit();
@@ -890,7 +885,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 //		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
 
-	MemEnd = AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
+	AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
 	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvColPROM = DrvMainROM = NULL;
 	DrvSoundROM = DrvFetch = CZ80Context = is_fg_dirty = NULL;
 	map_offset_lut = NULL;

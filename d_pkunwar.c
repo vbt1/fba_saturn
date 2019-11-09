@@ -12,28 +12,28 @@ int ovlInit(char *szShortName)
 		"pkunw", NULL,
 		"Penguin-Kun Wars (US)\0",
 		pkunwarRomInfo, pkunwarRomName, DrvInputInfo, DrvDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL//, DrvDraw//, NULL
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvNova2001u = {
 		"nova2001", "pkunw",
 		"Nova 2001 (US)\0",
 		nova2001uRomInfo, nova2001uRomName, Nova2001InputInfo, Nova2001DIPInfo,
-		NovaInit, DrvExit, NovaFrame, NULL
+		NovaInit, DrvExit, NovaFrame
 	};
 
 	struct BurnDriver nBurnDrvNinjakun = {
 		"ninjakun", "pkunw",
 		"Ninjakun Majou no Bouken\0",
 		ninjakunRomInfo, ninjakunRomName, NinjakunInputInfo, NinjakunDIPInfo,
-		NinjakunInit, DrvExit, NinjakunFrame, NULL
+		NinjakunInit, DrvExit, NinjakunFrame
 	};
 
 	struct BurnDriver nBurnDrvRaiders5 = {
 		"raiders5", "pkunw",
 		"Raiders5\0",
 		raiders5RomInfo, raiders5RomName, Raiders5InputInfo, Raiders5DIPInfo,
-		Raiders5Init, DrvExit, Raiders5Frame, NULL
+		Raiders5Init, DrvExit, Raiders5Frame
 	};
 
 	if (strcmp(nBurnDrvpkunwar.szShortName, szShortName) == 0)
@@ -1345,7 +1345,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int DrvExit()
 {
-	SPR_InitSlaveSH();
+	NinjakunDoReset();
 	nBurnSprites=128;
 	cleanSprites();
 

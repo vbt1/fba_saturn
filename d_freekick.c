@@ -11,42 +11,42 @@ int ovlInit(char *szShortName)
 		"pbillrd", "freek",
 		"Perfect Billiard",
 		pbillrdRomInfo, pbillrdRomName, PbillrdInputInfo, PbillrdDIPInfo,
-		pbillrdInit, DrvExit, DrvFrame, NULL
+		pbillrdInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvFreekickb1 = {
 		"freekb1", "freek",
 		"Free Kick (bootleg set 1)",
 		freekickb1RomInfo, freekickb1RomName, FreekckInputInfo, FreekckDIPInfo,
-		DrvFreeKickInit, DrvExit, DrvFrame, NULL
+		DrvFreeKickInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvCountrunb = {
 		"countrnb", "freek",
 		"Counter Run (bootleg set 1)",
 		countrunbRomInfo, countrunbRomName, CountrunInputInfo, CountrunDIPInfo,
-		DrvFreeKickInit, DrvExit, DrvFrame, NULL
+		DrvFreeKickInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvGigasb = {
 		"gigasb", "freek",
 		"Gigas (bootleg)",
 		gigasbRomInfo, gigasbRomName, GigasInputInfo, GigasDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvGigasm2 = {
 		"gigasm2b", "freek",
 		"Gigas Mark II", 
 		 gigasm2RomInfo, gigasm2RomName, GigasInputInfo, Gigasm2DIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvOmega = {
 		"omega", "freek",
 		"Omega",
 		omegaRomInfo, omegaRomName, GigasInputInfo, OmegaDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	if (strcmp(nBurnDrvPbillrd.szShortName, szShortName) == 0) 

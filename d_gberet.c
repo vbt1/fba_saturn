@@ -14,14 +14,14 @@ int ovlInit(char *szShortName)
 		"gberet", NULL,
 		"Green Beret\0",
 		gberetRomInfo, gberetRomName, DrvInputInfo, gberetDIPInfo,
-		gberetInit, DrvExit, DrvFrame, DrvDraw//, NULL
+		gberetInit, DrvExit, DrvFrame//, NULL
 	};
 
 	struct BurnDriver nBurnDrvMrgoemon = {
 		"mrgoemon", "gberet",
 		"Mr. Goemon (Japan)\0",
 		mrgoemonRomInfo, mrgoemonRomName, DrvInputInfo, mrgoemonDIPInfo,
-		mrgoemonInit, DrvExit, DrvFrame, DrvDraw//, NULL
+		mrgoemonInit, DrvExit, DrvFrame//, NULL
 	};
 
     if (strcmp(nBurnDrvGberet.szShortName, szShortName) == 0)
@@ -455,7 +455,6 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 /*static*/ INT32 DrvExit()
 {
 	DrvDoReset();
-	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
 

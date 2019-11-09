@@ -3,7 +3,7 @@
 //#define DEBUG 1
 #include "SEGA_INT.H"
 #include "SEGA_DMA.H"
-#include    "machine.h"
+#include "machine.h"
 #include "d_sidarm.h"
 
 //#define nInterleave 278/2
@@ -25,10 +25,10 @@ int ovlInit(char *szShortName)
 		"sidarm", NULL,
 		"Side Arms - Hyper Dyne (World, 861129)",
 		sidearmsRomInfo, sidearmsRomName, SidearmsInputInfo, SidearmsDIPInfo,
-		SidearmsInit, DrvExit, DrvFrame, NULL
+		SidearmsInit, DrvExit, DrvFrame
 	};
 
-	if (strcmp(nBurnDrvSidearms.szShortName, szShortName) == 0) 
+	if (!strcmp(nBurnDrvSidearms.szShortName, szShortName)) 
 	memcpy(shared,&nBurnDrvSidearms,sizeof(struct BurnDriver));
 
 	ss_reg   = (SclNorscl *)SS_REG;
@@ -59,9 +59,9 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/ void bankswitch(INT32 data)
+/*static*/ void bankswitch(UINT32 data)
 {
-	bank_data = data & 0x0f;
+	UINT8 bank_data = data & 0x0f;
 
 //	ZetMapMemory(DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000), 0x8000, 0xbfff, MAP_ROM);
 //	CZetMapArea(0xc000, 0xcfff, 0, DrvBgRAM + nBank);
@@ -274,7 +274,6 @@ int ovlInit(char *szShortName)
 	current_pcm = 0;
 	sprite_enable = 0;
 	bglayer_enable = 0;
-	bank_data = 0;
 
 	starfield_enable = 0;
 	starscrollx = 0;
@@ -329,7 +328,7 @@ int ovlInit(char *szShortName)
 	map_offset_lut	= Next; Next += 8192 * sizeof (UINT16);
 	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
 //	charaddr_lut		= Next; Next += 0x800 * sizeof (UINT16);
-	MemEnd			= Next;
+//	MemEnd			= Next;
 
 	return 0;
 }
@@ -343,29 +342,14 @@ int ovlInit(char *szShortName)
 	UINT32 XOffs0[16] = { STEP4(0,1), STEP4(8,1), STEP4(256,1), STEP4(256+8,1) };
 	UINT32 XOffs1[32] = { STEP4(0,1), STEP4(8,1), STEP4(512,1), STEP4(512+8,1), STEP4(1024,1), STEP4(1024+8,1), STEP4(1536,1), STEP4(1536+8,1) };
 	UINT32 YOffs[32]  = { STEP32(0,16) };
-	UINT8 *DrvGfxROM1	 = (UINT8 *)(SS_CACHE + 0x4000);
+	UINT8 *DrvGfxROM1	 = (UINT8 *)0x00240000;	
+	UINT8 *DrvGfxROM1b	 = (UINT8 *)(SS_CACHE + 0x4000);
 	UINT8 *DrvGfxROM0	 = (UINT8 *)SS_CACHE;
-	UINT8 *DrvGfxROM2	 = (UINT8 *)(ss_vram + 0x1100);
+	UINT8 *DrvGfxROM2	 = (UINT8*)0x002C0000;//(UINT8 *)(ss_vram + 0x1100);
+	UINT8 *DrvGfxROM2b	 = (UINT8*)(ss_vram + 0x1100);
+	
 	UINT8 *tmp = (UINT8*)0x00200000; 
 
-	memset4_fast(tmp,0x00,0x80000);
-// bg
-	memcpyl (tmp, DrvGfxROM1, 0x70000);
-
-//	memset(DrvGfxROM1,0x00,0x40000);
-	GfxDecode4Bpp(0x0400, 4, 32, 32, Plane1, XOffs1, YOffs, 0x800, DrvGfxROM1, tmp);
-	tile32x32toSaturn(1,0x0200, tmp);
-
-	for (UINT32 i=0;i<0x70000;i++ )
-	{
-		if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
-		else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
-
-		if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
-		else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
-	}
-
-	memcpyl (DrvGfxROM1, tmp, 0x70000);
 	memcpyl (tmp, DrvGfxROM0, 0x04000);
 // text
 	GfxDecode4Bpp(0x0400, 2,  8,  8, Plane0, XOffs0, YOffs, 0x080, tmp, DrvGfxROM0);
@@ -378,19 +362,37 @@ int ovlInit(char *szShortName)
 		if ((DrvGfxROM0[i]& 0x30)       ==0x00)DrvGfxROM0[i] = 0x30 | DrvGfxROM0[i] & 0x03;
 		else if ((DrvGfxROM0[i]& 0x30)==0x30) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x03;
 	}	
-// sprites
-	memcpyl (tmp, (UINT8 *)DrvGfxROM2, 0x40000);
 
-	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane2, XOffs0, YOffs, 0x200, tmp, DrvGfxROM2);
+wait_vblank();
+	
+// sprites // ok
+	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane2, XOffs0, YOffs, 0x200, DrvGfxROM2, tmp);
 
 	for (UINT32 i=0;i<0x40000;i++ )
 	{
-		if ((DrvGfxROM2[i]& 0x0f)     ==0x00)DrvGfxROM2[i] = DrvGfxROM2[i] & 0xf0 | 0xf;
-		else if ((DrvGfxROM2[i]& 0x0f)==0x0f) DrvGfxROM2[i] = DrvGfxROM2[i] & 0xf0;
+		if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
+		else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
 
-		if ((DrvGfxROM2[i]& 0xf0)       ==0x00)DrvGfxROM2[i] = 0xf0 | DrvGfxROM2[i] & 0x0f;
-		else if ((DrvGfxROM2[i]& 0xf0)==0xf0) DrvGfxROM2[i] = DrvGfxROM2[i] & 0x0f;
+		if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
+		else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
 	}
+	memcpyl (DrvGfxROM2b, tmp, 0x40000);
+	
+// bg
+	GfxDecode4Bpp(0x0400, 4, 32, 32, Plane1, XOffs1, YOffs, 0x800, DrvGfxROM1, tmp);
+	tile32x32toSaturn(1,0x0200, tmp);
+
+	for (UINT32 i=0;i<0x70000;i++ )
+	{
+		if ((tmp[i]& 0x0f)     ==0x00)tmp[i] = tmp[i] & 0xf0 | 0xf;
+		else if ((tmp[i]& 0x0f)==0x0f) tmp[i] = tmp[i] & 0xf0;
+
+		if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
+		else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
+	}
+
+	memcpyl (DrvGfxROM1b, tmp, 0x70000);
+	wait_vblank();
 }
 
 /*static*/ INT32 SidearmsInit()
@@ -400,8 +402,11 @@ int ovlInit(char *szShortName)
 	AllMem = NULL;
 	MemIndex();
 	UINT8 *ss_vram		 = (UINT8 *)SS_SPRAM;
-	UINT8 *DrvGfxROM1	 = (UINT8 *)(SS_CACHE + 0x4000);
-	UINT8 *DrvGfxROM2	 = (UINT8 *)(ss_vram + 0x1100);
+//	UINT8 *DrvGfxROM1	 = (UINT8 *)(SS_CACHE + 0x4000);
+	UINT8 *DrvGfxROM1	 = (UINT8 *)0x00240000;
+//	UINT8 *DrvGfxROM2	 = (UINT8 *)(ss_vram + 0x1100);
+	UINT8 *DrvGfxROM2	 = (UINT8*)0x002C0000;//(UINT8 *)(ss_vram + 0x1100);
+
 
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
@@ -409,6 +414,8 @@ int ovlInit(char *szShortName)
 	}
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
+	
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x08000,  1, 1)) return 1;
@@ -442,6 +449,7 @@ int ovlInit(char *szShortName)
 		if (BurnLoadRom(DrvTileMap + 0x00000, 22, 1)) return 1;
 		DrvGfxDecode();
 	}
+	
 #ifdef RAZE
   	z80_init_memmap();
 
@@ -492,7 +500,7 @@ int ovlInit(char *szShortName)
 #endif
 	DrvDoReset(1);
 	make_lut();
-
+	SS_SET_N0PRIN(3); // star field
 	drawWindow(0,224,240,0,0);
 
 	UINT8 *lineptr = (Uint8 *)0x0280000;
@@ -521,8 +529,8 @@ int ovlInit(char *szShortName)
 {
 	nBurnFunction = NULL;
 	wait_vblank();
-
-	SPR_InitSlaveSH();
+	DrvDoReset(1);
+	memset(ss_map2,0x00,0x20000);
 #ifdef RAZE
 
 #else
@@ -536,7 +544,7 @@ int ovlInit(char *szShortName)
 
 	bgmap_buf = NULL;
 	cram_lut = bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = NULL;
-	CZ80Context = MemEnd = AllRam = RamEnd = DrvZ80ROM0 = NULL;
+	CZ80Context = AllRam = RamEnd = DrvZ80ROM0 = NULL;
 	DrvStarMap = DrvTileMap = DrvVidRAM = DrvSprBuf = DrvSprRAM = DrvPalRAM = DrvZ80RAM0 = bgscrollx = bgscrolly = NULL;
 	BurnFree (AllMem);
 	AllMem = NULL;
@@ -600,7 +608,7 @@ void transfer_bg_layer()
 		ss_spritePtr->ay			= DrvSprBuf[offs + 2];
 		ss_spritePtr->color		= (attr & 0xf)<<4;//Colour<<4;
 		ss_spritePtr->charAddr	= 0x220+(code<<4);
-		ss_spritePtr++;
+		*ss_spritePtr++;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -637,7 +645,6 @@ void transfer_bg_layer()
 
 /*static*/ INT32 DrvFrame()
 {
-
 	watchdog++;
 	if (watchdog > 180 && enable_watchdog) {
 		DrvDoReset(0);
@@ -727,7 +734,7 @@ static void initLayers()
 	scfg.datatype 	   = SCL_BITMAP;
 	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
-	scfg.dispenbl      = OFF;
+	scfg.dispenbl      = ON;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
 	SCL_SetCycleTable(CycleTb);
@@ -744,6 +751,7 @@ static void initColors()
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_NBG0,OFF);
+	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
@@ -772,7 +780,7 @@ static void DrvInitSaturn()
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+3;
 
-	SS_SET_N0PRIN(3); // star field
+	SS_SET_N0PRIN(7); // star field
 	SS_SET_N1PRIN(4); // bg
 	SS_SET_N2PRIN(6); // fg
 	SS_SET_S0PRIN(4); // sp0
@@ -969,7 +977,7 @@ static void DrvInitSaturn()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
+/*static*/ void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
 {
 	for (unsigned int c = 0; c < num; c++) 
 	{

@@ -10,9 +10,12 @@ INT32 SidearmsInit();
 INT32 DrvExit();
 INT32 DrvFrame();
 UINT32 SidearmsDraw();
+void bankswitch(UINT32 data);
 void sidearms_draw_starfield(int *starfield_enable);
 //void vblIn();
-static void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+/*static*/ void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+void SDMA_ScuCst(Uint32 ch, void *dst, void *src, Uint32 cnt);
+Uint32 SDMA_ScuResult(Uint32 ch);
 unsigned char current_pcm=255;
 void dummy();
 
@@ -60,7 +63,6 @@ SFX sfx_sidarm[96] = {
 
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT8 *AllMem= NULL;
-/*static*/ UINT8 *MemEnd= NULL;
 /*static*/ UINT8 *AllRam= NULL;
 /*static*/ UINT8 *RamEnd= NULL;
 /*static*/ UINT8 *DrvZ80ROM0= NULL;
@@ -82,12 +84,11 @@ SFX sfx_sidarm[96] = {
 /*static*/ UINT8 starfield_enable=0;
 /*static*/ UINT8 sprite_enable=0;
 /*static*/ UINT8 bglayer_enable=0;
-/*static*/ UINT8 bank_data=0;
 /*static*/ UINT16 starscrollx=0;
 /*static*/ UINT16 starscrolly=0;
-/*static*/ UINT32 enable_watchdog=0;
-/*static*/ UINT32 watchdog=0;
-/*static*/ UINT32 vblank=0;
+/*static*/ UINT8 enable_watchdog=0;
+/*static*/ UINT8 watchdog=0;
+/*static*/ UINT8 vblank=0;
 
 /*static*/ UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
@@ -96,7 +97,6 @@ SFX sfx_sidarm[96] = {
 /*static*/ UINT8 DrvJoy5[8]={0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvDips[4]={0,0,0,0};
 /*static*/ UINT8 DrvInputs[5]={0,0,0,0,0};
-/*static*/ UINT8 DrvReset=0;
 
 /*static*/ struct BurnInputInfo SidearmsInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},
@@ -119,7 +119,7 @@ SFX sfx_sidarm[96] = {
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"	},
 	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy3 + 6,	"p2 fire 3"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };

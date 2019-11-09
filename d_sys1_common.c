@@ -271,7 +271,6 @@ Allocate Memory
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
 	map_cache			= (UINT32 *)Next; Next += (0x800*4) * sizeof(UINT32);
 	CZ80Context			= Next; Next += 2*sizeof(cz80_struc);
-	MemEnd = Next;
 
 	return 0;
 }
@@ -292,12 +291,9 @@ Reset Functions
 	System1VideoMode = 0;
 	System1FlipScreen = 0;
 	System1SoundLatch = 0;
-	System1RomBank = 0;
 	System1BgBankLatch =  0;
 	System1BgBank = 0;
 	System1BankedRom = 0;
-	System1BankSwitch =0;
-//	System1Reset = 0;
 
 	return 0;
 }
@@ -306,21 +302,21 @@ Reset Functions
 Memory Handlers
 ===============================================================================================*/
 
-void System1BankRom()
+void System1BankRom(UINT32 System1RomBank)
 {
-	INT32 BankAddress = (System1RomBank * 0x4000) + 0x10000;
+	UINT32 BankAddress = (System1RomBank * 0x4000) + 0x10000;
 	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
 //	CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + BankAddress, System1Rom1 + BankAddress);
 	CZetMapArea2(0x8000, 0xbfff, 2, System1Rom1 + BankAddress + 0x20000, System1Rom1 + BankAddress);
 }
-
+/*
 void System1BankRomNoDecode()
 {
 	int BankAddress = (System1RomBank << 14) + 0x10000;
 	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
 	CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
 }
-
+*/
 UINT8 __fastcall System1Z801PortRead(unsigned short a)
 {
 	a &= 0xff;
@@ -643,7 +639,6 @@ void initLayers()
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
 	ss_sprite  = (SprSpCmd *)SS_SPRIT;
-	ss_vram   = (UINT8 *)SS_SPRAM;
 	ss_scl      = (Fixed32 *)SS_SCL;
 
 	SaturnInitMem();
@@ -662,6 +657,7 @@ void initLayers()
 	//		ss_reg->n1_move_x =  -32 <<16;
 		}
 	}
+	UINT8 *ss_vram   = (UINT8 *)SS_SPRAM;
 	memset(&ss_vram[0x1100],0x00,0x7EF00);
 	SS_SET_N2PRIN(4);
 	SS_SET_S0PRIN(4);
@@ -931,7 +927,7 @@ int System1Exit()
     while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
     while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
 
-MemEnd  = CZ80Context = NULL;
+	CZ80Context = NULL;
 
 	SN76489Init(0, 0, 0);
 	SN76489Init(1, 0, 0);
@@ -946,7 +942,7 @@ System1ScrollXRam = System1BgCollisionRam = NULL;
 System1SprCollisionRam = NULL;
 System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
 /*System1Tiles =*/ SpriteOnScreenMap = NULL;
-System1Fetch1 = System1MC8123Key = NULL;
+System1Fetch1 = NULL;
 System1ScrollX = System1ScrollY = NULL;
 
 remap8to16_lut = NULL;
@@ -955,7 +951,6 @@ map_offset_lut = NULL;
 cpu_lut = NULL;
 cram_lut = NULL;
 width_lut = NULL;
-ss_vram = NULL;
 spriteCache = NULL;
 map_cache = NULL;
 
@@ -982,7 +977,6 @@ map_cache = NULL;
 	System1ColourProms = 0;
 	System1BankedRom = 0;
 	System1BankSwitch =0;
-//	System1Reset = 0;
 	
 	nCyclesTotal[0] = nCyclesTotal[1] = 0;
 
@@ -1072,7 +1066,7 @@ void renderSpriteCache(int *values)
 	UINT32 Width  = values[3];
 	int Bank = values[4];
 	UINT16 aNextSprite = values[5];
-
+	UINT8 *ss_vram   = (UINT8 *)SS_SPRAM;
 	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(aNextSprite<<3)];
 
 	for (UINT32 Row = 0; Row < Height; Row++) 

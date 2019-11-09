@@ -22,7 +22,7 @@ int ovlInit(char *szShortName)
 		"msx", NULL,
 		"MSX1 System",
 		MSX_1942RomInfo, MSX_1942RomName, MSXInputInfo, MSXDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	memcpy(shared,&nBurnDrvMSX_1942,sizeof(struct BurnDriver));

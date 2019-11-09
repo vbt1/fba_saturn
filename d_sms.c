@@ -19,7 +19,7 @@ int ovlInit(char *szShortName)
 		"Sega Master System (Faze)",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
-		SMSInit, SMSExit, SMSFrame, NULL
+		SMSInit, SMSExit, SMSFrame
 	};
 #else
 #ifdef CZ80
@@ -28,7 +28,7 @@ int ovlInit(char *szShortName)
 		"Sega Master System (CZ80)",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
-		SMSInit, SMSExit, SMSFrame, NULL
+		SMSInit, SMSExit, SMSFrame
 	};
 #else
 #ifdef CZ80
@@ -37,7 +37,7 @@ int ovlInit(char *szShortName)
 		"Sega Game Gear (CZ80)",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
-		SMSInit, SMSExit, SMSFrame, NULL
+		SMSInit, SMSExit, SMSFrame
 	};
 #else
 	struct BurnDriver nBurnDrvsms_akmw = {
@@ -45,7 +45,7 @@ int ovlInit(char *szShortName)
 		"Sega Game Gear (Faze)",
 		sms_akmwRomInfo, sms_akmwRomName, SMSInputInfo, SMSDIPInfo,
 //		sms_akmwRomInfo, sms_akmwRomName, NULL, SMSDIPInfo,
-		SMSInit, SMSExit, SMSFrame, NULL
+		SMSInit, SMSExit, SMSFrame
 	};
 #endif
 #endif

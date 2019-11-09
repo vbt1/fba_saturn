@@ -27,11 +27,9 @@ write_func p[36] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 /*static*/ //UINT8 *SaturnMem = NULL;
 /*static*/ UINT16 *remap8to16_lut = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
-///*static*/ Uint16 *code_lut = NULL;
 /*static*/ UINT32 *cpu_lut = NULL;
 /*static*/ UINT16 *cram_lut = NULL;
 /*static*/ UINT8 *width_lut = NULL;
-/*static*/ UINT8 *ss_vram = NULL;
 /*static*/ UINT16 *spriteCache = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
 /*static*/ UINT32 *map_cache = NULL;
@@ -47,6 +45,7 @@ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase);
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase);
 void *memset4_fast(void *, long, size_t);
+void System1BankRom(UINT32 System1RomBank);
 
 /*static*/ UINT8 System1InputPort0[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 System1InputPort1[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -56,7 +55,6 @@ void *memset4_fast(void *, long, size_t);
 /*static*/ //UINT8 System1Reset            = 0;
 
 /*static*/ UINT8 *Mem                    = NULL;
-/*static*/ UINT8 *MemEnd                 = NULL;
 /*static*/ UINT8 *RamStart               = NULL;
 /*static*/ UINT8 *RamStart1               = NULL;
 /*static*/ UINT8 *System1Rom1            = NULL;
@@ -81,7 +79,6 @@ void *memset4_fast(void *, long, size_t);
 /*static*/ UINT8 *System1Sprites         = NULL;
 /*static*/ UINT8 *SpriteOnScreenMap      = NULL;
 /*static*/ UINT8 *System1Fetch1          = NULL;
-/*static*/ UINT8 *System1MC8123Key       = NULL;
 /*static*/ UINT8  *System1ScrollX = NULL;
 /*static*/ UINT8  *System1ScrollY = NULL;
 
@@ -90,8 +87,6 @@ void *memset4_fast(void *, long, size_t);
 /*static*/ int            System1VideoMode = 0;
 /*static*/ int            System1FlipScreen = 0;
 /*static*/ int            System1SoundLatch = 0;
-/*static*/ int            System1RomBank = 0;
-/*static*/ int            System1BankSwitch = 0;
 
 /*static*/ UINT8 System1BgBankLatch = 0;
 /*static*/ UINT8 System1BgBank = 0;

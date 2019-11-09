@@ -11,7 +11,6 @@
 #include "d_sys1h.h"
 #include "d_sys1_common.c"
 
-//UINT8 System1MC8123Key[0x2000];
 //revoir WRITE_MEM16 et READ_MEM16
 //modifier CZetSetReadHandler et CZetSetWriteHandler
 
@@ -23,21 +22,21 @@ int ovlInit(char *szShortName)
 		"blockgal", "sys1h",
 		"Block Gal (MC-8123B, 317-0029)\0",
 		BlockgalRomInfo, BlockgalRomName, BlockgalInputInfo, BlockgalDIPInfo,
-		BlockgalInit, System1Exit, System1Frame, NULL//,NULL
+		BlockgalInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvGardia = {
 		"gardia", "sys1h",
 		"Gardia (317-0006)\0",
 		GardiaRomInfo, GardiaRomName, MyheroInputInfo, GardiaDIPInfo,
-		GardiaInit, System1Exit, System1Frame, NULL//, NULL//,
+		GardiaInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvStarjack = {
 		"starjack", "sys1h",
 		"Star Jacker (Sega)\0", 
 		StarjackRomInfo, StarjackRomName, MyheroInputInfo, StarjackDIPInfo,
-		StarjackInit, System1Exit, System1Frame, NULL
+		StarjackInit, System1Exit, System1Frame
 	};
 
 struct BurnDriver nBurnDrvRaflesia = {
@@ -82,7 +81,7 @@ Decode Functions
 
 /*static*/ void blockgal_decode()
 {
-	mc8123_decrypt_rom(0, 0, System1Rom1, System1Fetch1, System1MC8123Key);
+	mc8123_decrypt_rom(0, 0, System1Rom1, System1Fetch1, (UINT8*)0x002FC000);
 }
 /*==============================================================================================
 Memory Handlers
@@ -116,8 +115,7 @@ void __fastcall BrainZ801PortWrite(unsigned short a, UINT8 d)
 		case 0x19: {
 			System1VideoMode = d;
 			System1FlipScreen = d & 0x80;
-			System1RomBank = ((d & 0x04) >> 2) + ((d & 0x40) >> 5);
-			System1BankRom();
+			System1BankRom(((d & 0x04) >> 2) + ((d & 0x40) >> 5));
 			return;
 		}
 	}
@@ -150,13 +148,11 @@ Driver Inits
 {
 	int nRet;
 	flipscreen = 1;
-	System1MC8123Key = (UINT8*)0x002FC000;
+	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
 	BurnLoadRom(System1MC8123Key, 14, 1);
 	DecodeFunction = blockgal_decode;
 
 	nRet = System1Init(2, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
-//	free(System1MC8123Key);
-//	System1MC8123Key = NULL;
 	
 	CZetOpen(0);
 	CZetSetInHandler(BlockgalZ801PortRead);

@@ -16,14 +16,14 @@ int ovlInit(char *szShortName)
 		"newsa", "news",
 		"News (set 2)\0",
 		NewsaRomInfo, NewsaRomName, NewsInputInfo, NewsaDIPInfo,
-		NewsInit, NewsExit, NewsFrame, NULL//, NULL
+		NewsInit, NewsExit, NewsFrame//, NULL
 	};
 
 	struct BurnDriver nBurnDrvNews = {
 		"news", NULL,
 		"News (set 1)\0",
 		NewsRomInfo, NewsRomName, NewsInputInfo, NewsDIPInfo,
-		NewsInit, NewsExit, NewsFrame, NULL//, NULL
+		NewsInit, NewsExit, NewsFrame//, NULL
 	};
 
     if (strcmp(nBurnDrvNewsa.szShortName, szShortName) == 0)
@@ -385,7 +385,7 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ int NewsExit()
 {
-	SPR_InitSlaveSH();
+	NewsDoReset();
 	MSM6295Exit(0);
 #ifdef CZ80
 	CZetExit2();

@@ -15,49 +15,49 @@ int ovlInit(char *szShortName)
 		"hangonjr", "segae", 
 		"Hang-On Jr.", 
 		hangonjrRomInfo, hangonjrRomName, HangonjrInputInfo, HangonjrDIPInfo,
-		DrvHangonJrInit, DrvExit, DrvFrame, NULL
+		DrvHangonJrInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvTetrisse = {
 		"tetrisse", "segae",
 		"Tetris (Japan, System E)",
 		TetrisseRomInfo, TetrisseRomName, TetrisseInputInfo, TetrisseDIPInfo,
-		DrvTetrisInit, DrvExit, DrvFrame, NULL
+		DrvTetrisInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvTransfrm = {
 		"transfrm", "segae",
 		"Transformer",
 		TransfrmRomInfo, TransfrmRomName, TransfrmInputInfo, TransfrmDIPInfo,
-		DrvTransfrmInit, DrvExit, DrvFrame, NULL
+		DrvTransfrmInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvAstrofl = {
 		"astrofl", "segae",
 		"Astro Flash (Japan)",
 		AstroflRomInfo, AstroflRomName, TransfrmInputInfo, TransfrmDIPInfo,
-		DrvAstroflInit, DrvExit, DrvFrame, NULL
+		DrvAstroflInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvFantzn2 = {
 		"fantzn2", "segae",
 		"Fantasy Zone 2 - The Tears of Opa-Opa",
 		fantzn2RomInfo, fantzn2RomName, TransfrmInputInfo, Fantzn2DIPInfo,
-		DrvFantzn2Init, DrvExit, DrvFrame, NULL
+		DrvFantzn2Init, DrvExit, DrvFrame
 	};
 /*
 	struct BurnDriver nBurnDrvOpaopa = {
 		"opaopa", "segae",
 		"Opa Opa (MC-8123, 317-0042)",
 		opaopaRomInfo, opaopaRomName, Segae2pInputInfo, OpaopaDIPInfo,
-		DrvOpaopaInit, DrvExit, DrvFrame, NULL
+		DrvOpaopaInit, DrvExit, DrvFrame
 	};*/
 
 	struct BurnDriver nBurnDrvSlapshtr = {
 		"slapshtr", "segae",
 		"Slap Shooter",
 		slapshtrRomInfo, slapshtrRomName, TransfrmInputInfo, TransfrmDIPInfo,
-		DrvSlapshtrInit, DrvExit, DrvFrame, NULL
+		DrvSlapshtrInit, DrvExit, DrvFrame
 	};
 
 	if (strcmp(nBurnDrvHangonjr.szShortName, szShortName) == 0) 

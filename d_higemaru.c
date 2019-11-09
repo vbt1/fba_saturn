@@ -13,7 +13,7 @@ int ovlInit(char *szShortName)
 		"higema", NULL,
 		"Pirate Ship Higemaru\0",
 		higemaruRomInfo, higemaruRomName, DrvInputInfo, DrvDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL, //NULL
+		DrvInit, DrvExit, DrvFrame//NULL
 	};
 
 	memcpy(shared,&nBurnDrvhigemaru,sizeof(struct BurnDriver));
@@ -387,7 +387,7 @@ for (i = 0; i < 0x80; i+=4)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  int DrvExit()
 {
-	SPR_InitSlaveSH();
+	DrvDoReset();
 #ifdef RAZE
 	z80_stop_emulating();
 	z80_add_write(0xd000, 0xd7ff, 1, (void *)NULL);

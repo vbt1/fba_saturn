@@ -117,7 +117,7 @@ struct BurnDriver {
 	int (*GetRomName)(char** pszName, unsigned int i, int nAka);	// Function to get the possible names for each rom
 	int (*GetInputInfo)(struct BurnInputInfo* pii, unsigned int i);	// Function to get the input info for the game
 	int (*GetDIPInfo)(struct BurnDIPInfo* pdi, unsigned int i);		// Function to get the input info for the game
-	int (*Init)(); int (*Exit)(); int (*Frame)(); int (*Redraw)(); //int (*AreaScan)(int nAction, int* pnMin);
+	int (*Init)(); int (*Exit)(); int (*Frame)(); //int (*Redraw)(); //int (*AreaScan)(int nAction, int* pnMin);
 };
 
 // Standard functions for dealing with ROM and input info structures

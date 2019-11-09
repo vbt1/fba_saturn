@@ -47,7 +47,7 @@ int ovlInit(char *szShortName)
 		"blktiger", "blktgr",
 		"Black Tiger",
 		blktigerRomInfo, blktigerRomName, DrvInputInfo, DrvDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	if (strcmp(nBurnDrvBlktiger.szShortName, szShortName) == 0) 
@@ -699,8 +699,7 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
-	SPR_InitSlaveSH();
-
+	DrvDoReset(1);
 #ifdef RAZE0
 	z80_stop_emulating();
 	z80_add_write(0xc000, 0xdfff, 1, (void *)NULL);

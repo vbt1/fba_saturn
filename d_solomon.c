@@ -22,7 +22,7 @@ int ovlInit(char *szShortName)
 		"solomon", "solomn",
 		"Solomon's Key (US)",
 		SolomonRomInfo, SolomonRomName, SolomonInputInfo, SolomonDIPInfo,
-		SolomonInit, SolomonExit, SolomonFrame, NULL
+		SolomonInit, SolomonExit, SolomonFrame
 	};
 	memcpy(shared,&nBurnDrvSolomon,sizeof(struct BurnDriver));
 	ss_reg   = (SclNorscl *)SS_REG;
@@ -475,7 +475,7 @@ INT32 SolomonInit()
 
 INT32 SolomonExit()
 {
-	SPR_InitSlaveSH();	
+//	SPR_InitSlaveSH();	
 	nBurnFunction = NULL;
 	wait_vblank();
 	
@@ -534,7 +534,7 @@ void SolomonRenderSpriteLayer()
 		ss_spritePtr->ay			= 225 - SolomonSpriteRam[Offs + 2];
 		ss_spritePtr->ax			=  8 + SolomonSpriteRam[Offs + 3];
 		ss_spritePtr->color		=  (Attr & 0x0e)*8;
-		ss_spritePtr++;
+		*ss_spritePtr++;
 	}
 }
 

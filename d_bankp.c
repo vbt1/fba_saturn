@@ -15,14 +15,14 @@ int ovlInit(char *szShortName)
 	"bankp", NULL, 
 	"Bank Panic",  
 	bankpRomInfo, bankpRomName, bankpInputInfo, bankpDIPInfo,
-	DrvInit, DrvBpExit, DrvFrame, NULL//, NULL, 
+	DrvInit, DrvBpExit, DrvFrame//, NULL, 
 	};
 
 	struct BurnDriver nBurnDrvcombh = {
 	"combh", "bankp", 
 	"Combat Hawk",
 	combhRomInfo, combhRomName, combhInputInfo, combhDIPInfo,
-	DrvChInit, DrvBpExit, DrvFrame, NULL//, NULL
+	DrvChInit, DrvBpExit, DrvFrame//, NULL
 	};
 
     if (strcmp(nBurnDrvbankp.szShortName, szShortName) == 0)
@@ -524,7 +524,7 @@ int ovlInit(char *szShortName)
 	ss_map2[x] = ss_map2[x+0x40] = flipx | color;
 
 	if(color==1 || color==0xd)	ss_map2[x+1] = ss_map2[x+0x41] = code;
-	else									ss_map2[x+1] = ss_map2[x+0x41] = code+0x2800;
+	else						ss_map2[x+1] = ss_map2[x+0x41] = code+0x2800;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void 	 fg_line(UINT16 offs,UINT16 flipx)
@@ -539,7 +539,7 @@ int ovlInit(char *szShortName)
 	ss_map[x] = ss_map[x+0x40] = ss_map[x+0x1000] = ss_map[x+0x1040] = flipx | color;//color /8;
 
 	if(Palette[color<<2]==0x8000)	ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = code+0x800;
-	else											ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = code+0x1800;//2048  //0x1800
+	else							ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = code+0x1800;//2048  //0x1800
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvFrame()

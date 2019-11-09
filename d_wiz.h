@@ -26,15 +26,11 @@ void dummy();
 INT32 (*DrvDraw)() = NULL;
 
 /*static*/ UINT8 *AllMem = NULL;
-/*static*/ UINT8 *MemEnd = NULL;
 /*static*/ UINT8 *AllRam = NULL;
 /*static*/ UINT8 *RamEnd = NULL;
 /*static*/ UINT8 *DrvZ80ROM0 = NULL;
 /*static*/ UINT8 *DrvZ80Dec = NULL;
 /*static*/ UINT8 *DrvZ80ROM1 = NULL;
-/*static*/ UINT8 *DrvGfxROM0 = NULL;
-/*static*/ UINT8 *DrvGfxROM0b = NULL;
-/*static*/ UINT8 *DrvGfxROM1 = NULL;
 /*static*/ UINT8 *DrvColPROM = NULL;
 /*static*/ UINT8 *DrvZ80RAM0 = NULL;
 /*static*/ UINT8 *DrvZ80RAM1 = NULL;
@@ -63,9 +59,7 @@ INT32 (*DrvDraw)() = NULL;
 /*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvDips[2] = {0,0};
-/*static*/ UINT8 DrvReset = 0;
 /*static*/ UINT8 Wizmode = 0;
-/*static*/ UINT8 Scionmodeoffset = 0;
 
 /*static*/ struct BurnInputInfo WizInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
@@ -86,7 +80,7 @@ INT32 (*DrvDraw)() = NULL;
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 fire 1"	},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 fire 2"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };
@@ -112,7 +106,7 @@ STDINPUTINFO(Wiz)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 };
@@ -138,7 +132,7 @@ STDINPUTINFO(Scion)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 };
@@ -161,7 +155,7 @@ STDINPUTINFO(Stinger)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 fire 2"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 };

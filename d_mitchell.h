@@ -105,7 +105,6 @@ extern unsigned char* MSM6295ROM;
 extern int* pBuffer;
 
 /*static*/  unsigned char *Mem				= NULL;
-/*static*/  unsigned char *MemEnd			= NULL;
 /*static*/  unsigned char *RamStart			= NULL;
 /*static*/  unsigned char *DrvZ80Rom		= NULL;
 /*static*/  unsigned char *DrvZ80Code		= NULL;

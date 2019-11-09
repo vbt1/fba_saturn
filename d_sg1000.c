@@ -19,7 +19,7 @@ int ovlInit(char *szShortName)
 		"sg1000", NULL, 
 		"Sega SG-1000",
 		sg1k_wboyRomInfo, sg1k_wboyRomName, Sg1000InputInfo, Sg1000DIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL, 
+		DrvInit, DrvExit, DrvFrame 
 	};
 
 	/*struct BurnDriver * */ //fba_drv = 	(struct BurnDriver *)FBA_DRV;

@@ -15,7 +15,7 @@ int ovlInit(char *szShortName)
 		"bombja", NULL,
 		"Bomb Jack (set 1)",
 		BombjackRomInfo,BombjackRomName, BombjackInputInfo,BombjackDIPInfo,
-		DrvInit,DrvExit,DrvFrame,NULL
+		DrvInit,DrvExit,DrvFrame
 	};
 
 	memcpy(shared,&nBurnDrvBombjack,sizeof(struct BurnDriver));
@@ -786,7 +786,9 @@ static INT32 DrvInit()
 static INT32 DrvExit()
 {	 
 	nBurnFunction = NULL;
-	SPR_InitSlaveSH();
+	wait_vblank();	
+	DrvDoReset();
+//	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
 

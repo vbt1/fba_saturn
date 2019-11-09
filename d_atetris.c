@@ -14,7 +14,7 @@ int ovlInit(char *szShortName)
 		"atetris", "tetris", 
 		"Tetris (set 1)\0", 
 		atetrisRomInfo, atetrisRomName, AtetrisInputInfo, AtetrisDIPInfo,
-		DrvInit, DrvExit, DrvFrame, DrvDraw //, NULL, &DrvRecalc, 0x100,
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;

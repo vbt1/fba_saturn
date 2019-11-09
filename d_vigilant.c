@@ -30,7 +30,7 @@ int ovlInit(char *szShortName)
 		"vigil", NULL,
 		"Vigilante (World)",
 		DrvRomInfo, DrvRomName, DrvInputInfo, DrvDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL //NULL
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	memcpy(shared,&nBurnDrvVigilant,sizeof(struct BurnDriver));
@@ -957,7 +957,6 @@ static void Set8PCM()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvExit()
 {
-//	SPR_InitSlaveSH();
 	CZetExit2();
 
 #ifdef SOUND
@@ -1072,9 +1071,9 @@ static void Set8PCM()
 
 		ss_spritePtr->ax = sx-128;
 		ss_spritePtr->ay = sy;
-		ss_spritePtr->color         = (DrvSpriteRam[i + 0] & 0x0f)<<4;
-		ss_spritePtr->control      = (DrvSpriteRam[i + 5] & 0xC0)>>2;
-		ss_spritePtr->charSize   = 0x200|(h<<4);  //0x100 16*16
+		ss_spritePtr->color     = (DrvSpriteRam[i + 0] & 0x0f)<<4;
+		ss_spritePtr->control   = (DrvSpriteRam[i + 5] & 0xC0)>>2;
+		ss_spritePtr->charSize  = 0x200|(h<<4);  //0x100 16*16
 		ss_spritePtr->charAddr  = 0x220+(Code<<4);
 		*ss_spritePtr++;
 	}

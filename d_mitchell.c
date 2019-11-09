@@ -21,14 +21,14 @@ int ovlInit(char *szShortName)
 		"pang", "mitch",
 		"Pang (World)",
 		PangRomInfo, PangRomName, PangInputInfo, NULL,
-		PangInit, DrvExit, DrvFrame, NULL, //NULL
+		PangInit, DrvExit, DrvFrame//NULL
 	};
 
 	struct BurnDriver nBurnDrvSpang = {
 		"spang", "mitch",
 		"Super Pang (World 900914)",
 		SpangRomInfo, SpangRomName, PangInputInfo, NULL,
-		SpangInit, DrvExit, DrvFrame, NULL, //NULL
+		SpangInit, DrvExit, DrvFrame//NULL
 	};
 
     if (strcmp(nBurnDrvPang.szShortName, szShortName) == 0)
@@ -116,8 +116,6 @@ int ovlInit(char *szShortName)
 	pBuffer				= (int *)Next; Next += nBurnSoundRate * sizeof(int);
 	MSM6295Context		= (int *)Next; Next += 4 * 0x1000 * sizeof(int);
 // allocation de 808960 octets, 790ko
-//	RamEnd                  = Next;
-	MemEnd                 = Next;
 
 	return 0;
 }
@@ -658,7 +656,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x00000,  0, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x10000,  1, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvZ80Rom  + 0x30000,  2, 1); if (nRet != 0) return 1;
-
+	
 	memset(DrvTempRom, 0xff, 0xc0000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000,  3, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvTempRom + 0x20000,  4, 1); if (nRet != 0) return 1;
@@ -683,8 +681,11 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 		else if ((DrvSprites[i]& 0xf0)==0xf0) DrvSprites[i] = DrvSprites[i] & 0x0f;
 	}
 	
+	memset(DrvTempRom, 0x00, 0x50000);
 	spang_decode();
 	MitchellMachineInit();
+	
+	memset(DrvSoundRom, 0x00, 0x50000);
 	nRet = BurnLoadRom(DrvSoundRom + 0x00000,  9, 1); if (nRet != 0) return 1;
 	
 if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
@@ -823,12 +824,10 @@ static void dummy(void)
 {
 	nBurnFunction = NULL;
 	wait_vblank();
+	DrvDoReset();	
 	MSM6295Exit(0);
-	SPR_InitSlaveSH();
-	DrvDoReset();
 #ifdef CZ80
 	CZetExit2();
-//	CZetExit();
 #else
 #ifndef RAZE
 	ZetExit();
@@ -843,7 +842,7 @@ static void dummy(void)
 	stmClose(stm);
 
 	MSM6295Context = NULL;
-	CZ80Context = MemEnd = DrvZ80Rom = DrvZ80Code = DrvSoundRom = DrvZ80Ram = NULL;
+	CZ80Context = DrvZ80Rom = DrvZ80Code = DrvSoundRom = DrvZ80Ram = NULL;
 	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam = MSM6295ROM = NULL;
 	charaddr_lut = map_offset_lut = map_lut = cram_lut = NULL;
 	pBuffer = NULL;

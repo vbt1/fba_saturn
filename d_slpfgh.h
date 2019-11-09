@@ -18,14 +18,14 @@ void DrvDoReset();
 void Set6PCM();
 void PCM_MeStop(PcmHn hn);
 void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target);
+void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
+INT32 tigerhLoadROMs(UINT8 nWhichGame);
 void dummy();
 
-typedef int bool;
-bool irq_enable = 0;
-//bool bSoundCPUEnable = 0;
-bool sound_nmi_enable = 0;
+//typedef int bool;
+UINT8 irq_enable = 0;
+UINT8 sound_nmi_enable = 0;
 
-INT32 nWhichGame = 0;
 UINT32 nStatusIndex = 0;
 UINT32 nProtectIndex = 0;
 INT32 nSndIrqFrame = 0; //tigerh 6, slapf 3, perfr 4
@@ -35,8 +35,6 @@ INT32 nTigerHeliTileXPosHi = 0;
 INT32 nTigerHeliTileYPosLo = 0;
 UINT32 nTigerHeliTileMask = 0; 
 UINT32 nTigerHeliSpriteMask = 0;
-//UINT8 nPalettebank = 0;
-//UINT8 nFlipscreen = 0;
 
 UINT8 *Mem = NULL;
 UINT8 *Rom01 = NULL;

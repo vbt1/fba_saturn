@@ -13,8 +13,6 @@
 #include "d_sys2.h"
 #include "d_sys1_common.c"
 
-//UINT8 System1MC8123Key[0x2000];
-
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -23,28 +21,28 @@ int ovlInit(char *szShortName)
 		"chplftb", "sys2",
 		"Choplifter (Alternate)\0",
 		ChplftbRomInfo, ChplftbRomName, ChplftbInputInfo, ChplftbDIPInfo,
-		ChplftbInit, System1Exit, System1Frame, NULL//, NULL//,
+		ChplftbInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvWbml = {
 		"wbml", "sys2",
 		"Wonder Boy in Monster Land (Jp New)\0",
 		wbmlRomInfo, wbmlRomName, MyheroInputInfo, WbmlDIPInfo,
-		WbmlInit, System1Exit, System1Frame, NULL
+		WbmlInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvWbmlb = {
 		"wbmlb", "sys2",
 		"Wonder Boy in Monster Land (English bootleg set 1)\0",
 		wbmlbRomInfo, wbmlbRomName, MyheroInputInfo, WbmlDIPInfo,
-		WbmljbInit, System1Exit, System1Frame, NULL
+		WbmljbInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvWbmlvc = {
 		"wbmlvc", "sys2",
 		"Wonder Boy in Monster Land (EN VC)",
 		wbmlvcRomInfo, wbmlvcRomName, MyheroInputInfo, WbmlDIPInfo,
-		WbmljbInit, System1Exit, System1Frame, NULL
+		WbmljbInit, System1Exit, System1Frame
 	};
 
 	if (strcmp(nBurnDrvChplftb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvChplftb,sizeof(struct BurnDriver));
@@ -211,9 +209,8 @@ xxxxx
 
 /*static*/ inline void System2_bankswitch_w (UINT8 d)
 {
-	System1RomBank = (d & 0x0c) >> 2;
-	System1BankRom();
-	System1BankSwitch = d;
+	System1BankRom((d & 0x0c) >> 2);
+//	System1BankSwitch = d;
 }
 
 /*static*/ void __fastcall ChplftZ801ProgWrite(unsigned short a, UINT8 d)
@@ -244,7 +241,7 @@ static void wbmljb_decode()
 
 static void wbml_decode()
 {
-	mc8123_decrypt_rom(1, 4, System1Rom1, System1Rom1 + 0x20000, System1MC8123Key);
+	mc8123_decrypt_rom(1, 4, System1Rom1, System1Rom1 + 0x20000, (UINT8*)0x002FC000);
 }
 
 /*static*/ int ChplftbInit()
@@ -397,10 +394,10 @@ void CommonWbmlInit()
 
 static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Num, INT32 nZ80Rom2Size, INT32 nTileRomNum, INT32 nTileRomSize, INT32 nSpriteRomNum, INT32 nSpriteRomSize, bool bReset)
 {
-	INT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
-	INT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
-	INT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
-	INT32 nRet = 0, i, RomOffset;
+	UINT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
+	UINT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	UINT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
+	UINT32 nRet = 0, i, RomOffset;
 	struct BurnRomInfo ri;
 
 	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
@@ -426,7 +423,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	// Load Z80 #1 Program roms
 	RomOffset = 0;
 	for (i = 0; i < nZ80Rom1Num; i++) {
-		nRet = BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1); if (nRet != 0) return 1;
+		if(BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1)) return 1;
 		BurnDrvGetRomInfo(&ri, i);
 	}
 
@@ -465,14 +462,14 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	// Load Z80 #2 Program roms
 	RomOffset += nZ80Rom1Num;
 	for (i = 0; i < nZ80Rom2Num; i++) {
-		nRet = BurnLoadRom(System1Rom2 + (i * nZ80Rom2Size), i + RomOffset, 1); if (nRet != 0) return 1;
+		if(BurnLoadRom(System1Rom2 + (i * nZ80Rom2Size), i + RomOffset, 1)) return 1;
 	}
 
 	// Load and decode tiles
 	memset(System1TempRom, 0, 0x20000);
 	RomOffset += nZ80Rom2Num;
 	for (i = 0; i < nTileRomNum; i++) {
-		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1); if (nRet != 0) return 1;
+		if(BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1)) return 1;
 	}
 
 	GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, cache);
@@ -579,7 +576,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	SN76489AInit(1, 4000000, 1);
 	
 	make_lut();
-	make_cram_lut();
+//	make_cram_lut();
 	MakeInputsFunction = System1MakeInputs;
 
 	System1BgRam = NULL;
@@ -644,7 +641,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	System1BankedRom = 1;
 
 	DecodeFunction = wbml_decode;
-	System1MC8123Key = (UINT8*)0x002FC000;
+	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
 	BurnLoadRom(System1MC8123Key, 15, 1);
 	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
 	CommonWbmlInit();

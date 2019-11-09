@@ -16,7 +16,7 @@ int ovlInit(char *szShortName)
 		"robokid", "ninkd2",
 		"Atomic Robo-kid (World, Type-2)", 
 		robokidRomInfo, robokidRomName, DrvInputInfo, RobokidDIPInfo,
-		RobokidInit, DrvExit, DrvFrame, NULL
+		RobokidInit, DrvExit, DrvFrame
 	};
 
 	if (strcmp(nBurnDrvRobokid.szShortName, szShortName) == 0) 

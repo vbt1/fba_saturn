@@ -21,14 +21,14 @@ struct BurnDriver nBurnDrvGng = {
 	"gng", NULL,
 	"Ghosts'n Goblins (World? set 1)\0",
 	DrvRomInfo, DrvRomName, DrvInputInfo, DrvDIPInfo,
-	DrvInit, DrvExit, DrvFrame, NULL//, NULL
+	DrvInit, DrvExit, DrvFrame//, NULL
 };
 
 struct BurnDriver nBurnDrvGnga = {
 	"gnga", "gng",
 	"Ghosts'n Goblins (World? set 2)\0",
 	DrvaRomInfo, DrvaRomName, DrvInputInfo, DrvDIPInfo,
-	GngaInit, DrvExit, DrvFrame, NULL//, NULL
+	GngaInit, DrvExit, DrvFrame//, NULL
 };
 
     if (strcmp(nBurnDrvGng.szShortName, szShortName) == 0)

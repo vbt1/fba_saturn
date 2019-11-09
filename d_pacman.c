@@ -21,14 +21,14 @@ int ovlInit(char *szShortName)
 		"pengo2u", "pacm",
 		"Pengo (set 2 not encrypted)",
 		pengo2uRomInfo, pengo2uRomName, PengoInputInfo, PengoDIPInfo,
-		pengouInit, DrvExit, DrvFrame, NULL //, NULL, &DrvRecalc, 0x200,
+		pengouInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvpuckman = {
 		"puckman", "pacm",
 		"Puck Man (Japan set 1)",
 		puckmanRomInfo, puckmanRomName, DrvInputInfo, DrvDIPInfo,
-		puckmanInit, DrvExit, DrvFrame, NULL
+		puckmanInit, DrvExit, DrvFrame
 	};
 
 
@@ -566,13 +566,6 @@ void DrvInitSaturn()
 INT32 DrvExit()
 {
 	DrvDoReset(1);
-	/*CZetSetWriteHandler(NULL);
-	CZetSetReadHandler(NULL);
-	CZetSetOutHandler(NULL);
-	CZetSetInHandler(NULL);
-	*/
-//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-//	SPR_InitSlaveSH();	
 	
 	nSoundBufferPos=0;
 	NamcoSoundExit();
