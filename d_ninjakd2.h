@@ -14,17 +14,16 @@
 /*static*/  INT32 DrvExit();
 /*static*/  INT32 DrvFrame();
 /*static*/  void DrvCalculatePalette();
+void draw_sprites();
+void draw_fg_layer(UINT32 color_offset);
 /*static*/ void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 void cleanSprites();
 //void dummy();
 
 /*static*/  UINT8 *AllMem = NULL;
-/*static*/  UINT8 *MemEnd = NULL;
 /*static*/  UINT8 *AllRam = NULL;
 /*static*/  UINT8 *RamEnd = NULL;
 /*static*/  UINT8 *DrvZ80ROM0 = NULL;
-/*static*/  UINT8 *DrvGfxROM0 = NULL;
-/*static*/  UINT8 *DrvGfxROM1 = NULL;
 /*static*/  UINT8 *DrvGfxROM2 = NULL;
 /*static*/  UINT8 *DrvGfxROM3 = NULL;
 /*static*/  UINT8 *DrvGfxROM4 = NULL;
@@ -45,6 +44,7 @@ void cleanSprites();
 /*static*/  UINT16 scrollx[3] = {0,0,0};
 /*static*/  UINT16 scrolly[3] = {0,0,0};
 /*static*/  UINT8 tilemap_enable[3] = {0,0,0};
+/*static*/  INT16 previous_bank[3]={-1,-1,-1};
 /*static*/  UINT8 overdraw_enable = 0;
 
 /*static*/  //UINT8 m_omegaf_io_protection[3];
