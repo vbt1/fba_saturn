@@ -23,10 +23,8 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 /*static*/ unsigned char 	bg_dirtybuffer[2048];
 #endif
 
-/*static*/ unsigned short *Palette = NULL;
 /*static*/ unsigned int _30_HZ=0;
-
-/*static*/ unsigned char *Mem, *MemEnd, *Rom, *Gfx0, *Gfx1, *Prom;
+/*static*/ unsigned char *Mem = NULL, *MemEnd = NULL, *Rom = NULL;
 /*static*/ unsigned char DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 /*static*/ unsigned char DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 /*static*/ unsigned char DrvJoy3[8] = {0,0,0,0,0,0,0,0};
@@ -35,7 +33,7 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 
 /*static*/ unsigned char nmi_enable = 0, irq_enable = 0;
 /*static*/ unsigned char gberet_spritebank = 0;
-/*static*/ int mrgoemon_bank = 0;
+/*static*/// int mrgoemon_bank = 0;
 
 /*static*/ int game_type = 0; // 0 gberet / rushatck, 1 gberetb, 2 mrgoemon
 

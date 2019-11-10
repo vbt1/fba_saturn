@@ -12,16 +12,16 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvGberet = {
 		"gberet", NULL,
-		"Green Beret\0",
+		"Green Beret",
 		gberetRomInfo, gberetRomName, DrvInputInfo, gberetDIPInfo,
-		gberetInit, DrvExit, DrvFrame//, NULL
+		gberetInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvMrgoemon = {
 		"mrgoemon", "gberet",
-		"Mr. Goemon (Japan)\0",
+		"Mr. Goemon (Japan)",
 		mrgoemonRomInfo, mrgoemonRomName, DrvInputInfo, mrgoemonDIPInfo,
-		mrgoemonInit, DrvExit, DrvFrame//, NULL
+		mrgoemonInit, DrvExit, DrvFrame
 	};
 
     if (strcmp(nBurnDrvGberet.szShortName, szShortName) == 0)
@@ -33,18 +33,17 @@ int ovlInit(char *szShortName)
 
 /*static*/ void mrgoemon_bankswitch(int nBank)
 {
-	mrgoemon_bank = nBank;
 #ifdef CZ80
-	CZetMapArea(0xf800, 0xffff, 0, Rom + 0x10000 + mrgoemon_bank);
-	CZetMapArea(0xf800, 0xffff, 2, Rom + 0x10000 + mrgoemon_bank);
+	CZetMapArea(0xf800, 0xffff, 0, Rom + 0x10000 + nBank);
+	CZetMapArea(0xf800, 0xffff, 2, Rom + 0x10000 + nBank);
 #else
 #ifdef RAZE
-	z80_map_fetch(0xf800, 0xffff, Rom + 0x10000 + mrgoemon_bank); //0 read
-	z80_map_read (0xf800, 0xffff, Rom + 0x10000 + mrgoemon_bank); //2 fetch 
-	z80_map_write(0xf800, 0xffff, Rom + 0x10000 + mrgoemon_bank); //1 write 
+	z80_map_fetch(0xf800, 0xffff, Rom + 0x10000 + nBank); //0 read
+	z80_map_read (0xf800, 0xffff, Rom + 0x10000 + nBank); //2 fetch 
+	z80_map_write(0xf800, 0xffff, Rom + 0x10000 + nBank); //1 write 
 //#else
-//	ZetMapArea(0xf800, 0xffff, 0, Rom + 0x10000 + mrgoemon_bank);
-//	ZetMapArea(0xf800, 0xffff, 2, Rom + 0x10000 + mrgoemon_bank);
+//	ZetMapArea(0xf800, 0xffff, 0, Rom + 0x10000 + nBank);
+//	ZetMapArea(0xf800, 0xffff, 2, Rom + 0x10000 + nBank);
 #endif
 #endif
 }
@@ -190,13 +189,8 @@ int ovlInit(char *szShortName)
 
 /*static*/ int DrvDoReset()
 {
-//	DrvReset = 0;
-
-//	flipscreen = 0;
 	nmi_enable = 0;
 	irq_enable = 0;
-	mrgoemon_bank = 0;
-//	gberetb_scroll = 0;
 	gberet_spritebank = 0;
 
 #ifdef CZ80
@@ -232,15 +226,6 @@ int ovlInit(char *szShortName)
 	unsigned char *Next; Next = Mem;
 
 	Rom            = Next; Next += 0x14000;
-
-//	Gfx0		   = (unsigned char *)0x00200000;
-//	Gfx1		   = (unsigned char *)0x00218000;
-	Gfx0           = Next; Next += 0x08000;
-	Gfx1           = Next; Next += 0x20000;
-	Prom           = Next; Next += 0x00220;
-	Palette	       = (unsigned short*)colBgAddr;//(unsigned int*)Next; Next += 0x00200 * sizeof(unsigned int);
-//	DrvPalette     = (unsigned int*)Next; Next += 0x00200 * sizeof(unsigned int);
-
 	MemEnd         = Next;
 
 	return 0;
@@ -249,13 +234,14 @@ int ovlInit(char *szShortName)
 /*static*/ void DrvCreatePalette()
 {
 	unsigned int tmp[0x20];
-	unsigned int i;
+	unsigned char *Prom = (unsigned char *)0x00240000;
+	unsigned short *Palette = (unsigned short*)colBgAddr;//(unsigned int*)Next; Next += 0x00200 * sizeof(unsigned int);
 
 	init_32_colors(tmp,Prom);
 
 	Prom += 0x20;
 
-	for (i = 0; i < 0x100; i++)
+	for (unsigned int i = 0; i < 0x100; i++)
 	{
 		unsigned char ctabentry;
 
@@ -270,6 +256,9 @@ int ovlInit(char *szShortName)
 {
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	memset(cache,0x00,0x40000);
+	UINT8 *Gfx0 = (unsigned char *)0x00200000;
+	UINT8 *Gfx1 = (unsigned char *)0x00220000;
+	
 	GfxDecode4Bpp(0x200, 4,  8,  8, CharPlanes, CharXOffs, CharYOffs, 0x100, Gfx0, cache);
 	GfxDecode4Bpp(0x200, 4, 16, 16, SprPlanes, SprXOffs, SprYOffs, SprMod, Gfx1, &ss_vram[0x1100]);
 }
@@ -288,10 +277,11 @@ int ovlInit(char *szShortName)
 	char* pRomName;
 	struct BurnRomInfo ri;
 	unsigned char *Load0 = Rom;
-	unsigned char *Load1 = Gfx0;
-	unsigned char *Load2 = Gfx1;
-	unsigned char *Load3 = Prom;
-
+	unsigned char *Load1 = (unsigned char *)0x00200000;
+	unsigned char *Load2 = (unsigned char *)0x00220000;
+	unsigned char *Load3 = (unsigned char *)0x00240000;
+	memset(Load1,0x00,0x60000);
+	
 	for (unsigned int i = 0; !BurnDrvGetRomName(&pRomName, i, 0); i++) {
 
 		BurnDrvGetRomInfo(&ri, i);
@@ -479,8 +469,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	nBurnSprites=128;
 	cleanSprites();
 	memset(ss_scl,0x00,nBurnLinescrollSize);
-	MemEnd=Rom=Gfx0=Gfx1=Prom=NULL;
-	Palette=NULL;
+	MemEnd=Rom=NULL;
 	free(Mem);
 	Mem=NULL;
 
