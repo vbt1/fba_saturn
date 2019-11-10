@@ -14,8 +14,7 @@ INT32 pengouInit();
 //INT32 pengobInit();
 INT32 DrvExit();
 INT32 DrvFrame();
-INT32 DrvDraw();
-INT32 DrvDrawPacMan();
+inline void DrvDrawPacMan();
 INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), UINT32 select);
 INT32 pacman_load(UINT32 game_select);
 void convert_gfx(UINT32 game_select);
@@ -31,7 +30,7 @@ UINT8 *DrvVidRAM = NULL;
 UINT8 *DrvColRAM = NULL;
 UINT8 *DrvSprRAM = NULL;
 UINT8 *DrvSprRAM2 = NULL;
-UINT8 *DrvColPROM = NULL;
+//UINT8 *DrvColPROM = NULL;
 UINT8 *bg_dirtybuffer = NULL;
 UINT16 *map_offset_lut = NULL;
 UINT16 *ofst_lut = NULL;
@@ -43,7 +42,7 @@ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvInputs[2] = {0,0};
 UINT8 DrvDips[4] = {0,0,0,0};
 
-enum { PACMAN=0, PENGO };
+//enum { PACMAN=0, PENGO };
 
 extern struct namco_sound *chip;
 //UINT8 game_select = 0;

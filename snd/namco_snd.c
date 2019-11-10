@@ -50,7 +50,7 @@ INT16 *p = NULL; //(INT16*)0x00200000;
 		
 		*buffer++ += nLeftSample;
 //		counter += freq * chip->update_step;
-		counter += (UINT32)((double)freq * chip->update_step);
+		counter += (UINT32)((float)freq * chip->update_step);
 	}
 
 	return counter;
@@ -347,7 +347,7 @@ void NamcoSoundInit(INT32 clock, INT32 num_voices, UINT8 *Namcocontext)
 	}
 //	voice = NULL; 
 //	chip->update_step = INTERNAL_RATE / SOUNDRATE;
-	chip->update_step = ((double)INTERNAL_RATE / (double)SOUNDRATE);
+	chip->update_step = ((float)INTERNAL_RATE / (float)SOUNDRATE);
 
 }
 
@@ -369,7 +369,6 @@ void NamcoSoundExit()
 //	free(p);
 //	memset(p,0x00,0x30000);
 //	p = NULL;
-
 	if (chip) {
 		memset(chip, 0, sizeof(*chip));
 		chip = NULL;

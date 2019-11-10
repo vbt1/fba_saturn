@@ -49,7 +49,7 @@ typedef struct namco_sound
 
 	INT16 *waveform[MAX_VOLUME];
 	
-	double update_step;
+	float update_step;
 	
 //	double gain[2];
 //	INT32 output_dir[2];
