@@ -313,7 +313,8 @@ static void	SetVblank2( void ){
 {
 	nBurnFunction = NULL;
 	wait_vblank();
-
+	sms_reset();
+	
 	SS_SET_N0SPRM(0);
 	ss_regs->specialcode=0x0000;
 //	SPR_InitSlaveSH();
@@ -351,6 +352,11 @@ static void	SetVblank2( void ){
 
 	free(SaturnMem);
 	SaturnMem = NULL;
+	running = 0;
+	first = 0;
+	vsynch = 0;
+	scroll_x=scroll_y=0;	
+	
 	cleanDATA();
 	cleanBSS();
 
