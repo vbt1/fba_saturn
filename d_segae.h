@@ -47,9 +47,8 @@ void dummy();
 /*static*/ INT32 DrvWheel = 0;
 /*static*/ INT32 DrvAccel = 0;
 
-/*static*/ UINT8 *AllMem = NULL;
-/*static*/ UINT8 *MemEnd = NULL;
 /*static*/ UINT8 *AllRam = NULL;
+/*static*/ UINT8 *AllMem = NULL;
 /*static*/ UINT8 *RamEnd = NULL;
 /*static*/ UINT8 *DrvRAM = NULL;
 /*static*/ UINT8 *DrvMainROM = NULL;
@@ -60,7 +59,7 @@ void dummy();
 /*static*/ UINT8 port_fa_last = 0;
 /*static*/ UINT8 rombank = 0;
 
-/*static*/ UINT8 mc8123 = 0; // enabled?
+/*static*/// UINT8 mc8123 = 0; // enabled?
 /*static*/ UINT8 mc8123_banked = 0; // enabled?
 
 UINT8 hintcount = 0;			/* line interrupt counter, decreased each scanline */

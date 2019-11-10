@@ -585,7 +585,6 @@ int ovlInit(char *szShortName)
 	mc8123key           = Next; Next += 0x02000;
 	CZ80Context			= Next; Next += sizeof(cz80_struc);
 
-	AllRam				= Next;
 	DrvRAM			    = Next; Next += 0x10000;
 
 	segae_vdp_vram[0]	= Next; Next += 0x8000; /* 32kb (2 banks) */
@@ -605,7 +604,6 @@ int ovlInit(char *szShortName)
 //	map_lut	 	= Next; Next += 0x3000*sizeof(UINT16);	
 	map_lut	 	= (UINT16 *)0x00260000;	
 	ss_scl1		= (Fixed32 *)Next; Next += SCL_MAXLINE*sizeof(Fixed32);	
-	MemEnd		= Next;
 
 	return 0;
 }
@@ -624,12 +622,17 @@ int ovlInit(char *szShortName)
 	initPosition();
 //	wait_vblank();
 
-	CZ80Context = mc8123key = DrvMainROM	=DrvMainROMFetch = AllRam = DrvRAM = RamEnd = MemEnd = NULL;
+	CZ80Context = mc8123key = DrvMainROM	=DrvMainROMFetch = DrvRAM = RamEnd = NULL;
 	segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
 	segae_vdp_cram[0] = segae_vdp_regs[0] = segae_vdp_cram[1] = segae_vdp_regs[1] = NULL;
 	name_lut = cram_lut = map_lut = NULL;
 	bp_lut = NULL;
 	ss_scl1 = NULL;
+	
+	mc8123_banked = 0;
+	segae_8000bank = 0;
+	port_fa_last = 0;
+	currentLine = 0;
 	
 	SN76489Init(0, 0, 0);
 	SN76489Init(1, 0, 0);
@@ -637,7 +640,6 @@ int ovlInit(char *szShortName)
 	free(AllMem);
 	AllMem = NULL;
 	ss_port = NULL;
-//	nBurnFunction = NULL;
 
 	SCL_SetWindow(SCL_W0,(UINT32)NULL,(UINT32)NULL,(UINT32)NULL,0,0,0,0);
  	SCL_SetWindow(SCL_W1,(UINT32)NULL,(UINT32)NULL,(UINT32)NULL,0,0,0,0);
@@ -797,6 +799,7 @@ int ovlInit(char *szShortName)
 
 /*static*/ INT32 DrvInit(UINT8 game)
 {
+	UINT8 mc8123 = 0;
 	DrvInitSaturnS(game);
 
 	AllMem = NULL;
@@ -1241,9 +1244,9 @@ void initScrollingNBG1(UINT8 enabled,UINT32 address)
 {
 	for(UINT32 j = 0; j < 0x10000; j++)
 	{
-		UINT32 i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
-		UINT32 flip = (i >> 9) & 3;
-		UINT32 pal = (i >> 11) & 1;
+		UINT16 i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
+		UINT16 flip = (i >> 9) & 3;
+		UINT16 pal = (i >> 11) & 1;
 #ifdef TWO_WORDS
 /*
 Bit 15 - 13: Unused
@@ -1253,10 +1256,10 @@ Bit 10: Vertical Flip Flag
 Bit 09: Horizontal Flip Flag
 Bit 08 - 00 : Pattern Index 
 */
-		UINT32 priority = (i >> 12) & 1;
+		UINT16 priority = (i >> 12) & 1;
 		name_lut[j] = (flip << 14 | priority << 13 | pal);
 #else
-		UINT32 name = (i & 0x1FF);
+		UINT16 name = (i & 0x1FF);
 		name_lut[j] = (pal << 12 | flip << 10 | name);
 #endif
 	}
@@ -1303,8 +1306,9 @@ Bit 08 - 00 : Pattern Index
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut()
+/*static*/ void make_lut()
 {
+	memset((UINT8 *)0x00200000,0x00,0x80000);
 	make_name_lut();
 	make_bp_lut();
 	make_cram_lut();

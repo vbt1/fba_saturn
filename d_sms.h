@@ -85,7 +85,6 @@ typedef struct
 /*static*/  int scroll_x=0,scroll_y=0;
 /*static*/  UINT8 *dummy_write  = NULL; //[0x100];
 /*static*/  UINT8 *SaturnMem = NULL;
-/*static*/  UINT8 *MemEnd = NULL;
 /*static*/  UINT16 *name_lut = NULL;
 /*static*/  UINT32 *bp_lut = NULL;//[0x10000];
 /*static*/  UINT16 *cram_lut = NULL;//[0x40];

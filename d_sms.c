@@ -183,7 +183,6 @@ static void	SetVblank2( void ){
 	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
 	CZ80Context	= Next; Next += sizeof(cz80_struc);
-	MemEnd		= Next;	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void DrvInitSaturn()
@@ -312,11 +311,12 @@ static void	SetVblank2( void ){
 /*static*/  INT32 SMSExit(void)
 {
 	nBurnFunction = NULL;
+	SS_SET_N0SPRM(0);
+	SclProcess = 2;
+	ss_regs->specialcode=0x0000;	
 	wait_vblank();
 	sms_reset();
-	
-	SS_SET_N0SPRM(0);
-	ss_regs->specialcode=0x0000;
+
 //	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
@@ -334,7 +334,7 @@ static void	SetVblank2( void ){
 	cart.rom = NULL;
 	__port = NULL;
 
-	dummy_write = MemEnd = NULL;
+	dummy_write = NULL;
 	cram_lut = map_lut = NULL;
 
 	bp_lut = NULL;
