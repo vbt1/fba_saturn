@@ -9,11 +9,11 @@
 #define WAVEFORM_POSITION(n)	(((n) >> chip->f_fracbits) & 0x1f)
 #define BURN_SND_CLIPVBT(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
 
-UINT8* NamcoSoundProm = NULL;
+extern UINT8* NamcoSoundProm;
 INT16 *p = NULL; //(INT16*)0x00200000;
 
 /*static*/ UINT8 namco_soundregs[0x400]={0};
-/*static*/ UINT8 *namco_wavedata = NULL;
+/*static*/ //UINT8 *namco_wavedata = NULL;
 
 /*static*/// struct namco_sound chip[1];// = NULL;
  struct namco_sound *chip = NULL;
@@ -246,20 +246,20 @@ void NamcoSoundWrite(UINT32 offset, UINT8 data)
 	}
 }
 
-/*static*/ INT32 build_decoded_waveform()
+/*static*/ INT32 build_decoded_waveform(UINT8 *NamcoSoundProm)
 {
 	INT32 size;
 
-	if (NamcoSoundProm != NULL)
-		namco_wavedata = NamcoSoundProm;
+//	if (NamcoSoundProm != NULL)
+//		namco_wavedata = NamcoSoundProm;
 
 	/* 20pacgal has waves in RAM but old sound system */
-	if (NamcoSoundProm == NULL && chip->num_voices != 3)
+/*	if (NamcoSoundProm == NULL && chip->num_voices != 3)
 	{
 		chip->wave_size = 1;
-		size = 32 * 16;		/* 32 samples, 16 waveforms */
+		size = 32 * 16;		// 32 samples, 16 waveforms
 	}
-	else
+	else*/
 	{
 		chip->wave_size = 0;
 		size = 32 * 8;		/* 32 samples, 8 waveforms */
@@ -272,10 +272,10 @@ void NamcoSoundWrite(UINT32 offset, UINT8 data)
 	}
 
 	/* We need waveform data. It fails if region is not specified. */
-	if (namco_wavedata)
+	if (NamcoSoundProm)
 	{
 		for (UINT32 offset = 0; offset < 256; offset++)
-			update_namco_waveform(offset, namco_wavedata[offset]);
+			update_namco_waveform(offset, NamcoSoundProm[offset]);
 	}
 
 	return 0;
@@ -327,7 +327,7 @@ void NamcoSoundInit(INT32 clock, INT32 num_voices, UINT8 *Namcocontext)
 	chip->sample_rate = chip->namco_clock;
 
 	/* build the waveform table */
-	if (build_decoded_waveform()) return;
+	if (build_decoded_waveform(NamcoSoundProm)) return;
 	
 	/* start with sound enabled, many games don't have a sound enable register */
 	chip->sound_enable = 1;
@@ -356,8 +356,8 @@ void NamcoSoundExit()
 #if defined FBA_DEBUG
 //	if (!DebugSnd_NamcoSndInitted) bprintf(PRINT_ERROR, _T("NamcoSoundExit called without init\n"));
 #endif
-	namco_wavedata = NULL;
-	NamcoSoundProm = NULL;
+//	namco_wavedata = NULL;
+//	NamcoSoundProm = NULL;
 	if(chip->last_channel)
 		chip->last_channel = NULL;
 
@@ -365,7 +365,6 @@ void NamcoSoundExit()
 	{
 		chip->waveform[v] = NULL;
 	}
-
 //	free(p);
 //	memset(p,0x00,0x30000);
 //	p = NULL;

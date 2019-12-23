@@ -3,11 +3,13 @@
 #define OLD_SOUND 1
 #define SAMPLE 7680L
 #define TWO_WORDS 1
+#define MAX_DIR 384
 //GfsDirName dir_name_sms[512];
 #ifdef GG0
 unsigned char *disp_spr = NULL;
 unsigned char curr_sprite=0;
 #endif
+
 /* Attribute expansion table */
 //-------------------------------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
@@ -57,10 +59,30 @@ int ovlInit(char *szShortName)
 //	ss_regs  = (SclSysreg *)SS_REGS;
 //	slob_init();
 }
+//--------------------------------------------------------------------------------------------------------------------------------------
+static void ChangeDir(char *dirname)
+{
+    Sint32 fid;
+	GfsDirTbl dirtbl;
+	static GfsDirName dir_name[MAX_DIR];
+	char dir_upr[12];
+	char *ptr=&dir_upr[0];
+	strcpy(dir_upr,dirname);
+	ptr = strupr(ptr);
+    fid = GFS_NameToId((Sint8 *)dir_upr);
+	ptr = NULL;
+
+	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
+	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;
+	GFS_DIRTBL_NDIR(&dirtbl) = MAX_DIR;
+
+//	for (;;) {
+    file_max = GFS_LoadDir(fid, &dirtbl)-2;
+	GFS_SetDir(&dirtbl) ;
+}
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void	SetVblank2( void ){
 	int			imask;
-
 
 	imask = get_imask();
 	set_imask(2);
@@ -294,6 +316,8 @@ static void	SetVblank2( void ){
 #else
 	ChangeDir("SMS");
 #endif
+#else
+	ChangeDir(".");
 #endif
 	DrvInitSaturn();
 	sms_start();

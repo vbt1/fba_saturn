@@ -1209,6 +1209,8 @@ int System1Frame()
 {
 //	if (System1Reset) System1DoReset();
 	MakeInputsFunction();
+// vbt : à tester pour wbml
+	CZetNewFrame();
 	unsigned int nCyclesDone[2] = {0,0};
 	
 	for (UINT32 i = 0; i < nInterleave; i++) {

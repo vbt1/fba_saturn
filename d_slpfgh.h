@@ -10,17 +10,16 @@
 #define	true	1
 #define	false	0
 
-void updateSound();
+void updateSound(unsigned int *nSoundBufferPos);
 INT32 DrvInit();
 INT32 DrvExit();
 INT32 DrvFrame();
 void DrvDoReset();
 void Set6PCM();
 void PCM_MeStop(PcmHn hn);
-void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target);
+void rotate_tile16x16(unsigned int size, unsigned char *target);
 void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
-INT32 tigerhLoadROMs(UINT8 nWhichGame);
-void dummy();
+INT32 DrvLoadRoms(UINT8 nWhichGame);
 
 //typedef int bool;
 UINT8 irq_enable = 0;
@@ -28,25 +27,21 @@ UINT8 sound_nmi_enable = 0;
 
 UINT32 nStatusIndex = 0;
 UINT32 nProtectIndex = 0;
-INT32 nSndIrqFrame = 0; //tigerh 6, slapf 3, perfr 4
+UINT32 nSndIrqFrame = 0; //tigerh 6, slapf 3, perfr 4
 
-INT32 nTigerHeliTileXPosLo = 0;
-INT32 nTigerHeliTileXPosHi = 0;
-INT32 nTigerHeliTileYPosLo = 0;
+INT32 scrollx = 0;
+INT32 scrolly = 0;
 UINT32 nTigerHeliTileMask = 0; 
-UINT32 nTigerHeliSpriteMask = 0;
 
 UINT8 *Mem = NULL;
-UINT8 *Rom01 = NULL;
-UINT8 *Rom02 = NULL;
-UINT8 *Ram01 = NULL;
+UINT8 *DrvZ80ROM0 = NULL;
+UINT8 *DrvZ80RAM0 = NULL;
 UINT8 *RamShared = NULL;
-UINT8 *TigerHeliTileRAM = NULL;
-UINT8 *TigerHeliSpriteRAM = NULL;
-UINT8 *TigerHeliSpriteBuf = NULL;
-UINT8 *TigerHeliTextRAM = NULL;
+UINT8 *DrvVidRAM = NULL;
+UINT8 *DrvSprRAM = NULL;
+UINT8 *DrvSprBuf = NULL;
+UINT8 *DrvTxtRAM = NULL;
 UINT8 *CZ80Context = NULL;
-UINT8 *TigerHeliPaletteROM = NULL;
 UINT16 *map_offset_lut = NULL;
 UINT16 *map_offset_lut2 = NULL;
 
@@ -252,36 +247,6 @@ STDDIPINFO(Slapfigh)
 };
 STD_ROM_PICK(tigerhb1)
 STD_ROM_FN(tigerhb1)
-
-/*static*/ struct BurnRomInfo slapfighRomDesc[] = {
-	{ "a7700.8p",    0x008000, 0x674c0e0f, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
-	{ "a7701.8n",    0x008000, 0x3c42e4a7, BRF_ESS | BRF_PRG }, //  1
-
-	{ "a7712.8j",    0x008000, 0x8545d397, BRF_GRA },			 //  2 Sprite data
-	{ "a7711.7j",    0x008000, 0xb1b7b925, BRF_GRA },			 //  3
-	{ "a7710.8h",    0x008000, 0x422d946b, BRF_GRA },			 //  4
-	{ "a7709.7h",    0x008000, 0x587113ae, BRF_GRA },			 //  5
-
-	{ "a7704.6f",    0x002000, 0x2ac7b943, BRF_GRA },			 //  6 Text layer
-	{ "a7703.6g",    0x002000, 0x33cadc93, BRF_GRA },			 //  7
-
-	{ "a7708.6k",    0x008000, 0xb6358305, BRF_GRA },			 //  8 Background layer
-	{ "a7707.6m",    0x008000, 0xe92d9d60, BRF_GRA },			 //  9
-	{ "a7706.6n",    0x008000, 0x5faeeea3, BRF_GRA },			 // 10
-	{ "a7705.6p",    0x008000, 0x974e2ea9, BRF_GRA },			 // 11
-
-	{ "2182s129.12q",0x000100, 0xa0efaf99, BRF_GRA },			 // 12
-	{ "2082s129.12m",0x000100, 0xa56d57e5, BRF_GRA },			 // 13
-	{ "1982s129.12n",0x000100, 0x5cbf9fbf, BRF_GRA },			 // 14
-
-	{ "a7702.12d",   0x002000, 0x87f4705a, BRF_ESS | BRF_PRG }, // 15
-
-	{ "a7713.6a",    0x000800, 0xa70c81d9, BRF_ESS | BRF_PRG }, // 16 MCU ROM
-};
-
-
-STD_ROM_PICK(slapfigh)
-STD_ROM_FN(slapfigh)
 
 /*static*/ struct BurnRomInfo slapbtjpRomDesc[] = {
 	{ "sfr19jb.bin", 0x008000, 0x9a7ac8b3, BRF_ESS | BRF_PRG }, //  0 CPU #0 code

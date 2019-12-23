@@ -472,7 +472,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	MemEnd=Rom=NULL;
 	free(Mem);
 	Mem=NULL;
-
+	game_type=0;
 	_30_HZ=0;
 	cleanDATA();
 	cleanBSS();

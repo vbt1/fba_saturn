@@ -16,9 +16,9 @@ SECTIONS {
 	    *(.shared)
 		_play = .;
 		_hz = _play + 2;
-		_file_id2 = _hz + 2;
-		_file_max = _file_id2 + 4;
-		_col = _file_max + 4; /* size 16 */
+/*		_file_id2 = _hz + 2;
+		_file_max = _hz + 2;*/
+		_col = _hz + 2; /* size 16 */
 /*		_palette = _col + 16;*/ /* size 16 */		
 		_pcm = _col + 16; /* pointer size 4 */		
 		_nBurnDrvCount = _pcm + 16;
@@ -82,7 +82,7 @@ SECTIONS {
 		_end = .;
  	} > ram
 	
-	.overlay 0x060DA000:
+	.overlay 0x060DB000:
         {
 		__start_ram = .;		
 			boot = .;

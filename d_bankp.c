@@ -10,7 +10,7 @@
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
-
+	
 	struct BurnDriver nBurnDrvbankp	 = {
 	"bankp", NULL, 
 	"Bank Panic",  
@@ -38,7 +38,7 @@ int ovlInit(char *szShortName)
 
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
-	ss_regd  = (SclDataset *)SS_REGD;
+//	ss_regd  = (SclDataset *)SS_REGD;
 }
 
 /*static*/ INT32 DrvChInit()
@@ -58,7 +58,7 @@ int ovlInit(char *szShortName)
 	Prom = (UINT8 *)Next; Next += 0x200;
 	Palette = (UINT32 *)Next; Next += 0x200 * sizeof(UINT32);
 	map_offset_lut	= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
-	MemEnd         	= Next;
+	//MemEnd         	= Next;
 
 	return 0;
 }
@@ -496,7 +496,7 @@ int ovlInit(char *szShortName)
 	SN76489Init(1, 0, 0);
 	SN76489Init(2, 0, 0);
 
-	MemEnd = Rom  = Gfx0 = Gfx1 = Prom = NULL;
+	/*MemEnd =*/ Rom  = Gfx0 = Gfx1 = Prom = NULL;
 	Palette = NULL;
 	map_offset_lut = NULL;
 

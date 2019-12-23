@@ -1,4 +1,4 @@
-   .section SEGA_P
+ !  .section SEGA_P
    .align   4
 
 !   .global  _memcpy

@@ -5164,19 +5164,44 @@ EndFile
 				EndFile
 			EndDirectory
 
-			Directory FM
-				File TONE1.BIN;1
-					Source FM\TONE17.BIN
+			Directory NINKD2A
+				File NK2_01.BIN;1
+					Source NINKD2A\NK2_01.BIN
 				EndFile
-				File TONE.BIN;1
-					Source FM\TONE.BIN
+				File NK2_02.BIN;1
+					Source NINKD2A\NK2_02.BIN
 				EndFile
-;				File MAP.BIN;1
-;					Source FM\MAP.BIN
-;				EndFile
-				File    SDDRVS.TSK;1
-					Source SDDRVS.TSK
+				File NK2_03.ROM;1
+					Source NINKD2A\NK2_03.ROM
 				EndFile
+				File NK2_04.ROM;1
+					Source NINKD2A\NK2_04.ROM
+				EndFile
+				File NK2_05.BIN;1
+					Source NINKD2A\NK2_05.BIN
+				EndFile
+				File NK2_06.BIN;1
+					Source NINKD2A\NK2_06.BIN
+				EndFile				
+				File NK2_12.ROM;1
+					Source NINKD2A\NK2_12.ROM
+				EndFile
+				File NK2_08.ROM;1
+					Source NINKD2A\NK2_08.ROM
+				EndFile
+				File NK2_07.ROM;1
+					Source NINKD2A\NK2_07.ROM
+				EndFile				
+
+				File NK2_11.ROM;1
+					Source NINKD2A\NK2_11.ROM
+				EndFile
+				File NK2_10.ROM;1
+					Source NINKD2A\NK2_10.ROM
+				EndFile
+				File NK2_09.ROM;1
+					Source NINKD2A\NK2_09.ROM
+				EndFile	
 			EndDirectory
 
 ;			Directory CUBYBOP

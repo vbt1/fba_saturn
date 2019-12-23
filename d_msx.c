@@ -8,6 +8,7 @@
 //  Krakout any key starts, can't get into settings
 #define K051649 1
 #define RAZE 1
+#define MAX_DIR 384
 #include    "machine.h"
 #include "d_msx.h"
 //#define CASSETTE 1
@@ -17,7 +18,7 @@
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
-
+	
 	struct BurnDriver nBurnDrvMSX_1942 = {
 		"msx", NULL,
 		"MSX1 System",
@@ -30,6 +31,27 @@ int ovlInit(char *szShortName)
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 	file_id	 = 2;
+}
+//--------------------------------------------------------------------------------------------------------------------------------------
+static void ChangeDir(char *dirname)
+{
+    Sint32 fid;
+	GfsDirTbl dirtbl;
+	static GfsDirName dir_name[MAX_DIR];
+	char dir_upr[12];
+	char *ptr=&dir_upr[0];
+	strcpy(dir_upr,dirname);
+	ptr = strupr(ptr);
+    fid = GFS_NameToId((Sint8 *)dir_upr);
+	ptr = NULL;
+
+	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
+	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;
+	GFS_DIRTBL_NDIR(&dirtbl) = MAX_DIR;
+
+//	for (;;) {
+    file_max = GFS_LoadDir(fid, &dirtbl)-2;
+	GFS_SetDir(&dirtbl) ;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #if 1
@@ -1571,7 +1593,7 @@ And the address to change banks:
 
 /*static*/ void DrvDoReset()
 {
-//	memset (AllRam, 0, RamEnd - AllRam);
+	memset (AllRam, 0, 0x30000);
 
 	memset(keyRows, 0, sizeof(keyRows));
 	ppiC_row = 0;
@@ -1706,7 +1728,7 @@ And the address to change banks:
 	main_mem		= Next; Next += 0x020000;
 	EmptyRAM        = Next; Next += 0x010000;
 
-	RamEnd			= Next;
+	//RamEnd			= Next;
 //	tmpbmp				= Next; Next += (256*192);
 
 #ifdef K051649
@@ -1717,7 +1739,7 @@ And the address to change banks:
 	CZ80Context		= Next; Next += sizeof(cz80_struc);
 #endif
 	TMSContext		= Next; Next += (0x4000+0x6000+0x1000);
-	MemEnd			= Next;
+//	MemEnd			= Next;
 	return 0;
 }
 #ifdef RAZE
@@ -1906,6 +1928,7 @@ And the address to change banks:
 /*static*/ INT32 DrvInit()
 {
 	DrvInitSaturn();
+	ChangeDir(".");	
 	AllMem = NULL;
 	MemIndex();
 //FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnMalloc		",24,40);
@@ -2141,7 +2164,7 @@ void cleanmemmap()
 	}
 
 	maincpu = game = game_sram = AllRam = main_mem = NULL;
-	TMSContext = EmptyRAM = RAMData = MemEnd = RamEnd = NULL;
+	TMSContext = EmptyRAM = RAMData = /*MemEnd = RamEnd =*/ NULL;
 
 #ifdef KANJI
 	kanji_rom = NULL;
@@ -2334,7 +2357,7 @@ void initLayers(void)
 //    SclConfig	config;
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
 
-	const Uint16	CycleTb[]={
+	Uint16	CycleTb[]={
 		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
 		0xff5e, 0xffff, //A1
 		0xffff, 0xffff,	//A0

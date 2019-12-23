@@ -7,7 +7,7 @@
 #include "raze/raze.h"
 #define SOUND_LEN 256
 
-/*static*/ UINT8 *MemEnd = NULL;
+/*static*/ //UINT8 *MemEnd = NULL;
 /*static*/ UINT16 *map_offset_lut = NULL;
 /*static*/ UINT8 *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
 /*static*/ UINT32 *Palette = NULL;

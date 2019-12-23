@@ -26,7 +26,7 @@
 
 #define FREQBASEBITS	16
 
-/*static*/ UINT32 nUpdateStep = 0;
+/*static*/ //UINT32 nUpdateStep = 0;
 
 /* this structure defines the parameters for a channel */
 typedef struct
@@ -53,12 +53,12 @@ struct _k051649_state
 	INT16 *mixer_table;
 	INT16 *mixer_lookup;
 	INT16 *mixer_buffer;
-
+	UINT32 nUpdateStep;
 	INT32 f[10];
 };
 
 /*static*/ k051649_state Chips[1] = {{.mclock = 0, .rate = NULL}}; // ok?
-/*static*/ k051649_state *info=NULL;
+/*static*/ //k051649_state *info=NULL;
 
 /* build a table to divide by the number of voices */
 static void make_mixer_table(INT32 voices, INT16 *SCCMixerTable)
@@ -66,7 +66,8 @@ static void make_mixer_table(INT32 voices, INT16 *SCCMixerTable)
 	INT32 count = voices * 256;
 	INT32 i;
 	INT32 gain = 8;
-
+	
+	k051649_state *info = 	info = &Chips[0];
 	/* allocate memory */
 	info->mixer_table = (INT16 *)SCCMixerTable;
 
@@ -90,7 +91,7 @@ void K051649UpdateDirect(INT16 *pBuf, INT32 samples)
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649Update called without init\n"));
 //#endif
 
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 	k051649_sound_channel *voice=info->channel_list;
 //	INT16 *mix;
 	INT32 i,v,f,j,k;
@@ -126,7 +127,7 @@ void K051649UpdateDirect(INT16 *pBuf, INT32 samples)
 				/* Amuse source:  Cab suggests this method gives greater resolution */
 				/* Sean Young 20010417: the formula is really: f = clock/(16*(f+1))*/
 				//c+=(long)((((float)info->mclock / (float)((f+1) * 16))*(float)(1<<FREQBASEBITS)) / (float)(info->rate / 32));
-				c+=(INT32)((((((float)info->mclock / (float)((f+1) * 16))*(float)(1<<FREQBASEBITS)) / (float)(info->rate / 32)) * nUpdateStep) / 32768);
+				c+=(INT32)((((((float)info->mclock / (float)((f+1) * 16))*(float)(1<<FREQBASEBITS)) / (float)(info->rate / 32)) * info->nUpdateStep) / 32768);
 				offs = (c >> 16) & 0x1f;
 				//*mix++ += (((w[offs] * v)>>3) * nUpdateStep) >> 15;
 //				*mix++ += ((w[offs] * v)>>3);
@@ -182,7 +183,7 @@ void K051649UpdateDirect(INT16 *pBuf, INT32 samples)
 /*
 void K051649UpdateVBT(UINT32 samples)
 {
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 	k051649_sound_channel *voice=info->channel_list;
 	INT16 *mix;
 	INT32 i,v,f,j,k;
@@ -231,7 +232,7 @@ void K051649Init(INT32 clock, INT16 *SCCMixerBuffer, INT16 *SCCMixerTable)
 {
 //	DebugSnd_K051649Initted = 1;
 
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 
 	/* get stream channels */
 	info->rate = 7680L; ///clock/16; // vbt faux !!!
@@ -239,7 +240,7 @@ void K051649Init(INT32 clock, INT16 *SCCMixerBuffer, INT16 *SCCMixerTable)
 //	info->gain = (float)1.00;
 	//info->output_dir = BURN_SND_ROUTE_BOTH;
 	
-	nUpdateStep = (INT32)(((float)info->rate / nBurnSoundRate) * 32768);
+	info->nUpdateStep = (INT32)(((float)info->rate / nBurnSoundRate) * 32768);
 
 	/* allocate a buffer to mix into - 1 second's worth should be more than enough */
 	info->mixer_buffer = (INT16 *)SCCMixerBuffer;
@@ -250,7 +251,7 @@ void K051649Init(INT32 clock, INT16 *SCCMixerBuffer, INT16 *SCCMixerTable)
 /*
 void K051649SetRoute(double nVolume, INT32 nRouteDir)
 {
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 	
 	info->gain = nVolume;
 	info->output_dir = nRouteDir;
@@ -262,7 +263,7 @@ void K051649Exit()
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649Exit called without init\n"));
 //#endif
 
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 
 	if (info->mixer_buffer) {
 //		free (info->mixer_buffer);
@@ -274,7 +275,7 @@ void K051649Exit()
 		info->mixer_table = NULL;
 	}
 	
-	nUpdateStep = 0;
+	//nUpdateStep = 0;
 	
 //	DebugSnd_K051649Initted = 0;
 }
@@ -285,7 +286,7 @@ void K051649Reset()
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649Reset called without init\n"));
 //#endif
 
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 	k051649_sound_channel *voice = info->channel_list;
 	INT32 i;
 
@@ -335,7 +336,7 @@ void K051649WaveformWrite(INT32 offset, INT32 data)
 //#if defined FBA_DEBUG
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649WaveformWrite called without init\n"));
 //#endif
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 	info->channel_list[offset>>5].waveform[offset&0x1f]=data;
 	/* SY 20001114: Channel 5 shares the waveform with channel 4 */
 	if (offset >= 0x60)
@@ -348,7 +349,7 @@ UINT8 K051649WaveformRead(INT32 offset)
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649WaveformRead called without init\n"));
 //#endif
 
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 	return info->channel_list[offset>>5].waveform[offset&0x1f];
 }
 */
@@ -359,7 +360,7 @@ void K052539WaveformWrite(INT32 offset, INT32 data)
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K052539WaveformWrite called without init\n"));
 //#endif
 
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 
 	info->channel_list[offset>>5].waveform[offset&0x1f]=data;
 }
@@ -370,7 +371,7 @@ void K051649VolumeWrite(INT32 offset, INT32 data)
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649VolumeWrite called without init\n"));
 //#endif
 
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 
 	info->channel_list[offset&0x7].volume=data&0xf;
 }
@@ -381,7 +382,7 @@ void K051649FrequencyWrite(INT32 offset, INT32 data)
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649FrequencyWrite called without init\n"));
 //#endif
 
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 	info->f[offset]=data;
 
 	info->channel_list[offset>>1].frequency=(info->f[offset&0xe] + (info->f[offset|1]<<8))&0xfff;
@@ -393,7 +394,7 @@ void K051649KeyonoffWrite(INT32 data)
 //	if (!DebugSnd_K051649Initted) bprintf(PRINT_ERROR, _T("K051649KeyonoffWrite called without init\n"));
 //#endif
 
-	info = &Chips[0];
+	k051649_state *info = &Chips[0];
 	info->channel_list[0].key=data&1;
 	info->channel_list[1].key=data&2;
 	info->channel_list[2].key=data&4;

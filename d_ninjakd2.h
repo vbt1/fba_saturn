@@ -10,58 +10,65 @@
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
 
-/*static*/  INT32 RobokidInit();
-/*static*/  INT32 DrvExit();
-/*static*/  INT32 DrvFrame();
-/*static*/  void DrvCalculatePalette();
+INT32 RobokidInit();
+INT32 Ninjakd2DecryptedInit();
+INT32 DrvExit();
+INT32 DrvFrame();
+void Ninjakd2Draw();
+void RobokidDraw();
+void DrvInitSaturnS(UINT8 game);
+void initColorsS(UINT8 game);
+inline void DrvCalculatePalette();
 void draw_sprites();
-void draw_fg_layer(UINT32 color_offset);
-/*static*/ void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+void draw_bg_layer();
+void draw_fg_layer();
+ void tile16x16toSaturn (unsigned int num, unsigned char *pDest);
 void cleanSprites();
 //void dummy();
+INT32 (*DrvDraw)() = NULL;
+UINT8 *AllMem = NULL;
+//  UINT8 *AllRam = NULL;
+UINT8 *RamEnd = NULL;
+UINT8 *DrvZ80ROM0 = NULL;
+//  UINT8 *DrvZ80ROM1 = NULL;
+//  UINT8 *DrvGfxROM2 = NULL;
+//  UINT8 *DrvGfxROM3 = NULL;
+//  UINT8 *DrvGfxROM4 = NULL;
+UINT8 *DrvGfxROM4Data1 = NULL;
+UINT8 *DrvZ80RAM0 = NULL;
+UINT8 *DrvSprRAM = NULL;
+UINT8 *DrvPalRAM = NULL;
+UINT8 *DrvFgRAM = NULL;
+UINT8 *DrvBgRAM = NULL;
+UINT8 *DrvBgRAM0 = NULL;
+UINT8 *DrvBgRAM1 = NULL;
+UINT8 *DrvBgRAM2 = NULL;
+UINT8 *CZ80Context = NULL;
+UINT16 *ss_map3 = NULL;
+UINT8 soundlatch = 0;
+//UINT8 flipscreen = 0;
 
-/*static*/  UINT8 *AllMem = NULL;
-/*static*/  UINT8 *AllRam = NULL;
-/*static*/  UINT8 *RamEnd = NULL;
-/*static*/  UINT8 *DrvZ80ROM0 = NULL;
-/*static*/  UINT8 *DrvGfxROM2 = NULL;
-/*static*/  UINT8 *DrvGfxROM3 = NULL;
-/*static*/  UINT8 *DrvGfxROM4 = NULL;
-/*static*/  UINT8 *DrvGfxROM4Data1 = NULL;
-/*static*/  UINT8 *DrvZ80RAM0 = NULL;
-/*static*/  UINT8 *DrvSprRAM = NULL;
-/*static*/  UINT8 *DrvPalRAM = NULL;
-/*static*/  UINT8 *DrvFgRAM = NULL;
-/*static*/  UINT8 *DrvBgRAM = NULL;
-/*static*/  UINT8 *DrvBgRAM0 = NULL;
-/*static*/  UINT8 *DrvBgRAM1 = NULL;
-/*static*/  UINT8 *DrvBgRAM2 = NULL;
-/*static*/  UINT8 *CZ80Context = NULL;
-/*static*/  UINT16 *ss_map3 = NULL;
-/*static*/  UINT8 soundlatch = 0;
-/*static*/  //UINT8 flipscreen = 0;
+UINT16 scrollx[3] = {0,0,0};
+UINT16 scrolly[3] = {0,0,0};
+UINT8 tilemap_enable[3] = {0,0,0};
+INT16 previous_bank[3]={-1,-1,-1};
+UINT8 overdraw_enable = 0;
 
-/*static*/  UINT16 scrollx[3] = {0,0,0};
-/*static*/  UINT16 scrolly[3] = {0,0,0};
-/*static*/  UINT8 tilemap_enable[3] = {0,0,0};
-/*static*/  INT16 previous_bank[3]={-1,-1,-1};
-/*static*/  UINT8 overdraw_enable = 0;
+//UINT8 m_omegaf_io_protection[3];
+//UINT8 m_omegaf_io_protection_input;
+//INT32 m_omegaf_io_protection_tic;
+//INT32 ninjakd2_sample_offset;
 
-/*static*/  //UINT8 m_omegaf_io_protection[3];
-/*static*/  //UINT8 m_omegaf_io_protection_input;
-/*static*/  //INT32 m_omegaf_io_protection_tic;
-/*static*/  //INT32 ninjakd2_sample_offset;
+UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvDips[2] = {0,0};
+UINT8 DrvInputs[3] = {0,0,0};
+ // UINT8 DrvReset = 0;
 
-/*static*/  UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-/*static*/  UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-/*static*/  UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
-/*static*/  UINT8 DrvDips[2] = {0,0};
-/*static*/  UINT8 DrvInputs[3] = {0,0,0};
-/*static*/ // UINT8 DrvReset = 0;
+INT32 previous_coin[2] = {0,0};
 
-/*static*/  INT32 previous_coin[2] = {0,0};
-
-/*static*/  struct BurnInputInfo DrvInputList[] = {
+struct BurnInputInfo DrvInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 up"		},
@@ -87,7 +94,7 @@ void cleanSprites();
 
 STDINPUTINFO(Drv)
 
-/*static*/  struct BurnInputInfo Drv2InputList[] = {
+struct BurnInputInfo Drv2InputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 up"		},
@@ -113,7 +120,7 @@ STDINPUTINFO(Drv)
 
 STDINPUTINFO(Drv2)
 #if 0
-/*static*/  struct BurnInputInfo OmegafInputList[] = {
+struct BurnInputInfo OmegafInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 up"		},
@@ -140,7 +147,7 @@ STDINPUTINFO(Drv2)
 
 STDINPUTINFO(Omegaf)
 
-/*static*/  struct BurnDIPInfo MnightDIPList[]=
+struct BurnDIPInfo MnightDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xcf, NULL				},
 	{0x12, 0xff, 0xff, 0xff, NULL				},
@@ -191,8 +198,8 @@ STDINPUTINFO(Omegaf)
 };
 
 STDDIPINFO(Mnight)
-
-/*static*/  struct BurnDIPInfo Ninjakd2DIPList[]=
+#endif
+struct BurnDIPInfo Ninjakd2DIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x6f, NULL				},
 	{0x12, 0xff, 0xff, 0xfd, NULL				},
@@ -269,8 +276,8 @@ STDDIPINFO(Mnight)
 };
 
 STDDIPINFO(Ninjakd2)
-
-/*static*/  struct BurnDIPInfo RdactionDIPList[]=
+#if 0
+struct BurnDIPInfo RdactionDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x6f, NULL				},
 	{0x12, 0xff, 0xff, 0xfd, NULL				},
@@ -347,7 +354,7 @@ STDDIPINFO(Ninjakd2)
 
 STDDIPINFO(Rdaction)
 
-/*static*/  struct BurnDIPInfo ArkareaDIPList[]=
+struct BurnDIPInfo ArkareaDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xef, NULL				},
 	{0x12, 0xff, 0xff, 0xff, NULL				},
@@ -386,7 +393,7 @@ STDDIPINFO(Rdaction)
 STDDIPINFO(Arkarea)
 #endif 
 
-/*static*/  struct BurnDIPInfo RobokidDIPList[]=
+struct BurnDIPInfo RobokidDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xcf, NULL				},
 	{0x12, 0xff, 0xff, 0xff, NULL				},
@@ -438,7 +445,7 @@ STDDIPINFO(Arkarea)
 
 STDDIPINFO(Robokid)
 #if	 0
-/*static*/  struct BurnDIPInfo RobokidjDIPList[]=
+struct BurnDIPInfo RobokidjDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xcf, NULL				},
 	{0x12, 0xff, 0xff, 0xff, NULL				},
@@ -490,7 +497,7 @@ STDDIPINFO(Robokid)
 
 STDDIPINFOEXT(Robokidj, Robokid, Robokidj)
 
-/*static*/  struct BurnDIPInfo OmegafDIPList[]=
+struct BurnDIPInfo OmegafDIPList[]=
 {
 	{0x12, 0xff, 0xff, 0xff, NULL				},
 	{0x13, 0xff, 0xff, 0xff, NULL				},
@@ -550,7 +557,7 @@ STDDIPINFO(Omegaf)
 
 // Ninja-Kid II / NinjaKun Ashura no Shou (set 1)
 
-/*static*/  struct BurnRomInfo ninjakd2RomDesc[] = {
+struct BurnRomInfo ninjakd2RomDesc[] = {
 	{ "nk2_01.rom",		0x08000, 0x3cdbb906, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "nk2_02.rom",		0x08000, 0xb5ce9a1a, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "nk2_03.rom",		0x08000, 0xad275654, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -574,21 +581,11 @@ STDDIPINFO(Omegaf)
 
 STD_ROM_PICK(ninjakd2)
 STD_ROM_FN(ninjakd2)
-/*
-struct BurnDriver BurnDrvNinjakd2 = {
-	"ninjakd2", NULL, NULL, NULL, "1987",
-	"Ninja-Kid II / NinjaKun Ashura no Shou (set 1)\0", NULL, "UPL", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_SCRFIGHT, 0,
-	NULL, ninjakd2RomInfo, ninjakd2RomName, NULL, NULL, DrvInputInfo, Ninjakd2DIPInfo,
-	Ninjakd2Init, DrvExit, DrvFrame, Ninjakd2Draw, DrvScan, &DrvRecalc, 0x300,
-	256, 192, 4, 3
-};
-*/
+#endif
 
 // Ninja-Kid II / NinjaKun Ashura no Shou (set 2, bootleg?)
 
-/*static*/  struct BurnRomInfo ninjakd2aRomDesc[] = {
+struct BurnRomInfo ninjakd2aRomDesc[] = {
 	{ "nk2_01.bin",		0x08000, 0xe6adca65, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "nk2_02.bin",		0x08000, 0xd9284bd1, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "nk2_03.rom",		0x08000, 0xad275654, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -610,21 +607,11 @@ struct BurnDriver BurnDrvNinjakd2 = {
 
 STD_ROM_PICK(ninjakd2a)
 STD_ROM_FN(ninjakd2a)
-/*
-struct BurnDriver BurnDrvNinjakd2a = {
-	"ninjakd2a", "ninjakd2", NULL, NULL, "1987",
-	"Ninja-Kid II / NinjaKun Ashura no Shou (set 2, bootleg?)\0", NULL, "UPL", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_SCRFIGHT, 0,
-	NULL, ninjakd2aRomInfo, ninjakd2aRomName, NULL, NULL, DrvInputInfo, Ninjakd2DIPInfo,
-	Ninjakd2DecryptedInit, DrvExit, DrvFrame, Ninjakd2Draw, DrvScan, &DrvRecalc, 0x300,
-	256, 192, 4, 3
-};
-*/
 
+#if 0
 // Ninja-Kid II / NinjaKun Ashura no Shou (set 3, bootleg?)
 
-/*static*/  struct BurnRomInfo ninjakd2bRomDesc[] = {
+struct BurnRomInfo ninjakd2bRomDesc[] = {
 	{ "1.3s",			0x08000, 0xcb4f4624, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "2.3q",			0x08000, 0x0ad0c100, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "nk2_03.rom",		0x08000, 0xad275654, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -661,7 +648,7 @@ struct BurnDriver BurnDrvNinjakd2b = {
 // Ninja-Kid II / NinjaKun Ashura no Shou (set 4)
 // close to set 3
 
-/*static*/  struct BurnRomInfo ninjakd2cRomDesc[] = {
+struct BurnRomInfo ninjakd2cRomDesc[] = {
 	{ "1.3u",			0x08000, 0x06096412, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "2.3t",			0x08000, 0x9ed9a994, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "nk2_03.rom",		0x08000, 0xad275654, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -699,7 +686,7 @@ struct BurnDriver BurnDrvNinjakd2c = {
 
 // Rad Action / NinjaKun Ashura no Shou
 
-/*static*/  struct BurnRomInfo rdactionRomDesc[] = {
+struct BurnRomInfo rdactionRomDesc[] = {
 	{ "1.3u",			0x08000, 0x5c475611, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "2.3s",			0x08000, 0xa1e23bd2, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "nk2_03.rom",		0x08000, 0xad275654, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -738,7 +725,7 @@ struct BurnDriver BurnDrvRdaction = {
 // JT-104 (title screen modification of Rad Action)
 // identical to rdaction set with different gfx rom and decrypted sound rom
 
-/*static*/  struct BurnRomInfo jt104RomDesc[] = {
+struct BurnRomInfo jt104RomDesc[] = {
 	{ "1.3u",			0x08000, 0x5c475611, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "2.3s",			0x08000, 0xa1e23bd2, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "nk2_03.rom",		0x08000, 0xad275654, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -776,7 +763,7 @@ struct BurnDriver BurnDrvJt104 = {
 
 // Mutant Night 
 
-/*static*/  struct BurnRomInfo mnightRomDesc[] = {
+struct BurnRomInfo mnightRomDesc[] = {
 	{ "1.j19",			0x08000, 0x56678d14, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "2.j17",			0x08000, 0x2a73f88e, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "3.j16",			0x08000, 0xc5e42bb4, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -812,7 +799,7 @@ struct BurnDriver BurnDrvMnight = {
 
 // Mutant Night (Japan)
 
-/*static*/  struct BurnRomInfo mnightjRomDesc[] = {
+struct BurnRomInfo mnightjRomDesc[] = {
 	{ "1.j19",			0x08000, 0x56678d14, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "2.j17",			0x08000, 0x2a73f88e, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "3.j16",			0x08000, 0xc5e42bb4, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -848,7 +835,7 @@ struct BurnDriver BurnDrvMnightj = {
 
 // Ark Area
 
-/*static*/  struct BurnRomInfo arkareaRomDesc[] = {
+struct BurnRomInfo arkareaRomDesc[] = {
 	{ "arkarea.008",	0x08000, 0x1ce1b5b9, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "arkarea.009",	0x08000, 0xdb1c81d1, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "arkarea.010",	0x08000, 0x5a460dae, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -885,7 +872,7 @@ struct BurnDriver BurnDrvArkarea = {
 
 // Atomic Robo-kid (World, Type-2)
 
-/*static*/  struct BurnRomInfo robokidRomDesc[] = {
+struct BurnRomInfo robokidRomDesc[] = {
 	{ "robokid1.18j",	0x10000, 0x378c21fc, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "robokid2.18k",	0x10000, 0xddef8c5a, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "robokid3.15k",	0x10000, 0x05295ec3, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -942,7 +929,7 @@ struct BurnDriver BurnDrvRobokid = {
 #if	 0
 // Atomic Robo-kid (Japan, Type-2, set 1)
 
-/*static*/  struct BurnRomInfo robokidjRomDesc[] = {
+struct BurnRomInfo robokidjRomDesc[] = {
 	{ "1.29",			0x10000, 0x59a1e2ec, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "2.30",			0x10000, 0xe3f73476, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "robokid3.15k",	0x10000, 0x05295ec3, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -1000,7 +987,7 @@ struct BurnDriver BurnDrvRobokidj = {
 
 // Atomic Robo-kid (Japan, Type-2, set 2)
 
-/*static*/  struct BurnRomInfo robokidj2RomDesc[] = {
+struct BurnRomInfo robokidj2RomDesc[] = {
 	{ "1_rom29.18j",	0x10000, 0x969fb951, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "2_rom30.18k",	0x10000, 0xc0228b63, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "robokid3.15k",	0x10000, 0x05295ec3, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -1058,7 +1045,7 @@ struct BurnDriver BurnDrvRobokidj2 = {
 
 // Atomic Robo-kid (Japan)
 
-/*static*/  struct BurnRomInfo robokidj3RomDesc[] = {
+struct BurnRomInfo robokidj3RomDesc[] = {
 	{ "robokid1.18j",	0x10000, 0x77a9332a, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "robokid2.18k",	0x10000, 0x715ecee4, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "robokid3.15k",	0x10000, 0xce12fa86, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -1116,7 +1103,7 @@ struct BurnDriver BurnDrvRobokidj3 = {
 
 // Omega Fighter
 
-/*static*/  struct BurnRomInfo omegafRomDesc[] = {
+struct BurnRomInfo omegafRomDesc[] = {
 	{ "1.5",		0x20000, 0x57a7fd96, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "6.4l",		0x20000, 0x6277735c, 1 | BRF_PRG | BRF_ESS }, //  1
 
@@ -1149,7 +1136,7 @@ struct BurnDriver BurnDrvOmegaf = {
 
 // Omega Fighter Special
 
-/*static*/  struct BurnRomInfo omegafsRomDesc[] = {
+struct BurnRomInfo omegafsRomDesc[] = {
 	{ "5.3l",		0x20000, 0x503a3e63, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "6.4l",		0x20000, 0x6277735c, 1 | BRF_PRG | BRF_ESS }, //  1
 

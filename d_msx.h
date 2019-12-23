@@ -29,8 +29,8 @@ void *memset4_fast(void *, long, size_t);
 void dummy();
 INT32 GetFileSize(int file_id);
 
-extern int file_id;
-extern int file_max;
+int file_id = 2;
+int file_max = 0;
 #ifdef RAZE
 #include "raze\raze.h"
 /*static*/ void __fastcall msx_write_konami4(UINT16 address, UINT8 data);
@@ -106,9 +106,9 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
 #endif
 /*static*/  UINT8 *TMSContext = NULL;
 /*static*/  UINT8 *AllMem	= NULL;
-/*static*/  UINT8 *MemEnd	= NULL;
+/*static*/  //UINT8 *MemEnd	= NULL;
 /*static*/  UINT8 *AllRam	= NULL;
-/*static*/  UINT8 *RamEnd	= NULL;
+/*static*/ // UINT8 *RamEnd	= NULL;
 /*static*/  UINT8 *maincpu	= NULL; // msx bios rom
 /*static*/  UINT8 *game      = NULL; // game cart rom, tape side A
 #ifdef CASSETTE

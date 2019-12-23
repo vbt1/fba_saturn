@@ -6,6 +6,7 @@
 #include    "machine.h"
 #include "d_sg1000.h"
 #define SAMPLE 7680L
+#define MAX_DIR 384
 #define nBurnSoundLen 128
 #define nInterleave 16
 #define nCyclesTotal 3579545 / 60
@@ -27,6 +28,27 @@ int ovlInit(char *szShortName)
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+}
+//--------------------------------------------------------------------------------------------------------------------------------------
+static void ChangeDir(char *dirname)
+{
+    Sint32 fid;
+	GfsDirTbl dirtbl;
+	static GfsDirName dir_name[MAX_DIR];
+	char dir_upr[12];
+	char *ptr=&dir_upr[0];
+	strcpy(dir_upr,dirname);
+	ptr = strupr(ptr);
+    fid = GFS_NameToId((Sint8 *)dir_upr);
+	ptr = NULL;
+
+	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
+	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;
+	GFS_DIRTBL_NDIR(&dirtbl) = MAX_DIR;
+
+//	for (;;) {
+    file_max = GFS_LoadDir(fid, &dirtbl)-2;
+	GFS_SetDir(&dirtbl) ;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void	SetVblank2( void ){
@@ -395,13 +417,13 @@ int ovlInit(char *szShortName)
 /*static*/ int DrvInit()
 {
 	DrvInitSaturn();
+	ChangeDir(".");
 	AllMem = NULL;
 	MemIndex();
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 //	memset(CZ80Context,0x00,0x1080);
-
 	#ifndef RAZE
 	CZetInit2(1,CZ80Context);
 	#endif

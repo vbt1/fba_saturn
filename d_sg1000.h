@@ -48,8 +48,8 @@ static void __fastcall sg1000_write(UINT16 address, UINT8 data);
 /*static*/ UINT8 sg1000_ppi8255_portB_read();
 /*static*/ UINT8 sg1000_ppi8255_portC_read();
 
-extern int file_id;
-extern int file_max;
+int file_id = 2;
+int file_max = 0;
 
 typedef	struct	SysDevice	{
 	Uint8	type;

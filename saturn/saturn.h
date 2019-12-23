@@ -74,7 +74,7 @@ void InitCD();
 #endif
 
 #ifndef ACTION_REPLAY
-int file_id		= 2; 
+//int file_id; 
 #endif
 
 #define SystemWork  0x060ffc00              /* System Variable Address */

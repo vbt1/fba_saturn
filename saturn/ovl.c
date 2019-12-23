@@ -52,7 +52,7 @@ void dummy()
 {
 //	wait_vblank();
 	for (unsigned int c = 0; c < num; c++) {
-		int plane, x, y;
+		int plane;//, x, y;
 	
 		unsigned char *dp = pDest + (c * (xSize/2) * ySize);
 		memset((void *)dp, 0, (xSize/2) * ySize);
@@ -61,11 +61,11 @@ void dummy()
 			int planebit = 1 << (numPlanes - 1 - plane);
 			int planeoffs = (c * modulo) + planeoffsets[plane];
 		
-			for (y = 0; y < ySize; y++) {
+			for (unsigned int y = 0; y < ySize; y++) {
 				int yoffs = planeoffs + yoffsets[y];
 				dp = pDest + (c * (xSize/2) * ySize) + (y * (xSize/2));
 			
-				for (x = 0; x < xSize; x+=2) {
+				for (unsigned int x = 0; x < xSize; x+=2) {
 					if (readbit(pSrc, yoffs + xoffsets[x])) dp[x>>1] |= (planebit&0x0f)<<4;
 					if (readbit(pSrc, yoffs + xoffsets[x+1])) dp[x>>1] |= (planebit& 0x0f);
 				}
@@ -76,7 +76,7 @@ void dummy()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 {
-	unsigned int i,j,k,l=0;
+	unsigned int i,j,k;
 	unsigned char temp[8][8];
 	unsigned char rot[8][8];
 
@@ -85,11 +85,11 @@ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 		for(i=0;i<8;i++)
 			for(j=0;j<4;j++)
 			{
-				temp[i][j<<1]=target[l+(i*4)+j]>>4;
-				temp[i][(j<<1)+1]=target[l+(i*4)+j]&0x0f;
+				temp[i][j<<1]=target[(i*4)+j]>>4;
+				temp[i][(j<<1)+1]=target[(i*4)+j]&0x0f;
 			}
 
-		memset(&target[l],0,32);
+		memset(target,0,32);
 		
 		for(i=0;i<8;i++)
 			for(j=0;j<8;j++)
@@ -102,8 +102,8 @@ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 
 		for(i=0;i<8;i++)
 			for(j=0;j<4;j++)
-					target[l+(i*4)+j]    = (rot[i][j*2]<<4)|(rot[i][(j*2)+1]&0xf);
-		l+=32;
+					target[(i*4)+j]    = (rot[i][j*2]<<4)|(rot[i][(j*2)+1]&0xf);
+		target+=32;
 	}	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

@@ -28,7 +28,7 @@ int ovlInit(char *szShortName)
 		SidearmsInit, DrvExit, DrvFrame
 	};
 
-	if (!strcmp(nBurnDrvSidearms.szShortName, szShortName)) 
+//	if (!strcmp(nBurnDrvSidearms.szShortName, szShortName)) 
 	memcpy(shared,&nBurnDrvSidearms,sizeof(struct BurnDriver));
 
 	ss_reg   = (SclNorscl *)SS_REG;
@@ -254,7 +254,7 @@ int ovlInit(char *szShortName)
 /*static*/ INT32 DrvDoReset(INT32 clear_mem)
 {
 	if (clear_mem) {
-		memset (AllRam, 0, RamEnd - AllRam);
+		memset (DrvVidRAM, 0, RamEnd - DrvVidRAM);
 	}
 #ifdef RAZE
 	z80_reset();
@@ -278,6 +278,7 @@ int ovlInit(char *szShortName)
 	starfield_enable = 0;
 	starscrollx = 0;
 	starscrolly = 0;
+	
 	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
 	memset4_fast((UINT8 *)(ss_vram+0x43100),0x00,0x3E000);
 
@@ -285,16 +286,14 @@ int ovlInit(char *szShortName)
 	{
 		palette_write(i);
 	}
-
 	return 0;
 }
 
 /*static*/ INT32 MemIndex()
 {
 	UINT8 *Next; 
-	Next						= AllMem;
-//	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
-	CZ80Context			= Next; Next += sizeof(cz80_struc);
+	Next			= AllMem;
+	CZ80Context		= Next; Next += sizeof(cz80_struc);
 	DrvZ80ROM0		= Next; Next += 0x018000;
 #ifdef SOUND
 	DrvZ80ROM1		= Next; Next += 0x008000;
@@ -303,10 +302,10 @@ int ovlInit(char *szShortName)
 //	DrvStarMap		= 0x00200000;
 	DrvTileMap		= Next; Next += 0x008000;
 //	DrvTileMap		= 0x00208000;
-	AllRam			= Next;
+//	AllRam			= Next;
 
 	DrvVidRAM		= Next; Next += 0x001000;
-	DrvSprBuf			= Next; Next += 0x001000;
+	DrvSprBuf		= Next; Next += 0x001000;
 	DrvSprRAM		= Next; Next += 0x001000;
 	DrvPalRAM		= Next; Next += 0x000800;
 	DrvZ80RAM0		= Next; Next += 0x002000;
@@ -318,16 +317,16 @@ int ovlInit(char *szShortName)
 
 	RamEnd			= Next;
 
-	bgmap_lut	 		= Next; Next += 0x020000 * sizeof (UINT16);
+	bgmap_lut	 	= Next; Next += 0x020000 * sizeof (UINT16);
 //
 	bgmap_buf		= Next; Next += 0x800 * sizeof (UINT32);//bgmap_lut + 0x20000;
 //	bgmap_buf		= bgmap_lut + 0x20000;
 
 	remap4to16_lut	= Next; Next += 256 * sizeof (UINT16);
-	map_lut				= Next; Next += 256 * sizeof (UINT16);
+	map_lut			= Next; Next += 256 * sizeof (UINT16);
 	map_offset_lut	= Next; Next += 8192 * sizeof (UINT16);
-	cram_lut			= Next; Next += 4096 * sizeof (UINT16);
-//	charaddr_lut		= Next; Next += 0x800 * sizeof (UINT16);
+	cram_lut		= Next; Next += 4096 * sizeof (UINT16);
+//	charaddr_lut	= Next; Next += 0x800 * sizeof (UINT16);
 //	MemEnd			= Next;
 
 	return 0;
@@ -359,10 +358,9 @@ int ovlInit(char *szShortName)
 		if ((DrvGfxROM0[i]& 0x03)     ==0x00)DrvGfxROM0[i] = DrvGfxROM0[i] & 0x30 | 0x3;
 		else if ((DrvGfxROM0[i]& 0x03)==0x03) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x30;
 
-		if ((DrvGfxROM0[i]& 0x30)       ==0x00)DrvGfxROM0[i] = 0x30 | DrvGfxROM0[i] & 0x03;
+		if ((DrvGfxROM0[i]& 0x30)     ==0x00)DrvGfxROM0[i] = 0x30 | DrvGfxROM0[i] & 0x03;
 		else if ((DrvGfxROM0[i]& 0x30)==0x30) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x03;
 	}	
-
 wait_vblank();
 	
 // sprites // ok
@@ -377,7 +375,6 @@ wait_vblank();
 		else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
 	}
 	memcpyl (DrvGfxROM2b, tmp, 0x40000);
-	
 // bg
 	GfxDecode4Bpp(0x0400, 4, 32, 32, Plane1, XOffs1, YOffs, 0x800, DrvGfxROM1, tmp);
 	tile32x32toSaturn(1,0x0200, tmp);
@@ -390,8 +387,8 @@ wait_vblank();
 		if ((tmp[i]& 0xf0)       ==0x00)tmp[i] = 0xf0 | tmp[i] & 0x0f;
 		else if ((tmp[i]& 0xf0)==0xf0) tmp[i] = tmp[i] & 0x0f;
 	}
-
 	memcpyl (DrvGfxROM1b, tmp, 0x70000);
+
 	wait_vblank();
 }
 
@@ -449,7 +446,6 @@ wait_vblank();
 		if (BurnLoadRom(DrvTileMap + 0x00000, 22, 1)) return 1;
 		DrvGfxDecode();
 	}
-	
 #ifdef RAZE
   	z80_init_memmap();
 
@@ -479,11 +475,10 @@ wait_vblank();
 	CZetOpen(0);
 
 	CZetMapMemory(DrvZ80ROM0,	0x0000, 0x7fff, MAP_ROM);
-	CZetMapMemory(DrvPalRAM,		0xc000, 0xc7ff, MAP_ROM);
-	CZetMapMemory(DrvVidRAM,		0xd000, 0xdfff, MAP_ROM);
-	CZetMapMemory(DrvZ80RAM0,		0xe000, 0xefff, MAP_RAM);
-	CZetMapMemory(DrvSprRAM,		0xf000,	 0xffff, MAP_RAM);
-
+	CZetMapMemory(DrvPalRAM,	0xc000, 0xc7ff, MAP_ROM);
+	CZetMapMemory(DrvVidRAM,	0xd000, 0xdfff, MAP_ROM);
+	CZetMapMemory(DrvZ80RAM0,	0xe000, 0xefff, MAP_RAM);
+	CZetMapMemory(DrvSprRAM,	0xf000,	 0xffff, MAP_RAM);
 	CZetSetWriteHandler(sidearms_main_write);
 	CZetSetReadHandler(sidearms_main_read);
 	CZetClose();
@@ -501,7 +496,8 @@ wait_vblank();
 	DrvDoReset(1);
 	make_lut();
 	SS_SET_N0PRIN(3); // star field
-	drawWindow(0,224,240,0,0);
+	SclProcess = 2;  // pour activer maj
+//	drawWindow(0,224,240,0,0);
 
 	UINT8 *lineptr = (Uint8 *)0x0280000;
 	UINT8 *lineptr2 = (Uint8 *)SS_FONT;
@@ -530,7 +526,7 @@ wait_vblank();
 	nBurnFunction = NULL;
 	wait_vblank();
 	DrvDoReset(1);
-	memset(ss_map2,0x00,0x20000);
+//	memset(ss_map2,0x00,0x20000);
 #ifdef RAZE
 
 #else
@@ -544,10 +540,12 @@ wait_vblank();
 
 	bgmap_buf = NULL;
 	cram_lut = bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = NULL;
-	CZ80Context = AllRam = RamEnd = DrvZ80ROM0 = NULL;
+	CZ80Context = /*AllRam =*/ RamEnd = DrvZ80ROM0 = NULL;
 	DrvStarMap = DrvTileMap = DrvVidRAM = DrvSprBuf = DrvSprRAM = DrvPalRAM = DrvZ80RAM0 = bgscrollx = bgscrolly = NULL;
-	BurnFree (AllMem);
+	free (AllMem);
 	AllMem = NULL;
+
+	vblank=0;
 
 	cleanDATA();
 	cleanBSS();
@@ -556,7 +554,7 @@ wait_vblank();
 	return 0;
 }
 
-void transfer_bg_layer()
+inline void transfer_bg_layer()
 {
 	if(bglayer_enable)
 	{
@@ -661,7 +659,6 @@ void transfer_bg_layer()
 		}
 	}
 	vblank = 0;
-
 	for (UINT32 i = 0; i < nInterleave; i++) {
 #ifdef RAZE
 		z80_emulate(nSegment);
@@ -685,7 +682,6 @@ z80_raise_IRQ(0);
 	SidearmsDraw();
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x1000);
 	playMusic(&pcmStream);
-
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

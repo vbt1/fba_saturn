@@ -12,11 +12,13 @@ INT32 DrvFrame();
 UINT32 SidearmsDraw();
 void bankswitch(UINT32 data);
 void sidearms_draw_starfield(int *starfield_enable);
+inline void transfer_bg_layer();
 //void vblIn();
-/*static*/ void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+void cleanSprites();
+void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 void SDMA_ScuCst(Uint32 ch, void *dst, void *src, Uint32 cnt);
 Uint32 SDMA_ScuResult(Uint32 ch);
-unsigned char current_pcm=255;
+void *memset4_fast(void *, long, size_t);
 void dummy();
 
 SFX sfx_sidarm[96] = {
@@ -54,51 +56,52 @@ SFX sfx_sidarm[96] = {
 #define VDP2_REGISTER_BASE  (VDP2_BASE+0x180000)
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
 
-/*static*/ UINT32 *bgmap_buf = NULL;
-/*static*/ UINT16 *bgmap_lut = NULL;
-/*static*/ UINT16 *remap4to16_lut = NULL;
-/*static*/ UINT16 *map_lut = NULL;  //[256];
-/*static*/ UINT16 *map_offset_lut = NULL;  //[2048];
-/*static*/ UINT16 *cram_lut = NULL;  //[4096];
+UINT32 *bgmap_buf = NULL;
+UINT16 *bgmap_lut = NULL;
+UINT16 *remap4to16_lut = NULL;
+UINT16 *map_lut = NULL;  //[256];
+UINT16 *map_offset_lut = NULL;  //[2048];
+UINT16 *cram_lut = NULL;  //[4096];
 
-/*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ UINT8 *AllMem= NULL;
-/*static*/ UINT8 *AllRam= NULL;
-/*static*/ UINT8 *RamEnd= NULL;
-/*static*/ UINT8 *DrvZ80ROM0= NULL;
+UINT8 *CZ80Context = NULL;
+UINT8 *AllMem= NULL;
+//UINT8 *AllRam= NULL;
+UINT8 *RamEnd= NULL;
+UINT8 *DrvZ80ROM0= NULL;
 #ifdef SOUND
-/*static*/ UINT8 *DrvZ80ROM1= NULL;
+UINT8 *DrvZ80ROM1= NULL;
 #endif
-/*static*/ UINT8 *DrvStarMap= NULL;
-/*static*/ UINT8 *DrvTileMap= NULL;
-/*static*/ UINT8 *DrvVidRAM= NULL;
-/*static*/ UINT8 *DrvSprBuf= NULL;
-/*static*/ UINT8 *DrvSprRAM= NULL;
-/*static*/ UINT8 *DrvPalRAM= NULL;
-/*static*/ UINT8 *DrvZ80RAM0= NULL;
+UINT8 *DrvStarMap= NULL;
+UINT8 *DrvTileMap= NULL;
+UINT8 *DrvVidRAM= NULL;
+UINT8 *DrvSprBuf= NULL;
+UINT8 *DrvSprRAM= NULL;
+UINT8 *DrvPalRAM= NULL;
+UINT8 *DrvZ80RAM0= NULL;
 #ifdef SOUND
-/*static*/ UINT8 *DrvZ80RAM1= NULL;
+UINT8 *DrvZ80RAM1= NULL;
 #endif
-/*static*/ UINT8 *bgscrollx= NULL;
-/*static*/ UINT8 *bgscrolly= NULL;
-/*static*/ UINT8 starfield_enable=0;
-/*static*/ UINT8 sprite_enable=0;
-/*static*/ UINT8 bglayer_enable=0;
-/*static*/ UINT16 starscrollx=0;
-/*static*/ UINT16 starscrolly=0;
-/*static*/ UINT8 enable_watchdog=0;
-/*static*/ UINT8 watchdog=0;
-/*static*/ UINT8 vblank=0;
+UINT8 *bgscrollx= NULL;
+UINT8 *bgscrolly= NULL;
+UINT8 starfield_enable=0;
+UINT8 sprite_enable=0;
+UINT8 bglayer_enable=0;
+UINT16 starscrollx=0;
+UINT16 starscrolly=0;
+UINT8 enable_watchdog=0;
+UINT8 watchdog=0;
+UINT8 vblank=0;
+UINT8 current_pcm=255;
 
-/*static*/ UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy3[8]={0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy4[8]={0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy5[8]={0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvDips[4]={0,0,0,0};
-/*static*/ UINT8 DrvInputs[5]={0,0,0,0,0};
+UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
+UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
+UINT8 DrvJoy3[8]={0,0,0,0,0,0,0,0};
+UINT8 DrvJoy4[8]={0,0,0,0,0,0,0,0};
+UINT8 DrvJoy5[8]={0,0,0,0,0,0,0,0};
+UINT8 DrvDips[4]={0,0,0,0};
+UINT8 DrvInputs[5]={0,0,0,0,0};
 
-/*static*/ struct BurnInputInfo SidearmsInputList[] = {
+struct BurnInputInfo SidearmsInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 up"		},
@@ -126,7 +129,7 @@ SFX sfx_sidarm[96] = {
 
 STDINPUTINFO(Sidearms)
 
-/*static*/ struct BurnDIPInfo SidearmsDIPList[]=
+struct BurnDIPInfo SidearmsDIPList[]=
 {
 	{0x13, 0xff, 0xff, 0xfc, NULL			},
 	{0x14, 0xff, 0xff, 0xff, NULL			},
@@ -192,7 +195,7 @@ STDDIPINFO(Sidearms)
 
 // Side Arms - Hyper Dyne (World, 861129)
 
-/*static*/ struct BurnRomInfo sidearmsRomDesc[] = {
+struct BurnRomInfo sidearmsRomDesc[] = {
 	{ "sa03.bin",		0x8000, 0xe10fe6a0, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
 	{ "a_14e.rom",		0x8000, 0x4925ed03, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "a_12e.rom",		0x8000, 0x81d0ece7, 1 | BRF_PRG | BRF_ESS }, //  2

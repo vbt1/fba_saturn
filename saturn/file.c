@@ -21,7 +21,7 @@
 #ifndef ACTION_REPLAY
 //#define	MAX_FILE		384
 #define MAX_OPEN        20 //a ne pas modifier
-#define MAX_DIR         384//384
+#define MAX_DIR         128 //384
 #else
 //#define	MAX_FILE		1
 #define MAX_OPEN        2
@@ -32,7 +32,7 @@
 
 //extern t_cart cart;
 #ifndef ACTION_REPLAY
-extern signed int file_max;
+//extern signed int file_max;
 static GfsDirName dir_name[MAX_DIR];
 static Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
 #endif
@@ -90,13 +90,15 @@ void ChangeDir(char *dirname)
 	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;
 	GFS_DIRTBL_NDIR(&dirtbl) = MAX_DIR;
 
+
 //	for (;;) {
-	    file_max = GFS_LoadDir(fid, &dirtbl)-2;
+/*	    file_max =*/ GFS_LoadDir(fid, &dirtbl)-2;
 //		if ( file_max >= 0) {
 //			break;
 //		}
 //	}
 GFS_SetDir(&dirtbl) ;
+
 //	for (;;) {
 //		if (GFS_SetDir(&dirtbl) == 0) {
 //			break;

@@ -4,12 +4,14 @@
 //#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR 0x060DA000
+#define OVLADDR 0x060DB000
 #define OVLAEND 0x060FF000
-#define SIZEMAX  OVLAEND-OVLAEND //0x30000 //0x060FFC00-0x060CC000
+#define SIZEMAX  0x20000 //OVLAEND-OVLADDR //0x30000 //0x060FFC00-0x060CC000
 #define LOWADDR 0x00200000
 //#define MALLOC_MAX 0xAA000
-
+#define MAINSTART 0x0601C000
+#define MALLOC_MAX  OVLADDR-MAINSTART-0x3000 //0x30000 //0x060FFC00-0x060CC000
+#define LOWADDR 0x00200000
 #ifdef HEAP_WALK
 void heapWalk(void);
 #endif
@@ -484,7 +486,7 @@ static void display_menu(void)
 		if(!loaded)
 		{
 // nettoyage emplacement du driver
-			memset((Uint8 *)OVLADDR,0x00,SIZEMAX);
+			memset((volatile void *)OVLADDR,0x00,SIZEMAX);
 // vbt à remette			
 #ifndef DEBUG_DRV
 			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);

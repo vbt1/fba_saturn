@@ -757,7 +757,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void initLayers()
 {
-    const Uint16	CycleTb[]={
+    Uint16	CycleTb[]={
 		0xff56, 0xffff, //A0
 		0xffff, 0xffff,	//A1
 		0x15f2,0x4eff,   //B0

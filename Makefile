@@ -10,23 +10,26 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile
 #CCFLAGS =  -mhitachi -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
-CCFLAGS2 = -m2 -Os --save-temps -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I.
+CCFLAGS2 = -m2 -Os -ffreestanding --save-temps -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. 
+
 #CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O0 -fomit-frame-pointer -D_SH -DMODEL_S -c
 #CCOVLFLAGS = -g -m2 -mrenesas  -std=gnu99 -Wfatal-errors -Os -D_SH -DMODEL_S -c
 # pour asm 
 #CCOVLFLAGS = -S -fverbose-asm -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
-CCOVLFLAGS = -m2 -O2 --save-temps -fuse-linker-plugin -flto -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
+CCOVLFLAGS = -m2 -O2 --save-temps -fuse-linker-plugin -flto -fno-web -fno-unit-at-a-time -Wl,--strip-all -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
+#CCOVLFLAGS = -m2 -O2 --save-temps -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
+
 #CCOVLFLAGS = -m2 -O2 --save-temps -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
 #LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker boot -nostartfiles  -nostdlib
-LDCMNFLAGS = -m2 -O2 -Xlinker -n -Xlinker -flto -Xlinker
+LDCMNFLAGS = -m2 -O2 -Xlinker -S -Xlinker -n -Xlinker -flto -Xlinker
 
 TARGET    = root/sl.coff
 TARGET1  = root/sl.bin
 LDFILE	 = ./$(TARGET:.coff=.lnk)
 MPFILE     = $(TARGET:.coff=.maps)
-LDFLAGS = $(LDCMNFLAGS) -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
+LDFLAGS = -ffreestanding $(LDCMNFLAGS) -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
 SRCS       = saturn/low.s burn.c saturn/font.c saturn/file.c saturn/saturn.c 
 OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 
@@ -259,26 +262,26 @@ OVLNINKD2                 = root/d_ninkd2.coff
 OVLNINKD21               = root/d_ninkd2.bin
 MPOVLNINKD2FILE    = $(OVLNINKD2:.coff=.maps)
 LDOVLNINKD2FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNINKD2FILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLNINKD2         = d_ninjakd2.c czet.c cz80/cz80.c mc8123.c load.c saturn/ovl.c
+SRCOVLNINKD2         = d_ninjakd2.c czet.c cz80/cz80.c load.c saturn/ovl.c
 OBJOVLNINKD2         = $(SRCOVLNINKD2:.c=.o)
 
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
-../../SBL6/SEGALIB/LIB/vbtelf2/sega_gfs.a \
-../../SBL6/SEGALIB/SPR/vbtelf2/spr_slv.o \
-../../SBL6/SEGALIB/LIB/vbtelf2/sega_int.a \
-../../SBL6/SEGALIB/LIB/vbtelf2/cdcrep.a \
-../../SBL6/SEGALIB/PCM/vbtelf2/pcm_lib.o \
-../../SBL6/SEGALIB/PCM/vbtelf2/pcm_mp.o ../../SBL6/SEGALIB/PCM/vbtelf2/pcm_audi.o \
-../../SBL6/SEGALIB/PCM/vbtelf2/pcm_drv.o ../../SBL6/SEGALIB/PCM/vbtelf2/pcm_time.o \
-../../SBL6/SEGALIB/PCM/vbtelf2/pcm_etc.o ../../SBL6/SEGALIB/PCM/vbtelf2/pcm_aif.o \
-../../SBL6/SEGALIB/PCM/vbtelf2/pcm_gfs.o
+../../SBL6/SEGALIB/LIB/vbtelf4/sega_gfs.a \
+../../SBL6/SEGALIB/SPR/vbtelf4/spr_slv.o \
+../../SBL6/SEGALIB/LIB/vbtelf4/sega_int.a \
+../../SBL6/SEGALIB/LIB/vbtelf4/cdcrep.a \
+../../SBL6/SEGALIB/PCM/vbtelf4/pcm_lib.o \
+../../SBL6/SEGALIB/PCM/vbtelf4/pcm_mp.o ../../SBL6/SEGALIB/PCM/vbtelf4/pcm_audi.o \
+../../SBL6/SEGALIB/PCM/vbtelf4/pcm_drv.o ../../SBL6/SEGALIB/PCM/vbtelf4/pcm_time.o \
+../../SBL6/SEGALIB/PCM/vbtelf4/pcm_etc.o ../../SBL6/SEGALIB/PCM/vbtelf4/pcm_aif.o \
+../../SBL6/SEGALIB/PCM/vbtelf4/pcm_gfs.o
 
- LIBSTM = ../../SBL6/SEGALIB/PCM/vbtelf2/pcm_stm.o ../../SBL6/SEGALIB/LIB/vbtelf2/sega_stm.a ../../SBL6/SEGALIB/LIB/vbtelf2/sega_dma.a
+ LIBSTM = ../../SBL6/SEGALIB/PCM/vbtelf4/pcm_stm.o ../../SBL6/SEGALIB/LIB/vbtelf4/sega_stm.a ../../SBL6/SEGALIB/LIB/vbtelf4/sega_dma.a
 
-LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf2/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf2/sega_dma.a
+LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf4/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf4/sega_dma.a
 
 all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \
@@ -286,7 +289,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLMITCH) $(OVLMITCH1) $(OVLGNG) $(OVLGNG1) \
      $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
-     $(OVLTETRIS) $(OVLTETRIS1) $(OVLSMS) $(OVLSMS1) \
+     $(OVLSMS) $(OVLSMS1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) \
      $(OVLGGCZ) $(OVLGGCZ1) $(OVLAPPOOO) $(OVLAPPOOO1) \
      $(OVLBLKTGR) $(OVLBLKTGR1) $(OVLWIZ) $(OVLWIZ1) \

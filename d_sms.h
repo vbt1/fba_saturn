@@ -91,8 +91,8 @@ typedef struct
 /*static*/  UINT16 *map_lut = NULL;
 /*static*/  UINT8 *CZ80Context = NULL;
 //extern unsigned char play;
-extern int file_id;
-extern int file_max;
+int file_id = 2;
+int file_max = 0;
 
 typedef UINT16	trigger_t;
 
