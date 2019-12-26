@@ -159,14 +159,14 @@
 #define IN(A)				CPU->IN_Port(A)
 #define OUT(A, D)			CPU->OUT_Port(A, D)
 
-/*static*/ UINT8 SZ[256];
-/*static*/ UINT8 SZP[256];
-/*static*/ UINT8 SZ_BIT[256];
-/*static*/ UINT8 SZHV_inc[256];
-/*static*/ UINT8 SZHV_dec[256];
+/*static*/ UINT8 SZ[256]={0};
+/*static*/ UINT8 SZP[256]={0};
+/*static*/ UINT8 SZ_BIT[256]={0};
+/*static*/ UINT8 SZHV_inc[256]={0};
+/*static*/ UINT8 SZHV_dec[256]={0};
 #if CZ80_BIG_FLAGS_ARRAY
-/*static*/ UINT8 SZHVC_add[2*256*256];
-/*static*/ UINT8 SZHVC_sub[2*256*256];
+/*static*/ UINT8 SZHVC_add[2*256*256]={0};
+/*static*/ UINT8 SZHVC_sub[2*256*256]={0};
 #endif
 
 

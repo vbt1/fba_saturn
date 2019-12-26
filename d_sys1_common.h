@@ -32,7 +32,8 @@ write_func p[36] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 /*static*/ UINT8 *width_lut = NULL;
 /*static*/ UINT16 *spriteCache = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ UINT32 *map_cache = NULL;
+/*static*/ UINT16 *map_cache = NULL;
+/*static*/ UINT8 *map_dirty = NULL;
 typedef int bool;
 
 typedef struct { UINT8 x, y, width, yend } sprite_collision; 
@@ -46,6 +47,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Ski
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase);
 void *memset4_fast(void *, long, size_t);
 void System1BankRom(UINT32 System1RomBank);
+void renderSound(unsigned int *nSoundBufferPos);
 
 /*static*/ UINT8 System1InputPort0[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
 /*static*/ UINT8 System1InputPort1[8]    = {0, 0, 0, 0, 0, 0, 0, 0};

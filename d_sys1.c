@@ -171,15 +171,16 @@ Driver Inits
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }
 
-/*static*/ INT32 FourdwarrioInit()
+/*static*//* INT32 FourdwarrioInit()
 {
 	DecodeFunction = fdwarrio_decode;
-	
+
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
-}
+}*/
 /*==============================================================================================
 Graphics Rendering
 ===============================================================================================*/
+/*
 void fillSpriteCollision(unsigned int Num, int *values)
 {
 	sprites_collision[Num].x=sprites_collision[Num].y=sprites_collision[Num].width=sprites_collision[Num].yend=0;
@@ -202,7 +203,7 @@ void fillSpriteCollision(unsigned int Num, int *values)
 	if(values[1]+values[3]>0)
 		sprites_collision[Num].yend=(values[1]+values[3]) & 0xff; // height max 255
 }
-
+*/
 void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
 {
 	int Src = (SpriteBase[7] << 8) | SpriteBase[6];

@@ -347,7 +347,7 @@ INT32 DrvLoadRoms(UINT8 nWhichGame)
 	}
 
 	// Sprites
-	INT32 nRet = 0, nBaseROM = 0;
+	INT32 nBaseROM = 0;
 	switch (nWhichGame) {
 		case 0:										// Tiger Heli
 			nBaseROM = 3;
@@ -368,7 +368,7 @@ INT32 DrvLoadRoms(UINT8 nWhichGame)
 	UINT8* pTemp = (UINT8*)0x00240000;
 
 	for (UINT32 i = 0; i < 4; i++) {
-		nRet |= BurnLoadRom(pTemp + nSize * i, nBaseROM + i, 1);
+		BurnLoadRom(pTemp + nSize * i, nBaseROM + i, 1);
 	}
 
 	// Text layer
@@ -404,7 +404,7 @@ INT32 DrvLoadRoms(UINT8 nWhichGame)
 	pTemp = (UINT8*)0x00280000;
 
 	for (UINT32 i = 0; i < 4; i++) {
-		nRet |= BurnLoadRom(pTemp + nSize * i, nBaseROM + i, 1);
+		BurnLoadRom(pTemp + nSize * i, nBaseROM + i, 1);
 	}
 
 	INT32 Plane0[3]  = { 0x2000*8*0, 0x2000*8*1, 0x2000*8*2 };
@@ -585,9 +585,7 @@ INT32 DrvExit()
 // Deallocate all used memory
 	map_offset_lut = map_offset_lut2 = NULL;
 	CZ80Context = NULL;
-	DrvZ80ROM0 = /*Rom02 = Rom03 =*/ NULL;
-//	TigerHeliPaletteROM = NULL;
-	DrvZ80RAM0 = RamShared = /*Ram03 =*/ NULL;
+	DrvZ80ROM0 = DrvZ80RAM0 = RamShared = NULL;
 	DrvVidRAM = DrvSprRAM = DrvSprBuf = DrvTxtRAM = NULL;
 
 	free(Mem);
@@ -754,22 +752,14 @@ INT32 DrvFrame()
 	}
 
 	SPR_RunSlaveSH((PARA_RTN*)updateSound,&nSoundBufferPos);
-	unsigned int vblank = 1;
 	
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
 		CZetOpen(0);
 		nCyclesDone[0] += CZetRun(((i + 1) * nCycleSegment0) - nCyclesDone[0]);
 
-//		if (i == 15) {
-		if (i == 3) {
-			vblank = 0;
-		}
-
-//		if (i == 255) {
-			if (i == 63) {
+		if (i == 63) {
 			if (irq_enable) CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
-			vblank = 1;
 			memcpyl(DrvSprBuf, DrvSprRAM, 0x0800);
 		}
 		CZetClose();
@@ -812,12 +802,14 @@ void rotate_tile16x16(unsigned int size, unsigned char *target)
 				 rot[15-i][j]= temp[j][i] ;
 //				else
 //				 rot[i][15-j]= temp[j][i] ;
+				if(j%2)
+					target[(i*8)+j/2]    = (rot[i][j]<<4)|(rot[i][(j)+1]&0xf);
 			}
 
-		for(i=0;i<16;i++)
+/*		for(i=0;i<16;i++)
 			for(j=0;j<8;j++)
 					target[(i*8)+j]    = (rot[i][j*2]<<4)|(rot[i][(j*2)+1]&0xf);
-		target+=128;
+*/		target+=128;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

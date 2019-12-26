@@ -269,7 +269,8 @@ Allocate Memory
 //	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
 	cpu_lut				= (UINT32 *)Next; Next += 10*sizeof(UINT32);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
-	map_cache			= (UINT32 *)Next; Next += (0x800*4) * sizeof(UINT32);
+	map_cache			= (UINT16 *)Next; Next += (0x800*16) * sizeof(UINT32);
+	map_dirty			= Next; Next += 0x0008;
 	CZ80Context			= Next; Next += 2*sizeof(cz80_struc);
 
 	return 0;
@@ -294,7 +295,7 @@ Reset Functions
 	System1BgBankLatch =  0;
 	System1BgBank = 0;
 	System1BankedRom = 0;
-
+	memset(map_dirty,1,8);
 	return 0;
 }
 
@@ -515,6 +516,9 @@ void initLayers()
 //	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 //	scfg.datatype      = SCL_CELL;
 	scfg.plate_addr[0] = (Uint32)ss_map;
+//	scfg.plate_addr[1] = (Uint32)ss_map+0x1000;
+//	scfg.plate_addr[2] = (Uint32)ss_map+0x1000;
+//	scfg.plate_addr[3] = (Uint32)ss_map+0x1000;
 //	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
@@ -629,6 +633,7 @@ void initLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
+	SPR_InitSlaveSH();
 	nSoundBufferPos = 0;
 	nBurnSprites  = 35;
 	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
@@ -671,7 +676,7 @@ void initLayers()
 	initLayers();
 	initColors();
 	initSpritesS1();
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	if(flipscreen)
 		drawWindow(0,240,0,8,64);
@@ -757,15 +762,15 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
 	}
 
-	const UINT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
+	UINT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
 
-	const UINT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
-	const UINT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
+	UINT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	UINT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"GfxDecode4Bpp                     ",20,100);
 
 	if (System1NumTiles > 0x800)
 	{
-		const UINT32 NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
+		UINT32 NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
 		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, NoboranbTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, cache);
 	}
 	else
@@ -926,7 +931,7 @@ int System1Exit()
 
     while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
     while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
-
+	memset(map_dirty,1,0);
 	CZ80Context = NULL;
 
 	SN76489Init(0, 0, 0);
@@ -947,42 +952,16 @@ System1ScrollX = System1ScrollY = NULL;
 
 remap8to16_lut = NULL;
 map_offset_lut = NULL;
-//code_lut = NULL;
 cpu_lut = NULL;
 cram_lut = NULL;
 width_lut = NULL;
 spriteCache = NULL;
 map_cache = NULL;
+map_dirty = NULL;
 
-//	if(System1SpriteRomSize!=0x20000)
-//		free(System1Sprites);
 	System1Sprites = NULL;
-//	free(SpriteOnScreenMap);
-//	SpriteOnScreenMap = NULL;
-
 	free(Mem);
 	Mem = NULL;
-/*
-	System1SoundLatch = 0;
-	System1BgScrollX = 0;
-	System1BgScrollY = 0;
-	System1VideoMode = 0;
-	System1FlipScreen = 0;
-	System1RomBank = 0;
-	BlockgalDial1 = 0;
-	BlockgalDial2 = 0;
-	
-	System1SpriteRomSize = 0;
-	System1NumTiles = 0;
-	System1ColourProms = 0;
-	System1BankedRom = 0;
-	System1BankSwitch =0;
-	
-	nCyclesTotal[0] = nCyclesTotal[1] = 0;
-
-	nextSprite=0;
-	flipscreen=0;
-*/
 	DecodeFunction = NULL;
 	MakeInputsFunction = NULL;
 	CollisionFunction = NULL;
@@ -1126,16 +1105,16 @@ void renderSpriteCache(int *values)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void reset_sprite_colli(unsigned int Num)
+/*void reset_sprite_colli(unsigned int Num)
 {
- 	if(sprites_collision[Num].width>0)// && colli[Num][3]>0)
+	if(sprites_collision[Num].width>0)// && colli[Num][3]>0)
  	{
  		for (unsigned int i=sprites_collision[Num].y; i<=sprites_collision[Num].yend; i++)
  		{
 			memset((void *)SpriteOnScreenMap[(i<<8)+sprites_collision[Num].x],0xff,sprites_collision[Num].width);
 		}		 
  	}
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 void System1DrawSprites()
 {
@@ -1164,12 +1143,14 @@ void System1DrawSprites()
 		if (SpriteBase[1] && (SpriteBase[1] - SpriteBase[0] > 0))
 		{	
 			unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
-			unsigned int Bank = 
+			/*unsigned int Bank = 
 				(
 				((SpriteBase[3] & 0x80) >> 7) | 
 				((SpriteBase[3] & 0x40) >> 5) | 
 				((SpriteBase[3] & 0x20) >> 3)
 				) <<15;
+			*/
+			unsigned int Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
 			Bank &= (System1SpriteRomSize - 1);
 			UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
 			unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
@@ -1191,15 +1172,15 @@ void System1DrawSprites()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void renderSound()
+/*static*/ void renderSound(unsigned int *nSoundBufferPos)
 {
-	signed short *	nSoundBuffer = (signed short *)0x25a20000;
-	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	SN76496Update(0, &nSoundBuffer[deltaSlave], nSegmentLength);
-	SN76496Update(1, &nSoundBuffer[deltaSlave], nSegmentLength);
-	deltaSlave+=nSegmentLength;
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
+//	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	SN76496Update(0, &nSoundBuffer[*nSoundBufferPos], nSegmentLength);
+	SN76496Update(1, &nSoundBuffer[*nSoundBufferPos], nSegmentLength);
+	nSoundBufferPos[0]+=nSegmentLength;
 	//	nSoundBufferPos[0]+= nSegmentLength;
-	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
 
 /*==============================================================================================
@@ -1207,10 +1188,12 @@ Frame functions
 ===============================================================================================*/
 int System1Frame()
 {
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1Frame start                     ",20,100);
+
 //	if (System1Reset) System1DoReset();
 	MakeInputsFunction();
 // vbt : à tester pour wbml
-	CZetNewFrame();
+//	CZetNewFrame();
 	unsigned int nCyclesDone[2] = {0,0};
 	
 	for (UINT32 i = 0; i < nInterleave; i++) {
@@ -1230,7 +1213,9 @@ int System1Frame()
 		if (i == 9) CZetRaiseIrq(0);
 		CZetClose();
 #endif
-		SPR_RunSlaveSH((PARA_RTN*)renderSound,NULL);
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"SPR_RunSlaveSH                     ",20,100);
+
+		SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
 //vbt à précalculer !!!
 //		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 //		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
@@ -1247,8 +1232,11 @@ int System1Frame()
 			z80_emulate(1);
 		}
 #endif
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"SPR_WaitEndSlaveSH                     ",20,100);
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
 	}
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1Render                     ",20,100);
 
 	System1Render();
 
@@ -1258,8 +1246,9 @@ int System1Frame()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1Frame end                     ",20,100);
 
-//	SPR_WaitEndSlaveSH();
+	SPR_WaitEndSlaveSH();
 //	sc_check();
 	return 0;
 }

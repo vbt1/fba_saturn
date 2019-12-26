@@ -99,6 +99,16 @@ void system2_foregroundram_w(unsigned short a, UINT8 d)
 		unsigned int x = map_offset_lut[a&0x7ff];
 		ss_map2[x]   = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
 		ss_map2[x+1] = Code & (System1NumTiles-1);
+
+		switch (a&0x7ff)
+		{
+			case 0x740: 
+			case 0x742:
+			case 0x744:
+			case 0x746:
+				map_dirty[d&7]=1;
+			break;
+		}
 	}
 }
 
@@ -122,47 +132,33 @@ static void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d)
 	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
 	if (a >= 0xe000 && a <= 0xefff)
 	{
-		if(!System1BgBank && a <= 0xe7ff)
+		if(System1BgBank==0 && a <= 0xe7ff)
 		{
 			system2_foregroundram_w(a, d);
 			return;
 		}
-		System1VideoRam[(0x1000*System1BgBank) + (a & 0xfff)] = d;
+
+		if(System1VideoRam[(0x1000*System1BgBank) + (a & 0xfff)]!=d)
+		{
+			const unsigned int v[] = { 0, 0x40, 0x1000, 0x1040 };
+			System1VideoRam[(0x1000*System1BgBank) + (a & 0xfff)] = d;
+			a = (0x1000*System1BgBank) + (a & 0xffe);
+			map_dirty[a>>11] = 1;
+
+			unsigned int Code = (System1VideoRam[a+1]<<8)|System1VideoRam[a];
+			Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
+
+			unsigned int x = map_offset_lut[a&0x7ff];
+			UINT16 *map = &map_cache[x+(a>>11)*0x1000];
+			map[0] = ((Code >> 5) & 0x3f);
+			map[1] = Code & (System1NumTiles-1);
+		}
 		return;
 	}
 	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w(a,d); return; }
 	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
 	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
 }
-
-/*
-void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d)
-{
-	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
-	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
-
-	if (a >= 0xe000 && a <= 0xe7ff) 
-	{
-//		const int v[] = { 0, 0x40, 0x1000, 0x1040 };
-		if(!System1BgBank)
-		{
-			system2_foregroundram_w(a, d);
-			return;
-		}
-		RamStart1[a] = d;
-		return;
-	}
-	if (a >= 0xe800 && a <= 0xefff) 
-	{
-		RamStart1[a] = d;
-		return;
-	}
-
-	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w(a,d); return; }
-	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
-	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
-}
-*/
 
 static UINT8 __fastcall System2Z801ProgRead(UINT16 a)
 {
@@ -648,73 +644,28 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	return nRet;
 }
 
-void renderTile(UINT32 offs,UINT32 code,UINT32 current_map)
-{
-	code = (code>>8)|(code<<8);
-	code = ((code >> 4) & 0x800) | (code & 0x7ff);
-
-	unsigned int x = map_offset_lut[offs];
-//	unsigned int x =	(offs & 0x3f) | ((offs & (~0x3f))<<1);
-
-	UINT16 *map = &ss_map[x+current_map]; 
-	map[0] = ((code >> 5) & 0x3f); //|((code & 0x800)?0x3000:0x1000);//color_lut[Code];
-	map[1] = code;// & 0xfff;
-}
-
-//unsigned int map_cache[4][0x800];
-
 static void wbml_draw_bg()
 {
 //	ss_reg->n2_move_x = (-(((System1VideoRam[0x7c0] >> 1) + ((System1VideoRam[0x7c1] & 1) << 7) +1))) & 0xff;
 	ss_reg->n2_move_x = (255-((System1VideoRam[0x7c0] >> 1) + ((System1VideoRam[0x7c1] & 1) << 7))) &0xff;
 	ss_reg->n2_move_y = System1VideoRam[0x7ba]; // & 0x1f;
 
-	const unsigned int v[] = { 0, 0x40, 0x1000, 0x1040 };
+	const unsigned int v[] = {0, 0x40,0x1000,0x1040};
 
-#if 1
 	for (unsigned int page=0; page < 4; page++)
 	{
-		unsigned int current_map=v[page];
-//		UINT8 *source = System1VideoRam + (System1VideoRam[0x0740 + page*2] & 0x07)*0x800;
-		UINT16 *source = (UINT16 *)(System1VideoRam + ((((System1VideoRam[0x0740 + page*2] & 0x07)*0x800))));
-		UINT32 *curr_cache = map_cache[page<<11];
-
-		for(UINT32 offs = 0; offs <0x400;)
+		unsigned char real_page = (System1VideoRam[0x0740 + page*2] & 0x07);
+		if(real_page && map_dirty[real_page] == 1)
 		{
-			if(curr_cache[offs]!=*source)
+			map_dirty[real_page] = 0;
+			unsigned int current_map=v[page];
+			for (unsigned int i=0;i<32 ;i++ )
 			{
- 				curr_cache[offs] = *source;
-				renderTile(offs*2,*source,current_map);
-			}
-			++source;
-			++offs;
-
-			if(curr_cache[offs]!=*source)
-			{
- 				curr_cache[offs] = *source;
-				renderTile(offs*2,*source,current_map);
-			}
-			++source;
-			++offs;
-
-			if(curr_cache[offs]!=*source)
-			{
- 				curr_cache[offs] = *source;
-				renderTile(offs*2,*source,current_map);
-			}
-			++source;
-			++offs;
-
-			if(curr_cache[offs]!=*source)
-			{
- 				curr_cache[offs] = *source;
-				renderTile(offs*2,*source,current_map);
-			}
-			++source;
-			++offs;
+				memcpyl(&ss_map[current_map+i*128],&map_cache[(real_page*0x1000)+i*128],64*sizeof(UINT16));
+			}			
 		}
+		
 	}
-#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void System1Render()
