@@ -540,6 +540,8 @@ static void draw_sprites(unsigned char *attributeptr,unsigned char *spritepatter
 			ss_spritePtr->charSize  = 0;
 			ss_spritePtr->ax		= 0;
 			ss_spritePtr->ay		= 0;
+			ss_spritePtr->control	= 0;
+
 			++ss_spritePtr;
 			}
 			break;
@@ -557,6 +559,8 @@ static void draw_sprites(unsigned char *attributeptr,unsigned char *spritepatter
 			ss_spritePtr->charSize	= 0;
 			ss_spritePtr->ax		= 0;
 			ss_spritePtr->ay		= 0;
+			ss_spritePtr->control	= 0;
+			
 			++ss_spritePtr;
 			attributeptr+=3;
 			continue;
@@ -654,6 +658,8 @@ static void draw_sprites_large(unsigned char *attributeptr,unsigned char *sprite
 			ss_spritePtr->charSize	= 0;
 			ss_spritePtr->ax		= 0;
 			ss_spritePtr->ay		= 0;
+			ss_spritePtr->cx		= 0;
+			ss_spritePtr->cy		= 0;			
 			++ss_spritePtr;
 			attributeptr+=3;
 			continue;
