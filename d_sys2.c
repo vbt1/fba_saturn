@@ -19,21 +19,21 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvChplftb = {
 		"chplftb", "sys2",
-		"Choplifter (Alternate)\0",
+		"Choplifter (Alternate)",
 		ChplftbRomInfo, ChplftbRomName, ChplftbInputInfo, ChplftbDIPInfo,
 		ChplftbInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvWbml = {
 		"wbml", "sys2",
-		"Wonder Boy in Monster Land (Jp New)\0",
+		"Wonder Boy in Monster Land (Jp New)",
 		wbmlRomInfo, wbmlRomName, MyheroInputInfo, WbmlDIPInfo,
 		WbmlInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvWbmlb = {
 		"wbmlb", "sys2",
-		"Wonder Boy in Monster Land (English bootleg set 1)\0",
+		"Wonder Boy in Monster Land (English bootleg set 1)",
 		wbmlbRomInfo, wbmlbRomName, MyheroInputInfo, WbmlDIPInfo,
 		WbmljbInit, System1Exit, System1Frame
 	};
@@ -54,7 +54,55 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 
-/*static*/ UINT8 __fastcall System2Z801PortRead(unsigned short a)
+/*static*/ inline void chplft_bankswitch_w (UINT8 d)
+{
+	System1BankRomNoDecode(((d & 0x0c)>>2));
+	System1BankSwitch = d;
+}
+
+void __fastcall ChplftZ801PortWrite(UINT16 a, UINT8 d)
+{
+	a &= 0xff;
+	switch (a)
+	{
+		case 0x14: { system1_soundport_w(d);    return; }
+		case 0x15: { chplft_bankswitch_w(d);   return; }
+	}
+}
+
+void __fastcall System2Z801PortWrite(UINT16 a, UINT8 d)
+{
+	a &= 0x1f;
+	switch (a) 
+	{
+		case 0x14:
+		case 0x15:
+		case 0x16:
+		case 0x17:
+			ppi8255_w(0, a & 3, d);
+		return;
+	}
+}
+
+UINT8 __fastcall ChplftZ801PortRead(UINT16 a)
+{
+	a &= 0xff;
+	switch (a)
+	{
+		case 0x00: return 0xff - System1Input[0];
+		case 0x04: return 0xff - System1Input[1];
+		case 0x08: return 0xff - System1Input[2];
+		case 0x0c: return System1Dip[0];
+		case 0x0d: return System1Dip[1];
+		case 0x10: return System1Dip[1];
+		case 0x15: return System1BankSwitch;
+		case 0x16: return System1BgBankLatch;
+		case 0x19: return System1BankSwitch;
+	}
+	return 0;
+}
+
+UINT8 __fastcall System2Z801PortRead(UINT16 a)
 {
 	a &= 0x1f;
 	switch (a) 
@@ -69,7 +117,7 @@ int ovlInit(char *szShortName)
 		case 0x15:
 		case 0x16:
 		case 0x17: return ppi8255_r(0, a & 3);
-		//case 0x19: return System1BankSwitch;
+		case 0x19: return System1BankSwitch;
 	}
 	return 0;
 }
@@ -85,7 +133,7 @@ inline void System2_videoram_bank_latch_w (UINT8 d)
 	}
 }
 
-void system2_foregroundram_w(unsigned short a, UINT8 d) 
+void system2_foregroundram_w(UINT16 a, UINT8 d) 
 {
 	RamStart1						= System1VideoRam-0xe000;	 // fg
 	if(RamStart1[a]!=d)
@@ -109,20 +157,6 @@ void system2_foregroundram_w(unsigned short a, UINT8 d)
 				map_dirty[d&7]=1;
 			break;
 		}
-	}
-}
-
-static void __fastcall System2Z801PortWrite(UINT16 a, UINT8 d)
-{
-	a &= 0x1f;
-	switch (a) 
-	{
-		case 0x14:
-		case 0x15:
-		case 0x16:
-		case 0x17:
-			ppi8255_w(0, a & 3, d);
-		return;
 	}
 }
 
@@ -203,13 +237,20 @@ xxxxx
 	System2_videoram_bank_latch_w(data);
 }
 
-/*static*/ inline void System2_bankswitch_w (UINT8 d)
+void System1BankRomNoDecode(UINT32 System1RomBank)
 {
-	System1BankRom((d & 0x0c) >> 2);
-//	System1BankSwitch = d;
+	int BankAddress = (System1RomBank << 14) + 0x10000;
+	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
+	CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
 }
 
-/*static*/ void __fastcall ChplftZ801ProgWrite(unsigned short a, UINT8 d)
+inline void System2_bankswitch_w (UINT8 d)
+{
+	System1BankRom((d & 0x0c) >> 2);
+	System1BankSwitch = d;
+}
+
+void __fastcall ChplftZ801ProgWrite(UINT16 a, UINT8 d)
 {
 	if (a >= 0xe000 && a <= 0xe7bf) { system1_foregroundram_w(a,d); return; }
 	if (a >= 0xe800 && a <= 0xeeff) { system1_backgroundram_w(a,d); return; }
@@ -221,7 +262,7 @@ xxxxx
    if (a == 0xefbd) { ss_reg->n0_move_y = d<<16; return; }
 }
 
-/*static*/ int System1CalcSprPalette()
+int System1CalcSprPalette()
 {
 	for (int i = 511; i > 0; i--) 
 	{
@@ -240,7 +281,7 @@ static void wbml_decode()
 	mc8123_decrypt_rom(1, 4, System1Rom1, System1Rom1 + 0x20000, (UINT8*)0x002FC000);
 }
 
-/*static*/ int ChplftbInit()
+int ChplftbInit()
 {
 	int nRet;
 	nBurnLinescrollSize = 0x380;
@@ -248,8 +289,8 @@ static void wbml_decode()
 	System1BankedRom = 1;
 
 	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
-	initColors2();
-	initLayers2();
+//	initColors2();
+//	initLayers2();
 	nBurnFunction = System1CalcSprPalette;//System1CalcPalette;
 	ss_reg->n1_move_y =  0 <<16;
 	ss_reg->n1_move_x =  0 <<16;
@@ -268,8 +309,7 @@ static void wbml_decode()
 
 	RamStart						= System1BgRam-0xe800;
 	RamStart1						= System1VideoRam-0xe000;
-#ifndef USE_RAZE0
-	CZetOpen(0);
+/*	CZetOpen(0);
 
 	CZetMapArea(0xd800, 0xddff, 0, System1PaletteRam);
 //	CZetMapArea(0xd800, 0xddff, 1, System1PaletteRam);
@@ -290,18 +330,33 @@ static void wbml_decode()
 
 	CZetSetWriteHandler(ChplftZ801ProgWrite);
 
-	CZetSetInHandler   (System2Z801PortRead);
-	CZetSetOutHandler(System2Z801PortWrite);
+	CZetSetInHandler   (ChplftZ801PortRead);
+	CZetSetOutHandler  (ChplftZ801PortWrite);
 	CZetClose();
 
 	ppi8255_init(1);
 	PPI0PortWriteA = System2PPI0WriteA;
 	PPI0PortWriteB = System2PPI0WriteB;
 	PPI0PortWriteC = NULL;
+*/
+	CZetOpen(0);
 
-#endif
-//	nBurnFunction = System1CalcPalette;
-//	System1DoReset();
+	CZetMapArea(0xe7c0, 0xe7ff, 0, System1ScrollXRam);
+	CZetMapArea(0xe7c0, 0xe7ff, 1, System1ScrollXRam);
+	CZetMapArea(0xe7c0, 0xe7ff, 2, System1ScrollXRam);
+
+//	CZetMapArea(0xe000, 0xe7ff, 0, System1VideoRam); //read
+//	CZetMapArea(0xe000, 0xe7ff, 1, System1VideoRam);	//write
+	CZetMapArea(0xe000, 0xe7ff, 2, System1VideoRam); //fetch
+
+	CZetMapArea(0xe800, 0xeeff, 0, System1BgRam);
+//	CZetMapArea(0xe800, 0xeeff, 1, System1BgRam);
+	CZetMapArea(0xe800, 0xeeff, 2, System1BgRam);
+
+	CZetSetInHandler(ChplftZ801PortRead);
+	CZetSetOutHandler(ChplftZ801PortWrite);
+	CZetClose();
+
 	return nRet;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -610,7 +665,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ int WbmljbInit()
+int WbmljbInit()
 {
 	int nRet;
 
@@ -630,7 +685,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	return nRet;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ int WbmlInit()
+int WbmlInit()
 {
 	int nRet;
 	System1ColourProms = 1;
@@ -668,7 +723,7 @@ static void wbml_draw_bg()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void System1Render()
+inline void System1Render()
 {
 	System1DrawSprites();
 	wbml_draw_bg();
@@ -724,7 +779,7 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initColors2()
+void initColors2()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
  	colAddr             = (Uint16*)COLADDR;//(Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
@@ -736,7 +791,7 @@ void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
 	SCL_SetColRam(SCL_NBG1,8,4,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initLayers2()
+void initLayers2()
 {
     Uint16	CycleTb[]={
 		0x2f64, 0xeeee, //A0

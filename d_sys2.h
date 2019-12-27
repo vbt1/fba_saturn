@@ -20,19 +20,19 @@
 
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 */
-/*static*/ int ChplftbInit();
-/*static*/ int System1Exit();
-/*static*/ int System1Frame();
-/*static*/ int WbmlInit();
-/*static*/ int WbmljbInit();
-/*static*/ void initLayers2();
-/*static*/ void initColors2();
+int ChplftbInit();
+int System1Exit();
+int System1Frame();
+int WbmlInit();
+int WbmljbInit();
+void initLayers2();
+void initColors2();
 
 /*==============================================================================================
 Input Definitions
 ===============================================================================================*/
 
-/*static*/ struct BurnInputInfo ChplftbInputList[] = {
+struct BurnInputInfo ChplftbInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
@@ -61,7 +61,7 @@ Input Definitions
 
 STDINPUTINFO(Chplftb)
 
-/*static*/ struct BurnDIPInfo ChplftbDIPList[]=
+struct BurnDIPInfo ChplftbDIPList[]=
 {
 	// Default Values
 	{0x0f, 0xff, 0xff, 0xbe, NULL                     },
@@ -105,7 +105,7 @@ STDINPUTINFO(Chplftb)
 
 STDDIPINFO(Chplftb)
 
-static struct BurnInputInfo WbmlInputList[] = {
+struct BurnInputInfo WbmlInputList[] = {
 
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
@@ -139,7 +139,7 @@ static struct BurnInputInfo WbmlInputList[] = {
 STDINPUTINFO(Wbml)
 
 
-static struct BurnDIPInfo WbmlDIPList[]=
+struct BurnDIPInfo WbmlDIPList[]=
 {
 	// Default Values
 	{0x13, 0xff, 0xff, 0xfe, NULL                     },
@@ -187,7 +187,7 @@ STDDIPINFO(Wbml)
 ROM Descriptions
 ===============================================================================================*/
 
-/*static*/ struct BurnRomInfo ChplftbRomDesc[] = {
+struct BurnRomInfo ChplftbRomDesc[] = {
 	{ "epr7152.90",          0x008000, 0xfe49d83e, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr7153.91",          0x008000, 0x48697666, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "epr7154.92",          0x008000, 0x56d6222a, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -213,7 +213,7 @@ STD_ROM_FN(Chplftb)
 
 // Wonder Boy in Monster Land (Japan New Ver., MC-8123, 317-0043)
 
-static struct BurnRomInfo wbmlRomDesc[] = {
+struct BurnRomInfo wbmlRomDesc[] = {
 	{ "ep11031a.90",	0x8000, 0xbd3349e5, 1 }, //  0 main
 	{ "epr11032.91",	0x8000, 0x9d03bdb2, 1 }, //  1
 	{ "epr11033.92",	0x8000, 0x7076905c, 1 }, //  2
@@ -242,7 +242,7 @@ STD_ROM_FN(wbml)
 
 // Wonder Boy in Monster Land (Japan not encrypted)
 
-static struct BurnRomInfo wbmljbRomDesc[] = {
+struct BurnRomInfo wbmljbRomDesc[] = {
 	{ "wbml.01",		0x10000, 0x66482638, 1 }, //  0 main
 	{ "m6.bin",		0x10000, 0x8c08cd11, 1 }, //  1
 	{ "m7.bin",		0x10000, 0x11881703, 1 }, //  2
@@ -268,7 +268,7 @@ STD_ROM_PICK(wbmljb)
 STD_ROM_FN(wbmljb)
 
 // Wonder Boy in Monster Land (English, Virtual Console)
-static struct BurnRomInfo wbmlvcRomDesc[] = {
+struct BurnRomInfo wbmlvcRomDesc[] = {
 
     { "vc.90",        0x10000, 0x093c4852, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
     { "vc.91",        0x10000, 0x7e973ece, BRF_ESS | BRF_PRG }, //  1
@@ -291,7 +291,7 @@ STD_ROM_FN(wbmlvc)
 
 // Wonder Boy in Monster Land (English bootleg set 1)
 
-static struct BurnRomInfo wbmlbRomDesc[] = {
+struct BurnRomInfo wbmlbRomDesc[] = {
 /*	{ "wbml.01",		0x10000, 0x66482638, 1 }, //  0 maincpu
 	{ "wbml.02",		0x10000, 0x48746bb6, 1 }, //  1
 	{ "wbml.03",		0x10000, 0xd57ba8aa, 1 }, //  2

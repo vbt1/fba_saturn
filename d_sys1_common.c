@@ -295,6 +295,7 @@ Reset Functions
 	System1BgBankLatch =  0;
 	System1BgBank = 0;
 	System1BankedRom = 0;
+	System1BankSwitch = 0;
 	memset(map_dirty,1,8);
 	return 0;
 }
@@ -310,14 +311,7 @@ void System1BankRom(UINT32 System1RomBank)
 //	CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + BankAddress, System1Rom1 + BankAddress);
 	CZetMapArea2(0x8000, 0xbfff, 2, System1Rom1 + BankAddress + 0x20000, System1Rom1 + BankAddress);
 }
-/*
-void System1BankRomNoDecode()
-{
-	int BankAddress = (System1RomBank << 14) + 0x10000;
-	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
-	CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
-}
-*/
+
 UINT8 __fastcall System1Z801PortRead(unsigned short a)
 {
 	a &= 0xff;
@@ -804,6 +798,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1PromGreen, 1 + RomOffset, 1);
 		nRet = BurnLoadRom(System1PromBlue, 2 + RomOffset, 1);
 	}
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit2                     ",20,100);
 
 	// Setup the Z80 emulation
 // remettre 1 plus tard quand choplifter sera corrigé

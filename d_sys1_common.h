@@ -21,27 +21,27 @@ typedef void (*write_func)(unsigned short a, UINT8 d);
 write_func p[36] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 	NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
-/*static*/ int System1CalcPalette();
-/*static*/ int System1Exit();
-/*static*/ int System1Frame();
-/*static*/ //UINT8 *SaturnMem = NULL;
-/*static*/ UINT16 *remap8to16_lut = NULL;
-/*static*/ UINT16 *map_offset_lut = NULL;
-/*static*/ UINT32 *cpu_lut = NULL;
-/*static*/ UINT16 *cram_lut = NULL;
-/*static*/ UINT8 *width_lut = NULL;
-/*static*/ UINT16 *spriteCache = NULL;
-/*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ UINT16 *map_cache = NULL;
-/*static*/ UINT8 *map_dirty = NULL;
+int System1CalcPalette();
+int System1Exit();
+int System1Frame();
+//UINT8 *SaturnMem = NULL;
+UINT16 *remap8to16_lut = NULL;
+UINT16 *map_offset_lut = NULL;
+UINT32 *cpu_lut = NULL;
+UINT16 *cram_lut = NULL;
+UINT8 *width_lut = NULL;
+UINT16 *spriteCache = NULL;
+UINT8 *CZ80Context = NULL;
+UINT16 *map_cache = NULL;
+UINT8 *map_dirty = NULL;
 typedef int bool;
 
 typedef struct { UINT8 x, y, width, yend } sprite_collision; 
 sprite_collision sprites_collision[32]={0};
-/*static*/ UINT16 nextSprite=0;
-/*static*/ UINT8 flipscreen=0;
-/*static*/ void make_cram_lut(void);
-/*static*/ void updateCollisions(int *values);
+UINT16 nextSprite=0;
+UINT8 flipscreen=0;
+void make_cram_lut(void);
+void updateCollisions(int *values);
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase);
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase);
@@ -49,65 +49,66 @@ void *memset4_fast(void *, long, size_t);
 void System1BankRom(UINT32 System1RomBank);
 void renderSound(unsigned int *nSoundBufferPos);
 
-/*static*/ UINT8 System1InputPort0[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ UINT8 System1InputPort1[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ UINT8 System1InputPort2[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ UINT8 System1Dip[2]           = {0, 0};
-/*static*/ UINT8 System1Input[3]         = {0x00, 0x00, 0x00 };
-/*static*/ //UINT8 System1Reset            = 0;
+UINT8 System1InputPort0[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
+UINT8 System1InputPort1[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
+UINT8 System1InputPort2[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
+UINT8 System1Dip[2]           = {0, 0};
+UINT8 System1Input[3]         = {0x00, 0x00, 0x00 };
+//UINT8 System1Reset            = 0;
 
-/*static*/ UINT8 *Mem                    = NULL;
-/*static*/ UINT8 *RamStart               = NULL;
-/*static*/ UINT8 *RamStart1               = NULL;
-/*static*/ UINT8 *System1Rom1            = NULL;
-/*static*/ UINT8 *System1Rom2            = NULL;
-/*static*/ UINT8 *System1PromRed         = NULL;
-/*static*/ UINT8 *System1PromGreen       = NULL;
-/*static*/ UINT8 *System1PromBlue        = NULL;
-/*static*/ UINT8 *System1Ram1            = NULL;
-/*static*/ UINT8 *System1Ram2            = NULL;
-/*static*/ UINT8 *System1SpriteRam       = NULL;
-/*static*/ UINT8 *System1PaletteRam      = NULL;
-/*static*/ UINT8 *System1BgRam           = NULL;
-/*static*/ UINT8 *System1VideoRam        = NULL;
-/*static*/ UINT8 *System1ScrollXRam      = NULL;
-/*static*/ UINT8 *System1BgCollisionRam  = NULL;
-/*static*/ UINT8 *System1SprCollisionRam = NULL;
-/*static*/ UINT8 *System1deRam           = NULL;
-/*static*/ UINT8 *System1efRam           = NULL;
-/*static*/ UINT8 *System1f4Ram           = NULL;
-/*static*/ UINT8 *System1fcRam           = NULL;
-/*static*/ //UINT8 *System1Tiles           = NULL;
-/*static*/ UINT8 *System1Sprites         = NULL;
-/*static*/ UINT8 *SpriteOnScreenMap      = NULL;
-/*static*/ UINT8 *System1Fetch1          = NULL;
-/*static*/ UINT8  *System1ScrollX = NULL;
-/*static*/ UINT8  *System1ScrollY = NULL;
+UINT8 *Mem                    = NULL;
+UINT8 *RamStart               = NULL;
+UINT8 *RamStart1               = NULL;
+UINT8 *System1Rom1            = NULL;
+UINT8 *System1Rom2            = NULL;
+UINT8 *System1PromRed         = NULL;
+UINT8 *System1PromGreen       = NULL;
+UINT8 *System1PromBlue        = NULL;
+UINT8 *System1Ram1            = NULL;
+UINT8 *System1Ram2            = NULL;
+UINT8 *System1SpriteRam       = NULL;
+UINT8 *System1PaletteRam      = NULL;
+UINT8 *System1BgRam           = NULL;
+UINT8 *System1VideoRam        = NULL;
+UINT8 *System1ScrollXRam      = NULL;
+UINT8 *System1BgCollisionRam  = NULL;
+UINT8 *System1SprCollisionRam = NULL;
+UINT8 *System1deRam           = NULL;
+UINT8 *System1efRam           = NULL;
+UINT8 *System1f4Ram           = NULL;
+UINT8 *System1fcRam           = NULL;
+//UINT8 *System1Tiles           = NULL;
+UINT8 *System1Sprites         = NULL;
+UINT8 *SpriteOnScreenMap      = NULL;
+UINT8 *System1Fetch1          = NULL;
+UINT8  *System1ScrollX = NULL;
+UINT8  *System1ScrollY = NULL;
 
-/*static*/ int            System1BgScrollX = 0;
-/*static*/ int            System1BgScrollY = 0;
-/*static*/ int            System1VideoMode = 0;
-/*static*/ int            System1FlipScreen = 0;
-/*static*/ int            System1SoundLatch = 0;
+int            System1BgScrollX = 0;
+int            System1BgScrollY = 0;
+int            System1VideoMode = 0;
+int            System1FlipScreen = 0;
+int            System1SoundLatch = 0;
 
-/*static*/ UINT8 System1BgBankLatch = 0;
-/*static*/ UINT8 System1BgBank = 0;
+UINT8 System1BgBankLatch = 0;
+UINT8 System1BgBank = 0;
+UINT8 System1BankSwitch = 0;
 
-/*static*/ UINT8  BlockgalDial1 = 0;
-/*static*/ UINT8  BlockgalDial2 = 0;
+UINT8  BlockgalDial1 = 0;
+UINT8  BlockgalDial2 = 0;
 
-/*static*/ unsigned int System1SpriteRomSize = 0;
-/*static*/ unsigned int System1NumTiles = 0;
-/*static*/ unsigned int System1ColourProms = 0;
-/*static*/ unsigned int System1BankedRom = 0;
+unsigned int System1SpriteRomSize = 0;
+unsigned int System1NumTiles = 0;
+unsigned int System1ColourProms = 0;
+unsigned int System1BankedRom = 0;
 
 typedef void (*Decode)();
-/*static*/ Decode DecodeFunction = NULL;
-/*static*/ void System1Render();
+Decode DecodeFunction = NULL;
+void System1Render();
 typedef void (*Collision)(int *);
 Collision CollisionFunction = NULL;
 typedef void (*MakeInputs)();
-/*static*/ MakeInputs MakeInputsFunction = NULL;
+MakeInputs MakeInputsFunction = NULL;
 
 /*static*/unsigned int nCyclesTotal[2] = {0,0};
 
@@ -115,7 +116,7 @@ typedef void (*MakeInputs)();
 Input Definitions
 ===============================================================================================*/
 
-/*static*/ struct BurnInputInfo BlockgalInputList[] = {
+struct BurnInputInfo BlockgalInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
@@ -137,7 +138,7 @@ Input Definitions
 
 STDINPUTINFO(Blockgal)
 
-/*static*/ struct BurnInputInfo MyheroInputList[] = {
+struct BurnInputInfo MyheroInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
