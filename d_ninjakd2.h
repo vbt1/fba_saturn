@@ -45,6 +45,7 @@ UINT8 *DrvBgRAM1 = NULL;
 UINT8 *DrvBgRAM2 = NULL;
 UINT8 *CZ80Context = NULL;
 UINT16 *ss_map3 = NULL;
+UINT16 *cram_lut = NULL;
 UINT8 soundlatch = 0;
 //UINT8 flipscreen = 0;
 

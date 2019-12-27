@@ -25,7 +25,21 @@ int ovlInit(char *szShortName)
 		ninjakd2aRomInfo, ninjakd2aRomName, DrvInputInfo, Ninjakd2DIPInfo,
 		Ninjakd2DecryptedInit, DrvExit, DrvFrame
 	};
-
+/*	
+	struct BurnDriver nBurnDrvOmegafs = {
+		"omegafs", "ninkd2",
+		"Omega Fighter Special",
+		omegafsRomInfo, omegafsRomName, OmegafInputInfo, OmegafDIPInfo,
+		OmegafInit, DrvExit, DrvFrame
+	};
+	
+	struct BurnDriver nBurnDrvOmegaf = {
+		"omegaf", "ninkd2",
+		"Omega Fighter",
+		omegafRomInfo, omegafRomName, OmegafInputInfo, OmegafDIPInfo,
+		OmegafInit, DrvExit, DrvFrame
+	};	
+*/
 	if (!strcmp(nBurnDrvRobokid.szShortName, szShortName)) 
 	memcpy(shared,&nBurnDrvRobokid,sizeof(struct BurnDriver));
 
@@ -42,7 +56,7 @@ void DrvPaletteUpdate(INT32 offset)
 	offset &= 0x7fe;
 
 	UINT32 p = (DrvPalRAM[offset+0] << 8) + DrvPalRAM[offset+1];
-
+/*
 	UINT32 r = p >> 12;
 	UINT32 g = (p >> 8) & 0xf;
 	UINT32 b = (p >> 4) & 0xf;
@@ -50,18 +64,18 @@ void DrvPaletteUpdate(INT32 offset)
 	r |= r << 4;
 	g |= g << 4;
 	b |= b << 4;
-
+*/
 	if((((offset/2)+1)%16)==0)
 	{
-		colAddr[(offset/2)-15]= BurnHighCol(r,g,b,0);
+		colAddr[(offset/2)-15]= cram_lut[p>>4]; //BurnHighCol(r,g,b,0);
 	}
 	else if(((offset/2)%16)==0)
 	{
-		colAddr[(offset/2)+15]= BurnHighCol(r,g,b,0);
+		colAddr[(offset/2)+15]= cram_lut[p>>4]; //BurnHighCol(r,g,b,0);
 	}
 	else
 	{
-		colAddr[offset/2] = BurnHighCol(r,g,b,0);
+		colAddr[offset/2] = cram_lut[p>>4]; //BurnHighCol(r,g,b,0);
 	}
 }
 
@@ -569,7 +583,7 @@ INT32 MemIndex()
 
 //	CZ80Context	= (UINT8 *)0x2FB800;
 	CZ80Context		= (UINT8 *)Next; Next += (sizeof(cz80_struc));	
-
+	cram_lut 		= (UINT16 *)Next; Next += 0x1000 * (sizeof(UINT16));
 //	AllRam			= Next;
 
 	DrvZ80RAM0	= (UINT8 *)0x2F0000;//Next; Next += 0x001a00;
@@ -671,6 +685,7 @@ INT32 Ninjakd2CommonInit()
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
+	make_lut();
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  1, 1)) return 1;
@@ -685,6 +700,7 @@ INT32 Ninjakd2CommonInit()
 		UINT8 *DrvGfxROM2	= (UINT8 *)(UINT8 *)cache+0x08000; // bg
 //text		
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  6, 1)) return 1;
+		
 // sprites
 		if (BurnLoadRom(DrvGfxROM1 + 0x00000,  7, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x10000,  8, 1)) return 1;
@@ -695,7 +711,8 @@ INT32 Ninjakd2CommonInit()
 //		if (BurnLoadRom(DrvSndROM  + 0x00000, 11, 1)) return 1;
 
 		gfx_unscramble(0x20000);
-		DrvGfxDecode(DrvGfxROM0, 0x08000, 0);
+// vbt texte sans decode ??		
+//		DrvGfxDecode(DrvGfxROM0, 0x08000, 0);
 		
 		for (UINT32 i=0;i<0x08000;i++ )
 		{
@@ -705,7 +722,7 @@ INT32 Ninjakd2CommonInit()
 			if ((DrvGfxROM0[i]& 0xf0)     ==0x00) DrvGfxROM0[i] = 0xf0 | DrvGfxROM0[i] & 0x0f;
 			else if ((DrvGfxROM0[i]& 0xf0)==0xf0) DrvGfxROM0[i] = DrvGfxROM0[i] & 0x0f;
 		}		
-		
+	
 		DrvGfxDecode(DrvGfxROM1, 0x20000, 4); // sprites
 		
 		for (UINT32 i=0;i<0x20000;i++ )
@@ -775,6 +792,7 @@ INT32 RobokidInit()
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	
+	make_lut();
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x20000,  1, 1)) return 1;
@@ -967,8 +985,19 @@ void initLayersS(UINT8 game)
 	}
 	else
 	{
+		scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
+		scfg.datatype 	   = SCL_BITMAP;
+		scfg.mapover	   = SCL_OVER_0;
+		scfg.coltype	   = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;	
+		SCL_SetConfig(SCL_NBG0, &scfg);
+		
 		scfg.dispenbl      = OFF;
-		SCL_SetConfig(SCL_NBG3, &scfg);			
+		SCL_SetConfig(SCL_NBG3, &scfg);
+
+
+
+
+		
 	}
 	
 	SCL_SetCycleTable(CycleTb);
@@ -990,16 +1019,25 @@ void initPosition()
 void initColorsS(UINT8 game)
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	if(game==0)
+	if(game)
 	{
-		colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
-		SCL_AllocColRam(SCL_NBG3,OFF);
+		colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	}
 	else
-		colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
+	{
+		colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+		SCL_AllocColRam(SCL_NBG3,OFF);		
+	}
 	
 	SCL_AllocColRam(SCL_SPR,OFF);   // 0x200 pour sprites atomic robokid // 0x100 pour njkid 2
 	SCL_AllocColRam(SCL_NBG2,OFF); // 0x300 pour fg atomic robokid // 0x200 pour njkid 2
+	
+	if(game)
+	{
+		SCL_AllocColRam(SCL_NBG3,OFF);
+		SCL_AllocColRam(SCL_NBG0,OFF);
+		SCL_SetColRam(SCL_NBG0,8,8,palette);	
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturnS(UINT8 game)
@@ -1014,16 +1052,22 @@ void DrvInitSaturnS(UINT8 game)
 
  	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;		    // fg
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x1000;			// bg0
-	SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
+	if(game)
+		SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B0;			// window
+	else
+		SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
 	ss_map3				=(Uint16 *)SCL_VDP2_VRAM_B1+0xa000;			// bg2
 
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
-	SS_SET_S0PRIN(5);
-	SS_SET_N0PRIN(4);
-	SS_SET_N2PRIN(7);
-	SS_SET_N1PRIN(3);
-	SS_SET_N3PRIN(6);
+	SS_SET_S0PRIN(4);
+	if(game)	
+		SS_SET_N0PRIN(7);
+	else
+		SS_SET_N0PRIN(3);
+	SS_SET_N2PRIN(6);
+	SS_SET_N1PRIN(2);
+	SS_SET_N3PRIN(5);
 	initPosition();
 
 	initColorsS(game);
@@ -1092,6 +1136,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	/*AllRam =*/ RamEnd = DrvZ80ROM0 = /*DrvGfxROM2 =*/ NULL;
 	/*DrvGfxROM3 = DrvGfxROM4 =*/ DrvGfxROM4Data1 = DrvZ80RAM0 = DrvSprRAM = DrvPalRAM = NULL;
 	DrvFgRAM = DrvBgRAM = DrvBgRAM0 = DrvBgRAM1 = DrvBgRAM2 = NULL;
+	cram_lut = NULL;
 	free(AllMem);
 	AllMem = NULL;
 	ss_map3 = NULL;
@@ -1294,8 +1339,8 @@ void Ninjakd2Draw()
 //	}
 //	if (tilemap_enable[0] == 0)
 //		BurnTransferClear();
-	ss_reg->n0_move_x =  (scrollx[1]-8)<<16;
-	ss_reg->n0_move_y =  (scrolly[1]+32)<<16;
+//	ss_reg->n0_move_x =  (scrollx[1]-8)<<16;
+//	ss_reg->n0_move_y =  (scrolly[1]+32)<<16;
 	ss_reg->n1_move_x =  (scrollx[0]-8)<<16;
 	ss_reg->n1_move_y =  (scrolly[0]+32)<<16;
 	
@@ -1427,3 +1472,20 @@ DrvZ80ROM0[0x13566]=0x30;
 	
 	return 0;
 }
+//-------------------------------------------------------------------------------------------------
+void make_lut()
+{
+	for (UINT32 i = 0; i < 0x1000; i++) 
+	{
+		UINT32 r = i >> 8;
+		UINT32 g = (i >> 4) & 0xf;
+		UINT32 b = (i >> 0) & 0xf;
+
+		r |= r << 4;
+		g |= g << 4;
+		b |= b << 4;
+
+		cram_lut[i] = BurnHighCol(r, g, b, 0);
+	}
+}
+//-------------------------------------------------------------------------------------------------
