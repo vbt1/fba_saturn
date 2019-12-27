@@ -1,0 +1,2 @@
+mkisofs -quiet -sysid "SEGA SEGASATURN" -volid "FBA" -volset "FBA" -publisher "VBT" -preparer "VBT" -appid "CD0001" -abstract "ABS.TXT" -copyright "CPY.TXT" -biblio "BIB.TXT" -generic-boot ip.bin -full-iso9660-filenames -o j:\MULTIB\trck2.bin -exclude-list EXCLUDE.txt -graft-point -path-list FILES.txt
+rem PAUSE
