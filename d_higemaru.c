@@ -11,7 +11,7 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvhigemaru = {
 		"higema", NULL,
-		"Pirate Ship Higemaru\0",
+		"Pirate Ship Higemaru",
 		higemaruRomInfo, higemaruRomName, DrvInputInfo, DrvDIPInfo,
 		DrvInit, DrvExit, DrvFrame//NULL
 	};

@@ -407,22 +407,22 @@ STD_ROM_FN(nova2001u)
 // Ninjakun Majou no Bouken
 
 /*static*/ struct BurnRomInfo ninjakunRomDesc[] = {
-	{ "ninja1.7a",		0x2000, 0x1c1dc141, 1 | BRF_PRG | BRF_ESS}, //  0 Z80 #0 Code
-	{ "ninja2.7b",		0x2000, 0x39cc7d37, 1 | BRF_PRG | BRF_ESS}, //  1
-	{ "ninja3.7d",		0x2000, 0xd542bfe3, 1 | BRF_PRG | BRF_ESS}, //  2
-	{ "ninja4.7e",		0x2000, 0xa57385c6, 1 | BRF_PRG | BRF_ESS}, //  3
+	{ "ninja_1.7a",		0x2000, 0x1c1dc141, 1 | BRF_PRG | BRF_ESS}, //  0 Z80 #0 Code
+	{ "ninja_2.7b",		0x2000, 0x39cc7d37, 1 | BRF_PRG | BRF_ESS}, //  1
+	{ "ninja_3.7d",		0x2000, 0xd542bfe3, 1 | BRF_PRG | BRF_ESS}, //  2
+	{ "ninja_4.7e",		0x2000, 0xa57385c6, 1 | BRF_PRG | BRF_ESS}, //  3
 
-	{ "ninja5.7h",		0x2000, 0x164a42c4, 2 | BRF_PRG | BRF_ESS}, //  4 Z80 #1 Code
+	{ "ninja_5.7h",		0x2000, 0x164a42c4, 2 | BRF_PRG | BRF_ESS}, //  4 Z80 #1 Code
 
-	{ "ninja6.7n",		0x2000, 0xa74c4297, 3 | BRF_GRA },          //  5 Foreground & Sprites
-	{ "ninja7.7p",		0x2000, 0x53a72039, 3 | BRF_GRA },          //  6
-	{ "ninja8.7s",		0x2000, 0x4a99d857, 3 | BRF_GRA },          //  7
-	{ "ninja9.7t",		0x2000, 0xdede49e4, 3 | BRF_GRA },          //  8
+	{ "ninja_6.7n",		0x2000, 0xa74c4297, 3 | BRF_GRA },          //  5 Foreground & Sprites
+	{ "ninja_7.7p",		0x2000, 0x53a72039, 3 | BRF_GRA },          //  6
+	{ "ninja_8.7s",		0x2000, 0x4a99d857, 3 | BRF_GRA },          //  7
+	{ "ninja_9.7t",		0x2000, 0xdede49e4, 3 | BRF_GRA },          //  8
 
-	{ "ninja10.2c",	0x2000, 0x0d55664a, 4 | BRF_GRA },          //  9 Backgrounds
-	{ "ninja11.2d",	0x2000, 0x12ff9597, 4 | BRF_GRA },          // 10
-	{ "ninja12.4c",	0x2000, 0xe9b75807, 4 | BRF_GRA },          // 11
-	{ "ninja13.4d",	0x2000, 0x1760ed2c, 4 | BRF_GRA },          // 12
+	{ "ninja_10.2c",	0x2000, 0x0d55664a, 4 | BRF_GRA },          //  9 Backgrounds
+	{ "ninja_11.2d",	0x2000, 0x12ff9597, 4 | BRF_GRA },          // 10
+	{ "ninja_12.4c",	0x2000, 0xe9b75807, 4 | BRF_GRA },          // 11
+	{ "ninja_13.4d",	0x2000, 0x1760ed2c, 4 | BRF_GRA },          // 12
 };
 STD_ROM_PICK(ninjakun)
 STD_ROM_FN(ninjakun)
