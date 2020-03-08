@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 54
+#define NB_DRV 56
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -149,6 +149,8 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvSidearms = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvRobokid = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvNinjakd2a = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};	
+	static struct BurnDriver BurnDrvNineteen43 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvNineteen43b = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -422,6 +424,13 @@ BurnDrvNinjakd2a.szShortName="ninkd2a";
 BurnDrvNinjakd2a.szFullNameA="Ninja-Kid II (set 2, bootleg?)";
 BurnDrvNinjakd2a.szParent="ninkd2";
 
+BurnDrvNineteen43b.szShortName="1943b";
+BurnDrvNineteen43b.szFullNameA="1943: The Battle of Midway (btlg1 JP)";
+BurnDrvNineteen43b.szParent="1943";
+
+BurnDrvNineteen43.szShortName="1943";
+BurnDrvNineteen43.szFullNameA="1943: The Battle of Midway (Euro)";
+
 //BurnDrvFM.szShortName="fm";
 //BurnDrvFM.szFullNameA="FM Test Driver";
 //BurnDrvFM.szParent="blktgr";
@@ -434,6 +443,9 @@ pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvMSX_1942;
+pDriver[i++] = &BurnDrvNineteen43;
+pDriver[i++] = &BurnDrvNineteen43b;
+
 pDriver[i++] = &BurnDrvAppoooh;
 //pDriver[i++] = &BurnDrvAstrofl;
 pDriver[i++] = &BurnDrvRobokid;

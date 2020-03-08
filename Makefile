@@ -152,8 +152,8 @@ OVLZAXXON                 = root/d_zaxxon.coff
 OVLZAXXON1               = root/d_zaxxon.bin
 MPOVLZAXXONFILE    = $(OVLZAXXON:.coff=.maps)
 LDOVLZAXXONFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLZAXXONFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLZAXXON         = d_ZAXXON.c czet.c cz80/cz80.c load.c saturn/ovl.c
-#SRCOVLZAXXON       = d_ZAXXON.c saturn/ovl.c d_zaxxon.s
+SRCOVLZAXXON         = d_zaxxon.c czet.c cz80/cz80.c load.c saturn/ovl.c
+#SRCOVLZAXXON       = d_zaxxon.c saturn/ovl.c d_zaxxon.s
 OBJOVLZAXXON         = $(SRCOVLZAXXON:.c=.o)
 
 OVLTETRIS                 = root/d_tetris.coff
@@ -255,7 +255,7 @@ OVLSIDARM                 = root/d_sidarm.coff
 OVLSIDARM1               = root/d_sidarm.bin
 MPOVLSIDARMFILE    = $(OVLSIDARM:.coff=.maps)
 LDOVLSIDARMFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSIDARMFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSIDARM         = d_SIDARM.c czet.c cz80/cz80.c saturn/ovl.c load.c saturn/saturn_snd.c saturn/saturn_ext.c
+SRCOVLSIDARM         = d_sidarm.c czet.c cz80/cz80.c saturn/ovl.c load.c saturn/saturn_snd.c saturn/saturn_ext.c
 OBJOVLSIDARM         = $(SRCOVLSIDARM:.c=.o)
 
 OVLNINKD2                 = root/d_ninkd2.coff
@@ -264,6 +264,13 @@ MPOVLNINKD2FILE    = $(OVLNINKD2:.coff=.maps)
 LDOVLNINKD2FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNINKD2FILE) -Xlinker -e -Xlinker boot -nostartfiles
 SRCOVLNINKD2         = d_ninjakd2.c czet.c cz80/cz80.c load.c saturn/ovl.c
 OBJOVLNINKD2         = $(SRCOVLNINKD2:.c=.o)
+
+OVL1943                 = root/d_1943.coff
+OVL19431               = root/d_1943.bin
+MPOVL1943FILE    = $(OVL1943:.coff=.maps)
+LDOVL1943FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVL1943FILE) -Xlinker -e -Xlinker boot -nostartfiles
+SRCOVL1943         = d_1943.c czet.c cz80/cz80.c watchdog.c load.c saturn/ovl.c saturn/saturn_ext.c
+OBJOVL1943         = $(SRCOVL1943:.c=.o)
 
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
@@ -298,7 +305,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
      $(OVLMSX) $(OVLMSX1) $(OVLSEGAE) $(OVLSEGAE1) \
      $(OVLSOLOMN) $(OVLSOLOMN1) $(OVLSIDARM) $(OVLSIDARM1) \
-     $(OVLNINKD2) $(OVLNINKD21)
+     $(OVLNINKD2) $(OVLNINKD21) $(OVL1943) $(OVL19431)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -499,6 +506,12 @@ $(OVLNINKD2) : $(OBJOVLNINKD2) $(MAKEFILE) $(OBJOVLNINKD2) $(LDOVLNINKD2FILE)
 
 $(OVLNINKD21) : $(OBJOVLNINKD2) $(MAKEFILE) $(LDOVLNINKD2FILE)
 	$(CONV) -O binary $(OVLNINKD2) $(OVLNINKD21)
+
+$(OVL1943) : $(OBJOVL1943) $(MAKEFILE) $(OBJOVL1943) $(LDOVL1943FILE)
+	$(CC) $(LDOVL1943FLAGS) $(OBJOVL1943) $(LIBSOVL) -o $@
+
+$(OVL19431) : $(OBJOVL1943) $(MAKEFILE) $(LDOVL1943FILE)
+	$(CONV) -O binary $(OVL1943) $(OVL19431)
 
 # suffix
 .SUFFIXES: .asm
