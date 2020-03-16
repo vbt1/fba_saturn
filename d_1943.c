@@ -87,8 +87,8 @@ voir plutot p355 vdp2
 	scfg.patnamecontrl =  0x00008;// VRAM B0 のオフセット 
 	scfg.platesize     = SCL_PL_SIZE_2X2; // ou 2X2 ?
 	scfg.coltype       = SCL_COL_TYPE_16;
-	scfg.plate_addr[0] = (Uint32)(SS_MAP2);//////
-	scfg.plate_addr[1] = (Uint32)(SS_MAP2);//////
+	scfg.plate_addr[0] = (Uint32)(SS_MAP2+0x800);//////
+	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x800);//////
 	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
 	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
 	SCL_SetConfig(SCL_NBG1, &scfg);
@@ -253,7 +253,8 @@ void DrvInitDamageXsound()
 		asm("nop\n"); // waste time
 	}
 
-	GFS_Load(GFS_NameToId("VGM68.BIN"),0,(void *)0x5A00000,4640);
+	signed int fid=GFS_NameToId("VGM68.BIN");
+	GFS_Load(fid,0,(void *)0x5A00000,GetFileSize(fid));
 
 // turn on the 68000
 	*(UINT8 *)(0x2010001F)=6;
@@ -270,11 +271,22 @@ void DrvInitDamageXsound()
 
 	UINT32 end = *(UINT32 *)(0x25A00100);
 
-	GFS_Load(GFS_NameToId("02.VGM"),0,(void *)(0x5A00000+end),14952);
+	GFS_Load(GFS_NameToId("035.VGM"),0,(void *)(0x5A00000+end),sfx_1943[35].size);
 
  //   memcpy((UINT16 *)(0x25A00104),(UINT16 *)(0x25A00100),sizeof(UINT16));//
  *(UINT32 *)(0x25A00104)=end;
-    *(UINT16 *)(0x25A00108)=1;
+ *(UINT16 *)(0x25A00108)=1; // start
+
+
+
+
+/*
+stop the current song by setting command word to 2, then wait for 68K to set it back to zero. Then write the address of the new song and set command word to 1
+
+*/
+
+
+
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void DrvInitSaturn()
@@ -294,6 +306,7 @@ static void DrvInitSaturn()
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_reg->n1_move_x = -8<<16;
+//		ss_reg->n1_move_y =  (((-255))<<16) ;
 	ss_reg->n2_move_x = 8;
 
 //3 nbg
@@ -401,8 +414,54 @@ UINT8 __fastcall Drv1943Read1(UINT16 a)
 void __fastcall Drv1943Write1(UINT16 a, UINT8 d)
 {
 	switch (a) {
-		case 0xc800: {
-			DrvSoundLatch = d;
+		case 0xc800: 
+		{
+			if(DrvSoundLatch != d)
+			{
+				switch (d) 
+				{
+					case 255: 
+					{
+						return;
+					}
+					default: 
+					{
+						*(UINT16 *)(0x25A00108)=2;
+						DrvSoundLatch = d;
+/*
+						while(*(UINT16 *)(0x25A0010C)!=0)
+						{
+							for(int w=0;w<500;w++)
+							{
+								asm("nop\n"); // waste time
+							}
+						}
+*/
+						Uint32 msk;
+
+						msk = get_imask();
+						set_imask(15);
+						int cnt=100;
+						while (--cnt > 0) {
+							;
+						}
+						set_imask(msk);
+
+						char vgm_file[14];
+						sprintf(vgm_file, "%03d%s",d,".VGM");
+						FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)vgm_file,70,130);
+
+						if(sfx_1943[d].size!=0)
+						{
+							UINT32 end = *(UINT32 *)(0x25A00100);
+							GFS_Load(GFS_NameToId(vgm_file),0,(void *)(0x5A00000+end),sfx_1943[d].size);
+//							*(UINT32 *)(0x25A00104)=end; // vgm start address parameter
+							*(UINT16 *)(0x25A00108)=1; // start
+						}
+						return;
+					}
+				}
+			}
 			return;
 		}
 		
@@ -1112,35 +1171,37 @@ void DrvCalcPalette()
 void DrvRenderBg2Layer()
 {
 	INT32 mx, my, Offs, Attr, Code, Colour, x, y, TileIndex, xScroll, Flip, xFlip, yFlip;
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvRenderBg2Layer start      ",70,130);	
+//	xFlip = 0;
+//	yFlip = 0;
 	
-	xFlip = 0;
-	yFlip = 0;
-	
-	xScroll = DrvBg2ScrollX[0] + (256 * DrvBg2ScrollX[1]);
+//	xScroll = DrvBg2ScrollX[0] + (256 * DrvBg2ScrollX[1]);
 
 	
 
-	UINT32 *map = (UINT32 *)ss_map2;//bgmap_buf;
+	UINT32 *map = (UINT32 *)&ss_map2[0];//bgmap_buf;
 
 //	INT32 offs = 2 * (scrollx >> 5) + 0x100 * (scrolly >> 5);
 	INT32 offs = 0; //2 * (DrvBg2ScrollX[0] >> 5) + 0x100 * (DrvBg2ScrollX[1] >> 5);
+//	ss_reg->n1_move_y =  (((-128))<<16) ;
 
 	for (UINT32 k=0;k<32 ;k++ ) // row
 	{
 		for (UINT32 i=0;i<32 ;i+=2 ) // colon
 		{
 			UINT32 offset = offs + i;
-			offset = (offset & 0xf801) | ((offset & 0x0700) >> 7) | ((offset & 0x00fe) << 3);
+//			offset = (offset & 0xf801) | ((offset & 0x0700) >> 7) | ((offset & 0x00fe) << 3);
 			UINT32 *pDrvTileMap = ((UINT32 *)bgmap_lut)+(offset<<1);
 
-			map[i+0]	= 0;//pDrvTileMap[0];
-			map[i+1]	= 0x4;//pDrvTileMap[1];
-			map[i+32]	= 0;//pDrvTileMap[2];
-			map[i+33]	= 0x4;//pDrvTileMap[3];
+			map[i+0+0x800]	= 0x1000+4;//pDrvTileMap[0];
+			map[i+1+0x800]	= 0x1000+5;//pDrvTileMap[1];
+			map[i+32+0x800]	= 0x1000+6;//pDrvTileMap[2];
+			map[i+33+0x800]	= 0x1000+7;//pDrvTileMap[3];
 		}
 		offs += 256;
 		map+= 64;
 	}
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvRenderBg2Layer end       ",70,130);	
 
 //		SDMA_ScuCst(DMA_SCU_CH2,ss_map2,bgmap_buf,0x800);
 //		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);

@@ -3,6 +3,7 @@
 
 #include "burnint.h"
 #include "saturn/ovl.h"
+#include "saturn/saturn_snd.h"
 #include "snd/sn76496.h"
 #include "snd/msm5205.h"
 #include "czet.h"
@@ -13,6 +14,36 @@
 /*static*/ INT32 DrvFrame();
 /*static*/ void DrvDraw();
 void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+
+SFX sfx_1943[51] = {
+/*000.VGM*/{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	
+/*018.VGM*/	{0,798,10},		// Credit Inserted
+	{0,0,0},		// 
+/*020.VGM*/	{0,6435,10},	// Continue
+	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},
+	{0,0,0},	{0,0,0},	
+/*032.VGM*/	{0,14952,10},	// Air Battle A (Round 1, 2, 7, 10, 13, 16)	
+/*033.VGM*/	{0,12088,10},	// Antiship Battle A (Round 1-Tone, 2-Kaga, 7-Ise, 10-Mutsu, 13-Souryu)
+/*034.VGM*/	{0,9038,10},	// Air Battle B (Round 3, 4, 8, 14)
+/*035.VGM*/	{0,14624,10},	// Antiship Battle B (Round 4-Fuso, 8-Hiryu)
+/*036.VGM*/	{0,15208,10},	// Air Battle C (Round 5, 9, 12, 15)
+/*037.VGM*/	{0,14618,10},	// Antiship Battle C (Round 5-Akagi, 12-Yamashiro, 15-Nagato, 16-Yamato)
+/*038.PCM*/	{0,0,0},		// 
+/*039.VGM*/	{0,5263,10},	// Refuel (Counting Bonus Points)
+/*040.VGM*/	{0,9663,10},	// Final Stage Cleared
+/*041.VGM*/	{0,11535,10},	// Daihiryu (Round 6, 11)
+/*042.VGM*/	{0,11124,10},	// Ayako (Round 3, 9)
+/*043.VGM*/	{0,3601,10},	// Mission Completed I (Hit Ratio Result 1)
+/*044.VGM*/	{0,3301,10},	// Mission Completed II (Hit Ratio Result 3)
+/*045.VGM*/	{0,3394,10},	// Failed in the Attack (Hit Ratio Result 2)
+/*046.VGM*/	{0,3106,10},	// Game Over
+/*047.VGM*/	{0,9273,10},	// Credits Roll
+/*048.VGM*/	{0,14617,10},	// Air Battle D (Round 6, 11)
+/*049.VGM*/	{0,7568,10},	// Final Ayako (Round 14)
+/*050.VGM*/	{0,6230,10},	//  Star-spangled Banner
+};
 
 UINT8 DrvInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 UINT8 DrvInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
