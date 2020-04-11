@@ -576,7 +576,7 @@ inline void transfer_bg_layer()
 		for (UINT32 i=0;i<32 ;i+=2 ) // colon
 		{
 			UINT32 offset = offs + i;
-			offset = (offset & 0xf801) | ((offset & 0x0700) >> 7) | ((offset & 0x00fe) << 3);
+			offset = (offset & 0xf801) | ((offset & 0x0700) >> 7) | ((offset & 0x00fe) << 3) & 0x7fff;
 			UINT32 *pDrvTileMap = ((UINT32 *)bgmap_lut)+(offset<<1);
 
 			map[i+0]	= pDrvTileMap[0];
@@ -977,12 +977,11 @@ static void DrvInitSaturn()
 {
 	for (unsigned int c = 0; c < num; c++) 
 	{
-		unsigned char old_tile[512];
-		unsigned char reorder_tile[512];
+		unsigned char tile[512];
 
 		UINT8 *dpM = pDest + (c * 512);
-		memcpyl(old_tile,dpM,512);
-		UINT8 *dpO = &old_tile[0];
+		memcpyl(tile,dpM,512);
+		UINT8 *dpO = &tile[0];
 
 		for (unsigned int l=0;l<4;l++) // 4 par 4
 		{
@@ -1002,19 +1001,19 @@ static void DrvInitSaturn()
 		}
 // reordering
 		dpM = pDest + (c * 512);
-		memcpyl(reorder_tile,dpM,512);
+		memcpyl(tile,dpM,512);
 // 0&1 corrects
-		memcpy(&dpM[2*32],&reorder_tile[4*32],32);
-		memcpy(&dpM[3*32],&reorder_tile[5*32],32);
+		memcpy(&dpM[2*32],&tile[4*32],32);
+		memcpy(&dpM[3*32],&tile[5*32],32);
 
-		memcpy(&dpM[4*32],&reorder_tile[2*32],32);
-		memcpy(&dpM[5*32],&reorder_tile[3*32],32);
+		memcpy(&dpM[4*32],&tile[2*32],32);
+		memcpy(&dpM[5*32],&tile[3*32],32);
 
-		memcpy(&dpM[10*32],&reorder_tile[12*32],32);
-		memcpy(&dpM[11*32],&reorder_tile[13*32],32);
+		memcpy(&dpM[10*32],&tile[12*32],32);
+		memcpy(&dpM[11*32],&tile[13*32],32);
 
-		memcpy(&dpM[12*32],&reorder_tile[10*32],32);
-		memcpy(&dpM[13*32],&reorder_tile[11*32],32);
+		memcpy(&dpM[12*32],&tile[10*32],32);
+		memcpy(&dpM[13*32],&tile[11*32],32);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

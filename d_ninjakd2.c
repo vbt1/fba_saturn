@@ -993,11 +993,6 @@ void initLayersS(UINT8 game)
 		
 		scfg.dispenbl      = OFF;
 		SCL_SetConfig(SCL_NBG3, &scfg);
-
-
-
-
-		
 	}
 	
 	SCL_SetCycleTable(CycleTb);

@@ -33,7 +33,7 @@
 //extern t_cart cart;
 #ifndef ACTION_REPLAY
 //extern signed int file_max;
-static GfsDirName dir_name[MAX_DIR];
+static GfsDirId dir_name[MAX_DIR];
 static Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
 #endif
 

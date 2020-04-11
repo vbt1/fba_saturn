@@ -11,6 +11,7 @@
 //	INT32 nInterleave = 256;
 //	INT32 nCyclesTotal[2] = { 6000000 / 60, 3000000 / 60 };
 //	INT32 nCyclesDone[2] = { 0, 0 };
+Uint16 *ss_map3;
 
 int ovlInit(char *szShortName)
 {
@@ -69,31 +70,49 @@ voir plutot p355 vdp2
 //B0 0x0008
 //B1 0x000c 1100
 // 3 nbg
-	scfg.dispenbl      = ON;
+scfg.dispenbl 		 = ON; // bg1
+	scfg.charsize       = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
+	scfg.pnamesize      = SCL_PN2WORD;
+	scfg.patnamecontrl =  0x00000;// VRAM B0 のオフセット 
+	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
+	scfg.coltype       = SCL_COL_TYPE_16;
+	scfg.datatype      = SCL_CELL;	
+	scfg.plate_addr[0] = (Uint32)(ss_map3);//////
+	scfg.plate_addr[1] = (Uint32)(ss_map3)+0x1000;
+	scfg.plate_addr[2] = (Uint32)(ss_map3)+0x1000;
+	scfg.plate_addr[3] = (Uint32)(ss_map3)+0x1000;
+	SCL_SetConfig(SCL_NBG3, &scfg);	
+	
+// 3 nbg
+	scfg.dispenbl      = ON; //bg2
+	scfg.charsize          = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
+	scfg.pnamesize      = SCL_PN2WORD;
+//	scfg.patnamecontrl =  0x7fff;// VRAM B0 のオフセット 
+
+	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
+	scfg.coltype       = SCL_COL_TYPE_16;
+	scfg.datatype      = SCL_CELL;	
+	scfg.plate_addr[0] = (Uint32)(SS_MAP2);//////
+	scfg.plate_addr[1] = 0;
+	scfg.plate_addr[2] = 0;
+	scfg.plate_addr[3] = 0;
+	SCL_SetConfig(SCL_NBG1, &scfg);
+
+	scfg.dispenbl      = ON;  // char
 	scfg.charsize      = SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
-	scfg.pnamesize     = SCL_PN2WORD;
-	scfg.flip          = SCL_PN_10BIT; 
+	scfg.pnamesize     = SCL_PN1WORD;
+	scfg.flip          = SCL_PN_12BIT; 
 	scfg.platesize     = SCL_PL_SIZE_1X1;
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
-	scfg.patnamecontrl =  0x0000;// VRAM A 0??のオフセット 
+	scfg.patnamecontrl =  0x000c;// VRAM A 0??のオフセット 
 	scfg.plate_addr[0] = (Uint32)ss_map;
-	scfg.plate_addr[1] = 0x00;
+	scfg.plate_addr[1] = NULL; //(Uint32)(SS_MAP2+0x1000);//////
+	scfg.plate_addr[2] = NULL; //(Uint32)(SS_MAP2+0x1000);	 // good	  0x400
+	scfg.plate_addr[3] = NULL; //(Uint32)(SS_MAP2+0x1000);
 	SCL_SetConfig(SCL_NBG2, &scfg);
-// 3 nbg
-//	scfg.dispenbl      = ON;
-	scfg.charsize          = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
-	scfg.pnamesize      = SCL_PN2WORD;
-	scfg.patnamecontrl =  0x00008;// VRAM B0 のオフセット 
-	scfg.platesize     = SCL_PL_SIZE_2X2; // ou 2X2 ?
-	scfg.coltype       = SCL_COL_TYPE_16;
-	scfg.plate_addr[0] = (Uint32)(SS_MAP2+0x800);//////
-	scfg.plate_addr[1] = (Uint32)(SS_MAP2+0x800);//////
-	scfg.plate_addr[2] = (Uint32)(SS_MAP2+0x1000);	 // good	  0x400
-	scfg.plate_addr[3] = (Uint32)(SS_MAP2+0x1000);
-	SCL_SetConfig(SCL_NBG1, &scfg);
 
-//	scfg.dispenbl 		 = OFF;
+	scfg.dispenbl 		 = OFF;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
@@ -109,41 +128,110 @@ voir plutot p355 vdp2
 static void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG2,ON);
-	SCL_AllocColRam(SCL_NBG3,OFF);
-	SCL_AllocColRam(SCL_NBG1,OFF);
-	SCL_AllocColRam(SCL_NBG3,OFF);
-	colAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
-//	SCL_SetColRamOffset(SCL_NBG2,0,OFF);
-	ss_regs->dispenbl &= 0xfbff;
-
+	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG2,ON); // char
+	SCL_AllocColRam(SCL_NBG3,OFF); // bg1
+	SCL_AllocColRam(SCL_NBG1,OFF); // bg2
+	SCL_AllocColRam(SCL_SPR,OFF);
+	ss_regs->dispenbl &= 0xfbff; // remet la transparence
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void make_lut(void)
 {
-	int j=0;
-	for (int my = 0; my < 32; my++) 
+	memset(bgmap_lut1,0x00,0x20000);
+	memset(bgmap_lut2,0x00,0x20000);
+	UINT16 *pbgmap_lut = &bgmap_lut1[0];
+	int delta=0;
+	
+// 8x2048x2
+	for(UINT32 i = 0; i < 0x4000; i++)
 	{
-		for (int mx = 0; mx < 32; mx++) 
+		if(i%8)
+			delta+=2;
+		
+		UINT8 *pDrvBgTilemap = &DrvBgTilemap[((i&0x07)<<13)+delta];
+		
+		UINT32 attr		= pDrvBgTilemap[1];
+		UINT32 code		= 4; //pDrvBgTilemap[0] & 0x7f;
+		UINT32 color	= ((attr & 0x3c) >> 2);// + 0x18; a voir si decallage de palette utile
+		UINT32 flip		= ((attr & 0xc0) >> 6);
+		UINT32 flipx	= (flip >> 0) & 0x01;
+		UINT32 flipy	= (flip >> 1) & 0x01;
+
+		if(!flipx)
 		{
- 			map_offset_lut_fg[j] = (mx|(my<<6));
-			j++;
+			if(!flipy)
+			{
+				pbgmap_lut[0]=color;
+				pbgmap_lut[1]=((code++)<<2)+0x1400;
+				pbgmap_lut[2]=color;
+				pbgmap_lut[3]=((code++)<<2)+0x1400;
+				
+				pbgmap_lut[4]=color;
+				pbgmap_lut[5]=((code++)<<2)+0x1400;
+				pbgmap_lut[6]=color;
+				pbgmap_lut[7]=((code++)<<2)+0x1400;
+			}
+			else
+			{
+				pbgmap_lut[4]	= color | 0x8000;
+				pbgmap_lut[5]	= ((code++)<<2)+0x1400;
+				pbgmap_lut[6]	= color | 0x8000;
+				pbgmap_lut[7]	= ((code++)<<2)+0x1400;
+				
+				pbgmap_lut[0]	= color | 0x8000;
+				pbgmap_lut[1]	=	((code++)<<2)+0x1400;
+				pbgmap_lut[2]	= color | 0x8000;
+				pbgmap_lut[3]	=	((code++)<<2)+0x1400;
+			}
 		}
+		else
+		{
+			if(!flipy)
+			{
+				pbgmap_lut[2]	= color | 0x4000;
+				pbgmap_lut[3]	= ((code++)<<2)+0x1400;
+				pbgmap_lut[0]	= color | 0x4000;
+				pbgmap_lut[1]	= ((code++)<<2)+0x1400;
+				
+				pbgmap_lut[6]	= color | 0x4000;
+				pbgmap_lut[7]	=	((code++)<<2)+0x1400;
+				pbgmap_lut[4]	= color | 0x4000;
+				pbgmap_lut[5]	=	((code++)<<2)+0x1400;
+			}
+			else
+			{
+				pbgmap_lut[6]	= color | 0xC000;
+				pbgmap_lut[7]	= ((code++)<<2)+0x1400;
+				pbgmap_lut[4]	= color | 0xC000;
+				pbgmap_lut[5]	= ((code++)<<2)+0x1400;
+				
+				pbgmap_lut[2]	= color | 0xC000;
+				pbgmap_lut[3]	=	((code++)<<2)+0x1400;
+				pbgmap_lut[0]	= color | 0xC000;
+				pbgmap_lut[1]	=	((code++)<<2)+0x1400;
+			}
+		}
+		pbgmap_lut+=8;
 	}
 
-	memset(bgmap_lut,0x00,0x8000);
-	UINT16 *pbgmap_lut = &bgmap_lut[0];
-
-	for(UINT32 i = 0; i < 0x8000; i+=2)
+	pbgmap_lut = &bgmap_lut2[0];
+	delta=0;
+	
+// 8x2048x2
+	for(UINT32 i = 0; i < 0x4000; i++)
 	{
-		UINT8 *pDrvBg2Tilemap = &DrvBg2Tilemap[i];
+		if(i%8)
+			delta+=2;
+		
+		UINT8 *pDrvBg2Tilemap = &DrvBg2Tilemap[((i&0x07)<<13)+delta];
 		
 		UINT32 attr		= pDrvBg2Tilemap[1];
-		UINT32 code		= (pDrvBg2Tilemap[0] + ((attr & 0x01) * 256))*4;
-		UINT32 color	= attr / 8;
-		UINT32 flipx	= attr & 0x02;
-		UINT32 flipy	= attr & 0x04;
+		UINT32 code		= pDrvBg2Tilemap[0] & 0x7f;
+		UINT32 color	= ((attr & 0x3c) >> 2);// + 0x18; a voir si decallage de palette utile
+		UINT32 flip		= ((attr & 0xc0) >> 6);
+		UINT32 flipx	= (flip >> 0) & 0x01;
+		UINT32 flipy	= (flip >> 1) & 0x01;
 
 		if(!flipx)
 		{
@@ -201,28 +289,6 @@ void make_lut(void)
 		}
 		pbgmap_lut+=8;
 	}
-
-
-
-/*	for (UINT32 i = 0; i < 1024;i++) 
-	{
-		INT32 sx = ((i) % 32) <<6; //% 32;
-		INT32 sy = (32 - ((i) / 32));
-		map_offset_lut[i] = (sx| sy);//<<1;
-	}
-	
-	for (UINT32 i = 0; i < 256;i++) 
-	{
-		INT32 sy = (i % 16) <<5;//<<6
-		INT32 sx = (15 - (i / 16));//<<1;
-		mapbg_offset_lut[i] = (sx| sy);//<<1;
-	}
-
-	for (UINT32 i = 0; i < 4096; i++) 
-	{
-		cram_lut[i] = CalcCol(i);
-	}
-*/
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitDamageXsound()
@@ -295,31 +361,49 @@ static void DrvInitSaturn()
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites  = 128+4;//27;
+/*	
+		if( scfg->pnamesize == 1){  // SCL_PN1WORD
+			if(scfg->charsize == 0) { // SCL_CHAR_SIZE_1X1
+				boundary = 0x2000;
+			} else {				// SCL_CHAR_SIZE_2X2
+				boundary = 0x800;
+			}
+		} else {				// SCL_PN2WORD
+			if(scfg->charsize == 0) { // SCL_CHAR_SIZE_1X1
+				boundary = 0x4000;
+			} else {			// SCL_CHAR_SIZE_2X2
+				boundary = 0x1000;
+			}
+		}
+*/
 
-	SS_FONT        = ss_font     =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_MAP          = ss_map    =(Uint16 *)SCL_VDP2_VRAM_A1+0x08000;
-	SS_MAP2        = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1+0x0B000;
+
+	SS_FONT        = ss_font     = NULL; //(Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_MAP          = ss_map    =(Uint16 *)SCL_VDP2_VRAM_B1+0x1E000;  //char boundary 0x2000
+	SS_MAP2        = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_B1+0x1D000; //0x01D000;   //bg1  boundary 0x1000
 	SS_CACHE      = cache      =(Uint8  *)SCL_VDP2_VRAM_A0;
-
+	ss_map3		=(Uint16 *)SCL_VDP2_VRAM_B1+0x001b000; 				 //bg2  boundary  0x1000
+	
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-	ss_reg->n1_move_x = -8<<16;
+//	ss_reg->n1_move_x = -8<<16;
 //		ss_reg->n1_move_y =  (((-255))<<16) ;
 	ss_reg->n2_move_x = 8;
 
 //3 nbg
-	SS_SET_S0PRIN(5);
-	SS_SET_N0PRIN(7);
-	SS_SET_N1PRIN(4);
-	SS_SET_N2PRIN(6);
-	ss_regs->tvmode = 0x8011;
+	SS_SET_S0PRIN(5); // sprite
+	SS_SET_N0PRIN(7); // window
+	SS_SET_N1PRIN(3); // bg2
+	SS_SET_N2PRIN(6); // text
+	SS_SET_N3PRIN(4); // bg1	
+	ss_regs->tvmode = 0x8021;
 
 	initLayers();
 	initColors();
 //	make_lut();
-	initSprites(256-1,240-1,0,0,7,0);
+	initSprites(256-1,256-1,0,0,0,0);
 
     ss_sprite[nBurnSprites-1].control			= CTRL_END;
     ss_sprite[nBurnSprites-1].link				= 0;        
@@ -329,8 +413,8 @@ static void DrvInitSaturn()
     ss_sprite[nBurnSprites-1].charSize		= 0;
 
 //	nBurnFunction = CalcAll;
-	DrvInitDamageXsound();
-	drawWindow(0,240,0,6,66); 
+	DrvInitDamageXsound();  // a remettre
+//	drawWindow(0,240,0,6,66); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 UINT8 Drv1943ProtRead()
@@ -418,16 +502,17 @@ void __fastcall Drv1943Write1(UINT16 a, UINT8 d)
 		{
 			if(DrvSoundLatch != d)
 			{
+				DrvSoundLatch = d;
+				
 				switch (d) 
 				{
 					case 255: 
 					{
 						return;
 					}
-					default: 
+					case 0: 
 					{
 						*(UINT16 *)(0x25A00108)=2;
-						DrvSoundLatch = d;
 /*
 						while(*(UINT16 *)(0x25A0010C)!=0)
 						{
@@ -436,7 +521,7 @@ void __fastcall Drv1943Write1(UINT16 a, UINT8 d)
 								asm("nop\n"); // waste time
 							}
 						}
-*/
+*/					
 						Uint32 msk;
 
 						msk = get_imask();
@@ -446,13 +531,30 @@ void __fastcall Drv1943Write1(UINT16 a, UINT8 d)
 							;
 						}
 						set_imask(msk);
-
+						return;
+					}
+					
+					default:
+					{
 						char vgm_file[14];
 						sprintf(vgm_file, "%03d%s",d,".VGM");
 						FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)vgm_file,70,130);
 
 						if(sfx_1943[d].size!=0)
 						{
+						*(UINT16 *)(0x25A00108)=2;
+				
+						Uint32 msk;
+
+						msk = get_imask();
+						set_imask(15);
+						int cnt=100;
+						while (--cnt > 0) {
+							;
+						}
+						set_imask(msk);							
+							
+							
 							UINT32 end = *(UINT32 *)(0x25A00100);
 							GFS_Load(GFS_NameToId(vgm_file),0,(void *)(0x5A00000+end),sfx_1943[d].size);
 //							*(UINT32 *)(0x25A00104)=end; // vgm start address parameter
@@ -638,9 +740,9 @@ INT32 DrvDoReset(INT32 clear_mem)
 INT32 MemIndex()
 {
 	UINT8 *Next; Next = Mem;
-
+	CZ80Context			   = Next; Next += 2* sizeof(cz80_struc);
 	DrvZ80Rom1             = Next; Next += 0x30000;
-	DrvZ80Rom2             = Next; Next += 0x08000;
+//	DrvZ80Rom2             = Next; Next += 0x08000;
 	DrvPromRed             = Next; Next += 0x00100;
 	DrvPromGreen           = Next; Next += 0x00100;
 	DrvPromBlue            = Next; Next += 0x00100;
@@ -665,20 +767,20 @@ INT32 MemIndex()
 	RamEnd                 = Next;
 
 //	DrvChars               = Next; Next += 2048 * 8 * 8;
-	DrvChars			   = (UINT8 *)SS_CACHE;
+	DrvChars			   = (UINT8 *)SS_CACHE + 0x50000;
 //	DrvBg2Tiles            = Next; Next += 128 * 32 * 32;
-	DrvBg2Tiles            = (UINT8 *)(SS_CACHE + 0x8000);
-	DrvBgTiles             = Next; Next += 512 * 32 * 32;
+	DrvBg2Tiles            = (UINT8 *)(SS_CACHE + 0x40000);
+	DrvBgTiles             = (UINT8 *)(SS_CACHE + 0x00000); //Next; Next += 512 * 32 * 32;
 //	DrvSprites             = Next; Next += 2048 * 16 * 16;
 	UINT8 *ss_vram			= (UINT8 *)SS_SPRAM;
 	DrvSprites				= &ss_vram[0x1100];
 //	DrvPalette             = (UINT32*)Next; Next += 0x00380 * sizeof(UINT32);
 	DrvPalette			   = (UINT16*)colBgAddr;
-	bgmap_buf			   = Next; Next += 0x800 * sizeof (UINT32);//bgmap_lut + 0x20000;
-	map_offset_lut_fg	   = (UINT16*)Next; Next += 2048 * sizeof(UINT16);	
-	bgmap_lut	 		   = Next; Next += 0x020000 * sizeof (UINT16);
-	 Next += 0x020000;
-	CZ80Context			   = Next; Next += 2* sizeof(cz80_struc);
+//	bgmap_buf			   = Next; Next += 0x800 * sizeof (UINT32);//bgmap_lut + 0x20000;
+//	map_offset_lut_fg	   = (UINT16*)Next; Next += 2048 * sizeof(UINT16);	
+	bgmap_lut2	 		   = (UINT16 *)0x00200000; //Next; Next += 0x020000 * sizeof (UINT16);
+	bgmap_lut1	 		   = (UINT16 *)0x00220000; //Next; Next += 0x020000 * sizeof (UINT16);
+//	 Next += 0x020000;
 
 	MemEnd                 = Next;
 
@@ -734,26 +836,17 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"load      
 	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_2, 0.15, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_3, 0.15, BURN_SND_ROUTE_BOTH);
 
-	GenericTilesInit();
-	GenericTilemapInit(0, TILEMAP_SCAN_COLS, bg2_map_callback, 32, 32, 2048,  8);
-	GenericTilemapInit(1, TILEMAP_SCAN_COLS, bg1_map_callback, 32, 32, 2048,  8);
-	GenericTilemapInit(2, TILEMAP_SCAN_ROWS, fg_map_callback,   8,  8,   32, 32);
-	GenericTilemapSetGfx(0, DrvBg2Tiles, 4, 32, 32, 0x20000, 0x000, 0x3f);
-	GenericTilemapSetGfx(1, DrvBgTiles,  4, 32, 32, 0x80000, 0x000, 0x3f);
-	GenericTilemapSetGfx(2, DrvChars,    2,  8,  8, 0x20000, 0x000, 0x1f);
-	GenericTilemapSetOffsets(TMAP_GLOBAL, 0, -16);
-	GenericTilemapSetTransparent(1, 0);
-	GenericTilemapSetTransparent(2, 0);
 */
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDoReset      ",70,130);
-
+	make_lut();
 	// Reset the driver
 	DrvDoReset(1);
 	DrvCalcPalette();
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"make_lut        ",70,130);
-//	make_lut();
+
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end make_lut        ",70,130);
-	drawWindow(0,240,0,6,66); 
+//	drawWindow(0,256,0,2,70); // good
+//	drawWindow(0,256,0,0,50); 
 	return 0;
 }
 
@@ -770,13 +863,7 @@ INT32 DrvLoad()
 	nRet = BurnLoadRom(DrvZ80Rom1 + 0x20000, 2, 1); if (nRet != 0) return 1;
 	
 	// Load Z80 #2 Program Roms
-	nRet = BurnLoadRom(DrvZ80Rom2 + 0x00000, 3, 1); if (nRet != 0) return 1;
-	
-	// Load and decode the chars
-	nRet = BurnLoadRom(DrvTempRom, 4, 1); if (nRet != 0) return 1;
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 1      ",70,130);
-
-	GfxDecode4Bpp(2048, 2, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
+//	nRet = BurnLoadRom(DrvZ80Rom2 + 0x00000, 3, 1); if (nRet != 0) return 1;
 	
 	// Load and decode the bg2 tiles
 	memset(DrvTempRom, 0, 0x40000);
@@ -784,7 +871,18 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 
 	nRet = BurnLoadRom(DrvTempRom + 0x08000, 14, 1); if (nRet != 0) return 1;
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 2      ",70,130);
 	GfxDecode4Bpp(128, 4, 32, 32, Bg2TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x800, DrvTempRom, DrvBg2Tiles);
+	
 	tile32x32toSaturn(1,128, DrvBg2Tiles);
+
+	for (UINT32 i=0;i<0x10000;i++ )
+	{
+		if ((DrvBg2Tiles[i]& 0x0f)     ==0x00)DrvBg2Tiles[i] = DrvBg2Tiles[i] & 0xf0 | 0xf;
+		else if ((DrvBg2Tiles[i]& 0x0f)==0x0f) DrvBg2Tiles[i] = DrvBg2Tiles[i] & 0xf0;
+
+		if ((DrvBg2Tiles[i]& 0xf0)       ==0x00)DrvBg2Tiles[i] = 0xf0 | DrvBg2Tiles[i] & 0x0f;
+		else if ((DrvBg2Tiles[i]& 0xf0)==0xf0) DrvBg2Tiles[i] = DrvBg2Tiles[i] & 0x0f;
+	}	
+	wait_vblank();
 	
 	// Load and decode the bg tiles
 	memset(DrvTempRom, 0, 0x40000);
@@ -798,7 +896,19 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 
 	nRet = BurnLoadRom(DrvTempRom + 0x38000, 12, 1); if (nRet != 0) return 1;
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 3      ",70,130);
 	GfxDecode4Bpp(512, 4, 32, 32, BgTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x800, DrvTempRom, DrvBgTiles);
-	
+//	GfxDecode4Bpp(512, 4, 32, 32, BgTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x800, DrvTempRom, DrvBgTiles);
+
+	tile32x32toSaturn(1,512, DrvBgTiles);
+/*
+	for (UINT32 i=0;i<0x20000;i++ )
+	{
+		if ((DrvBgTiles[i]& 0x0f)     ==0x00)DrvBgTiles[i] = DrvBgTiles[i] & 0xf0 | 0xf;
+		else if ((DrvBgTiles[i]& 0x0f)==0x0f) DrvBgTiles[i] = DrvBgTiles[i] & 0xf0;
+
+		if ((DrvBgTiles[i]& 0xf0)       ==0x00)DrvBgTiles[i] = 0xf0 | DrvBgTiles[i] & 0x0f;
+		else if ((DrvBgTiles[i]& 0xf0)==0xf0) DrvBgTiles[i] = DrvBgTiles[i] & 0x0f;
+	}
+*/
 	// Load and decode the sprites
 	memset(DrvTempRom, 0, 0x40000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000, 15, 1); if (nRet != 0) return 1;
@@ -811,6 +921,7 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 
 	nRet = BurnLoadRom(DrvTempRom + 0x38000, 22, 1); if (nRet != 0) return 1;
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 4      ",70,130);
 	GfxDecode4Bpp(2048, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x200, DrvTempRom, DrvSprites);
+	rotate_tile16x16(2048,DrvSprites);
 	
 	// Load the Tilemaps
 	nRet = BurnLoadRom(DrvBgTilemap,         23, 1); if (nRet != 0) return 1;
@@ -827,6 +938,13 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 
 	nRet = BurnLoadRom(DrvPromBg2PalBank,    32, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvPromSpriteLookup,  33, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvPromSpritePalBank, 34, 1); if (nRet != 0) return 1;
+
+	// Load and decode the chars
+	nRet = BurnLoadRom(DrvTempRom, 4, 1); if (nRet != 0) return 1;
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 1      ",70,130);
+
+	GfxDecode4Bpp(2048, 2, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
+	rotate_tile(2048,1,DrvChars);
 	
 //	BurnFree(DrvTempRom);
 	DrvTempRom = NULL;	
@@ -852,7 +970,7 @@ INT32 DrvbLoad()
 	nRet = BurnLoadRom(DrvZ80Rom1 + 0x20000, 2, 1); if (nRet != 0) return 1;
 	
 	// Load Z80 #2 Program Roms
-	nRet = BurnLoadRom(DrvZ80Rom2 + 0x00000, 3, 1); if (nRet != 0) return 1;
+//	nRet = BurnLoadRom(DrvZ80Rom2 + 0x00000, 3, 1); if (nRet != 0) return 1;
 	
 	// Load and decode the chars
 	nRet = BurnLoadRom(DrvTempRom, 4, 1); if (nRet != 0) return 1;
@@ -925,7 +1043,7 @@ INT32 DrvbjLoad()
 	nRet = BurnLoadRom(DrvZ80Rom1 + 0x20000, 2, 1); if (nRet != 0) return 1;
 	
 	// Load Z80 #2 Program Roms
-	nRet = BurnLoadRom(DrvZ80Rom2 + 0x00000, 3, 1); if (nRet != 0) return 1;
+//	nRet = BurnLoadRom(DrvZ80Rom2 + 0x00000, 3, 1); if (nRet != 0) return 1;
 	
 	// Load and decode the chars
 	nRet = BurnLoadRom(DrvTempRom, 4, 1); if (nRet != 0) return 1;
@@ -1016,7 +1134,7 @@ INT32 Drvb2Load()
 	nRet = BurnLoadRom(DrvZ80Rom1 + 0x20000, 2, 1); if (nRet != 0) return 1;
 	
 	// Load Z80 #2 Program Roms
-	nRet = BurnLoadRom(DrvZ80Rom2 + 0x00000, 3, 1); if (nRet != 0) return 1;
+//	nRet = BurnLoadRom(DrvZ80Rom2 + 0x00000, 3, 1); if (nRet != 0) return 1;
 	
 	// Load and decode the chars
 	nRet = BurnLoadRom(DrvTempRom, 4, 1); if (nRet != 0) return 1;
@@ -1146,7 +1264,7 @@ void DrvCalcPalette()
 		
 		Palette[i] = BurnHighCol(r, g, b, 0);
 	}
-	
+// nbg 2 - 16 palettes de 4 couleurs // char	
 	for (i = 0; i < 0x80; i+=4) {
 		DrvPalette[i+0+delta] = Palette[(DrvPromCharLookup[i+0] & 0x0f) | 0x40];
 		DrvPalette[i+1+delta] = Palette[(DrvPromCharLookup[i+1] & 0x0f) | 0x40];
@@ -1154,118 +1272,103 @@ void DrvCalcPalette()
 		DrvPalette[i+3+delta] = Palette[(DrvPromCharLookup[i+3] & 0x0f) | 0x40];
 		delta+=12;
 	}
+//0x000 a 0x0ff nbg2 char
+//0x100 a 0x1ff	nbg3 bg1
+//0x200 a 0x2ff nbg1 bg2
+//0x300 a 0x3ff sprites
+// bg 2 - 16 palettes de 16 couleurs
 
-	for (i = 0x80; i < 0x180; i++) {
-		DrvPalette[i+delta] = Palette[((DrvPromBgPalBank[i - 0x80] & 0x03) << 4) | (DrvPromBgLookup[i - 0x80] & 0x0f)];
-	}
+// on commence a 512
 	for (i = 0x180; i < 0x280; i++) {
-		DrvPalette[i+delta] = Palette[((DrvPromBg2PalBank[i - 0x180] & 0x03) << 4) | (DrvPromBg2Lookup[i - 0x180] & 0x0f)];
+// bg 2 - 16 palettes de 16 couleurs		
+		DrvPalette[i+0x80] = Palette[((DrvPromBg2PalBank[i - 0x180] & 0x03) << 4) | (DrvPromBg2Lookup[i - 0x180] & 0x0f)];
+// bg 1 - 16 palettes de 16 couleurs			
+		DrvPalette[i-0x80] = Palette[((DrvPromBgPalBank[i - 0x180] & 0x03) << 4) | (DrvPromBgLookup[i - 0x180] & 0x0f)];
+// sprites		
+		DrvPalette[i+0x180] = Palette[((DrvPromSpritePalBank[i - 0x180] & 0x07) << 4) | (DrvPromSpriteLookup[i - 0x180] & 0x0f) | 0x80];		
 	}
-	
+/*
+// sprites
 	for (i = 0x280; i < 0x380; i++) {
-		DrvPalette[i+delta] = Palette[((DrvPromSpritePalBank[i - 0x280] & 0x07) << 4) | (DrvPromSpriteLookup[i - 0x280] & 0x0f) | 0x80];
+		DrvPalette[i+0x80] = Palette[((DrvPromSpritePalBank[i - 0x280] & 0x07) << 4) | (DrvPromSpriteLookup[i - 0x280] & 0x0f) | 0x80];
 	}
 
+// bg 1 - 16 palettes de 16 couleurs	
+	
+	for (i = 0x80; i < 0x180; i++) {
+		DrvPalette[i+0x80] = Palette[((DrvPromBgPalBank[i - 0x80] & 0x03) << 4) | (DrvPromBgLookup[i - 0x80] & 0x0f)];
+	}
+*/	
 }
 
 void DrvRenderBg2Layer()
 {
-	INT32 mx, my, Offs, Attr, Code, Colour, x, y, TileIndex, xScroll, Flip, xFlip, yFlip;
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvRenderBg2Layer start      ",70,130);	
+//	INT32 mx, my, Offs, Attr, Code, Colour, x, y, TileIndex, xScroll, Flip, 
+INT32 xFlip, yFlip;
 //	xFlip = 0;
 //	yFlip = 0;
+/*
+char tutu[50];
+
+
+//xScroll = DrvBg2ScrollX[0];// + (256 * DrvBg2ScrollX[1]);
 	
-//	xScroll = DrvBg2ScrollX[0] + (256 * DrvBg2ScrollX[1]);
+sprintf(tutu,"scroll2 %04d x2 %02d   ",DrvBg2ScrollX[0],DrvBg2ScrollX[1]);
 
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)tutu,70,130);		
+
+sprintf(tutu,"scroll1 %04d x2 %02d   ",DrvBgScrollX[0],DrvBgScrollX[1]);
+
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)tutu,70,140);	
+*/	
+	ss_reg->n1_move_y = (256-DrvBg2ScrollX[0])<<16;
+	ss_reg->n3_move_y = (256-DrvBgScrollX[0]);
 	
-
-	UINT32 *map = (UINT32 *)&ss_map2[0];//bgmap_buf;
-
-//	INT32 offs = 2 * (scrollx >> 5) + 0x100 * (scrolly >> 5);
-	INT32 offs = 0; //2 * (DrvBg2ScrollX[0] >> 5) + 0x100 * (DrvBg2ScrollX[1] >> 5);
+	UINT32 *map1 = (UINT32 *)&ss_map3[0];//bgmap_buf;
+	UINT32 *map2 = (UINT32 *)&ss_map2[0];//bgmap_buf;
+// 4096 pour autre  bg sur 65536
+//	INT32 offs = (DrvBg2ScrollX[1]+1)*8*8*2 ;//1024 * 2; //2 * (xScroll >> 5) ;
+//	INT32 offs = 0; //DrvBg2ScrollX[1]<<8; //2 * (DrvBg2ScrollX[0] >> 5) + 0x100 * (DrvBg2ScrollX[1] >> 5);
 //	ss_reg->n1_move_y =  (((-128))<<16) ;
-
-	for (UINT32 k=0;k<32 ;k++ ) // row
+	for (INT32 x = 0; x < 16; x++) // c'est y // 32*(8+1) = 256 + 32 for wrap
 	{
-		for (UINT32 i=0;i<32 ;i+=2 ) // colon
+		for (INT32 offset = 0; offset < 16; offset+=2)//2048 // 32*8 = 256 c'est x
 		{
-			UINT32 offset = offs + i;
-//			offset = (offset & 0xf801) | ((offset & 0x0700) >> 7) | ((offset & 0x00fe) << 3);
-			UINT32 *pDrvTileMap = ((UINT32 *)bgmap_lut)+(offset<<1);
+//			INT32 offx = (1024 * 2 +8*8*2)+offset+((16-x)*8*2); 
+			INT32 offx = (((DrvBg2ScrollX[1]+1)^1)*8*2)+offset+((16-x)*8*2); 
+			INT32 offx1 = (((DrvBgScrollX[1]+1)^1)*8*2)+offset+((16-x)*8*2);  //((DrvBgScrollX[1]+2)*8*2)+offset+((16-x)*8*2); 
 
-			map[i+0+0x800]	= 0x1000+4;//pDrvTileMap[0];
-			map[i+1+0x800]	= 0x1000+5;//pDrvTileMap[1];
-			map[i+32+0x800]	= 0x1000+6;//pDrvTileMap[2];
-			map[i+33+0x800]	= 0x1000+7;//pDrvTileMap[3];
+			INT32 attr = DrvBg2Tilemap[offx + 1];
+			INT32 code = (DrvBg2Tilemap[offx] + ((attr & 1) << 8))*4;
+			INT32 color = ((attr & 0x3c) >> 2) ; //+ color_offset;
+/*
+			INT32 Flip = (attr & 0xc0) >> 6;
+			xFlip = (Flip >> 0) & 0x01;
+			yFlip = (Flip >> 1) & 0x01;
+*/
+
+			map2[offset+0+0x000]	= (color<<16)|0x4000+(code<<2);
+			map2[offset+1+0x000]	= (color<<16)|0x4000+((code+1)<<2);
+			map2[offset+32+0x000]	= (color<<16)|0x4000+((code+2)<<2);
+			map2[offset+33+0x000]	= (color<<16)|0x4000+((code+3)<<2);
+
+			INT32 attr1 = DrvBgTilemap[offx1 + 1];
+			INT32 code1 = (DrvBgTilemap[offx1] + ((attr1 & 1) << 8))*4;
+			INT32 color1 = ((attr1 & 0x3c) >> 2) + 16; //+ color_offset;			
+			
+			map1[offset+0+0x000]	= (color1<<16)| 0x0000|(code1<<2);
+			map1[offset+1+0x000]	= (color1<<16)| 0x0000|((code1+1)<<2);
+			map1[offset+32+0x000]	= (color1<<16)| 0x0000|((code1+2)<<2);
+			map1[offset+33+0x000]	= (color1<<16)| 0x0000|((code1+3)<<2);
 		}
-		offs += 256;
-		map+= 64;
+		map1+= 64;
+		map2+= 64;		
 	}
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvRenderBg2Layer end       ",70,130);	
+
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvRenderBg2Layer end       ",70,130);	//
 
 //		SDMA_ScuCst(DMA_SCU_CH2,ss_map2,bgmap_buf,0x800);
 //		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
-
-#if 0
-	for (mx = 0; mx < 8; mx++) 
-	{
-//		for (my = 0; my < 2048; my++) 
-		for (my = 0; my < 16; my++) 
-		{
-			TileIndex = (my * 8) + mx;
-				
-			Offs = TileIndex * 2;
-			Attr = DrvBg2Tilemap[Offs + 1];
-			Code = DrvBg2Tilemap[Offs] & 0x7f;
-			Colour = ((Attr & 0x3c) >> 2) + 0x18;
-			Flip = (Attr & 0xc0) >> 6;
-			xFlip = (Flip >> 0) & 0x01;
-			yFlip = (Flip >> 1) & 0x01;
-/*						
-			y = 32 * mx;
-			x = 32 * my;
-			
-			x -= xScroll;
-			y -= 16;
-			
-			if (x < -31) x += 65536;
-			
-			if (x > 256) continue;
-			if (y > 240) continue;
-
-			if (x > 0 && x < 224 && y > 0 && y < 192) {
-				if (xFlip) {
-					if (yFlip) {
-						Render32x32Tile_FlipXY(pTransDraw, Code, x, y, Colour, 4, 0, DrvBg2Tiles);
-					} else {
-						Render32x32Tile_FlipX(pTransDraw, Code, x, y, Colour, 4, 0, DrvBg2Tiles);
-					}
-				} else {
-					if (yFlip) {
-						Render32x32Tile_FlipY(pTransDraw, Code, x, y, Colour, 4, 0, DrvBg2Tiles);
-					} else {
-						Render32x32Tile(pTransDraw, Code, x, y, Colour, 4, 0, DrvBg2Tiles);
-					}
-				}
-			} else {
-				if (xFlip) {
-					if (yFlip) {
-						Render32x32Tile_FlipXY_Clip(pTransDraw, Code, x, y, Colour, 4, 0, DrvBg2Tiles);
-					} else {
-						Render32x32Tile_FlipX_Clip(pTransDraw, Code, x, y, Colour, 4, 0, DrvBg2Tiles);
-					}
-				} else {
-					if (yFlip) {
-						Render32x32Tile_FlipY_Clip(pTransDraw, Code, x, y, Colour, 4, 0, DrvBg2Tiles);
-					} else {
-						Render32x32Tile_Clip(pTransDraw, Code, x, y, Colour, 4, 0, DrvBg2Tiles);
-					}
-				}
-			}
-*/
-		}
-	}
-#endif
 }
 
 void DrvRenderSprites(INT32 Priority)
@@ -1273,11 +1376,7 @@ void DrvRenderSprites(INT32 Priority)
 	SprSpCmd *ss_spritePtr = &ss_sprite[3];
 
 	for (INT32 Offs = 0x1000 - 32; Offs >= 0; Offs -= 32) {
-		INT32 Attr = DrvSpriteRam[Offs + 1];
-		INT32 Colour = Attr & 0x0f;
-
-		
-
+		UINT32 Attr = DrvSpriteRam[Offs + 1];
 
 /*
 		if (Colour != 0x0a && Colour != 0x0b)
@@ -1286,81 +1385,35 @@ void DrvRenderSprites(INT32 Priority)
 		}
 		else*/
 	//	{
-		INT32 Code = DrvSpriteRam[Offs] + ((Attr & 0xe0) << 3);
-		INT32 sx = DrvSpriteRam[Offs + 3] - ((Attr & 0x10) << 4);
-		INT32 sy = DrvSpriteRam[Offs + 2];
-//			sy -= 16;
-
 		ss_spritePtr->control	= ( JUMP_NEXT | FUNC_NORMALSP);
 		ss_spritePtr->drawMode	= ( ECD_DISABLE | COMPO_REP);
-
-		ss_spritePtr->ax		= sx;
-		ss_spritePtr->ay		= sy;
+		ss_spritePtr->ax		= DrvSpriteRam[Offs + 2]-16;
+		ss_spritePtr->ay		= 240-(DrvSpriteRam[Offs + 3] - ((Attr & 0x10) << 4));
 		ss_spritePtr->charSize	= 0x210;
-		ss_spritePtr->color		= Colour<<4;//Colour<<4;
-		ss_spritePtr->charAddr	= 0x220+(Code<<4);
+		ss_spritePtr->color		= (Attr & 0x0f)<<4;//Colour<<4;
+		ss_spritePtr->charAddr	= 0x220+((DrvSpriteRam[Offs] + ((Attr & 0xe0) << 3))<<4);
 		*ss_spritePtr++;
 	//	}
-
-
-/*		
-		if (Priority) {
-			if (Colour != 0x0a && Colour != 0x0b) {
-				if (sx > 0 && sx < 240 && sy > 0 && sy < 208) {
-					Render16x16Tile_Mask(pTransDraw, Code, sx, sy, Colour + 0x28, 4, 0, 0, DrvSprites);
-				} else {
-					Render16x16Tile_Mask_Clip(pTransDraw, Code, sx, sy, Colour + 0x28, 4, 0, 0, DrvSprites);
-				}
-			}
-		} else {
-			if (Colour == 0x0a || Colour == 0x0b) {
-				if (sx > 0 && sx < 240 && sy > 0 && sy < 208) {
-					Render16x16Tile_Mask(pTransDraw, Code, sx, sy, Colour + 0x28, 4, 0, 0, DrvSprites);
-				} else {
-					Render16x16Tile_Mask_Clip(pTransDraw, Code, sx, sy, Colour + 0x28, 4, 0, 0, DrvSprites);
-				}
-			}
-		
-		}
-*/
-
-
-
-
 	}
 	
 }
 
 static void DrvRenderCharLayer()
 {
-
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvRenderCharLayer      ",70,130);
-
-	INT32 mx, my, Attr, Code, Colour,/* x, y,*/ TileIndex = 0;
+	INT32 mx, my, Attr, Code, /*Colour, x, y,*/ TileIndex = 0;
 
 	for (my = 0; my < 32; my++) {
 		for (mx = 0; mx < 32; mx++) {
 			Attr = DrvPaletteRam[TileIndex];
 			Code = DrvVideoRam[TileIndex] + ((Attr & 0xe0) << 3);
-			Colour = Attr & 0x1f;
-			
-//			x = 8 * mx;
-//			y = 8 * my;
-			
-//			y -= 16;
-/*			
-			if (x > 0 && x < 248 && y > 0 && y < 216) {
-				Render8x8Tile_Mask(pTransDraw, Code, x, y, Colour, 2, 0, 0, DrvChars);
-			} else {
-				Render8x8Tile_Mask_Clip(pTransDraw, Code, x, y, Colour, 2, 0, 0, DrvChars);
-			}
-*/
-			unsigned short x = (mx|(my<<6))<<1; // map_offset_lut_fg[TileIndex]; //(mx|(my<<6));
-//			unsigned int Flip = (Attr & 0x30) << 6;
+//			Colour = Attr & 0x1f;
+			unsigned short x = ((31-((mx) & 0x1f))<<6|(my)); //<<1; // map_offset_lut_fg[TileIndex]; //(mx|(my<<6));
 
-			ss_map[x]   = Colour; //Colour << 12 | Flip | Code;
-			ss_map[x+1] = Code; //Colour << 12 | Flip | Code;
-
+//			ss_map[x]   = Colour;
+//			ss_map[x+1] = Code;
+// palette > 16 pas utilisees
+// pn12bits 0fff tile et 16 palettes
+			ss_map[x] = (Attr & 0x0f) <<12 | Code;
 			TileIndex++;
 		}
 	}
@@ -1494,11 +1547,7 @@ INT32 DrvFrame()
 		ZetClose();
 	}
 */	
-//	if (pBurnDraw) 
-	{
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvDraw      ",70,130);
-		DrvDraw();
-	}
+	DrvDraw();
 
 	return 0;
 }
@@ -1507,12 +1556,11 @@ INT32 DrvFrame()
 {
 	for (unsigned int c = 0; c < num; c++) 
 	{
-		unsigned char old_tile[512];
-		unsigned char reorder_tile[512];
+		unsigned char tile[512];
 
 		UINT8 *dpM = pDest + (c * 512);
-		memcpyl(old_tile,dpM,512);
-		UINT8 *dpO = &old_tile[0];
+		memcpyl(tile,dpM,512);
+		UINT8 *dpO = &tile[0];
 
 		for (unsigned int l=0;l<4;l++) // 4 par 4
 		{
@@ -1532,19 +1580,50 @@ INT32 DrvFrame()
 		}
 // reordering
 		dpM = pDest + (c * 512);
-		memcpyl(reorder_tile,dpM,512);
-// 0&1 corrects
-		memcpy(&dpM[2*32],&reorder_tile[4*32],32);
-		memcpy(&dpM[3*32],&reorder_tile[5*32],32);
+		memcpyl(tile,dpM,512);
 
-		memcpy(&dpM[4*32],&reorder_tile[2*32],32);
-		memcpy(&dpM[5*32],&reorder_tile[3*32],32);
+		memcpy(&dpM[0*32],&tile[3*32],32);// okkkkk
+		memcpy(&dpM[1*32],&tile[7*32],32);
+		memcpy(&dpM[2*32],&tile[2*32],32);//okkkkk
+		memcpy(&dpM[3*32],&tile[6*32],32);
 
-		memcpy(&dpM[10*32],&reorder_tile[12*32],32);
-		memcpy(&dpM[11*32],&reorder_tile[13*32],32);
+		memcpy(&dpM[4*32],&tile[11*32],32);
+		memcpy(&dpM[5*32],&tile[15*32],32);
+		memcpy(&dpM[6*32],&tile[10*32],32);
+		memcpy(&dpM[7*32],&tile[14*32],32);			
 
-		memcpy(&dpM[12*32],&reorder_tile[10*32],32);
-		memcpy(&dpM[13*32],&reorder_tile[11*32],32);
+		memcpy(&dpM[8*32],&tile[1*32],32);
+		memcpy(&dpM[9*32],&tile[5*32],32);
+		memcpy(&dpM[10*32],&tile[0*32],32);
+		memcpy(&dpM[11*32],&tile[4*32],32);
+
+		memcpy(&dpM[12*32],&tile[9*32],32);
+		memcpy(&dpM[13*32],&tile[13*32],32);
+		memcpy(&dpM[14*32],&tile[8*32],32);
+		memcpy(&dpM[15*32],&tile[12*32],32);
+
+		rotate_tile(16,1,dpM);
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void rotate_tile16x16(unsigned int size, unsigned char *target)
+{
+	unsigned int i,j,k; //,l=0;
+	unsigned char temp[16][16];
+
+	for (k=0;k<size;k++)
+	{
+		for(i=0;i<16;i++)
+			for(j=0;j<16;j+=2)
+			{
+				temp[i][j]=target[(i*8)+(j/2)]>>4;
+				temp[i][j+1]=target[(i*8)+(j/2)]&0x0f;
+			}
+
+		for(i=0;i<16;i++)
+			for(j=0;j<16;j+=2)
+				target[((15-i)*8)+(j)/2]    = (temp[j][i]<<4)|(temp[j+1][i]&0xf);
+		target+=128;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

@@ -54,7 +54,8 @@ UINT8 DrvReset         = 0;
 
 UINT8 *CZ80Context			= NULL;
 UINT16 *map_offset_lut_fg	= NULL;
-UINT16 *bgmap_lut           = NULL;
+UINT16 *bgmap_lut1          = NULL;
+UINT16 *bgmap_lut2          = NULL;
 UINT32 *bgmap_buf			= NULL;
 UINT8 *Mem                  = NULL;
 UINT8 *MemEnd               = NULL;

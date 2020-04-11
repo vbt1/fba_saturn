@@ -782,34 +782,20 @@ void rotate_tile16x16(unsigned int size, unsigned char *target)
 {
 	unsigned int i,j,k; //,l=0;
 	unsigned char temp[16][16];
-	unsigned char rot[16][16];
 
 	for (k=0;k<size;k++)
 	{
 		for(i=0;i<16;i++)
-			for(j=0;j<8;j++)
+			for(j=0;j<16;j+=2)
 			{
-				temp[i][j<<1]=target[(i*8)+j]>>4;
-				temp[i][(j<<1)+1]=target[(i*8)+j]&0x0f;
+				temp[i][j]=target[(i*8)+(j/2)]>>4;
+				temp[i][j+1]=target[(i*8)+(j/2)]&0x0f;
 			}
 
-		memset(target,0,128);
-		
 		for(i=0;i<16;i++)
-			for(j=0;j<16;j++)
-			{
-//				if(flip)
-				 rot[15-i][j]= temp[j][i] ;
-//				else
-//				 rot[i][15-j]= temp[j][i] ;
-				if(j%2)
-					target[(i*8)+j/2]    = (rot[i][j]<<4)|(rot[i][(j)+1]&0xf);
-			}
-
-/*		for(i=0;i<16;i++)
-			for(j=0;j<8;j++)
-					target[(i*8)+j]    = (rot[i][j*2]<<4)|(rot[i][(j*2)+1]&0xf);
-*/		target+=128;
+			for(j=0;j<16;j+=2)
+				target[((15-i)*8)+(j)/2]    = (temp[j][i]<<4)|(temp[j+1][i]&0xf);
+		target+=128;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

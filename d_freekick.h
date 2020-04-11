@@ -17,7 +17,7 @@
 /*static*/ INT32 DrvFrame();
 /*static*/ inline void DrvDraw();
 /*static*/ void DrvPaletteInit();
-/*static*/ void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target);
+/*static*/ void rotate_tile16x16(unsigned int size,unsigned char *target);
 
 /*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 /*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};

@@ -523,7 +523,7 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	if(!countrunbmode && !pbillrdmode)
 	{
 		rotate_tile(0x800,1,DrvGfxROM0);
-		rotate_tile16x16(0x200,1,DrvGfxROM1);
+		rotate_tile16x16(0x200,DrvGfxROM1);
 	}
 }
 
@@ -773,37 +773,25 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void rotate_tile16x16(unsigned int size,unsigned char flip, unsigned char *target)
+void rotate_tile16x16(unsigned int size, unsigned char *target)
 {
-	unsigned int i,j,l=0;
+	unsigned int i,j,k; //,l=0;
 	unsigned char temp[16][16];
-	unsigned char rot[16][16];
 
-	for (unsigned int k=0;k<size;k++)
+	for (k=0;k<size;k++)
 	{
 		for(i=0;i<16;i++)
-			for(j=0;j<8;j++)
+			for(j=0;j<16;j+=2)
 			{
-				temp[i][j<<1]=target[l+(i*8)+j]>>4;
-				temp[i][(j<<1)+1]=target[l+(i*8)+j]&0x0f;
-			}
-
-		memset(&target[l],0,128);
-		
-		for(i=0;i<16;i++)
-			for(j=0;j<16;j++)
-			{
-				if(flip)
-				 rot[15-i][j]= temp[j][i] ;
-				else
-				 rot[i][15-j]= temp[j][i] ;
+				temp[i][j]=target[(i*8)+(j/2)]>>4;
+				temp[i][j+1]=target[(i*8)+(j/2)]&0x0f;
 			}
 
 		for(i=0;i<16;i++)
-			for(j=0;j<8;j++)
-					target[l+(i*8)+j]    = (rot[i][j*2]<<4)|(rot[i][(j*2)+1]&0xf);
-		l+=128;
-	}	
+			for(j=0;j<16;j+=2)
+				target[((15-i)*8)+(j)/2]    = (temp[j][i]<<4)|(temp[j+1][i]&0xf);
+		target+=128;
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initLayers()
