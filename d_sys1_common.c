@@ -383,17 +383,16 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 {
 	if(RamStart1[a]!=d)
 	{
-		int Offs;
 		RamStart1[a] = d;
 		a&=~1;
 
-		int Code;//, Colour;
-		Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
+		unsigned int Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		unsigned int x = map_offset_lut[a&0x7ff];
-		ss_map2[x]   = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
-		ss_map2[x+1] = Code & (System1NumTiles-1);
+		UINT16 *map = &ss_map2[x];		
+		map[0] = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
+		map[1] = Code & (System1NumTiles-1);
 	}
 }
 
@@ -506,11 +505,11 @@ void initLayers()
 //	scfg.dispenbl      = ON;
 //	scfg.charsize      = SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
 //	scfg.pnamesize     = SCL_PN2WORD;
-	scfg.platesize     = SCL_PL_SIZE_2X2; // ou 2X2 ?
+	scfg.platesize     = SCL_PL_SIZE_2X1; // ou 2X2 ?
 //	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 //	scfg.datatype      = SCL_CELL;
 	scfg.plate_addr[0] = (Uint32)ss_map;
-//	scfg.plate_addr[1] = (Uint32)ss_map+0x1000;
+	scfg.plate_addr[1] = (Uint32)ss_map+0x1000;
 //	scfg.plate_addr[2] = (Uint32)ss_map+0x1000;
 //	scfg.plate_addr[3] = (Uint32)ss_map+0x1000;
 //	scfg.plate_addr[1] = 0x00;
@@ -783,7 +782,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	memset((unsigned char *)spriteCache,0xFF,0x80000);
 
 	memset(System1Sprites, 0x00, System1SpriteRomSize);
-
+	
 	// Load Sprite roms
 	RomOffset += nTileRomNum;
 	for (i = 0; i < nSpriteRomNum; i++) 
@@ -798,8 +797,6 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1PromGreen, 1 + RomOffset, 1);
 		nRet = BurnLoadRom(System1PromBlue, 2 + RomOffset, 1);
 	}
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit2                     ",20,100);
-
 	// Setup the Z80 emulation
 // remettre 1 plus tard quand choplifter sera corrigé
 	CZetInit2(2,CZ80Context);
@@ -979,25 +976,28 @@ Graphics Rendering
 	int xend=x+values[2];
 	int yend=y+values[3];
 	int Num=values[4];
-	int y256;
+//	int y256;
+	if(x < 0) x = 0;
+	if(y < 0) y = 0;
 
 	for (;y<yend ; y++)
 	{
-		if (y < 0 || y > 255) continue;
+		if (y > 255) continue;
 
 		yr = (((y - System1BgScrollY) & 0xff) >>3)<<5;
-		y256 = y<<8;
+//		y256 = y<<8;
+		UINT8 *sprScreenMap= &SpriteOnScreenMap[(y<<8)+x];
 
 		for(x=values[0];x<xend;x++)
 		{
-			if (x < 0 || x > 255) continue;
+			if (x > 255) continue;
 
-			if (SpriteOnScreenMap[y256 + x] != 255) 
+			if (*sprScreenMap != 255) 
 			{
-				SpriteOnScreen = SpriteOnScreenMap[y256 + x];
+				SpriteOnScreen = *sprScreenMap;
 				System1SprCollisionRam[SpriteOnScreen + (32 * Num)] = 0xff;
 			}
-			SpriteOnScreenMap[y256 + x] = Num;
+			*sprScreenMap++ = Num;
 
 			xr = ((x - System1BgScrollX) & 0xff) / 8;
  // vbt à remettre !!!!
@@ -1033,29 +1033,27 @@ Graphics Rendering
 void renderSpriteCache(int *values)
 //(int Src,unsigned int Height,INT16 Skip,unsigned int Width, int Bank)
 {
-//	Src,Height,Skip,Width, Bank,nextSprite
 	int Src = values[0];
 	UINT32 Height = values[1];
-	INT16 Skip = values[2];
+	INT32 Skip = values[2];
 	UINT32 Width  = values[3];
-	int Bank = values[4];
-	UINT16 aNextSprite = values[5];
 	UINT8 *ss_vram   = (UINT8 *)SS_SPRAM;
-	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(aNextSprite<<3)];
+	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(values[5]<<3)];
+	UINT8 *spr = &System1Sprites[values[4]];
 
 	for (UINT32 Row = 0; Row < Height; Row++) 
 	{
-		int x=0, /*y,*/ Src2;
+		int Src2;
 		Src = Src2 = Src + Skip;
 		unsigned int n = Row*Width;
-//			int SrcMask = Src & 0x8000;
+
+		UINT8 Colour1, Colour2, Data;		
 // remarque martin faire 2 boucles while
 		if(Src & 0x8000)
 		{
 			while(1) 
 			{
-				UINT8 Colour1, Colour2, Data;
-				Data = System1Sprites[Bank + (Src2 & 0x7fff)];
+				Data = spr[(Src2 & 0x7fff)];
 
 				Src2--;
 				Colour1 = Data & 0x0f;
@@ -1065,20 +1063,17 @@ void renderSpriteCache(int *values)
 
 				if (Colour2 == 0x0f) 
 				{
-					spriteVRam[n+x]=(Colour1<<4);// | 0x0;
+					spriteVRam[n]=(Colour1<<4);// | 0x0;
 					break;
 				}
-				spriteVRam[n+x]=Colour2 | (Colour1<<4);
-				x++;
-//					if(x>=abs(Skip)) break;
+				spriteVRam[n++]=Colour2 | (Colour1<<4);
 			}
 		}
 		else
 		{
 			while(1) 
 			{
-				UINT8 Colour1, Colour2, Data;
-				Data = System1Sprites[Bank + (Src2 & 0x7fff)];
+				Data = spr[(Src2 & 0x7fff)];
 
 				Src2++;
 				Colour1 = Data >> 4;
@@ -1088,69 +1083,45 @@ void renderSpriteCache(int *values)
 
 				if (Colour2 == 0x0f) 
 				{
-//					spriteVRam[n+x]=(Colour1<<4);// | 0x0;
-					spriteVRam[n+x]=Data & 0xf0;// | 0x0;
+					spriteVRam[n]=Data & 0xf0;// | 0x0;
 					break;
 				}
-				spriteVRam[n+x]=Data ;//Colour2 | (Colour1<<4);
-				x++;
-//					if(x>=abs(Skip)) break;
+				spriteVRam[n++]=Data ;//Colour2 | (Colour1<<4);
 			}
 		}
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*void reset_sprite_colli(unsigned int Num)
-{
-	if(sprites_collision[Num].width>0)// && colli[Num][3]>0)
- 	{
- 		for (unsigned int i=sprites_collision[Num].y; i<=sprites_collision[Num].yend; i++)
- 		{
-			memset((void *)SpriteOnScreenMap[(i<<8)+sprites_collision[Num].x],0xff,sprites_collision[Num].width);
-		}		 
- 	}
-}*/
-//-------------------------------------------------------------------------------------------------------------------------------------
 void System1DrawSprites()
 {
-	unsigned int i;//, SpriteBottomY, SpriteTopY;
 	UINT8 *SpriteBase;
-//	memset(SpriteOnScreenMap, 255, 256 * 256);
 	if(CollisionFunction)
 	{
 		memset4_fast(SpriteOnScreenMap, 255, 256 * 256);
-/*		for (i = 0; i < 32; ++i) 
-		{
-			reset_sprite_colli(i);
-		}
-*/
 	}
+	
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];	
+	
 // VBT 25/06/2017 : coorection dink pour pitfall 2
 	if (System1SpriteRam[0] == 0xff)
 	{
-		for (i = 3; i < 35; ++i) 	ss_sprite[i].ax = ss_sprite[i].ay = ss_sprite[i].charSize = ss_sprite[i].charAddr = 0;
+		for (UINT32 i = 0; i < 32; ++i)
+		{
+			ss_spritePtr[i].ax = ss_spritePtr[i].ay = ss_spritePtr[i].charSize = ss_spritePtr[i].charAddr = 0;
+		}
 		return; // 0xff in first byte of spriteram is sprite-disable mode
 	}
 
-	for (i = 0; i < 32; ++i) 
+	for (UINT32 i = 0; i < 32; ++i) 
 	{
 		SpriteBase = System1SpriteRam + (i << 4);
 		if (SpriteBase[1] && (SpriteBase[1] - SpriteBase[0] > 0))
 		{	
-			unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
-			/*unsigned int Bank = 
-				(
-				((SpriteBase[3] & 0x80) >> 7) | 
-				((SpriteBase[3] & 0x40) >> 5) | 
-				((SpriteBase[3] & 0x20) >> 3)
-				) <<15;
-			*/
-			unsigned int Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
-			Bank &= (System1SpriteRomSize - 1);
+			UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
+			UINT32 Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
+			Bank &= System1SpriteRomSize -1;
 			UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
 			unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
-
-//			DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
 
 			if (spriteCache[addr]!=0xFFFF)
 				DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
@@ -1159,10 +1130,8 @@ void System1DrawSprites()
 		}
 		else
 		{
-			ss_sprite[i+3].ax = ss_sprite[i+3].ay = ss_sprite[i+3].charSize = ss_sprite[i+3].charAddr = 0;
-#if 1
+			ss_spritePtr[i].ax = ss_spritePtr[i].ay = ss_spritePtr[i].charSize = ss_spritePtr[i].charAddr = 0;
 			sprites_collision[i].width=0;
-#endif
 		}
 	}
 }
@@ -1183,12 +1152,7 @@ Frame functions
 ===============================================================================================*/
 int System1Frame()
 {
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1Frame start                     ",20,100);
-
-//	if (System1Reset) System1DoReset();
 	MakeInputsFunction();
-// vbt : à tester pour wbml
-//	CZetNewFrame();
 	unsigned int nCyclesDone[2] = {0,0};
 	
 	for (UINT32 i = 0; i < nInterleave; i++) {
@@ -1197,8 +1161,6 @@ int System1Frame()
 #ifdef CZ80
 		CZetOpen(0);
 #endif
-//		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-//		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		INT32 nCyclesSegment = cpu_lut[i] - nCyclesDone[0];
 #ifdef CZ80
 		nCyclesDone[0] += CZetRun(nCyclesSegment);
@@ -1208,8 +1170,6 @@ int System1Frame()
 		if (i == 9) CZetRaiseIrq(0);
 		CZetClose();
 #endif
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"SPR_RunSlaveSH                     ",20,100);
-
 		SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
 //vbt à précalculer !!!
 //		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
@@ -1227,11 +1187,9 @@ int System1Frame()
 			z80_emulate(1);
 		}
 #endif
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"SPR_WaitEndSlaveSH                     ",20,100);
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
 	}
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1Render                     ",20,100);
 
 	System1Render();
 
@@ -1241,7 +1199,6 @@ int System1Frame()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1Frame end                     ",20,100);
 
 	SPR_WaitEndSlaveSH();
 //	sc_check();
@@ -1296,28 +1253,3 @@ int System1Frame()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-#if 0
-#define INT_DIGITS 19
-char *itoa(i)
-     int i;
-{
-  /* Room for INT_DIGITS digits, - and '\0' */
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			/* i < 0 */
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}
-#endif

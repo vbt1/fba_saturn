@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//int titi=0;
 /******************************/
 /* Compiler dependant defines */
 /******************************/
@@ -316,38 +315,6 @@ void Cz80_Init(cz80_struc *CPU)
 /*--------------------------------------------------------
 	CPUŽÀs
 --------------------------------------------------------*/
-/*
-#define INT_DIGITS 19
-char *itoa2(i)
-     int i;
-{
-  // Room for INT_DIGITS digits, - and '\0' 
-  static char buf[INT_DIGITS + 2];
-  char *p = buf + INT_DIGITS + 1;	// points to terminating '\0' 
-  if (i >= 0) {
-    do {
-      *--p = '0' + (i % 10);
-      i /= 10;
-    } while (i != 0);
-    return p;
-  }
-  else {			// i < 0 
-    do {
-      *--p = '0' - (i % 10);
-      i /= 10;
-    } while (i != 0);
-    *--p = '-';
-  }
-  return p;
-}
-*/
-
-
-
-//int vbt = 0;
-//int vbt2=0;
-//	   unsigned char toto[150];
-//	   unsigned char *titi;
 INT32 Cz80_Exec(cz80_struc* CPU)
 {
 
@@ -370,73 +337,14 @@ INT32 Cz80_Exec(cz80_struc* CPU)
 // vbt : ori
     PC = CPU->PC;
    PCDiff = (UINT32)CPU->Fetch[(zRealPC) >> CZ80_FETCH_SFT] - (UINT32)CPU->FetchData[(zRealPC) >> CZ80_FETCH_SFT];
-
-/*
-	titi = &toto[0];
- 
-if(vbt >=0x2CED00 && vbt<=0x2CED00+200)
-	{
-FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"pc                         ",4,vbt2);
-
-	}
-*/	
+	
 	goto Cz80_Try_Int;
 
 Cz80_Exec:
     {
         union16 *data = pzHL;
         Opcode = READ_OP();
-/*
-//if(vbt >=0x2CED0) // && vbt<=0x2CED00+200)
-	if(vbt >=4000000) // && vbt<=0x2CED00+200)
-	{
-		vbt2+=10;
-			titi=itoa2(zRealPC);
-		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,4,vbt2);	
-		titi=itoa2(Opcode);
-		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)"         ",34,vbt2);
-		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,34,vbt2);
-		titi=itoa2(vbt);
-		FNT_Print256_2bpp((volatile unsigned char *)0x25e20000,(unsigned char *)titi,64,vbt2);
-		if((zRealPC>32110 && zRealPC!=62439 && zRealPC!=64923)  ||vbt>850000)
-		{
-//			while(1);
-		}
 
-		if (vbt2>200)
-		{
-			vbt2=0;
-		}
-
-	}
-
-	vbt++;
-*/
-// 	   unsigned int *test=(unsigned int*)0x00200000;
-/*
-	   sprintf(test,"op%08x v%04d",Opcode,vbt++);
-	   test+=16;
- */
-
-
-
-// char toto[100];        
-// sprintf(toto,"o%02x %04x %04x %04x %04x %04x",Opcode,CPU->AF,CPU->BC,CPU->DE.W,CPU->HL.W,CPU->PC - CPU->BasePC);//Cz80_struc.HL.W);
-
-/*		
-char toto[100];        
-sprintf(toto,"o%02x %04x %04x %04x %04x %04x",Opcode,CPU->AF,CPU->BC,CPU->DE.W,CPU->HL.W,CPU->PC - CPU->BasePC);//Cz80_struc.HL.W);
-
-				FNT_Print256_2bpp((volatile UINT8 *)0x25e20000,(UINT8 *)toto,1,30+titi*10);
-//while(1);
-				titi++;
-
-if(titi>=15)
-	titi=0;
-	*/
-/*
-while(1);
-*/
         #include "cz80_op.c"
         
     }

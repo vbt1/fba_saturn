@@ -78,7 +78,7 @@ int ovlInit(char *szShortName)
     if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvTeddybb,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvWbdeluxe.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvWbdeluxe,sizeof(struct BurnDriver));
 //    if (strcmp(nBurnDrvFourdwarrio.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvFourdwarrio,sizeof(struct BurnDriver));
-   
+
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
@@ -213,15 +213,14 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	renderSpriteCache(values);
 	spriteCache[addr]=nextSprite;
-	nextSprite = nextSprite+(Width*Height)/8;
-	
+
 	unsigned int delta	= (Num+3);
 
-	ss_sprite[delta].ax				= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
-	ss_sprite[delta].ay				= SpriteBase[0] + 1;
+	ss_sprite[delta].ax			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
+	ss_sprite[delta].ay			= SpriteBase[0] + 1;
 	ss_sprite[delta].charSize	= (Width<<6) + Height;
-	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
-	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
+	ss_sprite[delta].color		= COLADDR_SPR | ((Num)<<2);
+	ss_sprite[delta].charAddr	= 0x220+nextSprite;
 
 	if(CollisionFunction)
 	{
@@ -229,6 +228,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 //		fillSpriteCollision(Num,values2);
 		updateCollisions(values2);
 	}
+	nextSprite+=(Width*Height)/8;
 }
 
 void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)

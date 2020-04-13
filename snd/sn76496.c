@@ -61,7 +61,7 @@ void SN76496Update(int Num, short* pSoundBuf, int Length)
 	while (Length > 0)
 	{
 		int Vol[4];
-		unsigned int Out;
+//		unsigned int Out;
 		int Left;
 
 		/* vol[] keeps track of how long each square wave stays */
@@ -147,34 +147,19 @@ void SN76496Update(int Num, short* pSoundBuf, int Length)
 
 			Left -= NextEvent;
 		} while (Left > 0);
-//		Out = Vol[0] * R->Volume[0] + Vol[1] * R->Volume[1] +
-//				Vol[2] * R->Volume[2] + Vol[3] * R->Volume[3];
-		Out = Vol[0] * R->Volume[0] + Vol[1] * R->Volume[1] +
-				Vol[2] * R->Volume[2] + Vol[3] * R->Volume[3];
+		unsigned int Out = Vol[0] * R->Volume[0] + Vol[1] * R->Volume[1] + Vol[2] * R->Volume[2] + Vol[3] * R->Volume[3];
 		if (Out > MAX_OUTPUT * STEP) Out = MAX_OUTPUT * STEP;
 
 		Out /= STEP;
 		
 		if (R->bSignalAdd) {
-//			Temp = pSoundBuf[0] + Out;
 			int Temp = pSoundBuf[0] + Out;
 			if (Temp > 32767) Temp = 32767;
 			if (Temp < -32768) Temp = -32768;
-//			pSoundBuf[0] = Temp;
-//			pSoundBuf[0] = Temp;
 			*pSoundBuf++ = Temp;			
-//			Temp = pSoundBuf[1] + Out;
-//			if (Temp > 32767) Temp = 32767;
-//			if (Temp < -32768) Temp = -32768;
-//			pSoundBuf[1] = Temp;
 		} else {
 			*pSoundBuf++ = Out;
-//			pSoundBuf[0] = Out;
-//			pSoundBuf[1] = Out;
 		}
-//		pSoundBuf += 2;
-//		pSoundBuf++;
-
 		Length--;
 	}
 }

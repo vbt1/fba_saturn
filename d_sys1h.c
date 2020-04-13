@@ -189,8 +189,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	renderSpriteCache(values);
 	spriteCache[addr]=nextSprite;
-	nextSprite = nextSprite+(Width*Height)/8;
-
+	
 	unsigned int delta	= (Num+3);
 
 	ss_sprite[delta].ay			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2-8;
@@ -222,12 +221,13 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	ss_sprite[delta].dx			= ss_sprite[delta].cx;
 
 	ss_sprite[delta].charSize	= (Width<<6) + Height;
-	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
-	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
+	ss_sprite[delta].color		= COLADDR_SPR | ((Num)<<2);
+	ss_sprite[delta].charAddr	= 0x220+nextSprite;
 
  	int values2[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
 //	SPR_WaitEndSlaveSH();
 	updateCollisions(values2);
+	nextSprite += (Width*Height)/8;
 //	SPR_RunSlaveSH((PARA_RTN*)updateCollisions,&values2);
 }
 
