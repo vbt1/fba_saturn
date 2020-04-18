@@ -58,16 +58,15 @@ int ovlInit(char *szShortName)
 	ss_regd = (SclDataset *)SS_REGD;
 }
 
-/*static*/ void palette_write(INT32 offset)
+/*static*/void palette_write(UINT32 offset)
 {
-//	UINT8 r,g,b;
 	UINT16 data = (DrvPalRAM[offset]) | (DrvPalRAM[offset | 0x400] << 8);
 
 	if(offset >=0x300)
 	{
 // fg	 offset 300
 		unsigned short position = remap4to16_lut[offset&0xff];
-		colBgAddr2[position] = cram_lut[data];//RGB(r>>3, g>>3, b>>3);
+		colBgAddr2[position] = cram_lut[data];
 	}
 	else
 	{
@@ -75,7 +74,7 @@ int ovlInit(char *szShortName)
 // sprites 0x200-0x2ff
 		unsigned short position = remap16_lut[offset];
 
-		DrvPalette[position] = cram_lut[data];//RGB(r>>3, g>>3, b>>3);
+		DrvPalette[position] = cram_lut[data];
 	}
 }
 
@@ -578,8 +577,6 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	memcpyl (tmp, DrvGfxROM1, 0x40000);
 	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane + 0, XOffs, YOffs, 0x200, tmp, DrvGfxROM1);
 
-//	tile16x16toSaturn(0,0x0400, DrvGfxROM1);
-//	tile16x16toSaturn(1,0x0400, DrvGfxROM1+0x20000);
 	tile16x16toSaturn(1,0x0800, DrvGfxROM1);
 
 //sprites
@@ -635,7 +632,7 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	}
 	PCM_MeStop(pcm);
 
-	int fid				= GFS_NameToId((Sint8 *)"SFX.ROM");
+	int fid			= GFS_NameToId((Sint8 *)"SFX.ROM");
 	long fileSize	= GetFileSize(fid);
 
 	GFS_Load(fid, 0, (UINT8*)0x00200000, fileSize);
@@ -725,13 +722,11 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 
 	CZ80Context = DrvZ80ROM0 = DrvZ80ROM1 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
 	DrvZ80RAM0	 = DrvZ80RAM1 = DrvPalRAM = DrvTxRAM = DrvBgRAM = DrvSprRAM = DrvSprBuf = NULL;
-/*	DrvScreenLayout =*/ DrvBgEnable = DrvFgEnable = DrvSprEnable = DrvVidBank = DrvRomBank	= NULL;
+	DrvBgEnable = DrvFgEnable = DrvSprEnable = DrvVidBank = DrvRomBank	= NULL;
 	DrvPalette = DrvScrollx	= DrvScrolly = NULL;
-	soundlatch = flipscreen /*= coin_lockout*/ = NULL;
+	soundlatch = flipscreen = NULL;
 	remap16_lut = remap4to16_lut	= cram_lut = fg_map_lut = bg_map_lut2x1 = bg_map_lut2x2 = NULL;
 	MemEnd = AllRam = RamEnd = NULL;
-//	watchdog = 0;
-//	coin_lockout = 0;
 
 	free (AllMem);
 	AllMem = NULL;
@@ -877,17 +872,16 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 		else
 		{
 			UINT32 code = DrvSprBuf[offs] | ((attr & 0xe0) << 3);
-			UINT32 color = attr & 0x07;
-			UINT32 flipx = (attr & 0x08) << 1;
+			UINT32 flipx = ((attr & 0x08) << 1);
 
-			ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP) | flipx;
+			ss_sprite[delta].control	= ( JUMP_NEXT | FUNC_NORMALSP) | flipx;
 			ss_sprite[delta].drawMode	= ( ECD_DISABLE | COMPO_REP);
 
 			ss_sprite[delta].ax			= sx;
 			ss_sprite[delta].ay			= sy;
-			ss_sprite[delta].charSize		= 0x210;
-			ss_sprite[delta].color			    = color<<4;//Colour<<4;
-			ss_sprite[delta].charAddr		= 0x220+(code<<4);
+			ss_sprite[delta].charSize	= 0x210;
+			ss_sprite[delta].color		= (attr & 0x07)<<4;
+			ss_sprite[delta].charAddr	= 0x220+(code<<4);
 		}
 		delta++;
 	}
@@ -1111,51 +1105,56 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	}
 //-------------------------------------------------------------------------------
 	UINT32 sx, sy;
+	UINT16* bm_2x1 = (UINT16*)bg_map_lut2x1;
+	UINT16* bm_2x2 = (UINT16*)bg_map_lut2x2;
 
 	for (UINT32 offs = 0; offs < 0x100; offs++)
 	{
 		sx = (offs & 0x0f);
 		sy = ((offs) >> 4)<<5;
-		bg_map_lut2x1[offs+0x0000] = bg_map_lut2x2[offs+0x0000] = (sx+0x0000)|sy;
-		bg_map_lut2x1[offs+0x0100] = bg_map_lut2x2[offs+0x0100] = (sx+0x0010)|sy;
-		bg_map_lut2x1[offs+0x0200] = bg_map_lut2x2[offs+0x0200] = (sx+0x0400)|sy;
-		bg_map_lut2x1[offs+0x0300] = bg_map_lut2x2[offs+0x0300] = (sx+0x0410)|sy;
+		bm_2x1[0x0000] = bm_2x2[0x0000] = (sx+0x0000)|sy;
+		bm_2x1[0x0100] = bm_2x2[0x0100] = (sx+0x0010)|sy;
+		bm_2x1[0x0200] = bm_2x2[0x0200] = (sx+0x0400)|sy;
+		bm_2x1[0x0300] = bm_2x2[0x0300] = (sx+0x0410)|sy;
 
-		bg_map_lut2x1[offs+0x1000] = bg_map_lut2x2[offs+0x0800] = (sx+0x0800)|sy;
-		bg_map_lut2x1[offs+0x1100] = bg_map_lut2x2[offs+0x0900] = (sx+0x0810)|sy;
-		bg_map_lut2x1[offs+0x1200] = bg_map_lut2x2[offs+0x0A00] = (sx+0x0C00)|sy;
-		bg_map_lut2x1[offs+0x1300] = bg_map_lut2x2[offs+0x0B00] = (sx+0x0C10)|sy;
+		bm_2x1[0x1000] = bm_2x2[0x0800] = (sx+0x0800)|sy;
+		bm_2x1[0x1100] = bm_2x2[0x0900] = (sx+0x0810)|sy;
+		bm_2x1[0x1200] = bm_2x2[0x0A00] = (sx+0x0C00)|sy;
+		bm_2x1[0x1300] = bm_2x2[0x0B00] = (sx+0x0C10)|sy;
 		
-		bg_map_lut2x1[offs+0x0400] = bg_map_lut2x2[offs+0x1000] = (sx+0x1000)|sy;
-		bg_map_lut2x1[offs+0x0500] = bg_map_lut2x2[offs+0x1100] = (sx+0x1010)|sy;
-		bg_map_lut2x1[offs+0x0600] = bg_map_lut2x2[offs+0x1200] = (sx+0x1400)|sy;
-		bg_map_lut2x1[offs+0x0700] = bg_map_lut2x2[offs+0x1300] = (sx+0x1410)|sy;
+		bm_2x1[0x0400] = bm_2x2[0x1000] = (sx+0x1000)|sy;
+		bm_2x1[0x0500] = bm_2x2[0x1100] = (sx+0x1010)|sy;
+		bm_2x1[0x0600] = bm_2x2[0x1200] = (sx+0x1400)|sy;
+		bm_2x1[0x0700] = bm_2x2[0x1300] = (sx+0x1410)|sy;
 
-		bg_map_lut2x1[offs+0x1400] = bg_map_lut2x2[offs+0x1800] = (sx+0x1800)|sy;
-		bg_map_lut2x1[offs+0x1500] = bg_map_lut2x2[offs+0x1900] = (sx+0x1810)|sy;
-		bg_map_lut2x1[offs+0x1600] = bg_map_lut2x2[offs+0x1A00] = (sx+0x1C00)|sy;
-		bg_map_lut2x1[offs+0x1700] = bg_map_lut2x2[offs+0x1B00] = (sx+0x1C10)|sy;
+		bm_2x1[0x1400] = bm_2x2[0x1800] = (sx+0x1800)|sy;
+		bm_2x1[0x1500] = bm_2x2[0x1900] = (sx+0x1810)|sy;
+		bm_2x1[0x1600] = bm_2x2[0x1A00] = (sx+0x1C00)|sy;
+		bm_2x1[0x1700] = bm_2x2[0x1B00] = (sx+0x1C10)|sy;
 		
 		sy = ((offs+0x100) >> 4)<<5;
-		bg_map_lut2x1[offs+0x0800] = bg_map_lut2x2[offs+0x0400] = (sx+0x0000)|sy;
-		bg_map_lut2x1[offs+0x0900] = bg_map_lut2x2[offs+0x0500] = (sx+0x0010)|sy;
-		bg_map_lut2x1[offs+0x0A00] = bg_map_lut2x2[offs+0x0600] = (sx+0x0400)|sy;
-		bg_map_lut2x1[offs+0x0B00] = bg_map_lut2x2[offs+0x0700] = (sx+0x0410)|sy;
+		bm_2x1[0x0800] = bm_2x2[0x0400] = (sx+0x0000)|sy;
+		bm_2x1[0x0900] = bm_2x2[0x0500] = (sx+0x0010)|sy;
+		bm_2x1[0x0A00] = bm_2x2[0x0600] = (sx+0x0400)|sy;
+		bm_2x1[0x0B00] = bm_2x2[0x0700] = (sx+0x0410)|sy;
 		
-		bg_map_lut2x1[offs+0x1800] = bg_map_lut2x2[offs+0x0C00] = (sx+0x0800)|sy;
-		bg_map_lut2x1[offs+0x1900] = bg_map_lut2x2[offs+0x0D00] = (sx+0x0810)|sy;
-		bg_map_lut2x1[offs+0x1A00] = bg_map_lut2x2[offs+0x0E00] = (sx+0x0C00)|sy;
-		bg_map_lut2x1[offs+0x1B00] = bg_map_lut2x2[offs+0x0F00] = (sx+0x0C10)|sy;
+		bm_2x1[0x1800] = bm_2x2[0x0C00] = (sx+0x0800)|sy;
+		bm_2x1[0x1900] = bm_2x2[0x0D00] = (sx+0x0810)|sy;
+		bm_2x1[0x1A00] = bm_2x2[0x0E00] = (sx+0x0C00)|sy;
+		bm_2x1[0x1B00] = bm_2x2[0x0F00] = (sx+0x0C10)|sy;
 		
-		bg_map_lut2x1[offs+0x0C00] = bg_map_lut2x2[offs+0x1400] = (sx+0x1000)|sy;
-		bg_map_lut2x1[offs+0x0D00] = bg_map_lut2x2[offs+0x1500] = (sx+0x1010)|sy;
-		bg_map_lut2x1[offs+0x0E00] = bg_map_lut2x2[offs+0x1600] = (sx+0x1400)|sy;
-		bg_map_lut2x1[offs+0x0F00] = bg_map_lut2x2[offs+0x1700] = (sx+0x1410)|sy;
+		bm_2x1[0x0C00] = bm_2x2[0x1400] = (sx+0x1000)|sy;
+		bm_2x1[0x0D00] = bm_2x2[0x1500] = (sx+0x1010)|sy;
+		bm_2x1[0x0E00] = bm_2x2[0x1600] = (sx+0x1400)|sy;
+		bm_2x1[0x0F00] = bm_2x2[0x1700] = (sx+0x1410)|sy;
 
-		bg_map_lut2x1[offs+0x1C00] = bg_map_lut2x2[offs+0x1C00] = (sx+0x1800)|sy;
-		bg_map_lut2x1[offs+0x1D00] = bg_map_lut2x2[offs+0x1D00] = (sx+0x1810)|sy;
-		bg_map_lut2x1[offs+0x1E00] = bg_map_lut2x2[offs+0x1E00] = (sx+0x1C00)|sy;
-		bg_map_lut2x1[offs+0x1F00] = bg_map_lut2x2[offs+0x1F00] = (sx+0x1C10)|sy;
+		bm_2x1[0x1C00] = bm_2x2[0x1C00] = (sx+0x1800)|sy;
+		bm_2x1[0x1D00] = bm_2x2[0x1D00] = (sx+0x1810)|sy;
+		bm_2x1[0x1E00] = bm_2x2[0x1E00] = (sx+0x1C00)|sy;
+		bm_2x1[0x1F00] = bm_2x2[0x1F00] = (sx+0x1C10)|sy;
+		
+		bm_2x1++;
+		bm_2x2++;
 	}
 //---------------------------------------------------------------------------------
 // commenter si  1 word
@@ -1174,11 +1173,11 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	GFS_SetErrFunc(errGfsFunc, NULL);
 	PCM_SetErrFunc(errPcmFunc, NULL);
 #endif
- 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
+ 	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
-// 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1;		   //c
+// 	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1;		   //c
 //	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
+	SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
 //SS_FONT = ss_font		=(Uint16 *)NULL;
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
@@ -1189,7 +1188,7 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
-	sfx_list			= &sfx_blktiger[0];
+	sfx_list		= &sfx_blktiger[0];
 
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+3;
@@ -1210,17 +1209,13 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	initSprites(256-1,224-1,0,0,0,-16);
 
 	SCL_Open();
-//	ss_reg->n1_move_y =  16 <<16;
-	ss_reg->n2_move_y =  16;//(0<<16) ;
-//	ss_reg->n2_move_x =  8;//(0<<16) ;
+	ss_reg->n2_move_y =  16;
 	SCL_Close();
 
 
 	memset((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x8000);
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 	memset((Uint8 *)ss_map2,0x11,0x8000);
-//	memset((Uint8 *)ss_map3,0,0x2000);
-//	memset((Uint8 *)bg_map_dirty,1,0x4000);
 	SprSpCmd *ss_spritePtr;
 	
 	for (unsigned int i = 3; i <nBurnSprites; i++) 
@@ -1277,21 +1272,16 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
+inline void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 {
-	UINT32 ofst;
 	UINT32 attr  = DrvBgRAM[(offs<<1) + 1];
 	UINT32 color = (attr >> 3) & 0x0f;
-	UINT32 code  = DrvBgRAM[(offs<<1)] + ((attr & 0x07) << 8); // + ((3-DrvVidBank[0])*0x400);
+	UINT32 code  = DrvBgRAM[(offs<<1)] + ((attr & 0x07) << 8);
 	UINT32 flipx = attr & 0x80;
 
-	ofst = bg_map_lut[offs];
-//	if(color==0)
-//	ss_map2[ofst] = (color | flipx << 7) | 0x3000; //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
-//	else
-//	ss_map2[ofst] = (color | flipx << 7); //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
-	ss_map2[ofst] = (color | flipx << 7); //| 0x4000; // | flipx << 7; // vbt remttre le flip ?
-	ss_map2[ofst+1] = (code<<2)+0x1000; 
+	UINT16 *map2 = (UINT16 *)&ss_map2[bg_map_lut[offs]];
+	map2[0] = (flipx << 7) | color;
+	map2[1] = (code*4)+0x1000;
 
 /*
 01:51:39<derek>	m_bg_tilemap8x4->set_transmask(0, 0xffff, 0x8000);  // split type 0 is totally transparent in front half 
