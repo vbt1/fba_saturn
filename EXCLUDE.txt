@@ -16,7 +16,7 @@
 *.zip
 *.ZIP
 sl.bin
-__map*
+__*
 befnew*
 bin*
 4DWARRIO

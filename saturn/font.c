@@ -227,7 +227,7 @@ static	Uint8 *FNT_SerchFont8_2bpp(Uint8 code)
 }
 */
 
-static	void  FNT_Print1Char256_8x8_2bpp(volatile Uint8 *vram,Uint8 code,Uint16 x,Uint16 y)
+static inline void  FNT_Print1Char256_8x8_2bpp(volatile Uint8 *vram,Uint8 code,Uint16 x,Uint16 y)
 {
 	Uint8	*codep = ((Uint8 *)(FONT_ADDR+((Uint32 )(code-0x20)<<4)));//FNT_SerchFont8_2bpp(code);
 	Uint8 *vramL = &vram[x	+ (y<<8)];
@@ -242,7 +242,7 @@ static	void  FNT_Print1Char256_8x8_2bpp(volatile Uint8 *vram,Uint8 code,Uint16 x
 	}
 }
 
-static	void  FNT_Print1Char256_8x8_2bppSel(volatile Uint8 *vram,Uint8 code,Uint16 x,Uint16 y)
+static inline void  FNT_Print1Char256_8x8_2bppSel(volatile Uint8 *vram,Uint8 code,Uint16 x,Uint16 y)
 {
 	unsigned int col[4]={0,13,14,15};
 

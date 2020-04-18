@@ -471,7 +471,8 @@ void __fastcall System1Z802ProgWrite(unsigned int a, UINT8 d)
 Driver Inits
 ===============================================================================================*/
 void initColors()
-{		 
+{
+	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));	
  	colAddr             = (Uint16*)COLADDR;//(Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	colBgAddr         = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);

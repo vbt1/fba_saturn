@@ -547,6 +547,7 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	BurnYM2203Reset();
 #endif
 	watchdog = 0;
+	current_pcm = 0;
 
 	return 0;
 }
@@ -1096,7 +1097,7 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 		{
 			remap16_lut[i] = i-15;
 		} 
-		else	
+		else
 		{
 			remap16_lut[i] = i;
 		}
@@ -1109,483 +1110,60 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 		fg_map_lut[i] = sy | sx;
 	}
 //-------------------------------------------------------------------------------
+	UINT32 sx, sy;
 
-//#if 1
-	INT32 sx, sy;
-// x0-63,y0-15
-	for (UINT32 offs = 0; offs < 0x100; offs++) // page 8 16x16
+	for (UINT32 offs = 0; offs < 0x100; offs++)
 	{
 		sx = (offs & 0x0f);
-		sy = ((offs) >> 4);				  // page 0 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
+		sy = ((offs) >> 4)<<5;
+		bg_map_lut2x1[offs+0x0000] = bg_map_lut2x2[offs+0x0000] = (sx+0x0000)|sy;
+		bg_map_lut2x1[offs+0x0100] = bg_map_lut2x2[offs+0x0100] = (sx+0x0010)|sy;
+		bg_map_lut2x1[offs+0x0200] = bg_map_lut2x2[offs+0x0200] = (sx+0x0400)|sy;
+		bg_map_lut2x1[offs+0x0300] = bg_map_lut2x2[offs+0x0300] = (sx+0x0410)|sy;
 
-	for (UINT32 offs = 0x100; offs < 0x200; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+16;
-		sy = ((offs-0x100) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
+		bg_map_lut2x1[offs+0x1000] = bg_map_lut2x2[offs+0x0800] = (sx+0x0800)|sy;
+		bg_map_lut2x1[offs+0x1100] = bg_map_lut2x2[offs+0x0900] = (sx+0x0810)|sy;
+		bg_map_lut2x1[offs+0x1200] = bg_map_lut2x2[offs+0x0A00] = (sx+0x0C00)|sy;
+		bg_map_lut2x1[offs+0x1300] = bg_map_lut2x2[offs+0x0B00] = (sx+0x0C10)|sy;
+		
+		bg_map_lut2x1[offs+0x0400] = bg_map_lut2x2[offs+0x1000] = (sx+0x1000)|sy;
+		bg_map_lut2x1[offs+0x0500] = bg_map_lut2x2[offs+0x1100] = (sx+0x1010)|sy;
+		bg_map_lut2x1[offs+0x0600] = bg_map_lut2x2[offs+0x1200] = (sx+0x1400)|sy;
+		bg_map_lut2x1[offs+0x0700] = bg_map_lut2x2[offs+0x1300] = (sx+0x1410)|sy;
 
-	for (UINT32 offs = 0x200; offs < 0x300; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x400;
-		sy = ((offs-0x200) >> 4);				  // page 2 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
+		bg_map_lut2x1[offs+0x1400] = bg_map_lut2x2[offs+0x1800] = (sx+0x1800)|sy;
+		bg_map_lut2x1[offs+0x1500] = bg_map_lut2x2[offs+0x1900] = (sx+0x1810)|sy;
+		bg_map_lut2x1[offs+0x1600] = bg_map_lut2x2[offs+0x1A00] = (sx+0x1C00)|sy;
+		bg_map_lut2x1[offs+0x1700] = bg_map_lut2x2[offs+0x1B00] = (sx+0x1C10)|sy;
+		
+		sy = ((offs+0x100) >> 4)<<5;
+		bg_map_lut2x1[offs+0x0800] = bg_map_lut2x2[offs+0x0400] = (sx+0x0000)|sy;
+		bg_map_lut2x1[offs+0x0900] = bg_map_lut2x2[offs+0x0500] = (sx+0x0010)|sy;
+		bg_map_lut2x1[offs+0x0A00] = bg_map_lut2x2[offs+0x0600] = (sx+0x0400)|sy;
+		bg_map_lut2x1[offs+0x0B00] = bg_map_lut2x2[offs+0x0700] = (sx+0x0410)|sy;
+		
+		bg_map_lut2x1[offs+0x1800] = bg_map_lut2x2[offs+0x0C00] = (sx+0x0800)|sy;
+		bg_map_lut2x1[offs+0x1900] = bg_map_lut2x2[offs+0x0D00] = (sx+0x0810)|sy;
+		bg_map_lut2x1[offs+0x1A00] = bg_map_lut2x2[offs+0x0E00] = (sx+0x0C00)|sy;
+		bg_map_lut2x1[offs+0x1B00] = bg_map_lut2x2[offs+0x0F00] = (sx+0x0C10)|sy;
+		
+		bg_map_lut2x1[offs+0x0C00] = bg_map_lut2x2[offs+0x1400] = (sx+0x1000)|sy;
+		bg_map_lut2x1[offs+0x0D00] = bg_map_lut2x2[offs+0x1500] = (sx+0x1010)|sy;
+		bg_map_lut2x1[offs+0x0E00] = bg_map_lut2x2[offs+0x1600] = (sx+0x1400)|sy;
+		bg_map_lut2x1[offs+0x0F00] = bg_map_lut2x2[offs+0x1700] = (sx+0x1410)|sy;
 
-	for (UINT32 offs = 0x300; offs < 0x400; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x400+16;
-		sy = ((offs-0x300) >> 4);				  // page 3 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-// x0-63,y16-31
-	for (UINT32 offs = 0x400; offs < 0x500; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f);
-		sy = ((offs-0x300) >> 4);				  // page 0 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x500; offs < 0x600; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+16;
-		sy = ((offs-0x400) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x600; offs < 0x700; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x400;
-		sy = ((offs-0x500) >> 4);				  // page 2 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x700; offs < 0x800; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x400+16;
-		sy = ((offs-0x600) >> 4);				  // page 3 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-// x0-63,y32-47
-	for (UINT32 offs = 0x800; offs < 0x900; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0;
-		sy = ((offs-0x800) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x900; offs < 0xA00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+16;
-		sy = ((offs-0x900) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0xA00; offs < 0xB00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0x400;
-		sy = ((offs-0xA00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0xB00; offs < 0xC00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0x400+16;
-		sy = ((offs-0xB00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-// x0-63,y48-63
-	for (UINT32 offs = 0xC00; offs < 0xD00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800;
-		sy = ((offs-0xB00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0xD00; offs < 0xE00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+16;
-		sy = ((offs-0xC00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0xE00; offs < 0xF00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0x400;
-		sy = ((offs-0xD00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0xF00; offs < 0x1000; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0x400+16;
-		sy = ((offs-0xE00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-// x64-127-63,y0-15
-	for (UINT32 offs = 0x1000; offs < 0x1100; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000;
-		sy = ((offs-0x1000) >> 4);				  // page 0 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1100; offs < 0x1200; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+16;
-		sy = ((offs-0x1100) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1200; offs < 0x1300; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x400;
-		sy = ((offs-0x1200) >> 4);				  // page 2 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1300; offs < 0x1400; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x400+16;
-		sy = ((offs-0x1300) >> 4);				  // page 3 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-// x64-127,y16-31
-	for (UINT32 offs = 0x1400; offs < 0x1500; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000;
-		sy = ((offs-0x1300) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
- 
-	for (UINT32 offs = 0x1500; offs < 0x1600; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+16;
-		sy = ((offs-0x1400) >> 4);	  // page 9 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1600; offs < 0x1700; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x400;
-		sy = ((offs-0x1500) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-	
-	for (UINT32 offs = 0x1700; offs < 0x1800; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x400+16;
-		sy = ((offs-0x1600) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-// x64-127,y32-47
-	for (UINT32 offs = 0x1800; offs < 0x1900; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0;
-		sy = ((offs-0x1800) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1900; offs < 0x1A00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+16;
-		sy = ((offs-0x1900) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1A00; offs < 0x1B00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0x400;
-		sy = ((offs-0x1A00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1B00; offs < 0x1C00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0x400+16;
-		sy = ((offs-0x1B00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-// x64-127,y48-63
-	for (UINT32 offs = 0x1C00; offs < 0x1D00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800;
-		sy = ((offs-0x1B00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1D00; offs < 0x1E00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+16;
-		sy = ((offs-0x1C00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1E00; offs < 0x1F00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0x400;
-		sy = ((offs-0x1D00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1F00; offs < 0x2000; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0x400+16;
-		sy = ((offs-0x1E00) >> 4);				  // page 1 16x16
-		bg_map_lut2x2[offs] = sx|(sy<<5);
-	}
-//#else
-//	INT32 sx, sy;
-// x0-63,y0-15
-	for (UINT32 offs = 0; offs < 0x100; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f);
-		sy = ((offs) >> 4);				  // page 0 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x100; offs < 0x200; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+16;
-		sy = ((offs-0x100) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x200; offs < 0x300; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x400;
-		sy = ((offs-0x200) >> 4);				  // page 2 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x300; offs < 0x400; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x400+16;
-		sy = ((offs-0x300) >> 4);				  // page 3 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-//---------------------------------------------------------------------------------
-// x0-63,y16-31
-	for (UINT32 offs = 0x800; offs < 0x900; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f);
-		sy = ((offs-0x700) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
- 
-	for (UINT32 offs = 0x900; offs < 0xA00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+16;
-		sy = ((offs-0x800) >> 4);	  // page 9 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0xA00; offs < 0xB00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x400;
-		sy = ((offs-0x900) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-	
-	for (UINT32 offs = 0xB00; offs < 0xC00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x400+16;
-		sy = ((offs-0xA00) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
+		bg_map_lut2x1[offs+0x1C00] = bg_map_lut2x2[offs+0x1C00] = (sx+0x1800)|sy;
+		bg_map_lut2x1[offs+0x1D00] = bg_map_lut2x2[offs+0x1D00] = (sx+0x1810)|sy;
+		bg_map_lut2x1[offs+0x1E00] = bg_map_lut2x2[offs+0x1E00] = (sx+0x1C00)|sy;
+		bg_map_lut2x1[offs+0x1F00] = bg_map_lut2x2[offs+0x1F00] = (sx+0x1C10)|sy;
 	}
 //---------------------------------------------------------------------------------
-
-// x0-63,y32-47
-	for (UINT32 offs = 0x1000; offs < 0x1100; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0;
-		sy = ((offs-0x1000) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1100; offs < 0x1200; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+16;
-		sy = ((offs-0x1100) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1200; offs < 0x1300; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0x400;
-		sy = ((offs-0x1200) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1300; offs < 0x1400; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0x400+16;
-		sy = ((offs-0x1300) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-//---------------------------------------------------------------------------------
-
-// x0-63,y48-63
-	for (UINT32 offs = 0x1800; offs < 0x1900; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800;
-		sy = ((offs-0x1700) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1900; offs < 0x1A00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+16;
-		sy = ((offs-0x1800) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1A00; offs < 0x1B00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0x400;
-		sy = ((offs-0x1900) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1B00; offs < 0x1C00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x800+0x400+16;
-		sy = ((offs-0x1A00) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-//---------------------------------------------------------------------------------
-
-// x64-127-63,y0-15
-	for (UINT32 offs = 0x400; offs < 0x500; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000;
-		sy = ((offs-0x400) >> 4);				  // page 0 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x500; offs < 0x600; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+16;
-		sy = ((offs-0x500) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x600; offs < 0x700; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x400;
-		sy = ((offs-0x600) >> 4);				  // page 2 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x700; offs < 0x800; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x400+16;
-		sy = ((offs-0x700) >> 4);				  // page 3 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-//---------------------------------------------------------------------------------
-
-// x64-127,y16-31
-	for (UINT32 offs = 0xC00; offs < 0xD00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000;
-		sy = ((offs-0xB00) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
- 
-	for (UINT32 offs = 0xD00; offs < 0xE00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+16;
-		sy = ((offs-0xC00) >> 4);	  // page 9 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0xE00; offs < 0xF00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x400;
-		sy = ((offs-0xD00) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-	
-	for (UINT32 offs = 0xF00; offs < 0x1000; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x400+16;
-		sy = ((offs-0xE00) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-//---------------------------------------------------------------------------------
-
-// x64-127,y32-47
-	for (UINT32 offs = 0x1400; offs < 0x1500; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0;
-		sy = ((offs-0x1400) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1500; offs < 0x1600; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+16;
-		sy = ((offs-0x1500) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1600; offs < 0x1700; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0x400;
-		sy = ((offs-0x1600) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1700; offs < 0x1800; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0x400+16;
-		sy = ((offs-0x1700) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-//---------------------------------------------------------------------------------
-
-// x64-127,y48-63
-	for (UINT32 offs = 0x1C00; offs < 0x1D00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800;
-		sy = ((offs-0x1B00) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1D00; offs < 0x1E00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+16;
-		sy = ((offs-0x1C00) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1E00; offs < 0x1F00; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0x400;
-		sy = ((offs-0x1D00) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-
-	for (UINT32 offs = 0x1F00; offs < 0x2000; offs++) // page 8 16x16
-	{
-		sx = (offs & 0x0f)+0x1000+0x800+0x400+16;
-		sy = ((offs-0x1E00) >> 4);				  // page 1 16x16
-		bg_map_lut2x1[offs] = sx|(sy<<5);
-	}
-//---------------------------------------------------------------------------------
-
-//#endif
 // commenter si  1 word
 	for (UINT32 offs = 0; offs < 0x2000; offs++) // page 8 16x16
 	{
 		bg_map_lut2x2[offs] = bg_map_lut2x2[offs] * 2;
 		bg_map_lut2x1[offs] = bg_map_lut2x1[offs] * 2;
 	}
-
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
