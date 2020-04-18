@@ -10,7 +10,7 @@
 #define nCyclesTotal1 2000000 / 60
 #define nCycleSegment0 nCyclesTotal0 / nInterleave 
 #define nCycleSegment1 nCyclesTotal1 / nInterleave 
-	
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -86,9 +86,9 @@ UINT8 __fastcall tigerhReadCPU0(UINT16 a)
 	switch (a) {
 		case 0xE803: {
 			
-			UINT8 nProtectSequence[3] = { 0, 1, (0 + 5) ^ 0x56 };
+			UINT32 nProtectSequence[3] = { 0, 1, (0 + 5) ^ 0x56 };
 			
-			UINT8 val = nProtectSequence[nProtectIndex];
+			UINT32 val = nProtectSequence[nProtectIndex];
 			nProtectIndex = (nProtectIndex + 1) % 3;
 			return val;
 		}
@@ -112,37 +112,22 @@ UINT8 __fastcall tigerhReadCPU0_tigerhb1(UINT16 a)
 
 void __fastcall tigerhWriteCPU0(UINT16 a, UINT8 d)
 {
-	if(a>= 0xD000 && a <= 0xD7FF)
-	{
-		a-= 0xD000;
-		if(DrvVidRAM[a]!=d)
-		{
-			DrvVidRAM[a] = d;
-			UINT32 attr  = d + (DrvVidRAM[0x800 + a] << 8);
-			UINT32 code  = attr & nTigerHeliTileMask;
-			UINT32 color = (attr & 0xf000) >> 12;
-
-			UINT16 x	 = map_offset_lut[a];
-			ss_map2[x]   = color;
-			ss_map2[x+1] = code+0x1000;
-		}
-		return;
-	}
-	
-	if(a>= 0xD800 && a <= 0xDFFF)
+	if(a>= 0xD000 && a <= 0xDFFF)
 	{
 		a-= 0xD000;
 		if(DrvVidRAM[a]!=d)
 		{
 			DrvVidRAM[a] = d;
 			a &=0x7ff;
-			UINT32 attr  = DrvVidRAM[a] + (d  << 8);
+			UINT8 *vram = &DrvVidRAM[a];
+			UINT32 attr  = vram[0] + (vram[0x800] << 8);
+
 			UINT32 code  = attr & nTigerHeliTileMask;
 			UINT32 color = (attr & 0xf000) >> 12;
 
-			UINT16 x	 = map_offset_lut[a];
-			ss_map2[x]   = color;
-			ss_map2[x+1] = code+0x1000;
+			UINT16 *map2 = (UINT16 *)&ss_map2[map_offset_lut[a]];
+			map2[0] = color;
+			map2[1] = code+0x1000;				
 		}
 		return;
 	}
@@ -153,22 +138,16 @@ void __fastcall tigerhWriteCPU0(UINT16 a, UINT8 d)
 		if(DrvTxtRAM[a]!=d)
 		{
 			DrvTxtRAM[a] = d;
-			UINT32 attr;
-			if(a>=0x800)
-			{
-				a &=0x7ff;
-				attr   = DrvTxtRAM[a] + (d << 8);
-			}
-			else
-			{
-				attr   = d + (DrvTxtRAM[0x800 + a] << 8);
-			}
+			a &=0x7ff;
+			UINT8 *vram = &DrvTxtRAM[a];
+			UINT32 attr  = vram[0] + (vram[0x800] << 8);
+			
 			UINT32 code  =  attr & 0x03ff;
 			UINT32 color = (attr & 0xfc00) >> 10;
 
-			UINT16 x	= map_offset_lut2[a];
-			ss_map[x]	= color & 0x3f;
-			ss_map[x+1] = code;
+			UINT16 *map = (UINT16 *)&ss_map[map_offset_lut2[a]];
+			map[0] = color;
+			map[1] = code;			
 		}
 		 return;
 	}
@@ -563,7 +542,6 @@ void DrvInitSaturn()
 	Set6PCM();
 
 	drawWindow(0,256,0,0,68);
-//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 INT32 DrvExit()
@@ -578,8 +556,9 @@ INT32 DrvExit()
 	for(UINT8 i=0;i<6;i++)
 	{
 		PCM_MeStop(pcm6[i]);
-//		memset((Sint8 *)SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+//		PCM_DestroyMemHandle(pcm6[i]);
 	}
+
 	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
 
 // Deallocate all used memory
@@ -614,7 +593,6 @@ void DrvDoReset()
 	CZetReset();
 	CZetClose();
 
-//	cleanSprites();
 	return;
 }
 
@@ -650,7 +628,6 @@ INT32 DrvInit()
 	
 	make_lut();
 
-	
 	CZetInit2(2,CZ80Context);
 
 	// Main CPU setup
@@ -688,8 +665,6 @@ INT32 DrvInit()
 	
 	CZetSetReadHandler(tigerhReadCPU1);
 	CZetSetWriteHandler(tigerhWriteCPU1);
-//		CZetSetInHandler(tigerhInCPU1);
-//		CZetSetOutHandler(tigerhOutCPU1);		
 
 	// Program ROM
 	CZetMapMemory(DrvZ80ROM0+0x12000, 0x0000, 0x1FFF, MAP_ROM);
@@ -717,20 +692,19 @@ inline void draw_sprites()
 			ss_sprite[i].ax    = -48;
 			ss_sprite[i].ay    = -32;
 	}
-
-	for (UINT32 offs = 0; offs < 0x800; offs += 4)
+	
+	for (UINT32 offs = 0; offs < 0x200; offs++)
 	{
-		if( (ram[offs + 3] - 15) > -7)
+		if( (ram[3] - 15) > -7)
 		{
-			UINT32 attr				= ram[offs + 2];
-			UINT32 code				= (ram[offs + 0] | ((attr & 0xc0) << 2));// & nTigerHeliSpriteMask;
-			ss_spritePtr->charAddr	= 0x440+(code<<4);
-			ss_spritePtr->ay		= 280-(ram[offs + 1] | (attr << 8 & 0x100));
-			ss_spritePtr->ax		= ram[offs + 3];
-			ss_spritePtr->color		= (attr >> 1 & 0xf)<<4;
+			UINT32 code				= (ram[0] | ((ram[2] & 0xc0) << 2));
+			ss_spritePtr->charAddr	= 0x440+(code*16);
+			ss_spritePtr->ay		= 280-(ram[1] | (ram[2] << 8 & 0x100));
+			ss_spritePtr->ax		= ram[3];
+			ss_spritePtr->color		= (ram[2] >> 1 & 0xf)<<4;
 			*ss_spritePtr++;			
 		}
-
+		ram+=4;
 	}
 }
 
@@ -750,7 +724,7 @@ INT32 DrvFrame()
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		}
 	}
-
+	
 	SPR_RunSlaveSH((PARA_RTN*)updateSound,&nSoundBufferPos);
 	
 	for (INT32 i = 0; i < nInterleave; i++)
@@ -774,6 +748,7 @@ INT32 DrvFrame()
 
 	}
 	ss_reg->n2_move_y = -scrollx-283;
+	
 	SPR_WaitEndSlaveSH();
 	return 0;
 }
