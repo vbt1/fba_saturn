@@ -17,7 +17,7 @@
 /*static*/ void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 /*static*/ void Set14PCM();
 /*static*/ PcmHn createHandle(PcmCreatePara *para);
-void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
+inline void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
 void dummy();
 void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
 Sint32 GetFileSize(int file_id);
