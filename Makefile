@@ -9,27 +9,20 @@ RM = rm
 CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile
-#CCFLAGS =  -mhitachi -m2 -std=gnu99 -Wfatal-errors -Os -fno-exceptions -fomit-frame-pointer -D_SH -DMODEL_S -c -I.
-CCFLAGS2 = -m2 -Os -ffreestanding --save-temps -fuse-linker-plugin -fno-fat-lto-objects -fno-web -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. 
+CCFLAGS2 = -m2 -Os --save-temps -ffreestanding -fno-web -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. 
 
-#CCOVLFLAGS = -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -fno-exceptions -D_SH -DMODEL_S -c
-#CCOVLFLAGS = -g -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O0 -fomit-frame-pointer -D_SH -DMODEL_S -c
-#CCOVLFLAGS = -g -m2 -mrenesas  -std=gnu99 -Wfatal-errors -Os -D_SH -DMODEL_S -c
-# pour asm 
-#CCOVLFLAGS = -S -fverbose-asm -mno-fsrra -maccumulate-outgoing-args -mrenesas -m2 -std=gnu99 -Wfatal-errors -O2 -fomit-frame-pointer -D_SH -DMODEL_S -c
-CCOVLFLAGS = -m2 -O2 --save-temps -fuse-linker-plugin -flto -fno-web -fno-unit-at-a-time -Wl,--strip-all -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
-#CCOVLFLAGS = -m2 -O2 --save-temps -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
+CCOVLFLAGS = -m2 -O2 --save-temps -fno-web -fno-unit-at-a-time -Wl,--strip-all -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
 
-#CCOVLFLAGS = -m2 -O2 --save-temps -fno-web -fno-gcse -fno-unit-at-a-time -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c
 OLVSCRIPT = root/overlay.lnk
-#LDOVLFLAGS = -s -O3 -Xlinker --defsym -Xlinker ___malloc_sbrk_base=0x6040000 -Xlinker --defsym -Xlinker __heap_end=0x60fffff -Xlinker -T$(LDOVLFILE) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker boot -nostartfiles  -nostdlib
-LDCMNFLAGS = -m2 -O2 -Xlinker -S -Xlinker -n -Xlinker -flto -Xlinker
+#LDCMNFLAGS = -m2 -O2 -flto -fuse-linker-plugin  -Xlinker -n -Xlinker -S -Xlinker
+LDCMNFLAGS = -m2 -O2 -Xlinker -n -Xlinker -S -Xlinker
+LDCMNFLAGS2 = -m2 -Os -Xlinker -S -Xlinker
 
 TARGET    = root/sl.coff
 TARGET1  = root/sl.bin
 LDFILE	 = ./$(TARGET:.coff=.lnk)
 MPFILE     = $(TARGET:.coff=.maps)
-LDFLAGS = -ffreestanding $(LDCMNFLAGS) -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
+LDFLAGS = $(LDCMNFLAGS2) -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
 SRCS       = saturn/low.s burn.c saturn/font.c saturn/file.c saturn/saturn.c 
 OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 
@@ -37,7 +30,7 @@ OVLIMG                 = root/img.coff
 OVLIMG1               = root/img.bin
 LDOVLIMGFILE     = ./$(OVLIMG:.coff=.lnk)
 MPOVLIMGFILE    = $(OVLIMG:.coff=.maps)
-LDOVLIMGFLAGS = $(LDCMNFLAGS) -T$(LDOVLIMGFILE) -Xlinker -Map -Xlinker $(MPOVLIMGFILE) -Xlinker -e -Xlinker _ovlstart -nostartfiles
+LDOVLIMGFLAGS = $(LDCMNFLAGS2) -T$(LDOVLIMGFILE) -Xlinker -Map -Xlinker $(MPOVLIMGFILE) -Xlinker -e -Xlinker _ovlstart -nostartfiles
 SRCOVLIMG         = saturn/img.c libyaul/libtga/tga.c
 OBJOVLIMG         = $(SRCOVLIMG:.c=.o)
 
@@ -310,7 +303,7 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
 # Use gcc to link so it will automagically find correct libs directory
 
 $(TARGET) : $(OBJS2) $(MAKEFILE) $(OBJECTS) $(LDFILE)
-	$(CC) $(LDFLAGS)  $(OBJS2) $(LIBS2) $(LIBSOVL)  -o $@
+	$(CC) $(LDFLAGS) $(OBJS2) $(LIBS2) $(LIBSOVL)  -o $@
 
 $(TARGET1) : $(SYSOBJS) $(OBJS2) $(MAKEFILE) $(LDFILE)
 	$(CONV) -O binary $(TARGET) $(TARGET1)
@@ -529,6 +522,9 @@ saturn/file.o: saturn/file.c
 	$(CC) $< $(DFLAGS) $(CCFLAGS2) -o $@
 
 saturn/font.o: saturn/font.c
+	$(CC) $< $(DFLAGS) $(CCFLAGS2) -o $@
+
+saturn/img.o: saturn/img.c
 	$(CC) $< $(DFLAGS) $(CCFLAGS2) -o $@
 .c.o:
 	$(CC) $< $(DFLAGS) $(EXTRA_FLAGS) $(CCOVLFLAGS) -o $@

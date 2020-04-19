@@ -83,20 +83,15 @@ int ovlInit(char *szShortName)
 	if (BurnLoadRom(Gfx0 + 0x0000, 4, 1)) return 1;
 	if (BurnLoadRom(Gfx0 + 0x2000, 5, 1)) return 1;
 
-	
 	for (UINT32 i = 0; i < 6; i++)
 	{
 		if (BurnLoadRom(Gfx1 + i * 0x2000, i +  6, 1)) return 1;
 	}
-
 	if (BurnLoadRom(Prom + 0x0000, 12, 1)) return 1;
 	if (BurnLoadRom(Prom + 0x0020, 13, 1)) return 1;
 	if (BurnLoadRom(Prom + 0x0120, 14, 1)) return 1;
-	if (bankp_gfx_decode()) return 1;
-
-	wait_vblank();
+	bankp_gfx_decode();
 	bankp_palette_init();
-
 #ifdef RAZE
 	z80_init_memmap();
 	z80_map_fetch (0x0000, 0xdfff, Rom + 0x0000); 
@@ -153,8 +148,7 @@ int ovlInit(char *szShortName)
 	if(Rom[address]!=data)
 	{
 		Rom[address] = data;
-//		fg_line(address&0x3ff, (0x3<< 14));
-		fg_line(address&0x3ff, 0xc000);
+		fg_line(address&0x3ff);
 	}
 }
 
@@ -163,8 +157,7 @@ int ovlInit(char *szShortName)
 	if(Rom[address]!=data)
 	{
 		Rom[address] = data;
-//		fg_line(address&0x3ff, (0x3<< 14));
-		fg_line(address&0x3ff, 0xc000);
+		fg_line(address&0x3ff);
 	}
 }
 
@@ -173,8 +166,7 @@ int ovlInit(char *szShortName)
 	if(Rom[address]!=data)
 	{
 		Rom[address] = data;
-		bg_line(address&0x3ff, (0x3<< 14));
-//		bg_line(address&0x3ff, 0xc00);
+		bg_line(address&0x3ff);
 	}
 }
 
@@ -183,8 +175,7 @@ int ovlInit(char *szShortName)
 	if(Rom[address]!=data)
 	{
 		Rom[address] = data;
-		bg_line(address&0x3ff, (0x3<< 14));
-//		bg_line(address&0x3ff, 0xc00);
+		bg_line(address&0x3ff);
 	}
 }
 #else
@@ -194,9 +185,8 @@ int ovlInit(char *szShortName)
 	{
 		if(Rom[address]!=data)
 		{
-//			fg_dirtybuffer[address&0x3ff] = 1;
 			Rom[address] = data;
-			fg_line(address&0x3ff, (0x3<< 14));
+			fg_line(address&0x3ff);
 		}
 		return;
 	}
@@ -205,9 +195,8 @@ int ovlInit(char *szShortName)
 	{
 		if(Rom[address]!=data)
 		{
-//			bg_dirtybuffer[address&0x3ff] = 1;
 			Rom[address] = data;
-			bg_line(address&0x3ff, (0x3<< 14));
+			bg_line(address&0x3ff);
 		}
 		return;
 	}
@@ -318,7 +307,7 @@ int ovlInit(char *szShortName)
 	interrupt_enable = 0;
 }
 
-/*static*/ INT32 bankp_palette_init()
+/*static*/ void bankp_palette_init()
 {
 	unsigned int t_pal[32];
 	unsigned int i;
@@ -328,7 +317,7 @@ int ovlInit(char *szShortName)
 	Prom+=32;
 //nbg2 mauvais
 
-	int delta=0;
+	unsigned int delta=0;
 	for (i = 0;i < 32 * 4;i++) {
 		colBgAddr2[delta] = colBgAddr2[delta+4] = Palette[i] = t_pal[*Prom & 0x0f];
 		delta++; if ((delta & 3) == 0) delta += 12;
@@ -341,16 +330,15 @@ int ovlInit(char *szShortName)
 		delta++; if ((delta & 7) == 0) delta += 8;
 		Prom++;
 	}
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ int bankp_gfx_decode()
+/*static*/ void bankp_gfx_decode()
 {
-	 const UINT32 Char1PlaneOffsets[2] = { 0x00, 0x04 };
-	 const UINT32 Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
-	 const UINT32 Char1XOffsets[8]     = { 0x43, 0x42, 0x41, 0x40, 0x03, 0x02, 0x01, 0x00 };
-	 const UINT32 Char2XOffsets[8]     = { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
-	 const UINT32 CharYOffsets[8]      = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
+	 UINT32 Char1PlaneOffsets[2] = { 0x00, 0x04 };
+	 UINT32 Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
+	 UINT32 Char1XOffsets[8]     = { 0x43, 0x42, 0x41, 0x40, 0x03, 0x02, 0x01, 0x00 };
+	 UINT32 Char2XOffsets[8]     = { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
+	 UINT32 CharYOffsets[8]      = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
 
 	GfxDecode4Bpp(0x400, 2, 8, 8, Char1PlaneOffsets, Char1XOffsets, CharYOffsets, 0x080, Gfx0, cache+0x10000);
 	GfxDecode4Bpp(0x800, 3, 8, 8, Char2PlaneOffsets, Char2XOffsets, CharYOffsets, 0x040, Gfx1, cache);
@@ -366,8 +354,6 @@ int ovlInit(char *szShortName)
  //nbg1
 	for (UINT32 i=0x00000;i<0x10000;i++ )
 		cache[i+0x50000] = cache[i]+0x88;
-
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initLayers()
@@ -496,7 +482,7 @@ int ovlInit(char *szShortName)
 	SN76489Init(1, 0, 0);
 	SN76489Init(2, 0, 0);
 
-	/*MemEnd =*/ Rom  = Gfx0 = Gfx1 = Prom = NULL;
+	Rom  = Gfx0 = Gfx1 = Prom = NULL;
 	Palette = NULL;
 	map_offset_lut = NULL;
 
@@ -512,34 +498,44 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void 	 bg_line(UINT16 offs,UINT16 flipx)
+/*static*/ void 	 bg_line(UINT16 offs)
 {
-	UINT32 code, color, x;
-	code = Rom[0xf800+offs] | ((Rom[0xfc00+offs] & 7) << 8);
-	color = (Rom[0xfc00+offs] >> 4) & 0x0f;
+	UINT32 code, color;
+	UINT32 flipx = 0xC000;
+	UINT8 *rom = &Rom[0xf800];
+	code = rom[offs];
+	rom+=0x400;
+	code |= ((rom[offs] & 7) << 8);
+	color = (rom[offs] >> 4) & 0x0f;
 
-	if (!flipscreen) flipx = (Rom[0xfc00+offs] & 0x08) << 11;
-	x = map_offset_lut[offs];
+	if (!flipscreen) flipx = (rom[offs] & 0x08) << 11;
+	
+	UINT16 *map2 = (UINT16 *)&ss_map2[map_offset_lut[offs]];	
 //NBG1
-	ss_map2[x] = ss_map2[x+0x40] = flipx | color;
+	map2[0] = map2[0x40] = flipx | color;
 
-	if(color==1 || color==0xd)	ss_map2[x+1] = ss_map2[x+0x41] = code;
-	else						ss_map2[x+1] = ss_map2[x+0x41] = code+0x2800;
+	if(color==1 || color==0xd)	map2[1] = map2[0x41] = code;
+	else						map2[1] = map2[0x41] = code+0x2800;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void 	 fg_line(UINT16 offs,UINT16 flipx)
+/*static*/ void 	 fg_line(UINT16 offs)
 {
-	UINT32 code, color, x;
-	code = Rom[0xf000+offs] | ((Rom[0xf400+offs] & 3) << 8);
-	color = (Rom[0xf400+offs] >> 3) & 0x1f;
+	UINT32 code, color;
+	UINT32 flipx = 0xC000;
+	UINT8 *rom = &Rom[0xf000];
+	code = rom[offs];
+	rom+=0x400;
+	code |= ((rom[offs] & 3) << 8);
+	color = (rom[offs] >> 3) & 0x1f;
 
-	if(!flipscreen)	flipx = (Rom[0xf400+offs] & 0x04) << 12;
-	x = map_offset_lut[offs];
+	if(!flipscreen)	flipx = (rom[offs] & 0x04) << 12;
+	
+	UINT16 *map = (UINT16 *)&ss_map[map_offset_lut[offs]];	
 //NBG2		   //0x40
-	ss_map[x] = ss_map[x+0x40] = ss_map[x+0x1000] = ss_map[x+0x1040] = flipx | color;//color /8;
+	map[0] = map[0x40] = map[0x1000] = map[0x1040] = flipx | color;//color /8;
 
-	if(Palette[color<<2]==0x8000)	ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = code+0x800;
-	else							ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = code+0x1800;//2048  //0x1800
+	if(Palette[color<<2]==0x8000)	map[1] = map[0x41] = map[0x1001] = map[0x1041] = code+0x800;
+	else							map[1] = map[0x41] = map[0x1001] = map[0x1041] = code+0x1800;//2048  //0x1800
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvFrame()

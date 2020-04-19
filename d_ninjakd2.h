@@ -27,13 +27,8 @@ void cleanSprites();
 //void dummy();
 INT32 (*DrvDraw)() = NULL;
 UINT8 *AllMem = NULL;
-//  UINT8 *AllRam = NULL;
 UINT8 *RamEnd = NULL;
 UINT8 *DrvZ80ROM0 = NULL;
-//  UINT8 *DrvZ80ROM1 = NULL;
-//  UINT8 *DrvGfxROM2 = NULL;
-//  UINT8 *DrvGfxROM3 = NULL;
-//  UINT8 *DrvGfxROM4 = NULL;
 UINT8 *DrvGfxROM4Data1 = NULL;
 UINT8 *DrvZ80RAM0 = NULL;
 UINT8 *DrvSprRAM = NULL;
@@ -47,7 +42,6 @@ UINT8 *CZ80Context = NULL;
 UINT16 *ss_map3 = NULL;
 UINT16 *cram_lut = NULL;
 UINT8 soundlatch = 0;
-//UINT8 flipscreen = 0;
 
 UINT16 scrollx[3] = {0,0,0};
 UINT16 scrolly[3] = {0,0,0};
@@ -55,18 +49,11 @@ UINT8 tilemap_enable[3] = {0,0,0};
 INT16 previous_bank[3]={-1,-1,-1};
 UINT8 overdraw_enable = 0;
 
-//UINT8 m_omegaf_io_protection[3];
-//UINT8 m_omegaf_io_protection_input;
-//INT32 m_omegaf_io_protection_tic;
-//INT32 ninjakd2_sample_offset;
-
 UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvDips[2] = {0,0};
 UINT8 DrvInputs[3] = {0,0,0};
- // UINT8 DrvReset = 0;
-
 INT32 previous_coin[2] = {0,0};
 
 struct BurnInputInfo DrvInputList[] = {

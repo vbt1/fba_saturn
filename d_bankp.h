@@ -20,8 +20,8 @@
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 /*static*/ unsigned char __fastcall bankp_in(unsigned short address);
-/*static*/ void 	 bg_line(UINT16 offs,UINT16 flipx);
-/*static*/ void 	 fg_line(UINT16 offs,UINT16 flipx);
+/*static*/ void 	 bg_line(UINT16 offs);
+/*static*/ void 	 fg_line(UINT16 offs);
 /*static*/ void __fastcall bankp_write(unsigned short address, unsigned char data);
 /*static*/ void __fastcall bankp_out(UINT16 address, UINT8 data);
 /*static*/ void __fastcall bankp_write_f000(unsigned short address, unsigned char data);
@@ -32,8 +32,8 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 //void 	 bg_line(INT32 offs,INT32 flipx);
 //void 	 fg_line(INT32 offs,INT32 flipx);
 
-/*static*/ INT32 bankp_palette_init();
-/*static*/ INT32 bankp_gfx_decode();
+/*static*/ void bankp_palette_init();
+/*static*/ void bankp_gfx_decode();
 /*static*/ void DrvDoReset();
 /*static*/ INT32 DrvBpExit();
 /*static*/ INT32 DrvFrame();

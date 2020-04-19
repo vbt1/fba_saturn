@@ -1652,8 +1652,8 @@ static void do_keypad()
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 		else
@@ -1665,8 +1665,8 @@ static void do_keypad()
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 	}
@@ -1715,14 +1715,7 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 	smsSprite[2].cy         = sy;
 
 	smsSprite[3].control    = CTRL_END;
-/*
-    smsSprite[nBurnSprites-1].control		= CTRL_END;
-    smsSprite[nBurnSprites-1].link			= 0;        
-    smsSprite[nBurnSprites-1].drawMode		= 0;                
-    smsSprite[nBurnSprites-1].color			= 0;                
-    smsSprite[nBurnSprites-1].charAddr		= 0;                
-    smsSprite[nBurnSprites-1].charSize		= 0;
-*/
+
 	_spr2_transfercommand();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1733,9 +1726,9 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
 	col[0]=10;
 
 // barre horizontale haut
-	for( x = 0; x < l1; x++ ) // 2 lignes
+	for( x = 0; x < l1*64; x++ ) // 2 lignes
     {
-		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
+		*VRAM++ = 0xaaaa;
 	}
 
 	for( x = 0; x < l2; x++ ) 
@@ -1745,9 +1738,9 @@ void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int
 		for( j = 0; j < vertright			  ; j++ ) *VRAM++ = 0xaaaa; // barre verticale droite
 	}
 // barre horizontale bas
-	for( x = 0; x < l3; x++ ) 
+	for( x = 0; x < l3*64; x++ ) 
     {
-		for( j = 0; j < 64; j++ ) *VRAM++ = 0xaaaa;
+		*VRAM++ = 0xaaaa;
 	}
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait...",20,40);
