@@ -197,16 +197,8 @@ for (i = 0; i < 0x80; i+=4)
 
 	GfxDecode4Bpp(0x200, 2,  8,  8, Planes + 2, XOffs, YOffs, 0x080, Gfx0, cache);
 	GfxDecode4Bpp(0x080, 4, 16, 16, Planes,     XOffs, YOffs, 0x200, Gfx1, &ss_vram[0x1100]);
+	swapFirstLastColor(&ss_vram[0x1100],0x0f,0x8000);
 
-	unsigned int i;
-	for (i=0;i<0x8000;i++ )
-	{
-		if ((ss_vram[0x1100+i]& 0x0f)       ==0x00)ss_vram[0x1100+i] = ss_vram[0x1100+i] & 0xf0 | 0xf;
-		else if ((ss_vram[0x1100+i]& 0x0f)==0x0f) ss_vram[0x1100+i] = ss_vram[0x1100+i] & 0xf0;
-
-		if ((ss_vram[0x1100+i]& 0xf0)       ==0x00)ss_vram[0x1100+i] = 0xf0 | ss_vram[0x1100+i] & 0x0f;
-		else if ((ss_vram[0x1100+i]& 0xf0)==0xf0) ss_vram[0x1100+i] = ss_vram[0x1100+i] & 0x0f;
-	}
 	return 0;
 }
 

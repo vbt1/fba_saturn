@@ -873,15 +873,7 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 
 	GfxDecode4Bpp(128, 4, 32, 32, Bg2TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x800, DrvTempRom, DrvBg2Tiles);
 	
 	tile32x32toSaturn(1,128, DrvBg2Tiles);
-
-	for (UINT32 i=0;i<0x10000;i++ )
-	{
-		if ((DrvBg2Tiles[i]& 0x0f)     ==0x00)DrvBg2Tiles[i] = DrvBg2Tiles[i] & 0xf0 | 0xf;
-		else if ((DrvBg2Tiles[i]& 0x0f)==0x0f) DrvBg2Tiles[i] = DrvBg2Tiles[i] & 0xf0;
-
-		if ((DrvBg2Tiles[i]& 0xf0)       ==0x00)DrvBg2Tiles[i] = 0xf0 | DrvBg2Tiles[i] & 0x0f;
-		else if ((DrvBg2Tiles[i]& 0xf0)==0xf0) DrvBg2Tiles[i] = DrvBg2Tiles[i] & 0x0f;
-	}	
+	swapFirstLastColor(DrvBg2Tiles,0x0f,0x10000);
 	wait_vblank();
 	
 	// Load and decode the bg tiles
@@ -899,16 +891,7 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 
 //	GfxDecode4Bpp(512, 4, 32, 32, BgTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x800, DrvTempRom, DrvBgTiles);
 
 	tile32x32toSaturn(1,512, DrvBgTiles);
-/*
-	for (UINT32 i=0;i<0x20000;i++ )
-	{
-		if ((DrvBgTiles[i]& 0x0f)     ==0x00)DrvBgTiles[i] = DrvBgTiles[i] & 0xf0 | 0xf;
-		else if ((DrvBgTiles[i]& 0x0f)==0x0f) DrvBgTiles[i] = DrvBgTiles[i] & 0xf0;
 
-		if ((DrvBgTiles[i]& 0xf0)       ==0x00)DrvBgTiles[i] = 0xf0 | DrvBgTiles[i] & 0x0f;
-		else if ((DrvBgTiles[i]& 0xf0)==0xf0) DrvBgTiles[i] = DrvBgTiles[i] & 0x0f;
-	}
-*/
 	// Load and decode the sprites
 	memset(DrvTempRom, 0, 0x40000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000, 15, 1); if (nRet != 0) return 1;

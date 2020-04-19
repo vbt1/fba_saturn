@@ -159,7 +159,7 @@ static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int
 	long fileSize	= GetFileSize(fid);
 	GFS_Load(fid, 0, Dest, ri.nLen);
 	pnWrote[0] = ri.nLen;
-	wait_vblank();
+//	wait_vblank();
 /*
 		char text[100];
 		sprintf(text,"%d %d %s %d ", fid,fileSize,pszFilename,ri.nLen);

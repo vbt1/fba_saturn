@@ -602,15 +602,8 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
 	UINT8 *DrvSprites	= (UINT8 *)(ss_vram+0x1100);
 	GfxDecode4Bpp(0x0800, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x200, DrvTempRom, DrvSprites);
+	swapFirstLastColor(DrvSprites,0x0f,0x40000);
 
-	for (UINT32 i=0;i<0x40000;i++ )
-	{
-		if ((DrvSprites[i]& 0x0f)     ==0x00)DrvSprites[i] = DrvSprites[i] & 0xf0 | 0xf;
-		else if ((DrvSprites[i]& 0x0f)==0x0f) DrvSprites[i] = DrvSprites[i] & 0xf0;
-
-		if ((DrvSprites[i]& 0xf0)       ==0x00)DrvSprites[i] = 0xf0 | DrvSprites[i] & 0x0f;
-		else if ((DrvSprites[i]& 0xf0)==0xf0) DrvSprites[i] = DrvSprites[i] & 0x0f;
-	}
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"pang_decode   ",80,130);	
 	pang_decode();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"MitchellMachineInit   ",80,130);	
@@ -671,15 +664,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
 	UINT8 *DrvSprites	= (UINT8 *)(ss_vram+0x1100);
 	GfxDecode4Bpp(0x0800, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x200, DrvTempRom, DrvSprites);
-
-	for (UINT32 i=0;i<0x40000;i++ )
-	{
-		if ((DrvSprites[i]& 0x0f)     ==0x00)DrvSprites[i] = DrvSprites[i] & 0xf0 | 0xf;
-		else if ((DrvSprites[i]& 0x0f)==0x0f) DrvSprites[i] = DrvSprites[i] & 0xf0;
-
-		if ((DrvSprites[i]& 0xf0)       ==0x00)DrvSprites[i] = 0xf0 | DrvSprites[i] & 0x0f;
-		else if ((DrvSprites[i]& 0xf0)==0xf0) DrvSprites[i] = DrvSprites[i] & 0x0f;
-	}
+	swapFirstLastColor(DrvSprites,0x0f,0x40000);
 	
 	memset(DrvTempRom, 0x00, 0x50000);
 	spang_decode();

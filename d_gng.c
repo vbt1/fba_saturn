@@ -458,26 +458,8 @@ inline double DrvGetTime()
 	nRet = BurnLoadRom(DrvTempRom, 4 + RomLoadOffset, 1); if (nRet != 0) return 1;
 //	GfxDecode4Bpp(0x400, 2, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
 	GfxDecode4Bpp(0x400, 2, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
+	swapFirstLastColor(DrvChars,0x0f,0x10000);
 
-   unsigned int i;
-
-	for (i=0;i<0x10000;i++ )
-	{
-		if ((DrvChars[i]& 0x03)       ==0x00)DrvChars[i] = DrvChars[i] & 0xf0 | 0x3;
-		else if ((DrvChars[i]& 0x03)==0x03) DrvChars[i] = DrvChars[i] & 0xf0;
-
-		if ((DrvChars[i]& 0x30)       ==0x00)DrvChars[i] = 0x30 | DrvChars[i] & 0x0f;
-		else if ((DrvChars[i]& 0x30)==0x30) DrvChars[i] = DrvChars[i] & 0x0f;
-	}
-
-
-
-/*		 int vbtxx=0;
-	for(vbtxx=0;vbtxx<16;vbtxx++)
-	{
-	 memset(&DrvChars[vbtxx*64], (vbtxx<<4)|vbtxx, 32);
-	}	 						*/
-//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"decode1",136,60);	
 	// Load and decode the tiles
 	memset(DrvTempRom, 0, 0x20000);
 	nRet = BurnLoadRom(DrvTempRom + 0x00000,  5 + RomLoadOffset, 1); if (nRet != 0) return 1;
@@ -490,16 +472,6 @@ inline double DrvGetTime()
 	GfxDecode4Bpp(0x400, 3, 16, 16, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x100, DrvTempRom, DrvTiles);
 	tile16x16toSaturn(0x400, DrvTiles);
 
-//	GfxDecode4Bpp(0x400, 3, 16, 16, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x100, DrvTempRom, DrvSprites);
-//	GfxDecode(0x400, 3, 16, 16, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x100, DrvTempRom, DrvTiles);
-/*
-		 int vbtxx=0;
-	for(vbtxx=0;vbtxx<16;vbtxx++)
-	{
-	 memset(&DrvTiles[vbtxx*32], (vbtxx<<4)|vbtxx, 32);
-	}
-  */
-
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"decode2",136,60);	
 	// Load and decode the sprites
 	memset(DrvTempRom, 0xff, 0x20000);
@@ -511,16 +483,7 @@ inline double DrvGetTime()
 	nRet = BurnLoadRom(DrvTempRom + 0x18000, 16 + RomLoadOffset, 1); if (nRet != 0) return 1;
 	GfxDecode4Bpp(0x400, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x200, DrvTempRom, DrvSprites);
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"decode3",136,60);	
-
-
-	for (i=0;i<0x10000;i++ )
-	{
-		if ((DrvSprites[i]& 0x0f)       ==0x00)DrvSprites[i] = DrvSprites[i] & 0xf0 | 0xf;
-		else if ((DrvSprites[i]& 0x0f)==0x0f) DrvSprites[i] = DrvSprites[i] & 0xf0;
-
-		if ((DrvSprites[i]& 0xf0)       ==0x00)DrvSprites[i] = 0xf0 | DrvSprites[i] & 0x0f;
-		else if ((DrvSprites[i]& 0xf0)==0xf0) DrvSprites[i] = DrvSprites[i] & 0x0f;
-	}
+	swapFirstLastColor(DrvSprites,0x0f,0x10000);
 
 //	free(DrvTempRom);
 	

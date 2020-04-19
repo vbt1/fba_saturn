@@ -74,6 +74,22 @@ void dummy()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+void swapFirstLastColor(unsigned char *mem,unsigned char mask,unsigned int size)
+{
+	register unsigned char mask2 = (mask<<4)&0xff;
+	unsigned char *ptr = &mem[0];
+	
+	for (unsigned int i=0;i<size;i++)
+	{
+		if ((*ptr & mask)     == 0x00) *ptr = ((*ptr & mask2) | mask) & 0xff;
+		else if ((*ptr & mask)==mask)  *ptr = (*ptr & mask2)  & 0xff;
+
+		if ((*ptr & mask2)     == 0x00)  *ptr = (mask2 | (*ptr & mask)) & 0xff;
+		else if ((*ptr & mask2)== mask2) *ptr = (*ptr & mask) & 0xff;
+		ptr++;
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 {
 	unsigned int i,j,k;
@@ -148,16 +164,16 @@ void vout(char *string, char *fmt, ...)
    va_end(arg_ptr);                                                             
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt, Uint32 channel)
+void DMA_ScuIndirectMemCopy(void *dst, void *src, unsigned int cnt, unsigned int channel)
 {
 	typedef struct TC_TRANSFER {
-		Uint32 size;
+		unsigned int size;
 		void *target;
 		void *source;
 	} TC_transfer __attribute__ ((aligned (8)));
 
     TC_transfer tc;
-    Uint32 msk = get_imask();
+    unsigned int msk = get_imask();
     set_imask(15);
 
     DmaScuPrm prm;
@@ -168,8 +184,8 @@ void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt, Uint32 channel)
 	tc.source += (1<<31);
     tc.target  = (void *)dst;
 
-    prm.dxr = (Uint32)NULL;     // no meaning in indirect mode
-    prm.dxw = ((Uint32)&tc);
+    prm.dxr = (unsigned int)NULL;     // no meaning in indirect mode
+    prm.dxw = ((unsigned int)&tc);
     prm.dxc = 0; // not matter ? sizeof();
     prm.dxad_r = DMA_SCU_R4;
     prm.dxad_w = DMA_SCU_W2; // pas toucher

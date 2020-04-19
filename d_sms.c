@@ -9,7 +9,6 @@
 unsigned char *disp_spr = NULL;
 unsigned char curr_sprite=0;
 #endif
-
 /* Attribute expansion table */
 //-------------------------------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
@@ -60,17 +59,30 @@ int ovlInit(char *szShortName)
 //	slob_init();
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
+static Sint32 GetFileSize(int file_id)
+{
+	GfsHn gfs;
+    Sint32 sctsize, nsct, lastsize;
+    
+    gfs = GFS_Open(file_id);
+    GFS_GetFileSize(gfs, &sctsize, &nsct, &lastsize);
+
+    GFS_Close(gfs);
+	return (sctsize*(nsct-1) + lastsize);
+}
+//--------------------------------------------------------------------------------------------------------------------------------------
 static void ChangeDir(char *dirname)
 {
     Sint32 fid;
 	GfsDirTbl dirtbl;
 	static GfsDirId dir_name[MAX_DIR];
-	char dir_upr[12];
-	char *ptr=&dir_upr[0];
-	strcpy(dir_upr,dirname);
-	ptr = strupr(ptr);
-    fid = GFS_NameToId((Sint8 *)dir_upr);
-	ptr = NULL;
+//	char dir_upr[12];
+//	char *ptr=&dir_upr[0];
+//	strcpy(dir_upr,dirname);
+//	ptr = strupr(ptr);
+//    fid = GFS_NameToId((Sint8 *)dir_upr);
+    fid = GFS_NameToId((Sint8 *)dirname);
+//	ptr = NULL;
 
 	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
 	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;
@@ -532,9 +544,7 @@ static void	SetVblank2( void ){
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void load_rom(void)
 {
-	long fileSize;
-
-	fileSize		 = GetFileSize(file_id);
+	long fileSize = GetFileSize(file_id);//dir_name[file_id].dirrec.size;
 	cart.rom	 = (UINT8 *) 0x00200000;
 //	memset4_fast((Uint8 *)&cart.rom[0],0,0x100000);
 	cart.pages	 = fileSize /0x4000;

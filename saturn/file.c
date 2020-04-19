@@ -80,11 +80,8 @@ void ChangeDir(char *dirname)
     Sint32 fid;
 	GfsDirTbl dirtbl; 
 	char dir_upr[12];
-	char *ptr=&dir_upr[0];
 	strcpy(dir_upr,dirname);
-	ptr = strupr(ptr);
-    fid = GFS_NameToId((Sint8 *)dir_upr);
-	ptr = NULL;
+    fid = GFS_NameToId((Sint8 *)strupr(dir_upr));
 
 	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
 	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;
@@ -92,7 +89,7 @@ void ChangeDir(char *dirname)
 
 
 //	for (;;) {
-/*	    file_max =*/ GFS_LoadDir(fid, &dirtbl)-2;
+/*	    file_max =*/ GFS_LoadDir(fid, &dirtbl);
 //		if ( file_max >= 0) {
 //			break;
 //		}
@@ -110,15 +107,7 @@ GFS_SetDir(&dirtbl) ;
 Sint32 GetFileSize(int file_id)
 {
 #ifndef ACTION_REPLAY	
-	GfsHn gfs;
-    Sint32 sctsize, nsct, lastsize;
-    
-    gfs = GFS_Open(file_id);
-    GFS_GetFileSize(gfs, &sctsize, &nsct, &lastsize);
-
-    GFS_Close(gfs);
-//	return sctsize*nsct;
-	return (sctsize*(nsct-1) + lastsize);
+	return (dir_name[file_id].dirrec.size);
 #else
     return 300;
 #endif	

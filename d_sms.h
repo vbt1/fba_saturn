@@ -6,6 +6,7 @@
 #include "sega_int.h"
 #include "raze/raze.h"
 #include "czet.h"
+static Sint32 GetFileSize(int file_id);
 static UINT8 update_input1(void);
 static UINT8 update_input2(void);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);

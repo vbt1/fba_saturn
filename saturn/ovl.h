@@ -17,6 +17,7 @@ void cleanBSS() __attribute__ ((section(".clean")));
 void cleanDATA() __attribute__ ((section(".clean")));
 
 void GfxDecode4Bpp(unsigned int num, unsigned int numPlanes, unsigned int xSize, unsigned int ySize, int planeoffsets[], int xoffsets[], int yoffsets[], int modulo, unsigned char *pSrc, unsigned char *pDest);
+void swapFirstLastColor(UINT8 *mem,UINT8 mask,UINT32 size);
 void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly);
 void initScrolling(Uint8 enabled,void *address);
 void drawWindow(unsigned  int l1,unsigned  int l2,unsigned  int l3,unsigned  int vertleft,unsigned  int vertright);
