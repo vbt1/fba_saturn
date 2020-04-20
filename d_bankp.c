@@ -52,20 +52,17 @@ int ovlInit(char *szShortName)
 {
 	unsigned char *Next; Next = Mem;
 
-	Rom  = (UINT8 *)Next; Next += 0x10000;
+	Rom  = (UINT8 *)Next; Next += 0x0e000;
 	Gfx0 = (UINT8 *)Next; Next += 0x10000;
 	Gfx1 = (UINT8 *)Next; Next += 0x20000;
-	Prom = (UINT8 *)Next; Next += 0x200;
-	Palette = (UINT32 *)Next; Next += 0x200 * sizeof(UINT32);
+	Prom = (UINT8 *)Next; Next += 0x220;
+	Palette = (UINT32 *)Next; Next += 0x100 * sizeof(UINT32);
 	map_offset_lut	= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
-	//MemEnd         	= Next;
-
 	return 0;
 }
 
 /*static*/ INT32 DrvInit()
 {
-	nSoundBufferPos=0;
 	DrvInitSaturn();
 
 	MemIndex();
@@ -206,38 +203,12 @@ int ovlInit(char *szShortName)
 
 /*static*/ UINT8 __fastcall bankp_in(UINT16 address)
 {
-	UINT8 ret = 0;
-
 	switch (address & 0xff)
 	{
 		case 0x00:
-		{
-			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy1[i] << i;
-
-			// limit controls to 2-way
-			if ((ret & 0x05) == 0x05) ret &= 0xfa;
-			if ((ret & 0x0a) == 0x0a) ret &= 0xf5;
-
-			return ret;
-		}
-
 		case 0x01:
-		{
-			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy2[i] << i;
-
-			// limit controls to 2-way
-			if ((ret & 0x05) == 0x05) ret &= 0xfa;
-			if ((ret & 0x0a) == 0x0a) ret &= 0xf5;
-
-			return ret;
-		}
-
 		case 0x02:
-		{
-			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy3[i] << i;
-
-			return ret;
-		}
+			return DrvInputs[address & 3];
 
 		case 0x04:
 			return DrvDips;
@@ -540,6 +511,14 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ INT32 DrvFrame()
 {
+	memset (DrvInputs, 0, 3);
+
+	for (INT32 i = 0; i < 8; i++) {
+		DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
+		DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
+		DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
+	}	
+	
 #ifdef RAZE
 	z80_emulate(nCyclesTotal);
 //z80_emulate(3867120 / 60);

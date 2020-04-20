@@ -7,41 +7,42 @@
 #include "raze/raze.h"
 #define SOUND_LEN 256
 
-/*static*/ //UINT8 *MemEnd = NULL;
-/*static*/ UINT16 *map_offset_lut = NULL;
-/*static*/ UINT8 *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
-/*static*/ UINT32 *Palette = NULL;
-/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvDips=0;
-/*static*/ UINT8 /*scroll_x,*/ priority=0, flipscreen=0, interrupt_enable=0;
+//UINT8 *MemEnd = NULL;
+UINT16 *map_offset_lut = NULL;
+UINT8 *Mem = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
+UINT32 *Palette = NULL;
+UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvInputs[3] = {0,0,0};
+UINT8 DrvDips=0;
+UINT8 /*scroll_x,*/ priority=0, flipscreen=0, interrupt_enable=0;
 
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
-/*static*/ unsigned char __fastcall bankp_in(unsigned short address);
-/*static*/ void 	 bg_line(UINT16 offs);
-/*static*/ void 	 fg_line(UINT16 offs);
-/*static*/ void __fastcall bankp_write(unsigned short address, unsigned char data);
-/*static*/ void __fastcall bankp_out(UINT16 address, UINT8 data);
-/*static*/ void __fastcall bankp_write_f000(unsigned short address, unsigned char data);
-/*static*/ void __fastcall bankp_write_f400(unsigned short address, unsigned char data);
-/*static*/ void __fastcall bankp_write_f800(unsigned short address, unsigned char data);
-/*static*/ void __fastcall bankp_write_fc00(unsigned short address, unsigned char data);
+unsigned char __fastcall bankp_in(unsigned short address);
+void 	 bg_line(UINT16 offs);
+void 	 fg_line(UINT16 offs);
+void __fastcall bankp_write(unsigned short address, unsigned char data);
+void __fastcall bankp_out(UINT16 address, UINT8 data);
+void __fastcall bankp_write_f000(unsigned short address, unsigned char data);
+void __fastcall bankp_write_f400(unsigned short address, unsigned char data);
+void __fastcall bankp_write_f800(unsigned short address, unsigned char data);
+void __fastcall bankp_write_fc00(unsigned short address, unsigned char data);
 
 //void 	 bg_line(INT32 offs,INT32 flipx);
 //void 	 fg_line(INT32 offs,INT32 flipx);
 
-/*static*/ void bankp_palette_init();
-/*static*/ void bankp_gfx_decode();
-/*static*/ void DrvDoReset();
-/*static*/ INT32 DrvBpExit();
-/*static*/ INT32 DrvFrame();
-/*static*/ INT32 DrvInit();
-/*static*/ INT32 DrvChInit();
-/*static*/ INT32 MemIndex();
+void bankp_palette_init();
+void bankp_gfx_decode();
+void DrvDoReset();
+INT32 DrvBpExit();
+INT32 DrvFrame();
+INT32 DrvInit();
+INT32 DrvChInit();
+INT32 MemIndex();
 
-/*static*/ struct BurnInputInfo bankpInputList[] = {
+struct BurnInputInfo bankpInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy1 + 5,	"p1 coin"  },
 	{"Coin 2"       , BIT_DIGITAL  , DrvJoy1 + 6,	"p2 coin"  },
 	{"Coin 3"       , BIT_DIGITAL  , DrvJoy1 + 6,	"p3 coin"  },
@@ -66,7 +67,7 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 
 STDINPUTINFO(bankp)
 
-/*static*/ struct BurnInputInfo combhInputList[] = {
+struct BurnInputInfo combhInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy1 + 5,	"p1 coin"  },
 	{"Coin 2"       , BIT_DIGITAL  , DrvJoy1 + 6,	"p2 coin"  },
 	{"Coin 3"       , BIT_DIGITAL  , DrvJoy1 + 6,	"p3 coin"  },
@@ -92,7 +93,7 @@ STDINPUTINFO(bankp)
 
 STDINPUTINFO(combh)
 
-/*static*/ struct BurnDIPInfo bankpDIPList[]=
+struct BurnDIPInfo bankpDIPList[]=
 {
 	// Default Values
 	{0x10, 0xff, 0xff, 0x41, NULL                     },
@@ -130,7 +131,7 @@ STDINPUTINFO(combh)
 
 STDDIPINFO(bankp)
 
-/*static*/ struct BurnDIPInfo combhDIPList[]=
+struct BurnDIPInfo combhDIPList[]=
 {
 	// Default Values
 	{0x10, 0xff, 0xff, 0x40, NULL                     },
@@ -168,7 +169,7 @@ STDDIPINFO(combh)
 
 // Bank Panic
 
-/*static*/ struct BurnRomInfo bankpRomDesc[] = {
+struct BurnRomInfo bankpRomDesc[] = {
 	{ "epr6175.bin",       0x4000, 0x044552b8, 1 | BRF_ESS | BRF_PRG },    //  0 Z80 Code	
 	{ "epr6174.bin",       0x4000, 0xd29b1598, 1 | BRF_ESS | BRF_PRG },    //  1	
 	{ "epr6173.bin",       0x4000, 0xb8405d38, 1 | BRF_ESS | BRF_PRG },    //  2	
@@ -197,7 +198,7 @@ STD_ROM_FN(bankp)
 
 // Combat Hawk
 
-/*static*/ struct BurnRomInfo combhRomDesc[] = {
+struct BurnRomInfo combhRomDesc[] = {
 	{ "epr10904.7e",      0x4000, 0x4b106335, 1 | BRF_ESS | BRF_PRG },    //  0 Z80 Code	
 	{ "epr10905.7f",      0x4000, 0xa76fc390, 1 | BRF_ESS | BRF_PRG },    //  1	
 	{ "epr10906.7h",      0x4000, 0x16d54885, 1 | BRF_ESS | BRF_PRG },    //  2	
