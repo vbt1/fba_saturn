@@ -6,6 +6,9 @@
 #include "sega_int.h"
 #include "raze/raze.h"
 #include "czet.h"
+
+extern unsigned char play;
+
 static Sint32 GetFileSize(int file_id);
 static UINT8 update_input1(void);
 static UINT8 update_input2(void);

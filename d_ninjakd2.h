@@ -3,7 +3,7 @@
 
 #include "burnint.h"
 #include "saturn/ovl.h"
-#include "saturn/saturn_snd.h"
+//#include "saturn/saturn_snd.h"
 #include "czet.h"
 
 #define VDP2_BASE           0x25e00000
@@ -18,9 +18,10 @@ void Ninjakd2Draw();
 void RobokidDraw();
 void DrvInitSaturnS(UINT8 game);
 void initColorsS(UINT8 game);
+void ninjakd2_bgconfig(UINT32 sel, UINT32 offset, UINT8 data);
 inline void DrvCalculatePalette();
 void draw_sprites();
-void draw_bg_layer();
+inline void draw_bg_layer();
 void draw_fg_layer();
  void tile16x16toSaturn (unsigned int num, unsigned char *pDest);
 void cleanSprites();

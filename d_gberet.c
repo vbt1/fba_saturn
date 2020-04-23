@@ -464,7 +464,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 #else
 	CZetExit2();
 #endif
-	SN76489Init(0, 0, 0);
+	SN76496Exit();
 	
 	nBurnSprites=128;
 	cleanSprites();

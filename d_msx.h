@@ -16,11 +16,13 @@
 
 #define nBurnSoundLen 128  // div par 2 car utilisation integer
 
-/*static*/ INT32 DrvFrame();
-/*static*/ int DrvExit();
-/*static*/ INT32 BasicDrvInit();
-/*static*/ int DrvInit();
-/*static*/ void DrvDoReset();
+extern unsigned char play;
+
+INT32 DrvFrame();
+int DrvExit();
+INT32 BasicDrvInit();
+int DrvInit();
+void DrvDoReset();
 
 void PCM_MeInit(void);
 void PCM_MeStart(PcmHn hn);
@@ -33,35 +35,35 @@ int file_id = 2;
 int file_max = 0;
 #ifdef RAZE
 #include "raze\raze.h"
-/*static*/ void __fastcall msx_write_konami4(UINT16 address, UINT8 data);
-/*static*/ void __fastcall msx_write_konami4scc(UINT16 address, UINT8 data);
-/*static*/ void __fastcall msx_write_scc(UINT16 address, UINT8 data);
-/*static*/ void __fastcall msx_write_scc2(UINT16 address, UINT8 data);
-/*static*/ void __fastcall msx_write_ascii8(UINT16 address, UINT8 data);
+void __fastcall msx_write_konami4(UINT16 address, UINT8 data);
+void __fastcall msx_write_konami4scc(UINT16 address, UINT8 data);
+void __fastcall msx_write_scc(UINT16 address, UINT8 data);
+void __fastcall msx_write_scc2(UINT16 address, UINT8 data);
+void __fastcall msx_write_ascii8(UINT16 address, UINT8 data);
 #endif
-/*static*/ UINT8 msx_ppi8255_portB_read();
-/*static*/ void msx_ppi8255_portA_write(UINT8 data);
-/*static*/ void msx_ppi8255_portC_write(UINT8 data);
-/*static*/ UINT8 ay8910portAread(UINT32 offset);
-/*static*/ void ay8910portAwrite(UINT32 offset, UINT32 data);
-/*static*/ void ay8910portBwrite(UINT32 offset, UINT32 data);
+UINT8 msx_ppi8255_portB_read();
+void msx_ppi8255_portA_write(UINT8 data);
+void msx_ppi8255_portC_write(UINT8 data);
+UINT8 ay8910portAread(UINT32 offset);
+void ay8910portAwrite(UINT32 offset, UINT32 data);
+void ay8910portBwrite(UINT32 offset, UINT32 data);
 
-/*static*/ void InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot);
-/*static*/ void PageMap(INT32 CartSlot, const char *cMap); //("0:0:0:0:0:0:0:0")
-/*static*/ void MapMegaROM(UINT8 nSlot, UINT8 nPg0, UINT8 nPg1, UINT8 nPg2, UINT8 nPg3);
+void InsertCart(UINT8 *cartbuf, INT32 cartsize, INT32 nSlot);
+void PageMap(INT32 CartSlot, const char *cMap); //("0:0:0:0:0:0:0:0")
+void MapMegaROM(UINT8 nSlot, UINT8 nPg0, UINT8 nPg1, UINT8 nPg2, UINT8 nPg3);
 
-/*static*/ void SetSlot(UINT8 nSlot);
-/*static*/ void setFetch(UINT32 I, UINT8 *ram);
-/*static*/ void vdp_interrupt(INT32 state);
+void SetSlot(UINT8 nSlot);
+void setFetch(UINT32 I, UINT8 *ram);
+void vdp_interrupt(INT32 state);
 
-/*static*/ void __fastcall msx_write(UINT16 address, UINT8 data);
+void __fastcall msx_write(UINT16 address, UINT8 data);
 
-/*static*/ UINT8 __fastcall msx_read_port(UINT16 port);
-/*static*/ void __fastcall msx_write_port(UINT16 port, UINT8 data);
+UINT8 __fastcall msx_read_port(UINT16 port);
+void __fastcall msx_write_port(UINT16 port, UINT8 data);
 
-/*static*/ void updateSlaveSound();
-/*static*/ void updateSlaveSoundSCC();
-/*static*/ void Set8PCM();
+void updateSlaveSound();
+void updateSlaveSoundSCC();
+void Set8PCM();
 
 
 PcmHn 			pcm8[8] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
@@ -99,46 +101,46 @@ const SysDevice	*PER_GetDeviceR( const SysPort	*port, Uint32	n );
 SysPort	*PER_OpenPort( void );
 trigger_t	PER_GetTrigger( const SysDevice	*this );
 
-/*static*/  UINT16 *SCCMixerBuffer	= NULL;
-/*static*/  UINT16 *SCCMixerTable	= NULL;
+ UINT16 *SCCMixerBuffer	= NULL;
+ UINT16 *SCCMixerTable	= NULL;
 #ifndef RAZE
-/*static*/  UINT8 *CZ80Context = NULL;
+ UINT8 *CZ80Context = NULL;
 #endif
-/*static*/  UINT8 *TMSContext = NULL;
-/*static*/  UINT8 *AllMem	= NULL;
-/*static*/  //UINT8 *MemEnd	= NULL;
-/*static*/  UINT8 *AllRam	= NULL;
-/*static*/ // UINT8 *RamEnd	= NULL;
-/*static*/  UINT8 *maincpu	= NULL; // msx bios rom
-/*static*/  UINT8 *game      = NULL; // game cart rom, tape side A
+ UINT8 *TMSContext = NULL;
+ UINT8 *AllMem	= NULL;
+ //UINT8 *MemEnd	= NULL;
+ UINT8 *AllRam	= NULL;
+// UINT8 *RamEnd	= NULL;
+ UINT8 *maincpu	= NULL; // msx bios rom
+ UINT8 *game      = NULL; // game cart rom, tape side A
 #ifdef CASSETTE
-/*static*/  UINT8 *game2     = NULL; // tape side B
+ UINT8 *game2     = NULL; // tape side B
 #endif
-/*static*/  UINT8 *main_mem	= NULL;
+ UINT8 *main_mem	= NULL;
 #ifdef KANJI
-/*static*/  UINT8 *kanji_rom = NULL;
+ UINT8 *kanji_rom = NULL;
 #endif
-/*static*/  UINT8 *game_sram = NULL;
+ UINT8 *game_sram = NULL;
 /*static*/// UINT8 *tmpbmp = NULL;
 
 #ifdef CASSETTE
-/*static*/  UINT8 *curtape   = NULL; // pointer(only) to currently inserted tape.
-/*static*/  INT32 curtapelen = 0;
+ UINT8 *curtape   = NULL; // pointer(only) to currently inserted tape.
+ INT32 curtapelen = 0;
 #endif
 /*static*/	UINT8 stop 			= 0;
-/*static*/  UINT8 use_kanji     = 0;
-/*static*/  UINT8 msx_basicmode = 0;
+ UINT8 use_kanji     = 0;
+ UINT8 msx_basicmode = 0;
 
-/*static*/  UINT8 DrvInputs[2]={0,0};
+ UINT8 DrvInputs[2]={0,0};
 
-/*static*/  UINT8 DrvJoy1[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-/*static*/  UINT8 DrvJoy2[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-/*static*/  UINT8 DrvJoy4[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-/*static*/  UINT8 DrvDips[1]={0};
+ UINT8 DrvJoy1[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+ UINT8 DrvJoy2[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+ UINT8 DrvJoy4[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+ UINT8 DrvDips[1]={0};
 /*static*///  UINT8 DrvReset = 0;
-/*static*/  UINT8 DrvNMI = 0;
+ UINT8 DrvNMI = 0;
 
-/*static*/ struct BurnInputInfo MSXInputList[] = {
+struct BurnInputInfo MSXInputList[] = {
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"},
 	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"},
@@ -171,7 +173,7 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
 
 STDINPUTINFO(MSX)
 
-/*static*/ struct BurnDIPInfo MSXDIPList[]=
+struct BurnDIPInfo MSXDIPList[]=
 {
 	//{0x17, 0xff, 0xff, 0x10, NULL		},
 
@@ -200,42 +202,42 @@ STDINPUTINFO(MSX)
 	{0x17, 0x01, 0x40, 0x40, "Side B"	},
 };
 
-/*static*/ struct BurnDIPInfo MSXDefaultDIPList[]=
+struct BurnDIPInfo MSXDefaultDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x10, NULL		},
 };
 
-/*static*/ struct BurnDIPInfo MSXJBIOSDIPList[]=
+struct BurnDIPInfo MSXJBIOSDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x11, NULL		},
 };
 
-/*static*/ struct BurnDIPInfo MSX50hzJoySwapDIPList[]=
+struct BurnDIPInfo MSX50hzJoySwapDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x20, NULL		},
 };
 
-/*static*/ struct BurnDIPInfo MSX50hzDIPList[]=
+struct BurnDIPInfo MSX50hzDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x20, NULL		},
 };
 
-/*static*/ struct BurnDIPInfo MSXJoySwapDIPList[]=
+struct BurnDIPInfo MSXJoySwapDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x30, NULL		},
 };
 
-/*static*/ struct BurnDIPInfo MSXMapCursorToJoy1DIPList[]=
+struct BurnDIPInfo MSXMapCursorToJoy1DIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x80, NULL		},
 };
 
-/*static*/ struct BurnDIPInfo MSXMapCursorToJoy1_60hzDIPList[]=
+struct BurnDIPInfo MSXMapCursorToJoy1_60hzDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x80+0x10, NULL		},
 };
 
-/*static*/ struct BurnDIPInfo MSXKeyClickerDACDIPList[]=
+struct BurnDIPInfo MSXKeyClickerDACDIPList[]=
 {
 	{0x17, 0xff, 0xff, 0x02, NULL		},
 };
@@ -272,67 +274,67 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 #define DEFAULT_CARTSLOTB 2
 #define DEFAULT_RAMSLOT 3
 
-/*static*/  UINT8 SwapJoyports = 0; // Swap Joyport DIP
-/*static*/  UINT8 Joyselect = 0;    // read from Joystick 0 or 1? (internal)
-/*static*/  UINT8 Hertz60 = 0;      // DIP setting.
-/*static*/  UINT8 BiosmodeJapan = 0;// DIP setting.
+ UINT8 SwapJoyports = 0; // Swap Joyport DIP
+ UINT8 Joyselect = 0;    // read from Joystick 0 or 1? (internal)
+ UINT8 Hertz60 = 0;      // DIP setting.
+ UINT8 BiosmodeJapan = 0;// DIP setting.
 
 // Game-based kludges
 //static INT32 MapCursorToJoy1 = 0; // Map Cursor Keys & space to Joy1
 
-/*static*/  INT32 VBlankKludge = 0; // For VoidRunner (joystick selection hangs)
+ INT32 VBlankKludge = 0; // For VoidRunner (joystick selection hangs)
 #ifdef CASSETTE
-/*static*/  INT32 CASMode = 0;      // Using .cas file?
-/*static*/  INT32 CASPos = 0;       // Internal tape position counter
-/*static*/  INT32 CASFrameCounter = 0; // for autoloading
-/*static*/  INT32 CASSide = 0; // Tape Side, 0 = A, 1 = B
-/*static*/  INT32 CASSideLast = 0; // used for detecting side changes
+ INT32 CASMode = 0;      // Using .cas file?
+ INT32 CASPos = 0;       // Internal tape position counter
+ INT32 CASFrameCounter = 0; // for autoloading
+ INT32 CASSide = 0; // Tape Side, 0 = A, 1 = B
+ INT32 CASSideLast = 0; // used for detecting side changes
 #endif
-/*static*/  INT32 BIOSSLOT = 0;      // Machine slot configuration
-/*static*/  INT32 CARTSLOTA = 0;
-/*static*/  INT32 CARTSLOTB = 0;
-/*static*/  INT32 RAMSLOT = 0;
+ INT32 BIOSSLOT = 0;      // Machine slot configuration
+ INT32 CARTSLOTA = 0;
+ INT32 CARTSLOTB = 0;
+ INT32 RAMSLOT = 0;
 
-/*static*/  UINT8 *RAM[8]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL}; // Mapped address space
-/*static*/  UINT8 *EmptyRAM = NULL; // Unmapped stuff points here
-/*static*/  UINT8 *MemMap[4][8]={{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},
+ UINT8 *RAM[8]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL}; // Mapped address space
+ UINT8 *EmptyRAM = NULL; // Unmapped stuff points here
+ UINT8 *MemMap[4][8]={{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},
 								{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},
 								{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},
 								{NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL}};    // [prislot] [page]
 
-/*static*/  UINT8 *RAMData = NULL;         // main flat-chunk of ram
-/*static*/  UINT8 RAMMapper[4]={0,0,0,0};
-/*static*/  UINT8 RAMMask = 0;
-/*static*/  INT32 RAMPages = 4;
+ UINT8 *RAMData = NULL;         // main flat-chunk of ram
+ UINT8 RAMMapper[4]={0,0,0,0};
+ UINT8 RAMMask = 0;
+ INT32 RAMPages = 4;
 
-/*static*/  UINT8 *SRAMData[MAXSLOTS]={NULL,NULL,NULL,NULL}; // ascii8/16 sram
+ UINT8 *SRAMData[MAXSLOTS]={NULL,NULL,NULL,NULL}; // ascii8/16 sram
 
-/*static*/  UINT8 *ROMData[MAXSLOTS]={NULL,NULL,NULL,NULL};  // flat chunk of cart-rom
-/*static*/  UINT8 ROMMapper[MAXSLOTS][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
-/*static*/  UINT8 ROMMask[MAXSLOTS]={0,0,0,0};
-/*static*/  UINT8 ROMType[MAXSLOTS]={0,0,0,0};
+ UINT8 *ROMData[MAXSLOTS]={NULL,NULL,NULL,NULL};  // flat chunk of cart-rom
+ UINT8 ROMMapper[MAXSLOTS][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
+ UINT8 ROMMask[MAXSLOTS]={0,0,0,0};
+ UINT8 ROMType[MAXSLOTS]={0,0,0,0};
 
 // Game-specific mappers
-/*static*/  UINT8 dooly_prot = 0;
-/*static*/  UINT8 crossblaim_selected_bank = 0;
-/*static*/  UINT8 *crossblaim_bank_base[4]={NULL,NULL,NULL,NULL};
-/*static*/  UINT8 rtype_selected_bank = 0;
-/*static*/  UINT8 *rtype_bank_base[2]={NULL,NULL};
+ UINT8 dooly_prot = 0;
+ UINT8 crossblaim_selected_bank = 0;
+ UINT8 *crossblaim_bank_base[4]={NULL,NULL,NULL,NULL};
+ UINT8 rtype_selected_bank = 0;
+ UINT8 *rtype_bank_base[2]={NULL,NULL};
 
-/*static*/  INT32 CurRomSizeA = 0; // cart A
-/*static*/  INT32 CurRomSizeB = 0; // cart B
+ INT32 CurRomSizeA = 0; // cart A
+ INT32 CurRomSizeB = 0; // cart B
 
-/*static*/  UINT8 WriteMode[MAXSLOTS]={0,0,0,0};
-/*static*/  UINT8 PSL[MAXSLOTS]={0,0,0,0}; // primary slot list
-/*static*/  UINT8 PSLReg=0; // primary slot register
-/*static*/  UINT8 SCCReg[MAXSLOTS]={0,0,0,0}; // Konami-scc enable register
+ UINT8 WriteMode[MAXSLOTS]={0,0,0,0};
+ UINT8 PSL[MAXSLOTS]={0,0,0,0}; // primary slot list
+ UINT8 PSLReg=0; // primary slot register
+ UINT8 SCCReg[MAXSLOTS]={0,0,0,0}; // Konami-scc enable register
 
-/*static*/  UINT8 Kana=0, KanaByte=0; // Kanji-rom stuff
+ UINT8 Kana=0, KanaByte=0; // Kanji-rom stuff
 
-/*static*/  UINT8 ppiC_row=0;
-/*static*/  UINT8 keyRows[12]={0,0,0,0,0,0,0,0,0,0,0,0};
+ UINT8 ppiC_row=0;
+ UINT8 keyRows[12]={0,0,0,0,0,0,0,0,0,0,0,0};
 #ifdef CASSETTE
-/*static*/ INT32 charMatrix[][3] = {
+INT32 charMatrix[][3] = {
 	{'0', 0, 0}, {')', 0, 0}, {'1', 0, 1}, {'!', 0, 1}, {'2', 0, 2}, {'@', 0, 2},
 	{'3', 0, 3}, {'#', 0, 3}, {'4', 0, 4}, {'$', 0, 4}, {'5', 0, 5}, {'%', 0, 5},
 	{'6', 0, 6}, {'^', 0, 6}, {'7', 0, 7}, {'&', 0, 7},
@@ -387,13 +389,13 @@ STDDIPINFOEXT(MSXKeyClick, MSXKeyClickerDAC, MSX)
 	{'\0', 0, 0} // NULL/END.
 };
 
-/*static*/ struct BurnRomInfo emptyRomDesc[] = {
+struct BurnRomInfo emptyRomDesc[] = {
 	{ "",                    0,          0, 0 },
 };
 #endif 
 
 // MSX1 BIOS
-/*static*/ struct BurnRomInfo msx_msxRomDesc[] = {
+struct BurnRomInfo msx_msxRomDesc[] = {
     { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios
     { "msxj.rom",    0x8000, 0x071135e0, BRF_BIOS | BRF_OPT }, // 0x81 - japanese bios
 //    { "kanji.rom",   0x40000, 0x1f6406fb, BRF_BIOS | BRF_OPT }, // 0x82 - kanji support
@@ -404,7 +406,7 @@ STD_ROM_FN(msx_msx)
 
 // 1942 (Jpn)
 
-/*static*/ struct BurnRomInfo MSX_1942RomDesc[] = {
+struct BurnRomInfo MSX_1942RomDesc[] = {
 //	{ "1942.rom",	0x2000, 0xa27787af, BRF_PRG | BRF_ESS },
 	{ "1942.rom",	0x20000, 0xa27787af, BRF_PRG | BRF_ESS },
     { "msx.rom",     0x8000, 0xa317e6b4, BRF_BIOS }, // 0x80 - standard bios

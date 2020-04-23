@@ -88,7 +88,7 @@ void ninjakd2_bankswitch(INT32 data)
 	CZetMapMemory(DrvZ80ROM0 + nBank, 	0x8000, 0xbfff, MAP_ROM);
 }
 
-void ninjakd2_bgconfig(INT32 sel, INT32 offset, UINT8 data)
+void ninjakd2_bgconfig(UINT32 sel, UINT32 offset, UINT8 data)
 {
 	switch (offset & 0x07)
 	{
@@ -794,12 +794,8 @@ INT32 RobokidInit()
 		DrvGfxDecode((UINT8*)tmp, 0x80000, 3);
 		swapFirstLastColor(tmp,0x0f,0x80000);
 // tile 0xc00 à vider 
-		for (UINT32 i=0x60000;i<0x60080;i++ )
-		{
-				tmp[i] = 0x00;
-		}
+		memset(&tmp[0x60000],0x00,0x80);
 
-//		memset(DrvGfxROM0,0x00,0x80000); // inutile
 //DrvGfxROM2
 		tmp = (UINT8*)0x00200000;
 		if (BurnLoadRom((UINT8*)tmp + 0x00000, 10, 1)) return 1;
@@ -813,7 +809,6 @@ INT32 RobokidInit()
 		DrvGfxDecode((UINT8*)tmp, 0x70000, 3);
 		swapFirstLastColor(tmp,0x0f,0x70000);
 
-//		memset(DrvGfxROM0,0x00,0x70000);  on vire
 //DrvGfxROM4 trouver 400k de ram !!!
 		tmp = (UINT8*)DrvGfxROM4Data1;
 		if (BurnLoadRom(tmp + 0x00000, 25, 1)) return 1;
@@ -830,7 +825,6 @@ INT32 RobokidInit()
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  5, 1)) return 1;
 		swapFirstLastColor(DrvGfxROM0,0x0f,0x10000);
 	}
-//	memset4_fast((UINT8*)0x00200000,0x00000000,0x40000);
 
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
@@ -849,7 +843,6 @@ INT32 RobokidInit()
 
 //	ninjakd2_sound_init();
 
-//memset(ss_map,0x11,0x10000);
 	DrvDoReset();
 	DrvCalculatePalette();
 	return 0;
@@ -1009,10 +1002,8 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 		memcpyl(new_tile,dpM,128);
 		unsigned int i=0,j=0,k=0;
 
-		for (k=0;k<128;k+=64)
+		for (k=0;k<2;k++)
 		{
-			dpM = pDest + ((c * 128)+k);
-
 			for (i=0;i<32;i+=4,j+=8)
 			{
 				dpM[i]=new_tile[j];
@@ -1024,6 +1015,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 				dpM[i+34]=new_tile[j+6];
 				dpM[i+35]=new_tile[j+7];
 			}
+			dpM+=64;
 		}
 	}
 }
@@ -1045,12 +1037,17 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	free(AllMem);
 	AllMem = NULL;
 	ss_map3 = NULL;
-
+/*
+	memset(DrvJoy1,0x00,8);
+	memset(DrvJoy2,0x00,8);
+	memset(DrvJoy3,0x00,8);
+	DrvDips[0] = DrvDips[1] = 0;
+	DrvInputs[0] = DrvInputs[1] = DrvInputs[2] = 0;
+*/
+	nSoundBufferPos=0;
 	cleanDATA();
 	cleanBSS();
-
-	nSoundBufferPos=0;
-
+	
 	return 0;
 }
 
@@ -1123,11 +1120,11 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	}
 }
 
-void draw_bg_layer()
+inline void draw_bg_layer()
 {
 
 
-	for (INT32 offs = 0; offs < 32 * 32; offs++)
+	for (UINT32 offs = 0; offs < 32 * 32; offs++)
 	{
 		UINT32 sx = (offs & 0x1f);
 		UINT32 sy = (offs / 0x20)<<5;
@@ -1138,7 +1135,7 @@ void draw_bg_layer()
 		UINT32 flipy = attr & 0x20;
  
 		ss_map2[offs*2] = (attr & 0x0f);
-		ss_map2[(offs*2)+1] = 0x400 + (code<<2) & 0x0fff;		
+		ss_map2[(offs*2)+1] = 0x400 + (code<<2) & 0x0fff;
 	}
 }
 

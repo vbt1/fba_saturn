@@ -175,17 +175,6 @@ static void ChangeDir(char *dirname)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void	SetVblank2( void ){
-	int			imask;
-
-	imask = get_imask();
-	set_imask(2);
-//	INT_ChgMsk(INT_MSK_NULL,INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT);
-	INT_ChgMsk(INT_MSK_NULL, INT_MSK_VBLK_OUT);
-//	INT_SetScuFunc(INT_SCU_VBLK_IN,UsrVblankIn2);
-	INT_SetScuFunc(INT_SCU_VBLK_OUT,update_input1);
-//	INT_ChgMsk(INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT,INT_MSK_NULL);
-	INT_ChgMsk(INT_MSK_VBLK_OUT,INT_MSK_NULL);
-	set_imask(imask);
 	__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

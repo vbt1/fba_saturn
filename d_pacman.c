@@ -530,7 +530,7 @@ void DrvInitSaturn()
 	ss_reg->n1_delta_y = FIXED(0.6);
 	ss_reg->n0_delta_y = FIXED(0.5);
 
-	nBurnLinescrollSize = 1;
+	nBurnLinescrollSize = 0;
 	nBurnSprites = 32+3;
 
 //3 nbg

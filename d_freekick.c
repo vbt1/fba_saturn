@@ -927,10 +927,7 @@ void rotate_tile16x16(unsigned int size, unsigned char *target)
 	PCM_NotifyWriteSize(pcm, nSoundBufferPos);	
 	PCM_Task(pcm);
 	
-	SN76489Init(0, 0, 0);
-	SN76489Init(1, 0, 0);
-	SN76489Init(2, 0, 0);
-	SN76489Init(3, 0, 0);	
+	SN76496Exit();	
 
 	CZ80Context = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
 	DrvVidRAM = DrvSprRAM = DrvColRAM = DrvColPROM = NULL;

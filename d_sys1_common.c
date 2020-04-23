@@ -927,8 +927,7 @@ int System1Exit()
 	memset(map_dirty,1,0);
 	CZ80Context = NULL;
 
-	SN76489Init(0, 0, 0);
-	SN76489Init(1, 0, 0);
+	SN76496Exit();
 
 RamStart1 = RamStart               = NULL;
 System1Rom1 = System1Rom2 = NULL;

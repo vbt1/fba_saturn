@@ -15,6 +15,8 @@
 #include "czet.h"	
 #endif
 
+extern unsigned char play;
+
 /*static*/ int DrvInit();
 /*static*/ int DrvExit();
 /*static*/ int DrvFrame();

@@ -16,10 +16,7 @@ SECTIONS {
 	    *(.shared)
 		_play = .;
 		_hz = _play + 2;
-/*		_file_id2 = _hz + 2;
-		_file_max = _hz + 2;*/
 		_col = _hz + 2; /* size 16 */
-/*		_palette = _col + 16;*/ /* size 16 */		
 		_pcm = _col + 16; /* pointer size 4 */		
 		_nBurnDrvCount = _pcm + 16;
 		_nBurnDrvSelect = _nBurnDrvCount + 4;

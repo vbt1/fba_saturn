@@ -496,7 +496,7 @@ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	nBurnSprites = 259;
-	nBurnLinescrollSize = 1;
+	nBurnLinescrollSize = 0;
 	nSoundBufferPos = 0;
 
 	SS_MAP  = ss_map   = (Uint16 *)(SCL_VDP2_VRAM_B1+0x10000);

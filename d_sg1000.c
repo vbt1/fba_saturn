@@ -51,21 +51,9 @@ static void ChangeDir(char *dirname)
 	GFS_SetDir(&dirtbl) ;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void	SetVblank2( void ){
-	int			imask;
-
-
-	imask = get_imask();
-	set_imask(2);
-//	INT_ChgMsk(INT_MSK_NULL,INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT);
-	INT_ChgMsk(INT_MSK_NULL, INT_MSK_VBLK_OUT);
-//	INT_SetScuFunc(INT_SCU_VBLK_IN,UsrVblankIn2);
-	INT_SetScuFunc(INT_SCU_VBLK_OUT,update_input1);
-//	INT_ChgMsk(INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT,INT_MSK_NULL);
-	INT_ChgMsk(INT_MSK_VBLK_OUT,INT_MSK_NULL);
-	set_imask(imask);
+/*static*/ void	SetVblank2( void )
+{
 	__port = PER_OpenPort();
-	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void set_memory_map(int mapper)
@@ -467,7 +455,7 @@ static void ChangeDir(char *dirname)
 #endif
 	TMS9928AExit();
 	ppi8255_exit();
-//	SN76489AInit(0, 0, 0);	
+	SN76496Exit();
 
 	memset((void *)SOUND_BUFFER,0x00,0x20000);
 	

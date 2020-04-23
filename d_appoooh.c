@@ -877,6 +877,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	CZetExit2();
 
 	MSM5205Exit();
+	SN76496Exit();
 
 	for(UINT32 i=0;i<4;i++)
 	{

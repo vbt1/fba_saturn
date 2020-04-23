@@ -366,6 +366,15 @@ void SN76496Init(int Num, int Clock, int SignalAdd)
 {
 	return GenericStart(Num, Clock, 0x8000, 0x06, 0, SignalAdd);
 }
+
+void SN76496Exit()
+{
+	memset(&Chip0, 0, sizeof(struct SN76496));
+	memset(&Chip1, 0, sizeof(struct SN76496));
+	memset(&Chip2, 0, sizeof(struct SN76496));
+	memset(&Chip3, 0, sizeof(struct SN76496));
+	memset(&Chip4, 0, sizeof(struct SN76496));
+}
 /*
 void SN76496SetRoute(int Num, double nVolume, int nRouteDir)
 {

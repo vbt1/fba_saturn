@@ -6,7 +6,7 @@
 #define CACHE 1
 #define nCyclesTotal 2578000 / 60
 #include "d_bankp.h"
-
+ 
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -418,7 +418,7 @@ int ovlInit(char *szShortName)
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri     = (SclOtherPriRegister *)SS_OTHR;
 	ss_BgColMix		= (SclBgColMixRegister *)SS_BGMIX;
-	nBurnLinescrollSize = 1;
+	nBurnLinescrollSize = 0;
 	nBurnSprites = 3;
 
 //3 nbg
@@ -449,9 +449,7 @@ int ovlInit(char *szShortName)
 	CZetExit2();
 	CZ80Context = NULL;
 #endif	
-	SN76489Init(0, 0, 0);
-	SN76489Init(1, 0, 0);
-	SN76489Init(2, 0, 0);
+	SN76496Exit();
 
 	Rom  = Gfx0 = Gfx1 = Prom = NULL;
 	Palette = NULL;

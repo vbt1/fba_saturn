@@ -20,7 +20,6 @@ void heapWalk(void);
 /*volatile*/ SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
 extern unsigned char play;
-unsigned char drvquit = 0;
 //-------------------------------------------------------------------------------------------------------------------------------------
 void	UsrVblankIn( void )
 {
@@ -43,14 +42,14 @@ void	UsrVblankIn( void )
 					 
 		if(frame_y==hz)
 		{
-				if(frame_displayed!=frame_x)
-				{
-					sprintf(xx,"%03d",frame_x);
-					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)xx,136,20);
-					frame_displayed = frame_x;
-				}
+			if(frame_displayed!=frame_x)
+			{
+				sprintf(xx,"%03d",frame_x);
+				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)xx,136,20);
+				frame_displayed = frame_x;
+			}
 
-				frame_y=frame_x=0;
+			frame_y=frame_x=0;
 		}		   
 #endif
 #ifndef ACTION_REPLAY
@@ -59,13 +58,13 @@ void	UsrVblankIn( void )
 //	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void   UsrVblankOut( void )
+static void   UsrVblankOut( void )
 {
-	do_keypad();
+	do_keypad(FBA_KEYPAD);
 	InpMake(FBA_KEYPAD);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void	SetVblank( void )
+static void	SetVblank()
 {
 	INT_ChgMsk(INT_MSK_NULL,INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT);
 	INT_SetScuFunc(INT_SCU_VBLK_IN,UsrVblankIn);
@@ -1239,7 +1238,7 @@ static unsigned int get_hz(void)
 		return 50;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int DoInputBlank(int bDipSwitch)
+static int DoInputBlank()
 {
   int iJoyNum = 0;
    int i=0; 
@@ -1251,7 +1250,7 @@ static int DoInputBlank(int bDipSwitch)
   for (i=0; i<nGameInpCount; i++)
   {
     struct BurnInputInfo bii;
-    memset(&bii,0,sizeof(bii));
+    memset(&bii,0,sizeof(struct BurnInputInfo));
 //    BurnDrvGetInputInfo(&bii,i);
 	pDriver[nBurnDrvSelect]->GetInputInfo(&bii, i);
     
@@ -1394,18 +1393,16 @@ static int DoInputBlank(int bDipSwitch)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void InpExit()
 {
-//  bInputOk = false;
-//  nGameInpCount = 0;
   if (DIPInfo.nDIP!=NULL)
 	{
-//	memset(DIPInfo.DIPData,0,DIPInfo.nDIP * sizeof(struct GameInp));
-	memset(DIPInfo.DIPData,0,4 * sizeof(struct GameInp));
-//		if (DIPInfo.DIPData!=NULL)
-//			free (DIPInfo.DIPData);
+		memset(DIPInfo.DIPData,0,4 * sizeof(struct GameInp));
+		memset(GameInp,0,12*4*sizeof(struct GameInp));
+		nGameInpCount = 0;
+		DIPInfo.nDIP = NULL;
+		FBA_KEYPAD[0] = 0;
+		P1P2Start = 0;
+		P1Start = P2Start = NULL;	
 	}
-	nGameInpCount = 0;
-//  DIPInfo.DIPData=NULL;
-//  return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void InpMake(unsigned int key[])
@@ -1465,7 +1462,7 @@ static void InpInit()
   }
 
   memset(GameInp,0,12*4*sizeof(struct GameInp));
-  DoInputBlank(1);
+  DoInputBlank();
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1560,16 +1557,15 @@ static void check_exit(Uint16 data)
 	   )
 	{
 		play = 0;
-		drvquit = 1;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void do_keypad()
+static void do_keypad(unsigned int key[])
 {
-	FBA_KEYPAD[0] = 0;
-	FBA_KEYPAD[1] = 0;
-	FBA_KEYPAD[2] = 0;
-	FBA_KEYPAD[3] = 0;
+	key[0] = 0;
+//	key[1] = 0;
+//	key[2] = 0;
+//	key[3] = 0;
 //	ServiceRequest =0;
 	P1P2Start = 0;
 
@@ -1591,19 +1587,19 @@ static void do_keypad()
 			{
 				switch(pltrigger[0] & pad_asign[i] )
 				{
-					case PER_DGT_U: FBA_KEYPAD[0] |= 0x0001; break;
-					case PER_DGT_D: FBA_KEYPAD[0] |= 0x0002; break;
-					case PER_DGT_L: FBA_KEYPAD[0] |= 0x0004; break;
-					case PER_DGT_R: FBA_KEYPAD[0] |= 0x0008; break;
-					case PER_DGT_B: FBA_KEYPAD[0] |= 0x0040; break;
-					case PER_DGT_A: FBA_KEYPAD[0] |= 0x0080; break;
-					case PER_DGT_C: FBA_KEYPAD[0] |= 0x0100; break;
-					case PER_DGT_X: FBA_KEYPAD[0] |= 0x0200; break;
-					case PER_DGT_Y: FBA_KEYPAD[0] |= 0x0400; break;
-					case PER_DGT_Z: FBA_KEYPAD[0] |= 0x0800; break;
-					case PER_DGT_TL: FBA_KEYPAD[0] |= 0x0010; break;
-					case PER_DGT_TR: FBA_KEYPAD[0] |= 0x0020; break;
-					case PER_DGT_S: FBA_KEYPAD[0] |= P1P2Start = 1; break;
+					case PER_DGT_U: key[0] |= 0x0001; break;
+					case PER_DGT_D: key[0] |= 0x0002; break;
+					case PER_DGT_L: key[0] |= 0x0004; break;
+					case PER_DGT_R: key[0] |= 0x0008; break;
+					case PER_DGT_B: key[0] |= 0x0040; break;
+					case PER_DGT_A: key[0] |= 0x0080; break;
+					case PER_DGT_C: key[0] |= 0x0100; break;
+					case PER_DGT_X: key[0] |= 0x0200; break;
+					case PER_DGT_Y: key[0] |= 0x0400; break;
+					case PER_DGT_Z: key[0] |= 0x0800; break;
+					case PER_DGT_TL: key[0] |= 0x0010; break;
+					case PER_DGT_TR: key[0] |= 0x0020; break;
+					case PER_DGT_S: key[0] |= P1P2Start = 1; break;
 				    default:
 					break;
 				}
@@ -1632,13 +1628,12 @@ static void do_keypad()
 		InpInit();
 		InpDIP();
 		play = 1;
-		drvquit = 0;
 	//	PCM_Start(pcm);
 		PCM_MeSetVolume(pcm,255);
 		PCM_DrvChangePcmPara(pcm,-1,-1);
 	//	PER_SMPC_SND_ON();
-		SetVblank(); // a garder
-
+//		SetVblank(); // a garder
+// vbt 23/04/2020 : ne devrait pas servir
 		int (*Frame)();
 		Frame = pDriver[nBurnDrvSelect]->Frame;
 
@@ -1652,8 +1647,8 @@ static void do_keypad()
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 		else
@@ -1665,17 +1660,17 @@ static void do_keypad()
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 	}
-	if(drvquit==1)
+
 	{
-		InpExit();
 		if (nBurnDrvSelect < nBurnDrvCount) 
 			BurnDrvExit();
 		initSaturn();
+		InpExit();
 		BurnDrvAssignList();
 	}
 //	asm("nop\n");

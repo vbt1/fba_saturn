@@ -118,12 +118,12 @@ RGB( 254>>3, 254>>3, 254>>3),RGB( 0,0,0 ),RGB( 254>>3, 254>>3, 254>>3),RGB( 221>
 RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 241>>3, 192>>3, 0>>3 ),RGB( 252>>3, 201>>3, 0>>3 ),
 };
 
-static unsigned char P1P2Start = 0;
-static unsigned int FBA_KEYPAD[4];
-static struct GameInp GameInp[4][12];
-static unsigned int nGameInpCount = 0;
-static unsigned char *P1Start = 0;
-static unsigned char *P2Start = 0;
+ static unsigned char P1P2Start = 0;
+ static unsigned int FBA_KEYPAD[4];
+ static struct GameInp GameInp[4][12];
+ static unsigned int nGameInpCount = 0;
+ static unsigned char *P1Start = NULL;
+ static unsigned char *P2Start = NULL;
 
 extern struct BurnDriver* pDriver[];// __attribute__ ((section(".pdriver")));
 
@@ -268,7 +268,7 @@ static void DmaClrZero(void *, Uint32);
 static void InpMake(unsigned int key[]);
 /*static*/ void run_fba_emulator(void);
 static void wait_vblank(void);
-static void do_keypad(void);
+static void do_keypad(unsigned int key[]);
 static unsigned char update_input(unsigned int *current_page, unsigned char *loaded, unsigned char *modified);
 static void display_menu(void);
 static void loadLogo(void);
