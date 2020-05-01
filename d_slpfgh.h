@@ -223,27 +223,27 @@ STDDIPINFO(Slapfigh)
 
 /*static*/ struct BurnRomInfo tigerhb1RomDesc[] = {
 	{ "b0.5",         0x004000, 0x6ae7e13c, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
-	{ "a4701.8n",    0x004000, 0x65df2152, BRF_ESS | BRF_PRG }, //  1
-	{ "a4702.8k",    0x004000, 0x633d324b, BRF_ESS | BRF_PRG }, //  2
+	{ "a47_01.8n",    0x004000, 0x65df2152, BRF_ESS | BRF_PRG }, //  1
+	{ "a47_02.8k",    0x004000, 0x633d324b, BRF_ESS | BRF_PRG }, //  2
 
-	{ "a4713.8j",    0x004000, 0x739a7e7e, BRF_GRA },			 //  3 Sprite data
-	{ "a4712.6j",    0x004000, 0xc064ecdb, BRF_GRA },			 //  4
-	{ "a4711.8h",    0x004000, 0x744fae9b, BRF_GRA },			 //  5
-	{ "a4710.6h",    0x004000, 0xe1cf844e, BRF_GRA },			 //  6
+	{ "a47_13.8j",    0x004000, 0x739a7e7e, BRF_GRA },			 //  3 Sprite data
+	{ "a47_12.6j",    0x004000, 0xc064ecdb, BRF_GRA },			 //  4
+	{ "a47_11.8h",    0x004000, 0x744fae9b, BRF_GRA },			 //  5
+	{ "a47_10.6h",    0x004000, 0xe1cf844e, BRF_GRA },			 //  6
 
-	{ "a4705.6f",    0x002000, 0xc5325b49, BRF_GRA },			 //  7 Text layer
-	{ "a4704.6g",    0x002000, 0xcd59628e, BRF_GRA },			 //  8
+	{ "a47_05.6f",    0x002000, 0xc5325b49, BRF_GRA },			 //  7 Text layer
+	{ "a47_04.6g",    0x002000, 0xcd59628e, BRF_GRA },			 //  8
 
-	{ "a4709.4m",    0x004000, 0x31fae8a8, BRF_GRA },			 //  9 Background layer
-	{ "a4708.6m",    0x004000, 0xe539af2b, BRF_GRA },			 // 10
-	{ "a4707.6n",    0x004000, 0x02fdd429, BRF_GRA },			 // 11
-	{ "a4706.6p",    0x004000, 0x11fbcc8c, BRF_GRA },			 // 12
+	{ "a47_09.4m",    0x004000, 0x31fae8a8, BRF_GRA },			 //  9 Background layer
+	{ "a47_08.6m",    0x004000, 0xe539af2b, BRF_GRA },			 // 10
+	{ "a47_07.6n",    0x004000, 0x02fdd429, BRF_GRA },			 // 11
+	{ "a47_06.6p",    0x004000, 0x11fbcc8c, BRF_GRA },			 // 12
 
 	{ "82s129.12q",   0x000100, 0x2c69350d, BRF_GRA },			 // 13
 	{ "82s129.12m",   0x000100, 0x7142e972, BRF_GRA },			 // 14
 	{ "82s129.12n",   0x000100, 0x25f273f2, BRF_GRA },			 // 15
 
-	{ "a4703.12d",   0x002000, 0xd105260f, BRF_ESS | BRF_PRG }, // 16
+	{ "a47_03.12d",   0x002000, 0xd105260f, BRF_ESS | BRF_PRG }, // 16
 };
 STD_ROM_PICK(tigerhb1)
 STD_ROM_FN(tigerhb1)
