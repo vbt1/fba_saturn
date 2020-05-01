@@ -1199,8 +1199,9 @@ int System1Frame()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
-
-	SPR_WaitEndSlaveSH();
+// evite plantage sur teddy boy	
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();
 //	sc_check();
 	return 0;
 }
