@@ -619,8 +619,8 @@ void DrawPacManBackground()
 		UINT16 color = (DrvColRAM[*ofst] & 0x1f) | (colortablebank << 5) | (palettebank << 6);
 		ss_map2[*x]=color;
 		ss_map2[(*x)+1]=code;
-		*ofst++;
-		*x++;
+		ofst++;
+		x++;
 	}
 }
 

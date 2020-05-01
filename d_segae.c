@@ -5,7 +5,7 @@
 #define nInterleave 262
 #define nCyclesTotal 10738635 / 2 / 60
 #define nCycleSegment nCyclesTotal / nInterleave
-volatile SysPort	*ss_port = NULL;
+//volatile SysPort	*ss_port = NULL;
 
 int ovlInit(char *szShortName)
 {
@@ -77,7 +77,7 @@ int ovlInit(char *szShortName)
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
-	ss_port  = (SysPort *)SS_PORT;
+//	ss_port  = (SysPort *)SS_PORT;
 }
 
 /*static*/ UINT8 __fastcall systeme_main_read(UINT16 address)
@@ -138,17 +138,26 @@ int ovlInit(char *szShortName)
 // à modifier pour gerer la manette
 // if (!wheel_pressed) { if (wheel < 0) wheel++; if (wheel > 0) wheel--; // autocenter }
 //if (left_pressed) wheel--; else if (right_pressed) wheel++;
-	SysDevice	*device;
+/*	SysDevice	*device;
 
 	if(( device = PER_GetDeviceR( &ss_port[0], 0 )) != NULL )
 	{
 		pltrigger[0] = PER_GetTrigger( device );
+		
+		if(       ((pltrigger[0] & PER_DGT_S) != 0) 
+			   && ((pltrigger[0] & PER_DGT_A) != 0) 
+			   && ((pltrigger[0] & PER_DGT_B) != 0) 
+			   && ((pltrigger[0] & PER_DGT_C) != 0)
+	   )
+		{
+			play = 0;
+		}		
 	}
 	else
 	{
 		pltrigger[0] = 0;
 	}
-
+*/
 	if (port_fa_last == 0x08)  /* 0000 1000 */ /* Angle */
 	{
 		if(pltrigger[0] & PER_DGT_L )
@@ -615,6 +624,7 @@ int ovlInit(char *szShortName)
 	wait_vblank();
 	DrvDoReset();
 	CZetExit2();
+	SN76496Exit();
 	
 	memset(ss_scl,0x00,SCL_MAXLINE*sizeof(Fixed32));
 	memset(ss_scl1,0x00,SCL_MAXLINE*sizeof(Fixed32));
@@ -633,13 +643,10 @@ int ovlInit(char *szShortName)
 	segae_8000bank = 0;
 	port_fa_last = 0;
 	currentLine = 0;
-	
-	SN76489Init(0, 0, 0);
-	SN76489Init(1, 0, 0);
 
 	free(AllMem);
 	AllMem = NULL;
-	ss_port = NULL;
+//	ss_port = NULL;
 
 	SCL_SetWindow(SCL_W0,(UINT32)NULL,(UINT32)NULL,(UINT32)NULL,0,0,0,0);
  	SCL_SetWindow(SCL_W1,(UINT32)NULL,(UINT32)NULL,(UINT32)NULL,0,0,0,0);
@@ -936,6 +943,11 @@ int ovlInit(char *szShortName)
 	return DrvInit(0);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+static void	SetVblank2( void )
+{
+	__port = PER_OpenPort();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
@@ -1073,6 +1085,7 @@ int ovlInit(char *szShortName)
 	memset(ss_scl,0xff,SCL_MAXLINE*sizeof(Fixed32));
 	memset(ss_scl1,0xff,SCL_MAXLINE*sizeof(Fixed32));
 	nBurnFunction = SCL_SetLineParamNBG1;
+	SetVblank2();	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void SCL_SetLineParamNBG1()

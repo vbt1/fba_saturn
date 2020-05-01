@@ -336,32 +336,34 @@ int ovlInit(char *szShortName)
 	INT32 XOffs0[16] = { STEP4(0,1), STEP4(8,1), STEP4(256,1), STEP4(256+8,1) };
 	INT32 XOffs1[32] = { STEP4(0,1), STEP4(8,1), STEP4(512,1), STEP4(512+8,1), STEP4(1024,1), STEP4(1024+8,1), STEP4(1536,1), STEP4(1536+8,1) };
 	INT32 YOffs[32]  = { STEP32(0,16) };
-	UINT8 *DrvGfxROM1	 = (UINT8 *)0x00240000;	
+	UINT8 *DrvGfxROM1	 = (UINT8 *)0x00250000;	
 	UINT8 *DrvGfxROM1b	 = (UINT8 *)(SS_CACHE + 0x8000);
 	UINT8 *DrvGfxROM0	 = (UINT8 *)SS_CACHE;
-	UINT8 *DrvGfxROM2	 = (UINT8*)0x002C0000;
+	UINT8 *DrvGfxROM2	 = (UINT8*)0x00210000;
 	UINT8 *DrvGfxROM2b	 = (UINT8*)(ss_vram + 0x1100);
 	
 	UINT8 *tmp = (UINT8*)0x00200000; 
 
 	memcpyl (tmp, DrvGfxROM0, 0x08000);
 // text
-	GfxDecode4Bpp(0x0400, 2,  8,  8, Plane0, XOffs0, YOffs, 0x080, tmp, DrvGfxROM0);
-	swapFirstLastColor(DrvGfxROM0,0x03,0x10000);
-wait_vblank();	
+	GfxDecode4Bpp(0x0400, 2,  8,  8, Plane0, XOffs0, YOffs, 0x080, tmp, DrvGfxROM0); // 0x4000
+	swapFirstLastColor(DrvGfxROM0,0x03,0x8000);
+//wait_vblank();	
 // sprites // ok
-	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane2, XOffs0, YOffs, 0x200, DrvGfxROM2b, DrvGfxROM2);
-	swapFirstLastColor(DrvGfxROM2,0x0f,0x20000);
+	GfxDecode4Bpp(0x0800, 4, 16, 16, Plane2, XOffs0, YOffs, 0x200, DrvGfxROM2, DrvGfxROM2b); //0x40000
+	swapFirstLastColor(DrvGfxROM2b,0x0f,0x40000);
+	
 #if 1	
-	memcpy (DrvGfxROM2b, DrvGfxROM2, 0x40000); ///-0x1100); // ca rentre pas !!!
+//	memcpyl (DrvGfxROM2b, DrvGfxROM2, 0x40000); ///-0x1100); // ca rentre pas !!!
+	
 //	swapFirstLastColor(DrvGfxROM2b,0x0f,0x1000);
 #endif	
 // bg
+
 	GfxDecode4Bpp(0x0200, 4, 32, 32, Plane1, XOffs1, YOffs, 0x800, DrvGfxROM1, tmp);
 	tile32x32toSaturn(1,0x0200, tmp);
 	swapFirstLastColor(tmp,0x0f,0x40000);
 	memcpyl (DrvGfxROM1b, tmp, 0x40000);
-
 }
 
 /*static*/ INT32 SidearmsInit()
@@ -370,10 +372,10 @@ wait_vblank();
 
 	AllMem = NULL;
 	MemIndex();
-	UINT8 *ss_vram		 = (UINT8 *)SS_SPRAM;
-	UINT8 *DrvGfxROM1	 = (UINT8 *)0x00240000;
-//	UINT8 *DrvGfxROM2	 = (UINT8*)0x002C0000;
-	UINT8 *DrvGfxROM2	 = (UINT8*)(ss_vram + 0x1100);
+//	UINT8 *ss_vram		 = (UINT8 *)SS_SPRAM;
+	UINT8 *DrvGfxROM1	 = (UINT8 *)0x00250000;
+	UINT8 *DrvGfxROM2	 = (UINT8*)0x00210000;
+//	UINT8 *DrvGfxROM2	 = (UINT8*)(ss_vram + 0x1100);
 	
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
 	{
@@ -415,6 +417,7 @@ wait_vblank();
 		if (BurnLoadRom(DrvTileMap + 0x00000, 22, 1)) return 1;
 
 		DrvGfxDecode();
+		PCM_MeStop(pcm);
 #if 1		
 #ifdef RAZE
   	z80_init_memmap();

@@ -1393,7 +1393,7 @@ static int DoInputBlank()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void InpExit()
 {
-  if (DIPInfo.nDIP!=NULL)
+	if (DIPInfo.nDIP!=NULL)
 	{
 		memset(DIPInfo.DIPData,0,4 * sizeof(struct GameInp));
 		memset(GameInp,0,12*4*sizeof(struct GameInp));
@@ -1401,7 +1401,7 @@ static void InpExit()
 		DIPInfo.nDIP = NULL;
 		FBA_KEYPAD[0] = 0;
 		P1P2Start = 0;
-		P1Start = P2Start = NULL;	
+		P1Start = P2Start = NULL;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

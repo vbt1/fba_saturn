@@ -395,9 +395,10 @@ for (i = 0; i < 0x80; i+=4)
 	for(unsigned int i=0;i<6;i++)
 	{
 		PCM_MeStop(pcm6[i]);
-		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
+		PCM_DestroyMemHandle(pcm6[i]);
 	}
-
+	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
+	
 	CZ80Context = MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
 	map_offset_lut = NULL;
 

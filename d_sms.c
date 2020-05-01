@@ -3,7 +3,7 @@
 #define OLD_SOUND 1
 #define SAMPLE 7680L
 #define TWO_WORDS 1
-#define MAX_DIR 384
+#define MAX_DIR 384*2
 //GfsDirName dir_name_sms[512];
 #ifdef GG0
 unsigned char *disp_spr = NULL;

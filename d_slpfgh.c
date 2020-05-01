@@ -450,7 +450,7 @@ void initLayers()
 	scfg.platesize		= SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.coltype			= SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype		= SCL_CELL;
-	scfg.flip					= SCL_PN_10BIT; // on force à 0
+	scfg.flip					= SCL_PN_10BIT; // on force ï¿½ 0
 	scfg.patnamecontrl =  0x0000; // a0 + 0x8000
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
 	scfg.plate_addr[1] = NULL; //(Uint32)SS_MAP;
@@ -461,7 +461,7 @@ void initLayers()
 
 //	scfg.pnamesize		= SCL_PN1WORD; //2word
 	scfg.platesize		= SCL_PL_SIZE_1X1; // ou 2X2 ?
-	scfg.flip					= SCL_PN_10BIT; // on force à 0
+	scfg.flip					= SCL_PN_10BIT; // on force ï¿½ 0
 	scfg.patnamecontrl =  0x0000; // a1
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
 	scfg.plate_addr[1] = (Uint32)SS_MAP2+0x400;
@@ -556,7 +556,7 @@ INT32 DrvExit()
 	for(UINT8 i=0;i<6;i++)
 	{
 		PCM_MeStop(pcm6[i]);
-//		PCM_DestroyMemHandle(pcm6[i]);
+		PCM_DestroyMemHandle(pcm6[i]);
 	}
 
 	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
@@ -865,4 +865,3 @@ void Set6PCM()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-

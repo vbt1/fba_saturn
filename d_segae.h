@@ -11,7 +11,6 @@
 #define nBurnSoundLen 128
 
 extern unsigned char play;
-
 UINT16 *name_lut = NULL;
 UINT32 *bp_lut = NULL;
 UINT16 *cram_lut = NULL;
@@ -113,6 +112,8 @@ typedef	struct	SysDevice	{
 	UINT8	size;
 	UINT8	data[1];
 } SysDevice;
+
+extern SysPort	*__port;
 
 struct BurnInputInfo TransfrmInputList[] = {
 
