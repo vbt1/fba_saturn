@@ -1,7 +1,7 @@
 // Wiz Todo:
 //
 // stinger: hook-up discrete samples
-// scion: /*static*/ in audio is normal (no kidding)
+// scion: in audio is normal (no kidding)
 //
 #include "d_wiz.h"
 //#define RAZE0 1
@@ -52,49 +52,6 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void 	 fg_line(UINT16 offs,UINT8 data)
-{
-	UINT8 bank   = 2 + ((char_bank_select[0] << 1) | char_bank_select[1]);
-	UINT8 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
-	UINT32 sx		 = (offs & 0x1f);
-	UINT32 code	 = data | (char_bank_select[1] << 8);
-	UINT32 color	 = (DrvColRAM1[offs] & 0x07) | (palbank << 3);
-	UINT32 x		 = map_offset_lut[offs]; 
-
-	if(x >= 0x440 )
-	{
-		ss_map[x+0x40] = color;
-		ss_map[x+0x41] = code+1;
-	}
-	ss_map[x] = color;
-	ss_map[x+1] = code+1;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void 	 bg_line(UINT16 offs,UINT8 data)
-{
-	UINT8 bank   = 2 + ((char_bank_select[0] << 1) | char_bank_select[1]);
-	UINT8 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
-	UINT8 sx		= (offs & 0x1f);
-	UINT8 sy		= (offs / 32)<<3;
-	UINT32	color = (DrvSprRAM0[2 * sx + 1] & 0x04) | (data & 3) | (palbank << 3);
-	UINT32 code = data | (bank << 8);
-	UINT32 x		= map_offset_lut[offs];
-
-	if(x < 0x440 )
-	{
-		if(sy>=16 && sy<240)
-		{
-			ss_font[x] = color ;
-			ss_font[x+1] = code+0x201;
-		}
-	}
-	else	
-	{	
-		ss_map2[x] = ss_map2[x+0x40] = color ;
-		ss_map2[x+1] = ss_map2[x+0x41] = code+0x201;
-	}
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 void __fastcall wiz_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
@@ -104,7 +61,7 @@ void __fastcall wiz_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xf000:
-			*sprite_bank = data;
+			sprite_bank = data;
 		return;
 
 		case 0xf001:
@@ -148,7 +105,7 @@ void __fastcall wiz_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xf818:
-			*background_color = data;
+			background_color = data;
 		return;
 	}
 }
@@ -238,7 +195,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ INT32 DrvDoReset()
+INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 
@@ -265,7 +222,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ void DrvPaletteInit()
+void DrvPaletteInit()
 {
 	UINT32 delta=0;
 
@@ -295,12 +252,12 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 }
 
 
-/*static*/ INT32 MemIndex()
+INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
 	DrvZ80ROM0		= Next; Next += 0x010000;
-	DrvZ80Dec			= Next; Next += 0x010000;
+	DrvZ80Dec		= Next; Next += 0x010000;
 	DrvZ80ROM1		= Next; Next += 0x010000;
 
 	DrvColPROM		= Next; Next += 0x000300;
@@ -321,14 +278,10 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	DrvSprRAM0		= Next; Next += 0x000100;
 	DrvSprRAM1		= Next; Next += 0x000100;
 
-//	soundlatch		= Next; Next += 0x000001;
-
-	sprite_bank		= Next; Next += 0x000001;
 	interrupt_enable= Next; Next += 0x000002;
 	palette_bank	= Next; Next += 0x000002;
 	char_bank_select= Next; Next += 0x000002;
 	screen_flip		= Next; Next += 0x000002;
-	background_color= Next; Next += 0x000001;
 
 	RamEnd			= Next;
 	CZ80Context		= Next; Next += sizeof(cz80_struc)*2;
@@ -338,7 +291,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ void DrvGfxDecode(UINT32 type, int rotated)
+void DrvGfxDecode(UINT32 type, int rotated)
 {
 	UINT8 *DrvGfxROM0	= SS_CACHE;
 	UINT8 *DrvGfxROM0b	= (SS_CACHE+0x2000);
@@ -396,12 +349,9 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp0 + 0x0000, DrvGfxROM1 + 0 * 16 * 8 * 256);
 	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp1 + 0x0000, DrvGfxROM1 + 1 * 16 * 8 * 256);
 	GfxDecode4Bpp(256, 3, 16, 16, Plane, XOffs1, YOffs1, 0x100, tmp1 + 0x6000, DrvGfxROM1 + 2 * 16 * 8 * 256);
-
-	tmp0=NULL;
-	tmp1 = NULL;
 }
 
-/*static*/ INT32 WizLoadRoms()
+INT32 WizLoadRoms()
 {
 	UINT8 *DrvGfxROM0	= SS_CACHE;
 	UINT8 *DrvGfxROM0b	= (SS_CACHE+0x2000);
@@ -435,7 +385,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ INT32 KungfutLoadRoms()
+INT32 KungfutLoadRoms()
 {
 	UINT8 *DrvGfxROM0	= SS_CACHE;
 	UINT8 *DrvGfxROM0b	= (SS_CACHE+0x2000);
@@ -465,7 +415,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ INT32 StingerLoadRoms()
+INT32 StingerLoadRoms()
 {
 	UINT8 *DrvGfxROM0	= SS_CACHE;
 	UINT8 *DrvGfxROM0b	= (SS_CACHE+0x2000);
@@ -497,7 +447,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ INT32 ScionLoadRoms()
+INT32 ScionLoadRoms()
 {
 	UINT8 *DrvGfxROM0	= SS_CACHE;
 	UINT8 *DrvGfxROM0b	= (SS_CACHE+0x2000);
@@ -529,7 +479,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
+INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 {
 	DrvInitSaturn();
 
@@ -657,10 +607,12 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	AY8910Init(2, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	DrvDoReset();
 
+	__port = PER_OpenPort();
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initLayers()
+void initLayers()
 {
     Uint16	CycleTb[]={
 		0xff45, 0x6fff, //A0
@@ -711,7 +663,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initColors()
+void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
@@ -724,14 +676,14 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_lut_r(int rotated)
+void make_lut_r(int rotated)
 {
 	if (rotated)
 	{
 		for (UINT32 i = 0; i < 1024;i++) 
 		{
 			INT32 sx    = (i & 0x1f);
-			UINT8 sy    = (((i / 32)<<3))&0xff;// - DrvSprRAM1[2 * sx + 0]);
+			INT32 sy   = (((i / 32)<<3))&0xff;// - DrvSprRAM1[2 * sx + 0]);
 
 			map_offset_lut[i] = ((sy>>3)<<1)|((31-sx)*128);
 		}
@@ -747,7 +699,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn()
+void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
@@ -799,7 +751,7 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ INT32 DrvExit()
+INT32 DrvExit()
 {
 	DrvDoReset();	
 	nSoundBufferPos=0;
@@ -838,13 +790,13 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	DrvColPROM = DrvZ80RAM0 = DrvZ80RAM1 = DrvVidRAM0 = NULL;
 	DrvVidRAM1 = DrvColRAM0  = DrvColRAM1 = DrvSprRAM0 = DrvSprRAM1 = NULL;
 
-/*	soundlatch =*/ sprite_bank = interrupt_enable = palette_bank = char_bank_select = screen_flip = background_color = NULL;
+	interrupt_enable = palette_bank = char_bank_select = screen_flip = NULL;
 	DrvPalette = NULL;
 
 	free(AllMem);
 	AllMem = NULL;
 
-	Wizmode = 0;
+	soundlatch = background_color = sprite_bank = Wizmode = 0;
 
  	SCL_SetWindow(SCL_W0,NULL,NULL,NULL,0,0,0,0);
  	SCL_SetWindow(SCL_W1,NULL,NULL,NULL,0,0,0,0);
@@ -856,53 +808,54 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
+void draw_background(INT16 bank, INT16 palbank, INT16 colortype)
 {
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
-		INT16 sx  = (offs & 0x1f);
-		UINT8 sy = (offs / 32)<<3;
-		UINT16 color;
+		UINT32 sx = (offs & 0x1f)<<1;
+		UINT32 sy = (offs / 32);
+		UINT32 color;
 
 		if (colortype) 
 		{
-			color = (DrvSprRAM0[2 * sx | 1] & 0x07) | (palbank << 3);
+			color = (DrvSprRAM0[ sx | 1] & 0x07) | (palbank << 3);
 		}
 		else 
 		{
-			color = (DrvSprRAM0[2 * sx + 1] & 0x04) | (DrvVidRAM0[offs] & 3) | (palbank << 3);
+			color = (DrvSprRAM0[ sx + 1] & 0x04) | (DrvVidRAM0[offs] & 3) | (palbank << 3);
 		}
 
-		UINT16 code  = DrvVidRAM0[offs] | (bank << 8);
-
-		UINT32 x = map_offset_lut[offs];
-		if(x < 0x440 )
+		UINT32 code  = DrvVidRAM0[offs] | (bank << 8);
+		UINT16 *map2 = (UINT16 *)&ss_map2[map_offset_lut[offs]];
+		UINT16 *font = (UINT16 *)&ss_font[map_offset_lut[offs]];
+		
+		if(map_offset_lut[offs] < 0x440 )
 		{
-			if(sy>=16 && sy<240)
+			if(sy>=2 && sy<30)
 			{
-				ss_font[x] = color ;
-				ss_font[x+1] = ((code+0x201));
+				font[0] = color ;
+				font[1] = ((code+0x201));
 			}
 		}
 		else	
 		{	
-			ss_map2[x] = ss_map2[x+0x40] = color ;
-			ss_map2[x+1] = ss_map2[x+0x41] = ((code+0x201)); //&0x5FF) ;
+			map2[0] = map2[0x40] = color ;
+			map2[1] = map2[0x41] = ((code+0x201)); //&0x5FF) ;
 		}
 	}
 }
 
-/*static*/ void draw_foreground(INT16 palbank, INT16 colortype)
+void draw_foreground(INT16 palbank, INT16 colortype)
 {
 	for (INT16 offs = 0x3ff; offs >= 0; offs--)
 	{
-		INT32 sx     = (offs & 0x1f);
-  		INT16 code = DrvVidRAM1[offs] | (char_bank_select[1] << 8);
-		INT16 color = 0;//DrvColRAM1[sx << 1 | 1] & 7;
+		UINT32 sx    = (offs & 0x1f) <<1;
+  		UINT32 code	 = DrvVidRAM1[offs] | (char_bank_select[1] << 8);
+		UINT32 color = 0;//DrvColRAM1[sx << 1 | 1] & 7;
 
 		if (colortype)
 		{
-			color = (DrvSprRAM1[2 * sx + 1] & 0x07);
+			color = (DrvSprRAM1[sx + 1] & 0x07);
 		}
 		else
 		{
@@ -911,18 +864,19 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 
 		color |= (palbank << 3);
 
-		UINT32 x = map_offset_lut[offs]; 
-		if(x >= 0x440 )
+		UINT16 *map = (UINT16 *)&ss_map[map_offset_lut[offs]];
+		
+		if(map_offset_lut[offs] >= 0x440 )
 		{
-			ss_map[x+0x40] = color;
-			ss_map[x+0x41] = code+1;
+			map[0x40] = color;
+			map[0x41] = code+1;
 		}
-		ss_map[x] = color;
-		ss_map[x+1] = code+1;
+		map[0] = color;
+		map[1] = code+1;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta, UINT8 rotated)
+void draw_sprites(UINT8 *ram, INT16 palbank, INT16 bank, UINT8 delta, UINT8 rotated)
 {
 	SprSpCmd *ss_spritePtr;
 	ss_spritePtr = &ss_sprite[delta];
@@ -963,11 +917,11 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 		ss_spritePtr->color		= color<<3;
 		ss_spritePtr->charSize	= 0x210;
 		ss_spritePtr->charAddr	= 0x220+((code)<<4 );
-		*ss_spritePtr++;
+		ss_spritePtr++;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void updateSound()
+void updateSound()
 {
 	int nSample;
 	int n;
@@ -1022,21 +976,6 @@ UINT8 __fastcall wiz_sound_read(UINT16 address)
 
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
-/*
-char buffer[80];
-int vspfunc(char *format, ...);
-
-int vspfunc(char *format, ...)
-{
-   va_list aptr;
-   int ret;
-
-   va_start(aptr, format);
-   ret = vsprintf(buffer, format, aptr);
-   va_end(aptr);
-
-   return(ret);
-}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 void cleanSpritesDIST()
 {
@@ -1053,14 +992,14 @@ void cleanSpritesDIST()
 		ss_spritePtr->cy		= -16;
 		ss_spritePtr->dx		= -16;
 		ss_spritePtr->dy		= -16;
-		*ss_spritePtr++;
+		ss_spritePtr++;
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ INT32 WizDraw()
+INT32 WizDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
-	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
+	*(Uint16 *)0x25E00000 = DrvPalette[background_color];
 
 	cleanSpritesDIST();
 
@@ -1074,15 +1013,15 @@ void cleanSpritesDIST()
 	draw_foreground(palbank, 0);
  
 	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3, 1);
-	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank, 11, 1);
+	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + sprite_bank, 11, 1);
 
 	return 0;
 }
 
-/*static*/ INT32 ScionDraw()
+INT32 ScionDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
-	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
+	*(Uint16 *)0x25E00000 = DrvPalette[background_color];
 	cleanSprites();
 
 	ss_reg->n1_move_x =  ((DrvSprRAM0[16])<<16) ;
@@ -1095,15 +1034,15 @@ void cleanSpritesDIST()
 	draw_foreground(palbank, 0);
 
 	draw_sprites(DrvSprRAM1 + 0x40, palbank, 0, 3, 0);
-	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + *sprite_bank, 11, 0);
+	draw_sprites(DrvSprRAM0 + 0x40, palbank, 1 + sprite_bank, 11, 0);
 
 	return 0;
 }
 
-/*static*/ INT32 StingerDraw()
+INT32 StingerDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
-	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
+	*(Uint16 *)0x25E00000 = DrvPalette[background_color];
 	cleanSpritesDIST();
 
 	draw_background(2 + char_bank_select[0], palbank, 1);
@@ -1115,10 +1054,10 @@ void cleanSpritesDIST()
 	return 0;
 }
 
-/*static*/ INT32 KungfutDraw()
+INT32 KungfutDraw()
 {
 	INT16 palbank = (palette_bank[0] << 0) | (palette_bank[1] << 1);
-	*(Uint16 *)0x25E00000 = DrvPalette[*background_color];
+	*(Uint16 *)0x25E00000 = DrvPalette[background_color];
 	cleanSprites();
 
 	draw_background(2 + char_bank_select[0], palbank, 0);
@@ -1129,10 +1068,10 @@ void cleanSpritesDIST()
 	return 0;
 }
 
-/*static*/ INT32 DrvFrame()
+INT32 DrvFrame()
 {
 	memset (DrvInputs, 0, 2);
-	for (INT16 i = 0; i < 8; i++) 
+	for (UINT32 i = 0; i < 8; i++) 
 	{
 		DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
 		DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
@@ -1178,14 +1117,14 @@ void cleanSpritesDIST()
 	return 0;
 }
 
-/*static*/ INT32 WizInit()
+INT32 WizInit()
 {
 	Wizmode = 1;
 	DrvDraw = WizDraw;
 	return DrvInit(WizLoadRoms,1);
 }
 
-/*static*/ INT32 KungfutInit()
+INT32 KungfutInit()
 {
 	DrvDraw = KungfutDraw;
 	int result = DrvInit(KungfutLoadRoms,0);
@@ -1195,7 +1134,7 @@ void cleanSpritesDIST()
 	return result;
 }
 
-/*static*/ void StingerDecode()
+void StingerDecode()
 {
 	INT32 swap_xor_table[4][4] =
 	{
@@ -1224,7 +1163,7 @@ void cleanSpritesDIST()
 	CZetClose();
 }
 
-/*static*/ INT32 StingerInit()
+INT32 StingerInit()
 {
 	DrvDraw = StingerDraw;
 	INT32 nRet = DrvInit(StingerLoadRoms,1);
@@ -1236,7 +1175,7 @@ void cleanSpritesDIST()
 	return nRet;
 }
 
-/*static*/ INT32 ScionInit()
+INT32 ScionInit()
 {
 	DrvDraw = ScionDraw;
 	//Scionmodeoffset = 8*4; // 8 8x8char offset

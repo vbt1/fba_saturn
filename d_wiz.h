@@ -10,58 +10,69 @@
 
 UINT16 *map_offset_lut = NULL;
 
-/*static*/ INT32 WizInit();
-/*static*/ INT32 KungfutInit();
-/*static*/ INT32 StingerInit();
-/*static*/ INT32 ScionInit();
+INT32 WizInit();
+INT32 KungfutInit();
+INT32 StingerInit();
+INT32 ScionInit();
 
-/*static*/ INT32 DrvInit(int (*RomLoadCallback)(), int rotated);
-/*static*/ INT32  DrvExit();
-/*static*/ INT32  DrvFrame();
-///*static*/ INT32  DrvDraw();
+INT32 DrvInit(int (*RomLoadCallback)(), int rotated);
+INT32  DrvExit();
+INT32  DrvFrame();
+//INT32  DrvDraw();
 void cleanSprites();
 void dummy();
 
-/*static*/ void make_lut_r(int rotated);
+void make_lut_r(int rotated);
 INT32 (*DrvDraw)() = NULL;
 
-/*static*/ UINT8 *AllMem = NULL;
-/*static*/ UINT8 *AllRam = NULL;
-/*static*/ UINT8 *RamEnd = NULL;
-/*static*/ UINT8 *DrvZ80ROM0 = NULL;
-/*static*/ UINT8 *DrvZ80Dec = NULL;
-/*static*/ UINT8 *DrvZ80ROM1 = NULL;
-/*static*/ UINT8 *DrvColPROM = NULL;
-/*static*/ UINT8 *DrvZ80RAM0 = NULL;
-/*static*/ UINT8 *DrvZ80RAM1 = NULL;
-/*static*/ UINT8 *DrvVidRAM0 = NULL;
-/*static*/ UINT8 *DrvVidRAM1 = NULL;
-/*static*/ UINT8 *DrvColRAM0 = NULL;
-/*static*/ UINT8 *DrvColRAM1 = NULL;
-/*static*/ UINT8 *DrvSprRAM0 = NULL;
-/*static*/ UINT8 *DrvSprRAM1 = NULL;
+UINT8 *AllMem = NULL;
+UINT8 *AllRam = NULL;
+UINT8 *RamEnd = NULL;
+UINT8 *DrvZ80ROM0 = NULL;
+UINT8 *DrvZ80Dec = NULL;
+UINT8 *DrvZ80ROM1 = NULL;
+UINT8 *DrvColPROM = NULL;
+UINT8 *DrvZ80RAM0 = NULL;
+UINT8 *DrvZ80RAM1 = NULL;
+UINT8 *DrvVidRAM0 = NULL;
+UINT8 *DrvVidRAM1 = NULL;
+UINT8 *DrvColRAM0 = NULL;
+UINT8 *DrvColRAM1 = NULL;
+UINT8 *DrvSprRAM0 = NULL;
+UINT8 *DrvSprRAM1 = NULL;
 
-/*static*/ UINT16 *DrvPalette = NULL;
-///*static*/ UINT8 DrvRecalc;
+UINT16 *DrvPalette = NULL;
+//UINT8 DrvRecalc;
 
-/*static*/ UINT8 soundlatch = 0;
-/*static*/ UINT8 *sprite_bank = NULL;
-/*static*/ UINT8 *interrupt_enable = NULL;
-/*static*/ UINT8 *palette_bank = NULL;
-/*static*/ UINT8 *char_bank_select = NULL;
-/*static*/ UINT8 *screen_flip = NULL;
-/*static*/ UINT8 *background_color = NULL;
-/*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ INT16* pFMBuffer = NULL;
-/*static*/ INT16* pAY8910Buffer[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+UINT8 soundlatch = 0;
+UINT8 sprite_bank = 0;
+UINT8 *interrupt_enable = NULL;
+UINT8 *palette_bank = NULL;
+UINT8 *char_bank_select = NULL;
+UINT8 *screen_flip = NULL;
+UINT8 background_color = 0;
+UINT8 *CZ80Context = NULL;
+INT16* pFMBuffer = NULL;
+INT16* pAY8910Buffer[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
-/*static*/ UINT8 DrvInputs[2] = {0,0};
-/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvDips[2] = {0,0};
-/*static*/ UINT8 Wizmode = 0;
+UINT8 DrvInputs[2] = {0,0};
+UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvDips[2] = {0,0};
+UINT8 Wizmode = 0;
 
-/*static*/ struct BurnInputInfo WizInputList[] = {
+#define	SZ_PERIPHERAL	20
+typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
+
+typedef	struct	SysPort	{
+	UINT8			id;
+	UINT8			connectable;
+	SysPeripheral	*peripheral;
+} SysPort;
+
+extern SysPort	*__port;
+
+struct BurnInputInfo WizInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 2,	"p1 up"		},
@@ -87,7 +98,7 @@ INT32 (*DrvDraw)() = NULL;
 
 STDINPUTINFO(Wiz)
 
-/*static*/ struct BurnInputInfo ScionInputList[] = {
+struct BurnInputInfo ScionInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 up"},
@@ -113,7 +124,7 @@ STDINPUTINFO(Wiz)
 
 STDINPUTINFO(Scion)
 
-/*static*/ struct BurnInputInfo StingerInputList[] = {
+struct BurnInputInfo StingerInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 up"},
@@ -139,7 +150,7 @@ STDINPUTINFO(Scion)
 
 STDINPUTINFO(Stinger)
 
-/*static*/ struct BurnInputInfo KungfutInputList[] = {
+struct BurnInputInfo KungfutInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 start"},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 left"},
@@ -162,7 +173,7 @@ STDINPUTINFO(Stinger)
 
 STDINPUTINFO(Kungfut)
 
-/*static*/ struct BurnDIPInfo StingerDIPList[]=
+struct BurnDIPInfo StingerDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xef, NULL		},
 	{0x12, 0xff, 0xff, 0xae, NULL		},
@@ -224,7 +235,7 @@ STDINPUTINFO(Kungfut)
 
 STDDIPINFO(Stinger)
 
-/*static*/ struct BurnDIPInfo Stinger2DIPList[]=
+struct BurnDIPInfo Stinger2DIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xef, NULL		},
 	{0x12, 0xff, 0xff, 0xa0, NULL		},
@@ -288,7 +299,7 @@ STDDIPINFO(Stinger)
 
 STDDIPINFO(Stinger2)
 
-/*static*/ struct BurnDIPInfo ScionDIPList[]=
+struct BurnDIPInfo ScionDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x05, NULL		},
 	{0x12, 0xff, 0xff, 0x00, NULL		},
@@ -349,7 +360,7 @@ STDDIPINFO(Stinger2)
 
 STDDIPINFO(Scion)
 
-/*static*/ struct BurnDIPInfo KungfutDIPList[]=
+struct BurnDIPInfo KungfutDIPList[]=
 {
 	{0x0e, 0xff, 0xff, 0x20, NULL		},
 	{0x0f, 0xff, 0xff, 0x0c, NULL		},
@@ -413,7 +424,7 @@ STDDIPINFO(Scion)
 STDDIPINFO(Kungfut)
 
 
-/*static*/ struct BurnDIPInfo WizDIPList[]=
+struct BurnDIPInfo WizDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x00, NULL			},
 	{0x12, 0xff, 0xff, 0x10, NULL			},
@@ -463,7 +474,7 @@ STDDIPINFO(Kungfut)
 
 STDDIPINFO(Wiz)
 
-/*static*/ struct BurnRomInfo wizRomDesc[] = {
+struct BurnRomInfo wizRomDesc[] = {
 	{ "ic07_01.bin",	0x4000, 0xc05f2c78, 1 }, //  0 maincpu
 	{ "ic05_03.bin",	0x4000, 0x7978d879, 1 }, //  1
 	{ "ic06_02.bin",	0x4000, 0x9c406ad2, 1 }, //  2
@@ -488,7 +499,7 @@ STD_ROM_FN(wiz)
 
 // Kung-Fu Taikun
 
-/*static*/ struct BurnRomInfo kungfutRomDesc[] = {
+struct BurnRomInfo kungfutRomDesc[] = {
 	{ "p1.bin",	0x4000, 0xb1e56960, 1 }, //  0 maincpu
 	{ "p3.bin",	0x4000, 0x6fc346f8, 1 }, //  1
 	{ "p2.bin",	0x4000, 0x042cc9c5, 1 }, //  2
@@ -513,7 +524,7 @@ STD_ROM_FN(kungfut)
 
 // Stinger
 
-/*static*/ struct BurnRomInfo stingerRomDesc[] = {
+struct BurnRomInfo stingerRomDesc[] = {
 	{ "15j.bin",	0x2000, 0x1a2ca600, 1 }, //  0 maincpu
 	{ "26j.bin",	0x2000, 0x957cd39c, 1 }, //  1
 	{ "38j.bin",	0x2000, 0x404c932e, 1 }, //  2
@@ -540,7 +551,7 @@ STD_ROM_FN(stinger)
 
 // Scion
 
-/*static*/ struct BurnRomInfo scionRomDesc[] = {
+struct BurnRomInfo scionRomDesc[] = {
 	{ "sc1.bin",	0x2000, 0x8dcad575, 1 }, //  0 maincpu
 	{ "sc2.bin",	0x2000, 0xf608e0ba, 1 }, //  1
 	{ "sc3.bin",	0x2000, 0x915289b9, 1 }, //  2
