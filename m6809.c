@@ -77,13 +77,13 @@
 m6809_Regs m6809;
 
 /* Enable big switch statement for the main opcodes */
-#ifndef BIG_SWITCH
-#define BIG_SWITCH  0
-#endif
+//#ifndef BIG_SWITCH
+//#define BIG_SWITCH  1
+//#endif
 
-#define VERBOSE 0
+//#define VERBOSE 0
 
-#define LOG(x)	do { if (VERBOSE) logerror x; } while (0)
+//#define LOG(x)	do { if (VERBOSE) logerror x; } while (0)
 
 //extern offs_t m6809_dasm(char *buffer, offs_t pc, const UINT8 *oprom, const UINT8 *opram);
 
@@ -253,7 +253,6 @@ static int m6809_ICount;
 	PAIR b;
 */
 
-
 static const UINT8 flags8i[256]=	 /* increment */
 {
 CC_Z,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
@@ -385,31 +384,32 @@ static const UINT8 cycles1[] =
 };
 #endif
 
- inline void SET_N8(UINT32 a)	
+ M6809_INLINE void SET_N8(UINT32 a)	
 {
 	CC|=((a>>4)&0x8);
 }
 
-inline void SET_N16(UINT32 a)	
+M6809_INLINE void SET_N16(UINT32 a)	
 {
-	CC|=((a>>12)&0x8);
+//	CC|=((a>>12)&0x8);
+	CC|=((a&0x8000)>>12); // vbt semble plus rapide
 }
 //#define SET_N8(a)		CC|=((a>>4)&0x8)
 //#define SET_N16(a)		CC|=((a>>12)&0x8)
 
-inline void SET_H(UINT32 a,UINT8 b,UINT32 r)
+M6809_INLINE void SET_H(UINT32 a,UINT8 b,UINT32 r)
 {
 	CC|=(((a^b^r)&0x10)<<1);
 }
 
 //#define SET_H(a,b,r)	CC|=(((a^b^r)&0x10)<<1)
 
-inline void SET_C8(UINT32 a)	
+M6809_INLINE void SET_C8(UINT32 a)	
 {
 	CC|=((a>>8)&0x1);
 }
 
-inline void SET_C16(UINT32 a)	
+M6809_INLINE void SET_C16(UINT32 a)	
 {
 	CC|=((a>>16)&0x1);
 }
@@ -425,19 +425,20 @@ M6809_INLINE UINT32 RM16( UINT32 Addr )
 //	return result | RM((Addr+1)&0xffff);
 }
 
-inline void SET_V8(UINT32 a,UINT8 b,UINT32 r)	
+M6809_INLINE void SET_V8(UINT32 a,UINT8 b,UINT32 r)	
 {
 	CC|=(((a^b^r^(r>>1))>>6)&0x2);
 }
 
-inline void SET_V16(UINT32 a,UINT8 b,UINT32 r)	
+M6809_INLINE void SET_V16(UINT32 a,UINT8 b,UINT32 r)	
 {
-	CC|=(((a^b^r^(r>>1))>>14)&0x2);
+//	CC|=(((a^b^r^(r>>1))>>14)&0x2);
+	CC|=(((a^b^r^(r>>1))&0x2000)>>14);  // vbt semble plus rapide
 }
 //#define SET_V8(a,b,r)	CC|=(((a^b^r^(r>>1))>>6)&0x2)
 //#define SET_V16(a,b,r)	CC|=(((a^b^r^(r>>1))>>14)&0x2)
 
-inline void SET_FLAGS16(UINT32 a,UINT8 b,UINT32 r)	
+M6809_INLINE void SET_FLAGS16(UINT32 a,UINT8 b,UINT32 r)	
 {
 	 SET_N16(r);
 	 SET_Z16(r);
@@ -446,7 +447,7 @@ inline void SET_FLAGS16(UINT32 a,UINT8 b,UINT32 r)
 }
 // #define SET_FLAGS16(a,b,r)	{SET_N16(r);SET_Z16(r);SET_V16(a,b,r);SET_C16(r);}
 
-inline void SET_FLAGS8(UINT32 a,UINT8 b,UINT32 r)	
+M6809_INLINE void SET_FLAGS8(UINT32 a,UINT8 b,UINT32 r)	
 {
 	SET_N8(r);
 	SET_Z8(r);
@@ -455,13 +456,13 @@ inline void SET_FLAGS8(UINT32 a,UINT8 b,UINT32 r)
 }
 // #define SET_FLAGS8(a,b,r)	{SET_N8(r);SET_Z8(r);SET_V8(a,b,r);SET_C8(r);}
 
-inline void SET_NZ8(UINT32 a)	
+M6809_INLINE void SET_NZ8(UINT32 a)	
 {
 	SET_N8(a);
 	SET_Z(a);
 }
 
-inline void SET_NZ16(UINT32 a)	
+M6809_INLINE void SET_NZ16(UINT32 a)	
 {
 	SET_N16(a);
 	SET_Z(a);

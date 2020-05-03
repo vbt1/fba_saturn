@@ -55,8 +55,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
 /*static*/ int RomLoadOffset = 0;
 
-/*static*/ int nCyclesDone[2], nCyclesTotal[2];
-/*static*/ int nCyclesSegment;
+/*static*/ int nCyclesTotal[2];
 
 ///*static*/ int Diamond;
 

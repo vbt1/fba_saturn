@@ -155,7 +155,7 @@ unsigned char DrvGngM6809ReadByte(unsigned short Address)
 	return 0;
 }
 
-static void bg_render(unsigned short Address, unsigned char *BgVideoRam)
+inline void bg_render(unsigned short Address, unsigned char *BgVideoRam)
 {
 	unsigned int Code = *BgVideoRam;
 	unsigned int Attr = BgVideoRam[0x400];
@@ -163,19 +163,21 @@ static void bg_render(unsigned short Address, unsigned char *BgVideoRam)
 
 	unsigned short x = map_offset_lut[Address];
 	unsigned int Flip = (Attr & 0x30) << 6;
-	ss_map2[x+1024] = ss_map2[x] = color[Attr & 0x07] | Flip | Code;//0x400; //Colour<<12 | Flip | Code;//0x400;
+	
+	unsigned short *map2 = &ss_map2[x];
+	map2[0] = map2[1024] = color[Attr & 0x07] | Flip | Code;
 }
 
-static void fg_render(unsigned short Address, unsigned char *FgVideoRam)
+inline void fg_render(unsigned short Address, unsigned char *FgVideoRam)
 {
 	unsigned int Code = *FgVideoRam;
 	unsigned int Attr = FgVideoRam[0x400];
 	Code += (Attr & 0xc0) << 2;
-
-	unsigned short x = map_offset_lut_fg[Address]; //(mx|(my<<6));
 	unsigned int Flip = (Attr & 0x30) << 6;
+	unsigned int col = (Attr & 0x0f)<<12;
 
-	ss_map[x] =  color[Attr & 0x0f] | Flip | Code; //Colour << 12 | Flip | Code;
+	unsigned short x = map_offset_lut_fg[Address];
+	ss_map[x] =  col | Flip | Code;
 }
 
 void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
@@ -318,9 +320,17 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 			}
 			return;
 		}
+/*
+		if(Address>=0x3900 && Address<=0x39FF) //0x3900
+		{
+			Address&=0xff;
+			DrvPaletteRam1[Address]=Data;
+			unsigned int Val = Data + (DrvPaletteRam2[Address] << 8);
+			colBgAddr[(Address&7)+(Address&0xf8)<<1] = cram_lut[Val];
+		}
+*/		
 	}
 #endif	
-//	bprintf(PRINT_NORMAL, _T("M6809 Write Byte -> %04X, %02X\n"), Address, Data);
 }
 
 unsigned char __fastcall DrvGngZ80Read(unsigned short a)
@@ -458,7 +468,7 @@ inline double DrvGetTime()
 	nRet = BurnLoadRom(DrvTempRom, 4 + RomLoadOffset, 1); if (nRet != 0) return 1;
 //	GfxDecode4Bpp(0x400, 2, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
 	GfxDecode4Bpp(0x400, 2, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
-	swapFirstLastColor(DrvChars,0x0f,0x10000);
+	swapFirstLastColor(DrvChars,0x03,0x10000);
 
 	// Load and decode the tiles
 	memset(DrvTempRom, 0, 0x20000);
@@ -502,6 +512,7 @@ inline double DrvGetTime()
 #endif
 	M6809MapMemory(DrvPaletteRam2       , 0x3800, 0x38ff, M6809_RAM);
 	M6809MapMemory(DrvPaletteRam1       , 0x3900, 0x39ff, M6809_RAM);
+//	M6809MapMemory(DrvPaletteRam1       , 0x3900, 0x39ff, M6809_ROM);
 	M6809MapMemory(DrvM6809Rom          , 0x4000, 0x5fff, M6809_ROM);
 	M6809MapMemory(DrvM6809Rom + 0x2000 , 0x6000, 0xffff, M6809_ROM);
 	M6809SetReadByteHandler(DrvGngM6809ReadByte);
@@ -622,8 +633,8 @@ voir plutot p355 vdp2
 /*static*/ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
-	colBgAddr    = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
-	colAddr        = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+	colBgAddr   = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
+	colAddr     = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	colBgAddr2  = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 // 	
 	SCL_AllocColRam(SCL_NBG0,OFF);
@@ -744,19 +755,16 @@ voir plutot p355 vdp2
 
 /*static*/ void DrvCalcPalette()
 {
-	unsigned int i,j,delta=0;
+	unsigned int i;
 	unsigned short *colAddr1 = &colBgAddr[0];
-	
-	for (i = 0; i < 64; i+=8) 
+//bg
+	for (i = 0; i < 64;) 
 	{
-		for (j = 0; j < 8; j++) 
-		{
-			unsigned int Val = DrvPaletteRam1[i+j] + (DrvPaletteRam2[i+j] << 8);
-			*(colAddr1++) = cram_lut[Val];
-		}
-		colAddr1 += 8;
+		unsigned int Val = DrvPaletteRam1[i] + (DrvPaletteRam2[i] << 8);		
+		*(colAddr1++) = cram_lut[Val];
+		i++; if ((i & 7) == 0) colAddr1 += 8;
 	}
-
+// sprites
 	for (i = 64; i < 128; i++) 
 	{
 		unsigned int Val = DrvPaletteRam1[i] + (DrvPaletteRam2[i] << 8);
@@ -768,72 +776,66 @@ voir plutot p355 vdp2
 	colAddr[47] = colAddr[32];
 	colAddr[63] = colAddr[48];
 
-	delta=0;
-	
-	for (i = 128,j=0; i < 256; i+=4) 
+	colAddr1 = &colBgAddr2[0];
+//fg	
+	for (i = 128; i < 256;) 
 	{
-		for (j = 0; j < 4; j++) 
-		{
-			unsigned int Val = DrvPaletteRam1[i+j] + (DrvPaletteRam2[i+j] << 8);
-			colBgAddr2[i+j+delta-128] = cram_lut[Val];
-		}
-		colBgAddr2[i+3+delta-128] = colBgAddr2[i+delta-128];
-		colBgAddr2[i+delta-128]     = colBgAddr2[i+3+delta-128];
-		delta += 12;  
+		unsigned int Val = DrvPaletteRam1[i] + (DrvPaletteRam2[i] << 8);
+		*(colAddr1++) = cram_lut[Val];
+		i++; if ((i & 3) == 0) colAddr1 += 12;		
 	}
-
 }
 
 /*static*/ void DrvRenderSprites()
 {
-	for (int Offs = 0x200 - 4; Offs >= 0; Offs -= 4) 
+	UINT8 *ram =&DrvSpriteRamBuffer[0];
+	
+	for (int Offs = 0x80 - 1; Offs >= 0; Offs --) 
 	{
-		UINT8 Attr = DrvSpriteRamBuffer[Offs + 1];
-		int sx = DrvSpriteRamBuffer[Offs + 3] - (0x100 * (Attr & 0x01));
-		int sy = DrvSpriteRamBuffer[Offs + 2];
-		int delta	= ((Offs/4)+3);
+		UINT8 Attr = ram[1];
+		int sx = ram[3] - (0x100 * (Attr & 0x01));
+		int sy = ram[2];
+		unsigned int delta	= (Offs+3);
 
 		if (sx>= 0 && sy >= 0 && sx < 256)
 		{
-			int flip = (Attr & 0x0C)<<2;
-			int Code = DrvSpriteRamBuffer[Offs + 0] + ((Attr << 2) & 0x300);
-//			int Colour = (Attr >> 4) & 3;
+			unsigned int flip = (Attr & 0x0C)<<2;
+			unsigned int Code = ram[0] + ((Attr << 2) & 0x300);
 
-			ss_sprite[delta].control			= ( JUMP_NEXT | FUNC_NORMALSP | flip);
+			ss_sprite[delta].control	= ( JUMP_NEXT | FUNC_NORMALSP | flip);
 			ss_sprite[delta].drawMode	= ( ECD_DISABLE | COMPO_REP);
 
 			ss_sprite[delta].ax			= sx;
 			ss_sprite[delta].ay			= sy-16;
-			ss_sprite[delta].charSize		= 0x210;
-			ss_sprite[delta].color			    = Attr & 0x30;//Colour<<4;
-			ss_sprite[delta].charAddr		= 0x220+(Code<<4);
+			ss_sprite[delta].charSize	= 0x210;
+			ss_sprite[delta].color		= Attr & 0x30;
+			ss_sprite[delta].charAddr	= 0x220+(Code<<4);
 		}
 		else
 		{
 			ss_sprite[delta].charSize   = 0;
-	//		ss_sprite[delta].charAddr   = 0;
 			ss_sprite[delta].ax   = 0;
-	//		ss_sprite[delta].ay   = 0;
-		} 
+		}
+		ram+=4;
 	}
 }
 
 /*static*/ int DrvFrame()
 {
-	if (DrvReset) DrvDoReset();
+//	if (DrvReset) DrvDoReset();
 
 	DrvMakeInputs();
 
-	nCyclesDone[0] = /*nCyclesDone[1] =*/ 0;
+	UINT32 nCyclesDone = 0, nCyclesSegment;
 	#ifdef CZ80	
-	CZetNewFrame();
+//	CZetNewFrame();
 	#endif
 	for (UINT32 i = 0; i < nInterleave; ++i) 
 	{
 		// Run M6809
 		M6809Open(0);
-		nCyclesSegment = nNext[i] - nCyclesDone[0];
-		nCyclesDone[0] += m6809_execute(nCyclesSegment);//M6809Run(nCyclesSegment);
+		nCyclesSegment = nNext[i] - nCyclesDone;
+		nCyclesDone += m6809_execute(nCyclesSegment);//M6809Run(nCyclesSegment);
 		if (i == 24) {
 			M6809SetIRQ(0, M6809_IRQSTATUS_AUTO);
 		}
@@ -877,7 +879,7 @@ voir plutot p355 vdp2
 */	
 	#ifdef CZ80	
 //	CZetOpen(0);
-	BurnTimerEndFrame(nCyclesTotal[1]);
+//	BurnTimerEndFrame(nCyclesTotal[1]);
 //	CZetClose();
 	#endif
 //	if (pBurnDraw) 
