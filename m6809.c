@@ -615,7 +615,7 @@ int m6809_execute(int cycles)	/* NS 970908 */
 	}
 	else
 	{
-#if !BIG_SWITCH		
+#if 0 //!BIG_SWITCH		
 		do
 		{
 #else			
@@ -966,11 +966,12 @@ m6809_Exec:
 			case 0xff: stu_ex();   RET(6);
 			}
 #else
-            (*m6809_main[m6809.ireg])();
-            USE_CYCLES(cycles1[m6809.ireg]);
+//            (*m6809_main[m6809.ireg])();
+			goto *m6809_main[m6809.ireg];
+            RET(cycles1[m6809.ireg]);
 #endif
 
-#if !BIG_SWITCH	
+#if 0 // !BIG_SWITCH	
 		} 
 		while( m6809.m6809_ICount > 0 );
 #else
