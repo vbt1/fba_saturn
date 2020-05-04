@@ -91,7 +91,11 @@ m6809_Regs m6809;
 #define change_pc(newpc)	m6809.pc.w.l = (newpc)
 #define M6809_CLEAR_LINE	0
 #define M6809_INPUT_LINE_NMI	32
-
+#define USE_CYCLES(A)		m6809.m6809_ICount -= (A);
+#define RET(A)															\
+        if ((m6809.m6809_ICount -= A) > 0) goto m6809_Exec;				\
+        goto m6809_Exec_End;
+		
 M6809_INLINE void fetch_effective_address( void );
 
 /* flag bits in the cc register */
@@ -195,7 +199,7 @@ static PAIR ea;         /* effective address */
 	}
 
 /* public globals */
-static int m6809_ICount;
+//static int m6809.m6809_ICount;
 
 /* these are re-defined in m6809.h TO RAM, ROM or functions in cpuintrf.c */
 #define RM(Addr)		M6809_RDMEM(Addr)
@@ -350,7 +354,7 @@ CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N
 	IMMWORD(t); 						\
 	if( f ) 							\
 	{									\
-		m6809_ICount -= 1;				\
+		USE_CYCLES(1);				\
 		PC += t.w.l;					\
 		CHANGE_PC;						\
 	}									\
@@ -601,18 +605,22 @@ void m6809_set_irq_line(int irqline, int state)
 /* execute instructions on this CPU until icount expires */
 int m6809_execute(int cycles)	/* NS 970908 */
 {
-    m6809_ICount = cycles - m6809.extra_cycles;
+    m6809.m6809_ICount = cycles - m6809.extra_cycles;
 	m6809.extra_cycles = 0;
 
 	if (m6809.int_state & (M6809_CWAI | M6809_SYNC))
 	{
 //		debugger_instruction_hook(Machine, PCD);
-		m6809_ICount = 0;
+		m6809.m6809_ICount = 0;
 	}
 	else
 	{
+#if !BIG_SWITCH		
 		do
 		{
+#else			
+m6809_Exec:			
+#endif
 			pPPC = pPC;
 
 //			debugger_instruction_hook(Machine, PCD);
@@ -622,275 +630,357 @@ int m6809_execute(int cycles)	/* NS 970908 */
 #if BIG_SWITCH
             switch( m6809.ireg )
 			{
-			case 0x00: neg_di();   m6809_ICount-= 6; break;
-			case 0x01: neg_di();   m6809_ICount-= 6; break;	/* undocumented */
-			case 0x02: illegal();  m6809_ICount-= 2; break;
-			case 0x03: com_di();   m6809_ICount-= 6; break;
-			case 0x04: lsr_di();   m6809_ICount-= 6; break;
-			case 0x05: illegal();  m6809_ICount-= 2; break;
-			case 0x06: ror_di();   m6809_ICount-= 6; break;
-			case 0x07: asr_di();   m6809_ICount-= 6; break;
-			case 0x08: asl_di();   m6809_ICount-= 6; break;
-			case 0x09: rol_di();   m6809_ICount-= 6; break;
-			case 0x0a: dec_di();   m6809_ICount-= 6; break;
-			case 0x0b: illegal();  m6809_ICount-= 2; break;
-			case 0x0c: inc_di();   m6809_ICount-= 6; break;
-			case 0x0d: tst_di();   m6809_ICount-= 6; break;
-			case 0x0e: jmp_di();   m6809_ICount-= 3; break;
-			case 0x0f: clr_di();   m6809_ICount-= 6; break;
-			case 0x10: pref10();					 break;
-			case 0x11: pref11();					 break;
-			case 0x12: nop();	   m6809_ICount-= 2; break;
-			case 0x13: sync();	   m6809_ICount-= 4; break;
-			case 0x14: illegal();  m6809_ICount-= 2; break;
-			case 0x15: illegal();  m6809_ICount-= 2; break;
-			case 0x16: lbra();	   m6809_ICount-= 5; break;
-			case 0x17: lbsr();	   m6809_ICount-= 9; break;
-			case 0x18: illegal();  m6809_ICount-= 2; break;
-			case 0x19: daa();	   m6809_ICount-= 2; break;
-			case 0x1a: orcc();	   m6809_ICount-= 3; break;
-			case 0x1b: illegal();  m6809_ICount-= 2; break;
-			case 0x1c: andcc();    m6809_ICount-= 3; break;
-			case 0x1d: sex();	   m6809_ICount-= 2; break;
-			case 0x1e: exg();	   m6809_ICount-= 8; break;
-			case 0x1f: tfr();	   m6809_ICount-= 6; break;
-			case 0x20: bra();	   m6809_ICount-= 3; break;
-			case 0x21: brn();	   m6809_ICount-= 3; break;
-			case 0x22: bhi();	   m6809_ICount-= 3; break;
-			case 0x23: bls();	   m6809_ICount-= 3; break;
-			case 0x24: bcc();	   m6809_ICount-= 3; break;
-			case 0x25: bcs();	   m6809_ICount-= 3; break;
-			case 0x26: bne();	   m6809_ICount-= 3; break;
-			case 0x27: beq();	   m6809_ICount-= 3; break;
-			case 0x28: bvc();	   m6809_ICount-= 3; break;
-			case 0x29: bvs();	   m6809_ICount-= 3; break;
-			case 0x2a: bpl();	   m6809_ICount-= 3; break;
-			case 0x2b: bmi();	   m6809_ICount-= 3; break;
-			case 0x2c: bge();	   m6809_ICount-= 3; break;
-			case 0x2d: blt();	   m6809_ICount-= 3; break;
-			case 0x2e: bgt();	   m6809_ICount-= 3; break;
-			case 0x2f: ble();	   m6809_ICount-= 3; break;
-			case 0x30: leax();	   m6809_ICount-= 4; break;
-			case 0x31: leay();	   m6809_ICount-= 4; break;
-			case 0x32: leas();	   m6809_ICount-= 4; break;
-			case 0x33: leau();	   m6809_ICount-= 4; break;
-			case 0x34: pshs();	   m6809_ICount-= 5; break;
-			case 0x35: puls();	   m6809_ICount-= 5; break;
-			case 0x36: pshu();	   m6809_ICount-= 5; break;
-			case 0x37: pulu();	   m6809_ICount-= 5; break;
-			case 0x38: illegal();  m6809_ICount-= 2; break;
-			case 0x39: rts();	   m6809_ICount-= 5; break;
-			case 0x3a: abx();	   m6809_ICount-= 3; break;
-			case 0x3b: rti();	   m6809_ICount-= 6; break;
-			case 0x3c: cwai();	   m6809_ICount-=20; break;
-			case 0x3d: mul();	   m6809_ICount-=11; break;
-			case 0x3e: illegal();  m6809_ICount-= 2; break;
-			case 0x3f: swi();	   m6809_ICount-=19; break;
-			case 0x40: nega();	   m6809_ICount-= 2; break;
-			case 0x41: illegal();  m6809_ICount-= 2; break;
-			case 0x42: illegal();  m6809_ICount-= 2; break;
-			case 0x43: coma();	   m6809_ICount-= 2; break;
-			case 0x44: lsra();	   m6809_ICount-= 2; break;
-			case 0x45: illegal();  m6809_ICount-= 2; break;
-			case 0x46: rora();	   m6809_ICount-= 2; break;
-			case 0x47: asra();	   m6809_ICount-= 2; break;
-			case 0x48: asla();	   m6809_ICount-= 2; break;
-			case 0x49: rola();	   m6809_ICount-= 2; break;
-			case 0x4a: deca();	   m6809_ICount-= 2; break;
-			case 0x4b: illegal();  m6809_ICount-= 2; break;
-			case 0x4c: inca();	   m6809_ICount-= 2; break;
-			case 0x4d: tsta();	   m6809_ICount-= 2; break;
-			case 0x4e: illegal();  m6809_ICount-= 2; break;
-			case 0x4f: clra();	   m6809_ICount-= 2; break;
-			case 0x50: negb();	   m6809_ICount-= 2; break;
-			case 0x51: illegal();  m6809_ICount-= 2; break;
-			case 0x52: illegal();  m6809_ICount-= 2; break;
-			case 0x53: comb();	   m6809_ICount-= 2; break;
-			case 0x54: lsrb();	   m6809_ICount-= 2; break;
-			case 0x55: illegal();  m6809_ICount-= 2; break;
-			case 0x56: rorb();	   m6809_ICount-= 2; break;
-			case 0x57: asrb();	   m6809_ICount-= 2; break;
-			case 0x58: aslb();	   m6809_ICount-= 2; break;
-			case 0x59: rolb();	   m6809_ICount-= 2; break;
-			case 0x5a: decb();	   m6809_ICount-= 2; break;
-			case 0x5b: illegal();  m6809_ICount-= 2; break;
-			case 0x5c: incb();	   m6809_ICount-= 2; break;
-			case 0x5d: tstb();	   m6809_ICount-= 2; break;
-			case 0x5e: illegal();  m6809_ICount-= 2; break;
-			case 0x5f: clrb();	   m6809_ICount-= 2; break;
-			case 0x60: neg_ix();   m6809_ICount-= 6; break;
-			case 0x61: illegal();  m6809_ICount-= 2; break;
-			case 0x62: illegal();  m6809_ICount-= 2; break;
-			case 0x63: com_ix();   m6809_ICount-= 6; break;
-			case 0x64: lsr_ix();   m6809_ICount-= 6; break;
-			case 0x65: illegal();  m6809_ICount-= 2; break;
-			case 0x66: ror_ix();   m6809_ICount-= 6; break;
-			case 0x67: asr_ix();   m6809_ICount-= 6; break;
-			case 0x68: asl_ix();   m6809_ICount-= 6; break;
-			case 0x69: rol_ix();   m6809_ICount-= 6; break;
-			case 0x6a: dec_ix();   m6809_ICount-= 6; break;
-			case 0x6b: illegal();  m6809_ICount-= 2; break;
-			case 0x6c: inc_ix();   m6809_ICount-= 6; break;
-			case 0x6d: tst_ix();   m6809_ICount-= 6; break;
-			case 0x6e: jmp_ix();   m6809_ICount-= 3; break;
-			case 0x6f: clr_ix();   m6809_ICount-= 6; break;
-			case 0x70: neg_ex();   m6809_ICount-= 7; break;
-			case 0x71: illegal();  m6809_ICount-= 2; break;
-			case 0x72: illegal();  m6809_ICount-= 2; break;
-			case 0x73: com_ex();   m6809_ICount-= 7; break;
-			case 0x74: lsr_ex();   m6809_ICount-= 7; break;
-			case 0x75: illegal();  m6809_ICount-= 2; break;
-			case 0x76: ror_ex();   m6809_ICount-= 7; break;
-			case 0x77: asr_ex();   m6809_ICount-= 7; break;
-			case 0x78: asl_ex();   m6809_ICount-= 7; break;
-			case 0x79: rol_ex();   m6809_ICount-= 7; break;
-			case 0x7a: dec_ex();   m6809_ICount-= 7; break;
-			case 0x7b: illegal();  m6809_ICount-= 2; break;
-			case 0x7c: inc_ex();   m6809_ICount-= 7; break;
-			case 0x7d: tst_ex();   m6809_ICount-= 7; break;
-			case 0x7e: jmp_ex();   m6809_ICount-= 4; break;
-			case 0x7f: clr_ex();   m6809_ICount-= 7; break;
-			case 0x80: suba_im();  m6809_ICount-= 2; break;
-			case 0x81: cmpa_im();  m6809_ICount-= 2; break;
-			case 0x82: sbca_im();  m6809_ICount-= 2; break;
-			case 0x83: subd_im();  m6809_ICount-= 4; break;
-			case 0x84: anda_im();  m6809_ICount-= 2; break;
-			case 0x85: bita_im();  m6809_ICount-= 2; break;
-			case 0x86: lda_im();   m6809_ICount-= 2; break;
-			case 0x87: sta_im();   m6809_ICount-= 2; break;
-			case 0x88: eora_im();  m6809_ICount-= 2; break;
-			case 0x89: adca_im();  m6809_ICount-= 2; break;
-			case 0x8a: ora_im();   m6809_ICount-= 2; break;
-			case 0x8b: adda_im();  m6809_ICount-= 2; break;
-			case 0x8c: cmpx_im();  m6809_ICount-= 4; break;
-			case 0x8d: bsr();	   m6809_ICount-= 7; break;
-			case 0x8e: ldx_im();   m6809_ICount-= 3; break;
-			case 0x8f: stx_im();   m6809_ICount-= 2; break;
-			case 0x90: suba_di();  m6809_ICount-= 4; break;
-			case 0x91: cmpa_di();  m6809_ICount-= 4; break;
-			case 0x92: sbca_di();  m6809_ICount-= 4; break;
-			case 0x93: subd_di();  m6809_ICount-= 6; break;
-			case 0x94: anda_di();  m6809_ICount-= 4; break;
-			case 0x95: bita_di();  m6809_ICount-= 4; break;
-			case 0x96: lda_di();   m6809_ICount-= 4; break;
-			case 0x97: sta_di();   m6809_ICount-= 4; break;
-			case 0x98: eora_di();  m6809_ICount-= 4; break;
-			case 0x99: adca_di();  m6809_ICount-= 4; break;
-			case 0x9a: ora_di();   m6809_ICount-= 4; break;
-			case 0x9b: adda_di();  m6809_ICount-= 4; break;
-			case 0x9c: cmpx_di();  m6809_ICount-= 6; break;
-			case 0x9d: jsr_di();   m6809_ICount-= 7; break;
-			case 0x9e: ldx_di();   m6809_ICount-= 5; break;
-			case 0x9f: stx_di();   m6809_ICount-= 5; break;
-			case 0xa0: suba_ix();  m6809_ICount-= 4; break;
-			case 0xa1: cmpa_ix();  m6809_ICount-= 4; break;
-			case 0xa2: sbca_ix();  m6809_ICount-= 4; break;
-			case 0xa3: subd_ix();  m6809_ICount-= 6; break;
-			case 0xa4: anda_ix();  m6809_ICount-= 4; break;
-			case 0xa5: bita_ix();  m6809_ICount-= 4; break;
-			case 0xa6: lda_ix();   m6809_ICount-= 4; break;
-			case 0xa7: sta_ix();   m6809_ICount-= 4; break;
-			case 0xa8: eora_ix();  m6809_ICount-= 4; break;
-			case 0xa9: adca_ix();  m6809_ICount-= 4; break;
-			case 0xaa: ora_ix();   m6809_ICount-= 4; break;
-			case 0xab: adda_ix();  m6809_ICount-= 4; break;
-			case 0xac: cmpx_ix();  m6809_ICount-= 6; break;
-			case 0xad: jsr_ix();   m6809_ICount-= 7; break;
-			case 0xae: ldx_ix();   m6809_ICount-= 5; break;
-			case 0xaf: stx_ix();   m6809_ICount-= 5; break;
-			case 0xb0: suba_ex();  m6809_ICount-= 5; break;
-			case 0xb1: cmpa_ex();  m6809_ICount-= 5; break;
-			case 0xb2: sbca_ex();  m6809_ICount-= 5; break;
-			case 0xb3: subd_ex();  m6809_ICount-= 7; break;
-			case 0xb4: anda_ex();  m6809_ICount-= 5; break;
-			case 0xb5: bita_ex();  m6809_ICount-= 5; break;
-			case 0xb6: lda_ex();   m6809_ICount-= 5; break;
-			case 0xb7: sta_ex();   m6809_ICount-= 5; break;
-			case 0xb8: eora_ex();  m6809_ICount-= 5; break;
-			case 0xb9: adca_ex();  m6809_ICount-= 5; break;
-			case 0xba: ora_ex();   m6809_ICount-= 5; break;
-			case 0xbb: adda_ex();  m6809_ICount-= 5; break;
-			case 0xbc: cmpx_ex();  m6809_ICount-= 7; break;
-			case 0xbd: jsr_ex();   m6809_ICount-= 8; break;
-			case 0xbe: ldx_ex();   m6809_ICount-= 6; break;
-			case 0xbf: stx_ex();   m6809_ICount-= 6; break;
-			case 0xc0: subb_im();  m6809_ICount-= 2; break;
-			case 0xc1: cmpb_im();  m6809_ICount-= 2; break;
-			case 0xc2: sbcb_im();  m6809_ICount-= 2; break;
-			case 0xc3: addd_im();  m6809_ICount-= 4; break;
-			case 0xc4: andb_im();  m6809_ICount-= 2; break;
-			case 0xc5: bitb_im();  m6809_ICount-= 2; break;
-			case 0xc6: ldb_im();   m6809_ICount-= 2; break;
-			case 0xc7: stb_im();   m6809_ICount-= 2; break;
-			case 0xc8: eorb_im();  m6809_ICount-= 2; break;
-			case 0xc9: adcb_im();  m6809_ICount-= 2; break;
-			case 0xca: orb_im();   m6809_ICount-= 2; break;
-			case 0xcb: addb_im();  m6809_ICount-= 2; break;
-			case 0xcc: ldd_im();   m6809_ICount-= 3; break;
-			case 0xcd: std_im();   m6809_ICount-= 2; break;
-			case 0xce: ldu_im();   m6809_ICount-= 3; break;
-			case 0xcf: stu_im();   m6809_ICount-= 3; break;
-			case 0xd0: subb_di();  m6809_ICount-= 4; break;
-			case 0xd1: cmpb_di();  m6809_ICount-= 4; break;
-			case 0xd2: sbcb_di();  m6809_ICount-= 4; break;
-			case 0xd3: addd_di();  m6809_ICount-= 6; break;
-			case 0xd4: andb_di();  m6809_ICount-= 4; break;
-			case 0xd5: bitb_di();  m6809_ICount-= 4; break;
-			case 0xd6: ldb_di();   m6809_ICount-= 4; break;
-			case 0xd7: stb_di();   m6809_ICount-= 4; break;
-			case 0xd8: eorb_di();  m6809_ICount-= 4; break;
-			case 0xd9: adcb_di();  m6809_ICount-= 4; break;
-			case 0xda: orb_di();   m6809_ICount-= 4; break;
-			case 0xdb: addb_di();  m6809_ICount-= 4; break;
-			case 0xdc: ldd_di();   m6809_ICount-= 5; break;
-			case 0xdd: std_di();   m6809_ICount-= 5; break;
-			case 0xde: ldu_di();   m6809_ICount-= 5; break;
-			case 0xdf: stu_di();   m6809_ICount-= 5; break;
-			case 0xe0: subb_ix();  m6809_ICount-= 4; break;
-			case 0xe1: cmpb_ix();  m6809_ICount-= 4; break;
-			case 0xe2: sbcb_ix();  m6809_ICount-= 4; break;
-			case 0xe3: addd_ix();  m6809_ICount-= 6; break;
-			case 0xe4: andb_ix();  m6809_ICount-= 4; break;
-			case 0xe5: bitb_ix();  m6809_ICount-= 4; break;
-			case 0xe6: ldb_ix();   m6809_ICount-= 4; break;
-			case 0xe7: stb_ix();   m6809_ICount-= 4; break;
-			case 0xe8: eorb_ix();  m6809_ICount-= 4; break;
-			case 0xe9: adcb_ix();  m6809_ICount-= 4; break;
-			case 0xea: orb_ix();   m6809_ICount-= 4; break;
-			case 0xeb: addb_ix();  m6809_ICount-= 4; break;
-			case 0xec: ldd_ix();   m6809_ICount-= 5; break;
-			case 0xed: std_ix();   m6809_ICount-= 5; break;
-			case 0xee: ldu_ix();   m6809_ICount-= 5; break;
-			case 0xef: stu_ix();   m6809_ICount-= 5; break;
-			case 0xf0: subb_ex();  m6809_ICount-= 5; break;
-			case 0xf1: cmpb_ex();  m6809_ICount-= 5; break;
-			case 0xf2: sbcb_ex();  m6809_ICount-= 5; break;
-			case 0xf3: addd_ex();  m6809_ICount-= 7; break;
-			case 0xf4: andb_ex();  m6809_ICount-= 5; break;
-			case 0xf5: bitb_ex();  m6809_ICount-= 5; break;
-			case 0xf6: ldb_ex();   m6809_ICount-= 5; break;
-			case 0xf7: stb_ex();   m6809_ICount-= 5; break;
-			case 0xf8: eorb_ex();  m6809_ICount-= 5; break;
-			case 0xf9: adcb_ex();  m6809_ICount-= 5; break;
-			case 0xfa: orb_ex();   m6809_ICount-= 5; break;
-			case 0xfb: addb_ex();  m6809_ICount-= 5; break;
-			case 0xfc: ldd_ex();   m6809_ICount-= 6; break;
-			case 0xfd: std_ex();   m6809_ICount-= 6; break;
-			case 0xfe: ldu_ex();   m6809_ICount-= 6; break;
-			case 0xff: stu_ex();   m6809_ICount-= 6; break;
+			case 0x00: neg_di();   RET(6);
+			case 0x01: neg_di();   RET(6);	/* undocumented */
+			case 0x02: illegal();  RET(2);
+			case 0x03: com_di();   RET(6);
+			case 0x04: lsr_di();   RET(6);
+			case 0x05: illegal();  RET(2);
+			case 0x06: ror_di();   RET(6);
+			case 0x07: asr_di();   RET(6);
+			case 0x08: asl_di();   RET(6);
+			case 0x09: rol_di();   RET(6);
+			case 0x0a: dec_di();   RET(6);
+			case 0x0b: illegal();  RET(2);
+			case 0x0c: inc_di();   RET(6);
+			case 0x0d: tst_di();   RET(6);
+			case 0x0e: jmp_di();   RET(3);
+			case 0x0f: clr_di();   RET(6);
+			case 0x10: {
+							UINT8 ireg2 = ROP(PCD);
+							PC++;
+							switch( ireg2 )
+							{
+								case 0x21: lbrn();		RET(5);
+								case 0x22: lbhi();		RET(5);
+								case 0x23: lbls();		RET(5);
+								case 0x24: lbcc();		RET(5);
+								case 0x25: lbcs();		RET(5);
+								case 0x26: lbne();		RET(5);
+								case 0x27: lbeq();		RET(5);
+								case 0x28: lbvc();		RET(5);
+								case 0x29: lbvs();		RET(5);
+								case 0x2a: lbpl();		RET(5);
+								case 0x2b: lbmi();		RET(5);
+								case 0x2c: lbge();		RET(5);
+								case 0x2d: lblt();		RET(5);
+								case 0x2e: lbgt();		RET(5);
+								case 0x2f: lble();		RET(5);
+
+								case 0x3f: swi2();		RET(20);
+
+								case 0x83: cmpd_im();	RET(5);
+								case 0x8c: cmpy_im();	RET(5);
+								case 0x8e: ldy_im();	RET(4);
+								case 0x8f: sty_im();	RET(4);
+
+								case 0x93: cmpd_di();	RET(7);
+								case 0x9c: cmpy_di();	RET(7);
+								case 0x9e: ldy_di();	RET(6);
+								case 0x9f: sty_di();	RET(6);
+
+								case 0xa3: cmpd_ix();	RET(7);
+								case 0xac: cmpy_ix();	RET(7);
+								case 0xae: ldy_ix();	RET(6);
+								case 0xaf: sty_ix();	RET(6);
+
+								case 0xb3: cmpd_ex();	RET(8);
+								case 0xbc: cmpy_ex();	RET(8);
+								case 0xbe: ldy_ex();	RET(7);
+								case 0xbf: sty_ex();	RET(7);
+
+								case 0xce: lds_im();	RET(4);
+								case 0xcf: sts_im();	RET(4);
+
+								case 0xde: lds_di();	RET(6);
+								case 0xdf: sts_di();	RET(6);
+
+								case 0xee: lds_ix();	RET(6);
+								case 0xef: sts_ix();	RET(6);
+
+								case 0xfe: lds_ex();	RET(7);
+								case 0xff: sts_ex();	RET(7);
+
+								default:   illegal();	goto m6809_Exec;
+							}
+						}
+			case 0x11: {
+							UINT8 ireg2 = ROP(PCD);
+							PC++;
+							switch( ireg2 )
+							{
+								case 0x3f: swi3();		RET(20);
+
+								case 0x83: cmpu_im();	RET(5);
+								case 0x8c: cmps_im();	RET(5);
+
+								case 0x93: cmpu_di();	RET(7);
+								case 0x9c: cmps_di();	RET(7);
+
+								case 0xa3: cmpu_ix();	RET(7);
+								case 0xac: cmps_ix();	RET(7);
+
+								case 0xb3: cmpu_ex();	RET(8);
+								case 0xbc: cmps_ex();	RET(8);
+
+								default:   illegal();	goto m6809_Exec;
+							}
+						}
+			case 0x12: nop();	   RET(2);
+			case 0x13: sync();	   RET(4);
+			case 0x14: illegal();  RET(2);
+			case 0x15: illegal();  RET(2);
+			case 0x16: lbra();	   RET(5);
+			case 0x17: lbsr();	   RET(9);
+			case 0x18: illegal();  RET(2);
+			case 0x19: daa();	   RET(2);
+			case 0x1a: orcc();	   RET(3);
+			case 0x1b: illegal();  RET(2);
+			case 0x1c: andcc();    RET(3);
+			case 0x1d: sex();	   RET(2);
+			case 0x1e: exg();	   RET(8);
+			case 0x1f: tfr();	   RET(6);
+			case 0x20: bra();	   RET(3);
+			case 0x21: brn();	   RET(3);
+			case 0x22: bhi();	   RET(3);
+			case 0x23: bls();	   RET(3);
+			case 0x24: bcc();	   RET(3);
+			case 0x25: bcs();	   RET(3);
+			case 0x26: bne();	   RET(3);
+			case 0x27: beq();	   RET(3);
+			case 0x28: bvc();	   RET(3);
+			case 0x29: bvs();	   RET(3);
+			case 0x2a: bpl();	   RET(3);
+			case 0x2b: bmi();	   RET(3);
+			case 0x2c: bge();	   RET(3);
+			case 0x2d: blt();	   RET(3);
+			case 0x2e: bgt();	   RET(3);
+			case 0x2f: ble();	   RET(3);
+			case 0x30: leax();	   RET(4);
+			case 0x31: leay();	   RET(4);
+			case 0x32: leas();	   RET(4);
+			case 0x33: leau();	   RET(4);
+			case 0x34: pshs();	   RET(5);
+			case 0x35: puls();	   RET(5);
+			case 0x36: pshu();	   RET(5);
+			case 0x37: pulu();	   RET(5);
+			case 0x38: illegal();  RET(2);
+			case 0x39: rts();	   RET(5);
+			case 0x3a: abx();	   RET(3);
+			case 0x3b: rti();	   RET(6);
+			case 0x3c: cwai();	   RET(20);
+			case 0x3d: mul();	   RET(11);
+			case 0x3e: illegal();  RET(2);
+			case 0x3f: swi();	   RET(19);
+			case 0x40: nega();	   RET(2);
+			case 0x41: illegal();  RET(2);
+			case 0x42: illegal();  RET(2);
+			case 0x43: coma();	   RET(2);
+			case 0x44: lsra();	   RET(2);
+			case 0x45: illegal();  RET(2);
+			case 0x46: rora();	   RET(2);
+			case 0x47: asra();	   RET(2);
+			case 0x48: asla();	   RET(2);
+			case 0x49: rola();	   RET(2);
+			case 0x4a: deca();	   RET(2);
+			case 0x4b: illegal();  RET(2);
+			case 0x4c: inca();	   RET(2);
+			case 0x4d: tsta();	   RET(2);
+			case 0x4e: illegal();  RET(2);
+			case 0x4f: clra();	   RET(2);
+			case 0x50: negb();	   RET(2);
+			case 0x51: illegal();  RET(2);
+			case 0x52: illegal();  RET(2);
+			case 0x53: comb();	   RET(2);
+			case 0x54: lsrb();	   RET(2);
+			case 0x55: illegal();  RET(2);
+			case 0x56: rorb();	   RET(2);
+			case 0x57: asrb();	   RET(2);
+			case 0x58: aslb();	   RET(2);
+			case 0x59: rolb();	   RET(2);
+			case 0x5a: decb();	   RET(2);
+			case 0x5b: illegal();  RET(2);
+			case 0x5c: incb();	   RET(2);
+			case 0x5d: tstb();	   RET(2);
+			case 0x5e: illegal();  RET(2);
+			case 0x5f: clrb();	   RET(2);
+			case 0x60: neg_ix();   RET(6);
+			case 0x61: illegal();  RET(2);
+			case 0x62: illegal();  RET(2);
+			case 0x63: com_ix();   RET(6);
+			case 0x64: lsr_ix();   RET(6);
+			case 0x65: illegal();  RET(2);
+			case 0x66: ror_ix();   RET(6);
+			case 0x67: asr_ix();   RET(6);
+			case 0x68: asl_ix();   RET(6);
+			case 0x69: rol_ix();   RET(6);
+			case 0x6a: dec_ix();   RET(6);
+			case 0x6b: illegal();  RET(2);
+			case 0x6c: inc_ix();   RET(6);
+			case 0x6d: tst_ix();   RET(6);
+			case 0x6e: jmp_ix();   RET(3);
+			case 0x6f: clr_ix();   RET(6);
+			case 0x70: neg_ex();   RET(7);
+			case 0x71: illegal();  RET(2);
+			case 0x72: illegal();  RET(2);
+			case 0x73: com_ex();   RET(7);
+			case 0x74: lsr_ex();   RET(7);
+			case 0x75: illegal();  RET(2);
+			case 0x76: ror_ex();   RET(7);
+			case 0x77: asr_ex();   RET(7);
+			case 0x78: asl_ex();   RET(7);
+			case 0x79: rol_ex();   RET(7);
+			case 0x7a: dec_ex();   RET(7);
+			case 0x7b: illegal();  RET(2);
+			case 0x7c: inc_ex();   RET(7);
+			case 0x7d: tst_ex();   RET(7);
+			case 0x7e: jmp_ex();   RET(4);
+			case 0x7f: clr_ex();   RET(7);
+			case 0x80: suba_im();  RET(2);
+			case 0x81: cmpa_im();  RET(2);
+			case 0x82: sbca_im();  RET(2);
+			case 0x83: subd_im();  RET(4);
+			case 0x84: anda_im();  RET(2);
+			case 0x85: bita_im();  RET(2);
+			case 0x86: lda_im();   RET(2);
+			case 0x87: sta_im();   RET(2);
+			case 0x88: eora_im();  RET(2);
+			case 0x89: adca_im();  RET(2);
+			case 0x8a: ora_im();   RET(2);
+			case 0x8b: adda_im();  RET(2);
+			case 0x8c: cmpx_im();  RET(4);
+			case 0x8d: bsr();	   RET(7);
+			case 0x8e: ldx_im();   RET(3);
+			case 0x8f: stx_im();   RET(2);
+			case 0x90: suba_di();  RET(4);
+			case 0x91: cmpa_di();  RET(4);
+			case 0x92: sbca_di();  RET(4);
+			case 0x93: subd_di();  RET(6);
+			case 0x94: anda_di();  RET(4);
+			case 0x95: bita_di();  RET(4);
+			case 0x96: lda_di();   RET(4);
+			case 0x97: sta_di();   RET(4);
+			case 0x98: eora_di();  RET(4);
+			case 0x99: adca_di();  RET(4);
+			case 0x9a: ora_di();   RET(4);
+			case 0x9b: adda_di();  RET(4);
+			case 0x9c: cmpx_di();  RET(6);
+			case 0x9d: jsr_di();   RET(7);
+			case 0x9e: ldx_di();   RET(5);
+			case 0x9f: stx_di();   RET(5);
+			case 0xa0: suba_ix();  RET(4);
+			case 0xa1: cmpa_ix();  RET(4);
+			case 0xa2: sbca_ix();  RET(4);
+			case 0xa3: subd_ix();  RET(6);
+			case 0xa4: anda_ix();  RET(4);
+			case 0xa5: bita_ix();  RET(4);
+			case 0xa6: lda_ix();   RET(4);
+			case 0xa7: sta_ix();   RET(4);
+			case 0xa8: eora_ix();  RET(4);
+			case 0xa9: adca_ix();  RET(4);
+			case 0xaa: ora_ix();   RET(4);
+			case 0xab: adda_ix();  RET(4);
+			case 0xac: cmpx_ix();  RET(6);
+			case 0xad: jsr_ix();   RET(7);
+			case 0xae: ldx_ix();   RET(5);
+			case 0xaf: stx_ix();   RET(5);
+			case 0xb0: suba_ex();  RET(5);
+			case 0xb1: cmpa_ex();  RET(5);
+			case 0xb2: sbca_ex();  RET(5);
+			case 0xb3: subd_ex();  RET(7);
+			case 0xb4: anda_ex();  RET(5);
+			case 0xb5: bita_ex();  RET(5);
+			case 0xb6: lda_ex();   RET(5);
+			case 0xb7: sta_ex();   RET(5);
+			case 0xb8: eora_ex();  RET(5);
+			case 0xb9: adca_ex();  RET(5);
+			case 0xba: ora_ex();   RET(5);
+			case 0xbb: adda_ex();  RET(5);
+			case 0xbc: cmpx_ex();  RET(7);
+			case 0xbd: jsr_ex();   RET(8);
+			case 0xbe: ldx_ex();   RET(6);
+			case 0xbf: stx_ex();   RET(6);
+			case 0xc0: subb_im();  RET(2);
+			case 0xc1: cmpb_im();  RET(2);
+			case 0xc2: sbcb_im();  RET(2);
+			case 0xc3: addd_im();  RET(4);
+			case 0xc4: andb_im();  RET(2);
+			case 0xc5: bitb_im();  RET(2);
+			case 0xc6: ldb_im();   RET(2);
+			case 0xc7: stb_im();   RET(2);
+			case 0xc8: eorb_im();  RET(2);
+			case 0xc9: adcb_im();  RET(2);
+			case 0xca: orb_im();   RET(2);
+			case 0xcb: addb_im();  RET(2);
+			case 0xcc: ldd_im();   RET(3);
+			case 0xcd: std_im();   RET(2);
+			case 0xce: ldu_im();   RET(3);
+			case 0xcf: stu_im();   RET(3);
+			case 0xd0: subb_di();  RET(4);
+			case 0xd1: cmpb_di();  RET(4);
+			case 0xd2: sbcb_di();  RET(4);
+			case 0xd3: addd_di();  RET(6);
+			case 0xd4: andb_di();  RET(4);
+			case 0xd5: bitb_di();  RET(4);
+			case 0xd6: ldb_di();   RET(4);
+			case 0xd7: stb_di();   RET(4);
+			case 0xd8: eorb_di();  RET(4);
+			case 0xd9: adcb_di();  RET(4);
+			case 0xda: orb_di();   RET(4);
+			case 0xdb: addb_di();  RET(4);
+			case 0xdc: ldd_di();   RET(5);
+			case 0xdd: std_di();   RET(5);
+			case 0xde: ldu_di();   RET(5);
+			case 0xdf: stu_di();   RET(5);
+			case 0xe0: subb_ix();  RET(4);
+			case 0xe1: cmpb_ix();  RET(4);
+			case 0xe2: sbcb_ix();  RET(4);
+			case 0xe3: addd_ix();  RET(6);
+			case 0xe4: andb_ix();  RET(4);
+			case 0xe5: bitb_ix();  RET(4);
+			case 0xe6: ldb_ix();   RET(4);
+			case 0xe7: stb_ix();   RET(4);
+			case 0xe8: eorb_ix();  RET(4);
+			case 0xe9: adcb_ix();  RET(4);
+			case 0xea: orb_ix();   RET(4);
+			case 0xeb: addb_ix();  RET(4);
+			case 0xec: ldd_ix();   RET(5);
+			case 0xed: std_ix();   RET(5);
+			case 0xee: ldu_ix();   RET(5);
+			case 0xef: stu_ix();   RET(5);
+			case 0xf0: subb_ex();  RET(5);
+			case 0xf1: cmpb_ex();  RET(5);
+			case 0xf2: sbcb_ex();  RET(5);
+			case 0xf3: addd_ex();  RET(7);
+			case 0xf4: andb_ex();  RET(5);
+			case 0xf5: bitb_ex();  RET(5);
+			case 0xf6: ldb_ex();   RET(5);
+			case 0xf7: stb_ex();   RET(5);
+			case 0xf8: eorb_ex();  RET(5);
+			case 0xf9: adcb_ex();  RET(5);
+			case 0xfa: orb_ex();   RET(5);
+			case 0xfb: addb_ex();  RET(5);
+			case 0xfc: ldd_ex();   RET(6);
+			case 0xfd: std_ex();   RET(6);
+			case 0xfe: ldu_ex();   RET(6);
+			case 0xff: stu_ex();   RET(6);
 			}
 #else
             (*m6809_main[m6809.ireg])();
-            m6809_ICount -= cycles1[m6809.ireg];
+            USE_CYCLES(cycles1[m6809.ireg]);
 #endif
 
-		} while( m6809_ICount > 0 );
-
-        m6809_ICount -= m6809.extra_cycles;
+#if !BIG_SWITCH	
+		} 
+		while( m6809.m6809_ICount > 0 );
+#else
+m6809_Exec_End:
+#endif
+        USE_CYCLES(m6809.extra_cycles);
 		m6809.extra_cycles = 0;
     }
 
-    return cycles - m6809_ICount;   /* NS 970908 */
+    return cycles - m6809.m6809_ICount;   /* NS 970908 */
 }
 
 M6809_INLINE void fetch_effective_address( void )
@@ -900,277 +990,277 @@ M6809_INLINE void fetch_effective_address( void )
 
 	switch(postbyte)
 	{
-	case 0x00: EA=X;												m6809_ICount-=1;   break;
-	case 0x01: EA=X+1;												m6809_ICount-=1;   break;
-	case 0x02: EA=X+2;												m6809_ICount-=1;   break;
-	case 0x03: EA=X+3;												m6809_ICount-=1;   break;
-	case 0x04: EA=X+4;												m6809_ICount-=1;   break;
-	case 0x05: EA=X+5;												m6809_ICount-=1;   break;
-	case 0x06: EA=X+6;												m6809_ICount-=1;   break;
-	case 0x07: EA=X+7;												m6809_ICount-=1;   break;
-	case 0x08: EA=X+8;												m6809_ICount-=1;   break;
-	case 0x09: EA=X+9;												m6809_ICount-=1;   break;
-	case 0x0a: EA=X+10; 											m6809_ICount-=1;   break;
-	case 0x0b: EA=X+11; 											m6809_ICount-=1;   break;
-	case 0x0c: EA=X+12; 											m6809_ICount-=1;   break;
-	case 0x0d: EA=X+13; 											m6809_ICount-=1;   break;
-	case 0x0e: EA=X+14; 											m6809_ICount-=1;   break;
-	case 0x0f: EA=X+15; 											m6809_ICount-=1;   break;
+	case 0x00: EA=X;												USE_CYCLES(1);   break;
+	case 0x01: EA=X+1;												USE_CYCLES(1);   break;
+	case 0x02: EA=X+2;												USE_CYCLES(1);   break;
+	case 0x03: EA=X+3;												USE_CYCLES(1);   break;
+	case 0x04: EA=X+4;												USE_CYCLES(1);   break;
+	case 0x05: EA=X+5;												USE_CYCLES(1);   break;
+	case 0x06: EA=X+6;												USE_CYCLES(1);   break;
+	case 0x07: EA=X+7;												USE_CYCLES(1);   break;
+	case 0x08: EA=X+8;												USE_CYCLES(1);   break;
+	case 0x09: EA=X+9;												USE_CYCLES(1);   break;
+	case 0x0a: EA=X+10; 											USE_CYCLES(1);   break;
+	case 0x0b: EA=X+11; 											USE_CYCLES(1);   break;
+	case 0x0c: EA=X+12; 											USE_CYCLES(1);   break;
+	case 0x0d: EA=X+13; 											USE_CYCLES(1);   break;
+	case 0x0e: EA=X+14; 											USE_CYCLES(1);   break;
+	case 0x0f: EA=X+15; 											USE_CYCLES(1);   break;
 
-	case 0x10: EA=X-16; 											m6809_ICount-=1;   break;
-	case 0x11: EA=X-15; 											m6809_ICount-=1;   break;
-	case 0x12: EA=X-14; 											m6809_ICount-=1;   break;
-	case 0x13: EA=X-13; 											m6809_ICount-=1;   break;
-	case 0x14: EA=X-12; 											m6809_ICount-=1;   break;
-	case 0x15: EA=X-11; 											m6809_ICount-=1;   break;
-	case 0x16: EA=X-10; 											m6809_ICount-=1;   break;
-	case 0x17: EA=X-9;												m6809_ICount-=1;   break;
-	case 0x18: EA=X-8;												m6809_ICount-=1;   break;
-	case 0x19: EA=X-7;												m6809_ICount-=1;   break;
-	case 0x1a: EA=X-6;												m6809_ICount-=1;   break;
-	case 0x1b: EA=X-5;												m6809_ICount-=1;   break;
-	case 0x1c: EA=X-4;												m6809_ICount-=1;   break;
-	case 0x1d: EA=X-3;												m6809_ICount-=1;   break;
-	case 0x1e: EA=X-2;												m6809_ICount-=1;   break;
-	case 0x1f: EA=X-1;												m6809_ICount-=1;   break;
+	case 0x10: EA=X-16; 											USE_CYCLES(1);   break;
+	case 0x11: EA=X-15; 											USE_CYCLES(1);   break;
+	case 0x12: EA=X-14; 											USE_CYCLES(1);   break;
+	case 0x13: EA=X-13; 											USE_CYCLES(1);   break;
+	case 0x14: EA=X-12; 											USE_CYCLES(1);   break;
+	case 0x15: EA=X-11; 											USE_CYCLES(1);   break;
+	case 0x16: EA=X-10; 											USE_CYCLES(1);   break;
+	case 0x17: EA=X-9;												USE_CYCLES(1);   break;
+	case 0x18: EA=X-8;												USE_CYCLES(1);   break;
+	case 0x19: EA=X-7;												USE_CYCLES(1);   break;
+	case 0x1a: EA=X-6;												USE_CYCLES(1);   break;
+	case 0x1b: EA=X-5;												USE_CYCLES(1);   break;
+	case 0x1c: EA=X-4;												USE_CYCLES(1);   break;
+	case 0x1d: EA=X-3;												USE_CYCLES(1);   break;
+	case 0x1e: EA=X-2;												USE_CYCLES(1);   break;
+	case 0x1f: EA=X-1;												USE_CYCLES(1);   break;
 
-	case 0x20: EA=Y;												m6809_ICount-=1;   break;
-	case 0x21: EA=Y+1;												m6809_ICount-=1;   break;
-	case 0x22: EA=Y+2;												m6809_ICount-=1;   break;
-	case 0x23: EA=Y+3;												m6809_ICount-=1;   break;
-	case 0x24: EA=Y+4;												m6809_ICount-=1;   break;
-	case 0x25: EA=Y+5;												m6809_ICount-=1;   break;
-	case 0x26: EA=Y+6;												m6809_ICount-=1;   break;
-	case 0x27: EA=Y+7;												m6809_ICount-=1;   break;
-	case 0x28: EA=Y+8;												m6809_ICount-=1;   break;
-	case 0x29: EA=Y+9;												m6809_ICount-=1;   break;
-	case 0x2a: EA=Y+10; 											m6809_ICount-=1;   break;
-	case 0x2b: EA=Y+11; 											m6809_ICount-=1;   break;
-	case 0x2c: EA=Y+12; 											m6809_ICount-=1;   break;
-	case 0x2d: EA=Y+13; 											m6809_ICount-=1;   break;
-	case 0x2e: EA=Y+14; 											m6809_ICount-=1;   break;
-	case 0x2f: EA=Y+15; 											m6809_ICount-=1;   break;
+	case 0x20: EA=Y;												USE_CYCLES(1);   break;
+	case 0x21: EA=Y+1;												USE_CYCLES(1);   break;
+	case 0x22: EA=Y+2;												USE_CYCLES(1);   break;
+	case 0x23: EA=Y+3;												USE_CYCLES(1);   break;
+	case 0x24: EA=Y+4;												USE_CYCLES(1);   break;
+	case 0x25: EA=Y+5;												USE_CYCLES(1);   break;
+	case 0x26: EA=Y+6;												USE_CYCLES(1);   break;
+	case 0x27: EA=Y+7;												USE_CYCLES(1);   break;
+	case 0x28: EA=Y+8;												USE_CYCLES(1);   break;
+	case 0x29: EA=Y+9;												USE_CYCLES(1);   break;
+	case 0x2a: EA=Y+10; 											USE_CYCLES(1);   break;
+	case 0x2b: EA=Y+11; 											USE_CYCLES(1);   break;
+	case 0x2c: EA=Y+12; 											USE_CYCLES(1);   break;
+	case 0x2d: EA=Y+13; 											USE_CYCLES(1);   break;
+	case 0x2e: EA=Y+14; 											USE_CYCLES(1);   break;
+	case 0x2f: EA=Y+15; 											USE_CYCLES(1);   break;
 
-	case 0x30: EA=Y-16; 											m6809_ICount-=1;   break;
-	case 0x31: EA=Y-15; 											m6809_ICount-=1;   break;
-	case 0x32: EA=Y-14; 											m6809_ICount-=1;   break;
-	case 0x33: EA=Y-13; 											m6809_ICount-=1;   break;
-	case 0x34: EA=Y-12; 											m6809_ICount-=1;   break;
-	case 0x35: EA=Y-11; 											m6809_ICount-=1;   break;
-	case 0x36: EA=Y-10; 											m6809_ICount-=1;   break;
-	case 0x37: EA=Y-9;												m6809_ICount-=1;   break;
-	case 0x38: EA=Y-8;												m6809_ICount-=1;   break;
-	case 0x39: EA=Y-7;												m6809_ICount-=1;   break;
-	case 0x3a: EA=Y-6;												m6809_ICount-=1;   break;
-	case 0x3b: EA=Y-5;												m6809_ICount-=1;   break;
-	case 0x3c: EA=Y-4;												m6809_ICount-=1;   break;
-	case 0x3d: EA=Y-3;												m6809_ICount-=1;   break;
-	case 0x3e: EA=Y-2;												m6809_ICount-=1;   break;
-	case 0x3f: EA=Y-1;												m6809_ICount-=1;   break;
+	case 0x30: EA=Y-16; 											USE_CYCLES(1);   break;
+	case 0x31: EA=Y-15; 											USE_CYCLES(1);   break;
+	case 0x32: EA=Y-14; 											USE_CYCLES(1);   break;
+	case 0x33: EA=Y-13; 											USE_CYCLES(1);   break;
+	case 0x34: EA=Y-12; 											USE_CYCLES(1);   break;
+	case 0x35: EA=Y-11; 											USE_CYCLES(1);   break;
+	case 0x36: EA=Y-10; 											USE_CYCLES(1);   break;
+	case 0x37: EA=Y-9;												USE_CYCLES(1);   break;
+	case 0x38: EA=Y-8;												USE_CYCLES(1);   break;
+	case 0x39: EA=Y-7;												USE_CYCLES(1);   break;
+	case 0x3a: EA=Y-6;												USE_CYCLES(1);   break;
+	case 0x3b: EA=Y-5;												USE_CYCLES(1);   break;
+	case 0x3c: EA=Y-4;												USE_CYCLES(1);   break;
+	case 0x3d: EA=Y-3;												USE_CYCLES(1);   break;
+	case 0x3e: EA=Y-2;												USE_CYCLES(1);   break;
+	case 0x3f: EA=Y-1;												USE_CYCLES(1);   break;
 
-	case 0x40: EA=U;												m6809_ICount-=1;   break;
-	case 0x41: EA=U+1;												m6809_ICount-=1;   break;
-	case 0x42: EA=U+2;												m6809_ICount-=1;   break;
-	case 0x43: EA=U+3;												m6809_ICount-=1;   break;
-	case 0x44: EA=U+4;												m6809_ICount-=1;   break;
-	case 0x45: EA=U+5;												m6809_ICount-=1;   break;
-	case 0x46: EA=U+6;												m6809_ICount-=1;   break;
-	case 0x47: EA=U+7;												m6809_ICount-=1;   break;
-	case 0x48: EA=U+8;												m6809_ICount-=1;   break;
-	case 0x49: EA=U+9;												m6809_ICount-=1;   break;
-	case 0x4a: EA=U+10; 											m6809_ICount-=1;   break;
-	case 0x4b: EA=U+11; 											m6809_ICount-=1;   break;
-	case 0x4c: EA=U+12; 											m6809_ICount-=1;   break;
-	case 0x4d: EA=U+13; 											m6809_ICount-=1;   break;
-	case 0x4e: EA=U+14; 											m6809_ICount-=1;   break;
-	case 0x4f: EA=U+15; 											m6809_ICount-=1;   break;
+	case 0x40: EA=U;												USE_CYCLES(1);   break;
+	case 0x41: EA=U+1;												USE_CYCLES(1);   break;
+	case 0x42: EA=U+2;												USE_CYCLES(1);   break;
+	case 0x43: EA=U+3;												USE_CYCLES(1);   break;
+	case 0x44: EA=U+4;												USE_CYCLES(1);   break;
+	case 0x45: EA=U+5;												USE_CYCLES(1);   break;
+	case 0x46: EA=U+6;												USE_CYCLES(1);   break;
+	case 0x47: EA=U+7;												USE_CYCLES(1);   break;
+	case 0x48: EA=U+8;												USE_CYCLES(1);   break;
+	case 0x49: EA=U+9;												USE_CYCLES(1);   break;
+	case 0x4a: EA=U+10; 											USE_CYCLES(1);   break;
+	case 0x4b: EA=U+11; 											USE_CYCLES(1);   break;
+	case 0x4c: EA=U+12; 											USE_CYCLES(1);   break;
+	case 0x4d: EA=U+13; 											USE_CYCLES(1);   break;
+	case 0x4e: EA=U+14; 											USE_CYCLES(1);   break;
+	case 0x4f: EA=U+15; 											USE_CYCLES(1);   break;
 
-	case 0x50: EA=U-16; 											m6809_ICount-=1;   break;
-	case 0x51: EA=U-15; 											m6809_ICount-=1;   break;
-	case 0x52: EA=U-14; 											m6809_ICount-=1;   break;
-	case 0x53: EA=U-13; 											m6809_ICount-=1;   break;
-	case 0x54: EA=U-12; 											m6809_ICount-=1;   break;
-	case 0x55: EA=U-11; 											m6809_ICount-=1;   break;
-	case 0x56: EA=U-10; 											m6809_ICount-=1;   break;
-	case 0x57: EA=U-9;												m6809_ICount-=1;   break;
-	case 0x58: EA=U-8;												m6809_ICount-=1;   break;
-	case 0x59: EA=U-7;												m6809_ICount-=1;   break;
-	case 0x5a: EA=U-6;												m6809_ICount-=1;   break;
-	case 0x5b: EA=U-5;												m6809_ICount-=1;   break;
-	case 0x5c: EA=U-4;												m6809_ICount-=1;   break;
-	case 0x5d: EA=U-3;												m6809_ICount-=1;   break;
-	case 0x5e: EA=U-2;												m6809_ICount-=1;   break;
-	case 0x5f: EA=U-1;												m6809_ICount-=1;   break;
+	case 0x50: EA=U-16; 											USE_CYCLES(1);   break;
+	case 0x51: EA=U-15; 											USE_CYCLES(1);   break;
+	case 0x52: EA=U-14; 											USE_CYCLES(1);   break;
+	case 0x53: EA=U-13; 											USE_CYCLES(1);   break;
+	case 0x54: EA=U-12; 											USE_CYCLES(1);   break;
+	case 0x55: EA=U-11; 											USE_CYCLES(1);   break;
+	case 0x56: EA=U-10; 											USE_CYCLES(1);   break;
+	case 0x57: EA=U-9;												USE_CYCLES(1);   break;
+	case 0x58: EA=U-8;												USE_CYCLES(1);   break;
+	case 0x59: EA=U-7;												USE_CYCLES(1);   break;
+	case 0x5a: EA=U-6;												USE_CYCLES(1);   break;
+	case 0x5b: EA=U-5;												USE_CYCLES(1);   break;
+	case 0x5c: EA=U-4;												USE_CYCLES(1);   break;
+	case 0x5d: EA=U-3;												USE_CYCLES(1);   break;
+	case 0x5e: EA=U-2;												USE_CYCLES(1);   break;
+	case 0x5f: EA=U-1;												USE_CYCLES(1);   break;
 
-	case 0x60: EA=S;												m6809_ICount-=1;   break;
-	case 0x61: EA=S+1;												m6809_ICount-=1;   break;
-	case 0x62: EA=S+2;												m6809_ICount-=1;   break;
-	case 0x63: EA=S+3;												m6809_ICount-=1;   break;
-	case 0x64: EA=S+4;												m6809_ICount-=1;   break;
-	case 0x65: EA=S+5;												m6809_ICount-=1;   break;
-	case 0x66: EA=S+6;												m6809_ICount-=1;   break;
-	case 0x67: EA=S+7;												m6809_ICount-=1;   break;
-	case 0x68: EA=S+8;												m6809_ICount-=1;   break;
-	case 0x69: EA=S+9;												m6809_ICount-=1;   break;
-	case 0x6a: EA=S+10; 											m6809_ICount-=1;   break;
-	case 0x6b: EA=S+11; 											m6809_ICount-=1;   break;
-	case 0x6c: EA=S+12; 											m6809_ICount-=1;   break;
-	case 0x6d: EA=S+13; 											m6809_ICount-=1;   break;
-	case 0x6e: EA=S+14; 											m6809_ICount-=1;   break;
-	case 0x6f: EA=S+15; 											m6809_ICount-=1;   break;
+	case 0x60: EA=S;												USE_CYCLES(1);   break;
+	case 0x61: EA=S+1;												USE_CYCLES(1);   break;
+	case 0x62: EA=S+2;												USE_CYCLES(1);   break;
+	case 0x63: EA=S+3;												USE_CYCLES(1);   break;
+	case 0x64: EA=S+4;												USE_CYCLES(1);   break;
+	case 0x65: EA=S+5;												USE_CYCLES(1);   break;
+	case 0x66: EA=S+6;												USE_CYCLES(1);   break;
+	case 0x67: EA=S+7;												USE_CYCLES(1);   break;
+	case 0x68: EA=S+8;												USE_CYCLES(1);   break;
+	case 0x69: EA=S+9;												USE_CYCLES(1);   break;
+	case 0x6a: EA=S+10; 											USE_CYCLES(1);   break;
+	case 0x6b: EA=S+11; 											USE_CYCLES(1);   break;
+	case 0x6c: EA=S+12; 											USE_CYCLES(1);   break;
+	case 0x6d: EA=S+13; 											USE_CYCLES(1);   break;
+	case 0x6e: EA=S+14; 											USE_CYCLES(1);   break;
+	case 0x6f: EA=S+15; 											USE_CYCLES(1);   break;
 
-	case 0x70: EA=S-16; 											m6809_ICount-=1;   break;
-	case 0x71: EA=S-15; 											m6809_ICount-=1;   break;
-	case 0x72: EA=S-14; 											m6809_ICount-=1;   break;
-	case 0x73: EA=S-13; 											m6809_ICount-=1;   break;
-	case 0x74: EA=S-12; 											m6809_ICount-=1;   break;
-	case 0x75: EA=S-11; 											m6809_ICount-=1;   break;
-	case 0x76: EA=S-10; 											m6809_ICount-=1;   break;
-	case 0x77: EA=S-9;												m6809_ICount-=1;   break;
-	case 0x78: EA=S-8;												m6809_ICount-=1;   break;
-	case 0x79: EA=S-7;												m6809_ICount-=1;   break;
-	case 0x7a: EA=S-6;												m6809_ICount-=1;   break;
-	case 0x7b: EA=S-5;												m6809_ICount-=1;   break;
-	case 0x7c: EA=S-4;												m6809_ICount-=1;   break;
-	case 0x7d: EA=S-3;												m6809_ICount-=1;   break;
-	case 0x7e: EA=S-2;												m6809_ICount-=1;   break;
-	case 0x7f: EA=S-1;												m6809_ICount-=1;   break;
+	case 0x70: EA=S-16; 											USE_CYCLES(1);   break;
+	case 0x71: EA=S-15; 											USE_CYCLES(1);   break;
+	case 0x72: EA=S-14; 											USE_CYCLES(1);   break;
+	case 0x73: EA=S-13; 											USE_CYCLES(1);   break;
+	case 0x74: EA=S-12; 											USE_CYCLES(1);   break;
+	case 0x75: EA=S-11; 											USE_CYCLES(1);   break;
+	case 0x76: EA=S-10; 											USE_CYCLES(1);   break;
+	case 0x77: EA=S-9;												USE_CYCLES(1);   break;
+	case 0x78: EA=S-8;												USE_CYCLES(1);   break;
+	case 0x79: EA=S-7;												USE_CYCLES(1);   break;
+	case 0x7a: EA=S-6;												USE_CYCLES(1);   break;
+	case 0x7b: EA=S-5;												USE_CYCLES(1);   break;
+	case 0x7c: EA=S-4;												USE_CYCLES(1);   break;
+	case 0x7d: EA=S-3;												USE_CYCLES(1);   break;
+	case 0x7e: EA=S-2;												USE_CYCLES(1);   break;
+	case 0x7f: EA=S-1;												USE_CYCLES(1);   break;
 
-	case 0x80: EA=X;	X++;										m6809_ICount-=2;   break;
-	case 0x81: EA=X;	X+=2;										m6809_ICount-=3;   break;
-	case 0x82: X--; 	EA=X;										m6809_ICount-=2;   break;
-	case 0x83: X-=2;	EA=X;										m6809_ICount-=3;   break;
-	case 0x84: EA=X;																   break;
-	case 0x85: EA=X+SIGNED(B);										m6809_ICount-=1;   break;
-	case 0x86: EA=X+SIGNED(A);										m6809_ICount-=1;   break;
-	case 0x87: EA=0;																   break; /*   ILLEGAL*/
-	case 0x88: IMMBYTE(EA); 	EA=X+SIGNED(EA);					m6809_ICount-=1;   break; /* this is a hack to make Vectrex work. It should be m6809_ICount-=1. Dunno where the cycle was lost :( */
-	case 0x89: IMMWORD(ea); 	EA+=X;								m6809_ICount-=4;   break;
-	case 0x8a: EA=0;																   break; /*   ILLEGAL*/
-	case 0x8b: EA=X+D;												m6809_ICount-=4;   break;
-	case 0x8c: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					m6809_ICount-=1;   break;
-	case 0x8d: IMMWORD(ea); 	EA+=PC; 							m6809_ICount-=5;   break;
-	case 0x8e: EA=0;																   break; /*   ILLEGAL*/
-	case 0x8f: IMMWORD(ea); 										m6809_ICount-=5;   break;
+	case 0x80: EA=X;	X++;										USE_CYCLES(2);   break;
+	case 0x81: EA=X;	X+=2;										USE_CYCLES(3);   break;
+	case 0x82: X--; 	EA=X;										USE_CYCLES(2);   break;
+	case 0x83: X-=2;	EA=X;										USE_CYCLES(3);   break;
+	case 0x84: EA=X;																 break;
+	case 0x85: EA=X+SIGNED(B);										USE_CYCLES(1);   break;
+	case 0x86: EA=X+SIGNED(A);										USE_CYCLES(1);   break;
+	case 0x87: EA=0;																 break; /*   ILLEGAL*/
+	case 0x88: IMMBYTE(EA); 	EA=X+SIGNED(EA);					USE_CYCLES(1);   break; /* this is a hack to make Vectrex work. It should be USE_CYCLES(1). Dunno where the cycle was lost :( */
+	case 0x89: IMMWORD(ea); 	EA+=X;								USE_CYCLES(4);   break;
+	case 0x8a: EA=0;																 break; /*   ILLEGAL*/
+	case 0x8b: EA=X+D;												USE_CYCLES(4);   break;
+	case 0x8c: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0x8d: IMMWORD(ea); 	EA+=PC; 							USE_CYCLES(5);   break;
+	case 0x8e: EA=0;																 break; /*   ILLEGAL*/
+	case 0x8f: IMMWORD(ea); 										USE_CYCLES(5);   break;
 
-	case 0x90: EA=X;	X++;						EAD=RM16(EAD);	m6809_ICount-=5;   break; /* Indirect ,R+ not in my specs */
-	case 0x91: EA=X;	X+=2;						EAD=RM16(EAD);	m6809_ICount-=6;   break;
-	case 0x92: X--; 	EA=X;						EAD=RM16(EAD);	m6809_ICount-=5;   break;
-	case 0x93: X-=2;	EA=X;						EAD=RM16(EAD);	m6809_ICount-=6;   break;
-	case 0x94: EA=X;								EAD=RM16(EAD);	m6809_ICount-=3;   break;
-	case 0x95: EA=X+SIGNED(B);						EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0x96: EA=X+SIGNED(A);						EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0x97: EA=0;																   break; /*   ILLEGAL*/
-	case 0x98: IMMBYTE(EA); 	EA=X+SIGNED(EA);	EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0x99: IMMWORD(ea); 	EA+=X;				EAD=RM16(EAD);	m6809_ICount-=7;   break;
-	case 0x9a: EA=0;																   break; /*   ILLEGAL*/
-	case 0x9b: EA=X+D;								EAD=RM16(EAD);	m6809_ICount-=7;   break;
-	case 0x9c: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0x9d: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	m6809_ICount-=8;   break;
-	case 0x9e: EA=0;																   break; /*   ILLEGAL*/
-	case 0x9f: IMMWORD(ea); 						EAD=RM16(EAD);	m6809_ICount-=8;   break;
+	case 0x90: EA=X;	X++;						EAD=RM16(EAD);	USE_CYCLES(5);   break; /* Indirect ,R+ not in my specs */
+	case 0x91: EA=X;	X+=2;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0x92: X--; 	EA=X;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0x93: X-=2;	EA=X;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0x94: EA=X;								EAD=RM16(EAD);	USE_CYCLES(3);   break;
+	case 0x95: EA=X+SIGNED(B);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0x96: EA=X+SIGNED(A);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0x97: EA=0;																 break; /*   ILLEGAL*/
+	case 0x98: IMMBYTE(EA); 	EA=X+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0x99: IMMWORD(ea); 	EA+=X;				EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0x9a: EA=0;																 break; /*   ILLEGAL*/
+	case 0x9b: EA=X+D;								EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0x9c: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0x9d: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	USE_CYCLES(8);   break;
+	case 0x9e: EA=0;																 break; /*   ILLEGAL*/
+	case 0x9f: IMMWORD(ea); 						EAD=RM16(EAD);	USE_CYCLES(8);   break;
 
-	case 0xa0: EA=Y;	Y++;										m6809_ICount-=2;   break;
-	case 0xa1: EA=Y;	Y+=2;										m6809_ICount-=3;   break;
-	case 0xa2: Y--; 	EA=Y;										m6809_ICount-=2;   break;
-	case 0xa3: Y-=2;	EA=Y;										m6809_ICount-=3;   break;
-	case 0xa4: EA=Y;																   break;
-	case 0xa5: EA=Y+SIGNED(B);										m6809_ICount-=1;   break;
-	case 0xa6: EA=Y+SIGNED(A);										m6809_ICount-=1;   break;
-	case 0xa7: EA=0;																   break; /*   ILLEGAL*/
-	case 0xa8: IMMBYTE(EA); 	EA=Y+SIGNED(EA);					m6809_ICount-=1;   break;
-	case 0xa9: IMMWORD(ea); 	EA+=Y;								m6809_ICount-=4;   break;
-	case 0xaa: EA=0;																   break; /*   ILLEGAL*/
-	case 0xab: EA=Y+D;												m6809_ICount-=4;   break;
-	case 0xac: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					m6809_ICount-=1;   break;
-	case 0xad: IMMWORD(ea); 	EA+=PC; 							m6809_ICount-=5;   break;
-	case 0xae: EA=0;																   break; /*   ILLEGAL*/
-	case 0xaf: IMMWORD(ea); 										m6809_ICount-=5;   break;
+	case 0xa0: EA=Y;	Y++;										USE_CYCLES(2);   break;
+	case 0xa1: EA=Y;	Y+=2;										USE_CYCLES(3);   break;
+	case 0xa2: Y--; 	EA=Y;										USE_CYCLES(2);   break;
+	case 0xa3: Y-=2;	EA=Y;										USE_CYCLES(3);   break;
+	case 0xa4: EA=Y;																 break;
+	case 0xa5: EA=Y+SIGNED(B);										USE_CYCLES(1);   break;
+	case 0xa6: EA=Y+SIGNED(A);										USE_CYCLES(1);   break;
+	case 0xa7: EA=0;																 break; /*   ILLEGAL*/
+	case 0xa8: IMMBYTE(EA); 	EA=Y+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xa9: IMMWORD(ea); 	EA+=Y;								USE_CYCLES(4);   break;
+	case 0xaa: EA=0;																 break; /*   ILLEGAL*/
+	case 0xab: EA=Y+D;												USE_CYCLES(4);   break;
+	case 0xac: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xad: IMMWORD(ea); 	EA+=PC; 							USE_CYCLES(5);   break;
+	case 0xae: EA=0;																 break; /*   ILLEGAL*/
+	case 0xaf: IMMWORD(ea); 										USE_CYCLES(5);   break;
 
-	case 0xb0: EA=Y;	Y++;						EAD=RM16(EAD);	m6809_ICount-=5;   break;
-	case 0xb1: EA=Y;	Y+=2;						EAD=RM16(EAD);	m6809_ICount-=6;   break;
-	case 0xb2: Y--; 	EA=Y;						EAD=RM16(EAD);	m6809_ICount-=5;   break;
-	case 0xb3: Y-=2;	EA=Y;						EAD=RM16(EAD);	m6809_ICount-=6;   break;
-	case 0xb4: EA=Y;								EAD=RM16(EAD);	m6809_ICount-=3;   break;
-	case 0xb5: EA=Y+SIGNED(B);						EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xb6: EA=Y+SIGNED(A);						EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xb7: EA=0;																   break; /*   ILLEGAL*/
-	case 0xb8: IMMBYTE(EA); 	EA=Y+SIGNED(EA);	EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xb9: IMMWORD(ea); 	EA+=Y;				EAD=RM16(EAD);	m6809_ICount-=7;   break;
-	case 0xba: EA=0;																   break; /*   ILLEGAL*/
-	case 0xbb: EA=Y+D;								EAD=RM16(EAD);	m6809_ICount-=7;   break;
-	case 0xbc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xbd: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	m6809_ICount-=8;   break;
-	case 0xbe: EA=0;																   break; /*   ILLEGAL*/
-	case 0xbf: IMMWORD(ea); 						EAD=RM16(EAD);	m6809_ICount-=8;   break;
+	case 0xb0: EA=Y;	Y++;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xb1: EA=Y;	Y+=2;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xb2: Y--; 	EA=Y;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xb3: Y-=2;	EA=Y;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xb4: EA=Y;								EAD=RM16(EAD);	USE_CYCLES(3);   break;
+	case 0xb5: EA=Y+SIGNED(B);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xb6: EA=Y+SIGNED(A);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xb7: EA=0;																 break; /*   ILLEGAL*/
+	case 0xb8: IMMBYTE(EA); 	EA=Y+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xb9: IMMWORD(ea); 	EA+=Y;				EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xba: EA=0;																 break; /*   ILLEGAL*/
+	case 0xbb: EA=Y+D;								EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xbc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xbd: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	USE_CYCLES(8);   break;
+	case 0xbe: EA=0;																 break; /*   ILLEGAL*/
+	case 0xbf: IMMWORD(ea); 						EAD=RM16(EAD);	USE_CYCLES(8);   break;
 
-	case 0xc0: EA=U;			U++;								m6809_ICount-=2;   break;
-	case 0xc1: EA=U;			U+=2;								m6809_ICount-=3;   break;
-	case 0xc2: U--; 			EA=U;								m6809_ICount-=2;   break;
-	case 0xc3: U-=2;			EA=U;								m6809_ICount-=3;   break;
-	case 0xc4: EA=U;																   break;
-	case 0xc5: EA=U+SIGNED(B);										m6809_ICount-=1;   break;
-	case 0xc6: EA=U+SIGNED(A);										m6809_ICount-=1;   break;
-	case 0xc7: EA=0;																   break; /*ILLEGAL*/
-	case 0xc8: IMMBYTE(EA); 	EA=U+SIGNED(EA);					m6809_ICount-=1;   break;
-	case 0xc9: IMMWORD(ea); 	EA+=U;								m6809_ICount-=4;   break;
-	case 0xca: EA=0;																   break; /*ILLEGAL*/
-	case 0xcb: EA=U+D;												m6809_ICount-=4;   break;
-	case 0xcc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					m6809_ICount-=1;   break;
-	case 0xcd: IMMWORD(ea); 	EA+=PC; 							m6809_ICount-=5;   break;
-	case 0xce: EA=0;																   break; /*ILLEGAL*/
-	case 0xcf: IMMWORD(ea); 										m6809_ICount-=5;   break;
+	case 0xc0: EA=U;			U++;								USE_CYCLES(2);   break;
+	case 0xc1: EA=U;			U+=2;								USE_CYCLES(3);   break;
+	case 0xc2: U--; 			EA=U;								USE_CYCLES(2);   break;
+	case 0xc3: U-=2;			EA=U;								USE_CYCLES(3);   break;
+	case 0xc4: EA=U;																 break;
+	case 0xc5: EA=U+SIGNED(B);										USE_CYCLES(1);   break;
+	case 0xc6: EA=U+SIGNED(A);										USE_CYCLES(1);   break;
+	case 0xc7: EA=0;																 break; /*ILLEGAL*/
+	case 0xc8: IMMBYTE(EA); 	EA=U+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xc9: IMMWORD(ea); 	EA+=U;								USE_CYCLES(4);   break;
+	case 0xca: EA=0;																 break; /*ILLEGAL*/
+	case 0xcb: EA=U+D;												USE_CYCLES(4);   break;
+	case 0xcc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xcd: IMMWORD(ea); 	EA+=PC; 							USE_CYCLES(5);   break;
+	case 0xce: EA=0;																 break; /*ILLEGAL*/
+	case 0xcf: IMMWORD(ea); 										USE_CYCLES(5);   break;
 
-	case 0xd0: EA=U;	U++;						EAD=RM16(EAD);	m6809_ICount-=5;   break;
-	case 0xd1: EA=U;	U+=2;						EAD=RM16(EAD);	m6809_ICount-=6;   break;
-	case 0xd2: U--; 	EA=U;						EAD=RM16(EAD);	m6809_ICount-=5;   break;
-	case 0xd3: U-=2;	EA=U;						EAD=RM16(EAD);	m6809_ICount-=6;   break;
-	case 0xd4: EA=U;								EAD=RM16(EAD);	m6809_ICount-=3;   break;
-	case 0xd5: EA=U+SIGNED(B);						EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xd6: EA=U+SIGNED(A);						EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xd7: EA=0;																   break; /*ILLEGAL*/
-	case 0xd8: IMMBYTE(EA); 	EA=U+SIGNED(EA);	EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xd9: IMMWORD(ea); 	EA+=U;				EAD=RM16(EAD);	m6809_ICount-=7;   break;
-	case 0xda: EA=0;																   break; /*ILLEGAL*/
-	case 0xdb: EA=U+D;								EAD=RM16(EAD);	m6809_ICount-=7;   break;
-	case 0xdc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xdd: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	m6809_ICount-=8;   break;
-	case 0xde: EA=0;																   break; /*ILLEGAL*/
-	case 0xdf: IMMWORD(ea); 						EAD=RM16(EAD);	m6809_ICount-=8;   break;
+	case 0xd0: EA=U;	U++;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xd1: EA=U;	U+=2;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xd2: U--; 	EA=U;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xd3: U-=2;	EA=U;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xd4: EA=U;								EAD=RM16(EAD);	USE_CYCLES(3);   break;
+	case 0xd5: EA=U+SIGNED(B);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xd6: EA=U+SIGNED(A);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xd7: EA=0;																 break; /*ILLEGAL*/
+	case 0xd8: IMMBYTE(EA); 	EA=U+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xd9: IMMWORD(ea); 	EA+=U;				EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xda: EA=0;																 break; /*ILLEGAL*/
+	case 0xdb: EA=U+D;								EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xdc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xdd: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	USE_CYCLES(8);   break;
+	case 0xde: EA=0;																 break; /*ILLEGAL*/
+	case 0xdf: IMMWORD(ea); 						EAD=RM16(EAD);	USE_CYCLES(8);   break;
 
-	case 0xe0: EA=S;	S++;										m6809_ICount-=2;   break;
-	case 0xe1: EA=S;	S+=2;										m6809_ICount-=3;   break;
-	case 0xe2: S--; 	EA=S;										m6809_ICount-=2;   break;
-	case 0xe3: S-=2;	EA=S;										m6809_ICount-=3;   break;
-	case 0xe4: EA=S;																   break;
-	case 0xe5: EA=S+SIGNED(B);										m6809_ICount-=1;   break;
-	case 0xe6: EA=S+SIGNED(A);										m6809_ICount-=1;   break;
-	case 0xe7: EA=0;																   break; /*ILLEGAL*/
-	case 0xe8: IMMBYTE(EA); 	EA=S+SIGNED(EA);					m6809_ICount-=1;   break;
-	case 0xe9: IMMWORD(ea); 	EA+=S;								m6809_ICount-=4;   break;
-	case 0xea: EA=0;																   break; /*ILLEGAL*/
-	case 0xeb: EA=S+D;												m6809_ICount-=4;   break;
-	case 0xec: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					m6809_ICount-=1;   break;
-	case 0xed: IMMWORD(ea); 	EA+=PC; 							m6809_ICount-=5;   break;
-	case 0xee: EA=0;																   break;  /*ILLEGAL*/
-	case 0xef: IMMWORD(ea); 										m6809_ICount-=5;   break;
+	case 0xe0: EA=S;	S++;										USE_CYCLES(2);   break;
+	case 0xe1: EA=S;	S+=2;										USE_CYCLES(3);   break;
+	case 0xe2: S--; 	EA=S;										USE_CYCLES(2);   break;
+	case 0xe3: S-=2;	EA=S;										USE_CYCLES(3);   break;
+	case 0xe4: EA=S;																 break;
+	case 0xe5: EA=S+SIGNED(B);										USE_CYCLES(1);   break;
+	case 0xe6: EA=S+SIGNED(A);										USE_CYCLES(1);   break;
+	case 0xe7: EA=0;																 break; /*ILLEGAL*/
+	case 0xe8: IMMBYTE(EA); 	EA=S+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xe9: IMMWORD(ea); 	EA+=S;								USE_CYCLES(4);   break;
+	case 0xea: EA=0;																 break; /*ILLEGAL*/
+	case 0xeb: EA=S+D;												USE_CYCLES(4);   break;
+	case 0xec: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xed: IMMWORD(ea); 	EA+=PC; 							USE_CYCLES(5);   break;
+	case 0xee: EA=0;																 break;  /*ILLEGAL*/
+	case 0xef: IMMWORD(ea); 										USE_CYCLES(5);   break;
 
-	case 0xf0: EA=S;	S++;						EAD=RM16(EAD);	m6809_ICount-=5;   break;
-	case 0xf1: EA=S;	S+=2;						EAD=RM16(EAD);	m6809_ICount-=6;   break;
-	case 0xf2: S--; 	EA=S;						EAD=RM16(EAD);	m6809_ICount-=5;   break;
-	case 0xf3: S-=2;	EA=S;						EAD=RM16(EAD);	m6809_ICount-=6;   break;
-	case 0xf4: EA=S;								EAD=RM16(EAD);	m6809_ICount-=3;   break;
-	case 0xf5: EA=S+SIGNED(B);						EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xf6: EA=S+SIGNED(A);						EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xf7: EA=0;																   break; /*ILLEGAL*/
-	case 0xf8: IMMBYTE(EA); 	EA=S+SIGNED(EA);	EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xf9: IMMWORD(ea); 	EA+=S;				EAD=RM16(EAD);	m6809_ICount-=7;   break;
-	case 0xfa: EA=0;																   break; /*ILLEGAL*/
-	case 0xfb: EA=S+D;								EAD=RM16(EAD);	m6809_ICount-=7;   break;
-	case 0xfc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	m6809_ICount-=4;   break;
-	case 0xfd: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	m6809_ICount-=8;   break;
-	case 0xfe: EA=0;																   break; /*ILLEGAL*/
-	case 0xff: IMMWORD(ea); 						EAD=RM16(EAD);	m6809_ICount-=8;   break;
+	case 0xf0: EA=S;	S++;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xf1: EA=S;	S+=2;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xf2: S--; 	EA=S;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xf3: S-=2;	EA=S;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xf4: EA=S;								EAD=RM16(EAD);	USE_CYCLES(3);   break;
+	case 0xf5: EA=S+SIGNED(B);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xf6: EA=S+SIGNED(A);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xf7: EA=0;																 break; /*ILLEGAL*/
+	case 0xf8: IMMBYTE(EA); 	EA=S+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xf9: IMMWORD(ea); 	EA+=S;				EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xfa: EA=0;																 break; /*ILLEGAL*/
+	case 0xfb: EA=S+D;								EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xfc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xfd: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	USE_CYCLES(8);   break;
+	case 0xfe: EA=0;																 break; /*ILLEGAL*/
+	case 0xff: IMMWORD(ea); 						EAD=RM16(EAD);	USE_CYCLES(8);   break;
 	}
 }
 
@@ -1263,7 +1353,7 @@ void m6809_get_info(UINT32 state, cpuinfo *info)
 		case CPUINFO_PTR_EXECUTE:						info->execute = m6809_execute;			break;
 		case CPUINFO_PTR_BURN:							info->burn = NULL;						break;
 		case CPUINFO_PTR_DISASSEMBLE:					info->disassemble = m6809_dasm;			break;
-		case CPUINFO_PTR_INSTRUCTION_COUNTER:			info->icount = &m6809_ICount;			break;
+		case CPUINFO_PTR_INSTRUCTION_COUNTER:			info->icount = &m6809.m6809_ICount;			break;
 
 		/* --- the following bits of info are returned as NULL-terminated strings --- */
 		case CPUINFO_STR_NAME:							strcpy(info->s, "M6809");				break;

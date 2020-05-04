@@ -181,7 +181,7 @@ M6809_INLINE void sync( void )
 	/* if M6809_SYNC has not been cleared by CHECK_IRQ_LINES,
      * stop execution until the interrupt lines change. */
 	if( m6809.int_state & M6809_SYNC )
-		if (m6809_ICount > 0) m6809_ICount = 0;
+		if (m6809.m6809_ICount > 0) m6809.m6809_ICount = 0;
 }
 
 /* $14 ILLEGAL */
@@ -196,8 +196,8 @@ M6809_INLINE void lbra( void )
 	CHANGE_PC;
 
 	if ( EA == 0xfffd )  /* EHC 980508 speed up busy loop */
-		if ( m6809_ICount > 0)
-			m6809_ICount = 0;
+		if ( m6809.m6809_ICount > 0)
+			m6809.m6809_ICount = 0;
 }
 
 /* $17 LBSR relative ----- */
@@ -375,7 +375,7 @@ M6809_INLINE void bra( void )
     CHANGE_PC;
 	/* JB 970823 - speed up busy loops */
 	if( t == 0xfe )
-		if( m6809_ICount > 0 ) m6809_ICount = 0;
+		if( m6809.m6809_ICount > 0 ) m6809.m6809_ICount = 0;
 }
 
 /* $21 BRN relative ----- */
@@ -597,14 +597,14 @@ M6809_INLINE void pshs( void )
 {
 	UINT8 t;
 	IMMBYTE(t);
-	if( t&0x80 ) { PUSHWORD(pPC); m6809_ICount -= 2; }
-	if( t&0x40 ) { PUSHWORD(pU);  m6809_ICount -= 2; }
-	if( t&0x20 ) { PUSHWORD(pY);  m6809_ICount -= 2; }
-	if( t&0x10 ) { PUSHWORD(pX);  m6809_ICount -= 2; }
-	if( t&0x08 ) { PUSHBYTE(DP);  m6809_ICount -= 1; }
-	if( t&0x04 ) { PUSHBYTE(B);   m6809_ICount -= 1; }
-	if( t&0x02 ) { PUSHBYTE(A);   m6809_ICount -= 1; }
-	if( t&0x01 ) { PUSHBYTE(CC);  m6809_ICount -= 1; }
+	if( t&0x80 ) { PUSHWORD(pPC); USE_CYCLES(2); }
+	if( t&0x40 ) { PUSHWORD(pU);  USE_CYCLES(2); }
+	if( t&0x20 ) { PUSHWORD(pY);  USE_CYCLES(2); }
+	if( t&0x10 ) { PUSHWORD(pX);  USE_CYCLES(2); }
+	if( t&0x08 ) { PUSHBYTE(DP);  USE_CYCLES(1); }
+	if( t&0x04 ) { PUSHBYTE(B);   USE_CYCLES(1); }
+	if( t&0x02 ) { PUSHBYTE(A);   USE_CYCLES(1); }
+	if( t&0x01 ) { PUSHBYTE(CC);  USE_CYCLES(1); }
 }
 
 /* 35 PULS inherent ----- */
@@ -612,14 +612,14 @@ M6809_INLINE void puls( void )
 {
 	UINT8 t;
 	IMMBYTE(t);
-	if( t&0x01 ) { PULLBYTE(CC); m6809_ICount -= 1; }
-	if( t&0x02 ) { PULLBYTE(A);  m6809_ICount -= 1; }
-	if( t&0x04 ) { PULLBYTE(B);  m6809_ICount -= 1; }
-	if( t&0x08 ) { PULLBYTE(DP); m6809_ICount -= 1; }
-	if( t&0x10 ) { PULLWORD(XD); m6809_ICount -= 2; }
-	if( t&0x20 ) { PULLWORD(YD); m6809_ICount -= 2; }
-	if( t&0x40 ) { PULLWORD(UD); m6809_ICount -= 2; }
-	if( t&0x80 ) { PULLWORD(PCD); CHANGE_PC; m6809_ICount -= 2; }
+	if( t&0x01 ) { PULLBYTE(CC); USE_CYCLES(1); }
+	if( t&0x02 ) { PULLBYTE(A);  USE_CYCLES(1); }
+	if( t&0x04 ) { PULLBYTE(B);  USE_CYCLES(1); }
+	if( t&0x08 ) { PULLBYTE(DP); USE_CYCLES(1); }
+	if( t&0x10 ) { PULLWORD(XD); USE_CYCLES(2); }
+	if( t&0x20 ) { PULLWORD(YD); USE_CYCLES(2); }
+	if( t&0x40 ) { PULLWORD(UD); USE_CYCLES(2); }
+	if( t&0x80 ) { PULLWORD(PCD); CHANGE_PC; USE_CYCLES(2); }
 
 	/* HJB 990225: moved check after all PULLs */
 	if( t&0x01 ) { CHECK_IRQ_LINES; }
@@ -630,14 +630,14 @@ M6809_INLINE void pshu( void )
 {
 	UINT8 t;
 	IMMBYTE(t);
-	if( t&0x80 ) { PSHUWORD(pPC); m6809_ICount -= 2; }
-	if( t&0x40 ) { PSHUWORD(pS);  m6809_ICount -= 2; }
-	if( t&0x20 ) { PSHUWORD(pY);  m6809_ICount -= 2; }
-	if( t&0x10 ) { PSHUWORD(pX);  m6809_ICount -= 2; }
-	if( t&0x08 ) { PSHUBYTE(DP);  m6809_ICount -= 1; }
-	if( t&0x04 ) { PSHUBYTE(B);   m6809_ICount -= 1; }
-	if( t&0x02 ) { PSHUBYTE(A);   m6809_ICount -= 1; }
-	if( t&0x01 ) { PSHUBYTE(CC);  m6809_ICount -= 1; }
+	if( t&0x80 ) { PSHUWORD(pPC); USE_CYCLES(2); }
+	if( t&0x40 ) { PSHUWORD(pS);  USE_CYCLES(2); }
+	if( t&0x20 ) { PSHUWORD(pY);  USE_CYCLES(2); }
+	if( t&0x10 ) { PSHUWORD(pX);  USE_CYCLES(2); }
+	if( t&0x08 ) { PSHUBYTE(DP);  USE_CYCLES(1); }
+	if( t&0x04 ) { PSHUBYTE(B);   USE_CYCLES(1); }
+	if( t&0x02 ) { PSHUBYTE(A);   USE_CYCLES(1); }
+	if( t&0x01 ) { PSHUBYTE(CC);  USE_CYCLES(1); }
 }
 
 /* 37 PULU inherent ----- */
@@ -645,14 +645,14 @@ M6809_INLINE void pulu( void )
 {
 	UINT8 t;
 	IMMBYTE(t);
-	if( t&0x01 ) { PULUBYTE(CC); m6809_ICount -= 1; }
-	if( t&0x02 ) { PULUBYTE(A);  m6809_ICount -= 1; }
-	if( t&0x04 ) { PULUBYTE(B);  m6809_ICount -= 1; }
-	if( t&0x08 ) { PULUBYTE(DP); m6809_ICount -= 1; }
-	if( t&0x10 ) { PULUWORD(XD); m6809_ICount -= 2; }
-	if( t&0x20 ) { PULUWORD(YD); m6809_ICount -= 2; }
-	if( t&0x40 ) { PULUWORD(SD); m6809_ICount -= 2; }
-	if( t&0x80 ) { PULUWORD(PCD); CHANGE_PC; m6809_ICount -= 2; }
+	if( t&0x01 ) { PULUBYTE(CC); USE_CYCLES(1); }
+	if( t&0x02 ) { PULUBYTE(A);  USE_CYCLES(1); }
+	if( t&0x04 ) { PULUBYTE(B);  USE_CYCLES(1); }
+	if( t&0x08 ) { PULUBYTE(DP); USE_CYCLES(1); }
+	if( t&0x10 ) { PULUWORD(XD); USE_CYCLES(2); }
+	if( t&0x20 ) { PULUWORD(YD); USE_CYCLES(2); }
+	if( t&0x40 ) { PULUWORD(SD); USE_CYCLES(2); }
+	if( t&0x80 ) { PULUWORD(PCD); CHANGE_PC; USE_CYCLES(2); }
 
 	/* HJB 990225: moved check after all PULLs */
 	if( t&0x01 ) { CHECK_IRQ_LINES; }
@@ -681,7 +681,7 @@ M6809_INLINE void rti( void )
 	t = CC & CC_E;		/* HJB 990225: entire state saved? */
 	if(t)
 	{
-        m6809_ICount -= 9;
+        USE_CYCLES(9);
 		PULLBYTE(A);
 		PULLBYTE(B);
 		PULLBYTE(DP);
@@ -717,8 +717,8 @@ M6809_INLINE void cwai( void )
 	m6809.int_state |= M6809_CWAI;	 /* HJB 990228 */
     CHECK_IRQ_LINES;    /* HJB 990116 */
 	if( m6809.int_state & M6809_CWAI )
-		if( m6809_ICount > 0 )
-			m6809_ICount = 0;
+		if( m6809.m6809_ICount > 0 )
+			m6809.m6809_ICount = 0;
 }
 
 /* $3D MUL inherent --*-@ */
@@ -2909,63 +2909,64 @@ M6809_INLINE void sts_ex( void )
 }
 
 /* $10xx opcodes */
+#if !BIG_SWITCH
 M6809_INLINE void pref10( void )
 {
 	UINT8 ireg2 = ROP(PCD);
 	PC++;
 	switch( ireg2 )
 	{
-		case 0x21: lbrn();		m6809_ICount-=5;	break;
-		case 0x22: lbhi();		m6809_ICount-=5;	break;
-		case 0x23: lbls();		m6809_ICount-=5;	break;
-		case 0x24: lbcc();		m6809_ICount-=5;	break;
-		case 0x25: lbcs();		m6809_ICount-=5;	break;
-		case 0x26: lbne();		m6809_ICount-=5;	break;
-		case 0x27: lbeq();		m6809_ICount-=5;	break;
-		case 0x28: lbvc();		m6809_ICount-=5;	break;
-		case 0x29: lbvs();		m6809_ICount-=5;	break;
-		case 0x2a: lbpl();		m6809_ICount-=5;	break;
-		case 0x2b: lbmi();		m6809_ICount-=5;	break;
-		case 0x2c: lbge();		m6809_ICount-=5;	break;
-		case 0x2d: lblt();		m6809_ICount-=5;	break;
-		case 0x2e: lbgt();		m6809_ICount-=5;	break;
-		case 0x2f: lble();		m6809_ICount-=5;	break;
+		case 0x21: lbrn();		USE_CYCLES(5);	break;
+		case 0x22: lbhi();		USE_CYCLES(5);	break;
+		case 0x23: lbls();		USE_CYCLES(5);	break;
+		case 0x24: lbcc();		USE_CYCLES(5);	break;
+		case 0x25: lbcs();		USE_CYCLES(5);	break;
+		case 0x26: lbne();		USE_CYCLES(5);	break;
+		case 0x27: lbeq();		USE_CYCLES(5);	break;
+		case 0x28: lbvc();		USE_CYCLES(5);	break;
+		case 0x29: lbvs();		USE_CYCLES(5);	break;
+		case 0x2a: lbpl();		USE_CYCLES(5);	break;
+		case 0x2b: lbmi();		USE_CYCLES(5);	break;
+		case 0x2c: lbge();		USE_CYCLES(5);	break;
+		case 0x2d: lblt();		USE_CYCLES(5);	break;
+		case 0x2e: lbgt();		USE_CYCLES(5);	break;
+		case 0x2f: lble();		USE_CYCLES(5);	break;
 
-		case 0x3f: swi2();		m6809_ICount-=20;	break;
+		case 0x3f: swi2();		USE_CYCLES(20);	break;
 
-		case 0x83: cmpd_im();	m6809_ICount-=5;	break;
-		case 0x8c: cmpy_im();	m6809_ICount-=5;	break;
-		case 0x8e: ldy_im();	m6809_ICount-=4;	break;
-		case 0x8f: sty_im();	m6809_ICount-=4;	break;
+		case 0x83: cmpd_im();	USE_CYCLES(5);	break;
+		case 0x8c: cmpy_im();	USE_CYCLES(5);	break;
+		case 0x8e: ldy_im();	USE_CYCLES(4);	break;
+		case 0x8f: sty_im();	USE_CYCLES(4);	break;
 
-		case 0x93: cmpd_di();	m6809_ICount-=7;	break;
-		case 0x9c: cmpy_di();	m6809_ICount-=7;	break;
-		case 0x9e: ldy_di();	m6809_ICount-=6;	break;
-		case 0x9f: sty_di();	m6809_ICount-=6;	break;
+		case 0x93: cmpd_di();	USE_CYCLES(7);	break;
+		case 0x9c: cmpy_di();	USE_CYCLES(7);	break;
+		case 0x9e: ldy_di();	USE_CYCLES(6);	break;
+		case 0x9f: sty_di();	USE_CYCLES(6);	break;
 
-		case 0xa3: cmpd_ix();	m6809_ICount-=7;	break;
-		case 0xac: cmpy_ix();	m6809_ICount-=7;	break;
-		case 0xae: ldy_ix();	m6809_ICount-=6;	break;
-		case 0xaf: sty_ix();	m6809_ICount-=6;	break;
+		case 0xa3: cmpd_ix();	USE_CYCLES(7);	break;
+		case 0xac: cmpy_ix();	USE_CYCLES(7);	break;
+		case 0xae: ldy_ix();	USE_CYCLES(6);	break;
+		case 0xaf: sty_ix();	USE_CYCLES(6);	break;
 
-		case 0xb3: cmpd_ex();	m6809_ICount-=8;	break;
-		case 0xbc: cmpy_ex();	m6809_ICount-=8;	break;
-		case 0xbe: ldy_ex();	m6809_ICount-=7;	break;
-		case 0xbf: sty_ex();	m6809_ICount-=7;	break;
+		case 0xb3: cmpd_ex();	USE_CYCLES(8);	break;
+		case 0xbc: cmpy_ex();	USE_CYCLES(8);	break;
+		case 0xbe: ldy_ex();	USE_CYCLES(7);	break;
+		case 0xbf: sty_ex();	USE_CYCLES(7);	break;
 
-		case 0xce: lds_im();	m6809_ICount-=4;	break;
-		case 0xcf: sts_im();	m6809_ICount-=4;	break;
+		case 0xce: lds_im();	USE_CYCLES(4);	break;
+		case 0xcf: sts_im();	USE_CYCLES(4);	break;
 
-		case 0xde: lds_di();	m6809_ICount-=6;	break;
-		case 0xdf: sts_di();	m6809_ICount-=6;	break;
+		case 0xde: lds_di();	USE_CYCLES(6);	break;
+		case 0xdf: sts_di();	USE_CYCLES(6);	break;
 
-		case 0xee: lds_ix();	m6809_ICount-=6;	break;
-		case 0xef: sts_ix();	m6809_ICount-=6;	break;
+		case 0xee: lds_ix();	USE_CYCLES(6);	break;
+		case 0xef: sts_ix();	USE_CYCLES(6);	break;
 
-		case 0xfe: lds_ex();	m6809_ICount-=7;	break;
-		case 0xff: sts_ex();	m6809_ICount-=7;	break;
+		case 0xfe: lds_ex();	USE_CYCLES(7);	break;
+		case 0xff: sts_ex();	USE_CYCLES(7);	break;
 
-		default:   illegal();						break;
+		default:   illegal();					break;
 	}
 }
 
@@ -2976,22 +2977,22 @@ M6809_INLINE void pref11( void )
 	PC++;
 	switch( ireg2 )
 	{
-		case 0x3f: swi3();		m6809_ICount-=20;	break;
+		case 0x3f: swi3();		USE_CYCLES(20);	break;
 
-		case 0x83: cmpu_im();	m6809_ICount-=5;	break;
-		case 0x8c: cmps_im();	m6809_ICount-=5;	break;
+		case 0x83: cmpu_im();	USE_CYCLES(5);	break;
+		case 0x8c: cmps_im();	USE_CYCLES(5);	break;
 
-		case 0x93: cmpu_di();	m6809_ICount-=7;	break;
-		case 0x9c: cmps_di();	m6809_ICount-=7;	break;
+		case 0x93: cmpu_di();	USE_CYCLES(7);	break;
+		case 0x9c: cmps_di();	USE_CYCLES(7);	break;
 
-		case 0xa3: cmpu_ix();	m6809_ICount-=7;	break;
-		case 0xac: cmps_ix();	m6809_ICount-=7;	break;
+		case 0xa3: cmpu_ix();	USE_CYCLES(7);	break;
+		case 0xac: cmps_ix();	USE_CYCLES(7);	break;
 
-		case 0xb3: cmpu_ex();	m6809_ICount-=8;	break;
-		case 0xbc: cmps_ex();	m6809_ICount-=8;	break;
+		case 0xb3: cmpu_ex();	USE_CYCLES(8);	break;
+		case 0xbc: cmps_ex();	USE_CYCLES(8);	break;
 
-		default:   illegal();						break;
+		default:   illegal();					break;
 	}
 }
-
+#endif
 

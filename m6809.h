@@ -23,6 +23,7 @@ typedef struct
     int     (*irq_callback)(int irqline);
     UINT8   int_state;  /* SYNC and CWAI flags */
     UINT8   nmi_state;
+	int m6809_ICount;	
 } m6809_Regs;
 
 enum
