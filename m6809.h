@@ -81,4 +81,6 @@ unsigned char M6809ReadOpArg(unsigned short Address);
 #    define TRUE (!FALSE)
 #endif
 
+
+
 #endif /* __M6809_H__ */

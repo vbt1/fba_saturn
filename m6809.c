@@ -69,7 +69,6 @@
     m6809_slapstick check moved into the opcode functions.
 
 *****************************************************************************/
-
 //#include "debugger.h"
 #include "burnint.h"
 #include "m6809.h"
@@ -95,7 +94,10 @@ m6809_Regs m6809;
 #define RET(A)															\
         if ((m6809.m6809_ICount -= A) > 0) goto m6809_Exec;				\
         goto m6809_Exec_End;
-		
+#define DISPATCH_MAIN() goto *m6809_main[m6809.ireg]
+#define DISPATCH10() goto *m6809_pref10[ireg2]
+#define DISPATCH11() goto *m6809_pref11[ireg2]
+	
 M6809_INLINE void fetch_effective_address( void );
 
 /* flag bits in the cc register */
@@ -363,6 +365,7 @@ CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N
 #define NXORV  ((CC&CC_N)^((CC&CC_V)<<2))
 
 /* macros for setting/getting registers in TFR/EXG instructions */
+#if 0
 
 #if (!BIG_SWITCH)
 /* timings for 1-byte opcodes */
@@ -386,6 +389,30 @@ static const UINT8 cycles1[] =
   /*E*/  4, 4, 4, 6, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5,
   /*F*/  5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6
 };
+
+/* timings for 2-byte opcodes */
+static unsigned char cycles2[] =
+{
+	/*    0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F */
+  /*0*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+  /*1*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+  /*2*/	  0,  5,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,
+  /*3*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 20,
+  /*4*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+  /*5*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+  /*6*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+  /*7*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+  /*8*/	  0,  0,  0,  5,  0,  0,  0,  0,  0,  0,  0,  0,  5,  0,  4,  0,
+  /*9*/	  0,  0,  0,  7,  0,  0,  0,  0,  0,  0,  0,  0,  7,  0,  6,  6,
+  /*A*/	  0,  0,  0,  7,  0,  0,  0,  0,  0,  0,  0,  0,  7,  0,  6,  6,
+  /*B*/	  0,  0,  0,  8,  0,  0,  0,  0,  0,  0,  0,  0,  8,  0,  7,  7,
+  /*C*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  4,  0,
+  /*D*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  6,  6,
+  /*E*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  6,  6,
+  /*F*/	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  7,  7
+};
+
+#endif
 #endif
 
  M6809_INLINE void SET_N8(UINT32 a)	
@@ -472,10 +499,6 @@ M6809_INLINE void SET_NZ16(UINT32 a)
 	SET_Z(a);
 }
 
-//#define SET_NZ8(a)			{SET_N8(a);SET_Z(a);}
-//#define SET_NZ16(a)			{SET_N16(a);SET_Z(a);}
-
-
 M6809_INLINE void WM16( UINT32 Addr, PAIR *p )
 {
 	WM( Addr, p->b.h );
@@ -508,19 +531,6 @@ void m6809_set_context(void *src)
 /****************************************************************************/
 void m6809_init(int (*irqcallback)(int))
 {
-//	state_save_register_item("m6809", index, PC);
-//	state_save_register_item("m6809", index, PPC);
-//	state_save_register_item("m6809", index, D);
-//	state_save_register_item("m6809", index, DP);
-//	state_save_register_item("m6809", index, U);
-//	state_save_register_item("m6809", index, S);
-//	state_save_register_item("m6809", index, X);
-//	state_save_register_item("m6809", index, Y);
-//	state_save_register_item("m6809", index, CC);
-//	state_save_register_item_array("m6809", index, m6809.irq_state);
-//	state_save_register_item("m6809", index, m6809.int_state);
-//	state_save_register_item("m6809", index, m6809.nmi_state);
-
 	m6809.irq_callback = irqcallback;
 }
 
@@ -596,387 +606,134 @@ void m6809_set_irq_line(int irqline, int state)
 }
 
 
-/* includes the static function prototypes and the master opcode table */
-#include "6809tbl.c"
 
-/* includes the actual opcode implementations */
-#include "6809ops.c"
 
 /* execute instructions on this CPU until icount expires */
 int m6809_execute(int cycles)	/* NS 970908 */
 {
+static void (*const m6809_main[0x100])(void) = {
+	&&neg_di, &&neg_di, &&illegal,&&com_di, &&lsr_di, &&illegal,&&ror_di, &&asr_di, 	/* 00 */
+	&&asl_di, &&rol_di, &&dec_di, &&illegal,&&inc_di, &&tst_di, &&jmp_di, &&clr_di,
+	&&pref10, &&pref11, &&nop,	&&sync,	&&illegal,&&illegal,&&lbra,	&&lbsr,		/* 10 */
+	&&illegal,&&daa,	&&orcc,	&&illegal,&&andcc,	&&sex,	&&exg,	&&tfr,
+	&&bra,	&&brn,	&&bhi,	&&bls,	&&bcc,	&&bcs,	&&bne,	&&beq,		/* 20 */
+	&&bvc,	&&bvs,	&&bpl,	&&bmi,	&&bge,	&&blt,	&&bgt,	&&ble,
+	&&leax,	&&leay,	&&leas,	&&leau,	&&pshs,	&&puls,	&&pshu,	&&pulu,		/* 30 */
+	&&illegal,&&rts,	&&abx,	&&rti,	&&cwai,	&&mul,	&&illegal,&&swi,
+	&&nega,	&&illegal,&&illegal,&&coma,	&&lsra,	&&illegal,&&rora,	&&asra,		/* 40 */
+	&&asla,	&&rola,	&&deca,	&&illegal,&&inca,	&&tsta,	&&illegal,&&clra,
+	&&negb,	&&illegal,&&illegal,&&comb,	&&lsrb,	&&illegal,&&rorb,	&&asrb,		/* 50 */
+	&&aslb,	&&rolb,	&&decb,	&&illegal,&&incb,	&&tstb,	&&illegal,&&clrb,
+	&&neg_ix, &&illegal,&&illegal,&&com_ix, &&lsr_ix, &&illegal,&&ror_ix, &&asr_ix, 	/* 60 */
+	&&asl_ix, &&rol_ix, &&dec_ix, &&illegal,&&inc_ix, &&tst_ix, &&jmp_ix, &&clr_ix,
+	&&neg_ex, &&illegal,&&illegal,&&com_ex, &&lsr_ex, &&illegal,&&ror_ex, &&asr_ex, 	/* 70 */
+	&&asl_ex, &&rol_ex, &&dec_ex, &&illegal,&&inc_ex, &&tst_ex, &&jmp_ex, &&clr_ex,
+	&&suba_im,&&cmpa_im,&&sbca_im,&&subd_im,&&anda_im,&&bita_im,&&lda_im, &&sta_im, 	/* 80 */
+	&&eora_im,&&adca_im,&&ora_im, &&adda_im,&&cmpx_im,&&bsr,	&&ldx_im, &&stx_im,
+	&&suba_di,&&cmpa_di,&&sbca_di,&&subd_di,&&anda_di,&&bita_di,&&lda_di, &&sta_di, 	/* 90 */
+	&&eora_di,&&adca_di,&&ora_di, &&adda_di,&&cmpx_di,&&jsr_di, &&ldx_di, &&stx_di,
+	&&suba_ix,&&cmpa_ix,&&sbca_ix,&&subd_ix,&&anda_ix,&&bita_ix,&&lda_ix, &&sta_ix, 	/* &&a0 */
+	&&eora_ix,&&adca_ix,&&ora_ix, &&adda_ix,&&cmpx_ix,&&jsr_ix, &&ldx_ix, &&stx_ix,
+	&&suba_ex,&&cmpa_ex,&&sbca_ex,&&subd_ex,&&anda_ex,&&bita_ex,&&lda_ex, &&sta_ex, 	/* b0 */
+	&&eora_ex,&&adca_ex,&&ora_ex, &&adda_ex,&&cmpx_ex,&&jsr_ex, &&ldx_ex, &&stx_ex,
+	&&subb_im,&&cmpb_im,&&sbcb_im,&&addd_im,&&andb_im,&&bitb_im,&&ldb_im, &&stb_im, 	/* &&c0 */
+	&&eorb_im,&&adcb_im,&&orb_im, &&addb_im,&&ldd_im, &&std_im, &&ldu_im, &&stu_im,
+	&&subb_di,&&cmpb_di,&&sbcb_di,&&addd_di,&&andb_di,&&bitb_di,&&ldb_di, &&stb_di, 	/* &&d0 */
+	&&eorb_di,&&adcb_di,&&orb_di, &&addb_di,&&ldd_di, &&std_di, &&ldu_di, &&stu_di,
+	&&subb_ix,&&cmpb_ix,&&sbcb_ix,&&addd_ix,&&andb_ix,&&bitb_ix,&&ldb_ix, &&stb_ix, 	/* &&e0 */
+	&&eorb_ix,&&adcb_ix,&&orb_ix, &&addb_ix,&&ldd_ix, &&std_ix, &&ldu_ix, &&stu_ix,
+	&&subb_ex,&&cmpb_ex,&&sbcb_ex,&&addd_ex,&&andb_ex,&&bitb_ex,&&ldb_ex, &&stb_ex, 	/* f0 */
+	&&eorb_ex,&&adcb_ex,&&orb_ex, &&addb_ex,&&ldd_ex, &&std_ex, &&ldu_ex, &&stu_ex
+};
+
+static void (*const m6809_pref10[0x100])(void) = {
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 00 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,		/* 10 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&lbrn, &&lbhi, &&lbls, &&lbcc, &&lbcs, &&lbne, &&lbeq,		/* 20 */
+	&&lbvc, &&lbvs, &&lbpl, &&lbmi, &&lbge, &&lblt, &&lbgt, &&lble,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,		/* 30 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&swi2,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,		/* 40 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,		/* 50 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 60 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 70 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&cmpd_im, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 80 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&cmpy_im, &&illegal, &&ldy_im, &&sty_im,
+	&&illegal, &&illegal, &&illegal, &&cmpd_di, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 90 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&cmpy_di, &&illegal, &&ldy_di, &&sty_di,
+	&&illegal, &&illegal, &&illegal, &&cmpd_ix, &&illegal, &&illegal, &&illegal, &&illegal, 	/* a0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&cmpy_ix, &&illegal, &&ldy_ix, &&sty_ix,
+	&&illegal, &&illegal, &&illegal, &&cmpd_ex, &&illegal, &&illegal, &&illegal, &&illegal, 	/* b0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&cmpy_ex, &&illegal, &&ldy_ex, &&sty_ex,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* c0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&lds_im, &&sts_im,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* d0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&lds_di, &&sts_di,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* e0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&lds_ix, &&sts_ix,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* f0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&lds_ex, &&sts_ex
+};
+static void (*const m6809_pref11[0x100])(void) = {
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 00 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,		/* 10 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,		/* 20 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,		/* 30 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&swi3,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,		/* 40 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,		/* 50 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 60 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 70 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&cmpu_im, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 80 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&cmps_im, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&cmpu_di, &&illegal, &&illegal, &&illegal, &&illegal, 	/* 90 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&cmps_di, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&cmpu_ix, &&illegal, &&illegal, &&illegal, &&illegal, 	/* a0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&cmps_ix, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&cmpu_ex, &&illegal, &&illegal, &&illegal, &&illegal, 	/* b0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&cmps_ex, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* c0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* d0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* e0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal,
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, 	/* f0 */
+	&&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal, &&illegal
+};	
+	
     m6809.m6809_ICount = cycles - m6809.extra_cycles;
 	m6809.extra_cycles = 0;
 
 	if (m6809.int_state & (M6809_CWAI | M6809_SYNC))
 	{
-//		debugger_instruction_hook(Machine, PCD);
 		m6809.m6809_ICount = 0;
 	}
 	else
 	{
-#if 0 //!BIG_SWITCH		
-		do
-		{
-#else			
 m6809_Exec:			
-#endif
-			pPPC = pPC;
+		pPPC = pPC;
+		m6809.ireg = ROP(PCD);
+		PC++;
+		DISPATCH_MAIN();
 
-//			debugger_instruction_hook(Machine, PCD);
+/* includes the static function prototypes and the master opcode table */
+#include "6809ops.c"		
 
-			m6809.ireg = ROP(PCD);
-			PC++;
-#if BIG_SWITCH
-            switch( m6809.ireg )
-			{
-			case 0x00: neg_di();   RET(6);
-			case 0x01: neg_di();   RET(6);	/* undocumented */
-			case 0x02: illegal();  RET(2);
-			case 0x03: com_di();   RET(6);
-			case 0x04: lsr_di();   RET(6);
-			case 0x05: illegal();  RET(2);
-			case 0x06: ror_di();   RET(6);
-			case 0x07: asr_di();   RET(6);
-			case 0x08: asl_di();   RET(6);
-			case 0x09: rol_di();   RET(6);
-			case 0x0a: dec_di();   RET(6);
-			case 0x0b: illegal();  RET(2);
-			case 0x0c: inc_di();   RET(6);
-			case 0x0d: tst_di();   RET(6);
-			case 0x0e: jmp_di();   RET(3);
-			case 0x0f: clr_di();   RET(6);
-			case 0x10: {
-							UINT8 ireg2 = ROP(PCD);
-							PC++;
-							switch( ireg2 )
-							{
-								case 0x21: lbrn();		RET(5);
-								case 0x22: lbhi();		RET(5);
-								case 0x23: lbls();		RET(5);
-								case 0x24: lbcc();		RET(5);
-								case 0x25: lbcs();		RET(5);
-								case 0x26: lbne();		RET(5);
-								case 0x27: lbeq();		RET(5);
-								case 0x28: lbvc();		RET(5);
-								case 0x29: lbvs();		RET(5);
-								case 0x2a: lbpl();		RET(5);
-								case 0x2b: lbmi();		RET(5);
-								case 0x2c: lbge();		RET(5);
-								case 0x2d: lblt();		RET(5);
-								case 0x2e: lbgt();		RET(5);
-								case 0x2f: lble();		RET(5);
-
-								case 0x3f: swi2();		RET(20);
-
-								case 0x83: cmpd_im();	RET(5);
-								case 0x8c: cmpy_im();	RET(5);
-								case 0x8e: ldy_im();	RET(4);
-								case 0x8f: sty_im();	RET(4);
-
-								case 0x93: cmpd_di();	RET(7);
-								case 0x9c: cmpy_di();	RET(7);
-								case 0x9e: ldy_di();	RET(6);
-								case 0x9f: sty_di();	RET(6);
-
-								case 0xa3: cmpd_ix();	RET(7);
-								case 0xac: cmpy_ix();	RET(7);
-								case 0xae: ldy_ix();	RET(6);
-								case 0xaf: sty_ix();	RET(6);
-
-								case 0xb3: cmpd_ex();	RET(8);
-								case 0xbc: cmpy_ex();	RET(8);
-								case 0xbe: ldy_ex();	RET(7);
-								case 0xbf: sty_ex();	RET(7);
-
-								case 0xce: lds_im();	RET(4);
-								case 0xcf: sts_im();	RET(4);
-
-								case 0xde: lds_di();	RET(6);
-								case 0xdf: sts_di();	RET(6);
-
-								case 0xee: lds_ix();	RET(6);
-								case 0xef: sts_ix();	RET(6);
-
-								case 0xfe: lds_ex();	RET(7);
-								case 0xff: sts_ex();	RET(7);
-
-								default:   illegal();	goto m6809_Exec;
-							}
-						}
-			case 0x11: {
-							UINT8 ireg2 = ROP(PCD);
-							PC++;
-							switch( ireg2 )
-							{
-								case 0x3f: swi3();		RET(20);
-
-								case 0x83: cmpu_im();	RET(5);
-								case 0x8c: cmps_im();	RET(5);
-
-								case 0x93: cmpu_di();	RET(7);
-								case 0x9c: cmps_di();	RET(7);
-
-								case 0xa3: cmpu_ix();	RET(7);
-								case 0xac: cmps_ix();	RET(7);
-
-								case 0xb3: cmpu_ex();	RET(8);
-								case 0xbc: cmps_ex();	RET(8);
-
-								default:   illegal();	goto m6809_Exec;
-							}
-						}
-			case 0x12: nop();	   RET(2);
-			case 0x13: sync();	   RET(4);
-			case 0x14: illegal();  RET(2);
-			case 0x15: illegal();  RET(2);
-			case 0x16: lbra();	   RET(5);
-			case 0x17: lbsr();	   RET(9);
-			case 0x18: illegal();  RET(2);
-			case 0x19: daa();	   RET(2);
-			case 0x1a: orcc();	   RET(3);
-			case 0x1b: illegal();  RET(2);
-			case 0x1c: andcc();    RET(3);
-			case 0x1d: sex();	   RET(2);
-			case 0x1e: exg();	   RET(8);
-			case 0x1f: tfr();	   RET(6);
-			case 0x20: bra();	   RET(3);
-			case 0x21: brn();	   RET(3);
-			case 0x22: bhi();	   RET(3);
-			case 0x23: bls();	   RET(3);
-			case 0x24: bcc();	   RET(3);
-			case 0x25: bcs();	   RET(3);
-			case 0x26: bne();	   RET(3);
-			case 0x27: beq();	   RET(3);
-			case 0x28: bvc();	   RET(3);
-			case 0x29: bvs();	   RET(3);
-			case 0x2a: bpl();	   RET(3);
-			case 0x2b: bmi();	   RET(3);
-			case 0x2c: bge();	   RET(3);
-			case 0x2d: blt();	   RET(3);
-			case 0x2e: bgt();	   RET(3);
-			case 0x2f: ble();	   RET(3);
-			case 0x30: leax();	   RET(4);
-			case 0x31: leay();	   RET(4);
-			case 0x32: leas();	   RET(4);
-			case 0x33: leau();	   RET(4);
-			case 0x34: pshs();	   RET(5);
-			case 0x35: puls();	   RET(5);
-			case 0x36: pshu();	   RET(5);
-			case 0x37: pulu();	   RET(5);
-			case 0x38: illegal();  RET(2);
-			case 0x39: rts();	   RET(5);
-			case 0x3a: abx();	   RET(3);
-			case 0x3b: rti();	   RET(6);
-			case 0x3c: cwai();	   RET(20);
-			case 0x3d: mul();	   RET(11);
-			case 0x3e: illegal();  RET(2);
-			case 0x3f: swi();	   RET(19);
-			case 0x40: nega();	   RET(2);
-			case 0x41: illegal();  RET(2);
-			case 0x42: illegal();  RET(2);
-			case 0x43: coma();	   RET(2);
-			case 0x44: lsra();	   RET(2);
-			case 0x45: illegal();  RET(2);
-			case 0x46: rora();	   RET(2);
-			case 0x47: asra();	   RET(2);
-			case 0x48: asla();	   RET(2);
-			case 0x49: rola();	   RET(2);
-			case 0x4a: deca();	   RET(2);
-			case 0x4b: illegal();  RET(2);
-			case 0x4c: inca();	   RET(2);
-			case 0x4d: tsta();	   RET(2);
-			case 0x4e: illegal();  RET(2);
-			case 0x4f: clra();	   RET(2);
-			case 0x50: negb();	   RET(2);
-			case 0x51: illegal();  RET(2);
-			case 0x52: illegal();  RET(2);
-			case 0x53: comb();	   RET(2);
-			case 0x54: lsrb();	   RET(2);
-			case 0x55: illegal();  RET(2);
-			case 0x56: rorb();	   RET(2);
-			case 0x57: asrb();	   RET(2);
-			case 0x58: aslb();	   RET(2);
-			case 0x59: rolb();	   RET(2);
-			case 0x5a: decb();	   RET(2);
-			case 0x5b: illegal();  RET(2);
-			case 0x5c: incb();	   RET(2);
-			case 0x5d: tstb();	   RET(2);
-			case 0x5e: illegal();  RET(2);
-			case 0x5f: clrb();	   RET(2);
-			case 0x60: neg_ix();   RET(6);
-			case 0x61: illegal();  RET(2);
-			case 0x62: illegal();  RET(2);
-			case 0x63: com_ix();   RET(6);
-			case 0x64: lsr_ix();   RET(6);
-			case 0x65: illegal();  RET(2);
-			case 0x66: ror_ix();   RET(6);
-			case 0x67: asr_ix();   RET(6);
-			case 0x68: asl_ix();   RET(6);
-			case 0x69: rol_ix();   RET(6);
-			case 0x6a: dec_ix();   RET(6);
-			case 0x6b: illegal();  RET(2);
-			case 0x6c: inc_ix();   RET(6);
-			case 0x6d: tst_ix();   RET(6);
-			case 0x6e: jmp_ix();   RET(3);
-			case 0x6f: clr_ix();   RET(6);
-			case 0x70: neg_ex();   RET(7);
-			case 0x71: illegal();  RET(2);
-			case 0x72: illegal();  RET(2);
-			case 0x73: com_ex();   RET(7);
-			case 0x74: lsr_ex();   RET(7);
-			case 0x75: illegal();  RET(2);
-			case 0x76: ror_ex();   RET(7);
-			case 0x77: asr_ex();   RET(7);
-			case 0x78: asl_ex();   RET(7);
-			case 0x79: rol_ex();   RET(7);
-			case 0x7a: dec_ex();   RET(7);
-			case 0x7b: illegal();  RET(2);
-			case 0x7c: inc_ex();   RET(7);
-			case 0x7d: tst_ex();   RET(7);
-			case 0x7e: jmp_ex();   RET(4);
-			case 0x7f: clr_ex();   RET(7);
-			case 0x80: suba_im();  RET(2);
-			case 0x81: cmpa_im();  RET(2);
-			case 0x82: sbca_im();  RET(2);
-			case 0x83: subd_im();  RET(4);
-			case 0x84: anda_im();  RET(2);
-			case 0x85: bita_im();  RET(2);
-			case 0x86: lda_im();   RET(2);
-			case 0x87: sta_im();   RET(2);
-			case 0x88: eora_im();  RET(2);
-			case 0x89: adca_im();  RET(2);
-			case 0x8a: ora_im();   RET(2);
-			case 0x8b: adda_im();  RET(2);
-			case 0x8c: cmpx_im();  RET(4);
-			case 0x8d: bsr();	   RET(7);
-			case 0x8e: ldx_im();   RET(3);
-			case 0x8f: stx_im();   RET(2);
-			case 0x90: suba_di();  RET(4);
-			case 0x91: cmpa_di();  RET(4);
-			case 0x92: sbca_di();  RET(4);
-			case 0x93: subd_di();  RET(6);
-			case 0x94: anda_di();  RET(4);
-			case 0x95: bita_di();  RET(4);
-			case 0x96: lda_di();   RET(4);
-			case 0x97: sta_di();   RET(4);
-			case 0x98: eora_di();  RET(4);
-			case 0x99: adca_di();  RET(4);
-			case 0x9a: ora_di();   RET(4);
-			case 0x9b: adda_di();  RET(4);
-			case 0x9c: cmpx_di();  RET(6);
-			case 0x9d: jsr_di();   RET(7);
-			case 0x9e: ldx_di();   RET(5);
-			case 0x9f: stx_di();   RET(5);
-			case 0xa0: suba_ix();  RET(4);
-			case 0xa1: cmpa_ix();  RET(4);
-			case 0xa2: sbca_ix();  RET(4);
-			case 0xa3: subd_ix();  RET(6);
-			case 0xa4: anda_ix();  RET(4);
-			case 0xa5: bita_ix();  RET(4);
-			case 0xa6: lda_ix();   RET(4);
-			case 0xa7: sta_ix();   RET(4);
-			case 0xa8: eora_ix();  RET(4);
-			case 0xa9: adca_ix();  RET(4);
-			case 0xaa: ora_ix();   RET(4);
-			case 0xab: adda_ix();  RET(4);
-			case 0xac: cmpx_ix();  RET(6);
-			case 0xad: jsr_ix();   RET(7);
-			case 0xae: ldx_ix();   RET(5);
-			case 0xaf: stx_ix();   RET(5);
-			case 0xb0: suba_ex();  RET(5);
-			case 0xb1: cmpa_ex();  RET(5);
-			case 0xb2: sbca_ex();  RET(5);
-			case 0xb3: subd_ex();  RET(7);
-			case 0xb4: anda_ex();  RET(5);
-			case 0xb5: bita_ex();  RET(5);
-			case 0xb6: lda_ex();   RET(5);
-			case 0xb7: sta_ex();   RET(5);
-			case 0xb8: eora_ex();  RET(5);
-			case 0xb9: adca_ex();  RET(5);
-			case 0xba: ora_ex();   RET(5);
-			case 0xbb: adda_ex();  RET(5);
-			case 0xbc: cmpx_ex();  RET(7);
-			case 0xbd: jsr_ex();   RET(8);
-			case 0xbe: ldx_ex();   RET(6);
-			case 0xbf: stx_ex();   RET(6);
-			case 0xc0: subb_im();  RET(2);
-			case 0xc1: cmpb_im();  RET(2);
-			case 0xc2: sbcb_im();  RET(2);
-			case 0xc3: addd_im();  RET(4);
-			case 0xc4: andb_im();  RET(2);
-			case 0xc5: bitb_im();  RET(2);
-			case 0xc6: ldb_im();   RET(2);
-			case 0xc7: stb_im();   RET(2);
-			case 0xc8: eorb_im();  RET(2);
-			case 0xc9: adcb_im();  RET(2);
-			case 0xca: orb_im();   RET(2);
-			case 0xcb: addb_im();  RET(2);
-			case 0xcc: ldd_im();   RET(3);
-			case 0xcd: std_im();   RET(2);
-			case 0xce: ldu_im();   RET(3);
-			case 0xcf: stu_im();   RET(3);
-			case 0xd0: subb_di();  RET(4);
-			case 0xd1: cmpb_di();  RET(4);
-			case 0xd2: sbcb_di();  RET(4);
-			case 0xd3: addd_di();  RET(6);
-			case 0xd4: andb_di();  RET(4);
-			case 0xd5: bitb_di();  RET(4);
-			case 0xd6: ldb_di();   RET(4);
-			case 0xd7: stb_di();   RET(4);
-			case 0xd8: eorb_di();  RET(4);
-			case 0xd9: adcb_di();  RET(4);
-			case 0xda: orb_di();   RET(4);
-			case 0xdb: addb_di();  RET(4);
-			case 0xdc: ldd_di();   RET(5);
-			case 0xdd: std_di();   RET(5);
-			case 0xde: ldu_di();   RET(5);
-			case 0xdf: stu_di();   RET(5);
-			case 0xe0: subb_ix();  RET(4);
-			case 0xe1: cmpb_ix();  RET(4);
-			case 0xe2: sbcb_ix();  RET(4);
-			case 0xe3: addd_ix();  RET(6);
-			case 0xe4: andb_ix();  RET(4);
-			case 0xe5: bitb_ix();  RET(4);
-			case 0xe6: ldb_ix();   RET(4);
-			case 0xe7: stb_ix();   RET(4);
-			case 0xe8: eorb_ix();  RET(4);
-			case 0xe9: adcb_ix();  RET(4);
-			case 0xea: orb_ix();   RET(4);
-			case 0xeb: addb_ix();  RET(4);
-			case 0xec: ldd_ix();   RET(5);
-			case 0xed: std_ix();   RET(5);
-			case 0xee: ldu_ix();   RET(5);
-			case 0xef: stu_ix();   RET(5);
-			case 0xf0: subb_ex();  RET(5);
-			case 0xf1: cmpb_ex();  RET(5);
-			case 0xf2: sbcb_ex();  RET(5);
-			case 0xf3: addd_ex();  RET(7);
-			case 0xf4: andb_ex();  RET(5);
-			case 0xf5: bitb_ex();  RET(5);
-			case 0xf6: ldb_ex();   RET(5);
-			case 0xf7: stb_ex();   RET(5);
-			case 0xf8: eorb_ex();  RET(5);
-			case 0xf9: adcb_ex();  RET(5);
-			case 0xfa: orb_ex();   RET(5);
-			case 0xfb: addb_ex();  RET(5);
-			case 0xfc: ldd_ex();   RET(6);
-			case 0xfd: std_ex();   RET(6);
-			case 0xfe: ldu_ex();   RET(6);
-			case 0xff: stu_ex();   RET(6);
-			}
-#else
-//            (*m6809_main[m6809.ireg])();
-			goto *m6809_main[m6809.ireg];
-            RET(cycles1[m6809.ireg]);
-#endif
-
-#if 0 // !BIG_SWITCH	
-		} 
-		while( m6809.m6809_ICount > 0 );
-#else
 m6809_Exec_End:
-#endif
         USE_CYCLES(m6809.extra_cycles);
 		m6809.extra_cycles = 0;
     }
@@ -1265,146 +1022,3 @@ M6809_INLINE void fetch_effective_address( void )
 	}
 }
 
-#if 0
-
-/**************************************************************************
- * Generic set_info
- **************************************************************************/
-
-static void m6809_set_info(UINT32 state, cpuinfo *info)
-{
-	switch (state)
-	{
-		/* --- the following bits of info are set as 64-bit signed integers --- */
-		case CPUINFO_INT_INPUT_STATE + M6809_IRQ_LINE:	set_irq_line(M6809_IRQ_LINE, info->i);	break;
-		case CPUINFO_INT_INPUT_STATE + M6809_FIRQ_LINE:	set_irq_line(M6809_FIRQ_LINE, info->i); break;
-		case CPUINFO_INT_INPUT_STATE + M6809_INPUT_LINE_NMI:	set_irq_line(M6809_INPUT_LINE_NMI, info->i);	break;
-
-		case CPUINFO_INT_PC:
-		case CPUINFO_INT_REGISTER + M6809_PC:			PC = info->i; CHANGE_PC;				break;
-		case CPUINFO_INT_SP:
-		case CPUINFO_INT_REGISTER + M6809_S:			S = info->i;							break;
-		case CPUINFO_INT_REGISTER + M6809_CC:			CC = info->i; CHECK_IRQ_LINES;			break;
-		case CPUINFO_INT_REGISTER + M6809_U:			U = info->i;							break;
-		case CPUINFO_INT_REGISTER + M6809_A:			A = info->i;							break;
-		case CPUINFO_INT_REGISTER + M6809_B:			B = info->i;							break;
-		case CPUINFO_INT_REGISTER + M6809_X:			X = info->i;							break;
-		case CPUINFO_INT_REGISTER + M6809_Y:			Y = info->i;							break;
-		case CPUINFO_INT_REGISTER + M6809_DP:			DP = info->i;							break;
-	}
-}
-
-
-
-/**************************************************************************
- * Generic get_info
- **************************************************************************/
-
-void m6809_get_info(UINT32 state, cpuinfo *info)
-{
-	switch (state)
-	{
-		/* --- the following bits of info are returned as 64-bit signed integers --- */
-		case CPUINFO_INT_CONTEXT_SIZE:					info->i = sizeof(m6809);				break;
-		case CPUINFO_INT_INPUT_LINES:					info->i = 2;							break;
-		case CPUINFO_INT_DEFAULT_IRQ_VECTOR:			info->i = 0;							break;
-		case CPUINFO_INT_ENDIANNESS:					info->i = CPU_IS_BE;					break;
-		case CPUINFO_INT_CLOCK_MULTIPLIER:				info->i = 1;							break;
-		case CPUINFO_INT_CLOCK_DIVIDER:					info->i = 1;							break;
-		case CPUINFO_INT_MIN_INSTRUCTION_BYTES:			info->i = 1;							break;
-		case CPUINFO_INT_MAX_INSTRUCTION_BYTES:			info->i = 5;							break;
-		case CPUINFO_INT_MIN_CYCLES:					info->i = 2;							break;
-		case CPUINFO_INT_MAX_CYCLES:					info->i = 19;							break;
-
-		case CPUINFO_INT_DATABUS_WIDTH + ADDRESS_SPACE_PROGRAM:	info->i = 8;					break;
-		case CPUINFO_INT_ADDRBUS_WIDTH + ADDRESS_SPACE_PROGRAM: info->i = 16;					break;
-		case CPUINFO_INT_ADDRBUS_SHIFT + ADDRESS_SPACE_PROGRAM: info->i = 0;					break;
-		case CPUINFO_INT_DATABUS_WIDTH + ADDRESS_SPACE_DATA:	info->i = 0;					break;
-		case CPUINFO_INT_ADDRBUS_WIDTH + ADDRESS_SPACE_DATA: 	info->i = 0;					break;
-		case CPUINFO_INT_ADDRBUS_SHIFT + ADDRESS_SPACE_DATA: 	info->i = 0;					break;
-		case CPUINFO_INT_DATABUS_WIDTH + ADDRESS_SPACE_IO:		info->i = 0;					break;
-		case CPUINFO_INT_ADDRBUS_WIDTH + ADDRESS_SPACE_IO: 		info->i = 0;					break;
-		case CPUINFO_INT_ADDRBUS_SHIFT + ADDRESS_SPACE_IO: 		info->i = 0;					break;
-
-		case CPUINFO_INT_INPUT_STATE + M6809_IRQ_LINE:	info->i = m6809.irq_state[M6809_IRQ_LINE]; break;
-		case CPUINFO_INT_INPUT_STATE + M6809_FIRQ_LINE:	info->i = m6809.irq_state[M6809_FIRQ_LINE]; break;
-		case CPUINFO_INT_INPUT_STATE + M6809_INPUT_LINE_NMI:	info->i = m6809.nmi_state;				break;
-
-		case CPUINFO_INT_PREVIOUSPC:					info->i = PPC;							break;
-
-		case CPUINFO_INT_PC:
-		case CPUINFO_INT_REGISTER + M6809_PC:			info->i = PC;							break;
-		case CPUINFO_INT_SP:
-		case CPUINFO_INT_REGISTER + M6809_S:			info->i = S;							break;
-		case CPUINFO_INT_REGISTER + M6809_CC:			info->i = CC;							break;
-		case CPUINFO_INT_REGISTER + M6809_U:			info->i = U;							break;
-		case CPUINFO_INT_REGISTER + M6809_A:			info->i = A;							break;
-		case CPUINFO_INT_REGISTER + M6809_B:			info->i = B;							break;
-		case CPUINFO_INT_REGISTER + M6809_X:			info->i = X;							break;
-		case CPUINFO_INT_REGISTER + M6809_Y:			info->i = Y;							break;
-		case CPUINFO_INT_REGISTER + M6809_DP:			info->i = DP;							break;
-
-		/* --- the following bits of info are returned as pointers to data or functions --- */
-		case CPUINFO_PTR_SET_INFO:						info->setinfo = m6809_set_info;			break;
-		case CPUINFO_PTR_GET_CONTEXT:					info->getcontext = m6809_get_context;	break;
-		case CPUINFO_PTR_SET_CONTEXT:					info->setcontext = m6809_set_context;	break;
-		case CPUINFO_PTR_INIT:							info->init = m6809_init;				break;
-		case CPUINFO_PTR_RESET:							info->reset = m6809_reset;				break;
-		case CPUINFO_PTR_EXIT:							info->exit = m6809_exit;				break;
-		case CPUINFO_PTR_EXECUTE:						info->execute = m6809_execute;			break;
-		case CPUINFO_PTR_BURN:							info->burn = NULL;						break;
-		case CPUINFO_PTR_DISASSEMBLE:					info->disassemble = m6809_dasm;			break;
-		case CPUINFO_PTR_INSTRUCTION_COUNTER:			info->icount = &m6809.m6809_ICount;			break;
-
-		/* --- the following bits of info are returned as NULL-terminated strings --- */
-		case CPUINFO_STR_NAME:							strcpy(info->s, "M6809");				break;
-		case CPUINFO_STR_CORE_FAMILY:					strcpy(info->s, "Motorola 6809");		break;
-		case CPUINFO_STR_CORE_VERSION:					strcpy(info->s, "1.11");				break;
-		case CPUINFO_STR_CORE_FILE:						strcpy(info->s, __FILE__);				break;
-		case CPUINFO_STR_CORE_CREDITS:					strcpy(info->s, "Copyright John Butler"); break;
-
-		case CPUINFO_STR_FLAGS:
-		/*	sprintf(info->s, "%c%c%c%c%c%c%c%c",
-				m6809.cc & 0x80 ? 'E':'.',
-				m6809.cc & 0x40 ? 'F':'.',
-                m6809.cc & 0x20 ? 'H':'.',
-                m6809.cc & 0x10 ? 'I':'.',
-                m6809.cc & 0x08 ? 'N':'.',
-                m6809.cc & 0x04 ? 'Z':'.',
-                m6809.cc & 0x02 ? 'V':'.',
-                m6809.cc & 0x01 ? 'C':'.');			  */
-            break;
-
-		case CPUINFO_STR_REGISTER + M6809_PC:			/*sprintf(info->s, "PC:%04X", m6809.pc.w.l);*/ break;
-		case CPUINFO_STR_REGISTER + M6809_S:			/*sprintf(info->s, "S:%04X", m6809.s.w.l);*/ break;
-		case CPUINFO_STR_REGISTER + M6809_CC:			/*sprintf(info->s, "CC:%02X", m6809.cc);*/ break;
-		case CPUINFO_STR_REGISTER + M6809_U:			/*sprintf(info->s, "U:%04X", m6809.u.w.l);*/ break;
-		case CPUINFO_STR_REGISTER + M6809_A:			/*sprintf(info->s, "A:%02X", m6809.d.b.h);*/ break;
-		case CPUINFO_STR_REGISTER + M6809_B:			/*sprintf(info->s, "B:%02X", m6809.d.b.l);*/ break;
-		case CPUINFO_STR_REGISTER + M6809_X:			/*sprintf(info->s, "X:%04X", m6809.x.w.l);*/ break;
-		case CPUINFO_STR_REGISTER + M6809_Y:			/*sprintf(info->s, "Y:%04X", m6809.y.w.l);*/ break;
-		case CPUINFO_STR_REGISTER + M6809_DP:			/*sprintf(info->s, "DP:%02X", m6809.dp.b.h);*/ break;
-	}
-}
-
-
-/**************************************************************************
- * CPU-specific set_info
- **************************************************************************/
-
-void m6809e_get_info(UINT32 state, cpuinfo *info)
-{
-	switch (state)
-	{
-		/* --- the following bits of info are returned as 64-bit signed integers --- */
-		case CPUINFO_INT_CLOCK_MULTIPLIER:				info->i = 1;							break;
-		case CPUINFO_INT_CLOCK_DIVIDER:					info->i = 4;							break;
-
-		/* --- the following bits of info are returned as NULL-terminated strings --- */
-		case CPUINFO_STR_NAME:							strcpy(info->s, "M6809E");				break;
-
-		default:										m6809_get_info(state, info);			break;
-	}
-}
-
-#endif
