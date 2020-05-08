@@ -30,7 +30,6 @@ neg_di:
 	CLR_NZVC;
 	SET_FLAGS8(0,t,r);
 	WM(EAD,r);
-	
 	RET (6);
 }
 
@@ -93,28 +92,70 @@ asr_di:
 	RET (6);	
 }
 
+UINT16 t16,r16;
 /* $08 ASL direct ?**** */
 asl_di:
 {
-	UINT16 t,r;
-	DIRBYTE(t);
-	r = t << 1;
-	CLR_NZVC;
-	SET_FLAGS8(t,t,r);
-	WM(EAD,r);
-	RET (6);	
+	DIRBYTE(t16);
+	r16 = t16 << 1;
+	goto vbt_asl_xx;
 }
 
 /* $09 ROL direct -**** */
 rol_di:
 {
-	UINT16 t,r;
-	DIRBYTE(t);
-	r = (CC & CC_C) | (t << 1);
+	DIRBYTE(t16);
+	r16 = (CC & CC_C) | (t16 << 1);
+	goto vbt_asl_xx;
+}
+
+/* $68 ASL indexed ?**** */
+asl_ix:
+{
+	fetch_effective_address();
+	t16=RM(EAD);
+	r16 |= t16 << 1;
+	goto vbt_asl_xx;
+}
+
+/* $69 ROL indexed -**** */
+rol_ix:
+{
+	fetch_effective_address();
+	t16=RM(EAD);
+	r16 = CC & CC_C;
+	r16 |= t16 << 1;	
+}
+
+vbt_asl_xx:
+{
 	CLR_NZVC;
-	SET_FLAGS8(t,t,r);
-	WM(EAD,r);
+	SET_FLAGS8(t16,t16,r16);
+	WM(EAD,r16);
 	RET (6);	
+}
+
+/* $78 ASL extended ?**** */
+asl_ex:
+{
+	EXTBYTE(t16); 
+	r16=t16<<1;
+	goto vbt_asl_xy;
+}
+
+/* $79 ROL extended -**** */
+rol_ex:
+{
+	EXTBYTE(t16); 
+	r16 = (CC & CC_C) | (t16 << 1);
+}
+
+vbt_asl_xy:
+{
+	CLR_NZVC;
+	SET_FLAGS8(t16,t16,r16);
+	WM(EAD,r16);
+	RET (7);	
 }
 
 /* $0A DEC direct -***- */
@@ -1179,33 +1220,6 @@ asr_ix:
 	RET(6);	
 }
 
-/* $68 ASL indexed ?**** */
-asl_ix:
-{
-	UINT16 t,r;
-	fetch_effective_address();
-	t=RM(EAD);
-	r = t << 1;
-	CLR_NZVC;
-	SET_FLAGS8(t,t,r);
-	WM(EAD,r);
-	RET(6);	
-}
-
-/* $69 ROL indexed -**** */
-rol_ix:
-{
-	UINT16 t,r;
-	fetch_effective_address();
-	t=RM(EAD);
-	r = CC & CC_C;
-	r |= t << 1;
-	CLR_NZVC;
-	SET_FLAGS8(t,t,r);
-	WM(EAD,r);
-	RET(6);	
-}
-
 /* $6A DEC indexed -***- */
 dec_ix:
 {
@@ -1302,7 +1316,8 @@ ror_ex:
 	UINT8 t,r;
 	EXTBYTE(t); r=(CC & CC_C) << 7;
 	CLR_NZC; CC |= (t & CC_C);
-	r |= t>>1; SET_NZ8(r);
+	r |= t>>1; 
+	SET_NZ8(r);
 	WM(EAD,r);
 	RET(7);	
 }
@@ -1315,26 +1330,6 @@ asr_ex:
 	t=(t&0x80)|(t>>1);
 	SET_NZ8(t);
 	WM(EAD,t);
-	RET(7);	
-}
-
-/* $78 ASL extended ?**** */
-asl_ex:
-{
-	UINT16 t,r;
-	EXTBYTE(t); r=t<<1;
-	CLR_NZVC; SET_FLAGS8(t,t,r);
-	WM(EAD,r);
-	RET(7);	
-}
-
-/* $79 ROL extended -**** */
-rol_ex:
-{
-	UINT16 t,r;
-	EXTBYTE(t); r = (CC & CC_C) | (t << 1);
-	CLR_NZVC; SET_FLAGS8(t,t,r);
-	WM(EAD,r);
 	RET(7);	
 }
 
@@ -1387,18 +1382,6 @@ clr_ex:
 	RET(7);	
 }
 
-/* $80 SUBA immediate ?**** */
-suba_im:
-{
-	UINT16 t,r;
-	IMMBYTE(t);
-	r = A - t;
-	CLR_NZVC;
-	SET_FLAGS8(A,t,r);
-	A = r;
-	RET(2);	
-}
-
 /* $81 CMPA immediate ?**** */
 cmpa_im:
 {
@@ -1410,56 +1393,107 @@ cmpa_im:
 	RET(2);	
 }
 
+/* $80 SUBA immediate ?**** */
+suba_im:
+{
+	IMMBYTE(t16);
+	r16 = A - t16;
+	goto vbt_suba_im;
+}
+
 /* $82 SBCA immediate ?**** */
 sbca_im:
 {
-	UINT16	  t,r;
-	IMMBYTE(t);
-	r = A - t - (CC & CC_C);
+	IMMBYTE(t16);
+	r16 = A - t16 - (CC & CC_C);
+}
+
+vbt_suba_im:
+{
 	CLR_NZVC;
-	SET_FLAGS8(A,t,r);
-	A = r;
+	SET_FLAGS8(A,t16,r16);
+	A = r16;
 	RET(2);	
 }
+
+/* $90 SUBA direct ?**** */
+suba_di:
+{
+	DIRBYTE(t16);
+	r16 = A - t16;
+	goto vbt_suba_xx;
+}
+
+/* $92 SBCA direct ?**** */
+sbca_di:
+{
+	DIRBYTE(t16);
+	r16 = A - t16 - (CC & CC_C);
+	goto vbt_suba_xx;	
+}
+
+/* $a0 SUBA indexed ?**** */
+suba_ix:
+{
+	fetch_effective_address();
+	t16 = RM(EAD);
+	r16 = A - t16;
+	goto vbt_suba_xx;
+}
+
+/* $a2 SBCA indexed ?**** */
+sbca_ix:
+{
+	fetch_effective_address();
+	t16 = RM(EAD);
+	r16 = A - t16 - (CC & CC_C);
+}
+
+vbt_suba_xx:
+{
+	CLR_NZVC;
+	SET_FLAGS8(A,t16,r16);
+	A = r16;
+	RET(4);	
+}
+
+UINT32 r32,d32;
+PAIR b;
 
 /* $83 SUBD (CMPD CMPU) immediate -**** */
 subd_im:
 {
-	UINT32 r,d;
-	PAIR b;
 	IMMWORD(b);
-	d = D;
-	r = d - b.d;
+	d32 = D;
+	r32 = d32 - b.d;
 	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	D = r;
+	SET_FLAGS16(d32,b.d,r32);
+	D = r32;
 	RET(4);	
 }
+
 
 /* $1083 CMPD immediate -**** */
 cmpd_im:
 {
-	UINT32 r,d;
-	PAIR b;
 	IMMWORD(b);
-	d = D;
-	r = d - b.d;
-	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	RET(5);	
+	d32 = D;
+	goto vbt_cmpd_im;
 }
 
 /* $1183 CMPU immediate -**** */
 cmpu_im:
 {
-	UINT32 r, d;
-	PAIR b;
 	IMMWORD(b);
-	d = U;
-	r = d - b.d;
+	d32 = U;
+}
+
+vbt_cmpd_im:
+{
+	r32 = d32 - b.d;
 	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	RET(5);	
+	SET_FLAGS16(d32,b.d,r32);
+	RET(5);
 }
 
 /* $84 ANDA immediate -**0- */
@@ -1515,19 +1549,6 @@ eora_im:
 	RET(2);	
 }
 
-/* $89 ADCA immediate ***** */
-adca_im:
-{
-	UINT16 t,r;
-	IMMBYTE(t);
-	r = A + t + (CC & CC_C);
-	CLR_HNZVC;
-	SET_FLAGS8(A,t,r);
-	SET_H(A,t,r);
-	A = r;
-	RET(2);	
-}
-
 /* $8A ORA immediate -**0- */
 ora_im:
 {
@@ -1539,16 +1560,27 @@ ora_im:
 	RET(2);	
 }
 
+/* $89 ADCA immediate ***** */
+adca_im:
+{
+	IMMBYTE(t16);
+	r16 = A + t16 + (CC & CC_C);
+	goto vbt_adca_im;
+}
+
 /* $8B ADDA immediate ***** */
 adda_im:
 {
-	UINT16 t,r;
-	IMMBYTE(t);
-	r = A + t;
+	IMMBYTE(t16);
+	r16 = A + t16;
+}
+
+vbt_adca_im:
+{	
 	CLR_HNZVC;
-	SET_FLAGS8(A,t,r);
-	SET_H(A,t,r);
-	A = r;
+	SET_FLAGS8(A,t16,r16);
+	SET_H(A,t16,r16);
+	A = r16;
 	RET(2);	
 }
 
@@ -1568,26 +1600,23 @@ cmpx_im:
 /* $108C CMPY immediate -**** */
 cmpy_im:
 {
-	UINT32 r,d;
-	PAIR b;
 	IMMWORD(b);
-	d = Y;
-	r = d - b.d;
-	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	RET(5);	
+	d32 = Y;
+	goto vbt_cmpy_im;
 }
 
 /* $118C CMPS immediate -**** */
 cmps_im:
 {
-	UINT32 r,d;
-	PAIR b;
 	IMMWORD(b);
-	d = S;
-	r = d - b.d;
+	d32 = S;
+}
+
+vbt_cmpy_im:
+{
+	r32 = d32 - b.d;
 	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
+	SET_FLAGS16(d32,b.d,r32);
 	RET(5);	
 }
 
@@ -1642,18 +1671,6 @@ sty_im:
 	RET(4);	
 }
 
-/* $90 SUBA direct ?**** */
-suba_di:
-{
-	UINT16	  t,r;
-	DIRBYTE(t);
-	r = A - t;
-	CLR_NZVC;
-	SET_FLAGS8(A,t,r);
-	A = r;
-	RET(4);	
-}
-
 /* $91 CMPA direct ?**** */
 cmpa_di:
 {
@@ -1662,18 +1679,6 @@ cmpa_di:
 	r = A - t;
 	CLR_NZVC;
 	SET_FLAGS8(A,t,r);
-	RET(4);	
-}
-
-/* $92 SBCA direct ?**** */
-sbca_di:
-{
-	UINT16	  t,r;
-	DIRBYTE(t);
-	r = A - t - (CC & CC_C);
-	CLR_NZVC;
-	SET_FLAGS8(A,t,r);
-	A = r;
 	RET(4);	
 }
 
@@ -1694,26 +1699,43 @@ subd_di:
 /* $1093 CMPD direct -**** */
 cmpd_di:
 {
-	UINT32 r,d;
-	PAIR b;
 	DIRWORD(b);
-	d = D;
-	r = d - b.d;
-	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	RET(7);	
+	d32 = D;
+	r32 = d32 - b.d;
+	goto vbt_cmpd_xx;
 }
 
 /* $1193 CMPU direct -**** */
 cmpu_di:
 {
-	UINT32 r,d;
-	PAIR b;
 	DIRWORD(b);
-	d = U;
-	r = d - b.d;
+	d32 = U;
+	r32 = d32 - b.d;
+	goto vbt_cmpd_xx;	
+}
+
+/* $10a3 CMPD indexed -**** */
+cmpd_ix:
+{
+	fetch_effective_address();
+    b.d=RM16(EAD);
+	d32 = D;
+	r32 = d32 - b.d;
+	goto vbt_cmpd_xx;
+}
+
+/* $11a3 CMPU indexed -**** */
+cmpu_ix:
+{
+	fetch_effective_address();
+    b.d=RM16(EAD);
+	r32 = U - b.d;
+}
+
+vbt_cmpd_xx:
+{
 	CLR_NZVC;
-	SET_FLAGS16(U,b.d,r);
+	SET_FLAGS16(U,b.d,r32);
 	RET(7);	
 }
 
@@ -1769,19 +1791,6 @@ eora_di:
 	RET(4);	
 }
 
-/* $99 ADCA direct ***** */
-adca_di:
-{
-	UINT16 t,r;
-	DIRBYTE(t);
-	r = A + t + (CC & CC_C);
-	CLR_HNZVC;
-	SET_FLAGS8(A,t,r);
-	SET_H(A,t,r);
-	A = r;
-	RET(4);	
-}
-
 /* $9A ORA direct -**0- */
 ora_di:
 {
@@ -1793,55 +1802,74 @@ ora_di:
 	RET(4);	
 }
 
+/* $99 ADCA direct ***** */
+adca_di:
+{
+	DIRBYTE(t16);
+	r16 = A + t16 + (CC & CC_C);
+	goto vbt_adca_di;
+}
+
 /* $9B ADDA direct ***** */
 adda_di:
 {
-	UINT16 t,r;
-	DIRBYTE(t);
-	r = A + t;
+	DIRBYTE(t16);
+	r16 = A + t16;
+}
+
+vbt_adca_di:
+{
 	CLR_HNZVC;
-	SET_FLAGS8(A,t,r);
-	SET_H(A,t,r);
-	A = r;
+	SET_FLAGS8(A,t16,r16);
+	SET_H(A,t16,r16);
+	A = r16;
 	RET(4);	
 }
 
 /* $9C CMPX (CMPY CMPS) direct -**** */
 cmpx_di:
 {
-	UINT32 r,d;
-	PAIR b;
 	DIRWORD(b);
-	d = X;
-	r = d - b.d;
+	goto vbt_cmpx_di;
+}
+
+/* $aC CMPX (CMPY CMPS) indexed -**** */
+cmpx_ix:
+{
+	fetch_effective_address();
+    b.d=RM16(EAD);
+}
+
+vbt_cmpx_di:
+{
+	d32 = X;
+	r32 = d32 - b.d;
 	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
+	SET_FLAGS16(d32,b.d,r32);
 	RET(6);	
 }
+
 
 /* $109C CMPY direct -**** */
 cmpy_di:
 {
-	UINT32 r,d;
-	PAIR b;
 	DIRWORD(b);
-	d = Y;
-	r = d - b.d;
-	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	RET(7);	
+	d32 = Y;
+	goto vbt_cmpy_di;
 }
 
 /* $119C CMPS direct -**** */
 cmps_di:
 {
-	UINT32 r,d;
-	PAIR b;
 	DIRWORD(b);
-	d = S;
-	r = d - b.d;
+	d32 = S;
+}
+
+vbt_cmpy_di:	
+{
+	r32 = d32 - b.d;
 	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
+	SET_FLAGS16(d32,b.d,r32);
 	RET(7);	
 }
 
@@ -1893,19 +1921,6 @@ sty_di:
 	RET(6);	
 }
 
-/* $a0 SUBA indexed ?**** */
-suba_ix:
-{
-	UINT16 t,r;
-	fetch_effective_address();
-	t = RM(EAD);
-	r = A - t;
-	CLR_NZVC;
-	SET_FLAGS8(A,t,r);
-	A = r;
-	RET(4);	
-}
-
 /* $a1 CMPA indexed ?**** */
 cmpa_ix:
 {
@@ -1915,19 +1930,6 @@ cmpa_ix:
 	r = A - t;
 	CLR_NZVC;
 	SET_FLAGS8(A,t,r);
-	RET(4);	
-}
-
-/* $a2 SBCA indexed ?**** */
-sbca_ix:
-{
-	UINT16	  t,r;
-	fetch_effective_address();
-	t = RM(EAD);
-	r = A - t - (CC & CC_C);
-	CLR_NZVC;
-	SET_FLAGS8(A,t,r);
-	A = r;
 	RET(4);	
 }
 
@@ -1944,33 +1946,6 @@ subd_ix:
 	SET_FLAGS16(d,b.d,r);
 	D = r;
 	RET(6);	
-}
-
-/* $10a3 CMPD indexed -**** */
-cmpd_ix:
-{
-	UINT32 r,d;
-	PAIR b;
-	fetch_effective_address();
-    b.d=RM16(EAD);
-	d = D;
-	r = d - b.d;
-	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	RET(7);	
-}
-
-/* $11a3 CMPU indexed -**** */
-cmpu_ix:
-{
-	UINT32 r;
-	PAIR b;
-	fetch_effective_address();
-    b.d=RM16(EAD);
-	r = U - b.d;
-	CLR_NZVC;
-	SET_FLAGS16(U,b.d,r);
-	RET(7);	
 }
 
 /* $a4 ANDA indexed -**0- */
@@ -2024,20 +1999,6 @@ eora_ix:
 	RET(4);	
 }
 
-/* $a9 ADCA indexed ***** */
-adca_ix:
-{
-	UINT16 t,r;
-	fetch_effective_address();
-	t = RM(EAD);
-	r = A + t + (CC & CC_C);
-	CLR_HNZVC;
-	SET_FLAGS8(A,t,r);
-	SET_H(A,t,r);
-	A = r;
-	RET(4);	
-}
-
 /* $aA ORA indexed -**0- */
 ora_ix:
 {
@@ -2048,59 +2009,53 @@ ora_ix:
 	RET(4);	
 }
 
+/* $a9 ADCA indexed ***** */
+adca_ix:
+{
+	fetch_effective_address();
+	t16 = RM(EAD);
+	r16 = A + t16 + (CC & CC_C);
+	goto vbt_adca_ix;
+}
+
 /* $aB ADDA indexed ***** */
 adda_ix:
 {
-	UINT16 t,r;
 	fetch_effective_address();
-	t = RM(EAD);
-	r = A + t;
+	t16 = RM(EAD);
+	r16 = A + t16;
+}
+
+vbt_adca_ix:
+{
 	CLR_HNZVC;
-	SET_FLAGS8(A,t,r);
-	SET_H(A,t,r);
-	A = r;
+	SET_FLAGS8(A,t16,r16);
+	SET_H(A,t16,r16);
+	A = r16;
 	RET(4);	
 }
 
-/* $aC CMPX (CMPY CMPS) indexed -**** */
-cmpx_ix:
-{
-	UINT32 r,d;
-	PAIR b;
-	fetch_effective_address();
-    b.d=RM16(EAD);
-	d = X;
-	r = d - b.d;
-	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	RET(6);	
-}
-
 /* $10aC CMPY indexed -**** */
-cmpy_ix:
+cmpy_ix:  // pas de gain
 {
-	UINT32 r,d;
-	PAIR b;
 	fetch_effective_address();
     b.d=RM16(EAD);
-	d = Y;
-	r = d - b.d;
+	d32 = Y;
+	r32 = d32 - b.d;
 	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
+	SET_FLAGS16(d32,b.d,r32);
 	RET(7);	
 }
 
 /* $11aC CMPS indexed -**** */
-cmps_ix:
+cmps_ix: // pas de gain
 {
-	UINT32 r,d;
-	PAIR b;
 	fetch_effective_address();
     b.d=RM16(EAD);
-	d = S;
-	r = d - b.d;
+	d32 = S;
+	r32 = d32 - b.d;
 	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
+	SET_FLAGS16(d32,b.d,r32);
 	RET(7);	
 }
 
@@ -2154,18 +2109,6 @@ sty_ix:
 	RET(6);	
 }
 
-/* $b0 SUBA extended ?**** */
-suba_ex:
-{
-	UINT16	  t,r;
-	EXTBYTE(t);
-	r = A - t;
-	CLR_NZVC;
-	SET_FLAGS8(A,t,r);
-	A = r;
-	RET(5);	
-}
-
 /* $b1 CMPA extended ?**** */
 cmpa_ex:
 {
@@ -2177,15 +2120,25 @@ cmpa_ex:
 	RET(5);	
 }
 
-/* $b2 SBCA extended ?**** */
-sbca_ex:
+/* $b0 SUBA extended ?**** */
+suba_ex: // vbt factorisation pas de gain en taille
 {
-	UINT16	  t,r;
-	EXTBYTE(t);
-	r = A - t - (CC & CC_C);
+	EXTBYTE(t16);
+	r16 = A - t16;
 	CLR_NZVC;
-	SET_FLAGS8(A,t,r);
-	A = r;
+	SET_FLAGS8(A,t16,r16);
+	A = r16;
+	RET(5);	
+}
+
+/* $b2 SBCA extended ?**** */
+sbca_ex: // vbt factorisation pas de gain en taille
+{
+	EXTBYTE(t16);
+	r16 = A - t16 - (CC & CC_C);
+	CLR_NZVC;
+	SET_FLAGS8(A,t16,r16);
+	A = r16;
 	RET(5);	
 }
 
@@ -2206,26 +2159,23 @@ subd_ex:
 /* $10b3 CMPD extended -**** */
 cmpd_ex:
 {
-	UINT32 r,d;
-	PAIR b;
 	EXTWORD(b);
-	d = D;
-	r = d - b.d;
-	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	RET(8);	
+	d32 = D;
+	goto vbt_cmpd_ex;
 }
 
 /* $11b3 CMPU extended -**** */
 cmpu_ex:
 {
-	UINT32 r,d;
-	PAIR b;
 	EXTWORD(b);
-	d = U;
-	r = d - b.d;
+	d32 = U;
+}
+
+vbt_cmpd_ex:
+{
+	r32 = d32 - b.d;
 	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
+	SET_FLAGS16(d32,b.d,r32);
 	RET(8);	
 }
 
@@ -2280,19 +2230,6 @@ eora_ex:
 	RET(5);	
 }
 
-/* $b9 ADCA extended ***** */
-adca_ex:
-{
-	UINT16 t,r;
-	EXTBYTE(t);
-	r = A + t + (CC & CC_C);
-	CLR_HNZVC;
-	SET_FLAGS8(A,t,r);
-	SET_H(A,t,r);
-	A = r;
-	RET(5);	
-}
-
 /* $bA ORA extended -**0- */
 ora_ex:
 {
@@ -2304,16 +2241,27 @@ ora_ex:
 	RET(5);	
 }
 
+/* $b9 ADCA extended ***** */
+adca_ex:
+{
+	EXTBYTE(t16);
+	r16 = A + t16 + (CC & CC_C);
+	goto vbt_adca_ex;
+}
+
 /* $bB ADDA extended ***** */
 adda_ex:
 {
-	UINT16 t,r;
-	EXTBYTE(t);
-	r = A + t;
+	EXTBYTE(t16);
+	r16 = A + t16;
+}
+
+vbt_adca_ex:	
+{
 	CLR_HNZVC;
-	SET_FLAGS8(A,t,r);
-	SET_H(A,t,r);
-	A = r;
+	SET_FLAGS8(A,t16,r16);
+	SET_H(A,t16,r16);
+	A = r16;
 	RET(5);	
 }
 
@@ -2333,26 +2281,23 @@ cmpx_ex:
 /* $10bC CMPY extended -**** */
 cmpy_ex:
 {
-	UINT32 r,d;
-	PAIR b;
 	EXTWORD(b);
-	d = Y;
-	r = d - b.d;
-	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
-	RET(8);	
+	d32 = Y;
+	goto vbt_cmpy_ex;
 }
 
 /* $11bC CMPS extended -**** */
 cmps_ex:
 {
-	UINT32 r,d;
-	PAIR b;
 	EXTWORD(b);
-	d = S;
-	r = d - b.d;
+	d32 = S;
+}
+
+vbt_cmpy_ex:
+{
+	r32 = d32 - b.d;
 	CLR_NZVC;
-	SET_FLAGS16(d,b.d,r);
+	SET_FLAGS16(d32,b.d,r32);
 	RET(8);	
 }
 
@@ -2404,18 +2349,6 @@ sty_ex:
 	RET(7);	
 }
 
-/* $c0 SUBB immediate ?**** */
-subb_im:
-{
-	UINT16	  t,r;
-	IMMBYTE(t);
-	r = B - t;
-	CLR_NZVC;
-	SET_FLAGS8(B,t,r);
-	B = r;
-	RET(2);	
-}
-
 /* $c1 CMPB immediate ?**** */
 cmpb_im:
 {
@@ -2426,18 +2359,68 @@ cmpb_im:
 	RET(2);	
 }
 
+/* $c0 SUBB immediate ?**** */
+subb_im:
+{
+	IMMBYTE(t16);
+	r16 = B - t16;
+	goto vbt_subb_im;
+}
+
 /* $c2 SBCB immediate ?**** */
 sbcb_im:
 {
-	UINT16	  t,r;
-	IMMBYTE(t);
-	r = B - t - (CC & CC_C);
-	CLR_NZVC;
-	SET_FLAGS8(B,t,r);
-	B = r;
-	RET(2);	
+	IMMBYTE(t16);
+	r16 = B - t16 - (CC & CC_C);
 }
 
+vbt_subb_im:
+{
+	CLR_NZVC;
+	SET_FLAGS8(B,t16,r16);
+	B = r16;
+	RET(2);	
+}
+/* $d0 SUBB direct ?**** */
+subb_di:
+{
+	DIRBYTE(t16);
+	r16 = B - t16;
+	goto vbt_subb_xx;	
+}
+
+/* $d2 SBCB direct ?**** */
+sbcb_di:
+{
+	DIRBYTE(t16);
+	r16 = B - t16 - (CC & CC_C);
+	goto vbt_subb_xx;	
+}
+
+/* $e0 SUBB indexed ?**** */
+subb_ix:
+{
+	fetch_effective_address();
+	t16 = RM(EAD);
+	r16 = B - t16;
+	goto vbt_subb_xx;
+}
+
+/* $e2 SBCB indexed ?**** */
+sbcb_ix:
+{
+	fetch_effective_address();
+	t16 = RM(EAD);
+	r16 = B - t16 - (CC & CC_C);
+}
+
+vbt_subb_xx:
+{
+	CLR_NZVC;
+	SET_FLAGS8(B,t16,r16);
+	B = r16;
+	RET(4);
+}
 /* $c3 ADDD immediate -**** */
 addd_im:
 {
@@ -2505,19 +2488,6 @@ eorb_im:
 	RET(2);	
 }
 
-/* $c9 ADCB immediate ***** */
-adcb_im:
-{
-	UINT16 t,r;
-	IMMBYTE(t);
-	r = B + t + (CC & CC_C);
-	CLR_HNZVC;
-	SET_FLAGS8(B,t,r);
-	SET_H(B,t,r);
-	B = r;
-	RET(2);	
-}
-
 /* $cA ORB immediate -**0- */
 orb_im:
 {
@@ -2529,16 +2499,27 @@ orb_im:
 	RET(2);	
 }
 
+/* $c9 ADCB immediate ***** */
+adcb_im:
+{
+	IMMBYTE(t16);
+	r16 = B + t16 + (CC & CC_C);
+	goto vbt_adcb_im;
+}
+
 /* $cB ADDB immediate ***** */
 addb_im:
 {
-	UINT16 t,r;
-	IMMBYTE(t);
-	r = B + t;
+	IMMBYTE(t16);
+	r16 = B + t16;
+}
+
+vbt_adcb_im:	
+{
 	CLR_HNZVC;
-	SET_FLAGS8(B,t,r);
-	SET_H(B,t,r);
-	B = r;
+	SET_FLAGS8(B,t16,r16);
+	SET_H(B,t16,r16);
+	B = r16;
 	RET(2);	
 }
 
@@ -2603,38 +2584,13 @@ sts_im:
 	RET(4);	
 }
 
-/* $d0 SUBB direct ?**** */
-subb_di:
-{
-	UINT16	  t,r;
-	DIRBYTE(t);
-	r = B - t;
-	CLR_NZVC;
-	SET_FLAGS8(B,t,r);
-	B = r;
-	RET(4);	
-}
-
 /* $d1 CMPB direct ?**** */
 cmpb_di:
 {
-	UINT16	  t,r;
-	DIRBYTE(t);
-	r = B - t;
+	DIRBYTE(t16);
+	r16 = B - t16;
 	CLR_NZVC;
-	SET_FLAGS8(B,t,r);
-	RET(4);	
-}
-
-/* $d2 SBCB direct ?**** */
-sbcb_di:
-{
-	UINT16	  t,r;
-	DIRBYTE(t);
-	r = B - t - (CC & CC_C);
-	CLR_NZVC;
-	SET_FLAGS8(B,t,r);
-	B = r;
+	SET_FLAGS8(B,t16,r16);
 	RET(4);	
 }
 
@@ -2704,19 +2660,6 @@ eorb_di:
 	RET(4);	
 }
 
-/* $d9 ADCB direct ***** */
-adcb_di:
-{
-	UINT16 t,r;
-	DIRBYTE(t);
-	r = B + t + (CC & CC_C);
-	CLR_HNZVC;
-	SET_FLAGS8(B,t,r);
-	SET_H(B,t,r);
-	B = r;
-	RET(4);	
-}
-
 /* $dA ORB direct -**0- */
 orb_di:
 {
@@ -2728,16 +2671,45 @@ orb_di:
 	RET(4);	
 }
 
+/* $d9 ADCB direct ***** */
+adcb_di:
+{
+	DIRBYTE(t16);
+	r16 = B + t16 + (CC & CC_C);
+	goto vbt_adcb_xx;
+}
+
 /* $dB ADDB direct ***** */
 addb_di:
 {
-	UINT16 t,r;
-	DIRBYTE(t);
-	r = B + t;
+	DIRBYTE(t16);
+	r16 = B + t16;
+	goto vbt_adcb_xx;
+}
+
+/* $e9 ADCB indexed ***** */
+adcb_ix:
+{
+	fetch_effective_address();
+	t16 = RM(EAD);
+	r16 = B + t16 + (CC & CC_C);
+	goto vbt_adcb_xx;
+}
+
+/* $eB ADDB indexed ***** */
+addb_ix:
+{
+	fetch_effective_address();
+	t16 = RM(EAD);
+	r16 = B + t16;
+}
+
+vbt_adcb_xx:	
+{
 	CLR_HNZVC;
-	SET_FLAGS8(B,t,r);
-	SET_H(B,t,r);
-	B = r;
+	SET_FLAGS8(B,t16,r16);
+	SET_H(B,t16,r16);
+	B = r16;
 	RET(4);	
 }
 
@@ -2799,19 +2771,6 @@ sts_di:
 	RET(6);	
 }
 
-/* $e0 SUBB indexed ?**** */
-subb_ix:
-{
-	UINT16	  t,r;
-	fetch_effective_address();
-	t = RM(EAD);
-	r = B - t;
-	CLR_NZVC;
-	SET_FLAGS8(B,t,r);
-	B = r;
-	RET(4);	
-}
-
 /* $e1 CMPB indexed ?**** */
 cmpb_ix:
 {
@@ -2821,19 +2780,6 @@ cmpb_ix:
 	r = B - t;
 	CLR_NZVC;
 	SET_FLAGS8(B,t,r);
-	RET(4);	
-}
-
-/* $e2 SBCB indexed ?**** */
-sbcb_ix:
-{
-	UINT16	  t,r;
-	fetch_effective_address();
-	t = RM(EAD);
-	r = B - t - (CC & CC_C);
-	CLR_NZVC;
-	SET_FLAGS8(B,t,r);
-	B = r;
 	RET(4);	
 }
 
@@ -2903,20 +2849,6 @@ eorb_ix:
 	RET(4);	
 }
 
-/* $e9 ADCB indexed ***** */
-adcb_ix:
-{
-	UINT16 t,r;
-	fetch_effective_address();
-	t = RM(EAD);
-	r = B + t + (CC & CC_C);
-	CLR_HNZVC;
-	SET_FLAGS8(B,t,r);
-	SET_H(B,t,r);
-	B = r;
-	RET(4);	
-}
-
 /* $eA ORB indexed -**0- */
 orb_ix:
 {
@@ -2924,20 +2856,6 @@ orb_ix:
 	B |= RM(EAD);
 	CLR_NZV;
 	SET_NZ8(B);
-	RET(4);	
-}
-
-/* $eB ADDB indexed ***** */
-addb_ix:
-{
-	UINT16 t,r;
-	fetch_effective_address();
-	t = RM(EAD);
-	r = B + t;
-	CLR_HNZVC;
-	SET_FLAGS8(B,t,r);
-	SET_H(B,t,r);
-	B = r;
 	RET(4);	
 }
 
@@ -3004,15 +2922,25 @@ sts_ix:
 /* $f0 SUBB extended ?**** */
 subb_ex:
 {
-	UINT16	  t,r;
-	EXTBYTE(t);
-	r = B - t;
-	CLR_NZVC;
-	SET_FLAGS8(B,t,r);
-	B = r;
-	RET(5);	
+	EXTBYTE(t16);
+	r16 = B - t16;
+	goto vbt_subb_ex;
 }
 
+/* $f2 SBCB extended ?**** */
+sbcb_ex:
+{
+	EXTBYTE(t16);
+	r16 = B - t16 - (CC & CC_C);
+}
+
+vbt_subb_ex:
+{
+	CLR_NZVC;
+	SET_FLAGS8(B,t16,r16);
+	B = r16;
+	RET(5);
+}
 /* $f1 CMPB extended ?**** */
 cmpb_ex:
 {
@@ -3021,18 +2949,6 @@ cmpb_ex:
 	r = B - t;
 	CLR_NZVC;
 	SET_FLAGS8(B,t,r);
-	RET(5);	
-}
-
-/* $f2 SBCB extended ?**** */
-sbcb_ex:
-{
-	UINT16	  t,r;
-	EXTBYTE(t);
-	r = B - t - (CC & CC_C);
-	CLR_NZVC;
-	SET_FLAGS8(B,t,r);
-	B = r;
 	RET(5);	
 }
 
@@ -3072,15 +2988,6 @@ bitb_ex:
 	RET(5);	
 }
 
-/* $f6 LDB extended -**0- */
-ldb_ex:
-{
-	EXTBYTE(B);
-	CLR_NZV;
-	SET_NZ8(B);
-	RET(5);	
-}
-
 /* $f7 STB extended -**0- */
 stb_ex:
 {
@@ -3091,27 +2998,25 @@ stb_ex:
 	RET(5);	
 }
 
+/* $f6 LDB extended -**0- */
+ldb_ex:
+{
+	EXTBYTE(B);
+	goto vbt_ldb_ex;
+}
+
 /* $f8 EORB extended -**0- */
 eorb_ex:
 {
 	UINT8 t;
 	EXTBYTE(t);
 	B ^= t;
+}	
+
+vbt_ldb_ex:	
+{
 	CLR_NZV;
 	SET_NZ8(B);
-	RET(5);	
-}
-
-/* $f9 ADCB extended ***** */
-adcb_ex:
-{
-	UINT16 t,r;
-	EXTBYTE(t);
-	r = B + t + (CC & CC_C);
-	CLR_HNZVC;
-	SET_FLAGS8(B,t,r);
-	SET_H(B,t,r);
-	B = r;
 	RET(5);	
 }
 
@@ -3126,19 +3031,29 @@ orb_ex:
 	RET(5);	
 }
 
+/* $f9 ADCB extended ***** */
+adcb_ex:
+{
+	EXTBYTE(t16);
+	r16 = B + t16 + (CC & CC_C);
+	goto vbt_adcb_ex;
+}
+
 /* $fB ADDB extended ***** */
 addb_ex:
 {
-	UINT16 t,r;
-	EXTBYTE(t);
-	r = B + t;
-	CLR_HNZVC;
-	SET_FLAGS8(B,t,r);
-	SET_H(B,t,r);
-	B = r;
-	RET(5);	
+	EXTBYTE(t16);
+	r16 = B + t16;
 }
 
+vbt_adcb_ex:
+{
+	CLR_HNZVC;
+	SET_FLAGS8(B,t16,r16);
+	SET_H(B,t16,r16);
+	B = r16;
+	RET(5);
+}
 /* $fC LDD extended -**0- */
 ldd_ex:
 {
@@ -3201,8 +3116,6 @@ sts_ex:
 pref10:
 {
 	UINT8 ireg2 = ROP(PCD);
-	UINT32 r,d;
-	PAIR b;
 	PC++;
 	DISPATCH10();
 }
@@ -3211,8 +3124,6 @@ pref10:
 pref11:
 {
 	UINT8 ireg2 = ROP(PCD);
-	UINT32 r, d;
-	PAIR b;
 	PC++;
 	DISPATCH11();
 }
