@@ -75,6 +75,10 @@
 /* 6809 registers */
 m6809_Regs m6809;
 
+#define VERSION_BIG_GOTO 1
+//#define VERSION_AVG_GOTO 1
+//#define VERSION_SMALL_GOTO 1
+
 /* Enable big switch statement for the main opcodes */
 //#ifndef BIG_SWITCH
 //#define BIG_SWITCH  1
@@ -85,6 +89,7 @@ m6809_Regs m6809;
 //#define LOG(x)	do { if (VERBOSE) logerror x; } while (0)
 
 //extern offs_t m6809_dasm(char *buffer, offs_t pc, const UINT8 *oprom, const UINT8 *opram);
+
 
 #define M6809_INLINE		static	 inline
 #define change_pc(newpc)	m6809.pc.w.l = (newpc)
@@ -98,6 +103,7 @@ m6809_Regs m6809;
 #define DISPATCH10() goto *m6809_pref10[ireg2]
 #define DISPATCH11() goto *m6809_pref11[ireg2]
 #define DISPATCH_FETCH() goto *m6809_fetch[postbyte]
+#define DISPATCH_FETCH2() goto *m6809_fetch[postbyte&0x1f]
 
 M6809_INLINE void fetch_effective_address( void );
 
@@ -148,6 +154,7 @@ static PAIR ea;         /* effective address */
 #define M6809_CWAI		8	/* set when CWAI is waiting for an interrupt */
 #define M6809_SYNC		16	/* set when SYNC is waiting for an interrupt */
 #define M6809_LDS		32	/* set when LDS occured at least once */
+
 
 #define CHECK_IRQ_LINES 												\
 	if( m6809.irq_state[M6809_IRQ_LINE] != M6809_CLEAR_LINE ||				\
@@ -415,6 +422,23 @@ static unsigned char cycles2[] =
 
 #endif
 #endif
+static const UINT8 flagsNZ[256] = {
+      4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 00-0F */
+      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 10-1F */
+      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 20-2F */
+      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 30-3F */
+      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 40-4F */
+      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 50-5F */
+      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 60-6F */
+      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 70-7F */
+      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* 80-8F */
+      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* 90-9F */
+      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* A0-AF */
+      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* B0-BF */
+      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* C0-CF */
+      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* D0-DF */
+      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* E0-EF */
+	  8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8};		    /* F0-FF */
 
  M6809_INLINE void SET_N8(UINT32 a)	
 {
@@ -601,7 +625,6 @@ void m6809_set_irq_line(int irqline, int state)
 
 
 
-
 /* execute instructions on this CPU until icount expires */
 int m6809_execute(int cycles)	/* NS 970908 */
 {
@@ -721,6 +744,14 @@ m6809_Exec:
 		pPPC = pPC;
 		m6809.ireg = ROP(PCD);
 		PC++;
+
+//---------------
+// vbt : test utilisation des opcodes		
+/*		unsigned int *	DrvTempRom = (unsigned int *)0x00200000;		
+		DrvTempRom[m6809.ireg]++;
+		if(DrvTempRom[m6809.ireg]==0x000fffff)
+			while(1);
+	*/	
 		DISPATCH_MAIN();
 
 /* includes the static function prototypes and the master opcode table */
@@ -734,6 +765,152 @@ m6809_Exec_End:
     return cycles - m6809.m6809_ICount;   /* NS 970908 */
 }
 
+#if VERSION_AVG_GOTO
+M6809_INLINE void fetch_effective_address( void )
+{
+    UINT16 *xchg = NULL;
+	UINT8 postbyte = ROP_ARG(PCD);
+	UINT32 T = 0;
+	PC++;
+
+	switch (postbyte & 0x60) 
+	{
+        case 0:
+            xchg = &X; break;
+        case 0x20:
+            xchg = &Y; break;
+        case 0x40:
+            xchg = &U; break;
+        case 0x60:
+            xchg = &S; break;
+    }
+
+    if (postbyte & 0x80) /* Complex stuff */
+    {
+		static void (*const m6809_fetch[0x20])(void) = {
+		&&l00,&&l01,&&l02,&&l03,&&l04,&&l05,&&l06,&&illeg,&&l08,&&l09,&&illeg,&&l0b,&&l0c,&&l0d,&&illeg,&&l0f,
+		&&l10,&&l11,&&l12,&&l13,&&l14,&&l15,&&l16,&&illeg,&&l18,&&l19,&&illeg,&&l1b,&&l1c,&&l1d,&&illeg,&&l1f};
+		
+		DISPATCH_FETCH2();
+		   
+l00: /* EA = ,reg+ */			EA = *xchg;				(*xchg)++;		USE_CYCLES(2);		goto end_fetch;
+l01: /* EA = ,reg++ */			EA = *xchg;	*xchg = (*xchg+2);			USE_CYCLES(3);		goto end_fetch;
+l02: /* EA = ,-reg */			(*xchg)--;				EA = *xchg;		USE_CYCLES(2);		goto end_fetch;
+l03: /* EA = ,--reg */			*xchg = (*xchg-2);		EA = *xchg;		USE_CYCLES(3);		goto end_fetch;
+l04: /* EA = ,reg */					EA = *xchg;											goto end_fetch;
+l05: /* EA = ,reg + B */				EA = *xchg + SIGNED(B);			USE_CYCLES(1);		goto end_fetch;
+l06: /* EA = ,reg + A */				EA = *xchg + SIGNED(A);			USE_CYCLES(1);		goto end_fetch;
+l08: /* EA = ,reg + 8-bit offset */
+/*EA=preg + SIGNED(fetch());*/ IMMBYTE(EA); EA = *xchg + SIGNED(EA);	USE_CYCLES(1);		goto end_fetch;
+l09: /* EA = ,reg + 16-bit offset */
+/*EA=preg+signed16(fetch16());*/ IMMWORD(ea); EA+=(*xchg);				USE_CYCLES(4);		goto end_fetch;
+l0b: /* EA = ,reg + D */
+/*      EA = preg + getD();*/			EA=X+D;							USE_CYCLES(4);		goto end_fetch;
+l0c: /* EA = PC + 8-bit offset */IMMBYTE(EA); 	EA=PC+SIGNED(EA);		USE_CYCLES(1);		goto end_fetch;
+l0d: /* EA = PC + 16-bit offset */	IMMWORD(ea); 	EA+=PC;				USE_CYCLES(5);		goto end_fetch;
+l0f: /* EA = [,address] */
+/*        EA = fetch16(); */		IMMWORD(ea);						USE_CYCLES(5);		goto end_fetch;
+
+l10: EA = *xchg;		(*xchg)++;			EAD=RM16(EAD);				USE_CYCLES(5);		goto end_fetch;
+l11: EA = *xchg;		*xchg = (*xchg+2);	EAD=RM16(EAD);				USE_CYCLES(6);		goto end_fetch;
+l12: (*xchg)--;		EA = *xchg;				EAD=RM16(EAD);				USE_CYCLES(5);		goto end_fetch;
+l13: *xchg = (*xchg-2);	EA = *xchg;			EAD=RM16(EAD);				USE_CYCLES(6);		goto end_fetch;
+l14: EA = *xchg;							EAD=RM16(EAD);									goto end_fetch;
+l15: EA = *xchg + SIGNED(B);				EAD=RM16(EAD);				USE_CYCLES(4);		goto end_fetch;
+l16: EA = *xchg + SIGNED(A);				EAD=RM16(EAD);				USE_CYCLES(4);		goto end_fetch;
+l18: IMMBYTE(EA); EA = *xchg + SIGNED(EA);	EAD=RM16(EAD);				USE_CYCLES(4);		goto end_fetch;
+l19: IMMWORD(ea); EA+=(*xchg);				EAD=RM16(EAD);				USE_CYCLES(7);		goto end_fetch;
+l1b: EA=X+D;								EAD=RM16(EAD);				USE_CYCLES(7);		goto end_fetch;
+l1c: IMMBYTE(EA); 	EA=PC+SIGNED(EA);		EAD=RM16(EAD);				USE_CYCLES(4);		goto end_fetch;
+l1d: IMMWORD(ea); 	EA+=PC;					EAD=RM16(EAD);				USE_CYCLES(8);		goto end_fetch;
+l1f: IMMWORD(ea);							EAD=RM16(EAD);				USE_CYCLES(8);		goto end_fetch;
+illeg: /* illegal */EA = 0;																	goto end_fetch;
+
+end_fetch:
+		EA &= 0xffff;
+    }
+    else /* Just a 5 bit signed offset + register */
+    {
+	   INT8 sByte = postbyte & 0x1f;
+	   if (sByte > 15) /* Two's complement 5-bit value */
+		  sByte -= 32;
+	   EA = *xchg + sByte;
+	   USE_CYCLES(1);
+    }
+	
+	USE_CYCLES(T);
+ //   return addr & 0xffff; /* Return the effective address */
+}
+#endif
+
+#if VERSION_SMALL_GOTO
+M6809_INLINE void fetch_effective_address( void )
+{
+	UINT8 postbyte = ROP_ARG(PCD);
+	UINT32 T = 0;
+	PC++;
+
+    UINT16 *xchg = NULL;	
+ 
+		switch (postbyte & 0x60) {
+        case 0:
+            xchg = &X; break;
+        case 0x20:
+            xchg = &Y; break;
+        case 0x40:
+            xchg = &U; break;
+        case 0x60:
+            xchg = &S; break;
+    }
+
+    if (postbyte & 0x80) /* Complex stuff */
+    {
+		static void (*const m6809_fetch[0x10])(void) = {
+		&&l00,	&&l01,	&&l02,	&&l03,	&&l04,	&&l05,	&&l06,	&&illeg,	&&l08,	&&l09,	&&illeg,	&&l0b,	&&l0c,	&&l0d,	&&illeg,	&&l0f
+		};
+		
+		DISPATCH_FETCH2();
+		   
+l00: /* EA = ,reg+ */		EA = *xchg;		(*xchg)++;								T=2;	goto end_fetch;
+l01: /* EA = ,reg++ */		EA = *xchg;		(*xchg) += 2;							T=3;	goto end_fetch;
+l02: /* EA = ,-reg */		(*xchg)--;		EA = *xchg;								T=2;	goto end_fetch;
+l03: /* EA = ,--reg */		(*xchg) -= 2;	EA = *xchg;								T=3;	goto end_fetch;
+l04: /* EA = ,reg */		EA = *xchg;														goto end_fetch;
+l05: /* EA = ,reg + B */	EA = *xchg + SIGNED(B);									T=1;	goto end_fetch;
+l06: /* EA = ,reg + A */	EA = *xchg + SIGNED(A);									T=1;	goto end_fetch;
+l08: /* EA = ,reg + 8-bit offset */		IMMBYTE(EA);	EA = *xchg + SIGNED(EA);	T=1;	goto end_fetch;
+l09: /* EA = ,reg + 16-bit offset */	IMMWORD(ea);	EA+=(*xchg);				T=4;	goto end_fetch;
+l0b: /* EA = ,reg + D */		EA=X+D;												T=4;	goto end_fetch;
+l0c: /* EA = PC + 8-bit offset */		IMMBYTE(EA);	EA=PC+SIGNED(EA);			T=1;	goto end_fetch;
+l0d: /* EA = PC + 16-bit offset */		IMMWORD(ea);	EA+=PC;						T=5;	goto end_fetch;
+l0f: /* EA = [,address] */				IMMWORD(ea);								T=5;	goto end_fetch;
+illeg: /* illegal */		EA = 0;															goto end_fetch;
+
+end_fetch:
+		EA &= 0xffff;
+
+		if (postbyte & 0x10) /* Indirect addressing */
+		{
+//          EA = byteAt(EA)*256+byteAt((EA+1) & 0xffff);
+			EAD=RM16(EAD);
+			T+=3;
+		}
+    }
+    else /* Just a 5 bit signed offset + register */
+    {
+	   INT8 sByte = postbyte & 0x1f;
+	   if (sByte > 15) /* Two's complement 5-bit value */
+		  sByte -= 32;
+	   EA = *xchg + sByte;
+	   T=1;
+    }
+	
+	USE_CYCLES(T);
+ //   return addr & 0xffff; /* Return the effective address */
+}
+#endif
+
+#if VERSION_BIG_GOTO
 M6809_INLINE void fetch_effective_address( void )
 {
 static void (*const m6809_fetch[0x100])(void) = {
@@ -748,6 +925,7 @@ static void (*const m6809_fetch[0x100])(void) = {
 };	
 	UINT8 postbyte = ROP_ARG(PCD);
 	PC++;
+
 	DISPATCH_FETCH();
 
 l00: EA=X+postbyte;										USE_CYCLES(1);   goto end_fetch;
@@ -848,4 +1026,287 @@ lfb: EA=S+D;							EAD=RM16(EAD);	USE_CYCLES(7);   goto end_fetch;
 end_fetch:
 ;	
 }
+#endif  
 
+#if VERSION_ORI
+M6809_INLINE void fetch_effective_address( void )
+{
+	UINT8 postbyte = ROP_ARG(PCD);
+	PC++;
+
+	switch(postbyte)
+	{
+	case 0x00: EA=X;												USE_CYCLES(1);   break;
+	case 0x01: EA=X+1;												USE_CYCLES(1);   break;
+	case 0x02: EA=X+2;												USE_CYCLES(1);   break;
+	case 0x03: EA=X+3;												USE_CYCLES(1);   break;
+	case 0x04: EA=X+4;												USE_CYCLES(1);   break;
+	case 0x05: EA=X+5;												USE_CYCLES(1);   break;
+	case 0x06: EA=X+6;												USE_CYCLES(1);   break;
+	case 0x07: EA=X+7;												USE_CYCLES(1);   break;
+	case 0x08: EA=X+8;												USE_CYCLES(1);   break;
+	case 0x09: EA=X+9;												USE_CYCLES(1);   break;
+	case 0x0a: EA=X+10; 											USE_CYCLES(1);   break;
+	case 0x0b: EA=X+11; 											USE_CYCLES(1);   break;
+	case 0x0c: EA=X+12; 											USE_CYCLES(1);   break;
+	case 0x0d: EA=X+13; 											USE_CYCLES(1);   break;
+	case 0x0e: EA=X+14; 											USE_CYCLES(1);   break;
+	case 0x0f: EA=X+15; 											USE_CYCLES(1);   break;
+
+	case 0x10: EA=X-16; 											USE_CYCLES(1);   break;
+	case 0x11: EA=X-15; 											USE_CYCLES(1);   break;
+	case 0x12: EA=X-14; 											USE_CYCLES(1);   break;
+	case 0x13: EA=X-13; 											USE_CYCLES(1);   break;
+	case 0x14: EA=X-12; 											USE_CYCLES(1);   break;
+	case 0x15: EA=X-11; 											USE_CYCLES(1);   break;
+	case 0x16: EA=X-10; 											USE_CYCLES(1);   break;
+	case 0x17: EA=X-9;												USE_CYCLES(1);   break;
+	case 0x18: EA=X-8;												USE_CYCLES(1);   break;
+	case 0x19: EA=X-7;												USE_CYCLES(1);   break;
+	case 0x1a: EA=X-6;												USE_CYCLES(1);   break;
+	case 0x1b: EA=X-5;												USE_CYCLES(1);   break;
+	case 0x1c: EA=X-4;												USE_CYCLES(1);   break;
+	case 0x1d: EA=X-3;												USE_CYCLES(1);   break;
+	case 0x1e: EA=X-2;												USE_CYCLES(1);   break;
+	case 0x1f: EA=X-1;												USE_CYCLES(1);   break;
+
+	case 0x20: EA=Y;												USE_CYCLES(1);   break;
+	case 0x21: EA=Y+1;												USE_CYCLES(1);   break;
+	case 0x22: EA=Y+2;												USE_CYCLES(1);   break;
+	case 0x23: EA=Y+3;												USE_CYCLES(1);   break;
+	case 0x24: EA=Y+4;												USE_CYCLES(1);   break;
+	case 0x25: EA=Y+5;												USE_CYCLES(1);   break;
+	case 0x26: EA=Y+6;												USE_CYCLES(1);   break;
+	case 0x27: EA=Y+7;												USE_CYCLES(1);   break;
+	case 0x28: EA=Y+8;												USE_CYCLES(1);   break;
+	case 0x29: EA=Y+9;												USE_CYCLES(1);   break;
+	case 0x2a: EA=Y+10; 											USE_CYCLES(1);   break;
+	case 0x2b: EA=Y+11; 											USE_CYCLES(1);   break;
+	case 0x2c: EA=Y+12; 											USE_CYCLES(1);   break;
+	case 0x2d: EA=Y+13; 											USE_CYCLES(1);   break;
+	case 0x2e: EA=Y+14; 											USE_CYCLES(1);   break;
+	case 0x2f: EA=Y+15; 											USE_CYCLES(1);   break;
+
+	case 0x30: EA=Y-16; 											USE_CYCLES(1);   break;
+	case 0x31: EA=Y-15; 											USE_CYCLES(1);   break;
+	case 0x32: EA=Y-14; 											USE_CYCLES(1);   break;
+	case 0x33: EA=Y-13; 											USE_CYCLES(1);   break;
+	case 0x34: EA=Y-12; 											USE_CYCLES(1);   break;
+	case 0x35: EA=Y-11; 											USE_CYCLES(1);   break;
+	case 0x36: EA=Y-10; 											USE_CYCLES(1);   break;
+	case 0x37: EA=Y-9;												USE_CYCLES(1);   break;
+	case 0x38: EA=Y-8;												USE_CYCLES(1);   break;
+	case 0x39: EA=Y-7;												USE_CYCLES(1);   break;
+	case 0x3a: EA=Y-6;												USE_CYCLES(1);   break;
+	case 0x3b: EA=Y-5;												USE_CYCLES(1);   break;
+	case 0x3c: EA=Y-4;												USE_CYCLES(1);   break;
+	case 0x3d: EA=Y-3;												USE_CYCLES(1);   break;
+	case 0x3e: EA=Y-2;												USE_CYCLES(1);   break;
+	case 0x3f: EA=Y-1;												USE_CYCLES(1);   break;
+
+	case 0x40: EA=U;												USE_CYCLES(1);   break;
+	case 0x41: EA=U+1;												USE_CYCLES(1);   break;
+	case 0x42: EA=U+2;												USE_CYCLES(1);   break;
+	case 0x43: EA=U+3;												USE_CYCLES(1);   break;
+	case 0x44: EA=U+4;												USE_CYCLES(1);   break;
+	case 0x45: EA=U+5;												USE_CYCLES(1);   break;
+	case 0x46: EA=U+6;												USE_CYCLES(1);   break;
+	case 0x47: EA=U+7;												USE_CYCLES(1);   break;
+	case 0x48: EA=U+8;												USE_CYCLES(1);   break;
+	case 0x49: EA=U+9;												USE_CYCLES(1);   break;
+	case 0x4a: EA=U+10; 											USE_CYCLES(1);   break;
+	case 0x4b: EA=U+11; 											USE_CYCLES(1);   break;
+	case 0x4c: EA=U+12; 											USE_CYCLES(1);   break;
+	case 0x4d: EA=U+13; 											USE_CYCLES(1);   break;
+	case 0x4e: EA=U+14; 											USE_CYCLES(1);   break;
+	case 0x4f: EA=U+15; 											USE_CYCLES(1);   break;
+
+	case 0x50: EA=U-16; 											USE_CYCLES(1);   break;
+	case 0x51: EA=U-15; 											USE_CYCLES(1);   break;
+	case 0x52: EA=U-14; 											USE_CYCLES(1);   break;
+	case 0x53: EA=U-13; 											USE_CYCLES(1);   break;
+	case 0x54: EA=U-12; 											USE_CYCLES(1);   break;
+	case 0x55: EA=U-11; 											USE_CYCLES(1);   break;
+	case 0x56: EA=U-10; 											USE_CYCLES(1);   break;
+	case 0x57: EA=U-9;												USE_CYCLES(1);   break;
+	case 0x58: EA=U-8;												USE_CYCLES(1);   break;
+	case 0x59: EA=U-7;												USE_CYCLES(1);   break;
+	case 0x5a: EA=U-6;												USE_CYCLES(1);   break;
+	case 0x5b: EA=U-5;												USE_CYCLES(1);   break;
+	case 0x5c: EA=U-4;												USE_CYCLES(1);   break;
+	case 0x5d: EA=U-3;												USE_CYCLES(1);   break;
+	case 0x5e: EA=U-2;												USE_CYCLES(1);   break;
+	case 0x5f: EA=U-1;												USE_CYCLES(1);   break;
+
+	case 0x60: EA=S;												USE_CYCLES(1);   break;
+	case 0x61: EA=S+1;												USE_CYCLES(1);   break;
+	case 0x62: EA=S+2;												USE_CYCLES(1);   break;
+	case 0x63: EA=S+3;												USE_CYCLES(1);   break;
+	case 0x64: EA=S+4;												USE_CYCLES(1);   break;
+	case 0x65: EA=S+5;												USE_CYCLES(1);   break;
+	case 0x66: EA=S+6;												USE_CYCLES(1);   break;
+	case 0x67: EA=S+7;												USE_CYCLES(1);   break;
+	case 0x68: EA=S+8;												USE_CYCLES(1);   break;
+	case 0x69: EA=S+9;												USE_CYCLES(1);   break;
+	case 0x6a: EA=S+10; 											USE_CYCLES(1);   break;
+	case 0x6b: EA=S+11; 											USE_CYCLES(1);   break;
+	case 0x6c: EA=S+12; 											USE_CYCLES(1);   break;
+	case 0x6d: EA=S+13; 											USE_CYCLES(1);   break;
+	case 0x6e: EA=S+14; 											USE_CYCLES(1);   break;
+	case 0x6f: EA=S+15; 											USE_CYCLES(1);   break;
+
+	case 0x70: EA=S-16; 											USE_CYCLES(1);   break;
+	case 0x71: EA=S-15; 											USE_CYCLES(1);   break;
+	case 0x72: EA=S-14; 											USE_CYCLES(1);   break;
+	case 0x73: EA=S-13; 											USE_CYCLES(1);   break;
+	case 0x74: EA=S-12; 											USE_CYCLES(1);   break;
+	case 0x75: EA=S-11; 											USE_CYCLES(1);   break;
+	case 0x76: EA=S-10; 											USE_CYCLES(1);   break;
+	case 0x77: EA=S-9;												USE_CYCLES(1);   break;
+	case 0x78: EA=S-8;												USE_CYCLES(1);   break;
+	case 0x79: EA=S-7;												USE_CYCLES(1);   break;
+	case 0x7a: EA=S-6;												USE_CYCLES(1);   break;
+	case 0x7b: EA=S-5;												USE_CYCLES(1);   break;
+	case 0x7c: EA=S-4;												USE_CYCLES(1);   break;
+	case 0x7d: EA=S-3;												USE_CYCLES(1);   break;
+	case 0x7e: EA=S-2;												USE_CYCLES(1);   break;
+	case 0x7f: EA=S-1;												USE_CYCLES(1);   break;
+
+	case 0x80: EA=X;	X++;										USE_CYCLES(2);   break;
+	case 0x81: EA=X;	X+=2;										USE_CYCLES(3);   break;
+	case 0x82: X--; 	EA=X;										USE_CYCLES(2);   break;
+	case 0x83: X-=2;	EA=X;										USE_CYCLES(3);   break;
+	case 0x84: EA=X;																 break;
+	case 0x85: EA=X+SIGNED(B);										USE_CYCLES(1);   break;
+	case 0x86: EA=X+SIGNED(A);										USE_CYCLES(1);   break;
+	case 0x87: EA=0;																 break; /*   ILLEGAL*/
+	case 0x88: IMMBYTE(EA); 	EA=X+SIGNED(EA);					USE_CYCLES(1);   break; /* this is a hack to make Vectrex work. It should be USE_CYCLES(1). Dunno where the cycle was lost :( */
+	case 0x89: IMMWORD(ea); 	EA+=X;								USE_CYCLES(4);   break;
+	case 0x8a: EA=0;																 break; /*   ILLEGAL*/
+	case 0x8b: EA=X+D;												USE_CYCLES(4);   break;
+	case 0x8c: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0x8d: IMMWORD(ea); 	EA+=PC; 							USE_CYCLES(5);   break;
+	case 0x8e: EA=0;																 break; /*   ILLEGAL*/
+	case 0x8f: IMMWORD(ea); 										USE_CYCLES(5);   break;
+
+	case 0x90: EA=X;	X++;						EAD=RM16(EAD);	USE_CYCLES(5);   break; /* Indirect ,R+ not in my specs */
+	case 0x91: EA=X;	X+=2;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0x92: X--; 	EA=X;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0x93: X-=2;	EA=X;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0x94: EA=X;								EAD=RM16(EAD);	USE_CYCLES(3);   break;
+	case 0x95: EA=X+SIGNED(B);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0x96: EA=X+SIGNED(A);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0x97: EA=0;																 break; /*   ILLEGAL*/
+	case 0x98: IMMBYTE(EA); 	EA=X+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0x99: IMMWORD(ea); 	EA+=X;				EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0x9a: EA=0;																 break; /*   ILLEGAL*/
+	case 0x9b: EA=X+D;								EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0x9c: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0x9d: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	USE_CYCLES(8);   break;
+	case 0x9e: EA=0;																 break; /*   ILLEGAL*/
+	case 0x9f: IMMWORD(ea); 						EAD=RM16(EAD);	USE_CYCLES(8);   break;
+
+	case 0xa0: EA=Y;	Y++;										USE_CYCLES(2);   break;
+	case 0xa1: EA=Y;	Y+=2;										USE_CYCLES(3);   break;
+	case 0xa2: Y--; 	EA=Y;										USE_CYCLES(2);   break;
+	case 0xa3: Y-=2;	EA=Y;										USE_CYCLES(3);   break;
+	case 0xa4: EA=Y;																 break;
+	case 0xa5: EA=Y+SIGNED(B);										USE_CYCLES(1);   break;
+	case 0xa6: EA=Y+SIGNED(A);										USE_CYCLES(1);   break;
+	case 0xa7: EA=0;																 break; /*   ILLEGAL*/
+	case 0xa8: IMMBYTE(EA); 	EA=Y+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xa9: IMMWORD(ea); 	EA+=Y;								USE_CYCLES(4);   break;
+	case 0xaa: EA=0;																 break; /*   ILLEGAL*/
+	case 0xab: EA=Y+D;												USE_CYCLES(4);   break;
+	case 0xac: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xad: IMMWORD(ea); 	EA+=PC; 							USE_CYCLES(5);   break;
+	case 0xae: EA=0;																 break; /*   ILLEGAL*/
+	case 0xaf: IMMWORD(ea); 										USE_CYCLES(5);   break;
+
+	case 0xb0: EA=Y;	Y++;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xb1: EA=Y;	Y+=2;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xb2: Y--; 	EA=Y;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xb3: Y-=2;	EA=Y;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xb4: EA=Y;								EAD=RM16(EAD);	USE_CYCLES(3);   break;
+	case 0xb5: EA=Y+SIGNED(B);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xb6: EA=Y+SIGNED(A);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xb7: EA=0;																 break; /*   ILLEGAL*/
+	case 0xb8: IMMBYTE(EA); 	EA=Y+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xb9: IMMWORD(ea); 	EA+=Y;				EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xba: EA=0;																 break; /*   ILLEGAL*/
+	case 0xbb: EA=Y+D;								EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xbc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xbd: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	USE_CYCLES(8);   break;
+	case 0xbe: EA=0;																 break; /*   ILLEGAL*/
+	case 0xbf: IMMWORD(ea); 						EAD=RM16(EAD);	USE_CYCLES(8);   break;
+
+	case 0xc0: EA=U;			U++;								USE_CYCLES(2);   break;
+	case 0xc1: EA=U;			U+=2;								USE_CYCLES(3);   break;
+	case 0xc2: U--; 			EA=U;								USE_CYCLES(2);   break;
+	case 0xc3: U-=2;			EA=U;								USE_CYCLES(3);   break;
+	case 0xc4: EA=U;																 break;
+	case 0xc5: EA=U+SIGNED(B);										USE_CYCLES(1);   break;
+	case 0xc6: EA=U+SIGNED(A);										USE_CYCLES(1);   break;
+	case 0xc7: EA=0;																 break; /*ILLEGAL*/
+	case 0xc8: IMMBYTE(EA); 	EA=U+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xc9: IMMWORD(ea); 	EA+=U;								USE_CYCLES(4);   break;
+	case 0xca: EA=0;																 break; /*ILLEGAL*/
+	case 0xcb: EA=U+D;												USE_CYCLES(4);   break;
+	case 0xcc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xcd: IMMWORD(ea); 	EA+=PC; 							USE_CYCLES(5);   break;
+	case 0xce: EA=0;																 break; /*ILLEGAL*/
+	case 0xcf: IMMWORD(ea); 										USE_CYCLES(5);   break;
+
+	case 0xd0: EA=U;	U++;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xd1: EA=U;	U+=2;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xd2: U--; 	EA=U;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xd3: U-=2;	EA=U;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xd4: EA=U;								EAD=RM16(EAD);	USE_CYCLES(3);   break;
+	case 0xd5: EA=U+SIGNED(B);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xd6: EA=U+SIGNED(A);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xd7: EA=0;																 break; /*ILLEGAL*/
+	case 0xd8: IMMBYTE(EA); 	EA=U+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xd9: IMMWORD(ea); 	EA+=U;				EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xda: EA=0;																 break; /*ILLEGAL*/
+	case 0xdb: EA=U+D;								EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xdc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xdd: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	USE_CYCLES(8);   break;
+	case 0xde: EA=0;																 break; /*ILLEGAL*/
+	case 0xdf: IMMWORD(ea); 						EAD=RM16(EAD);	USE_CYCLES(8);   break;
+
+	case 0xe0: EA=S;	S++;										USE_CYCLES(2);   break;
+	case 0xe1: EA=S;	S+=2;										USE_CYCLES(3);   break;
+	case 0xe2: S--; 	EA=S;										USE_CYCLES(2);   break;
+	case 0xe3: S-=2;	EA=S;										USE_CYCLES(3);   break;
+	case 0xe4: EA=S;																 break;
+	case 0xe5: EA=S+SIGNED(B);										USE_CYCLES(1);   break;
+	case 0xe6: EA=S+SIGNED(A);										USE_CYCLES(1);   break;
+	case 0xe7: EA=0;																 break; /*ILLEGAL*/
+	case 0xe8: IMMBYTE(EA); 	EA=S+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xe9: IMMWORD(ea); 	EA+=S;								USE_CYCLES(4);   break;
+	case 0xea: EA=0;																 break; /*ILLEGAL*/
+	case 0xeb: EA=S+D;												USE_CYCLES(4);   break;
+	case 0xec: IMMBYTE(EA); 	EA=PC+SIGNED(EA);					USE_CYCLES(1);   break;
+	case 0xed: IMMWORD(ea); 	EA+=PC; 							USE_CYCLES(5);   break;
+	case 0xee: EA=0;																 break;  /*ILLEGAL*/
+	case 0xef: IMMWORD(ea); 										USE_CYCLES(5);   break;
+
+	case 0xf0: EA=S;	S++;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xf1: EA=S;	S+=2;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xf2: S--; 	EA=S;						EAD=RM16(EAD);	USE_CYCLES(5);   break;
+	case 0xf3: S-=2;	EA=S;						EAD=RM16(EAD);	USE_CYCLES(6);   break;
+	case 0xf4: EA=S;								EAD=RM16(EAD);	USE_CYCLES(3);   break;
+	case 0xf5: EA=S+SIGNED(B);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xf6: EA=S+SIGNED(A);						EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xf7: EA=0;																 break; /*ILLEGAL*/
+	case 0xf8: IMMBYTE(EA); 	EA=S+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xf9: IMMWORD(ea); 	EA+=S;				EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xfa: EA=0;																 break; /*ILLEGAL*/
+	case 0xfb: EA=S+D;								EAD=RM16(EAD);	USE_CYCLES(7);   break;
+	case 0xfc: IMMBYTE(EA); 	EA=PC+SIGNED(EA);	EAD=RM16(EAD);	USE_CYCLES(4);   break;
+	case 0xfd: IMMWORD(ea); 	EA+=PC; 			EAD=RM16(EAD);	USE_CYCLES(8);   break;
+	case 0xfe: EA=0;																 break; /*ILLEGAL*/
+	case 0xff: IMMWORD(ea); 						EAD=RM16(EAD);	USE_CYCLES(8);   break;
+	}
+}	
+#endif
