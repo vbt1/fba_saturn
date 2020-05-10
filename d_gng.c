@@ -8,7 +8,7 @@
 
 int xScroll,yScroll;
 unsigned int color[16];
- unsigned int nNext[25];
+ //unsigned int nNext[25];
 
 UINT16 map_offset_lut[2048];
 UINT16 map_offset_lut_fg[1024];
@@ -121,7 +121,7 @@ struct BurnDriver nBurnDrvGnga = {
 	return 0;
 }
 
-unsigned char DrvGngM6809ReadByte(unsigned short Address)
+unsigned char DrvGngM6809ReadByte(unsigned int Address)
 {
 	switch (Address) {
 		case 0x3000: {
@@ -553,13 +553,18 @@ inline double DrvGetTime()
 	// Reset the driver
 	DrvDoReset();
 
+//---------------
+// vbt : test utilisation des opcodes
+	memset(DrvTempRom,0x00,0x20000);
+//---------------
+
 	return 0;
 }
 
 /*static*/ int GngaInit()
 {
 	RomLoadOffset = 2;
-	
+
 	return DrvInit();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -696,14 +701,14 @@ voir plutot p355 vdp2
 		color[j] = j << 12;
 	}
 
-	nCyclesTotal[0] = 1500000 / 60;
+//	nCyclesTotal[0] = 1500000 / 60;
 //	nCyclesTotal[1] = 1000000 / 60;
-
+/*
 	for (j = 0; j < nInterleave; j++) 
 	{
 		nNext[j] = (j + 1) * nCyclesTotal[0] / nInterleave;
 	}
-
+*/
 	drawWindow(0,240,0,0,64);  
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -825,8 +830,14 @@ voir plutot p355 vdp2
 //	if (DrvReset) DrvDoReset();
 
 	DrvMakeInputs();
-
-	UINT32 nCyclesDone = 0, nCyclesSegment;
+	static UINT32 nCyclesTotal = 1500000 / 60;
+//	nCyclesTotal[1] = 1000000 / 60;
+/*
+	for (j = 0; j < nInterleave; j++) 
+	{
+		nNext[j] = (j + 1) * nCyclesTotal[0] / nInterleave;
+*/		
+	UINT32 nCyclesDone = 0; //, nCyclesSegment;
 	#ifdef CZ80	
 //	CZetNewFrame();
 	#endif
@@ -834,8 +845,10 @@ voir plutot p355 vdp2
 	{
 		// Run M6809
 		M6809Open(0);
-		nCyclesSegment = nNext[i] - nCyclesDone;
-		nCyclesDone += m6809_execute(nCyclesSegment);//M6809Run(nCyclesSegment);
+//		nCyclesSegment = ((j + 1) * nCyclesTotal[0] / nInterleave) - nCyclesDone;
+//		nCyclesDone += m6809_execute(nCyclesSegment);//M6809Run(nCyclesSegment);
+		nCyclesDone += m6809_execute(((i + 1) * nCyclesTotal / nInterleave) - nCyclesDone);
+		
 		if (i == 24) {
 			M6809SetIRQ(0, M6809_IRQSTATUS_AUTO);
 		}

@@ -212,13 +212,14 @@ lbra:
 	IMMWORD(ea);
 	PC += EA;
 	CHANGE_PC;
-
+#if 0
 	if ( EA == 0xfffd )  /* EHC 980508 speed up busy loop */
 		if ( m6809.m6809_ICount > 0)
 		{
 			m6809.m6809_ICount = 0;
 			goto m6809_Exec_End;
 		}
+#endif		
 	RET (5);
 }
 
@@ -402,6 +403,7 @@ bra:
 	IMMBYTE(t);
 	PC += SIGNED(t);
     CHANGE_PC;
+#if  0	
 	/* JB 970823 - speed up busy loops */
 	if( t == 0xfe )
 		if( m6809.m6809_ICount > 0 )
@@ -409,6 +411,7 @@ bra:
 			m6809.m6809_ICount = 0;
 			goto m6809_Exec_End;			
 		}
+#endif		
 	RET (3);		
 }
 
@@ -3201,8 +3204,6 @@ sts_ex:
 pref10:
 {
 	UINT8 ireg2 = ROP(PCD);
-//	UINT32 r,d;
-//	PAIR b;
 	PC++;
 /*
 //---------------
@@ -3219,8 +3220,6 @@ pref10:
 pref11:
 {
 	UINT8 ireg2 = ROP(PCD);
-//	UINT32 r, d;
-//	PAIR b;
 	PC++;
 
 //---------------
@@ -6778,7 +6777,7 @@ ldd_ix:
     D=RM16(EAD);
 	CLR_NZV; 
 	SET_NZ16(D);
-	RET(5);	
+	RET(5);
 }
 
 /* $eD STD indexed -**0- */

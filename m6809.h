@@ -45,8 +45,11 @@ void m6809_set_irq_line(int irqline, int state);
 void m6809_get_context(void *dst);
 void m6809_set_context(void *src);
 
-unsigned char M6809ReadByte(unsigned short Address);
+unsigned char M6809ReadByte(unsigned int Address);
+unsigned short M6809ReadWord(unsigned int Address);
 void M6809WriteByte(unsigned short Address, unsigned char Data);
+//void M6809WriteWord(unsigned short Address, unsigned short Data);
+void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned char Data2);
 unsigned char M6809ReadOp(unsigned short Address);
 unsigned char M6809ReadOpArg(unsigned short Address);
 
@@ -54,11 +57,13 @@ unsigned char M6809ReadOpArg(unsigned short Address);
 /* Read a byte from given memory location                                   */
 /****************************************************************************/
 #define M6809_RDMEM(Addr) ((unsigned)M6809ReadByte(Addr))
+#define M6809_RDMEM16(Addr) ((unsigned)M6809ReadWord(Addr))
 
 /****************************************************************************/
 /* Write a byte to given memory location                                    */
 /****************************************************************************/
-#define M6809_WRMEM(Addr,Value) (M6809WriteByte(Addr,Value))
+#define M6809_WRMEM(Addr,Value)   (M6809WriteByte(Addr,Value))
+#define M6809_WRMEM16(Addr,Value,Value2) (M6809WriteWord(Addr,Value,Value2))
 
 /****************************************************************************/
 /* Z80_RDOP() is identical to Z80_RDMEM() except it is used for reading     */

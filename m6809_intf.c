@@ -151,14 +151,39 @@ void M6809SetReadOpArgHandler(unsigned char (*pHandler)(unsigned short))
 	ReadOpArg = pHandler;
 }
 
-unsigned char M6809ReadByte(unsigned short Address)
+unsigned char M6809ReadByte(unsigned int Address)
 {
 	// check mem map
 	unsigned char * pr = Read[(Address >> 8)];
 	if (pr != NULL) {
-		return pr[Address & 0xff];
+		return pr[Address&0xff];
 	}
 	return DrvGngM6809ReadByte(Address);
+}
+
+unsigned short M6809ReadWord(unsigned int Address)
+{
+	unsigned char * pr = (unsigned char *)Read[(Address >> 8)];
+	Address&=0xff;
+	// vbt : pas de test on part du principe qu'il y a toujours une zone émoire allouée
+	return ((pr[Address] <<8) | pr[(Address+1)]);
+}
+
+void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned char Data2)
+{
+	// check mem map
+	unsigned char * pr = (unsigned char *)Write[(Address >> 8)];
+	
+	if (pr != NULL) 
+	{
+		pr[(Address)&0xff] = Data;		
+		pr[(Address+1)&0xff] = Data2;		
+	}
+	else
+	{
+		DrvGngM6809WriteByte(Address, Data);
+		DrvGngM6809WriteByte(Address+1, Data2);
+	}
 }
 
 void M6809WriteByte(unsigned short Address, unsigned char Data)

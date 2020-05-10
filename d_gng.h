@@ -28,7 +28,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ void DrvCalcPalette();
 /*static*/ Uint16 *cram_lut; //[32768*2];
 
-/*static*/ unsigned char *Mem                 = NULL;
+/*static*/ unsigned char *Mem    __attribute__((aligned(32)))             = NULL;
 /*static*/ unsigned char *MemEnd              = NULL;
 /*static*/ unsigned char *RamStart            = NULL;
 /*static*/ unsigned char *RamEnd              = NULL;
