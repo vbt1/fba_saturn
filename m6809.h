@@ -78,6 +78,7 @@ unsigned char M6809ReadOpArg(unsigned short Address);
 /* use different encoding mechanisms for opcodes and opcode arguments       */
 /****************************************************************************/
 #define M6809_RDOP_ARG(Addr) ((unsigned)M6809ReadOpArg(Addr))
+#define M6809_RDOP_ARG16(Addr) ((unsigned)M6809ReadOpArg16(Addr))
 
 #ifndef FALSE
 #    define FALSE 0

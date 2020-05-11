@@ -216,20 +216,27 @@ static PAIR ea;         /* effective address */
 #define WM(Addr,Value)	M6809_WRMEM(Addr,Value)
 #define ROP(Addr)		M6809_RDOP(Addr)
 #define ROP_ARG(Addr)	M6809_RDOP_ARG(Addr)
+#define ROP_ARG16(Addr)	M6809_RDOP_ARG16(Addr)
 
 /* macros to access memory */
 #define IMMBYTE(b)	b = ROP_ARG(PCD); PC++
-#define IMMWORD(w)	w.d = (ROP_ARG(PCD)<<8) | ROP_ARG((PCD+1)&0xffff); PC+=2
+//#define IMMWORD(w)	w.d = (ROP_ARG(PCD)<<8) | ROP_ARG((PCD+1)&0xffff); PC+=2
+#define IMMWORD(w)	w.d = ROP_ARG16(PCD); PC+=2
 
 #define PUSHBYTE(b) --S; WM(SD,b)
-#define PUSHWORD(w) --S; WM(SD,w.b.l); --S; WM(SD,w.b.h)
+//#define PUSHWORD(w) --S; WM(SD,w.b.l); --S; WM(SD,w.b.h)
+#define PUSHWORD(w) S-=2; WM16(SD,&w.b)
+
 #define PULLBYTE(b) b = RM(SD); S++
-#define PULLWORD(w) w = RM(SD)<<8; S++; w |= RM(SD); S++
+//#define PULLWORD(w) w = RM(SD)<<8; S++; w |= RM(SD); S++
+#define PULLWORD(w) w = RM16(SD); S+=2
 
 #define PSHUBYTE(b) --U; WM(UD,b);
-#define PSHUWORD(w) --U; WM(UD,w.b.l); --U; WM(UD,w.b.h)
+//#define PSHUWORD(w) --U; WM(UD,w.b.l); --U; WM(UD,w.b.h)
+#define PSHUWORD(w) U-=2; WM16(UD,&w.b)
 #define PULUBYTE(b) b = RM(UD); U++
-#define PULUWORD(w) w = RM(UD)<<8; U++; w |= RM(UD); U++
+//#define PULUWORD(w) w = RM(UD)<<8; U++; w |= RM(UD); U++
+#define PULUWORD(w) w = RM16(UD); U+=2
 
 #define CLR_HNZVC   CC&=~(CC_H|CC_N|CC_Z|CC_V|CC_C)
 #define CLR_NZV 	CC&=~(CC_N|CC_Z|CC_V)

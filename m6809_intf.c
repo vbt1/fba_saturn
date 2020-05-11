@@ -11,7 +11,7 @@ pReadByteHandler ReadByte;
 pWriteByteHandler WriteByte;
 pReadOpHandler ReadOp;
 pReadOpArgHandler ReadOpArg;
-m6809_Regs m6809;
+extern m6809_Regs m6809;
 
 static unsigned char M6809ReadByteDummyHandler(unsigned short d)
 {
@@ -224,8 +224,17 @@ unsigned char M6809ReadOpArg(unsigned short Address)
 	//if (m6809CPUContext[nActiveCPU].ReadOpArg != NULL) {
 //		return m6809CPUContext[nActiveCPU].ReadOpArg(Address);
 		return ReadOpArg(Address);
-	//}
-	
-	return 0;
 }
 
+unsigned short M6809ReadOpArg16(unsigned short Address)
+{
+	// check mem map
+	unsigned char * pr = Read[(Address >> 8)];
+	if (pr != NULL) {
+		Address&=0xff;		
+//		return pr[Address & 0xff];
+		return ((pr[Address] <<8) | pr[(Address+1)]);
+	}
+	else
+		return((ReadOpArg(Address)<<8) | ReadOpArg((Address+1)));
+}
