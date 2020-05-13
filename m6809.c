@@ -78,6 +78,7 @@ m6809_Regs m6809;
 #define VERSION_BIG_GOTO 1
 //#define VERSION_AVG_GOTO 1
 //#define VERSION_SMALL_GOTO 1
+//#define NEW_NEG 1 plus court en regrouppant tous les neg !
 
 /* Enable big switch statement for the main opcodes */
 //#ifndef BIG_SWITCH
@@ -482,6 +483,7 @@ M6809_INLINE void WM16( UINT32 Addr, PAIR *p )
 //	WM( Addr, p->b.h );
 //	WM( (Addr+1)&0xffff, p->b.l );
 	M6809_WRMEM16(Addr,p->b.h,p->b.l);
+	// vbt : refaire avec p->d ??
 }
 
 /****************************************************************************
@@ -583,8 +585,6 @@ void m6809_set_irq_line(int irqline, int state)
 		CHECK_IRQ_LINES;
 	}
 }
-
-
 
 /* execute instructions on this CPU until icount expires */
 int m6809_execute(int cycles)	/* NS 970908 */
@@ -731,7 +731,7 @@ M6809_INLINE void fetch_effective_address( void )
 {
     UINT16 *xchg = NULL;
 	UINT8 postbyte = ROP_ARG(PCD);
-	UINT32 T = 0;
+//	UINT32 T = 0;
 	PC++;
 
 	switch (postbyte & 0x60) 
@@ -799,7 +799,7 @@ end_fetch:
 	   USE_CYCLES(1);
     }
 	
-	USE_CYCLES(T);
+//	USE_CYCLES(T);
  //   return addr & 0xffff; /* Return the effective address */
 }
 #endif

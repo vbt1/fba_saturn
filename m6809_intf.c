@@ -109,14 +109,15 @@ int M6809MapMemory(unsigned char* pMemory, unsigned short nStart, unsigned short
 	for (i = cStart; i <= (nEnd >> 8); ++i) 
 	{
 		if (nType & M6809_READ)	{
-			Read[i] = pMemory + ((i - cStart) << 8);
+			Read[i] = pMemory; // + ((i - cStart) << 8);
 		}
 		if (nType & M6809_WRITE) {
-			Write[i] = pMemory + ((i - cStart) << 8);
+			Write[i] = pMemory; // + ((i - cStart) << 8);
 		}
 		if (nType & M6809_FETCH) {
-			Fetch[i] = pMemory + ((i - cStart) << 8);
+			Fetch[i] = pMemory; // + ((i - cStart) << 8);
 		}
+		pMemory+=256;
 	}
 	return 0;
 }
@@ -126,10 +127,10 @@ void M6809MapMemory2(unsigned char* pMemory, unsigned short nStart, unsigned sho
 	unsigned short i;
 	nStart >>= 8;
 	nEnd >>= 8;
-
 	for (i = nStart; i <= nEnd; ++i) 
 	{
-		Fetch[i] = Read[i] = pMemory + ((i - nStart) << 8);
+		Fetch[i] = Read[i] = pMemory; // + ((i - nStart) << 8);
+		pMemory+=256;
 	}
 }
 
@@ -232,7 +233,6 @@ unsigned short M6809ReadOpArg16(unsigned short Address)
 	unsigned char * pr = Read[(Address >> 8)];
 	if (pr != NULL) {
 		Address&=0xff;		
-//		return pr[Address & 0xff];
 		return ((pr[Address] <<8) | pr[(Address+1)]);
 	}
 	else
