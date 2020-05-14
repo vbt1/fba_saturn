@@ -99,6 +99,34 @@ neg_ex:
 #if NEW_ADX
 UINT16 t16;
 UINT8 t8;
+/*
+inline void oPUSH(PAIR b)
+{
+	UINT8 t;
+	IMMBYTE(t);
+	if( t&0x80 ) { PSHUWORD(pPC); USE_CYCLES(2); }
+	if( t&0x40 ) { PSHUWORD(b);   USE_CYCLES(2); }
+	if( t&0x20 ) { PSHUWORD(pY);  USE_CYCLES(2); }
+	if( t&0x10 ) { PSHUWORD(pX);  USE_CYCLES(2); }
+	if( t&0x08 ) { PSHUBYTE(DP);  USE_CYCLES(1); }
+	if( t&0x04 ) { PSHUBYTE(B);   USE_CYCLES(1); }
+	if( t&0x02 ) { PSHUBYTE(A);   USE_CYCLES(1); }
+	if( t&0x01 ) { PSHUBYTE(CC);  USE_CYCLES(1); }	
+}
+*/
+
+void oSWI()
+{	
+	CC |= CC_E; 			// HJB 980225: save entire state 
+	PUSHWORD(pPC);
+	PUSHWORD(pU);
+	PUSHWORD(pY);
+	PUSHWORD(pX);
+	PUSHBYTE(DP);
+	PUSHBYTE(B);
+	PUSHBYTE(A);
+	PUSHBYTE(CC);
+}
 
 UINT8 oADD (UINT16 b,UINT16 v) {
    UINT16  temp = b+v;
@@ -1798,7 +1826,25 @@ pshs:
 	if( t&0x04 ) { PUSHBYTE(B);   USE_CYCLES(1); }
 	if( t&0x02 ) { PUSHBYTE(A);   USE_CYCLES(1); }
 	if( t&0x01 ) { PUSHBYTE(CC);  USE_CYCLES(1); }
+
 	RET(5);
+}
+
+/* $36 PSHU inherent ----- */
+pshu:
+{
+	UINT8 t;
+	IMMBYTE(t);
+	if( t&0x80 ) { PSHUWORD(pPC); USE_CYCLES(2); }
+	if( t&0x40 ) { PSHUWORD(pS);  USE_CYCLES(2); }
+	if( t&0x20 ) { PSHUWORD(pY);  USE_CYCLES(2); }
+	if( t&0x10 ) { PSHUWORD(pX);  USE_CYCLES(2); }
+	if( t&0x08 ) { PSHUBYTE(DP);  USE_CYCLES(1); }
+	if( t&0x04 ) { PSHUBYTE(B);   USE_CYCLES(1); }
+	if( t&0x02 ) { PSHUBYTE(A);   USE_CYCLES(1); }
+	if( t&0x01 ) { PSHUBYTE(CC);  USE_CYCLES(1); }
+
+	RET(5);	
 }
 
 /* 35 PULS inherent ----- */
@@ -1817,22 +1863,6 @@ puls:
 
 	/* HJB 990225: moved check after all PULLs */
 	if( t&0x01 ) { CHECK_IRQ_LINES; }
-	RET(5);	
-}
-
-/* $36 PSHU inherent ----- */
-pshu:
-{
-	UINT8 t;
-	IMMBYTE(t);
-	if( t&0x80 ) { PSHUWORD(pPC); USE_CYCLES(2); }
-	if( t&0x40 ) { PSHUWORD(pS);  USE_CYCLES(2); }
-	if( t&0x20 ) { PSHUWORD(pY);  USE_CYCLES(2); }
-	if( t&0x10 ) { PSHUWORD(pX);  USE_CYCLES(2); }
-	if( t&0x08 ) { PSHUBYTE(DP);  USE_CYCLES(1); }
-	if( t&0x04 ) { PSHUBYTE(B);   USE_CYCLES(1); }
-	if( t&0x02 ) { PSHUBYTE(A);   USE_CYCLES(1); }
-	if( t&0x01 ) { PSHUBYTE(CC);  USE_CYCLES(1); }
 	RET(5);	
 }
 
@@ -1940,15 +1970,7 @@ mul:
 /* $3F SWI (SWI2 SWI3) absolute indirect ----- */
 swi:
 {
-	CC |= CC_E; 			/* HJB 980225: save entire state */
-	PUSHWORD(pPC);
-	PUSHWORD(pU);
-	PUSHWORD(pY);
-	PUSHWORD(pX);
-	PUSHBYTE(DP);
-	PUSHBYTE(B);
-	PUSHBYTE(A);
-	PUSHBYTE(CC);
+	oSWI(); // HJB 980225: save entire state 
 	CC |= CC_IF | CC_II;	/* inhibit FIRQ and IRQ */
 	PCD=RM16(0xfffa);
 	CHANGE_PC;
@@ -1958,15 +1980,7 @@ swi:
 /* $103F SWI2 absolute indirect ----- */
 swi2:
 {
-	CC |= CC_E; 			/* HJB 980225: save entire state */
-	PUSHWORD(pPC);
-	PUSHWORD(pU);
-	PUSHWORD(pY);
-	PUSHWORD(pX);
-	PUSHBYTE(DP);
-	PUSHBYTE(B);
-	PUSHBYTE(A);
-    PUSHBYTE(CC);
+	oSWI(); // HJB 980225: save entire state
 	PCD = RM16(0xfff4);
 	CHANGE_PC;
 	RET(20);	
@@ -1975,15 +1989,7 @@ swi2:
 /* $113F SWI3 absolute indirect ----- */
 swi3:
 {
-	CC |= CC_E; 			/* HJB 980225: save entire state */
-	PUSHWORD(pPC);
-	PUSHWORD(pU);
-	PUSHWORD(pY);
-	PUSHWORD(pX);
-	PUSHBYTE(DP);
-	PUSHBYTE(B);
-	PUSHBYTE(A);
-    PUSHBYTE(CC);
+	oSWI(); // HJB 980225: save entire state 
 	PCD = RM16(0xfff2);
 	CHANGE_PC;
 	RET(20);	

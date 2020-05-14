@@ -3,9 +3,11 @@
 
 //#define MAX_CPU		1
 
-static unsigned char *Read[0x100];
-static unsigned char *Write[0x100];
-static unsigned char *Fetch[0x100];
+unsigned char *Read[0x100];
+unsigned char *Write[0x100];
+unsigned char *Fetch[0x100];
+//unsigned short *FetchW[0x100];
+//unsigned short *ReadW[0x100];
 
 pReadByteHandler ReadByte;
 pWriteByteHandler WriteByte;
@@ -50,7 +52,9 @@ int M6809Init(int num)
 	for (unsigned int j = 0; j < (0x0100); j++) {
 		Read[j] = NULL;
 		Write[j] = NULL;
-		Fetch[j] = NULL;			
+		Fetch[j] = NULL;
+//		ReadW[j] = NULL;
+//		FetchW[j] = NULL;		
 	}	
 	
 	m6809_init(NULL);
@@ -109,13 +113,13 @@ int M6809MapMemory(unsigned char* pMemory, unsigned short nStart, unsigned short
 	for (i = cStart; i <= (nEnd >> 8); ++i) 
 	{
 		if (nType & M6809_READ)	{
-			Read[i] = pMemory; // + ((i - cStart) << 8);
+			/*ReadW[i] =*/ Read[i] = pMemory; // + ((i - cStart) << 8);
 		}
 		if (nType & M6809_WRITE) {
 			Write[i] = pMemory; // + ((i - cStart) << 8);
 		}
 		if (nType & M6809_FETCH) {
-			Fetch[i] = pMemory; // + ((i - cStart) << 8);
+			/*FetchW[i] =*/ Fetch[i] = pMemory; // + ((i - cStart) << 8);
 		}
 		pMemory+=256;
 	}
@@ -129,7 +133,7 @@ void M6809MapMemory2(unsigned char* pMemory, unsigned short nStart, unsigned sho
 	nEnd >>= 8;
 	for (i = nStart; i <= nEnd; ++i) 
 	{
-		Fetch[i] = Read[i] = pMemory; // + ((i - nStart) << 8);
+		/*FetchW[i] = ReadW[i] =*/ Fetch[i] = Read[i] = pMemory; // + ((i - nStart) << 8);
 		pMemory+=256;
 	}
 }
@@ -151,7 +155,7 @@ void M6809SetReadOpArgHandler(unsigned char (*pHandler)(unsigned short))
 //	m6809CPUContext[nActiveCPU].ReadOpArg = pHandler;
 	ReadOpArg = pHandler;
 }
-
+/*
 unsigned char M6809ReadByte(unsigned int Address)
 {
 	// check mem map
@@ -187,6 +191,8 @@ void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned char Data
 	}
 }
 
+*/
+#if 0
 void M6809WriteByte(unsigned short Address, unsigned char Data)
 {
 	// check mem map
@@ -197,6 +203,7 @@ void M6809WriteByte(unsigned short Address, unsigned char Data)
 	}
 	DrvGngM6809WriteByte(Address, Data);
 }
+#endif
 
 unsigned char M6809ReadOp(unsigned short Address)
 {
@@ -206,11 +213,7 @@ unsigned char M6809ReadOp(unsigned short Address)
 	{
 		return pr[Address & 0xff];
 	}
-// check handler
-	//if (m6809CPUContext[nActiveCPU].ReadOp != NULL) {
-//		return m6809CPUContext[nActiveCPU].ReadOp(Address);
-		return ReadOp(Address);
-	//}
+	return ReadOp(Address);
 }
 
 unsigned char M6809ReadOpArg(unsigned short Address)
@@ -221,9 +224,6 @@ unsigned char M6809ReadOpArg(unsigned short Address)
 		return pr[Address & 0xff];
 	}
 	else
-	// check handler
-	//if (m6809CPUContext[nActiveCPU].ReadOpArg != NULL) {
-//		return m6809CPUContext[nActiveCPU].ReadOpArg(Address);
 		return ReadOpArg(Address);
 }
 

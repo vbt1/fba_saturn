@@ -24,10 +24,14 @@
 /* 10.March   2000 PeT added 6502 set overflow input line */
 /* 13.September 2000 PeT N2A03 jmp indirect */
 
+extern	unsigned char *Read[0x100];
+extern 	unsigned char *Write[0x100];
+extern	unsigned char *Fetch[0x100];
+
 #include "../burnint.h"
 #include "m6502.h"
 
-#define M6502_INLINE	 static
+#define M6502_INLINE	 static inline
 
 #if ((HAS_M65SC02 || HAS_DECO16) && !HAS_M65C02)
 #undef HAS_M65C02

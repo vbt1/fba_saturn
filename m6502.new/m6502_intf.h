@@ -9,6 +9,10 @@ typedef void (*pWriteMemIndexHandler)(UINT16 a, UINT8 d);
 typedef UINT8 (*pReadOpHandler)(UINT16 a);
 typedef UINT8 (*pReadOpArgHandler)(UINT16 a);
 
+UINT8 *Read[0x100];
+UINT8 *Write[0x100];
+UINT8 *Fetch[0x100];
+
 typedef struct  {
 
 	m6502_Regs reg;
@@ -18,8 +22,7 @@ typedef struct  {
 	void (*init)();
 	void (*set_irq_line)(INT32 irqline, INT32 state);
 
-	UINT8* pMemMap[0x100 * 3];
-
+//	UINT8* pMemMap[0x100 * 3];
 	pReadPortHandler ReadPort;
 	pWritePortHandler WritePort;
 	pReadByteHandler ReadByte;

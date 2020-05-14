@@ -166,8 +166,10 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 	
 	nM6502CyclesDone[cpu] = 0;
 	INT32 j;
-	for (j = 0; j < (0x0100 * 3); j++) {
-		pCurrentCPU->pMemMap[j] = NULL;
+	for (j = 0; j < (0x0100); j++) {
+		Read[j] = NULL;
+		Write[j] = NULL;		
+		Fetch[j] = NULL;		
 	}
 	
 	nM6502CyclesTotal = 0;
@@ -293,18 +295,18 @@ INT32 M6502MapMemory(UINT8* pMemory, UINT16 nStart, UINT16 nEnd, INT32 nType)
 #endif
 
 	UINT8 cStart = (nStart >> 8);
-	UINT8 **pMemMap = pCurrentCPU->pMemMap;
+//	UINT8 **pMemMap = pCurrentCPU->pMemMap;
 	UINT16 i;
 
 	for (i = cStart; i <= (nEnd >> 8); i++) {
 		if (nType & M6502_READ)	{
-			pMemMap[0     + i] = pMemory + ((i - cStart) << 8);
+			Read[i] = pMemory + ((i - cStart) << 8);
 		}
 		if (nType & M6502_WRITE) {
-			pMemMap[0x100 + i] = pMemory + ((i - cStart) << 8);
+			Write[i] = pMemory + ((i - cStart) << 8);
 		}
 		if (nType & M6502_FETCH) {
-			pMemMap[0x200 + i] = pMemory + ((i - cStart) << 8);
+			Fetch[i] = pMemory + ((i - cStart) << 8);
 		}
 	}
 	return 0;
@@ -413,7 +415,7 @@ void M6502WritePort(UINT16 Address, UINT8 Data)
 UINT8 M6502ReadByte(UINT16 Address)
 {
 	// check mem map
-	UINT8 * pr = pCurrentCPU->pMemMap[0x000 | (Address >> 8)];
+	UINT8 * pr = Read[(Address >> 8)];
 	if (pr != NULL) {
 		return pr[Address & 0xff];
 	}
@@ -429,7 +431,7 @@ UINT8 M6502ReadByte(UINT16 Address)
 void M6502WriteByte(UINT16 Address, UINT8 Data)
 {
 	// check mem map
-	UINT8 * pr = pCurrentCPU->pMemMap[0x100 | (Address >> 8)];
+	UINT8 * pr = Write[(Address >> 8)];
 	if (pr != NULL) {
 		pr[Address & 0xff] = Data;
 		return;
@@ -445,7 +447,7 @@ void M6502WriteByte(UINT16 Address, UINT8 Data)
 UINT8 M6502ReadMemIndex(UINT16 Address)
 {
 	// check mem map
-	UINT8 * pr = pCurrentCPU->pMemMap[0x000 | (Address >> 8)];
+	UINT8 * pr = Read[(Address >> 8)];
 	if (pr != NULL) {
 		return pr[Address & 0xff];
 	}
@@ -461,7 +463,7 @@ UINT8 M6502ReadMemIndex(UINT16 Address)
 void M6502WriteMemIndex(UINT16 Address, UINT8 Data)
 {
 	// check mem map
-	UINT8 * pr = pCurrentCPU->pMemMap[0x100 | (Address >> 8)];
+	UINT8 * pr = Write[(Address >> 8)];
 	if (pr != NULL) {
 		pr[Address & 0xff] = Data;
 		return;
@@ -477,7 +479,7 @@ void M6502WriteMemIndex(UINT16 Address, UINT8 Data)
 UINT8 M6502ReadOp(UINT16 Address)
 {
 	// check mem map
-	UINT8 * pr = pCurrentCPU->pMemMap[0x200 | (Address >> 8)];
+	UINT8 * pr = Fetch[(Address >> 8)];
 	if (pr != NULL) {
 		return pr[Address & 0xff];
 	}
@@ -493,7 +495,7 @@ UINT8 M6502ReadOp(UINT16 Address)
 UINT8 M6502ReadOpArg(UINT16 Address)
 {
 	// check mem map
-	UINT8 * pr = pCurrentCPU->pMemMap[0x000 | (Address >> 8)];
+	UINT8 * pr = Read[(Address >> 8)];
 	if (pr != NULL) {
 		return pr[Address & 0xff];
 	}
@@ -515,9 +517,9 @@ void M6502WriteRom(UINT32 Address, UINT8 Data)
 
 	Address &= 0xffff;
 
-	UINT8 * pr = pCurrentCPU->pMemMap[0x000 | (Address >> 8)];
-	UINT8 * pw = pCurrentCPU->pMemMap[0x100 | (Address >> 8)];
-	UINT8 * pf = pCurrentCPU->pMemMap[0x200 | (Address >> 8)];
+	UINT8 * pr = Read[(Address >> 8)];
+	UINT8 * pw = Write[(Address >> 8)];
+	UINT8 * pf = Fetch[(Address >> 8)];
 
 	if (pr != NULL) {
 		pr[Address & 0xff] = Data;

@@ -90,8 +90,6 @@ m6809_Regs m6809;
 //#define LOG(x)	do { if (VERBOSE) logerror x; } while (0)
 
 //extern offs_t m6809_dasm(char *buffer, offs_t pc, const UINT8 *oprom, const UINT8 *opram);
-
-
 #define M6809_INLINE		static	 inline
 #define change_pc(newpc)	m6809.pc.w.l = (newpc)
 #define M6809_CLEAR_LINE	0
@@ -117,8 +115,6 @@ M6809_INLINE void fetch_effective_address( void );
 #define CC_H    0x20        /* Half (auxiliary) carry */
 #define CC_IF   0x40        /* Inhibit FIRQ */
 #define CC_E    0x80        /* entire state pushed */
-
-
 
 #define pPPC    m6809.ppc
 #define pPC 	m6809.pc
@@ -155,7 +151,6 @@ static PAIR ea;         /* effective address */
 #define M6809_CWAI		8	/* set when CWAI is waiting for an interrupt */
 #define M6809_SYNC		16	/* set when SYNC is waiting for an interrupt */
 #define M6809_LDS		32	/* set when LDS occured at least once */
-
 
 #define CHECK_IRQ_LINES 												\
 	if( m6809.irq_state[M6809_IRQ_LINE] != M6809_CLEAR_LINE ||				\
@@ -483,7 +478,6 @@ M6809_INLINE void WM16( UINT32 Addr, PAIR *p )
 //	WM( Addr, p->b.h );
 //	WM( (Addr+1)&0xffff, p->b.l );
 	M6809_WRMEM16(Addr,p->b.h,p->b.l);
-	// vbt : refaire avec p->d ??
 }
 
 /****************************************************************************

@@ -19,8 +19,6 @@
  *   - This entire notice must remain in the source code.
  *
  *****************************************************************************/
-
-
 /* 6502 flags */
 #define F_C 0x01
 #define F_Z 0x02
@@ -77,12 +75,14 @@
  ***************************************************************/
 //#define RDOP() cpu_readop(PCW++); m6502_ICount -= 1
 #define RDOP() M6502ReadOp(PCW++); m6502_ICount -= 1
+//#define RDOP() Fetch[(PCW>>8)][(PCW&0xFF)];PCW++;m6502_ICount -= 1
 
 /***************************************************************
  *  RDOPARG read an opcode argument
  ***************************************************************/
 //#define RDOPARG() cpu_readop_arg(PCW++); m6502_ICount -= 1
 #define RDOPARG() M6502ReadOpArg(PCW++); m6502_ICount -= 1
+//#define RDOPARG() Read[(PCW)>>8][(PCW)&0xFF]; PCW++; m6502_ICount -= 1
 
 /***************************************************************
  *  RDMEM   read memory
