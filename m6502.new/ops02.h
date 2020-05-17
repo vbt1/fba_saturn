@@ -89,12 +89,17 @@
  ***************************************************************/
 //#define RDMEM(addr) program_read_byte_8le(addr); m6502_ICount -= 1
 #define RDMEM(addr) M6502ReadByte(addr); m6502_ICount -= 1
+#define RDMEM16(addr) ({unsigned char * pr = Read[(addr>>8)];m6502_ICount -= 2; pr[(addr+1)&0xFF]<<8 | pr[(addr&0xFF)]; })
 
 /***************************************************************
  *  WRMEM   write memory
  ***************************************************************/
 //#define WRMEM(addr,data) program_write_byte_8le(addr,data); m6502_ICount -= 1
 #define WRMEM(addr,data) M6502WriteByte(addr, data); m6502_ICount -= 1
+//#define WRMEM16(addr,data,data2) Write[(addr)>>8][(addr&0xFF)]=data;Write[(addr)>>8][(addr&0xFF)-1]=data2; m6502_ICount -= 2
+#define WRMEM16(addr,data,data2) ({unsigned char * pr = Write[(addr>>8)];pr[(addr&0xFF)]=data;pr[(addr&0xFF)-1]=data2; m6502_ICount -= 2; })
+
+//#define WRMEM16(addr,data,data2) M6502WriteByte(addr, data);M6502WriteByte(addr-1, data2); m6502_ICount -= 2
 
 /***************************************************************
  *  BRA  branch relative
@@ -309,11 +314,21 @@
  * push a register onto the stack
  ***************************************************************/
 #define PUSH(Rg) WRMEM(SPD, Rg); S--
+#define PUSH16(Rgh,Rgl) WRMEM16(SPD,Rgh,Rgl); S-=2
+/*
+#define PUSH16(Rgh,Rgl) \
+	WRMEM(SPD, Rgh); \
+	WRMEM(SPD-1, Rgl); \
+	S -= 2
+*/
+//WRMEM(SPD, Rgh); WRMEM(SPD, Rgl); S-=2
 
 /***************************************************************
  * pull a register from the stack
  ***************************************************************/
 #define PULL(Rg) S++; Rg = RDMEM(SPD)
+#define PULL16(Rg) S+=2; Rg = RDMEM16(SPD-1)
+//PCD
 
 /* 6502 ********************************************************
  *  ADC Add with carry
@@ -411,12 +426,10 @@
  ***************************************************************/
 #define BRK 													\
 	RDOPARG();													\
-	PUSH(PCH);													\
-	PUSH(PCL);													\
+	PUSH16(PCH,PCL);											\
 	PUSH(P | F_B);												\
 	P = (P | F_I);												\
-	PCL = RDMEM(M6502_IRQ_VEC); 								\
-	PCH = RDMEM(M6502_IRQ_VEC+1);								\
+	PCD = RDMEM16(M6502_IRQ_VEC);								\
 	CHANGE_PC
 
 /* 6502 ********************************************************
@@ -556,8 +569,7 @@
 #define JSR 													\
 	EAL = RDOPARG();											\
 	RDMEM(SPD);													\
-	PUSH(PCH);													\
-	PUSH(PCL);													\
+	PUSH16(PCH,PCL);												\
 	EAH = RDOPARG();											\
 	PCD = EAD;													\
 	CHANGE_PC
@@ -669,8 +681,7 @@
 	RDOPARG();													\
 	RDMEM(SPD);													\
 	PULL(P);													\
-	PULL(PCL);													\
-	PULL(PCH);													\
+	PULL16(PCD);													\
 	P |= F_T | F_B; 											\
 	if( (m6502.irq_state != M6502_CLEAR_LINE) && !(P & F_I) )			\
 	{															\
@@ -685,8 +696,7 @@
 #define RTS 													\
 	RDOPARG();													\
 	RDMEM(SPD);													\
-	PULL(PCL);													\
-	PULL(PCH);													\
+	PULL16(PCD);												\
 	RDMEM(PCW); PCW++;											\
 	CHANGE_PC
 

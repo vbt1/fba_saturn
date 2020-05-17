@@ -39,14 +39,12 @@ int ovlInit(char *szShortName)
 
 /*static*/ UINT8 atetris_read(UINT16 address)
 {
-	if ((address & 0xc000) == 0x4000) {
+	if ((address & 0xc000) == 0x4000) 
+	{
 		return atetris_slapstic_read(address);
 	}
 
 // Remove if/when Pokey support is added!
-#if 0
-	if (is_Bootleg)
-#endif
 	{
 		switch (address & ~0x03e0)
 		{
@@ -57,20 +55,6 @@ int ovlInit(char *szShortName)
 				return DrvInputs[1];
 		}
 	}
-#if 0
-	else
-	{
-		switch (address & ~0x03ef)
-		{
-			case 0x2800:
-				return 0; // pokey1
-
-			case 0x2810:
-				return 0; // pokey2
-		}
-	}
-#endif
-	return 0;
 }
 
 /*static*/ void atetris_write(UINT16 address, UINT8 data)
@@ -81,16 +65,12 @@ int ovlInit(char *szShortName)
 		if(DrvVidRAM[address]!=data)
 		{
 			DrvVidRAM[address] = data;
-
+			
 			address&=~1;
-			INT32 code  = DrvVidRAM[address + 0] | ((DrvVidRAM[address + 1] & 0x07) << 8);
-			INT32 color = DrvVidRAM[address + 1] >> 4;
+			UINT32 code  = DrvVidRAM[address + 0] | ((DrvVidRAM[address + 1] & 0x07) << 8);
+			UINT32 color = DrvVidRAM[address + 1] >> 4;
 
-			int x = map_offset_lut[address>>1];
-
-			ss_map[x] = color;
-			ss_map[x+1] = code;
-
+			int x = map_offset_lut[address];
 			ss_map2[x] = color;
 			ss_map2[x+1] = code;
 		}
@@ -239,12 +219,10 @@ int ovlInit(char *szShortName)
 	M6502MapMemory(DrvNVRAM,		0x2600, 0x27ff, M6502_ROM);
 	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
 	M6502SetReadHandler(atetris_read);
-//	Crab6502_set_memread(&c6502,atetris_read);
 	M6502SetReadOpHandler(atetris_read);
 	M6502SetReadOpArgHandler(atetris_read);
 	M6502SetReadMemIndexHandler(atetris_read);
 	M6502SetWriteHandler(atetris_write);
-//	Crab6502_set_memwrite(&c6502,atetris_write);
 	M6502SetWriteMemIndexHandler(atetris_write);
 	M6502Close();
 
@@ -429,12 +407,13 @@ void initLayers()
 		cram_lut[i] = RGB(r>>3,g>>3,b>>3);
 	}
 
-	for (i = 0; i < 0x800; i++)
+	for (i = 0; i < 0x800*2; i+=2)
 	{
-		sx = (i & 0x3f);// * 8;
-		sy = (i / 0x40);// * 8;
+		sx = ((i>>1) & 0x3f);// * 8;
+		sy = ((i>>1) / 0x40);// * 8;
 
 		map_offset_lut[i] = (sx|(sy<<6))<<1;
+		map_offset_lut[i+1] = (sx|(sy<<6))<<1;		
 	}
 
 //	colAddr[offset] = colBgAddr[offset] = colBgAddr2[offset] = RGB(r>>3,g>>3,b>>3);
@@ -465,7 +444,7 @@ void initLayers()
 //	width_lut			= Next; Next += 256 * sizeof(UINT8);
 	cram_lut			= Next; Next += 256 * sizeof(UINT16);
 //	remap8to16_lut	= Next; Next += 512 * sizeof(UINT16);
-	map_offset_lut	= Next; Next += 0x800 * sizeof(UINT16);
+	map_offset_lut	= Next; Next += 0x800 * 2 * sizeof(UINT16);
 //	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
 //	cpu_lut				= Next; Next += 10*sizeof(int);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);

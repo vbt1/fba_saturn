@@ -255,7 +255,8 @@ int ovlInit(char *szShortName)
 	m6502Open(0);
 //	Crab6502_init(&c6502);
 	m6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, M6502_RAM);
-	m6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
+//	m6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
+	m6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_ROM);
 	m6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, M6502_ROM);
 	m6502MapMemory(DrvPalRAM,		0x2100, 0x21ff, M6502_ROM);
 	m6502MapMemory(DrvPalRAM,		0x2200, 0x22ff, M6502_ROM);
@@ -297,6 +298,8 @@ int ovlInit(char *szShortName)
 
 	DrvDoReset(1);
 
+unsigned char *	DrvTempRom = (unsigned char *)0x00200000;	
+memset(DrvTempRom,0x00,0x10000);
 	return 0;
 }
 
@@ -335,15 +338,15 @@ int ovlInit(char *szShortName)
 		INT32 sx = (offs & 0x3f);// * 8;
 		INT32 sy = (offs / 0x40);// * 8;
 
-		if (sx >= 42 || sy >= 30) continue;
+//		if (sx >= 42 || sy >= 30) continue;
 
 		INT32 code  = DrvVidRAM[offs * 2 + 0] | ((DrvVidRAM[offs * 2 + 1] & 0x07) << 8);
 		INT32 color = DrvVidRAM[offs * 2 + 1] >> 4;
 
 		int x = map_offset_lut[offs];
 
-		ss_map[x] = color;
-		ss_map[x+1] = code;
+//		ss_map[x] = color;
+//		ss_map[x+1] = code;
 
 		ss_map2[x] = color;
 		ss_map2[x+1] = code;
@@ -351,6 +354,19 @@ int ovlInit(char *szShortName)
 //		Render8x8Tile(pTransDraw, code, sx, sy, color, 4, 0, DrvGfxROM);
 	}
 }
+/*
+inline void updateBgTile2Words(UINT32 offs)
+{
+	UINT32 attr  = DrvBgRAM[(offs<<1) + 1];
+	UINT32 color = (attr >> 3) & 0x0f;
+	UINT32 code  = DrvBgRAM[(offs<<1)] + ((attr & 0x07) << 8);
+	UINT32 flipx = attr & 0x80;
+
+	UINT16 *map2 = (UINT16 *)&ss_map2[bg_map_lut[offs]];
+	map2[0] = (flipx << 7) | color;
+	map2[1] = (code*4)+0x1000;
+}
+*/
 
 /*static*/ INT32 DrvDraw()
 {

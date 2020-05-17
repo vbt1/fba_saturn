@@ -115,7 +115,7 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 			pCurrentCPU->init = m6502_init;
 			pCurrentCPU->set_irq_line = m6502_set_irq_line;
 		break;
-
+/*
 		case TYPE_M65C02:
 			pCurrentCPU->execute = m65c02_execute;
 			pCurrentCPU->reset = m65c02_reset;
@@ -129,14 +129,14 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 			pCurrentCPU->init = deco16_init;
 			pCurrentCPU->set_irq_line = deco16_set_irq_line;
 		break;
-
+*/
 		case TYPE_N2A03:
 			pCurrentCPU->execute = m6502_execute;
 			pCurrentCPU->reset = m6502_reset;
 			pCurrentCPU->init = n2a03_init;		// different
 			pCurrentCPU->set_irq_line = m6502_set_irq_line;
 		break;
-
+/*
 		case TYPE_M65SC02:
 			pCurrentCPU->execute = m65c02_execute;
 			pCurrentCPU->reset = m65c02_reset;
@@ -153,6 +153,7 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 			pCurrentCPU->init = m6510_init;		// different
 			pCurrentCPU->set_irq_line = m6502_set_irq_line;
 		break;
+*/		
 	}
 
 	pCurrentCPU->ReadPort = M6502ReadPortDummyHandler;
@@ -267,13 +268,7 @@ void M6502SetIRQLine(INT32 vector, INT32 status)
 
 INT32 M6502Run(INT32 cycles)
 {
-#if defined FBA_DEBUG
-	if (!DebugCPU_M6502Initted) bprintf(PRINT_ERROR, _T("M6502Run called without init\n"));
-	if (nActiveCPU == -1) bprintf(PRINT_ERROR, _T("M6502Run called with no CPU open\n"));
-#endif
-
-	cycles = pCurrentCPU->execute(cycles);
-	
+	cycles = m6502_execute(cycles);
 	nM6502CyclesTotal += cycles;
 	
 	return cycles;
@@ -442,6 +437,26 @@ void M6502WriteByte(UINT16 Address, UINT8 Data)
 		pCurrentCPU->WriteByte(Address, Data);
 		return;
 	}
+}
+
+void M6502WriteWord(UINT16 Address, UINT8 Data, UINT8 Data2)
+{
+	// check mem map
+	UINT8 * pr = Write[(Address >> 8)];
+//	if (pr != NULL) 
+	{
+		pr[(Address&0xff)] = Data;		
+		pr[(Address&0xff)-1] = Data2;
+		return;
+	}
+	/*
+	// check handler
+	if (pCurrentCPU->WriteByte != NULL) {
+		pCurrentCPU->WriteByte(Address, Data);
+		pCurrentCPU->WriteByte(Address-1, Data2);		
+		return;
+	}
+	*/
 }
 
 UINT8 M6502ReadMemIndex(UINT16 Address)
