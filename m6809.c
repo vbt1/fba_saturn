@@ -475,8 +475,6 @@ M6809_INLINE void SET_NZ16(UINT32 a)
 
 M6809_INLINE void WM16( UINT32 Addr, PAIR *p )
 {
-//	WM( Addr, p->b.h );
-//	WM( (Addr+1)&0xffff, p->b.l );
 	M6809_WRMEM16(Addr,p->b.h,p->b.l);
 }
 

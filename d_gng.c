@@ -121,37 +121,23 @@ struct BurnDriver nBurnDrvGnga = {
 	return 0;
 }
 
-unsigned char DrvGngM6809ReadByte(unsigned int Address)
+unsigned char DrvGngM6809ReadByte(unsigned short Address)
 {
 	switch (Address) {
-		case 0x3000: {
-			return 0xff - DrvInput[0];
-		}
-		
-		case 0x3001: {
-			return 0xff - DrvInput[1];
-		}
-		
-		case 0x3002: {
-			return 0xff - DrvInput[2];
-		}
-		
-		case 0x3003: {
-			return DrvDip[0];
-		}
-		
-		case 0x3004: {
-			return DrvDip[1];
-		}
-		
+		case 0x3000:
+		case 0x3001:		
+		case 0x3002:		
+			return 0xff - DrvInput[Address&3];
+			
+		case 0x3003: 
+		case 0x3004:		
+			return DrvDip[Address&1];
+			
 		case 0x3c00: {
 			// nop
 			return 0;
 		}
 	}
-	
-//	bprintf(PRINT_NORMAL, _T("M6809 Read Byte -> %04X\n"), Address);
-	
 	return 0;
 }
 
@@ -159,13 +145,14 @@ inline void bg_render(unsigned short Address, unsigned char *BgVideoRam)
 {
 	unsigned int Code = *BgVideoRam;
 	unsigned int Attr = BgVideoRam[0x400];
+	unsigned int Flip = (Attr & 0x30) << 6;
+	
 	Code += (Attr & 0xc0) << 2;
 
 	unsigned short x = map_offset_lut[Address];
-	unsigned int Flip = (Attr & 0x30) << 6;
 	
 	unsigned short *map2 = &ss_map2[x];
-	map2[0] = map2[1024] = color[Attr & 0x07] | Flip | Code;
+	map2[0x00] = map2[0x400] = map2[0x1000] = map2[0x1440] = color[Attr & 0x07] | Flip | Code;
 }
 
 inline void fg_render(unsigned short Address, unsigned char *FgVideoRam)
@@ -182,10 +169,63 @@ inline void fg_render(unsigned short Address, unsigned char *FgVideoRam)
 
 void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 {
-#ifdef CACHE
+	if(Address>=0x2000 && Address<=0x23FF)
+	{
+		Address&=0x3ff;
+		if(DrvFgVideoRam[Address]!=Data)
+		{
+			DrvFgVideoRam[Address] = Data;
+			fg_render(Address,&DrvFgVideoRam[Address]);
+		}
+		return;
+	}
+
+	if(Address>=0x2400 && Address<=0x27FF)
+	{
+		Address&=0x7ff;
+		if(DrvFgVideoRam[Address]!=Data)
+		{
+			DrvFgVideoRam[Address] = Data;
+			Address&=0x3ff;
+			fg_render(Address,&DrvFgVideoRam[Address]);
+		}
+		return;
+	}
+
+	if(Address>=0x2800 && Address<=0x2BFF)
+	{
+		Address&=0x3ff;
+		if(DrvBgVideoRam[Address]!=Data)
+		{
+			DrvBgVideoRam[Address] = Data;
+			bg_render(Address,&DrvBgVideoRam[Address]);
+		}
+		return;
+	}
+
+	if(Address>=0x2C00 && Address<=0x2fff)
+	{
+		Address&=0x7ff;
+		if(DrvBgVideoRam[Address]!=Data)
+		{
+			DrvBgVideoRam[Address] = Data;
+			Address&=0x3ff;
+			bg_render(Address,&DrvBgVideoRam[Address]);
+		}
+		return;
+	}
+/*
+		if(Address>=0x3900 && Address<=0x39FF) //0x3900
+		{
+			Address&=0xff;
+			DrvPaletteRam1[Address]=Data;
+			unsigned int Val = Data + (DrvPaletteRam2[Address] << 8);
+			colBgAddr[(Address&7)+(Address&0xf8)<<1] = cram_lut[Val];
+		}
+*/		
+
 	if (Address>=0x3a00)
 	{
-#endif
 		switch (Address) {
 			case 0x3a00: {
 				DrvSoundLatch = Data;
@@ -197,10 +237,8 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 				{
 					DrvBgScrollX[0] = Data;
 					xScroll = DrvBgScrollX[0] | (DrvBgScrollX[1] << 8);
-//					xScroll &= 0x1ff;
 					xScroll &= 0x1ff;
-					xScroll <<= 16;
-					ss_reg->n1_move_x =  xScroll;
+					ss_reg->n1_move_x =  (xScroll<<16);
 				}
 				return;
 			}
@@ -211,8 +249,7 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 					DrvBgScrollX[1] = Data;
 					xScroll = DrvBgScrollX[0] | (DrvBgScrollX[1] << 8);
 					xScroll &= 0x1ff;
-					xScroll <<= 16;
-					ss_reg->n1_move_x =  xScroll;
+					ss_reg->n1_move_x =  (xScroll<<16);
 				}
 				return;
 			}
@@ -224,8 +261,7 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 					yScroll = DrvBgScrollY[0] | (DrvBgScrollY[1] << 8);
 					yScroll &= 0x1ff;
 					yScroll+=16;
-					yScroll <<= 16;
-					ss_reg->n1_move_y =  yScroll;	
+					ss_reg->n1_move_y =  (yScroll<<16);	
 				}
 				return;
 			}
@@ -237,8 +273,7 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 					yScroll = DrvBgScrollY[0] | (DrvBgScrollY[1] << 8);
 					yScroll &= 0x1ff;
 					yScroll+=16;
-					yScroll <<= 16;
-					ss_reg->n1_move_x =  xScroll;
+					ss_reg->n1_move_y =  (yScroll<<16);	
 				}
 				return;
 			}
@@ -271,109 +306,17 @@ void DrvGngM6809WriteByte(unsigned short Address, unsigned char Data)
 				return;
 			}
 		}
-#ifdef CACHE
 	}
-	else
-	{
-		if(Address>=0x2000 && Address<=0x23FF)
-		{
-			Address&=0x3ff;
-			if(DrvFgVideoRam[Address]!=Data)
-			{
- 				DrvFgVideoRam[Address] = Data;
-				fg_render(Address,&DrvFgVideoRam[Address]);
-			}
-			return;
-		}
-
-		if(Address>=0x2400 && Address<=0x27FF)
-		{
-			Address&=0x7ff;
-			if(DrvFgVideoRam[Address]!=Data)
-			{
-				DrvFgVideoRam[Address] = Data;
-				Address&=0x3ff;
-				fg_render(Address,&DrvFgVideoRam[Address]);
-			}
-			return;
-		}
-
-		if(Address>=0x2800 && Address<=0x2BFF)
-		{
-			Address&=0x3ff;
-			if(DrvBgVideoRam[Address]!=Data)
-			{
-				DrvBgVideoRam[Address] = Data;
-				bg_render(Address,&DrvBgVideoRam[Address]);
-			}
-			return;
-		}
-
-		if(Address>=0x2C00 && Address<=0x2fff)
-		{
-			Address&=0x7ff;
-			if(DrvBgVideoRam[Address]!=Data)
-			{
-				DrvBgVideoRam[Address] = Data;
-				Address&=0x3ff;
-				bg_render(Address,&DrvBgVideoRam[Address]);
-			}
-			return;
-		}
-/*
-		if(Address>=0x3900 && Address<=0x39FF) //0x3900
-		{
-			Address&=0xff;
-			DrvPaletteRam1[Address]=Data;
-			unsigned int Val = Data + (DrvPaletteRam2[Address] << 8);
-			colBgAddr[(Address&7)+(Address&0xf8)<<1] = cram_lut[Val];
-		}
-*/		
-	}
-#endif	
 }
 
 unsigned char __fastcall DrvGngZ80Read(unsigned short a)
 {
-	switch (a) {
-		case 0xc800: {
-			return DrvSoundLatch;
-		}
-		
-		default: {
-//			bprintf(PRINT_NORMAL, _T("Z80 Read => %04X\n"), a);
-		}
-	}
-	return 0;
+	return (a==0xc800)?DrvSoundLatch:0;
 }
 
 void __fastcall DrvGngZ80Write(unsigned short a, unsigned char d)
 {
-	switch (a) {
-		case 0xe000: {
-//			BurnYM2203Write(0, 0, d);
-			return;
-		}
-		
-		case 0xe001: {
-//			BurnYM2203Write(0, 1, d);
-			return;
-		}
-		
-		case 0xe002: {
-//			BurnYM2203Write(1, 0, d);
-			return;
-		}
-		
-		case 0xe003: {
-//			BurnYM2203Write(1, 1, d);
-			return;
-		}
-		
-		default: {
-//			bprintf(PRINT_NORMAL, _T("Z80 Write => %04X, %02X\n"), a, d);
-		}
-	}
+	return;
 }
 
 /*static*/ int CharPlaneOffsets[2]   = { 4, 0 };
@@ -385,23 +328,7 @@ void __fastcall DrvGngZ80Write(unsigned short a, unsigned char d)
 /*static*/ int SpritePlaneOffsets[4] = { 0x80004, 0x80000, 4, 0 };
 /*static*/ int SpriteXOffsets[16]    = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
 /*static*/ int SpriteYOffsets[16]    = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
-/*
-inline  int DrvSynchroniseStream(int nSoundRate)
-{
-#ifdef CZ80	
-	return (long long)(CZetTotalCycles() * nSoundRate / 3000000);
-#endif
-	return  0;
-}
 
-inline double DrvGetTime()
-{
-	#ifdef CZ80	
-	return (double)CZetTotalCycles() / 3000000;
-	#endif
-		return 0;
-}
-*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void tile16x16toSaturn (int num, unsigned char *pDest)
 {

@@ -49,14 +49,13 @@ void m6809_set_context(void *src);
 //unsigned short M6809ReadWord(unsigned int Address);
 //void M6809WriteByte(unsigned short Address, unsigned char Data);
 //void M6809WriteWord(unsigned short Address, unsigned short Data);
-void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned char Data2);
+//void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned char Data2);
+unsigned char DrvGngM6809ReadByte(unsigned short Address);
 unsigned char M6809ReadOp(unsigned short Address);
 unsigned char M6809ReadOpArg(unsigned short Address);
 extern unsigned char *Fetch[0x100];
 extern unsigned char *Read[0x100];
 extern unsigned char *Write[0x100];
-//extern	unsigned short *ReadW[0x100];
-//extern	unsigned short *FetchW[0x100];
 
 inline void M6809WriteByte(unsigned short Address, unsigned char Data)
 {
@@ -71,12 +70,8 @@ inline void M6809WriteByte(unsigned short Address, unsigned char Data)
 
 inline unsigned char M6809ReadByte(unsigned int Address)
 {
-	// check mem map
 	unsigned char * pr = Read[(Address >> 8)];
-	if (pr != NULL) {
-		return pr[Address&0xff];
-	}
-	return DrvGngM6809ReadByte(Address);
+	return (pr != NULL) ? pr[Address&0xff]:DrvGngM6809ReadByte(Address);
 }
 
 inline void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned char Data2)
@@ -86,8 +81,13 @@ inline void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned ch
 	
 	if (pr != NULL) 
 	{
-		pr[(Address)&0xff] = Data;		
-		pr[(Address+1)&0xff] = Data2;		
+//		if((int)&(pr[(Address&0xFF)]) & 1)
+		{
+			pr[(Address)&0xff] = Data;
+			pr[(Address+1)&0xff] = Data2;
+		}
+//		else
+//		(*(unsigned short *)&pr[(Address)&0xff])=Data<<8|Data2;
 	}
 	else
 	{
@@ -99,9 +99,7 @@ inline void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned ch
 /****************************************************************************/
 /* Read a byte from given memory location                                   */
 /****************************************************************************/
-//#define M6809_RDMEM(Addr) ((unsigned)M6809ReadByte(Addr))
 #define M6809_RDMEM(Addr) ((unsigned)M6809ReadByte(Addr))
-//#define M6809_RDMEM16(Addr) ((unsigned)M6809ReadWord(Addr))
 #define M6809_RDMEM16(Addr) ((Read[(Addr)>>8][(Addr&0xFF)] <<8)| (Read[(Addr)>>8][(Addr&0xff)+1]))
 
 /****************************************************************************/
@@ -115,7 +113,7 @@ inline void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned ch
 /* opcodes. In case of system with memory mapped I/O, this function can be  */
 /* used to greatly speed up emulation                                       */
 /****************************************************************************/
-#define M6809_RDOP(Addr) Fetch[(Addr)>>8][(Addr)&0xFF] //((unsigned)M6809ReadOp(Addr))
+#define M6809_RDOP(Addr) M6809_RDMEM(Addr) //Fetch[(Addr)>>8][(Addr)&0xFF] //((unsigned)M6809ReadOp(Addr))
 
 /****************************************************************************/
 /* Z80_RDOP_ARG() is identical to Z80_RDOP() except it is used for reading  */
@@ -123,13 +121,7 @@ inline void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned ch
 /* use different encoding mechanisms for opcodes and opcode arguments       */
 /****************************************************************************/
 #define M6809_RDOP_ARG(Addr) Read[(Addr)>>8][(Addr)&0xFF] //((unsigned)M6809ReadOpArg(Addr))
-//#define M6809_RDOP_ARG16(Addr) ({unsigned char * pr = Read[(Addr >> 8)]; \
-//Addr&=0xFF; \
-//((pr[(Addr)] <<8)| (pr[(Addr)+1]));})
-//((Read[(Addr)>>8][(Addr&0xFF)] <<8)| (Read[(Addr)>>8][(Addr&0xff)+1]))//((unsigned)M6809ReadOpArg16(Addr))
-
-//#define M6809_RDOP_ARG16(Addr) ReadW[(Addr)>>8][(Addr&0xFF)]
-#define M6809_RDOP_ARG16(Addr) ((Read[(Addr)>>8][(Addr&0xFF)] <<8)| (Read[(Addr)>>8][(Addr&0xff)+1]))
+#define M6809_RDOP_ARG16(Addr) M6809_RDMEM16(Addr)
 
 
 #ifndef FALSE
@@ -142,3 +134,41 @@ inline void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned ch
 
 
 #endif /* __M6809_H__ */
+
+
+
+/*
+#define M6809_RDMEM16(Addr) \
+	({unsigned char *pr = Read[(Addr)>>8]; ((int)&(pr[(Addr&0xFF)]) & 1)? \
+	( (pr[(Addr&0xFF)] <<8)| (pr[(Addr&0xff)+1])) : \
+	(*(unsigned short *)&(pr[(Addr&0xFF)]) ) ;          })
+*/
+
+/*
+#define M6809_RDMEM16(Addr) \
+	(((int)&(Read[(Addr)>>8][(Addr&0xFF)]) & 1)? \
+	( (Read[(Addr)>>8][(Addr&0xFF)] <<8)| (Read[(Addr)>>8][(Addr&0xff)+1])) : \
+	(*(unsigned short *)&(Read[(Addr)>>8][(Addr&0xFF)]) )           )
+*/
+/*
+	#define READ_WORD(addr) \
+	(((int)addr & 1)? \
+	( ((((unsigned char *)(addr))[1])) | ((((unsigned char *)(addr))[0]) <<  8) ) : \
+	(*(unsigned short *)(addr)) )
+	#define READ_WORD_ALIGNED(a) (*(unsigned short *)(a))
+	#define READ_WORD_NONALIGNED(addr) ( ((((unsigned char *)(addr))[1])) | ((((unsigned char *)(addr))[0]) <<  8) )
+
+	#define WRITE_WORD(addr,value) \
+	(((int)addr & 1)? \
+	( ((unsigned char *)(addr))[1]=(unsigned char)((value)),\
+	  ((unsigned char *)(addr))[0]=(unsigned char)((value)>>8),\
+	  value ) : \
+	(*(unsigned short *)(addr) = (value)) )
+	#define WRITE_WORD_ALIGNED(a,d) (*(unsigned short *)(a) = (d))
+	#define WRITE_WORD_NONALIGNED(addr,value) (((unsigned char *)(addr))[1]=(unsigned char)((value)),((unsigned char *)(addr))[0]=(unsigned char)((value)>>8),value)
+	
+	//#define M6809_RDOP_ARG16(Addr) ({unsigned char * pr = Read[(Addr >> 8)]; \
+//Addr&=0xFF; \
+//((pr[(Addr)] <<8)| (pr[(Addr)+1]));})
+//((Read[(Addr)>>8][(Addr&0xFF)] <<8)| (Read[(Addr)>>8][(Addr&0xff)+1]))//((unsigned)M6809ReadOpArg16(Addr))
+*/
