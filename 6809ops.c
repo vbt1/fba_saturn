@@ -79,41 +79,6 @@ neg_ex:
 	WM(EAD,r);
 	RET(7);	
 }
-// regroupement des LSR
-// regroupement des ADC/ADD
-#define NEW_ADX 1
-#define NEW_SBX 1
-#define NEW_XSR 1
-#define NEW_XSL 1
-#define NEW_SUBD 1
-
-#define F_CARRY     1
-#define F_OVERFLOW  2
-#define F_ZERO      4
-#define F_NEGATIVE  8
-#define F_IRQMASK   16
-#define F_HALFCARRY 32
-#define F_FIRQMASK  64
-#define F_ENTIRE    128	
-
-#if NEW_ADX
-UINT16 t16;
-UINT8 t8;
-/*
-inline void oPUSH(PAIR b)
-{
-	UINT8 t;
-	IMMBYTE(t);
-	if( t&0x80 ) { PSHUWORD(pPC); USE_CYCLES(2); }
-	if( t&0x40 ) { PSHUWORD(b);   USE_CYCLES(2); }
-	if( t&0x20 ) { PSHUWORD(pY);  USE_CYCLES(2); }
-	if( t&0x10 ) { PSHUWORD(pX);  USE_CYCLES(2); }
-	if( t&0x08 ) { PSHUBYTE(DP);  USE_CYCLES(1); }
-	if( t&0x04 ) { PSHUBYTE(B);   USE_CYCLES(1); }
-	if( t&0x02 ) { PSHUBYTE(A);   USE_CYCLES(1); }
-	if( t&0x01 ) { PSHUBYTE(CC);  USE_CYCLES(1); }	
-}
-*/
 
 void oSWI()
 {	
@@ -128,194 +93,6 @@ void oSWI()
 	PUSHBYTE(CC);
 }
 
-UINT8 oADD (UINT16 b,UINT16 v) {
-   UINT16  temp = b+v;
-   CC &= ~(F_HALFCARRY | F_CARRY | F_ZERO | F_OVERFLOW | F_NEGATIVE);
-   CC |= flagsNZ[temp & 0xff];
-   if (temp&0x100) CC|=F_CARRY;
-   SET_V8(b,v,temp);
-   if ((temp ^ b ^ v)&0x10) CC |= F_HALFCARRY;
-   return temp&0xff;
-}
-
-UINT8 oADC (UINT16 b,UINT16 v) {
-   UINT16 temp = b+v+(CC & F_CARRY);
-   CC &= ~(F_HALFCARRY | F_CARRY | F_ZERO | F_OVERFLOW | F_NEGATIVE);
-   CC |= flagsNZ[temp & 0xff];
-   if (temp&0x100) CC|=F_CARRY;
-   SET_V8(b,v,temp);
-   if ((temp ^ b ^ v)&0x10) CC |= F_HALFCARRY;
-   return temp&0xff;
-};
-
-UINT8 oSUB (UINT16 b,UINT16 v) {
-   UINT16 temp = b-v;
-   CC &= ~(F_CARRY | F_ZERO | F_OVERFLOW | F_NEGATIVE);
-   CC |= flagsNZ[temp & 0xff];
-   if (temp&0x100) CC|=F_CARRY;
-   SET_V8(b,v,temp);
-   return temp&0xff;
-}
-
-UINT8 oSBC (UINT16 b,UINT16 v) {
-   UINT16 temp = b-v-(CC & F_CARRY);
-   CC &= ~(F_CARRY | F_ZERO | F_OVERFLOW | F_NEGATIVE);
-   CC |= flagsNZ[temp & 0xff];
-   if (temp&0x100) CC|=F_CARRY;
-   SET_V8(b,v,temp);
-   return temp&0xff;
-}
-
-UINT8 oLSR (UINT16 b) {
-    CC &= ~(F_ZERO | F_CARRY | F_NEGATIVE);
-    if (b & 0x01) CC |= F_CARRY;
-    b >>= 1;
-    if (b == 0) CC |= F_ZERO;
-    return b & 0xff;
-}
-
-UINT8 oASR  (UINT16 b) {
-    CC &= ~(F_ZERO | F_CARRY | F_NEGATIVE);
-    if (b & 0x01) CC |= F_CARRY;
-    b = (b & 0x80) | (b>>1);
-    CC |= flagsNZ[b];
-    return b;
-};
-
-UINT8 oASL (UINT16 b) {
-	UINT16 r;
-	r = b << 1;
-	CLR_NZVC;
-	SET_FLAGS8(b,b,r);
-    return r;
-};
-
-UINT16 oSUB16 (UINT16 b,UINT16 v) {
-   UINT32 temp = b-v;
-   CC &= ~(F_CARRY | F_ZERO | F_OVERFLOW | F_NEGATIVE);
-   if ((temp&0xffff)==0) CC|=F_ZERO;
-   if (temp&0x8000) CC|=F_NEGATIVE;
-   if (temp&0x10000) CC|=F_CARRY;
-   SET_V16(b,v,temp);
-   return temp&0xffff;
-};
-
-adca_im: /* $89 ADCA immediate ***** */
-{
-	IMMBYTE(t16);
-	A = oADC(A, t16);
-	RET(2); 
-}
-adca_di: /* $99 ADCA direct ***** */
-{
-	DIRBYTE(t16);
-	A = oADC(A, t16);
-	RET(4);	
-}
-
-adca_ix: /* $a9 ADCA indexed ***** */
-{
-	fetch_effective_address();
-	t16 = RM(EAD);
-    A = oADC(A, t16);
-	RET(4);	
-}
-
-adca_ex: /* $b9 ADCA extended ***** */
-{
-	EXTBYTE(t16);
-    A = oADC(A, t16);
-	RET(5);	
-}
-
-adcb_im: /* $c9 ADCB immediate ***** */
-{
-	IMMBYTE(t16);
-    B = oADC(B, t16);
-	RET(2);	
-}
-
-adcb_di: /* $d9 ADCB direct ***** */
-{
-	DIRBYTE(t16);
-	B = oADC(B, t16);
-	RET(4);	
-}	
-
-adcb_ix: /* $e9 ADCB indexed ***** */
-{
-	fetch_effective_address();
-	t16 = RM(EAD);
-    B = oADC(B, t16);
-	RET(4);	
-}
-
-adcb_ex: /* $f9 ADCB extended ***** */
-{
-	EXTBYTE(t16);
-	B = oADC(B, t16);
-	RET(5);	
-}
-
-adda_im: /* $8B ADDA immediate ***** */
-{
-	IMMBYTE(t16);
-	A = oADD(A, t16);
-	RET(2);
-}
-
-adda_di: /* $9B ADDA direct ***** */
-{
-	DIRBYTE(t16);
-	A = oADD(A, t16);
-	RET(4);	
-}
-
-adda_ix: /* $aB ADDA indexed ***** */
-{
-	fetch_effective_address();
-	t16 = RM(EAD);
-    A = oADD(A, t16);
-	RET(4);
-}
-
-adda_ex: /* $bB ADDA extended ***** */
-{
-	EXTBYTE(t16);
-	A = oADD(A, t16);
-	RET(5);	
-}	
-
-addb_im: /* $cB ADDB immediate ***** */
-{
-	IMMBYTE(t16);
-    B = oADD(B, t16);
-	RET(2);	
-}
-
-addb_di: /* $dB ADDB direct ***** */
-{
-	DIRBYTE(t16);
-	B = oADD(B, t16);
-	RET(4);	
-}	
-
-addb_ix: /* $eB ADDB indexed ***** */
-{
-	fetch_effective_address();
-	t16 = RM(EAD);
-	B = oADD(B, t16);
-	RET(4);	
-}
-
-addb_ex: /* $fB ADDB extended ***** */
-{
-	EXTBYTE(t16);
-	B = oADD(B, t16);
-	RET(5);	
-}
-
-#else
 /* $89 ADCA immediate ***** */
 adca_im:
 {
@@ -527,125 +304,7 @@ addb_ex:
 	B = r;
 	RET(5);	
 }	
-#endif
 
-#if NEW_SBX
-sbca_im: /* $82 SBCA immediate ?**** */
-{
-	IMMBYTE(t16);
-	A = oSBC(A, t16);
-	RET(2);	
-}
-
-sbca_di: /* $92 SBCA direct ?**** */
-{
-	DIRBYTE(t16);
-	A = oSBC(A, t16);
-	RET(4);	
-}
-
-sbca_ix: /* $a2 SBCA indexed ?**** */
-{
-	fetch_effective_address();
-	t16 = RM(EAD);
-	A = oSBC(A, t16);
-	RET(4);	
-}
-
-sbca_ex: /* $b2 SBCA extended ?**** */
-{
-	EXTBYTE(t16);
-	A = oSBC(A, t16);
-	RET(5);	
-}
-
-sbcb_im: /* $c2 SBCB immediate ?**** */
-{
-	IMMBYTE(t16);
-	B = oSBC(B, t16);
-	RET(2);	
-}
-
-sbcb_di: /* $d2 SBCB direct ?**** */
-{
-	DIRBYTE(t16);
-	B = oSBC(B, t16);
-	RET(4);	
-}
-
-sbcb_ix: /* $e2 SBCB indexed ?**** */
-{
-	fetch_effective_address();
-	t16 = RM(EAD);
-	B = oSBC(B, t16);
-	RET(4);	
-}
-
-sbcb_ex: /* $f2 SBCB extended ?**** */
-{
-	EXTBYTE(t16);
-	B = oSBC(B, t16);
-	RET(5);	
-}
-
-suba_im: /* $80 SUBA immediate ?**** */
-{
-	IMMBYTE(t16);
-	A = oSUB(A, t16);
-	RET(2); 
-}
-
-suba_di: /* $90 SUBA direct ?**** */
-{
-	DIRBYTE(t16);
-	A = oSUB(A, t16);
-	RET(4);	
-}
-
-suba_ix: /* $a0 SUBA indexed ?**** */
-{
-	fetch_effective_address();
-	t16 = RM(EAD);
-	A = oSUB(A, t16);
-	RET(4);	
-}
-
-suba_ex: /* $b0 SUBA extended ?**** */
-{
-	EXTBYTE(t16);
-	A = oSUB(A, t16);
-	RET(5);
-}
-
-subb_im: /* $c0 SUBB immediate ?**** */
-{
-	IMMBYTE(t16);
-	B = oSUB(B, t16);
-	RET(2);
-}
-
-subb_di: /* $d0 SUBB direct ?**** */
-{
-	DIRBYTE(t16);
-	B = oSUB(B, t16);
-	RET(4);	
-}
-
-subb_ix: /* $e0 SUBB indexed ?**** */
-{
-	fetch_effective_address();
-	t16 = RM(EAD);
-	B = oSUB(B, t16);
-	RET(4);	
-}
-
-subb_ex: /* $f0 SUBB extended ?**** */
-{
-	EXTBYTE(t16);
-	B = oSUB(B, t16);
-	RET(5);	
-}
-#else
 /* $80 SUBA immediate ?**** */
 suba_im:
 {
@@ -839,45 +498,7 @@ sbcb_ex:
 	B = r;
 	RET(5);	
 }
-#endif
 
-#if NEW_XSR
-lsr_di: /* $04 LSR direct -0*-* */
-{
-	DIRBYTE(t8);
-	WM(EAD,oLSR(t8));
-	RET (6);
-}
-
-lsra: /* $44 LSRA inherent -0*-* */
-{
-	A = oLSR(A);
-	RET(2);	
-}
-
-lsrb: /* $54 LSRB inherent -0*-* */
-{
-	B = oLSR(B);
-	RET(2);	
-}
-
-lsr_ix: /* $64 LSR indexed -0*-* */
-{
-	fetch_effective_address();
-	t8=RM(EAD);
-	WM(EAD,oLSR(t8));
-	RET(6);	
-}
-
-lsr_ex: /* $74 LSR extended -0*-* */
-{
-	EXTBYTE(t8);
-	WM(EAD,oLSR(t8));
-	RET(7);	
-}
-
-
-#else
 /* $04 LSR direct -0*-* */
 lsr_di:
 {
@@ -933,45 +554,7 @@ lsr_ex:
 	WM(EAD,t);
 	RET(7);	
 }
-#endif
 
-#ifdef XSR
-asr_di: /* $07 ASR direct ?**-* */
-{
-	DIRBYTE(t8);
-	WM(EAD,oASR(t8));
-	RET (6);	
-}
-
-asra: /* $47 ASRA inherent ?**-* */
-{
-	A = oASR(A);
-	RET(2);	
-}
-
-asrb: /* $57 ASRB inherent ?**-* */
-{
-	B = oASR(B);
-	RET(2);	
-}
-
-/* $67 ASR indexed ?**-* */
-asr_ix:
-{
-	fetch_effective_address();
-	t8=RM(EAD);
-	WM(EAD,oASR(t8));
-	RET(6);	
-}
-
-/* $77 ASR extended ?**-* */
-asr_ex:
-{
-	EXTBYTE(t8);
-	WM(EAD,oASR(t8));
-	RET(7);	
-}
-#else
 /* $07 ASR direct ?**-* */
 asr_di:
 {
@@ -1029,43 +612,7 @@ asr_ex:
 	WM(EAD,t);
 	RET(7);	
 }	
-#endif
 
-#ifdef NEW_XSL
-asl_di: /* $08 ASL direct ?**** */
-{
-	DIRBYTE(t8);
-	WM(EAD,oASL(t8));
-	RET (6);	
-}
-
-asla: /* $48 ASLA inherent ?**** */
-{
-	A = oASL(A);
-	RET(2);	
-}
-
-aslb: /* $58 ASLB inherent ?**** */
-{
-	B = oASL(B);
-	RET(2);	
-}
-
-asl_ix: /* $68 ASL indexed ?**** */
-{
-	fetch_effective_address();
-	t16=RM(EAD);
-	WM(EAD,oASL(t16));
-	RET(6);	
-}
-
-asl_ex: /* $78 ASL extended ?**** */
-{
-	EXTBYTE(t16);
-	WM(EAD,oASL(t16));
-	RET(7);	
-}
-#else
 /* $08 ASL direct ?**** */
 asl_di:
 {
@@ -1123,43 +670,7 @@ asl_ex:
 	WM(EAD,r);
 	RET(7);	
 }	
-#endif
 
-#if NEW_SUBD
-subd_im: /* $83 SUBD (CMPD CMPU) immediate -**** */
-{
-	PAIR b;
-	IMMWORD(b);
-	D = oSUB16(D,b.d);
-	RET(4);	
-}
-
-subd_di: /* $93 SUBD (CMPD CMPU) direct -**** */
-{
-	PAIR b;
-	DIRWORD(b);
-	D = oSUB16(D,b.d);
-	RET(6);	
-}
-
-subd_ix: /* $a3 SUBD (CMPD CMPU) indexed -**** */
-{
-	PAIR b;
-	fetch_effective_address();
-    b.d=RM16(EAD);
-	D = oSUB16(D,b.d);
-	RET(6);	
-}
-
-subd_ex: /* $b3 SUBD (CMPD CMPU) extended -**** */
-{
-	UINT32 r,d;
-	PAIR b;
-	EXTWORD(b);
-	D = oSUB16(D,b.d);
-	RET(7);	
-}
-#else
 /* $83 SUBD (CMPD CMPU) immediate -**** */
 subd_im:
 {
@@ -1217,9 +728,6 @@ subd_ex:
 	D = r;
 	RET(7);	
 }
-
-#endif
-
 
  ///////////////////////////////////////////////////////////////////////
 /* $01 ILLEGAL */

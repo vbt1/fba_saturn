@@ -78,7 +78,6 @@ m6809_Regs m6809;
 #define VERSION_BIG_GOTO 1
 //#define VERSION_AVG_GOTO 1
 //#define VERSION_SMALL_GOTO 1
-//#define NEW_NEG 1 plus court en regrouppant tous les neg !
 
 /* Enable big switch statement for the main opcodes */
 //#ifndef BIG_SWITCH
@@ -377,25 +376,7 @@ CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N
 
 /* macros for setting/getting registers in TFR/EXG instructions */
 
-static const UINT8 flagsNZ[256] = {
-      4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 00-0F */
-      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 10-1F */
-      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 20-2F */
-      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 30-3F */
-      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 40-4F */
-      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 50-5F */
-      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 60-6F */
-      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,          /* 70-7F */
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* 80-8F */
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* 90-9F */
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* A0-AF */
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* B0-BF */
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* C0-CF */
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* D0-DF */
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,          /* E0-EF */
-	  8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8};		    /* F0-FF */
-
- M6809_INLINE void SET_N8(UINT32 a)	
+M6809_INLINE void SET_N8(UINT32 a)	
 {
 	CC|=((a>>4)&0x8);
 }
