@@ -22,9 +22,15 @@ typedef unsigned char MHELE;
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;
+typedef void (*write_func)(unsigned short a, byte d);
+typedef byte (*read_func)(unsigned short a);
 
-extern	unsigned char *Read[0x100];
-extern	unsigned char *Write[0x100];
+extern unsigned char *Read[0x100];
+extern unsigned char *Write[0x100];
+extern write_func wf[0x1000];
+extern read_func rf[0x1000];
+extern unsigned char *Drv6502RAM;
+extern unsigned char *Drv6502ROM;
 
 //#define ABITS1_16		12
 //#define ABITS2_16		4
@@ -57,9 +63,10 @@ extern	unsigned char *Write[0x100];
 #define SET_Z(n)	NZ = (NZ & 0x100) | (n)
 
 #else
-
+/*
 #define SET_NZ(n)				\
 	P = (P & ~(FLAG_N | FLAG_Z)) |  ((n) & FLAG_N) | (((n) == 0) ? FLAG_Z : 0)
+*/
 #define SET_Z(n)				\
     P = (P & ~FLAG_Z) | ((n) == 0) ? FLAG_Z : 0)
 
@@ -90,10 +97,13 @@ extern	unsigned char *Write[0x100];
 //extern	byte	*RAM;
 #endif
 
+#define RSTF(a)  P &= ~(a)
+#define SETF(a)  P |= (a)
+#define TEST(a)  RSTF( FLAG_N | FLAG_Z ); SETF( M6502_byTestTable[ a ] )
+
 /***************************************************************
  *  RDOP    read an opcode
  ***************************************************************/
-//#define RDOP() cpu_readop(PCW++)
 //#define RDOP() M6502ReadOp(PCW++)
 #define RDOP() RDMEM(PCW++)
 #define RDOPD() RDMEMD(PCW++)
@@ -104,7 +114,6 @@ extern	unsigned char *Write[0x100];
 #define RDOPARG() RDOP()
 #define RDOPARGD() RDOPD()
 #define RDOPARG16() M6502ReadWord(PCD);PCD+=2
-
 ///({unsigned char * pr = Read[(addr>>8)];pr[(addr+1)&0xFF]<<8 | pr[(addr&0xFF)]; })
 
 /***************************************************************
@@ -114,26 +123,25 @@ extern	unsigned char *Write[0x100];
 #define RDMEM(addr)                                             \
 	((Read[(addr) >> (ABITS2_16 + ABITS_MIN_16)]) ?		\
 		M6502ReadByte(addr) : Read[(addr) >> 8][addr&0xff])
-//		cpu_readmem16(addr) : RAM[addr])
 #else
-//#define RDMEM(addr) cpu_readmem16(addr)
-
 static inline unsigned char M6502ReadByte(unsigned short Address)
 {
 	// check mem map
 	unsigned char * pr = Read[(Address >> 8)];
-	return (pr != NULL) ? pr[Address&0xff]:atetris_read(Address);
+	return (pr != NULL) ? pr[Address&0xff]:rf[Address>>4](Address);
 }
 
 static inline unsigned short M6502ReadWord(unsigned short Address)
 {
 	unsigned char * pr = Read[(Address >> 8)];
-	return (pr != NULL) ? pr[Address&0xff]|pr[(Address&0xff)+1]<<8:atetris_read(Address)|atetris_read(Address+1)<<8;
+	read_func prf = rf[Address>>4];
+	return (pr != NULL) ? pr[Address&0xff]|pr[(Address&0xff)+1]<<8:prf(Address)|prf(Address+1)<<8;
 }
 
 #define RDMEM(addr) M6502ReadByte(addr)
 #define RDMEMD(addr) Read[(addr) >> 8][addr&0xff]
-#define RDMEM16(addr) ({unsigned char * pr = Read[(addr>>8)];pr[(addr+1)&0xFF]<<8 | pr[(addr&0xFF)]; })
+//#define RDMEMD(addr) (addr<0x1000)?Drv6502RAM[addr]:Read[(addr) >> 8][addr&0xff]
+#define RDMEM16D(addr) ({unsigned char * pr = Read[(addr>>8)];pr[(addr+1)&0xFF]<<8 | pr[(addr&0xFF)]; })
 #endif
 
 /***************************************************************
@@ -158,11 +166,12 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 		pr[Address & 0xff] = Data;
 		return;
 	}
-	atetris_write(Address, Data);
+	wf[Address>>4](Address, Data);
 }
 
 #define WRMEM(addr,data) M6502WriteByte(addr,data)
 #define WRMEMD(addr,data) Write[(addr) >> 8][addr&0xff]=data
+//#define WRMEM16D(addr,data,data2) Write[(addr) >> 8][addr&0xff]=data;Write[(addr) >> 8][(addr&0xff)+1]=data2
 #define WRMEM16D(addr,data,data2) Write[(addr) >> 8][addr&0xff]=data;Write[(addr) >> 8][(addr&0xff)+1]=data2
 #endif
 
@@ -248,7 +257,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 */
 #define EA_ZPI													\
 	ZPL = RDOPARGD();											\
-	EAD = RDMEM16(ZPD);											\
+	EAD = RDMEM16D(ZPD);											\
 	ZPL++
 
 /***************************************************************
@@ -263,7 +272,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 */
 #define EA_IDX													\
 	ZPL = RDOPARG() + X;										\
-	EAD = RDMEM16(ZPD);											\
+	EAD = RDMEM16D(ZPD);											\
 	ZPL++
 	
 /***************************************************************
@@ -282,7 +291,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 */
 #define EA_IDY													\
 	ZPL = RDOPARG();											\
-	EAD = RDMEM16(ZPD);											\
+	EAD = RDMEM16D(ZPD);											\
 	ZPL++;														\
     if (EAL + Y > 0xff)                                         \
 		M6502_ICount--; 										\
@@ -367,7 +376,8 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 /***************************************************************
  * pull a register from the stack
  ***************************************************************/
-#define PULL(Rg) S++; Rg = RDMEM(SPD)
+#define PULL(Rg) S++; Rg = RDMEMD(SPD)
+#define PULL16(Rg) S+=2; Rg = RDMEM16D(SPD-1)
 
 /* 6502 ********************************************************
  *	ADC Add with carry
@@ -412,9 +422,12 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 /* 6502 ********************************************************
  *	AND Logical and
  ***************************************************************/
+/* 
 #define AND 													\
 	A = (byte)(A & tmp);										\
 	SET_NZ(A)
+*/
+#define AND  A &= (tmp); TEST( A )
 
 /* 6502 ********************************************************
  *	ASL Arithmetic shift left
@@ -425,8 +438,6 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	tmp = (byte)(tmp << 1); 									\
 	SET_NZ(tmp)
 */
-#define RSTF(a)  P &= ~(a)
-#define SETF(a)  P |= (a)
 	
 #define ASL 													\
 	RSTF( FLAG_N | FLAG_Z | FLAG_C ); SETF( M6502_ASL[tmp].byFlag) ; tmp = M6502_ASL[tmp].byValue;
@@ -508,7 +519,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	COMPOSE_P;													\
 	PUSH(P | FLAG_B);												\
 	P = (P | FLAG_I) & ~FLAG_D;										\
-	PCD = RDMEM16(M6502_IRQ_VEC);								\
+	PCD = RDMEM16D(M6502_IRQ_VEC);								\
 	change_pc16(PCD)
 /* 6502 ********************************************************
  * BVC	Branch if overflow clear
@@ -537,7 +548,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define CLI 													\
 	if (m6502.pending_irq && (P & FLAG_I)) 						\
-		m6502.after_cli = 1;									\
+		after_cli = 1;									\
 	P &= ~FLAG_I
 
 /* 6502 ********************************************************
@@ -587,49 +598,52 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define DEC 													\
 	tmp = (byte)--tmp;											\
-	SET_NZ(tmp)
+	TEST(tmp)
 
 /* 6502 ********************************************************
  *	DEX Decrement index X
  ***************************************************************/
 #define DEX 													\
 	X = (byte)--X;												\
-	SET_NZ(X)
+	TEST(X)
 
 /* 6502 ********************************************************
  *	DEY Decrement index Y
  ***************************************************************/
 #define DEY 													\
 	Y = (byte)--Y;												\
-	SET_NZ(Y)
+	TEST(Y)
 
 /* 6502 ********************************************************
  *	EOR Logical exclusive or
  ***************************************************************/
+/*
 #define EOR 													\
 	A = (byte)(A ^ tmp);										\
 	SET_NZ(A)
+*/	
+#define EOR  A ^= (tmp); TEST( A )	
 
 /* 6502 ********************************************************
  *	INC Increment memory
  ***************************************************************/
 #define INC 													\
 	tmp = (byte)++tmp;											\
-	SET_NZ(tmp)
+	TEST(tmp)
 
 /* 6502 ********************************************************
  *	INX Increment index X
  ***************************************************************/
 #define INX 													\
 	X = (byte)++X;												\
-	SET_NZ(X)
+	TEST(X)
 
 /* 6502 ********************************************************
  *	INY Increment index Y
  ***************************************************************/
 #define INY 													\
 	Y = (byte)++Y;												\
-	SET_NZ(Y)
+	TEST(Y)
 
 /* 6502 ********************************************************
  *	JMP Jump to address
@@ -657,21 +671,21 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define LDA 													\
 	A = (byte)tmp;												\
-	SET_NZ(A)
+	TEST( A )
 
 /* 6502 ********************************************************
  *	LDX Load index X
  ***************************************************************/
 #define LDX 													\
 	X = (byte)tmp;												\
-	SET_NZ(X)
+	TEST( X )
 
 /* 6502 ********************************************************
  *	LDY Load index Y
  ***************************************************************/
 #define LDY 													\
 	Y = (byte)tmp;												\
-	SET_NZ(Y)
+	TEST( Y )
 
 /* 6502 ********************************************************
  *	LSR Logic shift right
@@ -694,9 +708,13 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 /* 6502 ********************************************************
  *	ORA Logical inclusive or
  ***************************************************************/
+/*
 #define ORA 													\
 	A = (byte)(A | tmp);										\
 	SET_NZ(A)
+*/
+
+#define ORA  A |= (tmp); TEST( A )
 
 /* 6502 ********************************************************
  *	PHA Push accumulator
@@ -716,7 +734,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define PLA 													\
 	PULL(A);													\
-	SET_NZ(A)
+	TEST(A)
 
 
 /* 6502 ********************************************************
@@ -729,7 +747,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	{															\
 		PULL(P);												\
 		if (m6502.pending_irq && !(P & FLAG_I))					\
-			m6502.after_cli = 1;								\
+			after_cli = 1;								\
 	}															\
 	else														\
 	{															\
@@ -745,7 +763,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	{															\
 		PULL(P);												\
 		if (m6502.pending_irq && !(P & FLAG_I))					\
-			m6502.after_cli = 1;								\
+			after_cli = 1;								\
 	}															\
 	else														\
 	{															\
@@ -793,23 +811,21 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 
 #define RTI 													\
 	PULL(P);													\
-	PULL(PCL);													\
-    PULL(PCH);                                                  \
+	PULL16(PCD);													\
     P |= FLAG_R;                                                   \
 	NZ = ((P & FLAG_N) << 8) | ((P & FLAG_Z) ^ FLAG_Z);					\
 	if (m6502.pending_irq && !(P & FLAG_I))						\
-		m6502.after_cli = 1;									\
+		after_cli = 1;									\
 	change_pc16(PCD)
 
 #else
 
 #define RTI 													\
 	PULL(P);													\
-	PULL(PCL);													\
-    PULL(PCH);                                                  \
+	PULL16(PCD);													\
     P |= FLAG_R;                                                   \
     if (m6502.pending_irq && !(P & FLAG_I))                        \
-		m6502.after_cli = 1;									\
+		after_cli = 1;									\
     change_pc16(PCD)
 
 #endif
@@ -905,28 +921,28 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define TAX 													\
 	X = A;														\
-	SET_NZ(X)
+	TEST(X)
 
 /* 6502 ********************************************************
  * TAY	Transfer accumulator to index Y
  ***************************************************************/
 #define TAY 													\
 	Y = A;														\
-	SET_NZ(Y)
+	TEST(Y)
 
 /* 6502 ********************************************************
  * TSX	Transfer stack LSB to index X
  ***************************************************************/
 #define TSX 													\
 	X = S;														\
-	SET_NZ(X)
+	TEST(X)
 
 /* 6502 ********************************************************
  * TXA	Transfer index X to accumulator
  ***************************************************************/
 #define TXA 													\
 	A = X;														\
-	SET_NZ(A)
+	TEST(A)
 
 /* 6502 ********************************************************
  * TXS	Transfer index X to stack LSB
@@ -940,7 +956,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define TYA 													\
 	A = Y;														\
-	SET_NZ(A)
+	TEST(A)
 
 /***************************************************************
  ***************************************************************
@@ -965,14 +981,14 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define DEA 													\
 	A = (byte)--A;												\
-	SET_NZ(A)
+	TEST(A)
 
 /* 65C02 *******************************************************
  *	INA Increment accumulator
  ***************************************************************/
 #define INA 													\
 	A = (byte)++A;												\
-	SET_NZ(A)
+	TEST(A)
 
 /* 65C02 *******************************************************
  *	PHX Push index X
@@ -1044,7 +1060,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	A = (byte)(A & tmp);										\
 	if (A & 0x80)												\
 		P |= FLAG_C;												\
-	SET_NZ(A)
+	TEST(A)
 
 /* 6510 ********************************************************
  *	ASR logical and, logical shift right
@@ -1061,7 +1077,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 #define AST 													\
 	S &= tmp;													\
 	A = X = S;													\
-	SET_NZ(A)
+	TEST(A)
 
 /* 6510 ********************************************************
  *	ARR logical and, rotate right
@@ -1079,14 +1095,14 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	if (X >= tmp)												\
 		P |= FLAG_C;												\
 	X = (byte)(X - tmp);										\
-	SET_NZ(X)
+	TEST(X)
 
 /* 6510 ********************************************************
  *	AXA transfer index X to accumulator, logical and
  ***************************************************************/
 #define AXA 													\
 	tmp = (byte)(X & tmp);										\
-	SET_NZ(tmp)
+	TEST(tmp)
 
 /* 6510 ********************************************************
  *	DCP decrement data and compare
@@ -1096,7 +1112,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	P &= ~FLAG_C;													\
 	if (A >= tmp)												\
 		P |= FLAG_C;												\
-    SET_NZ((byte)(A - tmp))
+    TEST((byte)(A - tmp))
 
 /* 6502 ********************************************************
  *	DOP double no operation
@@ -1116,7 +1132,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define LAX 													\
 	A = X = (byte)tmp;											\
-	SET_NZ(A)
+	TEST(A)
 
 /* 6510 ********************************************************
  * RLA	rotate left and logical and accumulator
@@ -1127,7 +1143,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	P = (P & ~FLAG_C) | ((tmp >> 8) & FLAG_C);						\
 	tmp = (byte)tmp;											\
 	A &= tmp;													\
-    SET_NZ(A)
+    TEST(A)
 
 /* 6510 ********************************************************
  * RRA	rotate right and add with carry
@@ -1144,7 +1160,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define SAX 													\
 	tmp = A & X;												\
-	SET_NZ(tmp)
+	TEST(tmp)
 
 /* 6510 ********************************************************
  *	SLO shift left and logical or
@@ -1153,7 +1169,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	P = (P & ~FLAG_C) | ((tmp >> 7) & FLAG_C);						\
 	tmp = (byte)(tmp << 1); 									\
 	A |= tmp;													\
-    SET_NZ(A)
+    TEST(A)
 
 /* 6510 ********************************************************
  *	SRE logical shift right and logical exclusive or
@@ -1163,7 +1179,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	P = (P & ~FLAG_C) | (tmp & FLAG_C);								\
 	tmp = (byte)tmp >> 1;										\
 	A ^= tmp;													\
-    SET_NZ(A)
+    TEST(A)
 
 /* 6510 ********************************************************
  * SAH	store accumulator and index X and high + 1

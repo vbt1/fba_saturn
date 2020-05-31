@@ -11,9 +11,9 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvAtetris = {
 		"atetris", "tetris",
-		"Tetris (set 1)\0",
+		"Tetris (set 1)",
 		atetrisRomInfo, atetrisRomName, AtetrisInputInfo, AtetrisDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL //, NULL, &DrvRecalc, 0x100,
+		DrvInit, DrvExit, DrvFrame, NULL
 	};
 
 	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
@@ -23,7 +23,7 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 
-/*static*/ inline UINT8 atetris_slapstic_read(UINT16 offset)
+static inline UINT8 atetris_slapstic_read(UINT16 offset)
 {
 	UINT8 ret = Drv6502ROM[((SlapsticBank() & 1) * 0x4000) + (offset & 0x3fff)];
 
@@ -32,7 +32,7 @@ int ovlInit(char *szShortName)
 	return ret;
 }
 
-/*static*/ inline void DrvPaletteUpdate(UINT16 offset)
+static inline void DrvPaletteUpdate(UINT16 offset)
 {
 	colBgAddr[offset] = cram_lut[DrvPalRAM[offset]];//RGB(r>>3,g>>3,b>>3);
 }
@@ -57,70 +57,44 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/ void atetris_write(UINT16 address, UINT8 data)
+/*static*/ void atetris_write_0x1000(UINT16 address, UINT8 data)
 {
-	if (address >=0x1000 && address<= 0x1fff)
+	address-=0x1000;
+	if(DrvVidRAM[address]!=data)
 	{
-		address-=0x1000;
-		if(DrvVidRAM[address]!=data)
-		{
-			DrvVidRAM[address] = data;
-			
-			address&=~1;
-			UINT32 code  = DrvVidRAM[address + 0] | ((DrvVidRAM[address + 1] & 0x07) << 8);
-			UINT32 color = DrvVidRAM[address + 1] >> 4;
+		DrvVidRAM[address] = data;
+		
+		address&=~1;
+		UINT32 code  = DrvVidRAM[address + 0] | ((DrvVidRAM[address + 1] & 0x07) << 8);
+		UINT32 color = DrvVidRAM[address + 1] >> 4;
 
-			int x = map_offset_lut[address];
-			ss_map2[x] = color;
-			ss_map2[x+1] = code;
-		}
-		return;
+		int x = map_offset_lut[address];
+		ss_map2[x] = color;
+		ss_map2[x+1] = code;
 	}
+}
 
+void atetris_write_0x2000(UINT16 address, UINT8 data)
+{
+	DrvPalRAM[address & 0x00ff] = data;
+	DrvPaletteUpdate(address & 0x00ff);
+}
 
-	if ((address & 0xfc00) == 0x2000) {
-		DrvPalRAM[address & 0x00ff] = data;
-		DrvPaletteUpdate(address & 0x00ff);
-		return;
+void atetris_write_0x2400(UINT16 address, UINT8 data)
+{
+	if (nvram_enable) {
+		DrvNVRAM[address & 0x01ff] = data;
 	}
+	nvram_enable = 0;
+}
 
-	if ((address & 0xfc00) == 0x2400) {
-		if (nvram_enable) {
-			DrvNVRAM[address & 0x01ff] = data;
-		}
-		nvram_enable = 0;
-		return;
-	}
-/*
-	if (is_Bootleg) // Bootleg set 2 sound system
-	{
-		switch (address)
-		{
-			case 0x2802:
-				SN76496Write(0, data);
-			return;
+void atetris_write_0x2800(UINT16 address, UINT8 data)
+{
+	return; // pokey1 & pokey2
+}
 
-			case 0x2804:
-				SN76496Write(1, data);
-			return;
-
-			case 0x2806:
-				SN76496Write(2, data);
-			return;
-		}
-	}
-	else	 */
-	{
-		switch (address & ~0x03ef)
-		{
-			case 0x2800: 	// pokey1
-			return;
-
-			case 0x2810: 	// pokey2
-			return;
-		}
-	}			
-
+void atetris_write_0x3000(UINT16 address, UINT8 data)
+{
 	switch (address & ~0x03ff)
 	{
 		case 0x3000:
@@ -132,7 +106,8 @@ int ovlInit(char *szShortName)
 		return;
 
 		case 0x3800:
-			M6502SetIRQLine(0, M6502_IRQSTATUS_NONE);
+//			M6502SetIRQLine(0, M6502_IRQSTATUS_NONE); modif derek
+			M6502SetIRQLine(1, M6502_IRQSTATUS_NONE);
 		return;
 
 		case 0x3c00:
@@ -146,11 +121,13 @@ int ovlInit(char *szShortName)
 	if (full_reset) {
 		memset(AllRam, 0, RamEnd - AllRam);
 	}
-
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502OpenR             ",10,70);	
 	M6502Open(0);
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Reset             ",10,70);	
 	M6502Reset();
-	M6502Close();
-
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);	
+//	M6502Close();
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             ",10,70);
 	SlapsticReset();
 
 	watchdog = 0;
@@ -206,9 +183,13 @@ int ovlInit(char *szShortName)
 //		DrvGfxExpand();
 	}
 
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Init             ",10,70);
+
 	M6502Init(0, TYPE_M6502);
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Open             ",10,70);	
 	M6502Open(0);
 //	Crab6502_init(&c6502);
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502MapMemory             ",10,70);
 	M6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, M6502_RAM);
 //	M6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
 	M6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, M6502_ROM);
@@ -218,12 +199,19 @@ int ovlInit(char *szShortName)
 	M6502MapMemory(DrvNVRAM,		0x2400, 0x25ff, M6502_ROM);
 	M6502MapMemory(DrvNVRAM,		0x2600, 0x27ff, M6502_ROM);
 	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502SetReadHandler             ",10,70);	
 	M6502SetReadHandler(atetris_read);
-	M6502SetReadOpHandler(atetris_read);
-	M6502SetReadOpArgHandler(atetris_read);
-	M6502SetReadMemIndexHandler(atetris_read);
-	M6502SetWriteHandler(atetris_write);
-	M6502SetWriteMemIndexHandler(atetris_write);
+	
+//	M6502SetReadOpHandler(atetris_read);
+//	M6502SetReadOpArgHandler(atetris_read);
+//	M6502SetWriteHandler(atetris_write);
+
+	M6502SetWriteHandler(0x3000, 0x3cff,atetris_write_0x3000);
+	M6502SetWriteHandler(0x2800, 0x281f,atetris_write_0x2800);
+	M6502SetWriteHandler(0x2400, 0x25ff,atetris_write_0x2400);
+	M6502SetWriteHandler(0x2000, 0x20ff,atetris_write_0x2000);
+	M6502SetWriteHandler(0x1000, 0x1fff,atetris_write_0x1000);
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);		
 	M6502Close();
 
 	SlapsticInit(101);
@@ -245,7 +233,7 @@ int ovlInit(char *szShortName)
 //	GenericTilesInit();
 
 	memset (DrvNVRAM, 0xff, 0x200);
-
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvDoReset             ",10,70);
 	DrvDoReset(1);
 
 	if (DrvRecalc) {
@@ -283,10 +271,6 @@ int ovlInit(char *szShortName)
 
 /*static*/ INT32 DrvFrame()
 {
-	if (DrvReset) {
-		DrvDoReset(1);
-	}
-	INT32 i;
 	watchdog++;
 	if (watchdog >= 180) {
 		DrvDoReset(0);
@@ -295,45 +279,44 @@ int ovlInit(char *szShortName)
 	{
 		DrvInputs[0] = DrvDips[0] & 0xbc;
 		DrvInputs[1] = 0;
-		for (i = 0; i < 8; i++) {
+		for (INT32 i = 0; i < 8; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		}
 	}
 
-//	INT32 nInterleave = 262;
 	INT32 nInterleave = 65;
-	INT32 nCyclesTotal[1] = { master_clock / 60 };
-	INT32 nCyclesDone[1] = { 0 };
-
-	M6502Open(0);
+	INT32 nCyclesTotal = { master_clock / 60 / nInterleave};
+//	INT32 nCyclesDone = { 0 };
+//	M6502Open(0);
 
 	vblank = 0;
 
-	for (i = 0; i < nInterleave; i++)
+	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		nCyclesDone[0] += M6502Run(nCyclesTotal[0] / nInterleave);
+		M6502Run(nCyclesTotal);
 //		nCyclesDone[0] += M6502Run(nCyclesTotal[0]);
 
 //		if (i == 16 || i == 48 || i == 80 || i == 112 || i == 146 || i == 176 || i == 208 || i == 240)
-		if (i == 4 || i == 12 || i == 20 || i == 28 || i == 36 || i == 44 || i == 52 || i == 60)
-//			M6502SetIRQLine(0, (i & 0x20) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);
-					M6502SetIRQLine(0, (i & 0x10) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);
-//			M6502SetIRQLine(0, M6502_IRQSTATUS_ACK);
-
+//		if (i == 4 || i == 12 || i == 20 || i == 28 || i == 36 || i == 44 || i == 52 || i == 60)
+		if((i-4)%8==0)
+		{
+//					M6502SetIRQLine(0, (i & 0x10) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);  modif derek
+					M6502SetIRQLine(1, (i & 0x10) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);
+			if (i == 60) vblank = 0x40;					
+		}
 //		if (i == 240) vblank = 0x40;
-		if (i == 60) vblank = 0x40;
-	}
 
-	M6502Close();
+	}
+//	M6502Close();
 
 //	if (pBurnSoundOut) {
-		if (is_Bootleg)	// Bootleg set 2 sound system
-		{
+//		if (is_Bootleg)	// Bootleg set 2 sound system
+//		{
 //			SN76496Update(0, pBurnSoundOut, nBurnSoundLen);
 //			SN76496Update(1, pBurnSoundOut, nBurnSoundLen);
 //			SN76496Update(2, pBurnSoundOut, nBurnSoundLen);
-		}
+//		}
 //	}
 
 	return 0;

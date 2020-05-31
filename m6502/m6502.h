@@ -86,7 +86,7 @@ typedef struct
 	int halt;						/* nonzero if the CPU is halted */
 	int pending_irq;				/* nonzero if an IRQ is pending */
 	int pending_nmi;				/* nonzero if a NMI is pending */
-	int after_cli;					/* pending IRQ and last insn cleared I */
+
 #if LAZY_FLAGS
 	int nz; 						/* last value (lazy N and Z flag) */
 #endif
@@ -100,6 +100,7 @@ typedef struct
 #define M6502_RST_VEC	0xfffc
 #define M6502_IRQ_VEC	0xfffe
 
+unsigned int after_cli;					/* pending IRQ and last insn cleared I */
 extern int M6502_ICount;                /* cycle count */
 extern int M6502_Type;					/* CPU subtype */
 

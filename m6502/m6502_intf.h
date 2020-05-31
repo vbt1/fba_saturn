@@ -1,5 +1,13 @@
 #include "m6502.h"
 
+#define MAP_READ		1
+#define MAP_WRITE		2
+#define MAP_FETCHOP		4
+#define MAP_FETCHARG		8
+#define MAP_FETCH		(MAP_FETCHOP|MAP_FETCHARG)
+#define MAP_ROM			(MAP_READ|MAP_FETCH)
+#define MAP_RAM			(MAP_ROM|MAP_WRITE)
+
 typedef UINT8 (*pReadPortHandler)(UINT16 a);
 typedef void (*pWritePortHandler)(UINT16 a, UINT8 d);
 typedef UINT8 (*pReadByteHandler)(UINT16 a);
@@ -8,6 +16,10 @@ typedef UINT8 (*pReadMemIndexHandler)(UINT16 a);
 typedef void (*pWriteMemIndexHandler)(UINT16 a, UINT8 d);
 typedef UINT8 (*pReadOpHandler)(UINT16 a);
 typedef UINT8 (*pReadOpArgHandler)(UINT16 a);
+typedef void (*write_func)(unsigned short a, UINT8 d);
+typedef UINT8 (*read_func)(unsigned short a);
+write_func wf[0x1000];
+read_func rf[0x1000];
 
 UINT8 *Read[0x100];
 UINT8 *Write[0x100];
@@ -29,8 +41,8 @@ typedef struct  {
 	pWriteByteHandler WriteByte;
 	pReadMemIndexHandler ReadMemIndex;
 	pWriteMemIndexHandler WriteMemIndex;
-	pReadOpHandler ReadOp;
-	pReadOpArgHandler ReadOpArg;
+//	pReadOpHandler ReadOp;
+//	pReadOpArgHandler ReadOpArg;
 	
 	INT32 nCyclesTotal;
 	INT32 nCyclesSegment;
@@ -78,8 +90,8 @@ void M6502RunEnd();
 INT32 M6502MapMemory(UINT8* pMemory, UINT16 nStart, UINT16 nEnd, INT32 nType);
 void M6502SetReadPortHandler(UINT8 (*pHandler)(UINT16));
 void M6502SetWritePortHandler(void (*pHandler)(UINT16, UINT8));
-void M6502SetReadHandler(UINT8 (*pHandler)(UINT16));
-void M6502SetWriteHandler(void (*pHandler)(UINT16, UINT8));
+void M6502SetReadHandler(UINT16 nStart, UINT16 nEnd,UINT8 (*pHandler)(UINT16));
+void M6502SetWriteHandler(UINT16 nStart, UINT16 nEnd,void (*pHandler)(UINT16, UINT8));
 void M6502SetReadMemIndexHandler(UINT8 (*pHandler)(UINT16));
 void M6502SetWriteMemIndexHandler(void (*pHandler)(UINT16, UINT8));
 void M6502SetReadOpHandler(UINT8 (*pHandler)(UINT16));

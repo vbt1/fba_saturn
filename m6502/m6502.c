@@ -41,8 +41,6 @@ static	M6502_Regs	m6502;
 #define FLAG_N 0x80
 
 void M6502WriteByte(unsigned short Address, unsigned char Data);
-// A table for the test
-static unsigned char M6502_byTestTable[ 256 ];
 
 // Value and Flag Data
 struct value_table_tag
@@ -133,6 +131,35 @@ FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"M6502_C
 
 int M6502_Execute(int cycles)
 {
+#if 1
+        /* check if the I flag was just reset (interrupts enabled) */
+        if (after_cli)
+            after_cli = 0;
+        else
+		if (m6502.pending_nmi || (m6502.pending_irq && !(P & FLAG_I)))
+        {
+            if (m6502.pending_nmi)
+            {
+                m6502.pending_nmi = 0;
+				EAD = M6502_NMI_VEC;
+            }
+            else
+            {
+                m6502.pending_irq = 0;
+				EAD = M6502_IRQ_VEC;
+            }
+			M6502_ICount -= 7;
+			m6502.halt = 0;
+			PUSH(PCH);
+			PUSH(PCL);
+			COMPOSE_P;
+			PUSH(P & ~FLAG_B);
+			P = (P & ~FLAG_D) | FLAG_I;		/* knock out D and set I flag */
+			PCD = RDMEM16D(EAD);
+			change_pc16(PCD);
+        }
+#endif	
+	
 #if USE_GOTO	
 static void (*const insn6502[0x100])(void) = {
 	&&m6502_00,&&m6502_01,&&m6502_02,&&m6502_03,&&m6502_04,&&m6502_05,&&m6502_06,&&m6502_07,
@@ -177,20 +204,21 @@ static void (*const insn6502[0x100])(void) = {
 
     do
     {
-		if (m6502.halt)
-            break;
+//		if (m6502.halt)
+ //           break;
 
 #if USE_GOTO
 		unsigned char op = RDOP();
 		DISPATCH();
-		
+
 #include "tbl6502.h"
-		
+
 m6502_end:
 #else
 	        insn[RDOP()]();
 #endif		
 
+#if 0
         /* check if the I flag was just reset (interrupts enabled) */
         if (m6502.after_cli)
             m6502.after_cli = 0;
@@ -214,10 +242,10 @@ m6502_end:
 			COMPOSE_P;
 			PUSH(P & ~FLAG_B);
 			P = (P & ~FLAG_D) | FLAG_I;		/* knock out D and set I flag */
-			PCD = RDMEM16(EAD);
+			PCD = RDMEM16D(EAD);
 			change_pc16(PCD);
         }
-
+#endif
     } while (M6502_ICount > 0);
 
     return cycles - M6502_ICount;

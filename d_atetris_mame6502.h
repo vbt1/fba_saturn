@@ -1,7 +1,6 @@
 
 #include "burnint.h"
-#include "m6502.new/m6502_intf.h"
-//#include "m6502.new/m6502.h"
+#include "m6502/m6502_intf.h"
 #include "slapstic.h"
 #include "snd/sn76496.h"
 #include "saturn/ovl.h"

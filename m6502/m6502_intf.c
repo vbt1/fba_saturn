@@ -164,8 +164,8 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 	pCurrentCPU->WriteByte = M6502WriteByteDummyHandler;
 	pCurrentCPU->ReadMemIndex = M6502ReadMemIndexDummyHandler;
 	pCurrentCPU->WriteMemIndex = M6502WriteMemIndexDummyHandler;
-	pCurrentCPU->ReadOp = M6502ReadOpDummyHandler;
-	pCurrentCPU->ReadOpArg = M6502ReadOpArgDummyHandler;
+//	pCurrentCPU->ReadOp = M6502ReadOpDummyHandler;
+//	pCurrentCPU->ReadOpArg = M6502ReadOpArgDummyHandler;
 	
 	nM6502CyclesDone[cpu] = 0;
 	INT32 j;
@@ -317,14 +317,24 @@ void M6502SetWritePortHandler(void (*pHandler)(UINT16, UINT8))
 	pCurrentCPU->WritePort = pHandler;
 }
 
-void M6502SetReadHandler(UINT8 (*pHandler)(UINT16))
+void M6502SetReadHandler(UINT16 nStart, UINT16 nEnd,UINT8 (*pHandler)(UINT16))
 {
-	pCurrentCPU->ReadByte = pHandler;
+	UINT8 cStart = (nStart >> 4);
+	
+	for (UINT32 i = cStart; i <= (nEnd >> 4); i++) 
+	{	
+		rf[i] = pHandler;
+	}	
 }
 
-void M6502SetWriteHandler(void (*pHandler)(UINT16, UINT8))
+void M6502SetWriteHandler(UINT16 nStart, UINT16 nEnd,void (*pHandler)(UINT16, UINT8))
 {
-	pCurrentCPU->WriteByte = pHandler;
+	UINT8 cStart = (nStart >> 4);
+	
+	for (UINT32 i = cStart; i <= (nEnd >> 4); i++) 
+	{	
+		wf[i] = pHandler;
+	}
 }
 
 void M6502SetReadMemIndexHandler(UINT8 (*pHandler)(UINT16))
@@ -336,7 +346,7 @@ void M6502SetWriteMemIndexHandler(void (*pHandler)(UINT16, UINT8))
 {
 	pCurrentCPU->WriteMemIndex = pHandler;
 }
-
+/*
 void M6502SetReadOpHandler(UINT8 (*pHandler)(UINT16))
 {
 	pCurrentCPU->ReadOp = pHandler;
@@ -346,7 +356,7 @@ void M6502SetReadOpArgHandler(UINT8 (*pHandler)(UINT16))
 {
 	pCurrentCPU->ReadOpArg = pHandler;
 }
-
+*/
 UINT8 M6502ReadPort(UINT16 Address)
 {
 	// check handler
@@ -364,18 +374,18 @@ void M6502WritePort(UINT16 Address, UINT8 Data)
 		pCurrentCPU->WritePort(Address, Data);
 	}
 }
-
+/*
 UINT8 M6502ReadByte(UINT16 Address)
 {
 	// check mem map
 	UINT8 * pr = Read[(Address >> 8)];
-	return (pr != NULL) ? pr[Address&0xff]:atetris_read(Address);
+	return (pr != NULL) ? pr[Address&0xff]:rf[Address>>4](Address);
 }
 
 UINT16 M6502ReadWord(UINT16 Address)
 {
 	UINT8 * pr = Read[(Address >> 8)];
-	return (pr != NULL) ? pr[Address&0xff]|pr[(Address&0xff)+1]<<8:atetris_read(Address)|atetris_read(Address+1)<<8;
+	return (pr != NULL) ? pr[Address&0xff]|pr[(Address&0xff)+1]<<8:rf[Address>>4](Address)|rf[Address>>4](Address+1)<<8;
 }
 
 void M6502WriteByte(UINT16 Address, UINT8 Data)
@@ -386,9 +396,9 @@ void M6502WriteByte(UINT16 Address, UINT8 Data)
 		pr[Address & 0xff] = Data;
 		return;
 	}
-	atetris_write(Address, Data);
+	wf[Address>>4](Address, Data);
 }
-
+*/
 void M6502WriteWord(UINT16 Address, UINT8 Data, UINT8 Data2)
 {
 	// check mem map
@@ -431,7 +441,7 @@ void M6502WriteMemIndex(UINT16 Address, UINT8 Data)
 		return;
 	}
 }
-
+/*
 UINT8 M6502ReadOp(UINT16 Address)
 {
 	// check mem map
@@ -445,7 +455,7 @@ UINT8 M6502ReadOpArg(UINT16 Address)
 	UINT8 * pr = Read[(Address >> 8)];
 	return (pr != NULL) ? pr[Address&0xff]:atetris_read(Address);
 }
-
+*/
 void M6502WriteRom(UINT32 Address, UINT8 Data)
 {
 #if defined FBA_DEBUG
