@@ -664,6 +664,14 @@ void gfx_unscramble(INT32 gfxlen)
 	lineswap_gfx_roms(DrvGfxROM2, gfxlen, 14);
 }
 
+/*static*/ void DrvCalculatePalette()
+{
+	for (UINT32 i = 0; i < 0x800; i+=2)
+	{
+		DrvPaletteUpdate(i);
+	}
+}
+
 INT32 Ninjakd2CommonInit()
 {
 	DrvInitSaturnS(1);
@@ -851,20 +859,17 @@ INT32 RobokidInit()
 void initLayersS(UINT8 game)
 {
     Uint16	CycleTb[]={
-//		0xff56, 0xffff, //A0
 		0xffff,0x4567,  //A0 // nbg1 et 2 ok
-		0xffff, 0xffff,	//A1
-//		0x15f2,0x4eff,   //B0 // nbg1 et 2 ok
-		0x0123, 0xffff,  //B1
-		0xffff,0xffff   //B0
-//		0x4eff, 0x1fff, //B1
+		0xffff, 0x4ff7,	//A1
+		0x0123,0x4ff7 ,  //B0
+		0xffff,0x4ff7   //B1
 	};
  	SclConfig	scfg;
 
 	scfg.dispenbl      = ON;
 	scfg.charsize      = SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
-	scfg.pnamesize   = SCL_PN1WORD;
-	scfg.flip              = SCL_PN_12BIT; 
+	scfg.pnamesize     = SCL_PN1WORD;
+	scfg.flip          = SCL_PN_12BIT; 
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
@@ -873,6 +878,7 @@ void initLayersS(UINT8 game)
 	scfg.plate_addr[1] = (Uint32)ss_map;
 	SCL_SetConfig(SCL_NBG2, &scfg); // fg
 
+	scfg.dispenbl      = ON;
 	scfg.pnamesize   = SCL_PN2WORD;
 	scfg.charsize      = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
@@ -883,7 +889,7 @@ void initLayersS(UINT8 game)
 	scfg.plate_addr[3] = (Uint32)ss_map2;
 
 	SCL_SetConfig(SCL_NBG1, &scfg); // bg0
-
+	scfg.dispenbl      = ON;
 	scfg.plate_addr[0] = (Uint32)ss_font; // bg1
 	scfg.plate_addr[1] = (Uint32)ss_font;
 	scfg.plate_addr[2] = (Uint32)ss_font;
@@ -892,12 +898,10 @@ void initLayersS(UINT8 game)
 	if(!game)
 	{
 		SCL_SetConfig(SCL_NBG0, &scfg);
-
 		scfg.plate_addr[0] = (Uint32)ss_map3; // bg2
 		scfg.plate_addr[1] = (Uint32)ss_map3;
 		scfg.plate_addr[2] = (Uint32)ss_map3;
 		scfg.plate_addr[3] = (Uint32)ss_map3;
-
 		SCL_SetConfig(SCL_NBG3, &scfg);
 	}
 	else
@@ -977,6 +981,7 @@ void DrvInitSaturnS(UINT8 game)
 		SS_SET_N0PRIN(7);
 	else
 		SS_SET_N0PRIN(3);
+		
 	SS_SET_N2PRIN(6);
 	SS_SET_N1PRIN(2);
 	SS_SET_N3PRIN(5);
@@ -1051,14 +1056,6 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	return 0;
 }
 
-/*static*/inline void DrvCalculatePalette()
-{
-	for (UINT32 i = 0; i < 0x800; i+=2)
-	{
-		DrvPaletteUpdate(i);
-	}
-}
-
  void draw_robokid_bg_layer(UINT32 sel, UINT8 *ram, UINT8 *rom, INT32 width, INT32 transp)
 {
 //	if (tilemap_enable[sel] == 0) return;
@@ -1111,6 +1108,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 				code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
 				ss_font[offs2] = (attr & 0x0f);
 				ss_font[offs2+1] = (0x1400+((code)<<2));
+//				ss_font[offs2+1] = (((code)<<2));
 				break;
 			case 2://nbg3
 				ss_map3[offs2] = (attr & 0x0f);

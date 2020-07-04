@@ -498,9 +498,9 @@ void __fastcall DrvGngZ80Write(unsigned short a, unsigned char d)
 /*static*/ void initLayers()
 {
     Uint16	CycleTb[]={
-		0x1f56, 0xffff, //A0
+		0x1f56, 0x4eff, //A0
 		0xffff, 0xffff,	//A1
-		0xf5f2, 0x4eff,   //B0
+		0xf5f2, 0xffff,   //B0
 		0xffff, 0xffff  //B1
 //		0x4eff, 0x1fff, //B1
 	};
