@@ -4,13 +4,11 @@
 #define MAX_CPU		1
 
 INT32 nM6502Count = 0;
-static INT32 nActiveCPU = 0;
-
-//static M6502Ext *m6502CPUContext[MAX_CPU] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+//static INT32 nActiveCPU = 0;
 static M6502Ext m6502CPUContext;
 static M6502Ext *pCurrentCPU;
 static INT32 nM6502CyclesDone[MAX_CPU];
-INT32 nM6502CyclesTotal;
+//INT32 nM6502CyclesTotal;
 
 static UINT8 M6502ReadPortDummyHandler(UINT16 a)
 {
@@ -69,7 +67,7 @@ void M6502NewFrame()
 	for (i = 0; i < nM6502Count; i++) {
 		nM6502CyclesDone[i] = 0;
 	}
-	nM6502CyclesTotal = 0;
+//	nM6502CyclesTotal = 0;
 }
 /*
 static UINT8 M6502CheatRead(UINT32 a)
@@ -98,7 +96,7 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 //	DebugCPU_M6502Initted = 1;
 	
 	nM6502Count++;
-	nActiveCPU = -1;
+//	nActiveCPU = -1;
 
 //	m6502CPUContext[cpu] = (M6502Ext*)BurnMalloc(sizeof(M6502Ext));
 
@@ -113,7 +111,7 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 			pCurrentCPU->execute = M6502_Execute;
 			pCurrentCPU->reset = M6502_Reset;
 			pCurrentCPU->init = M6502_Init;
-			pCurrentCPU->set_irq_line = NULL;
+//			pCurrentCPU->set_irq_line = NULL;
 		break;
 /*
 		case TYPE_M65C02:
@@ -158,8 +156,8 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 */		
 	}
 
-	pCurrentCPU->ReadPort = M6502ReadPortDummyHandler;
-	pCurrentCPU->WritePort = M6502WritePortDummyHandler;
+//	pCurrentCPU->ReadPort = M6502ReadPortDummyHandler;
+//	pCurrentCPU->WritePort = M6502WritePortDummyHandler;
 	pCurrentCPU->ReadByte = M6502ReadByteDummyHandler;
 	pCurrentCPU->WriteByte = M6502WriteByteDummyHandler;
 	pCurrentCPU->ReadMemIndex = M6502ReadMemIndexDummyHandler;
@@ -175,7 +173,7 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 		Fetch[j] = NULL;		
 	}
 	
-	nM6502CyclesTotal = 0;
+//	nM6502CyclesTotal = 0;
 	
 	pCurrentCPU->init();
 
@@ -210,13 +208,14 @@ void M6502Open(INT32 num)
 	if (nActiveCPU != -1) bprintf(PRINT_ERROR, _T("M6502Open called with CPU already open with index %x\n"), num);
 #endif
 
-	nActiveCPU = num;
+//	nActiveCPU = num;
 
 	pCurrentCPU = &m6502CPUContext;
 
 	M6502_SetRegs(&pCurrentCPU->reg);
 	
-	nM6502CyclesTotal = nM6502CyclesDone[nActiveCPU];
+//	nM6502CyclesTotal = nM6502CyclesDone[nActiveCPU];
+//	nM6502CyclesTotal = *nM6502CyclesDone;
 }
 
 void M6502Close()
@@ -228,21 +227,25 @@ void M6502Close()
 
 	M6502_GetRegs(&pCurrentCPU->reg);
 	
-	nM6502CyclesDone[nActiveCPU] = nM6502CyclesTotal;
+//	nM6502CyclesDone[nActiveCPU] = nM6502CyclesTotal;
+//	*nM6502CyclesDone = nM6502CyclesTotal;
 
 	pCurrentCPU = NULL; // cause problems! 
 	
-	nActiveCPU = -1;
+//	nActiveCPU = -1;
 }
 
 INT32 M6502GetActive()
 {
+	/*
 #if defined FBA_DEBUG
 	if (!DebugCPU_M6502Initted) bprintf(PRINT_ERROR, _T("M6502GetActive called without init\n"));
 	if (nActiveCPU == -1) bprintf(PRINT_ERROR, _T("M6502GetActive called with no CPU open\n"));
 #endif
 
 	return nActiveCPU;
+*/	
+	return 0;
 }
 
 void M6502SetIRQLine(INT32 vector, INT32 status)
@@ -268,7 +271,7 @@ void M6502SetIRQLine(INT32 vector, INT32 status)
 INT32 M6502Run(INT32 cycles)
 {
 	cycles = M6502_Execute(cycles);
-	nM6502CyclesTotal += cycles;
+//	nM6502CyclesTotal += cycles;
 	
 	return cycles;
 }
@@ -306,7 +309,7 @@ INT32 M6502MapMemory(UINT8* pMemory, UINT16 nStart, UINT16 nEnd, INT32 nType)
 	return 0;
 
 }
-
+/*
 void M6502SetReadPortHandler(UINT8 (*pHandler)(UINT16))
 {
 	pCurrentCPU->ReadPort = pHandler;
@@ -316,12 +319,12 @@ void M6502SetWritePortHandler(void (*pHandler)(UINT16, UINT8))
 {
 	pCurrentCPU->WritePort = pHandler;
 }
-
+*/
 void M6502SetReadHandler(UINT16 nStart, UINT16 nEnd,UINT8 (*pHandler)(UINT16))
 {
-	UINT8 cStart = (nStart >> 4);
+	UINT8 cStart = (nStart >> 8);
 	
-	for (UINT32 i = cStart; i <= (nEnd >> 4); i++) 
+	for (UINT32 i = cStart; i <= (nEnd >> 8); i++) 
 	{	
 		rf[i] = pHandler;
 	}	
@@ -329,9 +332,9 @@ void M6502SetReadHandler(UINT16 nStart, UINT16 nEnd,UINT8 (*pHandler)(UINT16))
 
 void M6502SetWriteHandler(UINT16 nStart, UINT16 nEnd,void (*pHandler)(UINT16, UINT8))
 {
-	UINT8 cStart = (nStart >> 4);
+	UINT8 cStart = (nStart >> 8);
 	
-	for (UINT32 i = cStart; i <= (nEnd >> 4); i++) 
+	for (UINT32 i = cStart; i <= (nEnd >> 8); i++) 
 	{	
 		wf[i] = pHandler;
 	}
@@ -356,7 +359,7 @@ void M6502SetReadOpArgHandler(UINT8 (*pHandler)(UINT16))
 {
 	pCurrentCPU->ReadOpArg = pHandler;
 }
-*/
+
 UINT8 M6502ReadPort(UINT16 Address)
 {
 	// check handler
@@ -374,6 +377,8 @@ void M6502WritePort(UINT16 Address, UINT8 Data)
 		pCurrentCPU->WritePort(Address, Data);
 	}
 }
+*/
+
 /*
 UINT8 M6502ReadByte(UINT16 Address)
 {
@@ -399,6 +404,7 @@ void M6502WriteByte(UINT16 Address, UINT8 Data)
 	wf[Address>>4](Address, Data);
 }
 */
+/*
 void M6502WriteWord(UINT16 Address, UINT8 Data, UINT8 Data2)
 {
 	// check mem map
@@ -409,23 +415,16 @@ void M6502WriteWord(UINT16 Address, UINT8 Data, UINT8 Data2)
 		pr[(Address&0xff)-1] = Data2;
 		return;
 	}
-	/*
-	// check handler
-	if (pCurrentCPU->WriteByte != NULL) {
-		pCurrentCPU->WriteByte(Address, Data);
-		pCurrentCPU->WriteByte(Address-1, Data2);		
-		return;
-	}
-	*/
 }
-
+*/
+/*
 UINT8 M6502ReadMemIndex(UINT16 Address)
 {
 	// check mem map
 	UINT8 * pr = Read[(Address >> 8)];
 	return (pr != NULL) ? pr[Address&0xff]:pCurrentCPU->ReadMemIndex(Address);	
 }
-
+*/
 void M6502WriteMemIndex(UINT16 Address, UINT8 Data)
 {
 	// check mem map
@@ -456,6 +455,7 @@ UINT8 M6502ReadOpArg(UINT16 Address)
 	return (pr != NULL) ? pr[Address&0xff]:atetris_read(Address);
 }
 */
+/*
 void M6502WriteRom(UINT32 Address, UINT8 Data)
 {
 #if defined FBA_DEBUG
@@ -487,6 +487,7 @@ void M6502WriteRom(UINT32 Address, UINT8 Data)
 		return;
 	}
 }
+*/
 /*
 UINT32 M6502GetPC()
 {

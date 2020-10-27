@@ -116,7 +116,8 @@
 		if ( ptr ) ptr[A] = D;										\
 		else {														\
 			CPU->PC = PC;											\
-			CPU->Write_Byte(A, D);									\
+/*			CPU->Write_Byte(A, D);*/								\
+			CPU->wf[A>>8](A, D);								\
 		}															\
 	}
 /*
@@ -141,8 +142,10 @@
 			ptr[(A)+1] = (D) >> 8;									\
 		} else {													\
 			CPU->PC = PC;											\
-			CPU->Write_Byte(A, D);									\
-			CPU->Write_Byte((A)+1, (D) >> 8);						\
+			/*CPU->Write_Byte(A, D);*/									\
+			/*CPU->Write_Byte((A)+1, (D) >> 8);*/						\
+			CPU->wf[A>>8](A, D);								\
+			CPU->wf[A>>8]((A)+1, (D) >> 8);								\
 		}															\
 	}
 /*

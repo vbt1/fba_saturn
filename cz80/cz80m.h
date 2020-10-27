@@ -137,6 +137,8 @@ extern "C" {
 #define CZ80_IRQSTATUS_AUTO	0x2000
 #define CZ80_IRQSTATUS_ACK	0x1000
 
+typedef void (*write_func)(unsigned short a, UINT8 d);
+
 typedef union
 {
 	struct
@@ -202,14 +204,13 @@ typedef struct cz80_t
 	
 	unsigned char *pzR8[8];
 	union16 *pzR16[4];
-
+	write_func wf[0x100];
 /*
 	unsigned char (*InnerReadByte)(unsigned short address);
 	unsigned short (*InnerReadWord)(unsigned short address);
 	void (*InnerWriteByte)(unsigned short address, unsigned char data);
 	void (*InnerWriteWord)(unsigned short address, unsigned short data);
 */
-
 	unsigned char   (__fastcall *Read_Byte)(unsigned short address);
 	void (__fastcall *Write_Byte)(unsigned short address, unsigned char data);
 

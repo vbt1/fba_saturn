@@ -1,4 +1,7 @@
 #define nInterleave 10
+#include "SEGA_INT.H"
+#include "SEGA_DMA.H"
+
 void dummy();
 
 /*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
@@ -586,7 +589,7 @@ void initLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void SaturnInitMem()
 {
-	p[8] = system1_backgroundram_w;
+	p[8] = system1_backgroundram_w; // e0
 	p[9] = system1_backgroundram_w;
 	p[10] = system1_backgroundram_w;
 	p[11] = system1_backgroundram_w;
@@ -595,7 +598,7 @@ void initLayers()
 	p[14] = system1_backgroundram_w;
 	p[15] = system1_backgroundram_w;
 
-	p[16] = system1_foregroundram_w;
+	p[16] = system1_foregroundram_w; // e8
 	p[17] = system1_foregroundram_w;
 	p[18] = system1_foregroundram_w;
 	p[19] = system1_foregroundram_w;
@@ -628,6 +631,7 @@ void initLayers()
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
+	INT_ChgMsk(INT_MSK_DMA2, INT_MSK_NULL);	
 	nSoundBufferPos = 0;
 	nBurnSprites  = 35;
 	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
@@ -1143,6 +1147,8 @@ void System1DrawSprites()
 	SN76496Update(0, &nSoundBuffer[*nSoundBufferPos], nSegmentLength);
 	SN76496Update(1, &nSoundBuffer[*nSoundBufferPos], nSegmentLength);
 	nSoundBufferPos[0]+=nSegmentLength;
+	
+//	System1Render();
 	//	nSoundBufferPos[0]+= nSegmentLength;
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
@@ -1162,6 +1168,8 @@ int System1Frame()
 		CZetOpen(0);
 #endif
 		INT32 nCyclesSegment = cpu_lut[i] - nCyclesDone[0];
+//		INT32 nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
+//		INT32 nCyclesSegment = nNext - nCyclesDone[0];	
 #ifdef CZ80
 		nCyclesDone[0] += CZetRun(nCyclesSegment);
 #endif
@@ -1172,8 +1180,8 @@ int System1Frame()
 #endif
 		SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
 //vbt à précalculer !!!
-//		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-//		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+//		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
+//		nCyclesSegment = nNext - nCyclesDone[1];
 		nCyclesSegment = cpu_lut[i] - nCyclesDone[1];
 #ifdef USE_RAZE1
 		nCyclesSegment = z80_emulate(nCyclesSegment);

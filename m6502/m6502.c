@@ -90,7 +90,6 @@ void M6502_SetRegs (M6502_Regs *Regs)
 
 void M6502_Reset(void)
 {
-FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"switch             ",10,70);		
 	switch (M6502_Type)
 	{
 #if SUPP65C02
@@ -109,7 +108,6 @@ FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"switch 
 #endif			
             break;
     }
-FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"memset             ",10,70);
     /* wipe out the m6502 structure */
 	memset(&m6502, 0, sizeof(M6502_Regs));
 
@@ -118,13 +116,11 @@ FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"memset 
 
     /* stack starts at 0x01ff */
 	m6502.sp.D = 0x1ff;
-FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"RDMEM             ",10,70);
 
     /* read the reset vector into PC */
 	PCL = RDMEM(M6502_RST_VEC);
 	PCH = RDMEM(M6502_RST_VEC+1);
 	change_pc16(PCD);
-FNT_Print256_2bpp((volatile unsigned char *)0x25e40000,(unsigned char *)"M6502_Clear_pending_Interrupts             ",10,70);
     /* clear pending interrupts */
     M6502_Clear_Pending_Interrupts();
 }
@@ -197,7 +193,7 @@ static void (*const insn6502[0x100])(void) = {
 };
 	#define DISPATCH() goto *insn6502[op]
 #endif
-	
+
     M6502_ICount = cycles;
 
 	change_pc16(PCD);
@@ -214,10 +210,10 @@ static void (*const insn6502[0x100])(void) = {
 #include "tbl6502.h"
 
 m6502_end:
+;
 #else
 	        insn[RDOP()]();
 #endif		
-
 #if 0
         /* check if the I flag was just reset (interrupts enabled) */
         if (m6502.after_cli)

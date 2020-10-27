@@ -27,12 +27,120 @@
 #define INLINE static __inline__
 
 /* op    temp     cycles             rdmem   opc  wrmem   ********************/
+m6502_80:
+m6502_02:
+m6502_22:
+m6502_42:
+m6502_62:
+m6502_82:
+m6502_c2: 
+m6502_e2: 
+m6502_12: 
+m6502_32: 
+m6502_52: 
+m6502_72: 
+m6502_92: 
+m6502_b2: 
+m6502_d2: 
+m6502_f2: 
+m6502_03: 
+m6502_23: 
+m6502_43: 
+m6502_63: 
+m6502_83: 
+m6502_a3: 
+m6502_c3: 
+m6502_e3: 
+m6502_13:
+m6502_33:
+m6502_53:
+m6502_73:
+m6502_93:
+m6502_b3: 
+m6502_d3:  
+m6502_f3:
+m6502_04:
+m6502_14:
+m6502_34:
+m6502_44:
+m6502_54:
+m6502_64:
+m6502_74:
+m6502_d4:
+m6502_f4:
+m6502_07: 
+m6502_27: 
+m6502_47: 
+m6502_67: 
+m6502_87: 
+m6502_a7: 
+m6502_c7: 
+m6502_e7: 
+m6502_17: 
+m6502_37: 
+m6502_57: 
+m6502_77: 
+m6502_97: 
+m6502_b7: 
+m6502_d7: 
+m6502_f7: 
+m6502_89:
+m6502_1a: 
+m6502_3a: 
+m6502_5a: 
+m6502_7a:  
+m6502_da: 
+m6502_fa: 
+
+m6502_0b: 
+m6502_2b: 
+m6502_4b: 
+m6502_6b: 
+m6502_8b: 
+m6502_ab: 
+m6502_cb: 
+m6502_eb: 
+
+m6502_1b: 
+m6502_3b: 
+m6502_5b: 
+m6502_7b: 
+m6502_9b: 
+m6502_bb: 
+m6502_db: 
+m6502_fb: 
+m6502_0c: 
+m6502_1c: 
+m6502_3c: 
+m6502_5c: 
+m6502_7c: 
+m6502_9c:
+m6502_dc: 
+m6502_fc: 
+m6502_9e: 
+m6502_0f: 
+m6502_2f: 
+m6502_4f: 
+m6502_6f: 
+m6502_8f: 
+m6502_af: 
+m6502_cf: 
+m6502_ef: 
+
+m6502_1f: 
+m6502_3f: 
+m6502_5f: 
+m6502_7f: 
+m6502_9f: 
+m6502_bf: 
+m6502_df: 
+m6502_ff: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
+
 
 m6502_00: {		  M6502_ICount -= 7;		 BRK;		  goto m6502_end; }
 m6502_20: {		  M6502_ICount -= 6;		 JSR;		  goto m6502_end; }
 m6502_40: {		  M6502_ICount -= 6;		 RTI;		  goto m6502_end; }
 m6502_60: {		  M6502_ICount -= 6;		 RTS;		  goto m6502_end; }
-m6502_80: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
 m6502_a0: { int tmp; M6502_ICount -= 2; RD_IMM; LDY;		  goto m6502_end; }
 m6502_c0: { int tmp; M6502_ICount -= 2; RD_IMM; CPY;		  goto m6502_end; }
 m6502_e0: { int tmp; M6502_ICount -= 2; RD_IMM; CPX;		  goto m6502_end; }
@@ -64,59 +172,16 @@ m6502_b1: { int tmp; M6502_ICount -= 5; RD_IDY; LDA;		  goto m6502_end; }
 m6502_d1: { int tmp; M6502_ICount -= 5; RD_IDY; CMP;		  goto m6502_end; }
 m6502_f1: { int tmp; M6502_ICount -= 5; RD_IDY; SBC;		  goto m6502_end; }
 
-m6502_02: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_22: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_42: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_62: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_82: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
 m6502_a2: { int tmp; M6502_ICount -= 2; RD_IMM; LDX;		  goto m6502_end; }
-m6502_c2: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_e2: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-
-m6502_12: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_32: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_52: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_72: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_92: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_b2: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_d2: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_f2: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-
-m6502_03: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_23: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_43: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_63: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_83: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
-m6502_a3: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_c3: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_e3: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-
-m6502_13: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_33: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_53: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_73: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_93: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_b3: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_d3: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_f3: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-
-m6502_04: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
 m6502_24: { int tmp; M6502_ICount -= 3; RD_ZPG; BIT;		  goto m6502_end; }
-m6502_44: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_64: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
+
 m6502_84: { int tmp; M6502_ICount -= 3;		 STY; WR_ZPG; goto m6502_end; }
 m6502_a4: { int tmp; M6502_ICount -= 3; RD_ZPG; LDY;		  goto m6502_end; }
 m6502_c4: { int tmp; M6502_ICount -= 3; RD_ZPG; CPY;		  goto m6502_end; }
 m6502_e4: { int tmp; M6502_ICount -= 3; RD_ZPG; CPX;		  goto m6502_end; }
 
-m6502_14: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_34: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_54: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_74: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
 m6502_94: { int tmp; M6502_ICount -= 4;		 STY; WR_ZPX; goto m6502_end; }
 m6502_b4: { int tmp; M6502_ICount -= 4; RD_ZPX; LDY;		  goto m6502_end; }
-m6502_d4: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_f4: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
 
 m6502_05: { int tmp; M6502_ICount -= 3; RD_ZPG; ORA;		  goto m6502_end; }
 m6502_25: { int tmp; M6502_ICount -= 3; RD_ZPG; AND;		  goto m6502_end; }
@@ -154,24 +219,6 @@ m6502_b6: { int tmp; M6502_ICount -= 4; RD_ZPY; LDX;		  goto m6502_end; }
 m6502_d6: { int tmp; M6502_ICount -= 6; RD_ZPX; DEC; WB_EA;  goto m6502_end; }
 m6502_f6: { int tmp; M6502_ICount -= 6; RD_ZPX; INC; WB_EA;  goto m6502_end; }
 
-m6502_07: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_27: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_47: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_67: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_87: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_a7: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_c7: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_e7: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-
-m6502_17: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_37: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_57: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_77: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_97: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_b7: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_d7: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_f7: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-
 m6502_08: {		  M6502_ICount -= 2;		 PHP;		  goto m6502_end; }
 m6502_28: {		  M6502_ICount -= 2;		 PLP;		  goto m6502_end; }
 m6502_48: {		  M6502_ICount -= 2;		 PHA;		  goto m6502_end; }
@@ -194,7 +241,6 @@ m6502_09: { int tmp; M6502_ICount -= 2; RD_IMM; ORA;		  goto m6502_end; }
 m6502_29: { int tmp; M6502_ICount -= 2; RD_IMM; AND;		  goto m6502_end; }
 m6502_49: { int tmp; M6502_ICount -= 2; RD_IMM; EOR;		  goto m6502_end; }
 m6502_69: { int tmp; M6502_ICount -= 2; RD_IMM; ADC;		  goto m6502_end; }
-m6502_89: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
 m6502_a9: { int tmp; M6502_ICount -= 2; RD_IMM; LDA;		  goto m6502_end; }
 m6502_c9: { int tmp; M6502_ICount -= 2; RD_IMM; CMP;		  goto m6502_end; }
 m6502_e9: { int tmp; M6502_ICount -= 2; RD_IMM; SBC;		  goto m6502_end; }
@@ -217,34 +263,10 @@ m6502_aa: {		  M6502_ICount -= 2;		 TAX;		  goto m6502_end; }
 m6502_ca: {		  M6502_ICount -= 2;		 DEX;		  goto m6502_end; }
 m6502_ea: {		  M6502_ICount -= 2;		 NOP;		  goto m6502_end; }
 
-m6502_1a: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_3a: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_5a: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_7a: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
+
 m6502_9a: {		  M6502_ICount -= 2;		 TXS;		  goto m6502_end; }
 m6502_ba: {		  M6502_ICount -= 2;		 TSX;		  goto m6502_end; }
-m6502_da: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_fa: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
 
-m6502_0b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_2b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_4b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_6b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_8b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_ab: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_cb: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_eb: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-
-m6502_1b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_3b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_5b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_7b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_9b: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_bb: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_db: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_fb: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-
-m6502_0c: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
 m6502_2c: { int tmp; M6502_ICount -= 4; RD_ABS; BIT;		  goto m6502_end; }
 m6502_4c: {		  M6502_ICount -= 3; EA_ABS; JMP;		  goto m6502_end; }
 m6502_6c: { int tmp; M6502_ICount -= 5; EA_IND; JMP;		  goto m6502_end; }
@@ -253,14 +275,7 @@ m6502_ac: { int tmp; M6502_ICount -= 4; RD_ABS; LDY;		  goto m6502_end; }
 m6502_cc: { int tmp; M6502_ICount -= 4; RD_ABS; CPY;		  goto m6502_end; }
 m6502_ec: { int tmp; M6502_ICount -= 4; RD_ABS; CPX;		  goto m6502_end; }
 
-m6502_1c: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_3c: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_5c: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_7c: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_9c: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
 m6502_bc: { int tmp; M6502_ICount -= 4; RD_ABX; LDY;		  goto m6502_end; }
-m6502_dc: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_fc: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
 
 m6502_0d: { int tmp; M6502_ICount -= 4; RD_ABS; ORA;		  goto m6502_end; }
 m6502_2d: { int tmp; M6502_ICount -= 4; RD_ABS; AND;		  goto m6502_end; }
@@ -293,28 +308,10 @@ m6502_1e: { int tmp; M6502_ICount -= 7; RD_ABX; ASL; WB_EA;  goto m6502_end; }
 m6502_3e: { int tmp; M6502_ICount -= 7; RD_ABX; ROL; WB_EA;  goto m6502_end; }
 m6502_5e: { int tmp; M6502_ICount -= 7; RD_ABX; LSR; WB_EA;  goto m6502_end; }
 m6502_7e: { int tmp; M6502_ICount -= 7; RD_ABX; ROR; WB_EA;  goto m6502_end; }
-m6502_9e: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
 m6502_be: { int tmp; M6502_ICount -= 4; RD_ABY; LDX;		  goto m6502_end; }
 m6502_de: { int tmp; M6502_ICount -= 7; RD_ABX; DEC; WB_EA;  goto m6502_end; }
 m6502_fe: { int tmp; M6502_ICount -= 7; RD_ABX; INC; WB_EA;  goto m6502_end; }
 
-m6502_0f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_2f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_4f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_6f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_8f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_af: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_cf: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_ef: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-
-m6502_1f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_3f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_5f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_7f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_9f: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_bf: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_df: {		  M6502_ICount -= 2;		 		  goto m6502_end; } 
-m6502_ff: {		  M6502_ICount -= 2;		 		  goto m6502_end; }
 #else
 
 //#ifdef DREAMCAST

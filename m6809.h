@@ -57,7 +57,7 @@ extern unsigned char *Fetch[0x100];
 extern unsigned char *Read[0x100];
 extern unsigned char *Write[0x100];
 
-inline void M6809WriteByte(unsigned short Address, unsigned char Data)
+static inline void M6809WriteByte(unsigned short Address, unsigned char Data)
 {
 	// check mem map
 	unsigned char * pr = Write[(Address >> 8)];
@@ -68,13 +68,13 @@ inline void M6809WriteByte(unsigned short Address, unsigned char Data)
 	DrvGngM6809WriteByte(Address, Data);
 }
 
-inline unsigned char M6809ReadByte(unsigned int Address)
+static inline unsigned char M6809ReadByte(unsigned int Address)
 {
 	unsigned char * pr = Read[(Address >> 8)];
 	return (pr != NULL) ? pr[Address&0xff]:DrvGngM6809ReadByte(Address);
 }
 
-inline void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned char Data2)
+static inline void M6809WriteWord(unsigned int Address, unsigned char Data, unsigned char Data2)
 {
 	// check mem map
 	unsigned char * pr = (unsigned char *)Write[(Address >> 8)];

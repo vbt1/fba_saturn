@@ -18,8 +18,8 @@ typedef UINT8 (*pReadOpHandler)(UINT16 a);
 typedef UINT8 (*pReadOpArgHandler)(UINT16 a);
 typedef void (*write_func)(unsigned short a, UINT8 d);
 typedef UINT8 (*read_func)(unsigned short a);
-write_func wf[0x1000];
-read_func rf[0x1000];
+write_func wf[0x100];
+read_func rf[0x100];
 
 UINT8 *Read[0x100];
 UINT8 *Write[0x100];
@@ -32,11 +32,11 @@ typedef struct  {
 	INT32 (*execute)(INT32 cycles);
 	void (*reset)();
 	void (*init)();
-	void (*set_irq_line)(INT32 irqline, INT32 state);
+//	void (*set_irq_line)(INT32 irqline, INT32 state);
 
 //	UINT8* pMemMap[0x100 * 3];
-	pReadPortHandler ReadPort;
-	pWritePortHandler WritePort;
+//	pReadPortHandler ReadPort;
+//	pWritePortHandler WritePort;
 	pReadByteHandler ReadByte;
 	pWriteByteHandler WriteByte;
 	pReadMemIndexHandler ReadMemIndex;
@@ -44,9 +44,9 @@ typedef struct  {
 //	pReadOpHandler ReadOp;
 //	pReadOpArgHandler ReadOpArg;
 	
-	INT32 nCyclesTotal;
-	INT32 nCyclesSegment;
-	INT32 nCyclesLeft;
+//	INT32 nCyclesTotal;
+//	INT32 nCyclesSegment;
+//	INT32 nCyclesLeft;
 } M6502Ext;
 
 #define M6502_IRQSTATUS_NONE	0

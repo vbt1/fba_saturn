@@ -8,14 +8,10 @@
 #define SOUND_LEN 256
 int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 
-/*static*/ UINT8 *SaturnMem = NULL;
-///*static*/ UINT8 *ss_vram;
-/*static*/ Uint16 *cram_lut;
-/*static*/ UINT16 *map_offset_lut;
-/*static*/ unsigned char 	bg_dirtybuffer[2048];
+/*static*/ Uint16 *cram_lut = NULL;
+/*static*/ UINT16 *map_offset_lut = NULL;
 
 /*static*/ UINT8 *AllMem = NULL;
-/*static*/ UINT8 *MemEnd = NULL;
 /*static*/ UINT8 *AllRam = NULL;
 /*static*/ UINT8 *RamEnd = NULL;
 /*static*/ UINT8 *Drv6502ROM = NULL;
@@ -25,10 +21,9 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ UINT8 *DrvVidRAM = NULL;
 /*static*/ UINT8 *DrvPalRAM = NULL;
 
-/*static*/ INT32 nvram_enable;
+/*static*/ UINT32 nvram_enable = 0;
 
-/*static*/ UINT32 *DrvPalette = NULL;
-/*static*/ UINT8   DrvRecalc;
+/*static*/ //UINT32 *DrvPalette = NULL;
 
 /*static*/ INT32 watchdog;
 /*static*/ INT32 master_clock;

@@ -9,7 +9,6 @@ static cz80_struc* CZetCPUContext = NULL;
 //static 
 //cz80_struc CZetCPUContext[2];
 static cz80_struc* lastCZetCPUContext = NULL;
-
 /*static*/ int nOpenedCPU = -1;
 /*static*/ int nCPUCount = 0;
 
@@ -39,6 +38,16 @@ void CZetSetWriteHandler(void (__fastcall *pHandler)(unsigned short, unsigned ch
 {
 	lastCZetCPUContext->Write_Byte = pHandler;
 //	lastCZetCPUContext->Write_Word = pHandler;
+}
+
+void CZetSetWriteHandler2(unsigned short nStart, unsigned short nEnd,void (*pHandler)(unsigned short, unsigned char))
+{
+	UINT8 cStart = (nStart >> 8);
+	
+	for (UINT32 i = cStart; i <= (nEnd >> 8); i++) 
+	{	
+		lastCZetCPUContext->wf[i] = pHandler;
+	}
 }
 
 void CZetSetInHandler(unsigned char (__fastcall *pHandler)(unsigned short))
@@ -289,40 +298,36 @@ void CZetMapMemory(unsigned char *Mem, int nStart, int nEnd, int nFlags)
 
 int CZetMapArea(int nStart, int nEnd, int nMode, unsigned char *Mem)
 {
-	int s = nStart >> CZ80_FETCH_SFT;
-	int e = (nEnd + CZ80_FETCH_BANK - 1) >> CZ80_FETCH_SFT;
+	unsigned int s = nStart >> CZ80_FETCH_SFT;
+	unsigned int e = (nEnd + CZ80_FETCH_BANK - 1) >> CZ80_FETCH_SFT;
+	static void (*const nMode_table[3])(void) = {&&Read,	&&Write,	&&Fetch};
+	#define DISPATCH() goto *nMode_table[nMode]
 
-	// Put this section in the memory map, giving the offset from Z80 memory to PC memory
 	for (unsigned int i = s; i < e; i++) {
-		switch (nMode) {
-			case 0:  // read
-				lastCZetCPUContext->Read[i] = Mem - nStart;
-				break;
-			case 1: // write
-				lastCZetCPUContext->Write[i] = Mem - nStart;
-				break;
-			case 2: // fetch
-				lastCZetCPUContext->Fetch[i] = Mem - nStart;
-				lastCZetCPUContext->FetchData[i] = Mem - nStart;
-				break;
-		}
+		DISPATCH();
+Read:
+		lastCZetCPUContext->Read[i] = Mem - nStart;
+		goto End;
+Write:
+		lastCZetCPUContext->Write[i] = Mem - nStart;
+		goto End;
+Fetch:
+		lastCZetCPUContext->Fetch[i] = Mem - nStart;
+		lastCZetCPUContext->FetchData[i] = Mem - nStart;
+End:
+;		
 	}
 	return 0;
 }
 
 int CZetMapArea2(int nStart, int nEnd, int nMode, unsigned char *Mem01, unsigned char *Mem02)
 {
-	int s = nStart >> CZ80_FETCH_SFT;
-	int e = (nEnd + CZ80_FETCH_BANK - 1) >> CZ80_FETCH_SFT;
-
-	if (nMode != 2) {
-		return 1;
-	}
+	unsigned int s = nStart >> CZ80_FETCH_SFT;
+	unsigned int e = (nEnd + CZ80_FETCH_BANK - 1) >> CZ80_FETCH_SFT;
 
 	// Put this section in the memory map, giving the offset from Z80 memory to PC memory
-	unsigned int i;
 
-	for (i = s; i < e; i++) {
+	for (unsigned char i = s; i < e; i++) {
 		lastCZetCPUContext->Fetch[i] = Mem01 - nStart;
 		lastCZetCPUContext->FetchData[i] = Mem02 - nStart;
 	}
@@ -373,18 +378,18 @@ int CZetHL(int n)
 
 void CZetSetIRQLine(const int line, const int status)
 {
-	switch (status)
-	{
+//	switch (status)
+//	{
 /*	case CZET_IRQSTATUS_HOLD:
 		lastCZetCPUContext->nInterruptLatch = line | 1;
 		CZetRun(100);
 		lastCZetCPUContext->nInterruptLatch = 0 | 0;
 //		CZetRun(0);
 		return;*/
-	default:
+//	default:
 		lastCZetCPUContext->nInterruptLatch = line | status;
-		return;
-	}
+//		return;
+//	}
 }
 
 int CZetNmi()

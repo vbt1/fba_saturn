@@ -10,6 +10,10 @@
 #define CPU2_ENABLED 1
 #define charSize(x, y) ((Uint16)( ((x >> 3) << 8) | (y)) )
 
+void SDMA_ScuCst(unsigned int ch, void *dst, void *src, unsigned int cnt);
+unsigned int SDMA_ScuResult(unsigned int ch);
+void CZetSetWriteHandler2(unsigned short nStart, unsigned short nEnd,void (*pHandler)(unsigned short, unsigned char));
+
 #include "d_sys2.h"
 #include "d_sys1_common.c"
 UINT8 *CurrentBank = NULL; // vbt à mettre dans drvexit !!!
@@ -163,9 +167,41 @@ inline void system2_foregroundram_w(UINT16 a, UINT8 d)
 	}
 }
 
+static void __fastcall system2_backgroundram_w(UINT16 a, UINT8 d)
+{
+	if(CurrentBank[(a & 0xfff)]!=d)
+	{
+		CurrentBank[(a & 0xfff)] = d;
+		a&=0xffe;
+
+		unsigned int Code = (CurrentBank[a+1]<<8)|CurrentBank[a];
+		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
+
+		unsigned int x = map_offset_lut[a&0x7ff];
+		a = (System1BgBank<<1) + (a>>11);
+		map_dirty[a] = 1;
+
+		UINT16 *map = &map_cache[x+(a<<12)];
+		map[0] = ((Code >> 5) & 0x3f);
+		map[1] = Code & (System1NumTiles-1);
+	}
+}
+
+static void __fastcall system2_foregroundram_w2(UINT16 a, UINT8 d)
+{
+	if(System1BgBank==0)
+	{
+		system2_foregroundram_w(a, d);
+	}
+	else
+		system2_backgroundram_w(a,d);
+}
+
 static void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d)
 {
-	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
+	(*p[(a>>8)-0xd8])(a, d);
+/*	
+ 	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
 	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
 	if (a >= 0xe000 && a <= 0xefff)
 	{
@@ -174,7 +210,6 @@ static void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d)
 			system2_foregroundram_w(a, d);
 			return;
 		}
-
 
 		if(CurrentBank[(a & 0xfff)]!=d)
 		{
@@ -197,6 +232,7 @@ static void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d)
 	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w(a,d); return; }
 	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
 	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
+*/
 }
 
 static UINT8 __fastcall System2Z801ProgRead(UINT16 a)
@@ -368,6 +404,24 @@ void CommonWbmlInit()
 	make_cram_lut();
 	System1CalcPalette();
 
+	p[8] = system2_foregroundram_w2; // e0
+	p[9] = system2_foregroundram_w2;
+	p[10] = system2_foregroundram_w2;
+	p[11] = system2_foregroundram_w2;
+	p[12] = system2_foregroundram_w2;
+	p[13] = system2_foregroundram_w2;
+	p[14] = system2_foregroundram_w2;
+	p[15] = system2_foregroundram_w2;
+	
+	p[16] = system2_backgroundram_w; // e8
+	p[17] = system2_backgroundram_w;
+	p[18] = system2_backgroundram_w;
+	p[19] = system2_backgroundram_w;
+	p[20] = system2_backgroundram_w;
+	p[21] = system2_backgroundram_w;
+	p[22] = system2_backgroundram_w;
+	p[23] = system2_backgroundram_w;
+
 //   nBurnFunction = System1CalcPalette;
 //	nBurnFunction = System1CalcSprPalette;//System1CalcPalette;
 	ss_reg->n1_move_x = 4<<16;
@@ -428,10 +482,21 @@ void CommonWbmlInit()
 	CZetMapArea(0xfc00, 0xffff, 2, System1fcRam);
 
 	CZetSetReadHandler(System2Z801ProgRead);
-	CZetSetWriteHandler(System2Z801ProgWrite);
+//	CZetSetWriteHandler(System2Z801ProgWrite);
+	CZetSetWriteHandler(NULL);
+	
+	CZetSetWriteHandler2(0xd800, 0xd9ff,system1_paletteram_w);
+	CZetSetWriteHandler2(0xda00, 0xdbff,system1_paletteram2_w);
+	CZetSetWriteHandler2(0xdc00, 0xddff,system1_paletteram3_w);
+	
+	CZetSetWriteHandler2(0xe000,0xe7ff,system2_foregroundram_w2);
+	CZetSetWriteHandler2(0xe800,0xefff,system2_backgroundram_w);	
+	
+	CZetSetWriteHandler2(0xf000,0xf3ff,system1_bgcollisionram_w);
+	CZetSetWriteHandler2(0xf800,0xfbff,system1_sprcollisionram_w);
 
-	CZetSetInHandler   (System2Z801PortRead);
-	CZetSetOutHandler(System2Z801PortWrite);
+	CZetSetInHandler  (System2Z801PortRead);
+	CZetSetOutHandler (System2Z801PortWrite);
 	CZetClose();
 
 	ppi8255_init(1);
@@ -441,9 +506,14 @@ void CommonWbmlInit()
 
 //	System1Draw = WbmlRender;
 	memset(System1VideoRam,0x00,0x4000);
+
+//	nCyclesTotal[0] = 3100000 / hz ;
+//	nCyclesTotal[1] = 3100000 / hz ;
+
+	for (UINT32 i = 0; i < 10; i++) cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;	
 }
 
-
+#if 0
 static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Num, INT32 nZ80Rom2Size, INT32 nTileRomNum, INT32 nTileRomSize, INT32 nSpriteRomNum, INT32 nSpriteRomSize, bool bReset)
 {
 	UINT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
@@ -666,6 +736,7 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 
 	return 0;
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 int WbmljbInit()
 {
@@ -720,15 +791,40 @@ static void wbml_draw_bg(UINT8* vram)
 			unsigned short *map = &ss_map[v[page]];
 			unsigned short *mapc = &map_cache[real_page*0x1000];			
 			
-			for (unsigned int i=0;i<8 ;i++ )
+	//		for (unsigned int i=0;i<32 ;i++ )
 			{
-				memcpyl(map,mapc,128);
+DMA_ScuIndirectMemCopy(map,mapc,128*32);
+		//		mapc+=128;
+			//	map+=128;	
+		/*SDMA_ScuCst(DMA_SCU_CH2,&map[0],&mapc[0],128);
 				mapc+=128;
-				map+=128;
+				map+=128;		
+		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
+
+		SDMA_ScuCst(DMA_SCU_CH2,&map[0],&mapc[0],128);
+				mapc+=128;
+				map+=128;		
+		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
+		
+				SDMA_ScuCst(DMA_SCU_CH2,&map[0],&mapc[0],128);
+				mapc+=128;
+				map+=128;		
+		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
+		
+				SDMA_ScuCst(DMA_SCU_CH2,&map[0],&mapc[0],128);
+				mapc+=128;
+				map+=128;		
+		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
+		*/
+	/*
 				
 				memcpyl(map,mapc,128);
 				mapc+=128;
 				map+=128;
+			
+				memcpyl(map,mapc,128);
+				mapc+=128;
+				map+=128;
 
 				memcpyl(map,mapc,128);
 				mapc+=128;
@@ -736,11 +832,36 @@ static void wbml_draw_bg(UINT8* vram)
 
 				memcpyl(map,mapc,128);
 				mapc+=128;
-				map+=128;				
+				map+=128;	*/
 			}			
 		}
 	}
 }
+/*
+static void wbml_draw_bg()
+{
+//	ss_reg->n2_move_x = (-(((System1VideoRam[0x7c0] >> 1) + ((System1VideoRam[0x7c1] & 1) << 7) +1))) & 0xff;
+	ss_reg->n2_move_x = (255-((System1VideoRam[0x7c0] >> 1) + ((System1VideoRam[0x7c1] & 1) << 7))) &0xff;
+	ss_reg->n2_move_y = System1VideoRam[0x7ba]; // & 0x1f;
+
+	const unsigned int v[] = {0, 0x40,0x1000,0x1040};
+
+	for (unsigned int page=0; page < 4; page++)
+	{
+		unsigned char real_page = (System1VideoRam[0x0740 + page*2] & 0x07);
+		if(real_page && map_dirty[real_page] == 1)
+		{
+			map_dirty[real_page] = 0;
+			unsigned int current_map=v[page];
+			for (unsigned int i=0;i<32 ;i++ )
+			{
+				memcpyl(&ss_map[current_map+i*128],&map_cache[(real_page*0x1000)+i*128],64*sizeof(UINT16));
+			}			
+		}
+		
+	}
+}
+*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void System1Render()
 {

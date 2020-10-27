@@ -25,30 +25,30 @@ void DrvFrame();
 void CZetRunSlave(int *nCycles);
 void dummy();
 
-/*static*/unsigned char DrvInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/unsigned char DrvInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/unsigned char DrvInputPort2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/unsigned char DrvDip[3]        = {0, 0, 0};
-/*static*/unsigned char DrvInput[3]      = {0x00, 0x00, 0x00};
-/*static*///unsigned char DrvReset         = 0;
+unsigned char DrvInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvDip[3]        = {0, 0, 0};
+unsigned char DrvInput[3]      = {0x00, 0x00, 0x00};
+//unsigned char DrvReset         = 0;
 
-/*static*/unsigned char *Mem			= NULL;
-/*static*/unsigned char *MemEnd			= NULL;
-/*static*///unsigned char *RamStart		= NULL;
-/*static*///unsigned char *RamEnd		= NULL;
-/*static*/unsigned char *DrvZ80Rom1		= NULL;
-/*static*/unsigned char *DrvZ80Rom2		= NULL;
-/*static*/unsigned char *DrvZ80Ram1		= NULL;
-/*static*/unsigned char *DrvZ80Ram2		= NULL;
-/*static*/unsigned char *DrvVideoRam	= NULL;
-/*static*/unsigned char *DrvSpriteRam	= NULL;
-/*static*/unsigned char *DrvPaletteRam	= NULL;
-/*static*/unsigned char *DrvChars		= NULL;
-/*static*/unsigned char *DrvBackTiles	= NULL;
-/*static*/unsigned char *DrvSprites		= NULL;
-/*static*/unsigned char *DrvSamples		= NULL;
-/*static*///unsigned char *DrvTempRom	= NULL;
-/*static*///unsigned int  *DrvPalette	= NULL;
+unsigned char *Mem			= NULL;
+unsigned char *MemEnd			= NULL;
+//unsigned char *RamStart		= NULL;
+//unsigned char *RamEnd		= NULL;
+unsigned char *DrvZ80Rom1		= NULL;
+unsigned char *DrvZ80Rom2		= NULL;
+unsigned char *DrvZ80Ram1		= NULL;
+unsigned char *DrvZ80Ram2		= NULL;
+unsigned char *DrvVideoRam	= NULL;
+unsigned char *DrvSpriteRam	= NULL;
+unsigned char *DrvPaletteRam	= NULL;
+unsigned char *DrvChars		= NULL;
+unsigned char *DrvBackTiles	= NULL;
+unsigned char *DrvSprites		= NULL;
+unsigned char *DrvSamples		= NULL;
+//unsigned char *DrvTempRom	= NULL;
+//unsigned int  *DrvPalette	= NULL;
 unsigned char *CZ80Context				= NULL;
 //unsigned int *vb_buffer				= NULL;
 unsigned short *vb_buffer				= NULL;//[0x4000];
@@ -58,23 +58,24 @@ unsigned short *vbmap[4] = {NULL,NULL,NULL,NULL};
 //INT16 *lBuffer = NULL;
 extern INT16 *lBuffer;
 
-/*static*/unsigned char DrvRomBank = 0;
-/*static*/unsigned char DrvSoundLatch = 0;
-/*static*/unsigned char DrvIrqVector = 0;
+INT16 oldScroll =0;
+unsigned char DrvRomBank = 0;
+unsigned char DrvSoundLatch = 0;
+unsigned char DrvIrqVector = 0;
 
-/*static*/int DrvRearColour = 0;
-/*static*/int DrvRearDisable = 0;
-/*static*/int DrvHorizScrollLo = 0;
-/*static*/int DrvHorizScrollHi = 0;
-/*static*/int DrvRearHorizScrollLo = 0;
-/*static*/int DrvRearHorizScrollHi = 0;
-/*static*/int DrvSampleAddress = 0;
+int DrvRearColour = 0;
+int DrvRearDisable = 0;
+int DrvHorizScrollLo = 0;
+int DrvHorizScrollHi = 0;
+int DrvRearHorizScrollLo = 0;
+int DrvRearHorizScrollHi = 0;
+int DrvSampleAddress = 0;
 
-/*static*/int nCyclesDone[2] = {0,0};//, nCyclesTotal[2] = {0,0};
-/*static*///int nCyclesSegment;
+int nCyclesDone[2] = {0,0};//, nCyclesTotal[2] = {0,0};
+//int nCyclesSegment;
 
-/*static*///unsigned char DrvHasYM2203 = 0;
-/*static*///unsigned char DrvKikcubicDraw = 0;
+//unsigned char DrvHasYM2203 = 0;
+//unsigned char DrvKikcubicDraw = 0;
 
 #define VECTOR_INIT		0
 #define YM2151_ASSERT		1
@@ -82,7 +83,7 @@ extern INT16 *lBuffer;
 #define Z80_ASSERT		3
 #define Z80_CLEAR		4
 
-/*static*/struct BurnInputInfo DrvInputList[] =
+struct BurnInputInfo DrvInputList[] =
 {
 	{"Coin 1"            , BIT_DIGITAL  , DrvInputPort0 + 3, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , DrvInputPort0 + 0, "p1 start"  },
@@ -112,7 +113,7 @@ extern INT16 *lBuffer;
 STDINPUTINFO(Drv)
 
 
-/*static*/inline void DrvClearOpposites(unsigned char* nJoystickInputs)
+inline void DrvClearOpposites(unsigned char* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x03) == 0x03) {
 		*nJoystickInputs &= ~0x03;
@@ -122,7 +123,7 @@ STDINPUTINFO(Drv)
 	}
 }
 
-/*static*/inline void DrvMakeInputs()
+inline void DrvMakeInputs()
 {
 	// Reset Inputs
 	DrvInput[0] = DrvInput[1] = DrvInput[2] = 0x00;
@@ -139,7 +140,7 @@ STDINPUTINFO(Drv)
 	DrvClearOpposites(&DrvInput[2]);
 }
 
-/*static*/struct BurnDIPInfo DrvDIPList[]=
+struct BurnDIPInfo DrvDIPList[]=
 {
 	// Default Values
 	{0x12, 0xff, 0xff, 0xff, NULL                     },
@@ -210,7 +211,7 @@ STDINPUTINFO(Drv)
 
 STDDIPINFO(Drv)
 
-/*static*/struct BurnRomInfo DrvRomDesc[] = {
+struct BurnRomInfo DrvRomDesc[] = {
 	{ "g07c03.bin",   0x08000, 0x9dcca081, BRF_ESS | BRF_PRG },	//  0	Z80 #1 Program Code
 	{ "j07c04.bin",   0x10000, 0xe0159105, BRF_ESS | BRF_PRG },	//  1
 	

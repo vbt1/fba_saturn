@@ -314,6 +314,7 @@ void m6502_set_irq_line(int irqline, int state)
 			EAD = M6502_NMI_VEC;
 			m6502_ICount -= 2;
 
+
 			PUSH16(PCH,PCL);
 			PUSH(P & ~F_B);
 			P |= F_I;		/* set I flag */

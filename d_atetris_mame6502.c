@@ -37,13 +37,37 @@ static inline void DrvPaletteUpdate(UINT16 offset)
 	colBgAddr[offset] = cram_lut[DrvPalRAM[offset]];//RGB(r>>3,g>>3,b>>3);
 }
 
-/*static*/ UINT8 atetris_read(UINT16 address)
+/*
+UINT8 atetris_read(UINT16 address)
 {
-	if ((address & 0xc000) == 0x4000) 
-	{
+	if ((address & 0xc000) == 0x4000) {
 		return atetris_slapstic_read(address);
 	}
 
+// Remove if/when Pokey support is added!
+
+	{
+		switch (address & ~0x03e0)
+		{
+			case 0x2808:
+				return DrvInputs[0] | vblank;
+
+			case 0x2818:
+				return DrvInputs[1];
+		}
+	}
+
+	return 0;
+}
+*/
+
+UINT8 atetris_read_0x4000(UINT16 address)
+{
+	return atetris_slapstic_read(address);
+}
+
+UINT8 atetris_read_0x2800(UINT16 address)
+{
 // Remove if/when Pokey support is added!
 	{
 		switch (address & ~0x03e0)
@@ -57,7 +81,7 @@ static inline void DrvPaletteUpdate(UINT16 offset)
 	}
 }
 
-/*static*/ void atetris_write_0x1000(UINT16 address, UINT8 data)
+void atetris_write_0x1000(UINT16 address, UINT8 data)
 {
 	address-=0x1000;
 	if(DrvVidRAM[address]!=data)
@@ -65,10 +89,10 @@ static inline void DrvPaletteUpdate(UINT16 offset)
 		DrvVidRAM[address] = data;
 		
 		address&=~1;
-		UINT32 code  = DrvVidRAM[address + 0] | ((DrvVidRAM[address + 1] & 0x07) << 8);
-		UINT32 color = DrvVidRAM[address + 1] >> 4;
+		UINT16 code  = DrvVidRAM[address + 0] | ((DrvVidRAM[address + 1] & 0x07) << 8);
+		UINT16 color = DrvVidRAM[address + 1] >> 4;
 
-		int x = map_offset_lut[address];
+		UINT16 x = map_offset_lut[address];
 		ss_map2[x] = color;
 		ss_map2[x+1] = code;
 	}
@@ -116,18 +140,18 @@ void atetris_write_0x3000(UINT16 address, UINT8 data)
 	}
 }
 
-/*static*/ INT32 DrvDoReset(INT32 full_reset)
+INT32 DrvDoReset(INT32 full_reset)
 {
 	if (full_reset) {
 		memset(AllRam, 0, RamEnd - AllRam);
 	}
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502OpenR             ",10,70);	
+//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502OpenR             ",10,70);	
 	M6502Open(0);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Reset             ",10,70);	
+//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Reset             ",10,70);	
 	M6502Reset();
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);	
+//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);	
 //	M6502Close();
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             ",10,70);
+//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             ",10,70);
 	SlapsticReset();
 
 	watchdog = 0;
@@ -136,16 +160,11 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             
 	return 0;
 }
 
-/*static*/ INT32 MemIndex()
+INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
 	Drv6502ROM		= Next; Next += 0x010000;
-
-//	DrvGfxROM		= Next; Next += 0x020000;
-
-	DrvPalette		= (UINT32*)Next; Next += 0x0100 * sizeof(UINT32);
-
 	DrvNVRAM		= Next; Next += 0x000200;
 
 	AllRam			= Next;
@@ -155,41 +174,30 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             
 	DrvPalRAM		= Next; Next += 0x000100;
 
 	RamEnd			= Next;
-
-	MemEnd			= Next;
-
+	
+	cram_lut		= Next; Next += 256 * sizeof(UINT16);
+	map_offset_lut	= Next; Next += 0x800 * 2 * sizeof(UINT16);
+	
 	return 0;
 }
 
-//Crab6502_t c6502;
-
-/*static*/ INT32 CommonInit(INT32 boot)
+INT32 CommonInit(INT32 boot)
 {
 	AllMem = NULL;
 	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
+	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
-
+	make_lut();
+	
 	{
 		if (BurnLoadRom(Drv6502ROM, 0, 1)) return 1;
-
 //		if (BurnLoadRom(DrvGfxROM , 1, 1)) return 1;
 		if (BurnLoadRom(cache , 1, 1)) return 1;
-
-//		memcpy (cache,DrvGfxROM,sizeof(DrvGfxROM));
-//		memcpy (&ss_vram[0x1100],DrvGfxROM,sizeof(DrvGfxROM));
-//		DrvGfxExpand();
 	}
 
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Init             ",10,70);
-
 	M6502Init(0, TYPE_M6502);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Open             ",10,70);	
 	M6502Open(0);
-//	Crab6502_init(&c6502);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502MapMemory             ",10,70);
 	M6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, M6502_RAM);
 //	M6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
 	M6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, M6502_ROM);
@@ -199,26 +207,21 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502MapMemory            
 	M6502MapMemory(DrvNVRAM,		0x2400, 0x25ff, M6502_ROM);
 	M6502MapMemory(DrvNVRAM,		0x2600, 0x27ff, M6502_ROM);
 	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502SetReadHandler             ",10,70);	
-	M6502SetReadHandler(atetris_read);
-	
-//	M6502SetReadOpHandler(atetris_read);
-//	M6502SetReadOpArgHandler(atetris_read);
-//	M6502SetWriteHandler(atetris_write);
+
+	M6502SetReadHandler(0x2800, 0x281f,atetris_read_0x2800);
+	M6502SetReadHandler(0x4000, 0x7fff,atetris_read_0x4000);	
 
 	M6502SetWriteHandler(0x3000, 0x3cff,atetris_write_0x3000);
 	M6502SetWriteHandler(0x2800, 0x281f,atetris_write_0x2800);
 	M6502SetWriteHandler(0x2400, 0x25ff,atetris_write_0x2400);
 	M6502SetWriteHandler(0x2000, 0x20ff,atetris_write_0x2000);
 	M6502SetWriteHandler(0x1000, 0x1fff,atetris_write_0x1000);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);		
 	M6502Close();
 
 	SlapsticInit(101);
 
 	is_Bootleg = boot;
 	master_clock = boot ? (14745600 / 8) : (14318180 / 8);
-//master_clock = master_clock /3;
 
 	if (is_Bootleg)	// Bootleg set 2 sound system
 	{
@@ -230,26 +233,19 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",1
 //		SN76496SetRoute(2, 0.50, BURN_SND_ROUTE_BOTH);
 	}
 
-//	GenericTilesInit();
-
 	memset (DrvNVRAM, 0xff, 0x200);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvDoReset             ",10,70);
+
 	DrvDoReset(1);
 
-	if (DrvRecalc) {
-		for (INT32 i = 0; i < 0x100; i++) {
-			DrvPaletteUpdate(i);
-		}
-
-		DrvRecalc = 0;
+	for (INT32 i = 0; i < 0x100; i++) 
+	{
+		DrvPaletteUpdate(i);
 	}
 	return 0;
 }
 
-/*static*/ INT32 DrvExit()
+INT32 DrvExit()
 {
-//	GenericTilesExit();
-
 	M6502Exit();
 /*
 	if (is_Bootleg)	// Bootleg set 2 sound system
@@ -257,19 +253,16 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvDoReset             ",1
 		SN76496Exit();
 	}
 */
-	Drv6502ROM = DrvPalette = DrvNVRAM = AllRam = DrvVidRAM = NULL;
-	Drv6502RAM = DrvPalRAM = RamEnd  = MemEnd = NULL;
+	Drv6502ROM = DrvNVRAM = AllRam = DrvVidRAM = NULL;
+	Drv6502RAM = DrvPalRAM = RamEnd  = NULL;
+	cram_lut = map_offset_lut= NULL;
 	free (AllMem);
 	AllMem = NULL;
-
-	cram_lut = map_offset_lut= NULL;
-	free (SaturnMem);
-	SaturnMem = NULL;
 
 	return 0;
 }
 
-/*static*/ INT32 DrvFrame()
+INT32 DrvFrame()
 {
 	watchdog++;
 	if (watchdog >= 180) {
@@ -287,15 +280,13 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvDoReset             ",1
 
 	INT32 nInterleave = 65;
 	INT32 nCyclesTotal = { master_clock / 60 / nInterleave};
-//	INT32 nCyclesDone = { 0 };
 //	M6502Open(0);
 
 	vblank = 0;
 
-	for (INT32 i = 0; i < nInterleave; i++)
+	for (UINT32 i = 0; i < nInterleave; i++)
 	{
 		M6502Run(nCyclesTotal);
-//		nCyclesDone[0] += M6502Run(nCyclesTotal[0]);
 
 //		if (i == 16 || i == 48 || i == 80 || i == 112 || i == 146 || i == 176 || i == 208 || i == 240)
 //		if (i == 4 || i == 12 || i == 20 || i == 28 || i == 36 || i == 44 || i == 52 || i == 60)
@@ -305,8 +296,6 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvDoReset             ",1
 					M6502SetIRQLine(1, (i & 0x10) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);
 			if (i == 60) vblank = 0x40;					
 		}
-//		if (i == 240) vblank = 0x40;
-
 	}
 //	M6502Close();
 
@@ -322,7 +311,7 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvDoReset             ",1
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initColors()
+void initColors()
 {
 // 	colAddr             = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	colBgAddr         = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
@@ -372,7 +361,7 @@ void initLayers()
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_lut(void)
+void make_lut(void)
 {
 	unsigned int i,delta=0;
 	int sx, sy;
@@ -420,21 +409,7 @@ void initLayers()
 //	for(i=0;i<0x2000;i++)		color_lut[i] = (i>>5) & 0x3f;		   */
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void SaturnInitMem()
-{
-	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-
-//	width_lut			= Next; Next += 256 * sizeof(UINT8);
-	cram_lut			= Next; Next += 256 * sizeof(UINT16);
-//	remap8to16_lut	= Next; Next += 512 * sizeof(UINT16);
-	map_offset_lut	= Next; Next += 0x800 * 2 * sizeof(UINT16);
-//	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
-//	cpu_lut				= Next; Next += 10*sizeof(int);
-//	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
-	MemEnd			= Next;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn()
+void DrvInitSaturn()
 {
 //	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvInitSaturn             ",10,70);
 	SPR_InitSlaveSH();
@@ -449,41 +424,19 @@ void initLayers()
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
 
-//	ss_sprite  = (SprSpCmd *)SS_SPRIT;
-//	ss_vram   = (UINT8 *)SS_SPRAM;
-//	ss_scl      = (Fixed32 *)SS_SCL;
-
-	SaturnInitMem();
-	int nLen = MemEnd - (UINT8 *)0;
-	SaturnMem = (UINT8 *)BurnMalloc(nLen); 
-	SaturnInitMem();
-	make_lut();
-//	spriteCache =(UINT16*)BurnMalloc(0x20000*sizeof(UINT16));
-//	memset(spriteCache,0xFF,0x20000*sizeof(UINT16));
-//	memset(&ss_vram[0x1100],0x00,0x7EF00);
-
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(5);
 	SS_SET_N0PRIN(7);
 
 	initLayers();
 	initColors();
-//	SCL_Open();
-//	Scl_n_reg.n1_move_x = 32<<16;
-//	Scl_n_reg.n2_move_x = 16;
-//	initScrolling(ON);
-//	make_cram_lut();
-//	make_width_lut();
-//	initScrolling(OFF);
-// 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvInitSaturn   done          ",10,70);
 	
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvInitSaturn dummy            ",10,70);
 	drawWindow(0,224,0,0,44);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 
-/*static*/ INT32 DrvInit()
+INT32 DrvInit()
 {
 	DrvInitSaturn();
 	return CommonInit(0);

@@ -2,6 +2,7 @@
 #include "sega_scl2.h"
 #include "sega_dma.h"
 #include "..\globals.h"
+#include "machine.h"
 
 /*static*/ SclWinscl	*ss_regw = NULL;
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -119,22 +120,24 @@ Uint32 SDMA_ScuResult(Uint32 ch)
         return(DMA_SCU_END);
 }
 
-#if 0
+#if 1
 typedef struct TC_TRANSFER {
     Uint32 size;
     void *target;
     void *source;
-} TC_transfer;
+} TC_transfer __attribute__ ((aligned (8)));
 
 void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt)
 {
     Uint32 msk;
     DmaScuPrm prm;
+	TC_transfer vbt[16]  __attribute__ ((aligned (8)));
 // ????
     msk = get_imask();
     set_imask(15);
 
-    TC_transfer *tc = (TC_transfer *)BurnMalloc (16*sizeof(TC_transfer));
+//    TC_transfer *tc = (TC_transfer *)BurnMalloc (16*sizeof(TC_transfer));
+    TC_transfer *tc = (TC_transfer *)&vbt[0];
 
     tc->size = cnt;
     tc->source = &src[0];
@@ -174,7 +177,7 @@ tc++;
 //    src[tc.size - 1] += 1 << 31;
 
     DMA_ScuSetPrm(&prm, DMA_SCU_CH0);
-  //  DMA_ScuStart(DMA_SCU_CH0);
+//    DMA_ScuStart(DMA_SCU_CH0); // on garde ou pas ???
 
 	set_imask(msk);
 

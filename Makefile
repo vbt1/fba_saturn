@@ -88,21 +88,21 @@ OVLSYS1                 = root/d_sys1.coff
 OVLSYS11               = root/d_sys1.bin
 MPOVLSYS1FILE    = $(OVLSYS1:.coff=.maps)
 LDOVLSYS1FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1FILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSYS1         = d_sys1.c czet.c cz80/cz80.c snd/sn76496.c load.c saturn/ovl.c
+SRCOVLSYS1         = d_sys1.c czet.c cz80/cz80.c snd/sn76496.c load.c saturn/ovl.c saturn/saturn_ext.c
 OBJOVLSYS1         = $(SRCOVLSYS1:.c=.o)
 
 OVLSYS1H                 = root/d_SYS1H.coff
 OVLSYS1H1               = root/d_SYS1H.bin
 MPOVLSYS1HFILE    = $(OVLSYS1H:.coff=.maps)
 LDOVLSYS1HFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1HFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSYS1H         = d_sys1h.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c
+SRCOVLSYS1H         = d_sys1h.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c saturn/saturn_ext.c
 OBJOVLSYS1H         = $(SRCOVLSYS1H:.c=.o)
 
 OVLSYS2                 = root/d_sys2.coff
 OVLSYS21               = root/d_sys2.bin
 MPOVLSYS2FILE    = $(OVLSYS2:.coff=.maps)
 LDOVLSYS2FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS2FILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSYS2         = d_sys2.c czet.c cz80/cz80.c snd/sn76496.c 8255ppi.c mc8123.c load.c saturn/ovl.c
+SRCOVLSYS2         = d_sys2.c czet.c cz80/cz80.c snd/sn76496.c 8255ppi.c mc8123.c load.c saturn/ovl.c saturn/saturn_ext.c
 OBJOVLSYS2         = $(SRCOVLSYS2:.c=.o)
 
 OVLPACM                 = root/d_pacm.coff
@@ -150,11 +150,12 @@ SRCOVLZAXXON         = d_zaxxon.c czet.c cz80/cz80.c load.c saturn/ovl.c
 OBJOVLZAXXON         = $(SRCOVLZAXXON:.c=.o)
 
 OVLTETRIS                 = root/d_tetris.coff
-OVLTETRIS1               = root/d_TETRIS.bin
+OVLTETRIS1               = root/d_tetris.bin
 MPOVLTETRISFILE    = $(OVLTETRIS:.coff=.maps)
 LDOVLTETRISFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLTETRISFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLTETRIS         = d_atetris_crab6502.c crab6502/crab6502.c crab6502/m6502_intf.c snd/sn76496.c slapstic.c
-SRCOVLTETRIS         = d_atetris_mame6502.c m6502.new/m6502.c m6502.new/m6502_intf.c snd/sn76496.c slapstic.c load.c saturn/ovl.c
+#SRCOVLTETRIS         = d_atetris_mame6502.c m6502.new/m6502.c m6502.new/m6502_intf.c snd/sn76496.c slapstic.c load.c saturn/ovl.c
+SRCOVLTETRIS         = d_atetris_mame6502.c m6502/m6502.c m6502/m6502_intf.c snd/sn76496.c slapstic.c load.c saturn/ovl.c
 #SRCOVLTETRIS         = d_atetris.c m6502/m6502.c m6502_intf.c snd/sn76496.c slapstic.c
 #SRCOVLTETRIS         = d_atetris.c m6502/m6502.c m6502_intf.c snd/sn76496.c slapstic.c
 #SRCOVLTETRIS         = d_atetris.c Crab6502/Crab6502.c snd/sn76496.c slapstic.c load.c saturn/ovl.c
@@ -265,6 +266,13 @@ LDOVL1943FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVL1943
 SRCOVL1943         = d_1943.c czet.c cz80/cz80.c watchdog.c load.c saturn/ovl.c saturn/saturn_ext.c
 OBJOVL1943         = $(SRCOVL1943:.c=.o)
 
+OVLJEDI            = root/d_jedi.coff
+OVLJEDI1           = root/d_jedi.bin
+MPOVLJEDIFILE      = $(OVLJEDI:.coff=.maps)
+LDOVLJEDIFLAGS 	   = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLJEDIFILE) -Xlinker -e -Xlinker boot -nostartfiles
+SRCOVLJEDI         = d_jedi.c m6502/m6502.c m6502/m6502_intf.c  load.c saturn/ovl.c
+OBJOVLJEDI         = $(SRCOVLJEDI:.c=.o)
+
 #YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/free_r.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/malloc_r.c  libyaul/kernel/mm/slob.c libyaul/kernel/mm/realloc_r.c
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
@@ -298,7 +306,8 @@ all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
      $(OVLMSX) $(OVLMSX1) $(OVLSEGAE) $(OVLSEGAE1) \
      $(OVLSOLOMN) $(OVLSOLOMN1) $(OVLSIDARM) $(OVLSIDARM1) \
-     $(OVLNINKD2) $(OVLNINKD21) $(OVL1943) $(OVL19431)
+     $(OVLNINKD2) $(OVLNINKD21) $(OVL1943) $(OVL19431) \
+	 $(OVLTETRIS) $(OVLTETRIS1) 
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -505,6 +514,12 @@ $(OVL1943) : $(OBJOVL1943) $(MAKEFILE) $(OBJOVL1943) $(LDOVL1943FILE)
 
 $(OVL19431) : $(OBJOVL1943) $(MAKEFILE) $(LDOVL1943FILE)
 	$(CONV) -O binary $(OVL1943) $(OVL19431)
+
+$(OVLJEDI) : $(OBJOVLJEDI) $(MAKEFILE) $(OBJOVLJEDI) $(LDOVLJEDIFILE)
+	$(CC) $(LDOVLJEDIFLAGS) $(OBJOVLJEDI) $(LIBSOVL) -o $@
+
+$(OVLJEDI1) : $(OBJOVLJEDI) $(MAKEFILE) $(LDOVLJEDIFILE)
+	$(CONV) -O binary $(OVLJEDI) $(OVLJEDI1)
 
 # suffix
 .SUFFIXES: .asm

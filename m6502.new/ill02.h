@@ -235,7 +235,7 @@
 #if 0
 #define SSH 													\
 	tmp = S = A & X;											\
-	tmp &= (UINT8)(cpu_readop_arg((PCW + 1) & 0xffff) + 1)
+	tmp &= (UINT8)(M6502ReadOpArg((PCW + 1) & 0xffff) + 1)
 #endif
 
 /* 6510 ********************************************************

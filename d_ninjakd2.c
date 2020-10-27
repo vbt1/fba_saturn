@@ -189,6 +189,17 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 
 		case 0xc203:
 			overdraw_enable = data & 0x01;
+// VBT : 			astuce Niddy pour émuler l'overdraw de sprites
+//			SPR_2FrameChgIntr(-1);
+/*
+si on enleve
+  XyInt xy[4];
+    xy[0].x = 0; xy[0].y = 0; //upper left
+    xy[1].x = 704; xy[1].y = 0; //upper right
+    xy[2].x = 704; xy[2].y = 480; //lower right
+    xy[3].x = 0; xy[3].y = 480; //lower left
+    SPR_2Polygon(0, 0, 0, xy, NO_GOUR);
+*/			
 		return;
 
 		case 0xc208:

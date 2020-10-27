@@ -49,7 +49,7 @@
 
 #define LAZY_FLAGS	0		/* set to 1 to use Bernd's idea for N and Z flags */
 
-#define USE_GOTO 0			/* use computed goto instead of jump table */
+#define USE_GOTO 1	// faster		/* use computed goto instead of jump table */
 
 /****************************************************************************
  * Define a 6502 word. Upper bytes are always zero

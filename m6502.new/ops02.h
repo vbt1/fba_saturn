@@ -74,14 +74,17 @@
  *  RDOP    read an opcode
  ***************************************************************/
 //#define RDOP() cpu_readop(PCW++); m6502_ICount -= 1
-#define RDOP() M6502ReadOp(PCW++); m6502_ICount -= 1
-//#define RDOP() Fetch[(PCW>>8)][(PCW&0xFF)];PCW++;m6502_ICount -= 1
+//#define RDOP() M6502ReadOp(PCW++); m6502_ICount -= 1
+#define RDOP() Fetch[(PCW>>8)][(PCW&0xFF)];PCW++;m6502_ICount -= 1
 
 /***************************************************************
  *  RDOPARG read an opcode argument
  ***************************************************************/
-//#define RDOPARG() cpu_readop_arg(PCW++); m6502_ICount -= 1
-#define RDOPARG() M6502ReadOpArg(PCW++); m6502_ICount -= 1
+//#define RDOPARG() M6502ReadOpArg(PCW++); m6502_ICount -= 1
+//#define RDOPARG() M6502ReadOpArg(PCW++); m6502_ICount -= 1
+
+#define RDOPARG() M6502ReadOpArg(PCW);PCW++; m6502_ICount -= 1
+#define RDOPARG16() ( m6502_ICount -= 2; ({M6502ReadOpArg(PCW++)<<8)|{M6502ReadOpArg(PCW++);})
 //#define RDOPARG() Read[(PCW)>>8][(PCW)&0xFF]; PCW++; m6502_ICount -= 1
 
 /***************************************************************

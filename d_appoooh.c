@@ -599,7 +599,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 
 	if (game_select == 1) 
 	{ // map decoded fetch for robowres
-		CZetMapArea2(0x0000, 0x7fff, 0, DrvFetch, DrvMainROM);
+//		CZetMapArea2(0x0000, 0x7fff, 0, DrvFetch, DrvMainROM);
 		CZetMapArea2(0x0000, 0x7fff, 2, DrvFetch, DrvMainROM);
 	}
 

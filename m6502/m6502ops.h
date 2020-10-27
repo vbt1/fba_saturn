@@ -27,15 +27,16 @@ typedef byte (*read_func)(unsigned short a);
 
 extern unsigned char *Read[0x100];
 extern unsigned char *Write[0x100];
-extern write_func wf[0x1000];
-extern read_func rf[0x1000];
+extern write_func wf[0x100];
+extern read_func rf[0x100];
 extern unsigned char *Drv6502RAM;
 extern unsigned char *Drv6502ROM;
 
-//#define ABITS1_16		12
-//#define ABITS2_16		4
-//#define ABITS_MIN_16	0			/* minimum memory block is 1 byte */
-
+#if FAST_MEMORY
+#define ABITS1_16		12
+#define ABITS2_16		4
+#define ABITS_MIN_16	0			/* minimum memory block is 1 byte */
+#endif
 
 /* 6502 flags */
 #define FLAG_C 0x01
@@ -63,10 +64,10 @@ extern unsigned char *Drv6502ROM;
 #define SET_Z(n)	NZ = (NZ & 0x100) | (n)
 
 #else
-/*
+
 #define SET_NZ(n)				\
 	P = (P & ~(FLAG_N | FLAG_Z)) |  ((n) & FLAG_N) | (((n) == 0) ? FLAG_Z : 0)
-*/
+
 #define SET_Z(n)				\
     P = (P & ~FLAG_Z) | ((n) == 0) ? FLAG_Z : 0)
 
@@ -121,21 +122,25 @@ extern unsigned char *Drv6502ROM;
  ***************************************************************/
 #if FAST_MEMORY
 #define RDMEM(addr)                                             \
-	((Read[(addr) >> (ABITS2_16 + ABITS_MIN_16)]) ?		\
+	((Read[(addr) >> 8]) ?		\
 		M6502ReadByte(addr) : Read[(addr) >> 8][addr&0xff])
+#define RDMEMD(addr) Read[(addr) >> 8][addr&0xff]
+#define RDMEM16D(addr) ({unsigned char * pr = Read[(addr>>8)];pr[(addr+1)&0xFF]<<8 | pr[(addr&0xFF)]; })
+
 #else
+// inline faster !!!!	
 static inline unsigned char M6502ReadByte(unsigned short Address)
 {
 	// check mem map
 	unsigned char * pr = Read[(Address >> 8)];
-	return (pr != NULL) ? pr[Address&0xff]:rf[Address>>4](Address);
+	return (pr != NULL) ? pr[Address&0xff]:rf[Address>>8](Address);
 }
 
 static inline unsigned short M6502ReadWord(unsigned short Address)
 {
 	unsigned char * pr = Read[(Address >> 8)];
-	read_func prf = rf[Address>>4];
-	return (pr != NULL) ? pr[Address&0xff]|pr[(Address&0xff)+1]<<8:prf(Address)|prf(Address+1)<<8;
+	read_func prf = rf[Address>>8];
+	return (pr != NULL) ? pr[Address&0xff]|pr[(Address&0xff)+1]<<8:prf(Address)|prf(Address+1)<<8;	
 }
 
 #define RDMEM(addr) M6502ReadByte(addr)
@@ -156,6 +161,9 @@ static inline unsigned short M6502ReadWord(unsigned short Address)
 //		cpu_writemem16(addr,data);								\
 	else														\
 		RAM[addr] = data
+#define WRMEMD(addr,data) Write[(addr) >> 8][addr&0xff]=data
+#define WRMEM16D(addr,data,data2) Write[(addr) >> 8][addr&0xff]=data;Write[(addr) >> 8][(addr&0xff)+1]=data2
+
 #else
 	
 static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
@@ -166,7 +174,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 		pr[Address & 0xff] = Data;
 		return;
 	}
-	wf[Address>>4](Address, Data);
+	wf[Address>>8](Address, Data);
 }
 
 #define WRMEM(addr,data) M6502WriteByte(addr,data)
@@ -224,11 +232,6 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 /***************************************************************
  *  EA = absolute address
  ***************************************************************/
-/* 
-#define EA_ABS													\
-	EAL = RDOPARG();											\
-	EAH = RDOPARG()
-*/
 #define EA_ABS	EAD = RDOPARG16()
 
 /***************************************************************
@@ -248,13 +251,6 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 /***************************************************************
  *	EA = zero page indirect (65c02 pre indexed w/o X)
  ***************************************************************/
-/* 
-#define EA_ZPI													\
-	ZPL = RDOPARG();											\
-	EAL = RDMEM(ZPD);											\
-	ZPL++;														\
-	EAH = RDMEM(ZPD)
-*/
 #define EA_ZPI													\
 	ZPL = RDOPARGD();											\
 	EAD = RDMEM16D(ZPD);											\
@@ -263,13 +259,6 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 /***************************************************************
  *  EA = zero page + X indirect (pre indexed)
  ***************************************************************/
-/*
-#define EA_IDX													\
-	ZPL = RDOPARG() + X;										\
-	EAL = RDMEM(ZPD);											\
-	ZPL++;														\
-    EAH = RDMEM(ZPD)
-*/
 #define EA_IDX													\
 	ZPL = RDOPARG() + X;										\
 	EAD = RDMEM16D(ZPD);											\
@@ -279,16 +268,6 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  *  EA = zero page indirect + Y (post indexed)
  *	subtract 1 cycle if page boundary is crossed
  ***************************************************************/
- /*
-#define EA_IDY													\
-	ZPL = RDOPARG();											\
-	EAL = RDMEM(ZPD);											\
-	ZPL++;														\
-	EAH = RDMEM(ZPD);											\
-    if (EAL + Y > 0xff)                                         \
-		M6502_ICount--; 										\
-	EAW += Y
-*/
 #define EA_IDY													\
 	ZPL = RDOPARG();											\
 	EAD = RDMEM16D(ZPD);											\
@@ -742,7 +721,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #if LAZY_FLAGS
 
-#define PLP 													\
+#define PLPX 													\
 	if (P & FLAG_I)												\
 	{															\
 		PULL(P);												\
@@ -772,12 +751,13 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	P |= FLAG_R
 
 #endif
+//#define PLP POP( F ); SETF( FLAG_R ); CLK( 4 );  
 
 /* 6502 ********************************************************
  * ROL	Rotate left
  *	new C <- [7][6][5][4][3][2][1][0] <- C
  ***************************************************************/
- /*
+/*
 #define ROL 													\
 	tmp = (tmp << 1) | (P & FLAG_C);								\
 	P = (P & ~FLAG_C) | ((tmp >> 8) & FLAG_C);						\
@@ -792,7 +772,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  * ROR	Rotate right
  *	C -> [7][6][5][4][3][2][1][0] -> new C
  ***************************************************************/
- /*
+/* 
 #define ROR 													\
 	tmp |= (P & FLAG_C) << 8;										\
 	P = (P & ~FLAG_C) | (tmp & FLAG_C);								\
@@ -835,8 +815,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  *	pull PC lo, PC hi and increment PC
  ***************************************************************/
 #define RTS 													\
-	PULL(PCL);													\
-	PULL(PCH);													\
+	PULL16(PCD);													\
 	PCW++;														\
 	change_pc16(PCD)
 

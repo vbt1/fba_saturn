@@ -105,15 +105,15 @@ int ovlInit(char *szShortName)
 		switch (address)
 		{
 			case 0x2802:
-				SN76496Write(0, data);
+//				SN76496Write(0, data);
 			return;
 
 			case 0x2804:
-				SN76496Write(1, data);
+//				SN76496Write(1, data);
 			return;
 
 			case 0x2806:
-				SN76496Write(2, data);
+//				SN76496Write(2, data);
 			return;
 		}
 	}
@@ -155,15 +155,10 @@ int ovlInit(char *szShortName)
 	if (full_reset) {
 		memset(AllRam, 0, RamEnd - AllRam);
 	}
-  /*
+  
 	M6502Open(0);
 	M6502Reset();
 	M6502Close();
-*/
-	m6502Open(0);
-	m6502Reset();
-	m6502Close();
-
 
 	SlapsticReset();
 
@@ -331,19 +326,19 @@ memset(DrvTempRom,0x00,0x10000);
 
 /*static*/ void DrawLayer()
 {
-	INT32 offs;
+	UINT16 offs;
 
 	for (offs = 0; offs < 0x800; offs++)
 	{
-		INT32 sx = (offs & 0x3f);// * 8;
-		INT32 sy = (offs / 0x40);// * 8;
+		UINT16 sx = (offs & 0x3f);// * 8;
+		UINT16 sy = (offs / 0x40);// * 8;
 
 //		if (sx >= 42 || sy >= 30) continue;
 
-		INT32 code  = DrvVidRAM[offs * 2 + 0] | ((DrvVidRAM[offs * 2 + 1] & 0x07) << 8);
-		INT32 color = DrvVidRAM[offs * 2 + 1] >> 4;
+		UINT16 code  = DrvVidRAM[offs * 2 + 0] | ((DrvVidRAM[offs * 2 + 1] & 0x07) << 8);
+		UINT16 color = DrvVidRAM[offs * 2 + 1] >> 4;
 
-		int x = map_offset_lut[offs];
+		UINT16 x = map_offset_lut[offs];
 
 //		ss_map[x] = color;
 //		ss_map[x+1] = code;

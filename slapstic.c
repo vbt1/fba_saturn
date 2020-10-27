@@ -860,14 +860,20 @@ INT32 SlapsticTweak(INT32 offset)
 	/* otherwise, use the state machine */
 	else
 	{
-		switch (state)
+	static void (*const state_table[11])(void) = {&&LBL_DISABLED, &&LBL_ENABLED, &&LBL_ALTERNATE1, &&LBL_ALTERNATE2, 
+	&&LBL_ALTERNATE3, &&LBL_BITWISE1, &&LBL_BITWISE2, &&LBL_BITWISE3, &&LBL_ADDITIVE1, &&LBL_ADDITIVE2, &&LBL_ADDITIVE3};
+	#define DISPATCH() goto *state_table[state]
+
+		DISPATCH();
+		
+//		switch (state)
 		{
 			/* DISABLED state: everything is ignored except a reset */
-			case DISABLED:
-				break;
+LBL_DISABLED:
+				goto LBL_END;
 
 			/* ENABLED state: the chip has been activated and is ready for a bankswitch */
-			case ENABLED:
+LBL_ENABLED:
 
 				/* check for request to enter bitwise state */
 				if (MATCHES_MASK_VALUE(offset, slapstic.bit1))
@@ -915,10 +921,10 @@ INT32 SlapsticTweak(INT32 offset)
 					state = DISABLED;
 					current_bank = 3;
 				}
-				break;
+				goto LBL_END;
 
 			/* ALTERNATE1 state: look for alternate2 offset, or else fall back to ENABLED */
-			case ALTERNATE1:
+LBL_ALTERNATE1:
 				if (MATCHES_MASK_VALUE(offset, slapstic.alt2))
 				{
 					state = ALTERNATE2;
@@ -927,10 +933,10 @@ INT32 SlapsticTweak(INT32 offset)
 				{
 					state = ENABLED;
 				}
-				break;
+				goto LBL_END;
 
 			/* ALTERNATE2 state: look for altbank offset, or else fall back to ENABLED */
-			case ALTERNATE2:
+LBL_ALTERNATE2:
 				if (MATCHES_MASK_VALUE(offset, slapstic.alt3))
 				{
 					state = ALTERNATE3;
@@ -940,19 +946,19 @@ INT32 SlapsticTweak(INT32 offset)
 				{
 					state = ENABLED;
 				}
-				break;
+				goto LBL_END;
 
 			/* ALTERNATE3 state: wait for the final value to finish the transaction */
-			case ALTERNATE3:
+LBL_ALTERNATE3:
 				if (MATCHES_MASK_VALUE(offset, slapstic.alt4))
 				{
 					state = DISABLED;
 					current_bank = alt_bank;
 				}
-				break;
+				goto LBL_END;
 
 			/* BITWISE1 state: waiting for a bank to enter the BITWISE state */
-			case BITWISE1:
+LBL_BITWISE1:
 				if (offset == slapstic.bank[0] || offset == slapstic.bank[1] ||
 					offset == slapstic.bank[2] || offset == slapstic.bank[3])
 				{
@@ -960,10 +966,10 @@ INT32 SlapsticTweak(INT32 offset)
 					bit_bank = current_bank;
 					bit_xor = 0;
 				}
-				break;
+				goto LBL_END;
 
 			/* BITWISE2 state: watch for twiddling and the escape mechanism */
-			case BITWISE2:
+LBL_BITWISE2:
 
 				/* check for clear bit 0 case */
 				if (MATCHES_MASK_VALUE(offset ^ bit_xor, slapstic.bit2c0))
@@ -998,20 +1004,20 @@ INT32 SlapsticTweak(INT32 offset)
 				{
 					state = BITWISE3;
 				}
-				break;
+				goto LBL_END;
 
 			/* BITWISE3 state: waiting for a bank to seal the deal */
-			case BITWISE3:
+LBL_BITWISE3:
 				if (offset == slapstic.bank[0] || offset == slapstic.bank[1] ||
 					offset == slapstic.bank[2] || offset == slapstic.bank[3])
 				{
 					state = DISABLED;
 					current_bank = bit_bank;
 				}
-				break;
+				goto LBL_END;
 
 			/* ADDITIVE1 state: look for add2 offset, or else fall back to ENABLED */
-			case ADDITIVE1:
+LBL_ADDITIVE1:
 				if (MATCHES_MASK_VALUE(offset, slapstic.add2))
 				{
 					state = ADDITIVE2;
@@ -1021,10 +1027,10 @@ INT32 SlapsticTweak(INT32 offset)
 				{
 					state = ENABLED;
 				}
-				break;
+				goto LBL_END;
 
 			/* ADDITIVE2 state: watch for twiddling and the escape mechanism */
-			case ADDITIVE2:
+LBL_ADDITIVE2:
 
 				/* check for add 1 case -- can intermix */
 				if (MATCHES_MASK_VALUE(offset, slapstic.addplus1))
@@ -1043,34 +1049,22 @@ INT32 SlapsticTweak(INT32 offset)
 				{
 					state = ADDITIVE3;
 				}
-				break;
+				goto LBL_END;
 
 			/* ADDITIVE3 state: waiting for a bank to seal the deal */
-			case ADDITIVE3:
+LBL_ADDITIVE3:
 				if (offset == slapstic.bank[0] || offset == slapstic.bank[1] ||
 					offset == slapstic.bank[2] || offset == slapstic.bank[3])
 				{
 					state = DISABLED;
 					current_bank = add_bank;
 				}
-				break;
+				goto LBL_END;
 		}
 	}
 
+LBL_END:
 	/* return the active bank */
 	return current_bank;
 }
 
-/*
-void SlapsticScan(INT32 nAction)
-{
-	if (nAction & ACB_NVRAM) {
-		SCAN_VAR(state);
-		SCAN_VAR(current_bank);
-		SCAN_VAR(alt_bank);
-		SCAN_VAR(bit_bank);
-		SCAN_VAR(add_bank);
-		SCAN_VAR(bit_xor);
-	}
-}
-*/

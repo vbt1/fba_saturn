@@ -186,6 +186,7 @@ void SN76496Write(int Num, int Data)
 	
 	c = r / 2;
 
+#if 0
 	switch (r)
 	{
 		case 0:	/* tone 0 : frequency */
@@ -223,6 +224,51 @@ void SN76496Write(int Num, int Data)
 			}
 			break;
 	}
+#else
+static void (*const reg[8])(void) = {&&lbl00,&&lbl01,&&lbl00,&&lbl01,&&lbl00,&&lbl01,&&lbl06,&&lbl01};
+#define DISPATCH() goto *reg[r]
+
+		DISPATCH();
+
+lbl00:	
+/* tone 0 : frequency */
+/* tone 1 : frequency */
+/* tone 2 : frequency */
+		    if ((Data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x0f) | ((Data & 0x3f) << 4);
+
+			R->Period[c] = R->UpdateStep * R->Register[r];
+			if (R->Period[c] == 0) R->Period[c] = R->UpdateStep;
+			if (r == 4)
+			{
+				/* update noise shift frequency */
+				if ((R->Register[6] & 0x03) == 0x03)
+					R->Period[3] = 2 * R->Period[2];
+			}
+goto end;
+/* tone 0 : volume */
+/* tone 1 : volume */
+/* tone 2 : volume */
+/* noise  : volume */
+lbl01:
+			R->Volume[c] = R->VolTable[Data & 0x0f];
+			if ((Data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x3f0) | (Data & 0x0f);
+goto end;
+lbl06:	/* noise  : frequency, mode */
+			{
+			        if ((Data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x3f0) | (Data & 0x0f);
+				n = R->Register[6];
+				R->NoiseMode = (n & 4) ? 1 : 0;
+				/* N/512,N/1024,N/2048,Tone #3 output */
+				R->Period[3] = ((n&3) == 3) ? 2 * R->Period[2] : (R->UpdateStep << (5+(n&3)));
+			        /* Reset noise shifter */
+				R->RNG = R->FeedbackMask; /* this is correct according to the smspower document */
+				//R->RNG = 0xF35; /* this is not, but sounds better in do run run */
+				R->Output[3] = R->RNG & 1;
+			}
+
+#endif	
+end:
+;
 }
 
 /*static*/ void SN76496SetGain(struct SN76496 *R,int Gain)

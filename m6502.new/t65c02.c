@@ -24,7 +24,8 @@
  *****************************************************************************/
 
 #undef	OP
-#define OP(nn) M6502_INLINE void m65c02_##nn(void)
+//#define OP(nn) M6502_INLINE void m65c02_##nn(void)
+#define OP(nn) m65c02_##nn:
 #define RD_IMM_DISCARD		RDOPARG()
 #define RD_ZPG_DISCARD		EA_ZPG; RDMEM(EAD)
 #define RD_ZPX_DISCARD		EA_ZPX; RDMEM(EAD)
@@ -328,7 +329,7 @@ OP(9f) { int tmp; RD_ZPG; BBS(1);                   } /* 5-7 BBS1 ZPG */
 OP(bf) { int tmp; RD_ZPG; BBS(3);                   } /* 5-7 BBS3 ZPG */
 OP(df) { int tmp; RD_ZPG; BBS(5);                   } /* 5-7 BBS5 ZPG */
 OP(ff) { int tmp; RD_ZPG; BBS(7);                   } /* 5-7 BBS7 ZPG */
-
+/*
 static void (*const insn65c02[0x100])(void) = {
 	m65c02_00,m65c02_01,m65c02_02,m65c02_03,m65c02_04,m65c02_05,m65c02_06,m65c02_07,
 	m65c02_08,m65c02_09,m65c02_0a,m65c02_0b,m65c02_0c,m65c02_0d,m65c02_0e,m65c02_0f,
@@ -363,7 +364,7 @@ static void (*const insn65c02[0x100])(void) = {
 	m65c02_f0,m65c02_f1,m65c02_f2,m65c02_f3,m65c02_f4,m65c02_f5,m65c02_f6,m65c02_f7,
 	m65c02_f8,m65c02_f9,m65c02_fa,m65c02_fb,m65c02_fc,m65c02_fd,m65c02_fe,m65c02_ff
 };
-
+*/
 #ifdef WDC65C02
 OP(cb_wdc) { RD_DUM; RD_DUM;                            } /* 3 WAI, TODO: Implement HALT mode */
 OP(db_wdc) { RD_DUM; RD_DUM;                            } /* 3 STP, TODO: Implement STP mode */
@@ -373,7 +374,7 @@ OP(5e_wdc) { int tmp; RD_ABX_P; RD_EA; LSR; WB_EA;      } /* 6 LSR ABX page pena
 OP(7e_wdc) { int tmp; RD_ABX_P; RD_EA; ROR; WB_EA;      } /* 6 ROR ABX page penalty */
 OP(de_wdc) { int tmp; RD_ABX_P; RD_EA; DEC; WB_EA;      } /* 6 DEC ABX page penalty */
 OP(fe_wdc) { int tmp; RD_ABX_P; RD_EA; INC; WB_EA;      } /* 6 INC ABX page penalty */
-
+/*
 static void (*const insnwdc65c02[0x100])(m6502_Regs *cpustate) = {
 	m65c02_00,m65c02_01,m65c02_02,m65c02_03,m65c02_04,m65c02_05,m65c02_06,m65c02_07,
 	m65c02_08,m65c02_09,m65c02_0a,m65c02_0b,m65c02_0c,m65c02_0d,m65c02_0e,m65c02_0f,
@@ -408,6 +409,7 @@ static void (*const insnwdc65c02[0x100])(m6502_Regs *cpustate) = {
 	m65c02_f0,m65c02_f1,m65c02_f2,m65c02_f3,m65c02_f4,m65c02_f5,m65c02_f6,m65c02_f7,
 	m65c02_f8,m65c02_f9,m65c02_fa,m65c02_fb,m65c02_fc,m65c02_fd,m65c02_fe_wdc,m65c02_ff
 };
+*/
 #endif
 
 
