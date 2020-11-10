@@ -527,7 +527,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  ***************************************************************/
 #define CLI 													\
 	if (m6502.pending_irq && (P & FLAG_I)) 						\
-		after_cli = 1;									\
+		m6502.after_cli = 1;									\
 	P &= ~FLAG_I
 
 /* 6502 ********************************************************
@@ -726,7 +726,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	{															\
 		PULL(P);												\
 		if (m6502.pending_irq && !(P & FLAG_I))					\
-			after_cli = 1;								\
+			m6502.after_cli = 1;								\
 	}															\
 	else														\
 	{															\
@@ -742,7 +742,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	{															\
 		PULL(P);												\
 		if (m6502.pending_irq && !(P & FLAG_I))					\
-			after_cli = 1;								\
+			m6502.after_cli = 1;								\
 	}															\
 	else														\
 	{															\
@@ -795,7 +795,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
     P |= FLAG_R;                                                   \
 	NZ = ((P & FLAG_N) << 8) | ((P & FLAG_Z) ^ FLAG_Z);					\
 	if (m6502.pending_irq && !(P & FLAG_I))						\
-		after_cli = 1;									\
+		m6502.after_cli = 1;									\
 	change_pc16(PCD)
 
 #else
@@ -805,7 +805,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
 	PULL16(PCD);													\
     P |= FLAG_R;                                                   \
     if (m6502.pending_irq && !(P & FLAG_I))                        \
-		after_cli = 1;									\
+		m6502.after_cli = 1;									\
     change_pc16(PCD)
 
 #endif

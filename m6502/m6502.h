@@ -83,10 +83,10 @@ typedef struct
 	int x;							/* X index register */
 	int y;							/* Y index register */
 	int p;							/* Processor status */
-	int halt;						/* nonzero if the CPU is halted */
-	int pending_irq;				/* nonzero if an IRQ is pending */
-	int pending_nmi;				/* nonzero if a NMI is pending */
-
+//	int halt;						/* nonzero if the CPU is halted */
+	unsigned char pending_irq;				/* nonzero if an IRQ is pending */
+	unsigned char pending_nmi;				/* nonzero if a NMI is pending */
+	unsigned char after_cli;					/* pending IRQ and last insn cleared I */
 #if LAZY_FLAGS
 	int nz; 						/* last value (lazy N and Z flag) */
 #endif
@@ -100,10 +100,11 @@ typedef struct
 #define M6502_RST_VEC	0xfffc
 #define M6502_IRQ_VEC	0xfffe
 
-unsigned int after_cli;					/* pending IRQ and last insn cleared I */
-extern int M6502_ICount;                /* cycle count */
-extern int M6502_Type;					/* CPU subtype */
 
+extern int M6502_ICount;                /* cycle count */
+#if !USE_GOTO
+extern int M6502_Type;					/* CPU subtype */
+#endif
 unsigned M6502_GetPC (void);			/* Get program counter */
 void M6502_GetRegs (M6502_Regs *Regs);	/* Get registers */
 void M6502_SetRegs (M6502_Regs *Regs);	/* Set registers */
