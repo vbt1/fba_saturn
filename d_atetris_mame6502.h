@@ -21,24 +21,24 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ UINT8 *DrvVidRAM = NULL;
 /*static*/ UINT8 *DrvPalRAM = NULL;
 
-/*static*/ UINT32 nvram_enable = 0;
+/*static*/ UINT8 nvram_enable = 0;
 
 /*static*/ //UINT32 *DrvPalette = NULL;
 
-/*static*/ INT32 watchdog;
-/*static*/ INT32 master_clock;
-/*static*/ INT32 vblank;
-/*static*/ INT32 is_Bootleg;
+/*static*/ UINT8 watchdog;
+/*static*/ UINT8 vblank;
+/*static*/ UINT8 is_Bootleg;
 
 /*static*/ UINT8 DrvJoy1[8];
 /*static*/ UINT8 DrvJoy2[8];
 /*static*/ UINT8 DrvDips[1];
 /*static*/ UINT8 DrvInputs[2];
 /*static*/ UINT8 DrvReset;
+/*static*/ UINT32 master_clock;
 
 /*static*/ INT32 DrvInit();
 /*static*/ INT32 DrvExit();
-/*static*/ INT32 DrvFrame();
+/*static*/ void DrvFrame();
 /*static*/ INT32 DrvDraw();
 /*static*/ void DrawLayer();
 

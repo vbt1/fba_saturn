@@ -25,30 +25,6 @@ UINT8 *Read[0x100];
 UINT8 *Write[0x100];
 UINT8 *Fetch[0x100];
 
-typedef struct  {
-
-	M6502_Regs reg;
-	
-	INT32 (*execute)(INT32 cycles);
-	void (*reset)();
-	void (*init)();
-//	void (*set_irq_line)(INT32 irqline, INT32 state);
-
-//	UINT8* pMemMap[0x100 * 3];
-//	pReadPortHandler ReadPort;
-//	pWritePortHandler WritePort;
-	pReadByteHandler ReadByte;
-	pWriteByteHandler WriteByte;
-	pReadMemIndexHandler ReadMemIndex;
-	pWriteMemIndexHandler WriteMemIndex;
-//	pReadOpHandler ReadOp;
-//	pReadOpArgHandler ReadOpArg;
-	
-//	INT32 nCyclesTotal;
-//	INT32 nCyclesSegment;
-//	INT32 nCyclesLeft;
-} M6502Ext;
-
 #define M6502_IRQSTATUS_NONE	0
 #define M6502_IRQSTATUS_ACK	1
 #define M6502_IRQSTATUS_AUTO	2
@@ -59,13 +35,6 @@ typedef struct  {
 
 #define M6502_RAM	(M6502_READ | M6502_WRITE | M6502_FETCH)
 #define M6502_ROM	(M6502_READ | M6502_FETCH)
-
-extern INT32 nM6502Count;
-
-extern INT32 nM6502CyclesTotal;
-
-void M6502Reset();
-void M6502NewFrame();
 
 void n2a03_irq(void); // USED FOR PSG!!
 
@@ -101,7 +70,7 @@ INT32 M6502Scan(INT32 nAction);
 UINT32 M6502GetPC();
 
 void M6502WriteRom(UINT32 Address, UINT8 Data);
-
+/*
 inline static INT32 M6502TotalCycles()
 {
 #if defined FBA_DEBUG
@@ -110,3 +79,4 @@ inline static INT32 M6502TotalCycles()
 
 	return nM6502CyclesTotal;
 }
+*/

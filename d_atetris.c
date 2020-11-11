@@ -157,7 +157,7 @@ int ovlInit(char *szShortName)
 	}
   
 	M6502Open(0);
-	M6502Reset();
+	M6502_Reset();
 	M6502Close();
 
 	SlapsticReset();

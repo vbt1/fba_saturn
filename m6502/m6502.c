@@ -1,3 +1,4 @@
+//#pragma GCC optimize ("O2")
 /*****************************************************************************
  *
  *	 m6502.c
@@ -18,7 +19,7 @@
  *   - This entire notice must remain in the source code.
  *
  *****************************************************************************/
-
+static int     M6502_ICount = 0;
 #include <stdio.h>
 #include "memory.h"
 #include "string.h"
@@ -26,7 +27,6 @@
 #include "m6502.h"
 #include "m6502ops.h"
 
-int     M6502_ICount = 0;
 #if !USE_GOTO
 int 	M6502_Type = M6502_PLAIN;
 static	void(**insn)(void);

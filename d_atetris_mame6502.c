@@ -23,11 +23,12 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 
-static inline UINT8 atetris_slapstic_read(UINT16 offset)
+static UINT8 atetris_slapstic_read(UINT16 offset)
 {
 	UINT8 ret = Drv6502ROM[((SlapsticBank() & 1) * 0x4000) + (offset & 0x3fff)];
 
-	if (offset & 0x2000) SlapsticTweak(offset & 0x1fff);
+	if (offset & 0x2000) 
+		SlapsticTweak(offset & 0x1fff);
 
 	return ret;
 }
@@ -37,35 +38,6 @@ static inline void DrvPaletteUpdate(UINT16 offset)
 	colBgAddr[offset] = cram_lut[DrvPalRAM[offset]];//RGB(r>>3,g>>3,b>>3);
 }
 
-/*
-UINT8 atetris_read(UINT16 address)
-{
-	if ((address & 0xc000) == 0x4000) {
-		return atetris_slapstic_read(address);
-	}
-
-// Remove if/when Pokey support is added!
-
-	{
-		switch (address & ~0x03e0)
-		{
-			case 0x2808:
-				return DrvInputs[0] | vblank;
-
-			case 0x2818:
-				return DrvInputs[1];
-		}
-	}
-
-	return 0;
-}
-*/
-
-UINT8 atetris_read_0x4000(UINT16 address)
-{
-	return atetris_slapstic_read(address);
-}
-
 UINT8 atetris_read_0x2800(UINT16 address)
 {
 // Remove if/when Pokey support is added!
@@ -73,7 +45,7 @@ UINT8 atetris_read_0x2800(UINT16 address)
 		switch (address & ~0x03e0)
 		{
 			case 0x2808:
-				return DrvInputs[0] | vblank;
+				return (DrvInputs[0] & ~0x40) | (vblank << 6);
 
 			case 0x2818:
 				return DrvInputs[1];
@@ -146,9 +118,9 @@ INT32 DrvDoReset(INT32 full_reset)
 		memset(AllRam, 0, RamEnd - AllRam);
 	}
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502OpenR             ",10,70);	
-	M6502Open(0);
+//	M6502Open(0);
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Reset             ",10,70);	
-	M6502Reset();
+	M6502_Reset();
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);	
 //	M6502Close();
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             ",10,70);
@@ -197,7 +169,7 @@ INT32 CommonInit(INT32 boot)
 	}
 
 	M6502Init(0, TYPE_M6502);
-	M6502Open(0);
+//	M6502Open(0);
 	M6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, M6502_RAM);
 //	M6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
 	M6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, M6502_ROM);
@@ -209,14 +181,15 @@ INT32 CommonInit(INT32 boot)
 	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
 
 	M6502SetReadHandler(0x2800, 0x281f,atetris_read_0x2800);
-	M6502SetReadHandler(0x4000, 0x7fff,atetris_read_0x4000);	
+//	M6502SetReadHandler(0x4000, 0x7fff,atetris_read_0x4000);	
+	M6502SetReadHandler(0x4000, 0x7fff,atetris_slapstic_read);	
 
 	M6502SetWriteHandler(0x3000, 0x3cff,atetris_write_0x3000);
 	M6502SetWriteHandler(0x2800, 0x281f,atetris_write_0x2800);
 	M6502SetWriteHandler(0x2400, 0x25ff,atetris_write_0x2400);
 	M6502SetWriteHandler(0x2000, 0x20ff,atetris_write_0x2000);
 	M6502SetWriteHandler(0x1000, 0x1fff,atetris_write_0x1000);
-	M6502Close();
+//	M6502Close();
 
 	SlapsticInit(101);
 
@@ -246,7 +219,7 @@ INT32 CommonInit(INT32 boot)
 
 INT32 DrvExit()
 {
-	M6502Exit();
+//	M6502Exit();
 /*
 	if (is_Bootleg)	// Bootleg set 2 sound system
 	{
@@ -262,7 +235,7 @@ INT32 DrvExit()
 	return 0;
 }
 
-INT32 DrvFrame()
+void DrvFrame()
 {
 	watchdog++;
 	if (watchdog >= 180) {
@@ -278,23 +251,21 @@ INT32 DrvFrame()
 		}
 	}
 
-	INT32 nInterleave = 65;
-	INT32 nCyclesTotal = { master_clock / 60 / nInterleave};
+	UINT8 nInterleave = 65;
+	UINT32 nCyclesTotal = { master_clock / 60 / nInterleave};
 //	M6502Open(0);
 
-	vblank = 0;
+	vblank = 1;
 
 	for (UINT32 i = 0; i < nInterleave; i++)
 	{
-		M6502Run(nCyclesTotal);
+		M6502_Execute(nCyclesTotal);
 
-//		if (i == 16 || i == 48 || i == 80 || i == 112 || i == 146 || i == 176 || i == 208 || i == 240)
-//		if (i == 4 || i == 12 || i == 20 || i == 28 || i == 36 || i == 44 || i == 52 || i == 60)
-		if((i-4)%8==0)
+		if (i == 12 || i == 28 || i == 44 || i == 60)	
 		{
 //					M6502SetIRQLine(0, (i & 0x10) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);  modif derek
-					M6502SetIRQLine(1, (i & 0x10) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);
-			if (i == 60) vblank = 0x40;					
+			M6502SetIRQLine(1, M6502_IRQSTATUS_ACK);
+			if (i == 60) vblank = 0;					
 		}
 	}
 //	M6502Close();
@@ -308,7 +279,7 @@ INT32 DrvFrame()
 //		}
 //	}
 
-	return 0;
+//	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void initColors()
