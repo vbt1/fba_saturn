@@ -50,7 +50,7 @@ struct value_table_tag
   unsigned char byValue;
   unsigned char byFlag;
 };
-static unsigned char M6502_byTestTable[256];
+static unsigned int M6502_byTestTable[256];
 static struct value_table_tag M6502_ASL[256];
 static struct value_table_tag M6502_LSR[256];
 static struct value_table_tag M6502_ROL[2][256];
@@ -250,7 +250,7 @@ m6502_end:
     return cycles - M6502_ICount;
 }
 
-void M6502_Cause_Interrupt(int type)
+void M6502_Cause_Interrupt(unsigned int type)
 {
 	if (type == M6502_INT_NMI)
 		m6502.pending_nmi = 1;

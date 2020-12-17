@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+//#pragma GCC optimize ("O2")
 #include "../burnint.h"
 #include "m6502_intf.h"
 
@@ -16,7 +16,7 @@ INT32 M6502Init(INT32 cpu, INT32 type)
 	return 0;
 }
 
-void M6502SetIRQLine(INT32 vector, INT32 status)
+void M6502SetIRQLine(UINT32 vector, UINT32 status)
 {
 	if (status == M6502_IRQSTATUS_NONE) {
 //		pCurrentCPU->set_irq_line(vector, 0);

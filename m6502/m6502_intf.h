@@ -53,7 +53,7 @@ void M6502Exit();
 void M6502Open(INT32 num);
 void M6502Close();
 INT32 M6502GetActive();
-void M6502SetIRQLine(INT32 vector, INT32 status);
+void M6502SetIRQLine(UINT32 vector, UINT32 status);
 INT32 M6502Run(INT32 cycles);
 void M6502RunEnd();
 INT32 M6502MapMemory(UINT8* pMemory, UINT16 nStart, UINT16 nEnd, INT32 nType);

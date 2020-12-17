@@ -18,7 +18,7 @@
 //#define SC_RELEASE 1
 
 typedef void (*write_func)(unsigned short a, UINT8 d);
-write_func p[36] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+write_func wf[256] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 	NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 int System1CalcPalette();
@@ -43,8 +43,8 @@ UINT8 flipscreen=0;
 void make_cram_lut(void);
 void updateCollisions(int *values);
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
-void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,UINT8 *SpriteBase);
-void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase);
+void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase);
+void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase);
 void *memset4_fast(void *, long, size_t);
 void System1BankRom(UINT32 System1RomBank);
 void renderSound(unsigned int *nSoundBufferPos);

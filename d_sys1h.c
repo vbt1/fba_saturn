@@ -181,7 +181,7 @@ Driver Inits
 /*==============================================================================================
 Graphics Rendering
 ===============================================================================================*/
-void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
+void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
@@ -189,90 +189,86 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	renderSpriteCache(values);
 	spriteCache[addr]=nextSprite;
-	
-	unsigned int delta	= (Num+3);
 
-	ss_sprite[delta].ay			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2-8;
+	ss_spritePtr->ay			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2-8;
 	if(flipscreen==2)
 	{
-		int toto = 216-ss_sprite[delta].ay;
-		ss_sprite[delta].ay			= toto+Width*2;
-		ss_sprite[delta].by			= toto;
-		ss_sprite[delta].cy			= toto;
-//		ss_sprite[delta].dy			= ss_sprite[delta].ay;
-		ss_sprite[delta].ax			= SpriteBase[0] + 41;
-//		ss_sprite[delta].bx			= ss_sprite[delta].ax;
-		ss_sprite[delta].cx			= ss_sprite[delta].ax+Height;
-//		ss_sprite[delta].dx			= ss_sprite[delta].cx;
+		int toto = 216-ss_spritePtr->ay;
+		ss_spritePtr->ay			= toto+Width*2;
+		ss_spritePtr->by			= toto;
+		ss_spritePtr->cy			= toto;
+//		ss_spritePtr->dy			= ss_spritePtr->ay;
+		ss_spritePtr->ax			= SpriteBase[0] + 41;
+//		ss_spritePtr->bx			= ss_spritePtr->ax;
+		ss_spritePtr->cx			= ss_spritePtr->ax+Height;
+//		ss_spritePtr->dx			= ss_spritePtr->cx;
 	}
 	else
 	{
-		ss_sprite[delta].ax		= 256-SpriteBase[0]+8;
-		ss_sprite[delta].by		= ss_sprite[delta].ay+Width*2;
-		ss_sprite[delta].cy		= ss_sprite[delta].by;
-//		ss_sprite[delta].dy		= ss_sprite[delta].ay;
+		ss_spritePtr->ax		= 256-SpriteBase[0]+8;
+		ss_spritePtr->by		= ss_spritePtr->ay+Width*2;
+		ss_spritePtr->cy		= ss_spritePtr->by;
+//		ss_spritePtr->dy		= ss_spritePtr->ay;
 
-//		ss_sprite[delta].bx			= ss_sprite[delta].ax;
-		ss_sprite[delta].cx			= ss_sprite[delta].ax-Height;
-//		ss_sprite[delta].dx			= ss_sprite[delta].cx;
+//		ss_spritePtr->bx			= ss_spritePtr->ax;
+		ss_spritePtr->cx			= ss_spritePtr->ax-Height;
+//		ss_spritePtr->dx			= ss_spritePtr->cx;
 	}
-	ss_sprite[delta].dy			= ss_sprite[delta].ay;
-	ss_sprite[delta].bx			= ss_sprite[delta].ax;
-	ss_sprite[delta].dx			= ss_sprite[delta].cx;
+	ss_spritePtr->dy			= ss_spritePtr->ay;
+	ss_spritePtr->bx			= ss_spritePtr->ax;
+	ss_spritePtr->dx			= ss_spritePtr->cx;
 
-	ss_sprite[delta].charSize	= (Width<<6) + Height;
-	ss_sprite[delta].color		= COLADDR_SPR | ((Num)<<2);
-	ss_sprite[delta].charAddr	= 0x220+nextSprite;
+	ss_spritePtr->charSize	= (Width<<6) + Height;
+	ss_spritePtr->color		= COLADDR_SPR | ((Num)<<2);
+	ss_spritePtr->charAddr	= 0x220+nextSprite;
 
- 	int values2[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
+ 	int values2[] ={ss_spritePtr->ax,ss_spritePtr->ay,Skip,Height,Num};
 //	SPR_WaitEndSlaveSH();
 	updateCollisions(values2);
 	nextSprite += (Width*Height)/8;
 //	SPR_RunSlaveSH((PARA_RTN*)updateCollisions,&values2);
 }
 
-void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
+void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[ABS(Skip)];
 
-	unsigned int delta	= (Num+3);
-
-	ss_sprite[delta].ay			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2-8;
+	ss_spritePtr->ay			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2-8;
 	if(flipscreen==2)
 	{
-		int toto = 216-ss_sprite[delta].ay;
-		ss_sprite[delta].ax			= SpriteBase[0] + 41;
-		ss_sprite[delta].ay			= toto+Width*2;
-		ss_sprite[delta].by			= toto;
-		ss_sprite[delta].cy			= toto;
-//		ss_sprite[delta].dy			= ss_sprite[delta].ay;
+		int toto = 216-ss_spritePtr->ay;
+		ss_spritePtr->ax			= SpriteBase[0] + 41;
+		ss_spritePtr->ay			= toto+Width*2;
+		ss_spritePtr->by			= toto;
+		ss_spritePtr->cy			= toto;
+//		ss_spritePtr->dy			= ss_spritePtr->ay;
 
-//		ss_sprite[delta].bx			= ss_sprite[delta].ax;
-		ss_sprite[delta].cx			= ss_sprite[delta].ax+Height;
-//		ss_sprite[delta].dx			= ss_sprite[delta].cx;
+//		ss_spritePtr->bx			= ss_spritePtr->ax;
+		ss_spritePtr->cx			= ss_spritePtr->ax+Height;
+//		ss_spritePtr->dx			= ss_spritePtr->cx;
 	}
 	else
 	{
-		ss_sprite[delta].ax		= 256-SpriteBase[0]+8;
-		ss_sprite[delta].by		= ss_sprite[delta].ay+Width*2;
-		ss_sprite[delta].cy		= ss_sprite[delta].by;
-//		ss_sprite[delta].dy		= ss_sprite[delta].ay;
+		ss_spritePtr->ax		= 256-SpriteBase[0]+8;
+		ss_spritePtr->by		= ss_spritePtr->ay+Width*2;
+		ss_spritePtr->cy		= ss_spritePtr->by;
+//		ss_spritePtr->dy		= ss_spritePtr->ay;
 
-//		ss_sprite[delta].bx			= ss_sprite[delta].ax;
-		ss_sprite[delta].cx			= ss_sprite[delta].ax-Height;
-//		ss_sprite[delta].dx			= ss_sprite[delta].cx;
+//		ss_spritePtr->bx			= ss_spritePtr->ax;
+		ss_spritePtr->cx			= ss_spritePtr->ax-Height;
+//		ss_spritePtr->dx			= ss_spritePtr->cx;
 	}
-	ss_sprite[delta].dy			= ss_sprite[delta].ay;
-	ss_sprite[delta].bx			= ss_sprite[delta].ax;
-	ss_sprite[delta].dx			= ss_sprite[delta].cx;
+	ss_spritePtr->dy			= ss_spritePtr->ay;
+	ss_spritePtr->bx			= ss_spritePtr->ax;
+	ss_spritePtr->dx			= ss_spritePtr->cx;
 
-	ss_sprite[delta].charSize	= (Width<<6) + Height;
-	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
-	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
+	ss_spritePtr->charSize	= (Width<<6) + Height;
+	ss_spritePtr->color			= COLADDR_SPR | ((Num)<<2);
+	ss_spritePtr->charAddr	= 0x220+spriteCache[addr];
 
- 	int values[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
+ 	int values[] ={ss_spritePtr->ax,ss_spritePtr->ay,Skip,Height,Num};
 //	SPR_WaitEndSlaveSH();
 	updateCollisions(values);
 //	SPR_RunSlaveSH((PARA_RTN*)updateCollisions,&values);

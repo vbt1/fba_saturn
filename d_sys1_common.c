@@ -364,12 +364,15 @@ void __fastcall System1Z801PortWrite(unsigned short a, UINT8 d)
 
 void system1_backgroundram_w(unsigned short a, UINT8 d)
 {	 
+
 	if(RamStart[a]!=d)
 	{
 		RamStart[a] = d;
 		a&=~1;
+		UINT8 *rs = (UINT8 *)(RamStart+a);		
 		int Code;//, Colour;
-		Code = (RamStart[a + 1] << 8) | RamStart[a + 0];
+		Code = (rs[1] << 8) | rs[0];
+//		Code = (RamStart[a + 1] << 8) | RamStart[a + 0];
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		unsigned int x = map_offset_lut[a&0x7ff];
@@ -377,7 +380,7 @@ void system1_backgroundram_w(unsigned short a, UINT8 d)
 //		ss_map[x]     = ss_map[x+0x40] = ss_map[x+0x1000] = ss_map[x+0x1040] = (Code >> 5) & 0x3f;;//color_lut[Code];
 //		ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = Code & (System1NumTiles-1);
 		map[0] = map[0x40] = map[0x1000] = map[0x1040] = ((Code >> 5) & 0x3f)//	+0x3000;
-																						|(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);//color_lut[Code];
+																						|(((rs[1] & 0x08)==8)?0x2000:0x0000);//color_lut[Code];
 		map[1] = map[0x41] = map[0x1001] = map[0x1041] = Code & (System1NumTiles-1);
 	}
 }
@@ -401,7 +404,8 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 
 void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 {
-	(*p[(a>>8)-0xd8])(a, d);
+//	(*p[(a>>8)-0xd8])(a, d);
+	(*wf[(a>>8)])(a, d);
 }
 
 void system1_bgcollisionram_w(unsigned short a, UINT8 d)
@@ -589,41 +593,41 @@ void initLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void SaturnInitMem()
 {
-	p[8] = system1_backgroundram_w; // e0
-	p[9] = system1_backgroundram_w;
-	p[10] = system1_backgroundram_w;
-	p[11] = system1_backgroundram_w;
-	p[12] = system1_backgroundram_w;
-	p[13] = system1_backgroundram_w;
-	p[14] = system1_backgroundram_w;
-	p[15] = system1_backgroundram_w;
+	wf[0xd8+8] = system1_backgroundram_w; // e0
+	wf[0xd8+9] = system1_backgroundram_w;
+	wf[0xd8+10] = system1_backgroundram_w;
+	wf[0xd8+11] = system1_backgroundram_w;
+	wf[0xd8+12] = system1_backgroundram_w;
+	wf[0xd8+13] = system1_backgroundram_w;
+	wf[0xd8+14] = system1_backgroundram_w;
+	wf[0xd8+15] = system1_backgroundram_w;
 
-	p[16] = system1_foregroundram_w; // e8
-	p[17] = system1_foregroundram_w;
-	p[18] = system1_foregroundram_w;
-	p[19] = system1_foregroundram_w;
-	p[20] = system1_foregroundram_w;
-	p[21] = system1_foregroundram_w;
-	p[22] = system1_foregroundram_w;
+	wf[0xd8+16] = system1_foregroundram_w; // e8
+	wf[0xd8+17] = system1_foregroundram_w;
+	wf[0xd8+18] = system1_foregroundram_w;
+	wf[0xd8+19] = system1_foregroundram_w;
+	wf[0xd8+20] = system1_foregroundram_w;
+	wf[0xd8+21] = system1_foregroundram_w;
+	wf[0xd8+22] = system1_foregroundram_w;
 
-	p[24] = system1_bgcollisionram_w;
-	p[25] = system1_bgcollisionram_w;
-	p[26] = system1_bgcollisionram_w;
-	p[27] = system1_bgcollisionram_w;
+	wf[0xd8+24] = system1_bgcollisionram_w;
+	wf[0xd8+25] = system1_bgcollisionram_w;
+	wf[0xd8+26] = system1_bgcollisionram_w;
+	wf[0xd8+27] = system1_bgcollisionram_w;
 
-	p[32] = system1_sprcollisionram_w;
-	p[33] = system1_sprcollisionram_w;
-	p[34] = system1_sprcollisionram_w;
-	p[35] = system1_sprcollisionram_w;
+	wf[0xd8+32] = system1_sprcollisionram_w;
+	wf[0xd8+33] = system1_sprcollisionram_w;
+	wf[0xd8+34] = system1_sprcollisionram_w;
+	wf[0xd8+35] = system1_sprcollisionram_w;
 
-	p[0] = system1_paletteram_w;
-	p[1] = system1_paletteram_w;
+	wf[0xd8+0] = system1_paletteram_w;
+	wf[0xd8+1] = system1_paletteram_w;
 
-	p[2] = system1_paletteram2_w;
-	p[3] = system1_paletteram2_w;
+	wf[0xd8+2] = system1_paletteram2_w;
+	wf[0xd8+3] = system1_paletteram2_w;
 
-	p[4] = system1_paletteram3_w;
-	p[5] = system1_paletteram3_w;
+	wf[0xd8+4] = system1_paletteram3_w;
+	wf[0xd8+5] = system1_paletteram3_w;
 
 //	p[23] = system1_ef_w;
 }
@@ -1116,9 +1120,11 @@ void System1DrawSprites()
 		return; // 0xff in first byte of spriteram is sprite-disable mode
 	}
 
+	SpriteBase = System1SpriteRam;
+	
 	for (UINT32 i = 0; i < 32; ++i) 
 	{
-		SpriteBase = System1SpriteRam + (i << 4);
+
 		if (SpriteBase[1] && (SpriteBase[1] - SpriteBase[0] > 0))
 		{	
 			UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
@@ -1128,16 +1134,20 @@ void System1DrawSprites()
 			unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
 
 			if (spriteCache[addr]!=0xFFFF)
-				DrawSpriteCache(i,Bank,addr,Skip,SpriteBase);
+				DrawSpriteCache(i,addr,Skip,ss_spritePtr,SpriteBase);
 			else
-				 DrawSprite(i,Bank,addr,Skip,SpriteBase);
+				 DrawSprite(i,Bank,addr,Skip,ss_spritePtr,SpriteBase);
 		}
 		else
 		{
-			ss_spritePtr[i].ax = ss_spritePtr[i].ay = ss_spritePtr[i].charSize = ss_spritePtr[i].charAddr = 0;
+			ss_spritePtr->ax = ss_spritePtr->ay = ss_spritePtr->charSize = ss_spritePtr->charAddr = 0;
 			sprites_collision[i].width=0;
 		}
+		
+		ss_spritePtr++;
+		SpriteBase+=16;
 	}
+	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void renderSound(unsigned int *nSoundBufferPos)

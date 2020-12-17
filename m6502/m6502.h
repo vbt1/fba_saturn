@@ -80,14 +80,14 @@ typedef struct
 	m6502_pair sp;					/* stack pointer (always 100 - 1FF) */
 	m6502_pair zp;					/* zero page address */
 	m6502_pair ea;					/* effective address */
-	int a;							/* Accumulator */
-	int x;							/* X index register */
-	int y;							/* Y index register */
-	int p;							/* Processor status */
+	unsigned int a;							/* Accumulator */
+	unsigned int x;							/* X index register */
+	unsigned int y;							/* Y index register */
+	unsigned int p;							/* Processor status */
 //	int halt;						/* nonzero if the CPU is halted */
-	unsigned char pending_irq;				/* nonzero if an IRQ is pending */
-	unsigned char pending_nmi;				/* nonzero if a NMI is pending */
-	unsigned char after_cli;					/* pending IRQ and last insn cleared I */
+	unsigned int pending_irq;				/* nonzero if an IRQ is pending */
+	unsigned int pending_nmi;				/* nonzero if a NMI is pending */
+	unsigned int after_cli;					/* pending IRQ and last insn cleared I */
 #if LAZY_FLAGS
 	int nz; 						/* last value (lazy N and Z flag) */
 #endif
@@ -111,7 +111,7 @@ void M6502_GetRegs (M6502_Regs *Regs);	/* Get registers */
 void M6502_SetRegs (M6502_Regs *Regs);	/* Set registers */
 void M6502_Reset (void);				/* Reset registers to the initial values */
 int  M6502_Execute(int cycles); 		/* Execute cycles - returns number of cycles actually run */
-void M6502_Cause_Interrupt(int type);
+void M6502_Cause_Interrupt(unsigned int type);
 void M6502_Clear_Pending_Interrupts(void);
 void M6502_Init();
 

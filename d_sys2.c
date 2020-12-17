@@ -184,6 +184,7 @@ static void __fastcall system2_backgroundram_w(UINT16 a, UINT8 d)
 		UINT16 *map = &map_cache[x+(a<<12)];
 		map[0] = ((Code >> 5) & 0x3f);
 		map[1] = Code & (System1NumTiles-1);
+		
 	}
 }
 
@@ -199,7 +200,8 @@ static void __fastcall system2_foregroundram_w2(UINT16 a, UINT8 d)
 
 static void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d)
 {
-	(*p[(a>>8)-0xd8])(a, d);
+//	(*p[(a>>8)-0xd8])(a, d);
+	(*wf[(a>>8)])(a, d);
 /*	
  	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
 	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
@@ -279,8 +281,11 @@ void System1BankRomNoDecode(UINT32 System1RomBank)
 
 inline void System2_bankswitch_w (UINT8 d)
 {
+	if(System1BankSwitch!=d)
+	{
 	System1BankRom((d & 0x0c) >> 2);
 	System1BankSwitch = d;
+	}
 }
 
 void __fastcall ChplftZ801ProgWrite(UINT16 a, UINT8 d)
@@ -404,23 +409,23 @@ void CommonWbmlInit()
 	make_cram_lut();
 	System1CalcPalette();
 
-	p[8] = system2_foregroundram_w2; // e0
-	p[9] = system2_foregroundram_w2;
-	p[10] = system2_foregroundram_w2;
-	p[11] = system2_foregroundram_w2;
-	p[12] = system2_foregroundram_w2;
-	p[13] = system2_foregroundram_w2;
-	p[14] = system2_foregroundram_w2;
-	p[15] = system2_foregroundram_w2;
+	wf[0xd8+8] = system2_foregroundram_w2; // e0
+	wf[0xd8+9] = system2_foregroundram_w2;
+	wf[0xd8+10] = system2_foregroundram_w2;
+	wf[0xd8+11] = system2_foregroundram_w2;
+	wf[0xd8+12] = system2_foregroundram_w2;
+	wf[0xd8+13] = system2_foregroundram_w2;
+	wf[0xd8+14] = system2_foregroundram_w2;
+	wf[0xd8+15] = system2_foregroundram_w2;
 	
-	p[16] = system2_backgroundram_w; // e8
-	p[17] = system2_backgroundram_w;
-	p[18] = system2_backgroundram_w;
-	p[19] = system2_backgroundram_w;
-	p[20] = system2_backgroundram_w;
-	p[21] = system2_backgroundram_w;
-	p[22] = system2_backgroundram_w;
-	p[23] = system2_backgroundram_w;
+	wf[0xd8+16] = system2_backgroundram_w; // e8
+	wf[0xd8+17] = system2_backgroundram_w;
+	wf[0xd8+18] = system2_backgroundram_w;
+	wf[0xd8+19] = system2_backgroundram_w;
+	wf[0xd8+20] = system2_backgroundram_w;
+	wf[0xd8+21] = system2_backgroundram_w;
+	wf[0xd8+22] = system2_backgroundram_w;
+	wf[0xd8+23] = system2_backgroundram_w;
 
 //   nBurnFunction = System1CalcPalette;
 //	nBurnFunction = System1CalcSprPalette;//System1CalcPalette;
@@ -507,8 +512,8 @@ void CommonWbmlInit()
 //	System1Draw = WbmlRender;
 	memset(System1VideoRam,0x00,0x4000);
 
-//	nCyclesTotal[0] = 3100000 / hz ;
-//	nCyclesTotal[1] = 3100000 / hz ;
+	nCyclesTotal[0] = 3200000 / hz;
+	nCyclesTotal[1] = 3200000 / hz;
 
 	for (UINT32 i = 0; i < 10; i++) cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;	
 }
@@ -691,9 +696,6 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	
 //	System1SpriteXOffset = 1;
 	
-	nCyclesTotal[0] = 3000000 / hz;
-	nCyclesTotal[1] = 3000000 / hz;
-
 	SN76489AInit(0, 2000000, 0);
 	SN76489AInit(1, 4000000, 1);
 	
@@ -788,12 +790,12 @@ static void wbml_draw_bg(UINT8* vram)
 		if(map_dirty[real_page] == 1)
 		{
 			map_dirty[real_page] = 0;
-			unsigned short *map = &ss_map[v[page]];
-			unsigned short *mapc = &map_cache[real_page*0x1000];			
+			register unsigned short *map = &ss_map[v[page]];
+			register unsigned short *mapc = &map_cache[real_page*0x1000];			
 			
-	//		for (unsigned int i=0;i<32 ;i++ )
+			for (unsigned int i=0;i<32 ;i++ )
 			{
-DMA_ScuIndirectMemCopy(map,mapc,128*32);
+//DMA_ScuIndirectMemCopy(map,mapc,128*32);
 		//		mapc+=128;
 			//	map+=128;	
 		/*SDMA_ScuCst(DMA_SCU_CH2,&map[0],&mapc[0],128);
@@ -816,7 +818,7 @@ DMA_ScuIndirectMemCopy(map,mapc,128*32);
 				map+=128;		
 		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
 		*/
-	/*
+	
 				
 				memcpyl(map,mapc,128);
 				mapc+=128;
@@ -832,7 +834,7 @@ DMA_ScuIndirectMemCopy(map,mapc,128*32);
 
 				memcpyl(map,mapc,128);
 				mapc+=128;
-				map+=128;	*/
+				map+=128;	
 			}			
 		}
 	}
@@ -870,7 +872,7 @@ inline void System1Render()
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #if 1
-void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
+void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
@@ -880,28 +882,25 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	spriteCache[addr]=nextSprite;
 	renderSpriteCache(values);
 
-	unsigned int delta	= (Num+3);
-
-	ss_sprite[delta].ax			= 11 + ((((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2);
-	ss_sprite[delta].ay			= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize	= (Width<<6) + Height;
-	ss_sprite[delta].color		= COLADDR_SPR | ((Num)<<2);
-	ss_sprite[delta].charAddr	= 0x220+nextSprite;
+	ss_spritePtr->ax		= 11 + ((((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2);
+	ss_spritePtr->ay		= SpriteBase[0] + 1;
+	ss_spritePtr->charSize	= (Width<<6) + Height;
+	ss_spritePtr->color		= COLADDR_SPR | ((Num)<<2);
+	ss_spritePtr->charAddr	= 0x220+nextSprite;
 
 	nextSprite += (Height*Width)/8;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
+void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width  = width_lut[ABS(Skip)];
-	unsigned int delta	= (Num+3);
 
-	ss_sprite[delta].ax			= 11+ ((((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2);
-	ss_sprite[delta].ay			= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize	= (Width<<6) + Height;
-	ss_sprite[delta].color		= COLADDR_SPR | ((Num)<<2);
-	ss_sprite[delta].charAddr	= 0x220+spriteCache[addr];
+	ss_spritePtr->ax		= 11+ ((((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2);
+	ss_spritePtr->ay		= SpriteBase[0] + 1;
+	ss_spritePtr->charSize	= (Width<<6) + Height;
+	ss_spritePtr->color		= COLADDR_SPR | ((Num)<<2);
+	ss_spritePtr->charAddr	= 0x220+spriteCache[addr];
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------

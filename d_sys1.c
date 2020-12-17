@@ -204,7 +204,7 @@ void fillSpriteCollision(unsigned int Num, int *values)
 		sprites_collision[Num].yend=(values[1]+values[3]) & 0xff; // height max 255
 }
 */
-void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, UINT8 *SpriteBase)
+void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
 {
 	int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
@@ -214,38 +214,35 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 	renderSpriteCache(values);
 	spriteCache[addr]=nextSprite;
 
-	unsigned int delta	= (Num+3);
-
-	ss_sprite[delta].ax			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
-	ss_sprite[delta].ay			= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize	= (Width<<6) + Height;
-	ss_sprite[delta].color		= COLADDR_SPR | ((Num)<<2);
-	ss_sprite[delta].charAddr	= 0x220+nextSprite;
+	ss_spritePtr->ax		= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
+	ss_spritePtr->ay		= SpriteBase[0] + 1;
+	ss_spritePtr->charSize	= (Width<<6) + Height;
+	ss_spritePtr->color		= COLADDR_SPR | ((Num)<<2);
+	ss_spritePtr->charAddr	= 0x220+nextSprite;
 
 	if(CollisionFunction)
 	{
-	 	int values2[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
+	 	int values2[] ={ss_spritePtr->ax,ss_spritePtr->ay,Skip,Height,Num};
 //		fillSpriteCollision(Num,values2);
 		updateCollisions(values2);
 	}
 	nextSprite+=(Width*Height)/8;
 }
 
-void DrawSpriteCache(int Num,int Bank, int addr,INT16 Skip,UINT8 *SpriteBase)
+void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[ABS(Skip)];
-	unsigned int delta	= (Num+3);
 
-	ss_sprite[delta].ax			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
-	ss_sprite[delta].ay			= SpriteBase[0] + 1;
-	ss_sprite[delta].charSize		= (Width<<6) + Height;
-	ss_sprite[delta].color			= COLADDR_SPR | ((Num)<<2);
-	ss_sprite[delta].charAddr		= 0x220+spriteCache[addr];
+	ss_spritePtr->ax		= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
+	ss_spritePtr->ay		= SpriteBase[0] + 1;
+	ss_spritePtr->charSize	= (Width<<6) + Height;
+	ss_spritePtr->color		= COLADDR_SPR | ((Num)<<2);
+	ss_spritePtr->charAddr	= 0x220+spriteCache[addr];
 
 	if(CollisionFunction)
 	{
-		int values[] ={ss_sprite[delta].ax,ss_sprite[delta].ay,Skip,Height,Num};
+		int values[] ={ss_spritePtr->ax,ss_spritePtr->ay,Skip,Height,Num};
 //		fillSpriteCollision(Num,values);
 		updateCollisions(values);
 	}

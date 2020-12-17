@@ -33,7 +33,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 /*static*/ UINT8 DrvJoy2[8];
 /*static*/ UINT8 DrvDips[1];
 /*static*/ UINT8 DrvInputs[2];
-/*static*/ UINT8 DrvReset;
+/*static*/ //UINT8 DrvReset;
 /*static*/ UINT32 master_clock;
 
 /*static*/ INT32 DrvInit();
@@ -55,7 +55,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 6,	"p2 right"	},
 	{"P2 Button",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 	{"Dips",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 };
 
