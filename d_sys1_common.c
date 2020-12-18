@@ -261,7 +261,7 @@ Allocate Memory
 	System1ScrollX           = System1efRam + 0xfc;
 
 	System1f4Ram           = Next; Next += 0x000400;
-	System1fcRam           = Next; Next += 0x000400; // +3 pour avoir un code aligné pour SpriteOnScreenMap
+	System1fcRam           = Next; Next += 0x000400; // +3 pour avoir un code align? pour SpriteOnScreenMap
 	SpriteOnScreenMap      = Next; Next += 0x10000;
 	System1Sprites         = Next; Next += System1SpriteRomSize;
 
@@ -400,12 +400,6 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 		map[0] = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
 		map[1] = Code & (System1NumTiles-1);
 	}
-}
-
-void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
-{
-//	(*p[(a>>8)-0xd8])(a, d);
-	(*wf[(a>>8)])(a, d);
 }
 
 void system1_bgcollisionram_w(unsigned short a, UINT8 d)
@@ -591,47 +585,6 @@ void initLayers()
 //	for(i=0;i<0x2000;i++)		color_lut[i] = (i>>5) & 0x3f;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void SaturnInitMem()
-{
-	wf[0xd8+8] = system1_backgroundram_w; // e0
-	wf[0xd8+9] = system1_backgroundram_w;
-	wf[0xd8+10] = system1_backgroundram_w;
-	wf[0xd8+11] = system1_backgroundram_w;
-	wf[0xd8+12] = system1_backgroundram_w;
-	wf[0xd8+13] = system1_backgroundram_w;
-	wf[0xd8+14] = system1_backgroundram_w;
-	wf[0xd8+15] = system1_backgroundram_w;
-
-	wf[0xd8+16] = system1_foregroundram_w; // e8
-	wf[0xd8+17] = system1_foregroundram_w;
-	wf[0xd8+18] = system1_foregroundram_w;
-	wf[0xd8+19] = system1_foregroundram_w;
-	wf[0xd8+20] = system1_foregroundram_w;
-	wf[0xd8+21] = system1_foregroundram_w;
-	wf[0xd8+22] = system1_foregroundram_w;
-
-	wf[0xd8+24] = system1_bgcollisionram_w;
-	wf[0xd8+25] = system1_bgcollisionram_w;
-	wf[0xd8+26] = system1_bgcollisionram_w;
-	wf[0xd8+27] = system1_bgcollisionram_w;
-
-	wf[0xd8+32] = system1_sprcollisionram_w;
-	wf[0xd8+33] = system1_sprcollisionram_w;
-	wf[0xd8+34] = system1_sprcollisionram_w;
-	wf[0xd8+35] = system1_sprcollisionram_w;
-
-	wf[0xd8+0] = system1_paletteram_w;
-	wf[0xd8+1] = system1_paletteram_w;
-
-	wf[0xd8+2] = system1_paletteram2_w;
-	wf[0xd8+3] = system1_paletteram2_w;
-
-	wf[0xd8+4] = system1_paletteram3_w;
-	wf[0xd8+5] = system1_paletteram3_w;
-
-//	p[23] = system1_ef_w;
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
@@ -647,8 +600,6 @@ void initLayers()
 	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
 	ss_sprite  = (SprSpCmd *)SS_SPRIT;
 	ss_scl      = (Fixed32 *)SS_SCL;
-
-	SaturnInitMem();
 
 	if(flipscreen)
 	{
@@ -807,11 +758,22 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1PromBlue, 2 + RomOffset, 1);
 	}
 	// Setup the Z80 emulation
-// remettre 1 plus tard quand choplifter sera corrigé
+// remettre 1 plus tard quand choplifter sera corrig?
 	CZetInit2(2,CZ80Context);
 
 	CZetOpen(0);
-	CZetSetWriteHandler(System1Z801ProgWrite);
+//	CZetSetWriteHandler(System1Z801ProgWrite);
+
+	CZetSetWriteHandler2(0xd800, 0xd9ff,system1_paletteram_w);
+	CZetSetWriteHandler2(0xda00, 0xdbff,system1_paletteram2_w);
+	CZetSetWriteHandler2(0xdc00, 0xddff,system1_paletteram3_w);
+	
+	CZetSetWriteHandler2(0xe000,0xe7ff,system1_backgroundram_w);
+	CZetSetWriteHandler2(0xe800,0xefff,system1_foregroundram_w);	
+	
+	CZetSetWriteHandler2(0xf000,0xf3ff,system1_bgcollisionram_w);
+	CZetSetWriteHandler2(0xf800,0xfbff,system1_sprcollisionram_w);
+
 	CZetSetInHandler(System1Z801PortRead);
 	CZetSetOutHandler(System1Z801PortWrite);
 	CZetMapArea(0x0000, 0x7fff, 0, System1Rom1);
@@ -1008,7 +970,7 @@ Graphics Rendering
 			*sprScreenMap++ = Num;
 
 			xr = ((x - System1BgScrollX) & 0xff) / 8;
- // vbt à remettre !!!!
+ // vbt ? remettre !!!!
 			if (System1BgRam[2 * ( yr + xr) + 1] & 0x10) 
 			{
 				System1BgCollisionRam[0x20 + Num] = 0xff;
@@ -1189,7 +1151,7 @@ int System1Frame()
 		CZetClose();
 #endif
 		SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
-//vbt à précalculer !!!
+//vbt ? pr?calculer !!!
 //		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 //		nCyclesSegment = nNext - nCyclesDone[1];
 		nCyclesSegment = cpu_lut[i] - nCyclesDone[1];

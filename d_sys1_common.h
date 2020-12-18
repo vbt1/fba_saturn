@@ -18,8 +18,6 @@
 //#define SC_RELEASE 1
 
 typedef void (*write_func)(unsigned short a, UINT8 d);
-write_func wf[256] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-	NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 int System1CalcPalette();
 int System1Exit();

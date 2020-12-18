@@ -198,45 +198,6 @@ static void __fastcall system2_foregroundram_w2(UINT16 a, UINT8 d)
 		system2_backgroundram_w(a,d);
 }
 
-static void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d)
-{
-//	(*p[(a>>8)-0xd8])(a, d);
-	(*wf[(a>>8)])(a, d);
-/*	
- 	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
-	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
-	if (a >= 0xe000 && a <= 0xefff)
-	{
-		if(System1BgBank==0 && a <= 0xe7ff)
-		{
-			system2_foregroundram_w(a, d);
-			return;
-		}
-
-		if(CurrentBank[(a & 0xfff)]!=d)
-		{
-			CurrentBank[(a & 0xfff)] = d;
-			a&=0xffe;
-
-			unsigned int Code = (CurrentBank[a+1]<<8)|CurrentBank[a];
-			Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
-
-			unsigned int x = map_offset_lut[a&0x7ff];
-			a = (System1BgBank<<1) + (a>>11);
-			map_dirty[a] = 1;
-
-			UINT16 *map = &map_cache[x+(a<<12)];
-			map[0] = ((Code >> 5) & 0x3f);
-			map[1] = Code & (System1NumTiles-1);
-		}
-		return;
-	}
-	if (a >= 0xd800 && a <= 0xd9ff) { system1_paletteram_w(a,d); return; }
-	if (a >= 0xda00 && a <= 0xdbff) { system1_paletteram2_w(a,d); return; }
-	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
-*/
-}
-
 static UINT8 __fastcall System2Z801ProgRead(UINT16 a)
 {
 	if (a >= 0xe000 && a <= 0xefff) 
@@ -409,24 +370,6 @@ void CommonWbmlInit()
 	make_cram_lut();
 	System1CalcPalette();
 
-	wf[0xd8+8] = system2_foregroundram_w2; // e0
-	wf[0xd8+9] = system2_foregroundram_w2;
-	wf[0xd8+10] = system2_foregroundram_w2;
-	wf[0xd8+11] = system2_foregroundram_w2;
-	wf[0xd8+12] = system2_foregroundram_w2;
-	wf[0xd8+13] = system2_foregroundram_w2;
-	wf[0xd8+14] = system2_foregroundram_w2;
-	wf[0xd8+15] = system2_foregroundram_w2;
-	
-	wf[0xd8+16] = system2_backgroundram_w; // e8
-	wf[0xd8+17] = system2_backgroundram_w;
-	wf[0xd8+18] = system2_backgroundram_w;
-	wf[0xd8+19] = system2_backgroundram_w;
-	wf[0xd8+20] = system2_backgroundram_w;
-	wf[0xd8+21] = system2_backgroundram_w;
-	wf[0xd8+22] = system2_backgroundram_w;
-	wf[0xd8+23] = system2_backgroundram_w;
-
 //   nBurnFunction = System1CalcPalette;
 //	nBurnFunction = System1CalcSprPalette;//System1CalcPalette;
 	ss_reg->n1_move_x = 4<<16;
@@ -488,7 +431,7 @@ void CommonWbmlInit()
 
 	CZetSetReadHandler(System2Z801ProgRead);
 //	CZetSetWriteHandler(System2Z801ProgWrite);
-	CZetSetWriteHandler(NULL);
+//	CZetSetWriteHandler(NULL);
 	
 	CZetSetWriteHandler2(0xd800, 0xd9ff,system1_paletteram_w);
 	CZetSetWriteHandler2(0xda00, 0xdbff,system1_paletteram2_w);
