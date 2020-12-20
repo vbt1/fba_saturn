@@ -1,4 +1,3 @@
-
 // 43-44 fps with CZ80 main & RAZE slave
 // 17-18 fps with RAZE main & CZ80 slave
 // FB Alpha Penguin-Kun Wars Driver Module
@@ -13,7 +12,6 @@
 void SDMA_ScuCst(unsigned int ch, void *dst, void *src, unsigned int cnt);
 unsigned int SDMA_ScuResult(unsigned int ch);
 void CZetSetWriteHandler2(unsigned short nStart, unsigned short nEnd,void (*pHandler)(unsigned short, unsigned char));
-
 #include "d_sys2.h"
 #include "d_sys1_common.c"
 UINT8 *CurrentBank = NULL; // vbt à mettre dans drvexit !!!
@@ -58,8 +56,8 @@ int ovlInit(char *szShortName)
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
-
-/*static*/ inline void chplft_bankswitch_w (UINT8 d)
+/*
+inline void chplft_bankswitch_w (UINT8 d)
 {
 	System1BankRomNoDecode(((d & 0x0c)>>2));
 	System1BankSwitch = d;
@@ -74,7 +72,7 @@ void __fastcall ChplftZ801PortWrite(UINT16 a, UINT8 d)
 		case 0x15: { chplft_bankswitch_w(d);   return; }
 	}
 }
-
+*/
 void __fastcall System2Z801PortWrite(UINT16 a, UINT8 d)
 {
 	a &= 0x1f;
@@ -354,9 +352,10 @@ int ChplftbInit()
 	CZetMapArea(0xe800, 0xeeff, 0, System1BgRam);
 //	CZetMapArea(0xe800, 0xeeff, 1, System1BgRam);
 	CZetMapArea(0xe800, 0xeeff, 2, System1BgRam);
-
+/*
 	CZetSetInHandler(ChplftZ801PortRead);
 	CZetSetOutHandler(ChplftZ801PortWrite);
+*/	
 	CZetClose();
 
 	return nRet;
@@ -455,8 +454,8 @@ void CommonWbmlInit()
 //	System1Draw = WbmlRender;
 	memset(System1VideoRam,0x00,0x4000);
 
-	nCyclesTotal[0] = 3200000 / hz;
-	nCyclesTotal[1] = 3200000 / hz;
+	nCyclesTotal[0] = 3000000 / hz;
+	nCyclesTotal[1] = 3000000 / hz;
 
 	for (UINT32 i = 0; i < 10; i++) cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;	
 }

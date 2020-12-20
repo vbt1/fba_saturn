@@ -19,7 +19,7 @@
 
 typedef void (*write_func)(unsigned short a, UINT8 d);
 
-int System1CalcPalette();
+void System1CalcPalette();
 int System1Exit();
 int System1Frame();
 //UINT8 *SaturnMem = NULL;

@@ -7,6 +7,9 @@
 #define nCyclesTotal 6000000 / 60
 #define nCycleSegment nCyclesTotal / nInterleave
 //unsigned int vbt=0;
+unsigned int bg_cache[3][0x1000];
+unsigned int nextTile[3]={0,0,0};
+
 
 int ovlInit(char *szShortName)
 {
@@ -728,7 +731,7 @@ INT32 Ninjakd2CommonInit()
 		DrvGfxDecode(DrvGfxROM1, 0x20000, 4); // sprites
 		swapFirstLastColor(DrvGfxROM1,0x0f,0x20000);
 		
-		DrvGfxDecode(DrvGfxROM2, 0x20000, 1);
+		DrvGfxDecode(DrvGfxROM2, 0x20000, 1); // bg0
 		swapFirstLastColor(DrvGfxROM2,0x0f,0x20000);
 	}
 
@@ -926,7 +929,7 @@ void initLayersS(UINT8 game)
 		scfg.dispenbl      = OFF;
 		SCL_SetConfig(SCL_NBG3, &scfg);
 	}
-	
+
 	SCL_SetCycleTable(CycleTb);
 
 	memset((void *)SCL_VDP2_VRAM_B0,0x00,0x2000);
@@ -1067,65 +1070,74 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	return 0;
 }
 
- void draw_robokid_bg_layer(UINT32 sel, UINT8 *ram, UINT8 *rom, INT32 width, INT32 transp)
+ void draw_robokid_bg_layer(INT32 width)
 {
 //	if (tilemap_enable[sel] == 0) return;
 	UINT32 wide = (width) ? 128 : 32;
 
-	UINT32 sx1 = (64 % wide);
-	UINT32 sy1 = (64 / wide);
-
-	UINT32 ofst1 = (sx1 & 0x0f) + (sy1 * 16) + ((sx1 & 0x70) * 0x20);
-	UINT32 attr1  = ram[ofst1 * 2 + 1];
-
-	if(previous_bank[sel]!=(((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5))		)
-	{
-		previous_bank[sel] = (((attr1 & 0x10) << 7) + ((attr1 & 0x20) << 5));
-
-		switch(sel)
-		{
-			case 0: // nbg1
-				memcpyl(rom,(UINT8*)0x00200000+(previous_bank[sel]*128),0x20000);
-				break;
-			case 1: // nbg0
-				memcpyl(rom,(UINT8*)0x00270000+(previous_bank[sel]*128),0x30000);
-				break;
-			case 2: // nbg3
-				memcpyl(rom,(UINT8*)DrvGfxROM4Data1+(previous_bank[sel]*128),0x20000);
-				break;
-		}
-	}
-
+	UINT8 attr;
+	UINT32 code;
+	UINT32 bank;
+		
 	for (UINT32 offs = 0; offs < wide * 32; offs++)
 	{
 		UINT32 sx = (offs % wide);
 		UINT32 sy = (offs / wide);
 
 		UINT32 ofst = (sx & 0x0f) + (sy * 16) + ((sx & 0x70) * 0x20);
-		UINT8 attr  = ram[ofst * 2 + 1];
-//		INT32 code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
-		UINT32 code  = ram[ofst * 2 + 0] + ((attr & 0xc0) << 2); // correct pour nbg1
-
-		UINT32 offs2 = (sx | sy <<5)*2;
-
-		switch(sel)
+		UINT32 offs2 = (sx | sy <<5)*2;			
+//-----------------------------------------------------------------------------------------------------------------
+// nbg1
+		attr = DrvBgRAM0[ofst * 2 + 1];
+		bank = ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
+		code = DrvBgRAM0[ofst * 2 + 0] + ((attr & 0xc0) << 2);
+		
+		if(bg_cache[0][code|bank]==0)
 		{
-			case 0: // nbg1 = back 3
-				ss_map2[offs2] = (attr & 0x0f);
-				ss_map2[offs2+1] = (0x400+(code<<2));
-				break;
-			case 1: // nbg0
-// correct juste pour le premier niveau 
-				code  = ram[ofst * 2 + 0] + ((attr & 0x10) << 7) + ((attr & 0x20) << 5) + ((attr & 0xc0) << 2);
-				ss_font[offs2] = (attr & 0x0f);
-				ss_font[offs2+1] = (0x1400+((code)<<2));
-//				ss_font[offs2+1] = (((code)<<2));
-				break;
-			case 2://nbg3
-				ss_map3[offs2] = (attr & 0x0f);
-				ss_map3[offs2+1] = (0x2C00+((code)<<2)); // si 0x20000 pour bg2
-				break;
+			bg_cache[0][code|bank]=(nextTile[0]<<2);
+			UINT8 *toto = (UINT8*)0x00200000+(bank*128);
+			memcpy((UINT8 *)cache+0x08000+bg_cache[0][code|bank]*32,&toto[code*128],128);
+
+			if(nextTile[0]++>0xfff)
+				nextTile[0]=0;
 		}
+		ss_map2[offs2] = (attr & 0x0f);
+		ss_map2[offs2+1] = (0x400+bg_cache[0][code|bank]);
+//-----------------------------------------------------------------------------------------------------------------
+// nbg0			
+		attr = DrvBgRAM1[ofst * 2 + 1];
+		bank = ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
+		code = DrvBgRAM1[ofst * 2 + 0] + ((attr & 0xc0) << 2);
+		
+		if(bg_cache[1][code|bank]==0)
+		{
+			bg_cache[1][code|bank]=(nextTile[1]<<2);
+			UINT8 *toto = (UINT8*)0x00270000+(bank*128);
+			memcpy((UINT8 *)cache+0x28000+bg_cache[1][code|bank]*32,&toto[code*128],128);
+
+			if(nextTile[1]++>0xfff)
+				nextTile[1]=0;
+		}
+		ss_font[offs2] = (attr & 0x0f);
+		ss_font[offs2+1] = (0x1400+bg_cache[1][code|bank]);			
+//-----------------------------------------------------------------------------------------------------------------
+// nbg3			
+		attr = DrvBgRAM2[ofst * 2 + 1];
+		bank = ((attr & 0x10) << 7) + ((attr & 0x20) << 5);// + ((attr & 0xc0) << 2);
+		code = DrvBgRAM2[ofst * 2 + 0] + ((attr & 0xc0) << 2); 
+		
+		if(bg_cache[2][code|bank]==0)
+		{
+			bg_cache[2][code|bank]=(nextTile[2]<<2);
+			UINT8 *toto = (UINT8*)DrvGfxROM4Data1+(bank*128);
+			memcpy((UINT8 *)cache+0x48000+bg_cache[2][code|bank]*32,&toto[code*128],128);
+
+			if(nextTile[2]++>0xfff)
+				nextTile[2]=0;
+		}
+		ss_map3[offs2] = (attr & 0x0f);
+		ss_map3[offs2+1] = (0x2400+bg_cache[2][code|bank]); // si 0x20000 pour bg2
+//-----------------------------------------------------------------------------------------------------------------
 	}
 }
 
@@ -1257,10 +1269,12 @@ void RobokidDraw()
 //	DrvGfxROM2	 	= (UINT8 *)cache+0x08000;// bg1 //Next; Next += 0x100000;
 //	DrvGfxROM3	 	= (UINT8 *)cache+0x28000;//bg2  //Next; Next += 0x100000;
 //	DrvGfxROM4		= (UINT8 *)cache+0x58000;//bg3 // Next; Next += 0x100000;
-
-	if (tilemap_enable[0])draw_robokid_bg_layer(0, DrvBgRAM0, (UINT8 *)cache+0x08000, 0, 0);
-	if (tilemap_enable[1])draw_robokid_bg_layer(1, DrvBgRAM1, (UINT8 *)cache+0x28000, 0, 1);
-	if (tilemap_enable[2])draw_robokid_bg_layer(2, DrvBgRAM2, (UINT8 *)cache+0x58000, 0, 1);
+/*
+	if (tilemap_enable[0])prepare_robokid_bg_layer(0, DrvBgRAM0, 0);
+	if (tilemap_enable[1])prepare_robokid_bg_layer(1, DrvBgRAM1, 0);
+	if (tilemap_enable[2])prepare_robokid_bg_layer(2, DrvBgRAM2, 0);
+*/
+	draw_robokid_bg_layer(0);
 
 	draw_sprites();
 	
@@ -1300,6 +1314,7 @@ void RobokidDraw()
 	}
 }
 
+int vbt=0;
 
  INT32 DrvFrame()
 {
@@ -1307,7 +1322,7 @@ void RobokidDraw()
 //		DrvDoReset();
 //	}
 //
-#if 0
+#if 1
 if(vbt<1000)
 	vbt++;
 else

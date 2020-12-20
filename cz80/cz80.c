@@ -1,3 +1,4 @@
+//#pragma GCC optimize ("O0")
 /******************************************************************************
  *
  * CZ80 (Z80 CPU emulator) version 0.9
@@ -116,8 +117,7 @@
 		if ( ptr ) ptr[A] = D;										\
 		else {														\
 			CPU->PC = PC;											\
-/*			CPU->Write_Byte(A, D);*/								\
-			CPU->wf[A>>8](A, D);								\
+			CPU->Write_Byte(A, D);								\
 		}															\
 	}
 /*
@@ -142,10 +142,8 @@
 			ptr[(A)+1] = (D) >> 8;									\
 		} else {													\
 			CPU->PC = PC;											\
-			/*CPU->Write_Byte(A, D);*/									\
-			/*CPU->Write_Byte((A)+1, (D) >> 8);*/						\
-			CPU->wf[A>>8](A, D);								\
-			CPU->wf[A>>8]((A)+1, (D) >> 8);								\
+			CPU->Write_Byte(A, D);									\
+			CPU->Write_Byte((A)+1, (D) >> 8);						\
 		}															\
 	}
 /*

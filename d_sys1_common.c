@@ -317,8 +317,8 @@ void System1BankRom(UINT32 System1RomBank)
 
 UINT8 __fastcall System1Z801PortRead(unsigned short a)
 {
-	a &= 0xff;
-	switch (a) 
+//	a &= 0xff;
+	switch (a & 0xff) 
 	{
 		case 0x00: return 0xff - System1Input[0];
 		case 0x04: return 0xff - System1Input[1];
@@ -341,9 +341,9 @@ inline void __fastcall system1_soundport_w(UINT8 d)
 
 void __fastcall System1Z801PortWrite(unsigned short a, UINT8 d)
 {
-	a &= 0xff;
+//	a &= 0xff;
 	
-	switch (a) {
+	switch (a & 0xff) {
 		case 0x14:
 		case 0x18: 
 		{
@@ -942,21 +942,23 @@ Graphics Rendering
 /*static*/ void updateCollisions(int *values)
 {
 	int x=values[0],y=values[1];
-	int xr,yr,SpriteOnScreen;
+	int xr;//,yr;//,SpriteOnScreen;
 	int xend=x+values[2];
 	int yend=y+values[3];
 	int Num=values[4];
-//	int y256;
-	if(x < 0) x = 0;
-	if(y < 0) y = 0;
 
+//	int y256;
+	if(y < 0) y = 0;
+	UINT8 *tmp= &SpriteOnScreenMap[(y<<8)+x];
+		
 	for (;y<yend ; y++)
 	{
 		if (y > 255) continue;
 
-		yr = (((y - System1BgScrollY) & 0xff) >>3)<<5;
+		int yr = (((y - System1BgScrollY) & 0xff) >>3)<<5;
 //		y256 = y<<8;
-		UINT8 *sprScreenMap= &SpriteOnScreenMap[(y<<8)+x];
+//		register UINT8 *sprScreenMap= &SpriteOnScreenMap[(y<<8)+x];
+		register UINT8 *sprScreenMap= (UINT8 *)tmp;
 
 		for(x=values[0];x<xend;x++)
 		{
@@ -964,8 +966,8 @@ Graphics Rendering
 
 			if (*sprScreenMap != 255) 
 			{
-				SpriteOnScreen = *sprScreenMap;
-				System1SprCollisionRam[SpriteOnScreen + (32 * Num)] = 0xff;
+//				SpriteOnScreen = *sprScreenMap;
+				System1SprCollisionRam[*sprScreenMap + (32 * Num)] = 0xff;
 			}
 			*sprScreenMap++ = Num;
 
@@ -976,10 +978,11 @@ Graphics Rendering
 				System1BgCollisionRam[0x20 + Num] = 0xff;
 			}
 		}
+		tmp+=256;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ int System1CalcPalette()
+/*static*/ void System1CalcPalette()
 {
 	unsigned int delta=0;		
 	UINT8 *System1PaletteRam512   = System1PaletteRam+512;
@@ -997,7 +1000,6 @@ Graphics Rendering
 		++System1PaletteRam1024;
 		delta++; if ((delta & 7) == 0) delta += 8;  
 	}
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void renderSpriteCache(int *values)
@@ -1006,7 +1008,7 @@ void renderSpriteCache(int *values)
 	int Src = values[0];
 	UINT32 Height = values[1];
 	INT32 Skip = values[2];
-	UINT32 Width  = values[3];
+//	UINT32 Width  = values[3];
 	UINT8 *ss_vram   = (UINT8 *)SS_SPRAM;
 	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(values[5]<<3)];
 	UINT8 *spr = &System1Sprites[values[4]];
@@ -1015,7 +1017,7 @@ void renderSpriteCache(int *values)
 	{
 		int Src2;
 		Src = Src2 = Src + Skip;
-		unsigned int n = Row*Width;
+		unsigned int n = 0;
 
 		UINT8 Colour1, Colour2, Data;		
 // remarque martin faire 2 boucles while
@@ -1059,6 +1061,7 @@ void renderSpriteCache(int *values)
 				spriteVRam[n++]=Data ;//Colour2 | (Colour1<<4);
 			}
 		}
+		spriteVRam+=values[3];
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1109,7 +1112,6 @@ void System1DrawSprites()
 		ss_spritePtr++;
 		SpriteBase+=16;
 	}
-	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void renderSound(unsigned int *nSoundBufferPos)
@@ -1118,7 +1120,7 @@ void System1DrawSprites()
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 	SN76496Update(0, &nSoundBuffer[*nSoundBufferPos], nSegmentLength);
 	SN76496Update(1, &nSoundBuffer[*nSoundBufferPos], nSegmentLength);
-	nSoundBufferPos[0]+=nSegmentLength;
+	*nSoundBufferPos+=nSegmentLength;
 	
 //	System1Render();
 	//	nSoundBufferPos[0]+= nSegmentLength;

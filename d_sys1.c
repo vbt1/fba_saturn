@@ -204,6 +204,7 @@ void fillSpriteCollision(unsigned int Num, int *values)
 		sprites_collision[Num].yend=(values[1]+values[3]) & 0xff; // height max 255
 }
 */
+
 void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
 {
 	int Src = (SpriteBase[7] << 8) | SpriteBase[6];
