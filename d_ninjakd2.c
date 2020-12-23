@@ -185,6 +185,24 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 		return;
 	}
 
+	if(address>= 0xd800 && address <= 0xdfff)
+	{
+		address-= 0xd800;
+		if(DrvBgRAM[address]!=data)
+		{
+			DrvBgRAM[address] = data;
+			address &=0x7fe;
+			UINT8 *vram = &DrvBgRAM[address];
+			UINT32 attr  = vram[1];
+			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
+			
+			UINT16 *map = (UINT16 *)&ss_map2[address];
+			map[0] = (attr & 0x0f);
+			map[1] = 0x400 + (code<<2) & 0xffff;
+		}
+		return;
+	}	
+
 	switch (address)
 	{
 		case 0xc200:
@@ -230,6 +248,24 @@ void __fastcall mnight_main_write(UINT16 address, UINT8 data)
 		DrvPaletteUpdate(address);
 		return;
 	}
+
+	if(address>= 0xe000 && address <= 0xe7ff)
+	{
+		address-= 0xe000;
+		if(DrvBgRAM[address]!=data)
+		{
+			DrvBgRAM[address] = data;
+			address &=0x7fe;
+			UINT8 *vram = &DrvBgRAM[address];
+			UINT32 attr  = vram[1];
+			UINT32 code  = vram[0] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 6);
+			
+			UINT16 *map = (UINT16 *)&ss_map2[address];
+			map[0] = (attr & 0x0f);
+			map[1] = 0x400 + (code<<2) & 0xffff;
+		}
+		return;
+	}	
 
 	switch (address)
 	{
@@ -622,7 +658,7 @@ void ninjakd2_sound_init()
 
 INT32 DrvDoReset()
 {
-	memset(DrvZ80RAM0, 0, RamEnd);
+	memset(DrvZ80RAM0, 0, RamEnd-DrvZ80RAM0);
 
 	CZetOpen(0);
 	CZetReset();
@@ -639,12 +675,15 @@ INT32 DrvDoReset()
 	return 0;
 }
 
-INT32 MemIndex()
+INT32 MemIndex(UINT32 game)
 {
 	UINT8 *Next; Next = AllMem;
 
 	DrvZ80ROM0		= (UINT8 *)Next; Next += 0x050000;
-	DrvGfxROM4Data1	= (UINT8 *)Next; Next += 0x060000;
+	if(!game)
+	{	
+		DrvGfxROM4Data1	= (UINT8 *)Next; Next += 0x060000;
+	}
 //	DrvGfxROM2	 	= (UINT8 *)cache+0x08000;// bg1 //Next; Next += 0x100000;
 //	DrvGfxROM3	 	= (UINT8 *)cache+0x28000;//bg2  //Next; Next += 0x100000;
 //	DrvGfxROM4		= (UINT8 *)cache+0x58000;//bg3 // Next; Next += 0x100000;
@@ -652,17 +691,33 @@ INT32 MemIndex()
 	CZ80Context		= (UINT8 *)Next; Next += (sizeof(cz80_struc));	
 	cram_lut 		= (UINT16 *)Next; Next += 0x1000 * (sizeof(UINT16));
 
-	DrvZ80RAM0	= (UINT8 *)0x2F0000;//Next; Next += 0x001a00;
-	DrvSprRAM	= (UINT8 *)0x2F2200;//Next; Next += 0x000600;
-	DrvPalRAM	= (UINT8 *)0x2F2800;//Next; Next += 0x000800;
-	DrvFgRAM	= (UINT8 *)0x2F3000;//Next; Next += 0x000800;
-	DrvBgRAM0	= (UINT8 *)0x2F3800;//Next;
-	DrvBgRAM	= (UINT8 *)0x2F5800;//Next; Next += 0x002000;
-	DrvBgRAM1	= (UINT8 *)0x2F7800;//Next; Next += 0x002000;
-	DrvBgRAM2	= (UINT8 *)0x2F9800;//Next; Next += 0x002000;
+	if(!game)
+	{
+		DrvZ80RAM0	= (UINT8 *)0x2F0000;//Next; Next += 0x001a00;
+		DrvSprRAM	= (UINT8 *)0x2F2200;//Next; Next += 0x000600;
+		DrvPalRAM	= (UINT8 *)0x2F2800;//Next; Next += 0x000800;
+		DrvFgRAM	= (UINT8 *)0x2F3000;//Next; Next += 0x000800;
+		DrvBgRAM0	= (UINT8 *)0x2F3800;//Next;
+		DrvBgRAM	= (UINT8 *)0x2F5800;//Next; Next += 0x002000;
+		DrvBgRAM1	= (UINT8 *)0x2F7800;//Next; Next += 0x002000;
+		DrvBgRAM2	= (UINT8 *)0x2F9800;//Next; Next += 0x002000;
 
-	RamEnd		= 0x2FA800-0x2F0000;
+		RamEnd		= DrvBgRAM2+0x002000;
+	}
+	else
+	{
+		DrvGfxROM4Data1	= (UINT8 *)Next; Next += 0x040000;
+		DrvZ80RAM0	= (UINT8 *)Next; Next += 0x002200;
+		DrvSprRAM	= (UINT8 *)Next; Next += 0x000600;
+		DrvPalRAM	= (UINT8 *)Next; Next += 0x000800;
+		DrvFgRAM	= (UINT8 *)Next; Next += 0x000800;
+		DrvBgRAM0	= (UINT8 *)Next; Next += 0x002000;
+		DrvBgRAM	= (UINT8 *)Next; Next += 0x002000;
+		DrvBgRAM1	= (UINT8 *)Next; Next += 0x002000;
+		DrvBgRAM2	= (UINT8 *)Next; Next += 0x002000;
 
+		RamEnd		= (UINT8 *)Next;		
+	}
 	return 0;
 }
 
@@ -754,13 +809,12 @@ INT32 Ninjakd2CommonInit()
 	DrvInitSaturnS(1);
 	DrvDraw = Ninjakd2Draw;
 	AllMem = NULL;
-	MemIndex();
+	MemIndex(1);
 
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset((void *)0x2F0000, 0, 0x9c00);
 	memset(AllMem, 0, MALLOC_MAX);
-	MemIndex();
-
+	MemIndex(1);
+	
 	make_lut();
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
@@ -804,7 +858,8 @@ INT32 Ninjakd2CommonInit()
 	CZetMapMemory(DrvZ80ROM0 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	CZetMapMemory(DrvPalRAM,			0xc800, 0xcdff, MAP_ROM);
 	CZetMapMemory(DrvFgRAM,				0xd000, 0xd7ff, MAP_RAM);
-	CZetMapMemory(DrvBgRAM,				0xd800, 0xdfff, MAP_RAM);
+//	CZetMapMemory(DrvBgRAM,				0xd800, 0xdfff, MAP_RAM);
+	CZetMapMemory(DrvBgRAM,				0xd800, 0xdfff, MAP_ROM);
 	CZetMapMemory(DrvZ80RAM0,			0xe000, 0xf9ff, MAP_RAM);
 	CZetMapMemory(DrvSprRAM,			0xfa00, 0xffff, MAP_RAM);
 	CZetSetWriteHandler(ninjakd2_main_write);
@@ -838,12 +893,12 @@ INT32 MnightInit()
 	DrvInitSaturnS(1);
 	DrvDraw = MnightDraw;
 	AllMem = NULL;
-	MemIndex();
+	MemIndex(1);
 
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset((void *)0x2F0000, 0, 0x9c00);
 	memset(AllMem, 0, MALLOC_MAX);
-	MemIndex();
+	MemIndex(1);
 	
 	make_lut();
 	{
@@ -889,7 +944,8 @@ INT32 MnightInit()
 	CZetMapMemory(DrvZ80ROM0 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	CZetMapMemory(DrvZ80RAM0,			0xc000, 0xd9ff, MAP_RAM);
 	CZetMapMemory(DrvSprRAM,			0xda00, 0xdfff, MAP_RAM);
-	CZetMapMemory(DrvBgRAM,				0xe000, 0xe7ff, MAP_RAM);
+//	CZetMapMemory(DrvBgRAM,				0xe000, 0xe7ff, MAP_RAM);
+	CZetMapMemory(DrvBgRAM,				0xe000, 0xe7ff, MAP_ROM);
 	CZetMapMemory(DrvFgRAM,				0xe800, 0xefff, MAP_RAM);
 	CZetMapMemory(DrvPalRAM,			0xf000, 0xf5ff, MAP_ROM);
 	CZetSetWriteHandler(mnight_main_write);
@@ -910,12 +966,12 @@ INT32 RobokidInit()
 	DrvInitSaturnS(0);
 	DrvDraw = RobokidDraw;
 	AllMem = NULL;
-	MemIndex();
+	MemIndex(0);
 
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset((void *)0x2F0000, 0, 0x9c00);
 	memset(AllMem, 0, MALLOC_MAX);
-	MemIndex();
+	MemIndex(0);
 	
 	make_lut();
 	{
@@ -1013,12 +1069,12 @@ INT32 OmegafInit()
 	DrvInitSaturnS(0);
 	DrvDraw = Ninjakd2Draw;
 	AllMem = NULL;
-	MemIndex();
+	MemIndex(0);
 
 	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
 	memset((void *)0x2F0000, 0, 0x9c00);
 	memset(AllMem, 0, MALLOC_MAX);
-	MemIndex();
+	MemIndex(0);
 	
 	make_lut();	
 	
@@ -1306,7 +1362,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	
 	return 0;
 }
-
+/*
 void draw_mnight_bg_layer()
 {
 //	INT32 xscroll = (scrollx[0] + 0) & 0x1ff;
@@ -1314,8 +1370,8 @@ void draw_mnight_bg_layer()
 
 	for (INT32 offs = 0; offs < 32 * 32; offs++)
 	{
-		UINT32 sx = (offs & 0x1f);
-		UINT32 sy = (offs / 0x20)<<5;
+//		UINT32 sx = (offs & 0x1f);
+//		UINT32 sy = (offs / 0x20)<<5;
 
 		UINT32 attr  = DrvBgRAM[offs*2+1];
 		UINT32 code  = DrvBgRAM[offs*2+0] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 6);
@@ -1325,7 +1381,7 @@ void draw_mnight_bg_layer()
 		ss_map2[(offs*2)+1] = 0x400 + (code<<2) & 0xffff;		
 	}
 }
-
+*/
  void draw_robokid_bg_layer(INT32 width)
 {
 //	if (tilemap_enable[sel] == 0) return;
@@ -1392,15 +1448,15 @@ void draw_mnight_bg_layer()
 //-----------------------------------------------------------------------------------------------------------------
 	}
 }
-
+/*
 inline void draw_bg_layer()
 {
 
 
 	for (UINT32 offs = 0; offs < 32 * 32; offs++)
 	{
-		UINT32 sx = (offs & 0x1f);
-		UINT32 sy = (offs / 0x20)<<5;
+//		UINT32 sx = (offs & 0x1f);
+//		UINT32 sy = (offs / 0x20)<<5;
 
 		UINT32 attr  = DrvBgRAM[offs*2+1];
 		UINT32 code  = DrvBgRAM[offs*2+0] + ((attr & 0xc0) << 2);
@@ -1411,7 +1467,7 @@ inline void draw_bg_layer()
 		ss_map2[(offs*2)+1] = 0x400 + (code<<2) & 0x0fff;
 	}
 }
-
+*/
 void draw_fg_layer()
 {
 	for (UINT32 offs = (32 * 4); offs < (32 * 32) - (32 * 4); offs++)
@@ -1603,9 +1659,8 @@ void Ninjakd2Draw()
 	ss_reg->n1_move_x =  (scrollx[0]-8)<<16;
 	ss_reg->n1_move_y =  (scrolly[0]+32)<<16;
 	
-	if (tilemap_enable[0])
-		draw_bg_layer();
-	
+//	if (tilemap_enable[0])
+//		draw_bg_layer();
 	draw_sprites(0); // 0x100
 
 	draw_fg_layer();
@@ -1622,8 +1677,8 @@ void MnightDraw()
 //	if (tilemap_enable[0] == 0)
 //		BurnTransferClear();
 
-	if (tilemap_enable[0])
-		draw_mnight_bg_layer();
+//	if (tilemap_enable[0])
+//		draw_mnight_bg_layer();
 
 //	draw_copy_sprites();
 
