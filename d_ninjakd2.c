@@ -185,6 +185,26 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 		return;
 	}
 
+	if(address>= 0xd000 && address <= 0xd7ff)
+	{
+		address-= 0xd000;
+		if(DrvFgRAM[address]!=data)
+		{
+			DrvFgRAM[address] = data;
+			UINT32 sx = ((address>>1) & 0x1f);
+			UINT32 off2s = sx | (address/0x40) <<6;
+
+			address &=0x7fe;
+			UINT8 *vram = &DrvFgRAM[address];
+			UINT32 attr  = vram[1];
+			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
+			
+			code |= (attr & 0x20) << 3;
+			ss_map[off2s] = (attr & 0x0f) <<12 | code & 0xfff;
+		}
+		return;
+	}
+
 	if(address>= 0xd800 && address <= 0xdfff)
 	{
 		address-= 0xd800;
@@ -246,6 +266,26 @@ void __fastcall mnight_main_write(UINT16 address, UINT8 data)
 	if ((address & 0xf800) == 0xf000) {
 		DrvPalRAM[address & 0x7ff] = data;
 		DrvPaletteUpdate(address);
+		return;
+	}
+
+	if(address>= 0xe800 && address <= 0xefff)
+	{
+		address-= 0xe800;
+		if(DrvFgRAM[address]!=data)
+		{
+			DrvFgRAM[address] = data;
+			UINT32 sx = ((address>>1) & 0x1f);
+			UINT32 off2s = sx | (address/0x40) <<6;
+
+			address &=0x7fe;
+			UINT8 *vram = &DrvFgRAM[address];
+			UINT32 attr  = vram[1];
+			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
+			
+			code |= (attr & 0x20) << 3;
+			ss_map[off2s] = (attr & 0x0f) <<12 | code & 0xfff;
+		}
 		return;
 	}
 
@@ -318,6 +358,26 @@ void __fastcall robokid_main_write(UINT16 address, UINT8 data)
 		DrvPaletteUpdate(address^1);
 		return;
 	}
+	
+	if(address>= 0xc800 && address <= 0xcfff)
+	{
+		address-= 0xc800;
+		if(DrvFgRAM[address]!=data)
+		{
+			DrvFgRAM[address] = data;
+			UINT32 sx = ((address>>1) & 0x1f);
+			UINT32 off2s = sx | (address/0x40) <<6;
+
+			address &=0x7fe;
+			UINT8 *vram = &DrvFgRAM[address];
+			UINT32 attr  = vram[1];
+			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
+			
+			code |= (attr & 0x20) << 3;
+			ss_map[off2s] = (attr & 0x0f) <<12 | code & 0xfff;
+		}
+		return;
+	}	
 
 	switch (address)
 	{
@@ -857,7 +917,8 @@ INT32 Ninjakd2CommonInit()
 	CZetMapMemory(DrvZ80ROM0,			0x0000, 0x7fff, MAP_ROM);
 	CZetMapMemory(DrvZ80ROM0 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	CZetMapMemory(DrvPalRAM,			0xc800, 0xcdff, MAP_ROM);
-	CZetMapMemory(DrvFgRAM,				0xd000, 0xd7ff, MAP_RAM);
+//	CZetMapMemory(DrvFgRAM,				0xd000, 0xd7ff, MAP_RAM);
+	CZetMapMemory(DrvFgRAM,				0xd000, 0xd7ff, MAP_ROM);
 //	CZetMapMemory(DrvBgRAM,				0xd800, 0xdfff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM,				0xd800, 0xdfff, MAP_ROM);
 	CZetMapMemory(DrvZ80RAM0,			0xe000, 0xf9ff, MAP_RAM);
@@ -946,7 +1007,8 @@ INT32 MnightInit()
 	CZetMapMemory(DrvSprRAM,			0xda00, 0xdfff, MAP_RAM);
 //	CZetMapMemory(DrvBgRAM,				0xe000, 0xe7ff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM,				0xe000, 0xe7ff, MAP_ROM);
-	CZetMapMemory(DrvFgRAM,				0xe800, 0xefff, MAP_RAM);
+//	CZetMapMemory(DrvFgRAM,				0xe800, 0xefff, MAP_RAM);
+	CZetMapMemory(DrvFgRAM,				0xe800, 0xefff, MAP_ROM);
 	CZetMapMemory(DrvPalRAM,			0xf000, 0xf5ff, MAP_ROM);
 	CZetSetWriteHandler(mnight_main_write);
 	CZetSetReadHandler(ninjakd2_main_read);
@@ -1045,7 +1107,8 @@ INT32 RobokidInit()
 	CZetMapMemory(DrvZ80ROM0,			0x0000, 0x7fff, MAP_ROM);
 	CZetMapMemory(DrvZ80ROM0 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	CZetMapMemory(DrvPalRAM,			0xc000, 0xc7ff, MAP_ROM);
-	CZetMapMemory(DrvFgRAM,				0xc800, 0xcfff, MAP_RAM);
+//	CZetMapMemory(DrvFgRAM,				0xc800, 0xcfff, MAP_RAM);
+	CZetMapMemory(DrvFgRAM,				0xc800, 0xcfff, MAP_ROM);
 	CZetMapMemory(DrvBgRAM2,			0xd000, 0xd3ff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM1,			0xd400, 0xd7ff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM0,			0xd800, 0xdbff, MAP_RAM);
@@ -1467,7 +1530,7 @@ inline void draw_bg_layer()
 		ss_map2[(offs*2)+1] = 0x400 + (code<<2) & 0x0fff;
 	}
 }
-*/
+
 void draw_fg_layer()
 {
 	for (UINT32 offs = (32 * 4); offs < (32 * 32) - (32 * 4); offs++)
@@ -1482,7 +1545,7 @@ void draw_fg_layer()
 		ss_map[off2s] = (attr & 0x0f) <<12 | code & 0xfff;
 	}
 }
-
+*/
 SprSpCmd ss_spriteBuff[96];
 
  void draw_sprites(UINT32 robokid)
@@ -1663,7 +1726,7 @@ void Ninjakd2Draw()
 //		draw_bg_layer();
 	draw_sprites(0); // 0x100
 
-	draw_fg_layer();
+//	draw_fg_layer();
 }
 
 
@@ -1682,7 +1745,7 @@ void MnightDraw()
 
 //	draw_copy_sprites();
 
-	draw_fg_layer(0x200);
+//	draw_fg_layer();
 }
 
 void RobokidDraw()
@@ -1699,7 +1762,7 @@ void RobokidDraw()
 
 	draw_sprites(1);
 	
-	draw_fg_layer();
+//	draw_fg_layer();
 
 	ss_reg->n0_move_x =  (scrollx[1]-8)<<16;
 	ss_reg->n0_move_y =  (scrolly[1]+32)<<16;
@@ -1712,8 +1775,8 @@ void RobokidDraw()
 	{
 		UINT32 sx = (offs & 0x3f);
 
-		UINT8 attr  = DrvFgRAM[offs*2+1];
-		UINT16 code  = DrvFgRAM[offs*2+0] + ((attr & 0xc0) << 2);
+//		UINT8 attr  = DrvFgRAM[offs*2+1];
+//		UINT16 code  = DrvFgRAM[offs*2+0] + ((attr & 0xc0) << 2);
 		UINT16 off2s = sx | (offs / 0x40) <<6;
 
 		if((sx<32)&& (offs / 0x40)<28)
@@ -1723,6 +1786,7 @@ void RobokidDraw()
 		else
 			ss_map[off2s] = 0x5;
 	}
+	
 }
 
  inline void DrvClearOpposites(UINT8* nJoystickInputs)
