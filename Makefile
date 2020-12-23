@@ -289,7 +289,7 @@ LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
 
  LIBSTM = ../../SBL6/SEGALIB/PCM/vbtelf4/pcm_stm.o ../../SBL6/SEGALIB/LIB/vbtelf4/sega_stm.a ../../SBL6/SEGALIB/LIB/vbtelf4/sega_dma.a
 
-LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf4/sega_spr.a ../../SBL6/SEGALIB/LIB/vbtelf4/sega_dma.a
+LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf4/sega_dma.a
 
 all: $(TARGET) $(TARGET1) $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \

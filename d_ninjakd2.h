@@ -11,16 +11,19 @@
 #define BGON    (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x20))
 
 INT32 RobokidInit();
+INT32 MnightInit();
 INT32 Ninjakd2DecryptedInit();
+//static INT32 OmegafInit();
 INT32 DrvExit();
 INT32 DrvFrame();
 void Ninjakd2Draw();
 void RobokidDraw();
+void MnightDraw();
 void DrvInitSaturnS(UINT8 game);
 void initColorsS(UINT8 game);
 void ninjakd2_bgconfig(UINT32 sel, UINT32 offset, UINT8 data);
 inline void DrvCalculatePalette();
-void draw_sprites();
+void draw_sprites(UINT32 robokid);
 inline void draw_bg_layer();
 void draw_fg_layer();
  void tile16x16toSaturn (unsigned int num, unsigned char *pDest);
@@ -56,7 +59,11 @@ UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvDips[2] = {0,0};
 UINT8 DrvInputs[3] = {0,0,0};
 INT32 previous_coin[2] = {0,0};
-
+/*
+UINT8 m_omegaf_io_protection[3];
+UINT8 m_omegaf_io_protection_input;
+INT32 m_omegaf_io_protection_tic;
+*/
 struct BurnInputInfo DrvInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
@@ -135,7 +142,7 @@ struct BurnInputInfo OmegafInputList[] = {
 };
 
 STDINPUTINFO(Omegaf)
-
+#endif
 struct BurnDIPInfo MnightDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0xcf, NULL				},
@@ -187,7 +194,7 @@ struct BurnDIPInfo MnightDIPList[]=
 };
 
 STDDIPINFO(Mnight)
-#endif
+
 struct BurnDIPInfo Ninjakd2DIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x6f, NULL				},
@@ -486,6 +493,7 @@ struct BurnDIPInfo RobokidjDIPList[]=
 
 STDDIPINFOEXT(Robokidj, Robokid, Robokidj)
 
+
 struct BurnDIPInfo OmegafDIPList[]=
 {
 	{0x12, 0xff, 0xff, 0xff, NULL				},
@@ -749,7 +757,7 @@ struct BurnDriver BurnDrvJt104 = {
 	256, 192, 4, 3
 };
 */
-
+#endif
 // Mutant Night 
 
 struct BurnRomInfo mnightRomDesc[] = {
@@ -785,7 +793,7 @@ struct BurnDriver BurnDrvMnight = {
 	256, 192, 4, 3
 };
 */
-
+#if 0
 // Mutant Night (Japan)
 
 struct BurnRomInfo mnightjRomDesc[] = {

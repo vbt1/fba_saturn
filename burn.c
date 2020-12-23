@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 58
+#define NB_DRV 59
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -150,6 +150,9 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvRobokid = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvNinjakd2a = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};	
 	static struct BurnDriver BurnDrvNineteen43 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+//	static struct BurnDriver BurnDrvOmegafs = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvMnight = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+
 	static struct BurnDriver BurnDrvNineteen43b = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
@@ -424,6 +427,14 @@ BurnDrvNinjakd2a.szShortName="ninkd2a";
 BurnDrvNinjakd2a.szFullNameA="Ninja-Kid II (set 2, bootleg?)";
 BurnDrvNinjakd2a.szParent="ninkd2";
 
+//BurnDrvOmegafs.szShortName="omegafs";
+//BurnDrvOmegafs.szFullNameA="Omega Fighter Special";
+//BurnDrvOmegafs.szParent="ninkd2";
+
+BurnDrvMnight.szShortName="mnight";
+BurnDrvMnight.szFullNameA="Mutant Night";
+BurnDrvMnight.szParent="ninkd2";
+
 BurnDrvNineteen43b.szShortName="1943b";
 BurnDrvNineteen43b.szFullNameA="1943: The Battle of Midway (btlg1 JP)";
 BurnDrvNineteen43b.szParent="1943";
@@ -450,6 +461,8 @@ pDriver[i++] = &BurnDrvAppoooh;
 //pDriver[i++] = &BurnDrvAstrofl;
 pDriver[i++] = &BurnDrvRobokid;
 pDriver[i++] = &BurnDrvNinjakd2a;
+//pDriver[i++] = &BurnDrvOmegafs;
+pDriver[i++] = &BurnDrvMnight;
 pDriver[i++] = &BurnDrvGnga;
 pDriver[i++] = &BurnDrvAtetris;
 //pDriver[i++] = &BurnDrvOpaopa;

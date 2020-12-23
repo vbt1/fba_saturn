@@ -28,6 +28,13 @@ int ovlInit(char *szShortName)
 		ninjakd2aRomInfo, ninjakd2aRomName, DrvInputInfo, Ninjakd2DIPInfo,
 		Ninjakd2DecryptedInit, DrvExit, DrvFrame
 	};
+	
+	struct BurnDriver nBurnDrvMnight = {
+		"mnight", "ninkd2", 
+		"Mutant Night",
+		mnightRomInfo, mnightRomName, DrvInputInfo, MnightDIPInfo,
+		MnightInit, DrvExit, DrvFrame
+	};	
 /*	
 	struct BurnDriver nBurnDrvOmegafs = {
 		"omegafs", "ninkd2",
@@ -48,37 +55,46 @@ int ovlInit(char *szShortName)
 
 	if (!strcmp(nBurnDrvNinjakd2a.szShortName, szShortName)) 
 	memcpy(shared,&nBurnDrvNinjakd2a,sizeof(struct BurnDriver));
+/*
+	if (!strcmp(nBurnDrvOmegafs.szShortName, szShortName)) 
+	memcpy(shared,&nBurnDrvOmegafs,sizeof(struct BurnDriver));
+*/
+	if (!strcmp(nBurnDrvMnight.szShortName, szShortName)) 
+	memcpy(shared,&nBurnDrvMnight,sizeof(struct BurnDriver));
 
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 	ss_regd  = (SclDataset *)SS_REGD;
 }
 
+void DrvOverDraw()
+{
+//	SCL_SetFrameInterval(-1);
+//	SPR_WRITE_REG(SPR_W_FBCR, SPR_FBCR_MANUAL | 0);
+	if(overdraw_enable)
+		SPR_WRITE_REG(SPR_W_FBCR, SPR_FBCR_MANUAL);
+	else
+		SPR_WRITE_REG(SPR_W_FBCR, SPR_FBCR_AUTO);
+}
+
 void DrvPaletteUpdate(INT32 offset)
 {
 	offset &= 0x7fe;
 
-	UINT32 p = (DrvPalRAM[offset+0] << 8) + DrvPalRAM[offset+1];
-/*
-	UINT32 r = p >> 12;
-	UINT32 g = (p >> 8) & 0xf;
-	UINT32 b = (p >> 4) & 0xf;
+	UINT32 p = ((DrvPalRAM[offset+0] << 8) + DrvPalRAM[offset+1])>>4;
+	offset>>=1;
 
-	r |= r << 4;
-	g |= g << 4;
-	b |= b << 4;
-*/
-	if((((offset/2)+1)%16)==0)
+	if(((offset+1)%16)==0)
 	{
-		colAddr[(offset/2)-15]= cram_lut[p>>4];
+		colAddr[(offset)-15]= cram_lut[p];
 	}
-	else if(((offset/2)%16)==0)
+	else if((offset%16)==0)
 	{
-		colAddr[(offset/2)+15]= cram_lut[p>>4];
+		colAddr[(offset)+15]= cram_lut[p];
 	}
 	else
 	{
-		colAddr[offset/2] = cram_lut[p>>4];
+		colAddr[offset] = cram_lut[p];
 	}
 }
 
@@ -191,18 +207,10 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xc203:
-			overdraw_enable = data & 0x01;
-// VBT : 			astuce Niddy pour émuler l'overdraw de sprites
-//			SPR_2FrameChgIntr(-1);
-/*
-si on enleve
-  XyInt xy[4];
-    xy[0].x = 0; xy[0].y = 0; //upper left
-    xy[1].x = 704; xy[1].y = 0; //upper right
-    xy[2].x = 704; xy[2].y = 480; //lower right
-    xy[3].x = 0; xy[3].y = 480; //lower left
-    SPR_2Polygon(0, 0, 0, xy, NO_GOUR);
-*/			
+			if(overdraw_enable != data & 0x01)
+			{
+				overdraw_enable = data & 0x01;
+			}
 		return;
 
 		case 0xc208:
@@ -210,6 +218,49 @@ si on enleve
 		case 0xc20a:
 		case 0xc20b:
 		case 0xc20c:
+			ninjakd2_bgconfig(0, address, data);
+		return;
+	}
+}
+
+void __fastcall mnight_main_write(UINT16 address, UINT8 data)
+{
+	if ((address & 0xf800) == 0xf000) {
+		DrvPalRAM[address & 0x7ff] = data;
+		DrvPaletteUpdate(address);
+		return;
+	}
+
+	switch (address)
+	{
+		case 0xfa00:
+			soundlatch = data;
+		return;
+
+		case 0xfa01:
+		/*{
+			if (data & 0x10)
+			{
+				ZetReset(1);
+			}
+
+			*flipscreen = data & 0x80;
+		}*/
+		return;
+
+		case 0xfa02:
+			ninjakd2_bankswitch(data & 0x07);
+		return;
+
+		case 0xfa03:
+			overdraw_enable = data & 0x01;
+		return;
+
+		case 0xfa08:
+		case 0xfa09:
+		case 0xfa0a:
+		case 0xfa0b:
+		case 0xfa0c:
 			ninjakd2_bgconfig(0, address, data);
 		return;
 	}
@@ -257,7 +308,14 @@ void __fastcall robokid_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xdc03:
+		
+//		if(overdraw_enable != data & 0x01)
+		{
 			overdraw_enable = data & 0x01;
+// VBT : 			astuce Niddy pour émuler l'overdraw de sprites
+//			SCL_SetFrameInterval(-overdraw_enable);		
+//			SCL_SetFrameInterval(-1);		
+		}
 		return;
 
 		case 0xdd00:
@@ -297,7 +355,7 @@ void __fastcall robokid_main_write(UINT16 address, UINT8 data)
 		return;
 	}
 }
-#if	 0
+#if 0
 // Copied directly from MAME
 UINT8 omegaf_protection_read(INT32 offset)
 {
@@ -402,7 +460,7 @@ void __fastcall omegaf_main_write(UINT16 address, UINT8 data)
 {
 	if ((address & 0xf800) == 0xd800) {
 		DrvPalRAM[address & 0x7ff] = data;
-		DrvPaletteUpdate(address);
+		DrvPaletteUpdate(address^1);
 		return;
 	}
 
@@ -414,14 +472,14 @@ void __fastcall omegaf_main_write(UINT16 address, UINT8 data)
 
 		case 0xc001:
 		{
-			if (data & 0x10) {
+/*			if (data & 0x10) {
 				CZetClose();
 				CZetOpen(1);
 				CZetReset();
 				CZetClose();
 				CZetOpen(0);
 			}
-
+*/
 //			flipscreen = data & 0x80;
 		}
 		return;
@@ -629,6 +687,11 @@ INT32 DrvGfxDecode(UINT8 *rom, UINT32 len, UINT32 type)
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs0, YOffs0, 0x400, tmp, rom);
 			tile16x16toSaturn((len * 2) / (16 * 16), rom);			
 			break;			
+		case 10:
+			// decode pour sprites		
+			memcpyl (tmp, rom, len);
+			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs0, YOffs0, 0x400, tmp, rom);
+			break;				
 		case 2:
 			// decode pour sprites
 			memcpyl (tmp, rom, len);
@@ -752,6 +815,7 @@ INT32 Ninjakd2CommonInit()
 
 	DrvDoReset();
 	DrvCalculatePalette();
+	nBurnFunction = DrvOverDraw;	
 	drawWindow(0,192,192,2,62);
 	return 0;
 }
@@ -767,6 +831,78 @@ INT32 Ninjakd2DecryptedInit()
 	}*/
 
 	return nRet;
+}
+
+INT32 MnightInit()
+{
+	DrvInitSaturnS(1);
+	DrvDraw = MnightDraw;
+	AllMem = NULL;
+	MemIndex();
+
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
+	memset((void *)0x2F0000, 0, 0x9c00);
+	memset(AllMem, 0, MALLOC_MAX);
+	MemIndex();
+	
+	make_lut();
+	{
+		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
+		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  1, 1)) return 1;
+		if (BurnLoadRom(DrvZ80ROM0 + 0x18000,  2, 1)) return 1;
+		if (BurnLoadRom(DrvZ80ROM0 + 0x20000,  3, 1)) return 1;
+		if (BurnLoadRom(DrvZ80ROM0 + 0x28000,  4, 1)) return 1;
+
+//		if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  5, 1)) return 1;
+//		memcpy (DrvZ80ROM1 + 0x10000, DrvZ80ROM1, 0x10000);
+
+		UINT8 *DrvGfxROM0	= (UINT8 *)cache;// fg
+		UINT8 *ss_vram 		= (UINT8 *)SS_SPRAM;
+		UINT8 *DrvGfxROM1	= (UINT8 *)(ss_vram+0x1100); // sprites
+		UINT8 *DrvGfxROM2	= (UINT8 *)(UINT8 *)cache+0x08000; // bg
+
+		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  6, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x00000,  7, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x10000,  8, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x20000,  9, 1)) return 1;
+		memcpyl (DrvGfxROM1 + 0x30000, DrvGfxROM1 + 0x20000, 0x10000);
+		
+		if (BurnLoadRom(DrvGfxROM2 + 0x00000, 10, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM2 + 0x10000, 11, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM2 + 0x20000, 12, 1)) return 1;
+
+		gfx_unscramble(0x40000);
+
+//		DrvGfxDecode(DrvGfxROM0, 0x08000, 0); // text
+		swapFirstLastColor(DrvGfxROM0,0x0f,0x08000);
+		
+		DrvGfxDecode(DrvGfxROM1, 0x40000, 10); // sprites
+		swapFirstLastColor(DrvGfxROM1,0x0f,0x40000);			
+
+		DrvGfxDecode(DrvGfxROM2, 0x40000, 1); // bg0
+		swapFirstLastColor(DrvGfxROM2,0x0f,0x40000);	
+	}
+
+	CZetInit2(1,CZ80Context);
+	CZetOpen(0);
+	CZetMapMemory(DrvZ80ROM0,			0x0000, 0x7fff, MAP_ROM);
+	CZetMapMemory(DrvZ80ROM0 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
+	CZetMapMemory(DrvZ80RAM0,			0xc000, 0xd9ff, MAP_RAM);
+	CZetMapMemory(DrvSprRAM,			0xda00, 0xdfff, MAP_RAM);
+	CZetMapMemory(DrvBgRAM,				0xe000, 0xe7ff, MAP_RAM);
+	CZetMapMemory(DrvFgRAM,				0xe800, 0xefff, MAP_RAM);
+	CZetMapMemory(DrvPalRAM,			0xf000, 0xf5ff, MAP_ROM);
+	CZetSetWriteHandler(mnight_main_write);
+	CZetSetReadHandler(ninjakd2_main_read);
+	CZetClose();
+
+//	ninjakd2_sound_init();
+
+	DrvDoReset();
+	DrvCalculatePalette();
+	nBurnFunction = DrvOverDraw;
+	drawWindow(0,192,192,2,62);	
+	return 0;
 }
 
 INT32 RobokidInit()
@@ -816,7 +952,7 @@ INT32 RobokidInit()
 		DrvGfxDecode((UINT8*)tmp, 0x80000, 3);
 		swapFirstLastColor(tmp,0x0f,0x80000);
 // tile 0xc00 à vider 
-		memset(&tmp[0x60000],0x00,0x80);
+//		memset(&tmp[0x60000],0x00,0x80);
 
 //DrvGfxROM2
 		tmp = (UINT8*)0x00200000;
@@ -867,8 +1003,103 @@ INT32 RobokidInit()
 
 	DrvDoReset();
 	DrvCalculatePalette();
+	nBurnFunction = DrvOverDraw;
 	return 0;
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
+#if 0
+INT32 OmegafInit()
+{
+	DrvInitSaturnS(0);
+	DrvDraw = Ninjakd2Draw;
+	AllMem = NULL;
+	MemIndex();
+
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
+	memset((void *)0x2F0000, 0, 0x9c00);
+	memset(AllMem, 0, MALLOC_MAX);
+	MemIndex();
+	
+	make_lut();	
+	
+	{
+		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  0, 1)) return 1;
+		if (BurnLoadRom(DrvZ80ROM0 + 0x30000,  1, 1)) return 1;
+		memcpyl (DrvZ80ROM0, DrvZ80ROM0 + 0x10000, 0x10000);
+
+//		if (BurnLoadRom(DrvZ80ROM1 + 0x10000,  2, 1)) return 1;
+//		memcpyl (DrvZ80ROM1, DrvZ80ROM1 + 0x10000, 0x10000);
+		
+		UINT8 *ss_vram 		= (UINT8 *)SS_SPRAM;
+		UINT8 *DrvGfxROM1	= (UINT8 *)(ss_vram+0x1100); // sprites
+
+		if (BurnLoadRom(DrvGfxROM1 + 0x00000,  4, 1)) return 1;
+
+// pour sprites
+		DrvGfxDecode(DrvGfxROM1, 0x40000, 2);
+		swapFirstLastColor(DrvGfxROM1,0x0f,0x40000);
+
+//DrvGfxROM3
+		UINT8 *tmp = (UINT8*)0x00270000;
+		if (BurnLoadRom(tmp + 0x00000,  6, 1)) return 1;
+
+// bg2 utile
+		DrvGfxDecode((UINT8*)tmp, 0x80000, 3);
+		swapFirstLastColor(tmp,0x0f,0x80000);
+		
+//DrvGfxROM2
+		tmp = (UINT8*)0x00200000;
+
+		if (BurnLoadRom(tmp + 0x00000,  5, 1)) return 1;
+
+		DrvGfxDecode((UINT8*)tmp, 0x70000, 3);
+		swapFirstLastColor(tmp,0x0f,0x70000);
+/*
+//DrvGfxROM4
+		tmp = (UINT8*)DrvGfxROM4Data1;
+
+		if (BurnLoadRom(tmp + 0x00000,  7, 1)) return 1;
+		DrvGfxDecode((UINT8*)tmp, 0x60000, 3);
+		swapFirstLastColor(tmp,0x0f,0x60000);
+*/
+//text
+		UINT8 *DrvGfxROM0	 	= (UINT8 *)cache;// fg
+		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  3, 1)) return 1;
+		swapFirstLastColor(DrvGfxROM0,0x0f,0x10000);
+		
+//		DrvGfxDecode(DrvGfxROM0, 0x08000, 0);
+//		DrvGfxDecode(DrvGfxROM1, 0x20000, 2);
+//		DrvGfxDecode(DrvGfxROM2, 0x80000, 2);
+//		DrvGfxDecode(DrvGfxROM3, 0x80000, 2);
+//		DrvGfxDecode(DrvGfxROM4, 0x80000, 2);
+	}
+
+	CZetInit2(1,CZ80Context);
+	CZetOpen(0);
+	CZetMapMemory(DrvZ80ROM0,			0x0000, 0x7fff, MAP_ROM);
+	CZetMapMemory(DrvZ80ROM0 + 0x10000,	0x8000, 0xbfff, MAP_ROM);
+	CZetMapMemory(DrvBgRAM0,			0xc400, 0xc7ff, MAP_RAM);
+	CZetMapMemory(DrvBgRAM1,			0xc800, 0xcbff, MAP_RAM);
+	CZetMapMemory(DrvBgRAM2,			0xcc00, 0xcfff, MAP_RAM);
+	CZetMapMemory(DrvFgRAM,				0xd000, 0xd7ff, MAP_RAM);
+	CZetMapMemory(DrvPalRAM,			0xd800, 0xdfff, MAP_ROM);
+	CZetMapMemory(DrvZ80RAM0,			0xe000, 0xf9ff, MAP_RAM);
+	CZetMapMemory(DrvSprRAM,			0xfa00, 0xffff, MAP_RAM);
+	CZetSetWriteHandler(omegaf_main_write);
+	CZetSetReadHandler(omegaf_main_read);
+	CZetClose();
+
+//	ninjakd2_sound_init();
+//	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   0.80, BURN_SND_ROUTE_BOTH);
+//	BurnYM2203SetRoute(1, BURN_SND_YM2203_YM2203_ROUTE,   0.80, BURN_SND_ROUTE_BOTH);
+
+//	GenericTilesInit();
+
+	DrvDoReset();
+
+	return 0;
+}
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 void initLayersS(UINT8 game)
 {
@@ -972,6 +1203,7 @@ void initColorsS(UINT8 game)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturnS(UINT8 game)
 {
+	//nBurnSprites  = 196;
 	nBurnSprites  = 100;
 	cleanSprites();
 	
@@ -1005,8 +1237,12 @@ void DrvInitSaturnS(UINT8 game)
 	initLayersS(game);
 
 	initSprites(264-1,216-1,0,0,8,-32);
-//	drawWindow(0,192,192,2,62);
 	
+	if(game)
+	{
+		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);	
+		drawWindow(0,192,192,2,62);
+	}
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 	//*(unsigned int*)OPEN_CSH_VAR(SOUND_LEN) = 128;
 }
@@ -1042,6 +1278,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 
  INT32 DrvExit()
 {
+	nBurnFunction = NULL;
 	DrvDoReset();
 	CZetExit2();
 
@@ -1070,6 +1307,25 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	return 0;
 }
 
+void draw_mnight_bg_layer()
+{
+//	INT32 xscroll = (scrollx[0] + 0) & 0x1ff;
+//	INT32 yscroll = (scrolly[0] + 32) & 0x1ff;
+
+	for (INT32 offs = 0; offs < 32 * 32; offs++)
+	{
+		UINT32 sx = (offs & 0x1f);
+		UINT32 sy = (offs / 0x20)<<5;
+
+		UINT32 attr  = DrvBgRAM[offs*2+1];
+		UINT32 code  = DrvBgRAM[offs*2+0] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 6);
+		UINT32 flipy = attr & 0x20;
+ 
+		ss_map2[offs*2] = (attr & 0x0f);
+		ss_map2[(offs*2)+1] = 0x400 + (code<<2) & 0xffff;		
+	}
+}
+
  void draw_robokid_bg_layer(INT32 width)
 {
 //	if (tilemap_enable[sel] == 0) return;
@@ -1077,7 +1333,6 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 
 	UINT8 attr;
 	UINT32 code;
-	UINT32 bank;
 		
 	for (UINT32 offs = 0; offs < wide * 32; offs++)
 	{
@@ -1089,54 +1344,51 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 //-----------------------------------------------------------------------------------------------------------------
 // nbg1
 		attr = DrvBgRAM0[ofst * 2 + 1];
-		bank = ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
-		code = DrvBgRAM0[ofst * 2 + 0] + ((attr & 0xc0) << 2);
+		code = DrvBgRAM0[ofst * 2 + 0] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
 		
-		if(bg_cache[0][code|bank]==0)
+		if(bg_cache[0][code]==0)
 		{
-			bg_cache[0][code|bank]=(nextTile[0]<<2);
-			UINT8 *toto = (UINT8*)0x00200000+(bank*128);
-			memcpy((UINT8 *)cache+0x08000+bg_cache[0][code|bank]*32,&toto[code*128],128);
+			bg_cache[0][code]=(nextTile[0]<<2);
+			UINT8 *toto = (UINT8*)0x00200000+(code*128);
+			memcpyl((UINT8 *)cache+0x08000+bg_cache[0][code]*32,&toto[0],128);
 
 			if(nextTile[0]++>0xfff)
 				nextTile[0]=0;
 		}
 		ss_map2[offs2] = (attr & 0x0f);
-		ss_map2[offs2+1] = (0x400+bg_cache[0][code|bank]);
+		ss_map2[offs2+1] = (0x400+bg_cache[0][code]);
 //-----------------------------------------------------------------------------------------------------------------
 // nbg0			
 		attr = DrvBgRAM1[ofst * 2 + 1];
-		bank = ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
-		code = DrvBgRAM1[ofst * 2 + 0] + ((attr & 0xc0) << 2);
+		code = DrvBgRAM1[ofst * 2 + 0] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
 		
-		if(bg_cache[1][code|bank]==0)
+		if(bg_cache[1][code]==0)
 		{
-			bg_cache[1][code|bank]=(nextTile[1]<<2);
-			UINT8 *toto = (UINT8*)0x00270000+(bank*128);
-			memcpy((UINT8 *)cache+0x28000+bg_cache[1][code|bank]*32,&toto[code*128],128);
+			bg_cache[1][code]=(nextTile[1]<<2);
+			UINT8 *toto = (UINT8*)0x00270000+(code*128);
+			memcpyl((UINT8 *)cache+0x28000+bg_cache[1][code]*32,&toto[0],128);
 
 			if(nextTile[1]++>0xfff)
 				nextTile[1]=0;
 		}
 		ss_font[offs2] = (attr & 0x0f);
-		ss_font[offs2+1] = (0x1400+bg_cache[1][code|bank]);			
+		ss_font[offs2+1] = (0x1400+bg_cache[1][code]);			
 //-----------------------------------------------------------------------------------------------------------------
 // nbg3			
 		attr = DrvBgRAM2[ofst * 2 + 1];
-		bank = ((attr & 0x10) << 7) + ((attr & 0x20) << 5);// + ((attr & 0xc0) << 2);
-		code = DrvBgRAM2[ofst * 2 + 0] + ((attr & 0xc0) << 2); 
+		code = DrvBgRAM2[ofst * 2 + 0] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
 		
-		if(bg_cache[2][code|bank]==0)
+		if(bg_cache[2][code]==0)
 		{
-			bg_cache[2][code|bank]=(nextTile[2]<<2);
-			UINT8 *toto = (UINT8*)DrvGfxROM4Data1+(bank*128);
-			memcpy((UINT8 *)cache+0x48000+bg_cache[2][code|bank]*32,&toto[code*128],128);
+			bg_cache[2][code]=(nextTile[2]<<2);
+			UINT8 *toto = (UINT8*)DrvGfxROM4Data1+(code*128);
+			memcpyl((UINT8 *)cache+0x48000+bg_cache[2][code]*32,&toto[0],128);
 
 			if(nextTile[2]++>0xfff)
 				nextTile[2]=0;
 		}
 		ss_map3[offs2] = (attr & 0x0f);
-		ss_map3[offs2+1] = (0x2400+bg_cache[2][code|bank]); // si 0x20000 pour bg2
+		ss_map3[offs2+1] = (0x2400+bg_cache[2][code]); // si 0x20000 pour bg2
 //-----------------------------------------------------------------------------------------------------------------
 	}
 }
@@ -1175,79 +1427,174 @@ void draw_fg_layer()
 	}
 }
 
- void draw_sprites()
+SprSpCmd ss_spriteBuff[96];
+
+ void draw_sprites(UINT32 robokid)
 {
-	int big_xshift = 1;
-	int big_yshift = 0;
+	int const big_xshift = robokid ? 0 : 1;
+	int const big_yshift = robokid ? 1 : 0;
 
 	UINT8* sprptr = DrvSprRAM + 11;
 	unsigned int sprites_drawn = 0;
 	SprSpCmd *ss_spritePtr;
-	ss_spritePtr = &ss_sprite[3];
+
 	
-	cleanSprites();
-
-	while (1)
+	if(!overdraw_enable)
 	{
-		if (sprptr[2] & 0x02)
+		ss_spritePtr = &ss_sprite[3];		
+//		nBurnSprites  = 100;
+		cleanSprites();
+		
+//		SprSpCmd *ss_spritePtrBuff;
+//		ss_spritePtrBuff = &ss_spriteBuff[0];		
+
+	// en cas d'overdraw : envoyer ceux en cours + ceux de la frame précédente
+	// à faire !!!
+
+		while (1)
 		{
-			int sx = sprptr[1] - ((sprptr[2] & 0x01) << 8);
-			int sy = sprptr[0];
+			if (sprptr[2] & 0x02)
+			{
+				int sx = sprptr[1] - ((sprptr[2] & 0x01) << 8);
+				int sy = sprptr[0];
 
-			int code = sprptr[3] + ((sprptr[2] & 0xc0) << 2) + ((sprptr[2] & 0x08) << 7);
-			unsigned int flipx = (sprptr[2] & 0x10) >> 4;
-			unsigned int flipy = (sprptr[2] & 0x20) >> 5;
-			unsigned int flip = (sprptr[2] & 0x30);
-			unsigned int color = sprptr[4] & 0x0f;
-			unsigned int big = (sprptr[2] & 0x04) >> 2;
-/*
-			if (*flipscreen)
-			{
-				sx = 240 - 16*big - sx;
-				sy = 240 - 16*big - sy;
-				flipx ^= 1;
-				flipy ^= 1;
-			}
-*/
-			if (big)
-			{
-				code &= ~3;
-				code ^= flipx << big_xshift;
-				code ^= flipy << big_yshift;
-			}
+				int code = sprptr[3] + ((sprptr[2] & 0xc0) << 2) + ((sprptr[2] & 0x08) << 7);
 
-			for (unsigned int y = 0; y <= big; ++y)
-			{
-				for (unsigned int x = 0; x <= big; ++x)
+				unsigned int flip = (sprptr[2] & 0x30);
+				unsigned int color = sprptr[4] & 0x0f;
+				unsigned int big = (sprptr[2] & 0x04) >> 2;
+/*	
+				if (*flipscreen)
 				{
-					unsigned int tile = code ^ (x << big_xshift) ^ (y << big_yshift);
+					sx = 240 - 16*big - sx;
+					sy = 240 - 16*big - sy;
+//					flipx ^= 1;
+//					flipy ^= 1;
+				}
+*/	
+				if (big)
+				{
+					unsigned int flipx = (sprptr[2] & 0x10) >> 4;
+					unsigned int flipy = (sprptr[2] & 0x20) >> 5;
+				
+					code &= ~3;
+//					code ^= flipx << big_xshift;
+//					code ^= flipy << big_yshift;
+					code ^= flipy << big_xshift;
+					code ^= flipx << big_yshift;
+				}
 
-					ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP) | flip;
-					ss_spritePtr->drawMode		= ( ECD_DISABLE | COMPO_REP);
+				for (unsigned int y = 0; y <= big; ++y)
+				{
+					for (unsigned int x = 0; x <= big; ++x)
+					{
+						unsigned int tile = code ^ (y << big_xshift) ^ (x << big_yshift);
 
-					ss_spritePtr->ax			= sx + (x<<4);
-					ss_spritePtr->ay			= sy + (y<<4);
-					ss_spritePtr->charSize		= 0x210;
-					ss_spritePtr->color			= color<<4;
-					ss_spritePtr->charAddr		= 0x220+(tile<<4);
-					*ss_spritePtr++;
+						ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP) | flip;
+						ss_spritePtr->drawMode		= ( ECD_DISABLE | COMPO_REP);
 
-					++sprites_drawn;
+						ss_spritePtr->ax			= sx + (x<<4);
+						ss_spritePtr->ay			= sy + (y<<4);
+						ss_spritePtr->charSize		= 0x210;
+						ss_spritePtr->color			= color<<4;
+						ss_spritePtr->charAddr		= 0x220+(tile<<4);
+//						memcpy(ss_spritePtrBuff,ss_spritePtr,sizeof(SprSpCmd));						
+						*ss_spritePtr++;
+//						*ss_spritePtrBuff++;						
 
-					if (sprites_drawn >= 96)
-						break;
+						++sprites_drawn;
+
+						if (sprites_drawn >= 96)
+							break;
+					}
 				}
 			}
+			else
+			{
+				++sprites_drawn;
+
+				if (sprites_drawn >= 96)
+					break;
+			}
+
+			sprptr += 16;
 		}
-		else
+	}
+	else
+	{
+		ss_spritePtr = &ss_sprite[3+96];
+//		nBurnSprites  = 196;
+
+		SprSpCmd *ss_spritePtrBuff;
+		ss_spritePtrBuff = &ss_spriteBuff[0];
+		memcpy(&ss_sprite[3],&ss_spriteBuff[0],sizeof(SprSpCmd)*96);
+
+		while (1)
 		{
-			++sprites_drawn;
+			if (sprptr[2] & 0x02)
+			{
+				int sx = sprptr[1] - ((sprptr[2] & 0x01) << 8);
+				int sy = sprptr[0];
 
-			if (sprites_drawn >= 96)
-				break;
+				int code = sprptr[3] + ((sprptr[2] & 0xc0) << 2) + ((sprptr[2] & 0x08) << 7);
+
+				unsigned int flip = (sprptr[2] & 0x30);
+				unsigned int color = sprptr[4] & 0x0f;
+				unsigned int big = (sprptr[2] & 0x04) >> 2;
+	/*
+				if (*flipscreen)
+				{
+					sx = 240 - 16*big - sx;
+					sy = 240 - 16*big - sy;
+					flipx ^= 1;
+					flipy ^= 1;
+				}
+	*/
+				if (big)
+				{
+					unsigned int flipx = (sprptr[2] & 0x10) >> 4;
+					unsigned int flipy = (sprptr[2] & 0x20) >> 5;					
+					code &= ~3;
+					code ^= flipx << big_xshift;
+					code ^= flipy << big_yshift;
+				}
+
+				for (unsigned int y = 0; y <= big; ++y)
+				{
+					for (unsigned int x = 0; x <= big; ++x)
+					{
+						unsigned int tile = code ^ (x << big_xshift) ^ (y << big_yshift);
+
+						ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP) | flip;
+						ss_spritePtr->drawMode		= ( ECD_DISABLE | COMPO_REP);
+
+						ss_spritePtr->ax			= sx + (x<<4);
+						ss_spritePtr->ay			= sy + (y<<4);
+						ss_spritePtr->charSize		= 0x210;
+						ss_spritePtr->color			= color<<4;
+						ss_spritePtr->charAddr		= 0x220+(tile<<4);
+						memcpy(ss_spritePtrBuff,ss_spritePtr,sizeof(SprSpCmd));
+
+						*ss_spritePtr++;
+						*ss_spritePtrBuff++;
+
+						++sprites_drawn;
+
+						if (sprites_drawn >= 96)
+							break;
+					}
+				}
+			}
+			else
+			{
+				++sprites_drawn;
+
+				if (sprites_drawn >= 96)
+					break;
+			}
+
+			sprptr += 16;
 		}
-
-		sprptr += 16;
 	}
 }
 
@@ -1259,9 +1606,28 @@ void Ninjakd2Draw()
 	if (tilemap_enable[0])
 		draw_bg_layer();
 	
-	draw_sprites(); // 0x100
+	draw_sprites(0); // 0x100
 
 	draw_fg_layer();
+}
+
+
+void MnightDraw()
+{
+	ss_reg->n1_move_x =  (scrollx[0]-8)<<16;
+	ss_reg->n1_move_y =  (scrolly[0]+32)<<16;	
+
+	draw_sprites(0);
+
+//	if (tilemap_enable[0] == 0)
+//		BurnTransferClear();
+
+	if (tilemap_enable[0])
+		draw_mnight_bg_layer();
+
+//	draw_copy_sprites();
+
+	draw_fg_layer(0x200);
 }
 
 void RobokidDraw()
@@ -1276,7 +1642,7 @@ void RobokidDraw()
 */
 	draw_robokid_bg_layer(0);
 
-	draw_sprites();
+	draw_sprites(1);
 	
 	draw_fg_layer();
 
@@ -1322,7 +1688,7 @@ int vbt=0;
 //		DrvDoReset();
 //	}
 //
-#if 1
+#if 0
 if(vbt<1000)
 	vbt++;
 else
@@ -1345,6 +1711,9 @@ DrvZ80ROM0[0x13566]=0x30;
 	}
 #endif
 	{
+	//	if(overdraw_enable)
+//			SCL_SetFrameInterval(-1);
+		
 		memset (DrvInputs, 0xff, 3);
 
 		for (UINT32 i = 0; i < 8; i++) {

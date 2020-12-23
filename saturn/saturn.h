@@ -137,7 +137,6 @@ unsigned char hz=0;
 static Uint8        *aVRAM;
 static SprSpCmd     smsSprite[256+3];
 SclLineparam lp;
-
 static Uint32	SclAddrLsTbl[2];
 static Fixed32	ls_tbl[SCL_MAXLINE];
 extern Uint16	SclProcess;
