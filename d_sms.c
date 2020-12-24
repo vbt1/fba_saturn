@@ -370,6 +370,7 @@ static void	SetVblank2( void )
 
 #ifdef GG0
 	disp_spr = NULL;
+	curr_sprite=0;	
 #endif
 
 #ifdef GG
@@ -644,7 +645,7 @@ int sms_irq_callback(int param)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Read the status flags */
-/*static*/  int vdp_ctrl_r(void)
+/*static*/ inline int vdp_ctrl_r(void)
 {
     /* Save the status flags */
     UINT8 temp = vdp.status;
@@ -661,7 +662,7 @@ int sms_irq_callback(int param)
     return (temp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void update_bg(t_vdp *vdp, int index)
+/*static*/inline  void update_bg(t_vdp *vdp, int index)
 {
 //				if(index>=vdp.ntab && index<vdp.ntab+0x700)
 // VBT 04/02/2007 : modif compilo
@@ -718,25 +719,27 @@ int sms_irq_callback(int param)
 
 	memset4_fast(disp_spr,0,64);
 	curr_sprite = 0;
+	ss_spritePtr = &ss_sprite[3];
 	
 	for (unsigned int delta=3; delta<nBurnSprites; delta++)
 	{
 //		ss_sprite[delta].charSize   = 0;
 //		ss_sprite[delta].charAddr   = 0;
-		ss_sprite[delta].ax   = -16;
-		ss_sprite[delta].ay   = -16;
+		ss_spritePtr->ax   = -16;
+		ss_spritePtr->ay   = -16;
+		*ss_spritePtr++;
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Draw sprites */
-void render_obj(INT32 line)
+inline void render_obj(INT32 line)
 {
     /* Sprite count for current line (8 max.) */
-    int count = 0;
+    unsigned int count = 0;
 
     /* Sprite dimensions */
-    int width = 8;
-    int height = (vdp.reg[1] & 0x02) ? 16 : 8;
+    unsigned int width = 8;
+    unsigned int height = (vdp.reg[1] & 0x02) ? 16 : 8;
 
     /* Pointer to sprite attribute table */
     UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
@@ -749,10 +752,10 @@ void render_obj(INT32 line)
     }
 
 	SprSpCmd *ss_spritePtr;
-	ss_spritePtr = &ss_sprite[3];
+	ss_spritePtr = (SprSpCmd *)ss_sprite;
 
     /* Draw sprites in front-to-back order */
-    for(UINT8 i = 0; i < 64; i += 1)
+    for(UINT8 i = 0; i < 64; i ++)
     {
 		/* Sprite Y position */
 		int yp = st[i];
@@ -864,7 +867,7 @@ void update_cache(void)
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-void vdp_data_w(INT32 offset, UINT8 data)
+inline void vdp_data_w(INT32 offset, UINT8 data)
 {
     INT32 index;
 
@@ -887,8 +890,7 @@ void vdp_data_w(INT32 offset, UINT8 data)
  			if(index>=vdp.satb )
 				if( index < vdp.satb+0x40)
 			{
-				SprSpCmd *ss_spritePtr;
-				ss_spritePtr = &ss_sprite[3];
+
 
 				// Sprite dimensions 
 				unsigned int height = (vdp.reg[1] & 0x02) ? 16 : 8;
@@ -898,16 +900,18 @@ void vdp_data_w(INT32 offset, UINT8 data)
 				UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
 				// Sprite Y position 
 				int yp = st[delta];
+				SprSpCmd *ss_spritePtr;
+				ss_spritePtr = &ss_sprite[3+delta];
 
 				if(yp == 208) 
 				{
 					
-					ss_spritePtr[delta].control = CTRL_END;
-					ss_spritePtr[delta].drawMode = 0;
-					ss_spritePtr[delta].charAddr	= 0;
-					ss_spritePtr[delta].charSize		= 0;
-					ss_spritePtr[delta].ax	= 0;
-					ss_spritePtr[delta].ay	= 0;
+					ss_spritePtr->control = CTRL_END;
+					ss_spritePtr->drawMode = 0;
+					ss_spritePtr->charAddr	= 0;
+					ss_spritePtr->charSize		= 0;
+					ss_spritePtr->ax	= 0;
+					ss_spritePtr->ay	= 0;
 //					nbSprites = delta+5;
 //ajouter un flag
 					break;
@@ -916,7 +920,7 @@ void vdp_data_w(INT32 offset, UINT8 data)
 				yp ++;
 				//Wrap Y coordinate for sprites > 240 
 				if(yp > 240) yp -= 256;
-				ss_spritePtr[delta].ay = yp;
+				ss_spritePtr->ay = yp;
 
 				/* Adjust dimensions for double size sprites */
 				if(vdp.reg[1] & 0x01)
@@ -926,9 +930,9 @@ void vdp_data_w(INT32 offset, UINT8 data)
 				}
 
 				// Clip sprites on left edge 
-				ss_spritePtr[delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
-				ss_spritePtr[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-				ss_spritePtr[delta].charSize    = (width<<5) + height;  //0x100
+				ss_spritePtr->control = ( JUMP_NEXT | FUNC_NORMALSP);
+				ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+				ss_spritePtr->charSize    = (width<<5) + height;  //0x100
 			}
 
 // VBT 04/02/2007 : modif compilo
@@ -1067,7 +1071,7 @@ void vdp_data_w(INT32 offset, UINT8 data)
 				if( index < vdp.satb+0x40)
 			{
 				SprSpCmd *ss_spritePtr;
-				ss_spritePtr = &ss_sprite[3];
+
 
 				// Sprite dimensions 
 				unsigned int height = (vdp.reg[1] & 0x02) ? 16 : 8;
@@ -1077,16 +1081,17 @@ void vdp_data_w(INT32 offset, UINT8 data)
 				UINT8 *st = (UINT8 *)&vdp.vram[vdp.satb];
 				// Sprite Y position 
 				int yp = st[delta];
-
+				ss_spritePtr = &ss_sprite[3+delta];
+				
 				if(yp == 208) 
 				{
 					
-					ss_spritePtr[delta].control = CTRL_END;
-					ss_spritePtr[delta].drawMode = 0;
-					ss_spritePtr[delta].charAddr	= 0;
-					ss_spritePtr[delta].charSize		= 0;
-					ss_spritePtr[delta].ax	= 0;
-					ss_spritePtr[delta].ay	= 0;
+					ss_spritePtr->control = CTRL_END;
+					ss_spritePtr->drawMode = 0;
+					ss_spritePtr->charAddr	= 0;
+					ss_spritePtr->charSize		= 0;
+					ss_spritePtr->ax	= 0;
+					ss_spritePtr->ay	= 0;
 //					nbSprites = delta+5;
 //ajouter un flag
 					break;
@@ -1095,12 +1100,12 @@ void vdp_data_w(INT32 offset, UINT8 data)
 				yp ++;
 				//Wrap Y coordinate for sprites > 240 
 				if(yp > 240) yp -= 256;
-				ss_spritePtr[delta].ay = yp;
+				ss_spritePtr->ay = yp;
 
 				// Clip sprites on left edge 
-				ss_spritePtr[delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
-				ss_spritePtr[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-				ss_spritePtr[delta].charSize   = 0x100+ height;  //0x100
+				ss_spritePtr->control = ( JUMP_NEXT | FUNC_NORMALSP);
+				ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+				ss_spritePtr->charSize   = 0x100+ height;  //0x100
 			}
 
 // VBT 04/02/2007 : modif compilo
@@ -1787,7 +1792,7 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void make_map_lut()
+/*static*/inline  void make_map_lut()
 {
 	unsigned int row,column;
 
@@ -1803,7 +1808,7 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void make_name_lut()
+/*static*/inline  void make_name_lut()
 {
 	unsigned int i, j;
 	for(j = 0; j < 0x10000; j++)
@@ -1829,7 +1834,7 @@ Bit 08 - 00 : Pattern Index
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void make_bp_lut(void)
+/*static*/inline  void make_bp_lut(void)
 {
     unsigned int i, j;
     for(j = 0; j < 0x10000; j++)
@@ -1857,7 +1862,7 @@ Bit 08 - 00 : Pattern Index
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void make_cram_lut(void)
+/*static*/inline  void make_cram_lut(void)
 {
 #ifdef GG
     for(unsigned int j = 0; j < 0x1000; j++)

@@ -6,7 +6,7 @@
 #include "sega_int.h"
 
 //#include "z80_intf.h"
-//#include "driver.h"
+#include "czet.h"
 #include "tms9928a.h"
 #include "8255ppi.h"
 //#include "bitswap.h"
@@ -119,6 +119,7 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
  UINT8 *main_mem	= NULL;
 #ifdef KANJI
  UINT8 *kanji_rom = NULL;
+ UINT8 use_kanji     = 0;
 #endif
  UINT8 *game_sram = NULL;
 /*static*/// UINT8 *tmpbmp = NULL;
@@ -128,8 +129,7 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
  INT32 curtapelen = 0;
 #endif
 /*static*/	UINT8 stop 			= 0;
- UINT8 use_kanji     = 0;
- UINT8 msx_basicmode = 0;
+// UINT8 msx_basicmode = 0;
 
  UINT8 DrvInputs[2]={0,0};
 

@@ -33,6 +33,7 @@ int ovlInit(char *szShortName)
 	file_id	 = 2;
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
+
 static void ChangeDir(char *dirname)
 {
     Sint32 fid;
@@ -53,16 +54,46 @@ static void ChangeDir(char *dirname)
     file_max = GFS_LoadDir(fid, &dirtbl)-2;
 	GFS_SetDir(&dirtbl) ;
 }
+
+/*
+static void ChangeDir(char *dirname)
+{
+    Sint32 fid;
+	GfsDirTbl dirtbl;
+	static GfsDirId dir_name[MAX_DIR];
+//	char dir_upr[12];
+//	char *ptr=&dir_upr[0];
+//	strcpy(dir_upr,dirname);
+//	ptr = strupr(ptr);
+//    fid = GFS_NameToId((Sint8 *)dir_upr);
+    fid = GFS_NameToId((Sint8 *)dirname);
+//	ptr = NULL;
+
+	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
+	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;
+	GFS_DIRTBL_NDIR(&dirtbl) = MAX_DIR;
+
+//	for (;;) {
+    file_max = GFS_LoadDir(fid, &dirtbl)-2;
+	GFS_SetDir(&dirtbl) ;
+}
+*/
+
+
+//int vbt=0;
 //-------------------------------------------------------------------------------------------------------------------------------------
 #if 1
 /*static*/ void load_rom()
 {
 	stop=0;
+//		vbt++;
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"load_rom1        ",4,80);
 
 	for(unsigned int i=0;i<8;i++)
 	{
 		PCM_MeStop(pcm8[i]);
 	}
+
 	memset((void *)SOUND_BUFFER,0x00,0x20000);
 
 	memset(game, 0xff, MAX_MSX_CARTSIZE);
@@ -71,16 +102,21 @@ static void ChangeDir(char *dirname)
 	BiosmodeJapan = (DrvDips[0] & 0x01) ? 1 : 0;
 	SwapJoyports = (DrvDips[0] & 0x20) ? 1 : 0;
 
-	struct BurnRomInfo ri;
-
-	BurnDrvGetRomInfo(&ri, 0);
-	ri.nLen		 = GetFileSize(file_id);
-	GFS_Load(file_id, 0, game, ri.nLen);
-	CurRomSizeA = ri.nLen;
-
-	Hertz60 = (DrvDips[0] & 0x10) ? 1 : 0;
-	BiosmodeJapan = (DrvDips[0] & 0x01) ? 1 : 0;
-	SwapJoyports = (DrvDips[0] & 0x20) ? 1 : 0;
+	GfsHn gfs;
+	
+	if ((gfs = GFS_Open(file_id)) == NULL)
+	{
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"error opening file",24,10);			
+	}
+	Sint32 tfid,fn,fsize,atr;	
+	GFS_GetFileInfo(gfs,&tfid,&fn,&fsize,&atr);
+	GFS_Close(gfs);
+	
+//	struct BurnRomInfo ri;
+//	BurnDrvGetRomInfo(&ri, 0);
+//	ri.nLen		 = fsize;
+	GFS_Load(file_id, 0, game, fsize);
+	CurRomSizeA = fsize;
 
 #ifdef RAZE
 	z80_init_memmap();
@@ -93,7 +129,7 @@ static void ChangeDir(char *dirname)
 	z80_set_out((void (*)(unsigned short, unsigned char))&msx_write_port);
 #else
 	CZetExit2();
-	memset(CZ80Context,0x00,sizeof(cz80_struc));
+//	memset(CZ80Context,0x00,sizeof(cz80_struc));
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetMapArea(0x0000, 0x3fff, 0, maincpu);
@@ -105,6 +141,7 @@ static void ChangeDir(char *dirname)
 	CZetSetWriteHandler(msx_write);
 //	CZetClose();
 #endif
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"load_rom2        ",4,80);
 	TMS9928AExit();
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt, TMSContext);
 
@@ -297,6 +334,8 @@ void msxinit(INT32 cart_len)
 
 	nSoundBufferPos=0;
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
+	
+
 	
 	for(unsigned int i=0;i<8;i++)
 	{
@@ -1333,14 +1372,30 @@ And the address to change banks:
 	}
 
 	if ((ca != 'A') || (cb != 'B')) {
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"MSX Cartridge signature not found		",24,40);		
 //		bprintf(0, _T("MSX Cartridge signature not found!\n"));
 		return;
 	}
 
 	if (Len < Pages) { // rom isn't a valid page-length, so mirror
+
+/*	
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Len < Pages		",24,40);
+char toto[100];
+
+sprintf(toto,"L%d P%d C%d",Len,Pages,cartsize);
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)toto,24,50);	
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Len < Pages end		",24,40);	
+if(vbt==1)
+{
+		while(1);
+}
+*/
 		memcpy(ROMData[nSlot] + Len * 0x2000,
 			   ROMData[nSlot] + (Len - Pages / 2) * 0x2000,
 			   (Pages - Len) * 0x2000);
+
+		   
 	}
 
 	ROMMask[nSlot]= !Flat64 && (Len > 4) ? (Pages - 1) : 0x00;
@@ -1349,7 +1404,7 @@ And the address to change banks:
 	{
 		ROMType[nSlot] = GuessROM(ROMData[nSlot], 0x2000 * (ROMMask[nSlot] + 1));
 	}
-
+	
 	UINT8 filename[13];
 
 	strcpy(filename,GFS_IdToName(file_id));	
@@ -1597,7 +1652,7 @@ And the address to change banks:
 	VBlankKludge = 0;
 
 	msxinit(CurRomSizeA);
-
+	
 	PSLReg = 99;
 
 	for (UINT8 J = 0; J < 4; J++)	
@@ -1916,8 +1971,8 @@ And the address to change banks:
 
 /*static*/ INT32 DrvInit()
 {
+	ChangeDir(".");		
 	DrvInitSaturn();
-	ChangeDir(".");	
 	AllMem = NULL;
 	MemIndex();
 //FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnMalloc		",24,40);
@@ -1935,7 +1990,7 @@ And the address to change banks:
 		SwapJoyports = (DrvDips[0] & 0x20) ? 1 : 0;
 
 //		if (BurnLoadRom(maincpu, 0x80 + BiosmodeJapan, 1)) return 1; // BIOS
-//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 //FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom		",24,40);
 
 		if (BurnLoadRom(maincpu, 1 + BiosmodeJapan, 1)) return 1; // BIOS
@@ -1998,7 +2053,7 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)" ",24,40); // nécessair
 	DACInit(0, 0, 1, DrvSyncDAC);
 #endif
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"TMS9928AInit      ",26,210);
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)" ",24,40); // nécessaire
+//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)" ",24,40); // nécessaire
 
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt, TMSContext);
 
@@ -2168,6 +2223,9 @@ void cleanmemmap()
 
 	free (AllMem);
 	AllMem = NULL;
+	
+	stop = 0;
+	DrvNMI = 0;
 /*
 	DrvReset = 0;
 	DrvNMI = 0;
@@ -2191,6 +2249,7 @@ void cleanmemmap()
 /*static*/ INT32 DrvFrame()
 {
 	//	SPR_InitSlaveSH();
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame        ",4,80);
 
 	if (stop==0)
 	{
@@ -2242,6 +2301,7 @@ void cleanmemmap()
 //	unsigned char *ss_vram = (unsigned char *)SS_SPRAM;
 
 //	DMA_ScuIndirectMemCopy((ss_vram+0x1100+0x10000),tmpbmp,0x4000,0);
+/*
 	switch (ROMType[CARTSLOTA])
 	{
 		case MAP_KONAMI5:
@@ -2251,7 +2311,7 @@ void cleanmemmap()
 			SPR_RunSlaveSH((PARA_RTN*)updateSlaveSound, NULL);
 			break;
 	}
-
+*/
 	//	for (UINT32 i = 0; i < nInterleave; i++)
 		{
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"z80_emulate      ",26,210);
@@ -2266,21 +2326,25 @@ void cleanmemmap()
 #ifndef RAZE
 		CZetClose();
 #endif
+	TMS9928ADraw();
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"TMS9928AInterrupt      ",26,210);
-
-	TMS9928AInterrupt();
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"SPR_WaitEndSlaveSH      ",26,210);
 
-	SPR_WaitEndSlaveSH();
+//	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//		SPR_WaitEndSlaveSH();
+	TMS9928AInterrupt();
+
 
 #ifdef DAC
 			volatile signed short *	pBurnSoundOut = (signed short *)0x25a20000;
 			DACUpdate(pBurnSoundOut, nBurnSoundLen);
 #endif
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"end SPR_WaitEndSlaveSH      ",26,210);
-
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"framend        ",4,80);
 	}
 	else
+//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"load_rom        ",4,80);
+	
 		load_rom();
 	return 1;
 }
@@ -2306,7 +2370,7 @@ void cleanmemmap()
 		PCM_Task(pcm8[2]); // bon emplacement
 	}
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
-	TMS9928ADraw();
+//	TMS9928ADraw();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void updateSlaveSoundSCC()
