@@ -384,6 +384,8 @@ static void	SetVblank2( void )
 	first = 0;
 	vsynch = 0;
 	scroll_x=scroll_y=0;	
+	file_max = 0;
+	file_id = 0;	
 	
 	cleanDATA();
 	cleanBSS();

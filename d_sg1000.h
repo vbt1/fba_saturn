@@ -114,23 +114,24 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
 /*static*/ UINT8 DrvDips[1]={0};
 
 /*static*/ struct BurnInputInfo Sg1000InputList[] = {
-	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
-	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"	},
-	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"	},
+	{"P1 Up",			BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
+	{"P1 Down",			BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"	},
+	{"P1 Left",			BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"	},
 	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 right"	},
 	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"	},
 	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"	},
 
-	{"P2 Up",		BIT_DIGITAL,	DrvJoy1 + 6,	"p2 up"		},
-	{"P2 Down",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 down"	},
-	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 left"	},
+	{"P2 Up",			BIT_DIGITAL,	DrvJoy1 + 6,	"p2 up"		},
+	{"P2 Down",			BIT_DIGITAL,	DrvJoy1 + 7,	"p2 down"	},
+	{"P2 Left",			BIT_DIGITAL,	DrvJoy2 + 0,	"p2 left"	},
 	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 right"	},
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 fire 1"	},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 2"	},
 
-	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
+	{"Console Pause",	BIT_DIGITAL,	NULL,		"consolepause"	},
+	{"Reset",			BIT_DIGITAL,	NULL,		"reset"		},
+	{"DIPS",			BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 };
-
 
 
 STDINPUTINFO(Sg1000)

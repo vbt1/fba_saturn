@@ -8,7 +8,7 @@
 //  Krakout any key starts, can't get into settings
 #define K051649 1
 #define RAZE 1
-#define MAX_DIR 384
+#define MAX_DIR 384*2
 #include    "machine.h"
 #include "d_msx.h"
 //#define CASSETTE 1
@@ -170,8 +170,8 @@ static void ChangeDir(char *dirname)
 		if((pltriggerE[0] & PER_DGT_S)!=0)
 		{
 			stop=1;
-			SPR_InitSlaveSH();
-			SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
+//			SPR_InitSlaveSH();
+//			SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 			return;
 		}
 
@@ -1378,24 +1378,9 @@ And the address to change banks:
 	}
 
 	if (Len < Pages) { // rom isn't a valid page-length, so mirror
-
-/*	
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Len < Pages		",24,40);
-char toto[100];
-
-sprintf(toto,"L%d P%d C%d",Len,Pages,cartsize);
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)toto,24,50);	
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Len < Pages end		",24,40);	
-if(vbt==1)
-{
-		while(1);
-}
-*/
 		memcpy(ROMData[nSlot] + Len * 0x2000,
 			   ROMData[nSlot] + (Len - Pages / 2) * 0x2000,
 			   (Pages - Len) * 0x2000);
-
-		   
 	}
 
 	ROMMask[nSlot]= !Flat64 && (Len > 4) ? (Pages - 1) : 0x00;
@@ -1779,10 +1764,10 @@ if(vbt==1)
 	SCCMixerBuffer	= (INT16*)Next; Next += 2 * 7680L * sizeof(INT16);
 	SCCMixerTable	= (INT16*)Next; Next += 512 * 5 * sizeof(INT16);
 #endif
+	TMSContext		= Next; Next += (0x4000+0x6000+0x1000+8);
 #ifndef RAZE
 	CZ80Context		= Next; Next += sizeof(cz80_struc);
 #endif
-	TMSContext		= Next; Next += (0x4000+0x6000+0x1000);
 //	MemEnd			= Next;
 	return 0;
 }
@@ -1981,7 +1966,7 @@ if(vbt==1)
 	MemIndex();
 
 	{
-		struct BurnRomInfo ri;
+//		struct BurnRomInfo ri;
 
 		DrvDips[0] = 0x11;
 
@@ -2000,12 +1985,24 @@ if(vbt==1)
 		use_kanji = 1;
 #endif
 		memset(game, 0xff, MAX_MSX_CARTSIZE);
-
+/*
 		BurnDrvGetRomInfo(&ri, 0);
 		ri.nLen = GetFileSize(file_id);
 //FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"GFS_Load		",24,40);
-		GFS_Load(file_id, 0, game, ri.nLen);
-		CurRomSizeA = ri.nLen;
+
+*/
+		GfsHn gfs;
+		
+		if ((gfs = GFS_Open(file_id)) == NULL)
+		{
+			FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"error opening file",24,10);			
+		}
+		Sint32 tfid,fn,fsize,atr;	
+		GFS_GetFileInfo(gfs,&tfid,&fn,&fsize,&atr);
+		GFS_Close(gfs);
+
+		GFS_Load(file_id, 0, game, fsize);
+		CurRomSizeA = fsize;
 
 #ifdef CASSETTE
 		BurnDrvGetRomInfo(&ri, 1);
@@ -2052,25 +2049,18 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)" ",24,40); // nécessair
 #ifdef DAC
 	DACInit(0, 0, 1, DrvSyncDAC);
 #endif
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"TMS9928AInit      ",26,210);
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)" ",24,40); // nécessaire
-
 	TMS9928AInit(TMS99x8A, 0x4000, 0, 0, vdp_interrupt, TMSContext);
 
 	ppi8255_init(1);
 	PPI0PortReadB	= msx_ppi8255_portB_read;
 	PPI0PortWriteA	= msx_ppi8255_portA_write;
 	PPI0PortWriteC	= msx_ppi8255_portC_write;
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"after init        ",4,80);
-//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"DrvDoReset      ",26,210);
-
-	DrvDoReset();
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"after reset        ",4,80);
-//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"                    ",24,40);
 
 	PCM_MeStop(pcm);
 	nSoundBufferPos=0;	
 	Set8PCM();
+
+	load_rom();
 
 	return 0;
 }
@@ -2162,6 +2152,7 @@ void cleanmemmap()
 /*static*/ INT32 DrvExit()
 {
 	nBurnFunction = NULL;
+	wait_vblank();	
 	DrvDoReset();
 #ifdef RAZE
 	z80_stop_emulating();
@@ -2206,7 +2197,9 @@ void cleanmemmap()
 		ROMData[PSlot] = NULL;
 //		RAMMapper[PSlot] = 0;
 	}
-
+	memset((void *)SOUND_BUFFER,0x00,0x20000);
+	memset(TMSContext,0x00,(0x4000+0x6000+0x1000+8));
+	
 	maincpu = game = game_sram = AllRam = main_mem = NULL;
 	TMSContext = EmptyRAM = RAMData = /*MemEnd = RamEnd =*/ NULL;
 
@@ -2226,6 +2219,8 @@ void cleanmemmap()
 	
 	stop = 0;
 	DrvNMI = 0;
+	file_max = 0;
+	file_id = 0;
 /*
 	DrvReset = 0;
 	DrvNMI = 0;
@@ -2301,7 +2296,7 @@ void cleanmemmap()
 //	unsigned char *ss_vram = (unsigned char *)SS_SPRAM;
 
 //	DMA_ScuIndirectMemCopy((ss_vram+0x1100+0x10000),tmpbmp,0x4000,0);
-/*
+
 	switch (ROMType[CARTSLOTA])
 	{
 		case MAP_KONAMI5:
@@ -2311,7 +2306,7 @@ void cleanmemmap()
 			SPR_RunSlaveSH((PARA_RTN*)updateSlaveSound, NULL);
 			break;
 	}
-*/
+
 	//	for (UINT32 i = 0; i < nInterleave; i++)
 		{
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"z80_emulate      ",26,210);
@@ -2330,8 +2325,8 @@ void cleanmemmap()
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"TMS9928AInterrupt      ",26,210);
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"SPR_WaitEndSlaveSH      ",26,210);
 
-//	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-//		SPR_WaitEndSlaveSH();
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();
 	TMS9928AInterrupt();
 
 
@@ -2394,7 +2389,7 @@ void cleanmemmap()
 		deltaSlave=0;
 	}
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
-	TMS9928ADraw();
+//	TMS9928ADraw();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initColors()
@@ -2447,7 +2442,7 @@ void initPosition(void)
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 
 	nBurnSprites  = 4+32;//131;//27;
 	nBurnLinescrollSize = 0;
@@ -2478,12 +2473,13 @@ void initPosition(void)
 	initLayers();
 	initColors();
 
-	nBurnFunction = update_input1;
+
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 
+	nBurnFunction = update_input1;
 	drawWindow(0,192,192,0,64);
 	SetVblank2();
-	wait_vblank();
+//	wait_vblank();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ PcmHn createHandle(PcmCreatePara *para)

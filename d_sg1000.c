@@ -6,7 +6,7 @@
 #include    "machine.h"
 #include "d_sg1000.h"
 #define SAMPLE 7680L
-#define MAX_DIR 384
+#define MAX_DIR 384*2
 #define nBurnSoundLen 128
 #define nInterleave 16
 #define nCyclesTotal 3579545 / 60
@@ -329,16 +329,18 @@ static void ChangeDir(char *dirname)
 {
 	UINT8 *Next; Next = AllMem;
 
-	DrvZ80ROM		= Next; Next +=   0x10000;//Next += 0x010000;
-	DrvZ80ExtRAM	= DrvZ80ROM + 0x02000;
+	DrvZ80ROM		= Next; Next += 0x010000;
+	DrvZ80ExtRAM	= Next; Next += 0x010000;
 
-	AllRam				= DrvZ80ROM + 0x0c000;
-	DrvZ80RAM		= DrvZ80ROM + 0x0c000;
+	AllRam			= Next;
+
+	DrvZ80RAM		= Next; Next += 0x010400;
 
 	RamEnd			= Next;
+	TMSContext		= Next; Next += (0x4000+0x6000+0x1000+8);	
 	CZ80Context		= Next; Next += sizeof(cz80_struc);
-	TMSContext		= Next; Next += (0x4000+0x6000+0x1000);
 	MemEnd			= Next;
+
 
 	return 0;
 }
@@ -432,7 +434,8 @@ static void ChangeDir(char *dirname)
 /*static*/ int DrvExit()
 {
 	nBurnFunction = NULL;
-//	wait_vblank();
+	wait_vblank();
+	DrvDoReset();
 
 #ifdef RAZE
 	z80_stop_emulating();
@@ -457,11 +460,16 @@ static void ChangeDir(char *dirname)
 	SN76496Exit();
 
 	memset((void *)SOUND_BUFFER,0x00,0x20000);
-	
+	memset(TMSContext,0x00,(0x4000+0x6000+0x1000+8));
+	memset(CZ80Context,0x00,sizeof(cz80_struc));
+
 	CZ80Context = TMSContext = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
 //	__port = NULL;
 	free (AllMem);
 	AllMem = NULL;
+
+	file_max = 0;
+	file_id = 0;
 
 	cleanDATA();
 	cleanBSS();
@@ -484,7 +492,7 @@ static void ChangeDir(char *dirname)
 		}
 	}
 
-	UINT32 nCyclesDone = 0;
+//	UINT32 nCyclesDone = 0;
 	UINT32 nSoundBufferPos2 = 0;
 
 #ifndef RAZE
@@ -494,9 +502,9 @@ static void ChangeDir(char *dirname)
 	for (UINT32 i = 0; i < nInterleave; i++)
 	{
 #ifdef RAZE
-		nCyclesDone += z80_emulate(nCyclesTotal / nInterleave);
+		/*nCyclesDone +=*/ z80_emulate(nCyclesTotal / nInterleave);
 #else
-		nCyclesDone += CZetRun(nCyclesTotal / nInterleave);
+		/*nCyclesDone +=*/ CZetRun(nCyclesTotal / nInterleave);
 #endif
 		INT16* pSoundBuf = nSoundBuffer + nSoundBufferPos;
 		SN76496Update(0, pSoundBuf, nSegmentLength);
@@ -504,11 +512,11 @@ static void ChangeDir(char *dirname)
 		nSoundBufferPos2 += nSegmentLength;
 	}
 
-	TMS9928AInterrupt();
 #ifndef RAZE
 	CZetClose();
 #endif
 	TMS9928ADraw();
+	TMS9928AInterrupt();	
 //	unsigned char *ss_vram = (unsigned char *)SS_SPRAM;
 
 //	DMA_ScuIndirectMemCopy((ss_vram+0x1100+0x10000),tmpbmp,0x4000,0);

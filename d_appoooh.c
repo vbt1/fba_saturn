@@ -821,7 +821,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 /*static*/  void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
  	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;

@@ -17,7 +17,6 @@ typedef enum
 typedef struct {
 	unsigned char mode;
 	unsigned char ReadAhead;
-	unsigned char Regs[8];
 	unsigned char StatusReg;
 	unsigned char FifthSprite;
 	unsigned char FirstByte;
@@ -46,6 +45,7 @@ typedef struct {
 
 //unsigned char dirty[24*32*8*4];
 	unsigned char *dirty;
+	unsigned char *Regs;	
 #ifdef USE_LUT
 //unsigned int color_2bpp_lut[0x400];
 unsigned int *color_2bpp_lut;

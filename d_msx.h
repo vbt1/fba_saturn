@@ -29,7 +29,7 @@ void PCM_MeStart(PcmHn hn);
 void PCM_MeStop(PcmHn hn);
 void *memset4_fast(void *, long, size_t);
 void dummy();
-INT32 GetFileSize(int file_id);
+//INT32 GetFileSize(int file_id);
 
 int file_id = 2;
 int file_max = 0;
