@@ -14,12 +14,12 @@ UINT16 *map_offset_lut = NULL;
 UINT16 *mapbg_offset_lut = NULL;
 UINT8 *CZ80Context = NULL;
 UINT16 *cram_lut = NULL;
-static UINT32 CalcCol(UINT16 nColour);
-static INT32 DrvInit();
-static INT32 DrvZInit();
-static INT32 DrvExit();
-static INT32 DrvFrame();
-static INT32 DrvDoReset();
+UINT32 CalcCol(UINT16 nColour);
+INT32 DrvInit();
+INT32 DrvZInit();
+INT32 DrvExit();
+INT32 DrvFrame();
+INT32 DrvDoReset();
 void dummy();
 
 UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -28,40 +28,35 @@ UINT8 DrvJoy3[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 UINT8 DrvDips[2] = {0, 0};
 UINT8 DrvInputs[3] = {0, 0, 0};
 
-static UINT8 DrvReset = 0;
-static INT32 nmi_mask = 0;
-static UINT8 soundlatch = 0;
+//UINT8 DrvReset = 0;
+INT32 nmi_mask = 0;
+UINT8 soundlatch = 0;
 
-static UINT8 *Mem = NULL;
-static UINT8 *MemEnd = NULL;
-static UINT8 *RamStart = NULL;
-static UINT8 *RamEnd = NULL;
-static UINT8 *BjGfx = NULL;
-static UINT8 *BjMap = NULL;
-static UINT8 *BjRom = NULL;
-static UINT8 *BjRam = NULL;
-static UINT8 *BjColRam = NULL;
-static UINT8 *BjVidRam = NULL;
-static UINT8 *BjSprRam = NULL;
+UINT8 *Mem = NULL;
+UINT8 *MemEnd = NULL;
+UINT8 *RamStart = NULL;
+UINT8 *RamEnd = NULL;
+UINT8 *BjGfx = NULL;
+UINT8 *BjMap = NULL;
+UINT8 *BjRom = NULL;
+UINT8 *BjRam = NULL;
+UINT8 *BjColRam = NULL;
+UINT8 *BjVidRam = NULL;
+UINT8 *BjSprRam = NULL;
 
 // sound cpu
-static UINT8 *SndRom = NULL;
-static UINT8 *SndRam = NULL;
-
-// graphics tiles
-static UINT8 *text = NULL;
-static UINT8 *sprites = NULL;
-static UINT8 *tiles = NULL;
+UINT8 *SndRom = NULL;
+UINT8 *SndRam = NULL;
 
 // pallete
-static UINT8 *BjPalSrc = NULL;
-//static UINT32 *BjPalReal = NULL;
+UINT8 *BjPalSrc = NULL;
+//UINT32 *BjPalReal = NULL;
 
-static INT16* pFMBuffer = NULL;
-static INT16* pAY8910Buffer[9];
+INT16* pFMBuffer = NULL;
+INT16* pAY8910Buffer[9];
 
 // Dip Switch and Input Definitions
-static struct BurnInputInfo BombjackInputList[] = {
+struct BurnInputInfo BombjackInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 2,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 up"		},
@@ -78,14 +73,14 @@ static struct BurnInputInfo BombjackInputList[] = {
 	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 right"	},
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };
 
 STDINPUTINFO(Bombjack)
 
-static struct BurnDIPInfo BombjackDIPList[]=
+struct BurnDIPInfo BombjackDIPList[]=
 {
 	{0x0f, 0xff, 0xff, 0xc0, NULL			},
 	{0x10, 0xff, 0xff, 0x50, NULL			},
@@ -146,7 +141,7 @@ static struct BurnDIPInfo BombjackDIPList[]=
 STDDIPINFO(Bombjack)
 
 // Bomb Jack (set 1)
-static struct BurnRomInfo BombjackRomDesc[] = {
+struct BurnRomInfo BombjackRomDesc[] = {
 	{ "09j01b.bin",    0x2000, 0xc668dc30, BRF_ESS | BRF_PRG },		//  0 Z80 code
 	{ "10l01b.bin",    0x2000, 0x52a1e5fb, BRF_ESS | BRF_PRG },		//  1
 	{ "11m01b.bin",    0x2000, 0xb68a062a, BRF_ESS | BRF_PRG },		//  2
@@ -176,7 +171,7 @@ STD_ROM_FN(Bombjack)
 
 /*
 // Bomb Jack (set 2)
-static struct BurnRomInfo Bombjac2RomDesc[] = {
+struct BurnRomInfo Bombjac2RomDesc[] = {
 	{ "09_j01b.bin",    0x2000, 0xc668dc30, BRF_ESS | BRF_PRG },		//  0 Z80 code
 	{ "10_l01b.bin",    0x2000, 0x52a1e5fb, BRF_ESS | BRF_PRG },		//  1
 	{ "11_m01b.bin",    0x2000, 0xb68a062a, BRF_ESS | BRF_PRG },		//  2

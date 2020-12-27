@@ -2,8 +2,8 @@
 #define RAZE 1
 #define SOUND 1
 void SoundUpdate2(INT32 *length2);
-static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
-static INT32 CalcAll();
+void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
+INT32 CalcAll();
 UINT32 BgSel=0xFFFF;
 //UINT32 bg_cache[1024];
 
@@ -91,7 +91,7 @@ voir plutot p355 vdp2
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initColors()
+void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
@@ -103,7 +103,7 @@ static void initColors()
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut(void)
+void make_lut(void)
 {
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
@@ -125,7 +125,7 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvInitSaturn()
+void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
@@ -296,7 +296,7 @@ void __fastcall bombjack_sound_write_port(UINT16 port, UINT8 data)
 }
 
 
-static INT32 DrvZInit()
+INT32 DrvZInit()
 {
 	// Init the z80
 	CZetInit2(2,CZ80Context);
@@ -413,7 +413,7 @@ static INT32 DrvZInit()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DecodeTiles4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+void DecodeTiles4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	INT32 c,y,x,dat1,dat2,dat3,col1,col2;
 	for (c=0;c<num;c++)
@@ -445,7 +445,7 @@ static void DecodeTiles4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2,
 	}	  
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DecodeTiles(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+void DecodeTiles(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	INT32 c,y,x,dat1,dat2,dat3,col1,col2;
 	for (c=0;c<num;c++)
@@ -470,7 +470,7 @@ static void DecodeTiles(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT
 	}
  }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	DecodeTiles(TilePointer, num,off1,off2, off3);
 	unsigned char tiles4[8*8*4];
@@ -533,7 +533,7 @@ static void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT3
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	unsigned char tiles4[32*16*4];
  /*2,0,3,1 */
@@ -617,7 +617,7 @@ static void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 of
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	DecodeTiles(TilePointer, num,off1,off2, off3);
 	unsigned char tiles4[8*8*4];
@@ -680,7 +680,7 @@ static void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 of
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvDoReset()
+INT32 DrvDoReset()
 {
 	nmi_mask = 0;
 	soundlatch = 0;
@@ -700,7 +700,7 @@ static INT32 DrvDoReset()
 	return 0;
 }
 
-static INT32 MemIndex()
+INT32 MemIndex()
 {
 	UINT8 *Next; Next = Mem;
 
@@ -717,11 +717,7 @@ static INT32 MemIndex()
 	BjColRam  = Next; Next += 0x00400;
 	BjSprRam  = Next; Next += 0x00060;
 	RamEnd	  = Next;
-	text		  = cache;//Next; Next += 512 * 8 * 8;
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 
-	sprites	  = &ss_vram[0x1100];//Next; Next += 1024 * 8 * 8;
-	tiles		  = (UINT8 *)SCL_VDP2_VRAM_B0;//+0x10000;//Next; Next += 1024 * 8 * 8;
 	CZ80Context					= Next; Next += sizeof(cz80_struc)*2;
 	pFMBuffer	= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 //	BjPalReal	= (UINT32*)Next; Next += 0x0080 * sizeof(UINT32);
@@ -733,7 +729,7 @@ static INT32 MemIndex()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvInit()
+INT32 DrvInit()
 {
 	DrvInitSaturn();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvInitSaturn             ",10,70);
@@ -774,6 +770,11 @@ static INT32 DrvInit()
 	// Set memory access & Init
 	DrvZInit();
 
+	UINT8 *ss_vram    = (UINT8 *)SS_SPRAM;
+	UINT8 *sprites	  = &ss_vram[0x1100];
+	UINT8 *tiles	  = (UINT8 *)SCL_VDP2_VRAM_B0;
+	UINT8 *	text	  = cache;
+
 	DecodeTiles4Bpp(text,512,0,0x1000,0x2000);
 	DecodeTiles16_4Bpp(sprites,1024,0x7000,0x5000,0x3000);
 	DecodeTiles32_4Bpp(sprites+0x4000,32,0x7000,0x5000,0x3000);
@@ -783,7 +784,7 @@ static INT32 DrvInit()
 	return 0;
 }
 
-static INT32 DrvExit()
+INT32 DrvExit()
 {	 
 	nBurnFunction = NULL;
 	wait_vblank();	
@@ -811,7 +812,7 @@ static INT32 DrvExit()
 
 	cram_lut = map_offset_lut = mapbg_offset_lut = NULL;
 	CZ80Context = MemEnd = RamStart = RamEnd = BjGfx = BjMap = BjRom = BjRam = BjColRam = NULL;
-	BjVidRam = BjSprRam = SndRom = SndRam = text = sprites = tiles = BjPalSrc = NULL;
+	BjVidRam = BjSprRam = SndRom = SndRam = BjPalSrc = NULL;
 
 	for (int i = 0; i < 9; i++) {
 		pAY8910Buffer[i] = NULL;
@@ -822,6 +823,7 @@ static INT32 DrvExit()
 //	GenericTilesExit();
 	free(Mem);
 	Mem = NULL;
+	BgSel = 0;
 
 	cleanDATA();
 	cleanBSS();
@@ -829,7 +831,7 @@ static INT32 DrvExit()
 	return 0;
 }
 
-static UINT32 CalcCol(UINT16 nColour)
+UINT32 CalcCol(UINT16 nColour)
 {
 	INT32 r, g, b;
 
@@ -844,7 +846,7 @@ static UINT32 CalcCol(UINT16 nColour)
 	return BurnHighCol(r, g, b, 0);
 }
 
-static INT32 CalcAll()
+INT32 CalcAll()
 {
 	UINT32 delta=0;
 	for (UINT32 i = 0; i < 0x100; i+=2) 
@@ -857,7 +859,7 @@ static INT32 CalcAll()
 	return 0;
 }
 
-static void BjRenderBgLayer(UINT32 BgSel)
+void BjRenderBgLayer(UINT32 BgSel)
 {
 //	INT32 BgSel=BjRam[0x9e00];
 
@@ -875,11 +877,11 @@ static void BjRenderBgLayer(UINT32 BgSel)
 }
 
 
-static void draw_sprites()
+void draw_sprites()
 {
 	INT32 offs;
-	UINT32 delta=3;
-
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
+	
 	for (offs = 0x60 - 4; offs >= 0; offs -= 4)
 	{
 		/*
@@ -895,42 +897,40 @@ static void draw_sprites()
 		hhhhhhhh x position
 		iiiiiiii y position
 		*/
-//		ss_sprite[delta].ax				= BjSprRam[offs+2] & 0xff;
+//		ss_spritePtr->ax				= BjSprRam[offs+2] & 0xff;
+		UINT32 flipx, flipy, code, colour;//, big;
 
-		{
-			UINT32 flipx, flipy, code, colour;//, big;
+		flipx = (BjSprRam[offs+1] & 0x80)/8;
+		flipy = (BjSprRam[offs+1] & 0x40)>>1;
 
-			flipx = (BjSprRam[offs+1] & 0x80)>>3;
-			flipy = (BjSprRam[offs+1] & 0x40)>>1;
-
-			code   = BjSprRam[offs] & 0x7f;
-			colour = (BjSprRam[offs+1] & 0x0f);
+		code   = BjSprRam[offs] & 0x7f;
+		colour = (BjSprRam[offs+1] & 0x0f);
 //			big      = (BjSprRam[offs] & 0x80);
 
-			ss_sprite[delta].control		= ( JUMP_NEXT | FUNC_NORMALSP | flipx | flipy);
-//			ss_sprite[delta].drawMode	= ( COLOR_0 | COMPO_REP);
-			ss_sprite[delta].ax				= BjSprRam[offs+2];
-			ss_sprite[delta].ay				= BjSprRam[offs+3];
-			ss_sprite[delta].color			= colour<<3;
+		ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP | flipx | flipy);
+//			ss_spritePtr->drawMode	= ( COLOR_0 | COMPO_REP);
+		ss_spritePtr->ax				= BjSprRam[offs+2];
+		ss_spritePtr->ay				= BjSprRam[offs+3];
+		ss_spritePtr->color			= colour<<3;
 
-			if (!(BjSprRam[offs] & 0x80))
-			{
-				ss_sprite[delta].charSize= 0x210;
-			}
-			else
-			{
-				code&=31;
-				code*=4;
-				code+=0x80;
-				ss_sprite[delta].charSize= 0x420;
-			}
-			ss_sprite[delta].charAddr	= 0x220+((code)<<4 );
+		if (!(BjSprRam[offs] & 0x80))
+		{
+			ss_spritePtr->charSize= 0x210;
 		}
-		delta++;
+		else
+		{
+			code&=31;
+			code*=4;
+			code+=0x80;
+			ss_spritePtr->charSize= 0x420;
+		}
+		ss_spritePtr->charAddr	= 0x220+((code)<<4 );
+
+		*ss_spritePtr++;
 	}
 }
 
-static INT32 DrvFrame()
+INT32 DrvFrame()
 {
 	{
 		DrvInputs[0] = 0x00;
@@ -1028,7 +1028,7 @@ void AY8910Update1Slave(INT32 *length)
 {
 	AY8910Update(1, &pAY8910Buffer[3], length[0]);
 }
-
+#ifdef SOUND2
 //-------------------------------------------------------------------------------------------------
 void SoundUpdate2(INT32 *length2)
 {
@@ -1069,7 +1069,7 @@ void SoundUpdate2(INT32 *length2)
 			}
 		}
 //		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
-		buffer[n] = nSample;//pAY8910Buffer[5][n];//nSample;
+		*buffer++ = nSample;//pAY8910Buffer[5][n];//nSample;
 	}
 	deltaSlave+=length;
 
@@ -1085,6 +1085,7 @@ void SoundUpdate2(INT32 *length2)
 
 //	deltaSlave+=nBurnSoundLen;
 }
+#endif
 //-------------------------------------------------------------------------------------------------
 void SoundUpdate(INT16* buffer, INT32 length)
 {
@@ -1127,7 +1128,7 @@ void SoundUpdate(INT16* buffer, INT32 length)
 			}
 		}
 //		nSoundBuffer[deltaSlave + n] = nSample;//pAY8910Buffer[5][n];//nSample;
-		buffer[n] = nSample;//pAY8910Buffer[5][n];//nSample;
+		*buffer++ = nSample;//pAY8910Buffer[5][n];//nSample;
 	}
 	nSoundBufferPos+=length;
 

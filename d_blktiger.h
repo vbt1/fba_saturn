@@ -7,16 +7,16 @@
 #include "raze/raze.h"
 #include "machine.h"
 
-/*static*/ INT32 DrvInit();
-/*static*/ INT32 DrvFMInit();
-/*static*/ INT32 DrvFMFrame();
-/*static*/ INT32 DrvExit();
-/*static*/ INT32 DrvFrame();
-/*static*/ INT32 DrvDraw();
-/*static*/ void draw_sprites();
-/*static*/ void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
-/*static*/ void Set14PCM();
-/*static*/ PcmHn createHandle(PcmCreatePara *para);
+INT32 DrvInit();
+INT32 DrvFMInit();
+INT32 DrvFMFrame();
+INT32 DrvExit();
+INT32 DrvFrame();
+INT32 DrvDraw();
+void draw_sprites();
+void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+void Set14PCM();
+PcmHn createHandle(PcmCreatePara *para);
 inline void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
 void dummy();
 void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
@@ -109,54 +109,49 @@ SFX sfx_blktiger[68]=
 #define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
 
 //#define SND 1
-/*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ UINT16 *remap4to16_lut = NULL;//[256];
-/*static*/ UINT16 *remap16_lut = NULL;//[768];
-/*static*/ UINT16 *cram_lut = NULL;//[4096];
-/*static*/ UINT16 *fg_map_lut = NULL;//[0x400];
-/*static*/ UINT16 *bg_map_lut2x1 = NULL;//[0x2000];
-/*static*/ UINT16 *bg_map_lut2x2 = NULL;//[0x2000];
-/*static*/ UINT16 *bg_map_lut = NULL;
+UINT8 *CZ80Context = NULL;
+UINT16 *remap4to16_lut = NULL;//[256];
+UINT16 *remap16_lut = NULL;//[768];
+UINT16 *cram_lut = NULL;//[4096];
+UINT16 *fg_map_lut = NULL;//[0x400];
+UINT16 *bg_map_lut2x1 = NULL;//[0x2000];
+UINT16 *bg_map_lut2x2 = NULL;//[0x2000];
+UINT16 *bg_map_lut = NULL;
 /*static*/// INT16 *ym_buffer = NULL;
 
-/*static*/ UINT8 *AllMem = NULL;
-/*static*/ UINT8 *MemEnd = NULL;
-/*static*/ UINT8 *AllRam = NULL;
-/*static*/ UINT8 *RamEnd = NULL;
-/*static*/ UINT8 *DrvZ80ROM0 = NULL;
-/*static*/ UINT8 *DrvZ80ROM1 = NULL;
-/*static*/ UINT8 *DrvGfxROM0 = NULL;
-/*static*/ UINT8 *DrvGfxROM1 = NULL;
-/*static*/ UINT8 *DrvGfxROM2 = NULL;
-/*static*/ UINT8 *DrvZ80RAM0 = NULL;
-/*static*/ UINT8 *DrvZ80RAM1 = NULL;
-/*static*/ UINT8 *DrvSprRAM = NULL;
-/*static*/ UINT8 *DrvSprBuf = NULL;
-/*static*/ UINT8 *DrvPalRAM = NULL;
-/*static*/ UINT8 *DrvBgRAM = NULL;
-/*static*/ UINT8 *DrvTxRAM = NULL;
-/*static*/ UINT16 *DrvPalette = NULL;
+UINT8 *AllMem = NULL;
+UINT8 *MemEnd = NULL;
+UINT8 *AllRam = NULL;
+UINT8 *RamEnd = NULL;
+UINT8 *DrvZ80ROM0 = NULL;
+UINT8 *DrvZ80ROM1 = NULL;
+UINT8 *DrvZ80RAM0 = NULL;
+UINT8 *DrvZ80RAM1 = NULL;
+UINT8 *DrvSprRAM = NULL;
+UINT8 *DrvSprBuf = NULL;
+UINT8 *DrvPalRAM = NULL;
+UINT8 *DrvBgRAM = NULL;
+UINT8 *DrvTxRAM = NULL;
+//UINT16 *DrvPalette = NULL;
 
-/*static*/ UINT8 *DrvScreenLayout = NULL;
-/*static*/ UINT8 *DrvBgEnable = NULL;
-/*static*/ UINT8 *DrvFgEnable = NULL;
-/*static*/ UINT8 *DrvSprEnable = NULL;
-/*static*/ UINT8 *DrvVidBank = NULL;
-/*static*/ UINT8 *DrvRomBank = NULL;
+UINT8 *DrvBgEnable = NULL;
+UINT8 *DrvFgEnable = NULL;
+//UINT8 *DrvSprEnable = NULL;
+UINT8 *DrvVidBank = NULL;
+UINT8 *DrvRomBank = NULL;
 
-/*static*/ UINT8 *soundlatch = NULL;
-/*static*/ UINT8 *flipscreen = NULL;
-/*static*/ UINT16 *DrvScrollx = NULL;
-/*static*/ UINT16 *DrvScrolly = NULL;
-/*static*/ UINT8 coin_lockout = 0;
+UINT8 *soundlatch = NULL;
+UINT16 *DrvScrollx = NULL;
+UINT16 *DrvScrolly = NULL;
+UINT8 coin_lockout = 0;
 
-/*static*/ UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvDips[3] = {0,0,0};
-/*static*/ UINT8 DrvInputs[3] = {0,0,0};
-/*static*/ UINT8 DrvReset = 0;
-/*static*/ INT32 watchdog = 0;
+UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvDips[3] = {0,0,0};
+UINT8 DrvInputs[3] = {0,0,0};
+//UINT8 DrvReset = 0;
+INT32 watchdog = 0;
 
 //static INT32 nCyclesTotal[2];
 
@@ -182,7 +177,7 @@ static struct BurnInputInfo DrvInputList[] = {
 	{"P2 Button 1"  	  , BIT_DIGITAL  , DrvJoy3 + 4,  "p2 fire 1"},
 	{"P2 Button 2"  	  , BIT_DIGITAL  , DrvJoy3 + 5,  "p2 fire 2"},
 
-	{"Reset",		    BIT_DIGITAL  , &DrvReset,	 "reset"    },
+	{"Reset",		    BIT_DIGITAL  , NULL,	 "reset"    },
 	{"Service",		    BIT_DIGITAL  , DrvJoy1 + 5,  "service"  },
 	{"Dip 1",		    BIT_DIPSWITCH, DrvDips + 0,	 "dip"	    },
 	{"Dip 2",		    BIT_DIPSWITCH, DrvDips + 1,	 "dip"	    },

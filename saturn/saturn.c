@@ -233,6 +233,8 @@ static void resetLayers()
     SCL_SET_N0PRIN(2);
     SCL_SET_N1PRIN(3);
     SCL_SET_N2PRIN(1);
+// reset special priority mode	
+	SCL_SET_N1SPRM(0);
 }
 //--------------------------------------------------------------------------------------------------------------
 static void resetColors()

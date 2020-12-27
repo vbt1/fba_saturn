@@ -1398,6 +1398,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
  INT32 DrvExit()
 {
 	nBurnFunction = NULL;
+	wait_vblank();	
 	DrvDoReset();
 	CZetExit2();
 
@@ -1412,6 +1413,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	free(AllMem);
 	AllMem = NULL;
 	ss_map3 = NULL;
+
 /*
 	memset(DrvJoy1,0x00,8);
 	memset(DrvJoy2,0x00,8);

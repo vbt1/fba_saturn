@@ -74,7 +74,7 @@ int ovlInit(char *szShortName)
 // sprites 0x200-0x2ff
 		unsigned short position = remap16_lut[offset];
 
-		DrvPalette[position] = cram_lut[data];
+		colBgAddr[position] = cram_lut[data];
 	}
 }
 
@@ -301,7 +301,7 @@ if(i==0)
 //				CZetOpen(0);
 			}
 
-			*flipscreen  =  data & 0x40;
+//			*flipscreen  =  data & 0x40;
 			*DrvFgEnable = ~data & 0x80;
 
 			ss_regs->dispenbl &= 0xfffb;
@@ -335,7 +335,7 @@ if(i==0)
 
 		case 0x0c:
 			*DrvBgEnable = ~data & 0x02;
-			*DrvSprEnable  = ~data & 0x04;
+/*			*DrvSprEnable  = ~data & 0x04; */
   /*
 			ss_regs->dispenbl &= 0xfffD;
 			ss_regs->dispenbl |= (*DrvBgEnable >> 1) & 0x0002;
@@ -348,7 +348,7 @@ if(i==0)
 
 		case 0x0e:
 		{
-			UINT32 plate_addr[4];
+//			UINT32 plate_addr[4];
 
 			if(data)		  // 1 = 128x64, 0 = 64x128
 			{
@@ -466,13 +466,7 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 #ifdef SND
 	DrvZ80ROM1	= Next; Next += 0x008000;
 #endif
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	DrvGfxROM0	= SS_CACHE; //Next; Next += 0x020000;
-//	DrvGfxROM1	= SS_CACHE + 0x010000;
-	DrvGfxROM1	= SS_CACHE + 0x08000;
-	DrvGfxROM2	= (UINT8 *)(ss_vram+0x1100);
-
-	DrvPalette	= (UINT16*)colBgAddr; //(UINT32*)Next; Next += 0x0400 * sizeof(UINT32);
+//	DrvPalette	= (UINT16*)colBgAddr; //(UINT32*)Next; Next += 0x0400 * sizeof(UINT32);
 
 	AllRam		= Next;
 
@@ -486,10 +480,10 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	DrvSprRAM	= Next; Next += 0x000200;
 	DrvSprBuf		= Next; Next += 0x000200;
 
-	DrvScreenLayout	= Next; Next += 0x000001;
+//	DrvScreenLayout	= Next; Next += 0x000001;
 	DrvBgEnable		= Next; Next += 0x000001;
 	DrvFgEnable		= Next; Next += 0x000001;
-	DrvSprEnable	= Next; Next += 0x000001;
+//	DrvSprEnable	= Next; Next += 0x000001;
 
 	DrvVidBank	= Next; Next += 0x000001;
 	DrvRomBank	= Next; Next += 0x000001;
@@ -497,8 +491,8 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	DrvScrollx	= (UINT16*)Next; Next += 0x0001 * sizeof (UINT16);
 	DrvScrolly	= (UINT16*)Next; Next += 0x0001 * sizeof (UINT16);
 
-	soundlatch	= Next; Next += 0x000001;
-	flipscreen	= Next; Next += 0x000001;
+	soundlatch	= Next; Next += 0x000002;
+//	flipscreen	= Next; Next += 0x000001;
 //	coin_lockout	= Next; Next += 0x000001;
 
 	RamEnd			= Next;
@@ -559,7 +553,13 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	const UINT32 YOffs[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16,
 			8*16, 9*16, 10*16, 11*16, 12*16, 13*16, 14*16, 15*16 };
 
-	UINT8 *tmp = (UINT8*)0x00200000;
+	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	UINT8 *DrvGfxROM0	= SS_CACHE; //Next; Next += 0x020000;
+	UINT8 *DrvGfxROM1	= SS_CACHE + 0x08000;
+	UINT8 *DrvGfxROM2	= (UINT8 *)(ss_vram+0x1100);
+
+//	UINT8 *tmp = (UINT8*)0x00200000;
+	UINT8 *tmp = (UINT8*)DrvZ80ROM0;
 // texte
 	memcpyl (tmp, DrvGfxROM0, 0x08000);
 	GfxDecode4Bpp(0x0800, 2,  8,  8, Plane + 2, XOffs, YOffs, 0x080, tmp, DrvGfxROM0);
@@ -599,6 +599,12 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 #ifdef SND
 		if (BurnLoadRom(DrvZ80ROM1, 5, 1)) return 1;
 #endif
+
+		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+		UINT8 *DrvGfxROM0	= SS_CACHE; //Next; Next += 0x020000;
+		UINT8 *DrvGfxROM1	= SS_CACHE + 0x08000;
+		UINT8 *DrvGfxROM2	= (UINT8 *)(ss_vram+0x1100);
+	
 		if (BurnLoadRom(DrvGfxROM0, 6, 1)) return 1;
 
 		for (INT32 i = 0; i < 4; i++) {
@@ -697,11 +703,11 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	PCM_DestroyStmHandle(pcm14[0]);
 	stmClose(stm);
 
-	CZ80Context = DrvZ80ROM0 = DrvZ80ROM1 = DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 = NULL;
+	CZ80Context = DrvZ80ROM0 = DrvZ80ROM1 = /*DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =*/ NULL;
 	DrvZ80RAM0	 = DrvZ80RAM1 = DrvPalRAM = DrvTxRAM = DrvBgRAM = DrvSprRAM = DrvSprBuf = NULL;
-	DrvBgEnable = DrvFgEnable = DrvSprEnable = DrvVidBank = DrvRomBank	= NULL;
-	DrvPalette = DrvScrollx	= DrvScrolly = NULL;
-	soundlatch = flipscreen = NULL;
+	DrvBgEnable = DrvFgEnable = /*DrvSprEnable =*/ DrvVidBank = DrvRomBank	= NULL;
+	/*DrvPalette =*/ DrvScrollx	= DrvScrolly = NULL;
+	soundlatch = /*flipscreen =*/ NULL;
 	remap16_lut = remap4to16_lut	= cram_lut = fg_map_lut = bg_map_lut2x1 = bg_map_lut2x2 = NULL;
 	MemEnd = AllRam = RamEnd = NULL;
 
@@ -710,7 +716,10 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 
 	cleanDATA();
 	cleanBSS();
-
+    SCL_SET_S0PRIN(0);
+    SCL_SET_N0PRIN(2);
+    SCL_SET_N1PRIN(3);
+    SCL_SET_N2PRIN(1);
 	nSoundBufferPos=0;
 
 	return 0;
@@ -781,15 +790,11 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 				if(pcm_info[i].position+(size*2)>pcm_info[i].size)
 				{
 //					memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
-					memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].ring_position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 					size=pcm_info[i].size-pcm_info[i].position;
 					pcm_info[i].num = 0xff;
 				}
-				else
-				{
-//					memcpyl((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
-					memcpyl((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].ring_position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
-				}
+// VBt : ne pas utiliser de memcpyl				
+				memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].ring_position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
 				pcm_info[i].ring_position+=size;
@@ -834,7 +839,8 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void draw_sprites()
 {
-	UINT32 delta	= 3;
+//	UINT32 delta	= 3;
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
 
 	for (INT32 offs = 0x200 - 4; offs >= 0; offs -= 4)
 	{
@@ -844,23 +850,24 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 
 		if (sy < -15 || sy > 239 || sx < -15 || sx > 255)
 		{
-			ss_sprite[delta].charSize		= 0;
+			ss_spritePtr->charSize		= 0;
 		}
 		else
 		{
 			UINT32 code = DrvSprBuf[offs] | ((attr & 0xe0) << 3);
 			UINT32 flipx = ((attr & 0x08) << 1);
 
-			ss_sprite[delta].control	= ( JUMP_NEXT | FUNC_NORMALSP) | flipx;
-			ss_sprite[delta].drawMode	= ( ECD_DISABLE | COMPO_REP);
+			ss_spritePtr->control	= ( JUMP_NEXT | FUNC_NORMALSP) | flipx;
+			ss_spritePtr->drawMode	= ( ECD_DISABLE | COMPO_REP);
 
-			ss_sprite[delta].ax			= sx;
-			ss_sprite[delta].ay			= sy;
-			ss_sprite[delta].charSize	= 0x210;
-			ss_sprite[delta].color		= (attr & 0x07)<<4;
-			ss_sprite[delta].charAddr	= 0x220+(code<<4);
+			ss_spritePtr->ax			= sx;
+			ss_spritePtr->ay			= sy;
+			ss_spritePtr->charSize	= 0x210;
+			ss_spritePtr->color		= (attr & 0x07)<<4;
+			ss_spritePtr->charAddr	= 0x220+(code<<4);
 		}
-		delta++;
+//		delta++;
+		ss_spritePtr++;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1144,8 +1151,8 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn()
 {
-	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_InitSlaveSH();
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 #ifdef DEBUG
 	GFS_SetErrFunc(errGfsFunc, NULL);
 	PCM_SetErrFunc(errPcmFunc, NULL);
