@@ -155,7 +155,8 @@ MPOVLTETRISFILE    = $(OVLTETRIS:.coff=.maps)
 LDOVLTETRISFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLTETRISFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLTETRIS         = d_atetris_crab6502.c crab6502/crab6502.c crab6502/m6502_intf.c snd/sn76496.c slapstic.c
 #SRCOVLTETRIS         = d_atetris_mame6502.c m6502.new/m6502.c m6502.new/m6502_intf.c snd/sn76496.c slapstic.c load.c saturn/ovl.c
-SRCOVLTETRIS         = d_atetris_mame6502.c lib6502/lib6502.c lib6502/lib6502_intf.c slapstic.c load.c saturn/ovl.c
+SRCOVLTETRIS         = d_atetris_mame6502.c m6502/m6502.c m6502/m6502_intf.c slapstic.c load.c saturn/ovl.c
+#SRCOVLTETRIS         = d_atetris_mame6502.c lib6502/lib6502.c lib6502/lib6502_intf.c slapstic.c load.c saturn/ovl.c
 #SRCOVLTETRIS         = d_atetris.c m6502/m6502.c m6502_intf.c snd/sn76496.c slapstic.c
 #SRCOVLTETRIS         = d_atetris.c m6502/m6502.c m6502_intf.c snd/sn76496.c slapstic.c
 #SRCOVLTETRIS         = d_atetris.c Crab6502/Crab6502.c snd/sn76496.c slapstic.c load.c saturn/ovl.c

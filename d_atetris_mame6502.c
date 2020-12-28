@@ -5,6 +5,9 @@
 //	Hook up pokey (once ported) and verify bootleg set 2 sound
 
 #include "d_atetris_mame6502.h"
+#define nInterleave 65
+#define master_clock (14318180 / 8)
+#define nCyclesTotal  master_clock / 60 / nInterleave
 
 int ovlInit(char *szShortName)
 {
@@ -57,17 +60,18 @@ UINT8 atetris_read_0x2800(UINT16 address)
 void atetris_write_0x1000(UINT16 address, UINT8 data)
 {
 	address-=0x1000;
-	if(DrvVidRAM[address]!=data)
+//	if(DrvVidRAM[address]!=data)
 	{
 		DrvVidRAM[address] = data;
 		
 		address&=~1;
-		UINT16 code  = DrvVidRAM[address + 0] | ((DrvVidRAM[address + 1] & 0x07) << 8);
-		UINT16 color = DrvVidRAM[address + 1] >> 4;
+		
+		UINT8 *rs = (UINT8 *)(DrvVidRAM+address);	
 
 		UINT16 x = map_offset_lut[address];
-		ss_map2[x] = color;
-		ss_map2[x+1] = code;
+		UINT16 *map = &ss_map2[x]; 		
+		map[0] = rs[1] >> 4;
+		map[1] = rs[0] | ((rs[1] & 0x07) << 8);
 	}
 }
 
@@ -104,7 +108,7 @@ void atetris_write_0x3000(UINT16 address, UINT8 data)
 
 		case 0x3800:
 //			M6502SetIRQLine(0, M6502_IRQSTATUS_NONE); modif derek
-			libM6502SetIRQLine(1, M6502_IRQSTATUS_NONE);
+			M6502SetIRQLine(1, M6502_IRQSTATUS_NONE);
 		return;
 
 		case 0x3c00:
@@ -120,8 +124,8 @@ INT32 DrvDoReset(INT32 full_reset)
 	}
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502OpenR             ",10,70);	
 //	M6502Open(0);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Reset             ",10,70);	
-	libM6502_Reset();
+//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Reset             ",10,70);	
+	M6502_Reset();
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);	
 //	M6502Close();
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             ",10,70);
@@ -158,10 +162,10 @@ INT32 CommonInit(INT32 boot)
 {
 	AllMem = NULL;
 	MemIndex();
-//	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-//	memset(AllMem, 0, MALLOC_MAX);
-	if ((AllMem = (UINT8 *)BurnMalloc(0x14500)) == NULL) return 1;
-	memset(AllMem, 0, 0x14500);
+	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
+	memset(AllMem, 0, MALLOC_MAX);
+//	if ((AllMem = (UINT8 *)BurnMalloc(0x14500)) == NULL) return 1;
+//	memset(AllMem, 0, 0x14500);
 	MemIndex();
 	make_lut();
 	
@@ -170,35 +174,36 @@ INT32 CommonInit(INT32 boot)
 //		if (BurnLoadRom(DrvGfxROM , 1, 1)) return 1;
 		if (BurnLoadRom(cache , 1, 1)) return 1;
 	}
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"libM6502Init             ",10,70);	
-	libM6502Init(0, TYPE_M6502);
+//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Init             ",10,70);	
+	M6502Init(0, TYPE_M6502);
 //	M6502Open(0);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"libM6502MapMemory             ",10,70);
-	libM6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, M6502_RAM);
-//	libM6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
-	libM6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, M6502_ROM);
-	libM6502MapMemory(DrvPalRAM,		0x2100, 0x21ff, M6502_ROM);
-	libM6502MapMemory(DrvPalRAM,		0x2200, 0x22ff, M6502_ROM);
-	libM6502MapMemory(DrvPalRAM,		0x2300, 0x23ff, M6502_ROM);
-	libM6502MapMemory(DrvNVRAM,		0x2400, 0x25ff, M6502_ROM);
-	libM6502MapMemory(DrvNVRAM,		0x2600, 0x27ff, M6502_ROM);
-	libM6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"libM6502SetReadHandler             ",10,70);
-	libM6502SetReadHandler(0x2800, 0x281f,atetris_read_0x2800);
-//	libM6502SetReadHandler(0x4000, 0x7fff,atetris_read_0x4000);	
-	libM6502SetReadHandler(0x4000, 0x7fff,atetris_slapstic_read);	
+//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502MapMemory             ",10,70);
+	M6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, M6502_RAM);
+//	M6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
+	M6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, M6502_ROM);
+	M6502MapMemory(DrvPalRAM,		0x2100, 0x21ff, M6502_ROM);
+	M6502MapMemory(DrvPalRAM,		0x2200, 0x22ff, M6502_ROM);
+	M6502MapMemory(DrvPalRAM,		0x2300, 0x23ff, M6502_ROM);
+	M6502MapMemory(DrvNVRAM,		0x2400, 0x25ff, M6502_ROM);
+	M6502MapMemory(DrvNVRAM,		0x2600, 0x27ff, M6502_ROM);
+	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
+//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502SetReadHandler             ",10,70);
+	M6502SetReadHandler(0x2800, 0x281f,atetris_read_0x2800);
+//	M6502SetReadHandler(0x4000, 0x7fff,atetris_read_0x4000);	
+	M6502SetReadHandler(0x4000, 0x7fff,atetris_slapstic_read);	
 
-	libM6502SetWriteHandler(0x3000, 0x3cff,atetris_write_0x3000);
-	libM6502SetWriteHandler(0x2800, 0x281f,atetris_write_0x2800);
-	libM6502SetWriteHandler(0x2400, 0x25ff,atetris_write_0x2400);
-	libM6502SetWriteHandler(0x2000, 0x20ff,atetris_write_0x2000);
-	libM6502SetWriteHandler(0x1000, 0x1fff,atetris_write_0x1000);
+	M6502SetWriteHandler(0x3000, 0x3cff,atetris_write_0x3000);
+	M6502SetWriteHandler(0x2800, 0x281f,atetris_write_0x2800);
+	M6502SetWriteHandler(0x2400, 0x25ff,atetris_write_0x2400);
+	M6502SetWriteHandler(0x2000, 0x20ff,atetris_write_0x2000);
+	M6502SetWriteHandler(0x1000, 0x1fff,atetris_write_0x1000);
 //	M6502Close();
 
 	SlapsticInit(101);
 
-	is_Bootleg = boot;
-	master_clock = boot ? (14745600 / 8) : (14318180 / 8);
+//	is_Bootleg = boot;
+//	master_clock = boot ? (14745600 / 8) : (14318180 / 8);
+
 /*
 	if (is_Bootleg)	// Bootleg set 2 sound system
 	{
@@ -214,7 +219,7 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"libM6502SetReadHandler    
 
 	DrvDoReset(1);
 
-	for (INT32 i = 0; i < 0x100; i++) 
+	for (UINT32 i = 0; i < 0x100; i++) 
 	{
 		DrvPaletteUpdate(i);
 	}
@@ -241,7 +246,7 @@ INT32 DrvExit()
 
 void DrvFrame()
 {
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvFrame                 ",10,70);	
+//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvFrame                 ",10,70);	
 	watchdog++;
 	if (watchdog >= 180) {
 		DrvDoReset(0);
@@ -256,20 +261,21 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvFrame                 "
 		}
 	}
 
-	UINT8 nInterleave = 65;
-	UINT32 nCyclesTotal = { master_clock / 60 / nInterleave};
+//	UINT8 nInterleave = 65;
+//	master_clock = (14318180 / 8);
+//	UINT32 nCyclesTotal = { master_clock / 60 / nInterleave};
 //	M6502Open(0);
 
 	vblank = 0x40;
 
 	for (UINT32 i = 0; i < nInterleave; i++)
 	{
-		libM6502_Execute(nCyclesTotal);
+		M6502_Execute(nCyclesTotal);
 
 		if (i == 12 || i == 28 || i == 44 || i == 60)	
 		{
-//					libM6502SetIRQLine(0, (i & 0x10) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);  modif derek
-			libM6502SetIRQLine(1, M6502_IRQSTATUS_ACK);
+//					M6502SetIRQLine(0, (i & 0x10) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);  modif derek
+			M6502SetIRQLine(1, M6502_IRQSTATUS_ACK);
 			if (i == 60) vblank = 0;					
 		}
 	}
@@ -348,7 +354,7 @@ void make_lut(void)
 		INT32 g = (i >> 2) & 7;
 		INT32 b = (i >> 0) & 3;
 
-		r =  (r << 5) | (r << 2) | (r >> 1);
+		r = (r << 5) | (r << 2) | (r >> 1);
 		g = (g << 5) | (g << 2) | (g >> 1);
 		b = (b << 6) | (b << 4) | (b << 2) | (b << 0);
 
@@ -388,7 +394,7 @@ void make_lut(void)
 void DrvInitSaturn()
 {
 //	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvInitSaturn             ",10,70);
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	nBurnSprites  = 35;
 
 	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;

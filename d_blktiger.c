@@ -558,8 +558,7 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	UINT8 *DrvGfxROM1	= SS_CACHE + 0x08000;
 	UINT8 *DrvGfxROM2	= (UINT8 *)(ss_vram+0x1100);
 
-//	UINT8 *tmp = (UINT8*)0x00200000;
-	UINT8 *tmp = (UINT8*)DrvZ80ROM0;
+	UINT8 *tmp = (UINT8*)0x00200000;
 // texte
 	memcpyl (tmp, DrvGfxROM0, 0x08000);
 	GfxDecode4Bpp(0x0800, 2,  8,  8, Plane + 2, XOffs, YOffs, 0x080, tmp, DrvGfxROM0);
@@ -717,9 +716,6 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	cleanDATA();
 	cleanBSS();
     SCL_SET_S0PRIN(0);
-    SCL_SET_N0PRIN(2);
-    SCL_SET_N1PRIN(3);
-    SCL_SET_N2PRIN(1);
 	nSoundBufferPos=0;
 
 	return 0;
