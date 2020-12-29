@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 57
+#define NB_DRV 58
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -139,7 +139,7 @@ void BurnDrvAssignList()
 
 //	static struct BurnDriver BurnDrvHangonjr = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvTetrisse = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvTransfrm = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvTransfrm = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvFantzn2  = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvAstrofl = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvOpaopa = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
@@ -390,11 +390,11 @@ BurnDrvHangonjr.szParent="segae"	;
 BurnDrvTetrisse.szShortName="tetrisse";
 BurnDrvTetrisse.szFullNameA="Tetris (Japan, System E)";
 BurnDrvTetrisse.szParent="segae";
-/*
+
 BurnDrvTransfrm.szShortName="transfrm";
 BurnDrvTransfrm.szFullNameA="Transformer";
 BurnDrvTransfrm.szParent="segae";
-*/
+
 BurnDrvFantzn2.szShortName="fantzn2";
 BurnDrvFantzn2.szFullNameA="Fantasy Zone 2 - The Tears of Opa-Opa";
 BurnDrvFantzn2.szParent="segae";
@@ -511,7 +511,7 @@ pDriver[i++] = &BurnDrvSzaxxon;
 pDriver[i++] = &BurnDrvTeddybb;
 pDriver[i++] = &BurnDrvTetrisse;
 pDriver[i++] = &BurnDrvTigerHB1;
-//pDriver[i++] = &BurnDrvTransfrm;
+pDriver[i++] = &BurnDrvTransfrm;
 //pDriver[i++] = &BurnDrvVigilant;
 pDriver[i++] = &BurnDrvWiz;
 pDriver[i++] = &BurnDrvWboyu;

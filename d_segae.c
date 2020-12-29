@@ -96,7 +96,7 @@ void __fastcall systeme_main_write(UINT16 address, UINT8 data)
 		if (segae_vdp_vram[chip][index] != data) 
 		{
 			segae_vdp_vram[chip][index] = data;
-//			update_bg(chip, index);		
+			update_bg(chip, index);		
 			update_sprites(chip, index);		
 		}
 	}
@@ -394,6 +394,7 @@ void segae_vdp_data_w ( UINT8 chip, UINT8 data )
 
 			UINT8 index = segae_vdp_accessaddr[chip] & 0x1F;
 			colBgAddr[index+(chip<<8)] = cram_lut[data & 0x3F];
+			
 			if(index >0x0f)
 				colAddr[(index&0x0f)+(chip*16)] =  cram_lut[data & 0x3F];
 		}
@@ -656,6 +657,10 @@ INT32 DrvExit()
 INT32 DrvDoReset()
 {
 	memset (DrvRAM, 0, RamEnd - DrvRAM);
+	
+	memset(segae_vdp_cram[0],0xFF,0x20);
+	memset(segae_vdp_cram[1],0xFF,0x20);
+	
 	rombank = 0;
 	hintcount = 0;
 	vintpending = 0;
@@ -727,6 +732,8 @@ void segae_interrupt ()
 			if  ((segae_vdp_regs[1][0] & 0x10)) {
 				CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 				return;
+			} else {
+				CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 			}
 
 		} else {
@@ -739,13 +746,15 @@ void segae_interrupt ()
 
 		if ( (currentLine<0xe0) && (vintpending) ) {
 			CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
+		} else {
+			CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 		}
 	}
 }
 
 INT32 DrvFrame()
 {
-//	*(Uint16 *)0x25E00000 = colBgAddr[0]; // set bg_color
+//	*(Uint16 *)0x25E00000 = colBgAddr[256]; // set bg_color
 	DrvMakeInputs();
 
 	UINT32 nCyclesDone = 0;
@@ -1303,9 +1312,15 @@ void make_cram_lut(void)
 {
     for(UINT32 j = 0; j < 0x40; j++)
     {
+/*
         INT32 r = (j >> 0) & 3;
         INT32 g = (j >> 2) & 3;
         INT32 b = (j >> 4) & 3;
+*/		
+        INT32 r = ((j &0x03) >> 0) & 3;
+        INT32 g = ((j &0x0c) >> 2) & 3;
+        INT32 b = ((j &0x30) >> 4) & 3;
+		
         r  = (r << 3) | (r << 1) | (r >> 1);
         g = (g << 3) | (g << 1) | (g >> 1);
         b = (b << 3) | (b << 1) | (b >> 1);
