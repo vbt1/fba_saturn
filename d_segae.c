@@ -214,11 +214,16 @@ void segae_bankswitch (void)
 {
 	UINT32 bankloc = 0x10000 + (rombank * 0x4000);
 
-	CZetMapArea(0x8000, 0xbfff, 0, DrvMainROM + bankloc);
-	CZetMapArea(0x8000, 0xbfff, 2, DrvMainROM + bankloc);
-
 	if (mc8123_banked) {
-		CZetMapArea2(0x8000, 0xbfff, 2, DrvMainROMFetch + bankloc, DrvMainROM + bankloc); // fetch ops(encrypted), opargs(unencrypted)
+//		CZetMapArea(0x8000, 0xbfff, 0, DrvMainROM + bankloc);
+//		CZetMapArea2(0x8000, 0xbfff, 2, DrvMainROMFetch + bankloc, DrvMainROM + bankloc); // fetch ops(encrypted), opargs(unencrypted)
+		CZetMapMemory2(DrvMainROMFetch + bankloc, DrvMainROM + bankloc, 0x8000, 0xbfff, MAP_ROM);		
+	}
+	else
+	{
+//		CZetMapArea(0x8000, 0xbfff, 0, DrvMainROM + bankloc);
+//		CZetMapArea(0x8000, 0xbfff, 2, DrvMainROM + bankloc);		
+		CZetMapMemory((unsigned char *)(DrvMainROM + bankloc), 0x8000, 0xbfff, MAP_ROM);
 	}
 }
 
@@ -312,6 +317,7 @@ void segae_vdp_processcmd ( UINT8 chip, UINT16 cmd )
 	}
 }
 
+#if 0
 UINT8 segae_vdp_counter_r (UINT8 chip, UINT8 offset)
 {
 	UINT8 temp = 0;
@@ -338,6 +344,28 @@ UINT8 segae_vdp_counter_r (UINT8 chip, UINT8 offset)
 	
 	return temp;
 }
+#else
+UINT8 segae_vdp_counter_r (UINT8 chip, UINT8 offset)
+{
+	UINT8 temp = 0;
+	UINT16 sline;
+
+	switch (offset)
+	{
+		case 0: /* port 0x7e, Vert Position (in scanlines) */
+			sline = currentLine;
+//			if (sline > 0xDA) sline -= 6;
+//			temp = sline-1 ;
+			if (sline > 0xDA) sline -= 5;
+			temp = sline ;
+			break;
+		case 1: /* port 0x7f, Horz Position (in pixel clock cycles)  */
+			/* unhandled for now */
+			break;
+	}
+	return temp;
+}
+#endif
 
 UINT8 segae_vdp_data_r(UINT8 chip)
 {
@@ -755,6 +783,9 @@ void segae_interrupt ()
 INT32 DrvFrame()
 {
 //	*(Uint16 *)0x25E00000 = colBgAddr[256]; // set bg_color
+	
+//	memset(&ss_sprite[3],0,131*sizeof(SprSpCmd));
+
 	DrvMakeInputs();
 
 	UINT32 nCyclesDone = 0;
@@ -877,7 +908,8 @@ INT32 DrvInit(UINT8 game)
 	CZetMapMemory(DrvRAM, 0xc000, 0xffff, MAP_RAM);
 
 	if (mc8123) {
-		CZetMapArea2(0x0000, 0x7fff, 2, DrvMainROMFetch, DrvMainROM);
+//		CZetMapArea2(0x0000, 0x7fff, 2, DrvMainROMFetch, DrvMainROM);
+		CZetMapMemory2(DrvMainROMFetch, DrvMainROM, 0x0000, 0x7fff, MAP_FETCH);
 	}
 
 	CZetSetWriteHandler(systeme_main_write);
@@ -1143,10 +1175,10 @@ void update_sprites(UINT8 chip, UINT32 index)
 			for(int x=delta;x<64;x++)
 			{
 				ss_spritePtr[INV-x].drawMode = 0;
-//				ss_spritePtr[inv-x].charAddr	= 0;
-				ss_spritePtr[INV-x].charSize		= 0;
-				ss_spritePtr[INV-x].ax	= -16;
-				ss_spritePtr[INV-x].ay	= yp;
+				ss_spritePtr[INV-x].charAddr = 0;
+				ss_spritePtr[INV-x].charSize = 0;
+				ss_spritePtr[INV-x].ax	= 0;
+				ss_spritePtr[INV-x].ay	= 0;
 			}
 			return;
 		}

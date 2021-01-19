@@ -296,6 +296,22 @@ void CZetMapMemory(unsigned char *Mem, int nStart, int nEnd, int nFlags)
 	}
 }
 
+void CZetMapMemory2(unsigned char *Mem, unsigned char *Mem02, int nStart, int nEnd, int nFlags)
+{
+//	UINT8 cStart = (nStart >> 8);
+	int s = nStart >> CZ80_FETCH_SFT;
+//	UINT8 **pMemMap = ZetCPUContext[nOpenedCPU]->pZetMemMap;
+	int e = (nEnd + CZ80_FETCH_BANK - 1) >> CZ80_FETCH_SFT;
+	
+	for (unsigned int i = s; i < e; i++) 
+	{
+		if (nFlags & (1 << 0)) lastCZetCPUContext->Read[i] = Mem02 - nStart; // READ
+		if (nFlags & (1 << 1)) lastCZetCPUContext->Write[i] = Mem02 - nStart; // WRITE
+		if (nFlags & (1 << 2)) 	lastCZetCPUContext->Fetch[i] = Mem - nStart; // OP
+		if (nFlags & (1 << 3)) 	lastCZetCPUContext->FetchData[i] = Mem02 - nStart; // ARG			
+	}
+}
+
 int CZetMapArea(int nStart, int nEnd, int nMode, unsigned char *Mem)
 {
 	unsigned int s = nStart >> CZ80_FETCH_SFT;
@@ -319,7 +335,7 @@ End:
 	}
 	return 0;
 }
-
+/*
 int CZetMapArea2(int nStart, int nEnd, int nMode, unsigned char *Mem01, unsigned char *Mem02)
 {
 	unsigned int s = nStart >> CZ80_FETCH_SFT;
@@ -333,7 +349,7 @@ int CZetMapArea2(int nStart, int nEnd, int nMode, unsigned char *Mem01, unsigned
 	}
 	return 0;
 }
-
+*/
 int CZetReset()
 {
 	Cz80_Reset( lastCZetCPUContext );

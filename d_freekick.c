@@ -303,8 +303,7 @@ UINT8 __fastcall freekick_read(UINT16 address)
 		ZetMapArea(0x8000, 0xbfff, 0, DrvMainROM + bankloc); // read
 		ZetMapArea(0x8000, 0xbfff, 2, DrvMainROMdec + bankloc, DrvMainROM + bankloc); // fetch ops(encrypted), opargs(unencrypted)
 	} else {	*/
-		CZetMapArea(0x8000, 0xbfff, 0, DrvMainROM + bankloc); // read
-		CZetMapArea(0x8000, 0xbfff, 2, DrvMainROM + bankloc); // fetch
+		CZetMapMemory((unsigned char *)(DrvMainROM + bankloc), 0x8000, 0xbfff, MAP_ROM);
 //	}
 }
 
@@ -736,13 +735,15 @@ void __fastcall gigas_out(UINT16 address, UINT8 data)
 */
 		pbillrd_setbank(0);
 	} else { // gigas*
-		CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
-		CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROM + 0x10000, DrvMainROM);
+//		CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
+//		CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROM + 0x10000, DrvMainROM);
+		CZetMapMemory2(DrvMainROM + 0x10000, DrvMainROM, 0x0000, 0xbfff, MAP_ROM);
 
 //		if (use_encrypted) {
 		if (!strcmp(BurnDrvGetTextA(DRV_NAME), "omega")) {	
-			CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
-			CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROMdec, DrvMainROM); // fetch ops(encrypted), opargs(unencrypted)
+//			CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
+//			CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROMdec, DrvMainROM); // fetch ops(encrypted), opargs(unencrypted)
+			CZetMapMemory2(DrvMainROMdec, DrvMainROM, 0x0000, 0xbfff, MAP_ROM);			
 		}
 	}
 

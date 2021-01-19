@@ -1129,7 +1129,8 @@ int find_minimum_x(UINT8 value)
 	UINT8 *decrypt = DrvZ80DecROM;
 #ifndef RAZE	 
 	CZetOpen(0);
-	CZetMapArea2(0x0000, 0x5fff, 2, DrvZ80DecROM, DrvZ80ROM );
+//	CZetMapArea2(0x0000, 0x5fff, 2, DrvZ80DecROM, DrvZ80ROM );
+	CZetMapMemory2(DrvZ80DecROM, DrvZ80ROM, 0x0000, 0x5fff, MAP_FETCH);
 	CZetClose();
 #endif
 
@@ -1181,7 +1182,8 @@ int find_minimum_x(UINT8 value)
 	
 #ifndef RAZE	
 	CZetOpen(0);
-	CZetMapArea2(0x0000, 0x5fff, 2, DrvZ80DecROM, DrvZ80ROM);
+//	CZetMapArea2(0x0000, 0x5fff, 2, DrvZ80DecROM, DrvZ80ROM);
+		CZetMapMemory2(DrvZ80DecROM, DrvZ80ROM, 0x0000, 0x5fff, MAP_FETCH);
 	CZetClose();
 #endif	
 	for (A = 0x0000;A < cryptlen;A++)

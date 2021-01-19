@@ -69,8 +69,7 @@ int ovlInit(char *szShortName)
 	z80_map_read(0x8000, 0xbfff, DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000));
 	z80_map_fetch(0x8000, 0xbfff, DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000));
 #else
-	CZetMapArea (0x8000, 0xbfff, 0, DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000));
-	CZetMapArea (0x8000, 0xbfff, 2, DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000));
+	CZetMapMemory(DrvZ80ROM0 + 0x8000 + (bank_data * 0x4000), 0x8000, 0xbfff, MAP_ROM);
 #endif
 }
 

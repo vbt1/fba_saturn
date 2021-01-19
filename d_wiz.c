@@ -24,14 +24,14 @@ int ovlInit(char *szShortName)
 		kungfutRomInfo, kungfutRomName, KungfutInputInfo, KungfutDIPInfo,
 		KungfutInit, DrvExit, DrvFrame 
 	};
-
+/*
 	struct BurnDriver nBurnDrvStinger = {
 		"stinger", "wiz", 
 		"Stinger",
 		stingerRomInfo, stingerRomName, StingerInputInfo, StingerDIPInfo,
 		StingerInit, DrvExit, DrvFrame 
 	};
-
+*/
 	struct BurnDriver nBurnDrvScion = {
 		"scion", "wiz", 
 		"Scion", 
@@ -43,8 +43,8 @@ int ovlInit(char *szShortName)
 	memcpy(shared,&nBurnDrvWiz,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvKungfut.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvKungfut,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvStinger.szShortName, szShortName) == 0) 
-	memcpy(shared,&nBurnDrvStinger,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvStinger.szShortName, szShortName) == 0) 
+//	memcpy(shared,&nBurnDrvStinger,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvScion.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvScion,sizeof(struct BurnDriver));
 
@@ -1133,7 +1133,7 @@ INT32 KungfutInit()
 
 	return result;
 }
-
+/*
 void StingerDecode()
 {
 	INT32 swap_xor_table[4][4] =
@@ -1174,7 +1174,7 @@ INT32 StingerInit()
 
 	return nRet;
 }
-
+*/
 INT32 ScionInit()
 {
 	DrvDraw = ScionDraw;

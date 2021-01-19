@@ -234,8 +234,9 @@ static void System2PPI0WriteC(UINT8 data)
 void System1BankRomNoDecode(UINT32 System1RomBank)
 {
 	int BankAddress = (System1RomBank << 14) + 0x10000;
-	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
-	CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
+//	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
+//	CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
+	CZetMapMemory(System1Rom1 + BankAddress, 0x8000, 0xbfff, MAP_ROM);
 }
 
 inline void System2_bankswitch_w (UINT8 d)
@@ -397,8 +398,8 @@ void CommonWbmlInit()
 	CZetMapArea(0x0000, 0x7fff, 0, System1Rom1);
 	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + 0x8000);
 
-	CZetMapArea2(0x0000, 0x7fff, 2, System1Rom1 + 0x20000, System1Rom1);
-	CZetMapArea2(0x8000, 0xbfff, 2, System1Rom1 + 0x30000, System1Rom1 + 0x10000);  // 30 fetch et 10 pour code ?
+	CZetMapMemory2(System1Rom1 + 0x20000, System1Rom1, 0x0000, 0x7fff, MAP_ROM);
+	CZetMapMemory2(System1Rom1 + 0x30000, System1Rom1 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	
 	CZetMapArea(0xc000, 0xcfff, 0, System1Ram1);
 	CZetMapArea(0xc000, 0xcfff, 1, System1Ram1);
@@ -578,18 +579,17 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	CZetSetInHandler(System2Z801PortRead);
 	CZetSetOutHandler(System2Z801PortWrite);
 
-	CZetMapArea(0x0000, 0x7fff, 0, System1Rom1);
-	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + 0x8000);
 	if (DecodeFunction) 
 	{
-		CZetMapArea2(0x0000, 0x7fff, 2, System1Rom1 + 0x20000, System1Rom1);
-		CZetMapArea2(0x8000, 0xbfff, 2, System1Rom1 + 0x30000, System1Rom1 + 0x10000);  // 30 fetch, 10 for code(?)
+		CZetMapMemory2(System1Fetch1, System1Rom1, 0x0000, 0x7fff, MAP_ROM);
+		CZetMapMemory2(System1Fetch1 + 0x10000, System1Rom1 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	}
 	else
 	{
-		CZetMapArea(0x0000, 0x7fff, 2, System1Rom1);
-		CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + 0x8000);
-	}
+		CZetMapMemory(System1Rom1, 0x0000, 0x7fff, MAP_ROM);
+		CZetMapMemory(System1Rom1 + 0x8000, 0x8000, 0xbfff, MAP_ROM);		
+	}	
+	
 	CZetMapArea(0xc000, 0xcfff, 0, System1Ram1);
 	CZetMapArea(0xc000, 0xcfff, 1, System1Ram1);
 	CZetMapArea(0xc000, 0xcfff, 2, System1Ram1);

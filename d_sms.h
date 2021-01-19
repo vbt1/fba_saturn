@@ -94,6 +94,7 @@ typedef struct
 /*static*/  UINT16 *cram_lut = NULL;//[0x40];
 /*static*/  UINT16 *map_lut = NULL;
 /*static*/  UINT8 *CZ80Context = NULL;
+/*static*/  UINT8 *sms512kbRom = NULL;
 //extern unsigned char play;
 int file_id = 2;
 int file_max = 0;

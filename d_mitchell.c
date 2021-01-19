@@ -132,12 +132,13 @@ int ovlInit(char *szShortName)
 #ifdef CZ80
 //	CZetOpen(0);
 	DrvRomBank = 0;
-	CZetMapArea(0x8000, 0xbfff, 0, DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000));
+
 	if (DrvHasEEPROM) {
-		CZetMapArea2(0x8000, 0xbfff, 2, DrvZ80Code + 0x10000 + (DrvRomBank * 0x4000), DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000));
+		CZetMapMemory2(DrvZ80Code + 0x10000 + (DrvRomBank * 0x4000), DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000), 0x8000, 0xbfff, MAP_ROM);
 	} else {
-		CZetMapArea(0x8000, 0xbfff, 2, DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000));
-	}
+		CZetMapMemory((unsigned char *)(DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000)), 0x8000, 0xbfff, MAP_ROM);
+	}	
+	
 	CZetReset();
 //	CZetClose();
 #else
@@ -371,11 +372,10 @@ int ovlInit(char *szShortName)
 		case 0x02: {
 			DrvRomBank = d & 0x0f;
 #ifdef CZ80
-			CZetMapArea(0x8000, 0xbfff, 0, DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000));
 			if (DrvHasEEPROM) {
-				CZetMapArea2(0x8000, 0xbfff, 2, DrvZ80Code + 0x10000 + (DrvRomBank * 0x4000), DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000));
+				CZetMapMemory2(DrvZ80Code + 0x10000 + (DrvRomBank * 0x4000), DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000), 0x8000, 0xbfff, MAP_ROM);
 			} else {
-				CZetMapArea(0x8000, 0xbfff, 2, DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000));
+				CZetMapMemory((unsigned char *)(DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000)), 0x8000, 0xbfff, MAP_ROM);
 			}
 #else
 
@@ -489,10 +489,9 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	CZetSetWriteHandler(MitchellZ80Write);
 	CZetSetInHandler(MitchellZ80PortRead);
 	CZetSetOutHandler(MitchellZ80PortWrite);
-	CZetMapArea (0x0000, 0x7fff, 0, DrvZ80Rom  + 0x00000                     );
-	CZetMapArea2(0x0000, 0x7fff, 2, DrvZ80Code + 0x00000, DrvZ80Rom + 0x00000);
-	CZetMapArea (0x8000, 0xbfff, 0, DrvZ80Rom  + 0x10000                     );
-	CZetMapArea2(0x8000, 0xbfff, 2, DrvZ80Code + 0x10000, DrvZ80Rom + 0x10000);
+	CZetMapMemory2(DrvZ80Code + 0x00000, DrvZ80Rom + 0x00000, 0x0000, 0x7fff, MAP_ROM);
+	CZetMapMemory2(DrvZ80Code + 0x10000, DrvZ80Rom + 0x10000, 0x8000, 0xbfff, MAP_ROM);
+	
 	CZetMapArea(0xc800, 0xcfff, 0, DrvAttrRam                               );
 #ifdef LOOP
 	CZetMapArea(0xc800, 0xcfff, 1, DrvAttrRam                               );
@@ -613,10 +612,13 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 	DrvDoReset();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"stmInit   ",80,130);	
 //-------------------------------------------------
+#ifdef PCM_MUSIC
 	stmInit();
 	SetStreamPCM();
 	PCM_Start(pcmStream);
+#endif	
 //-------------------------------------------------
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"PCM_Start   ",80,130);	
 	return 0;
 }
 
@@ -679,9 +681,11 @@ if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 //	DrvNVRamAddress = 0x0000;
 	DrvDoReset();
 //-------------------------------------------------
+#ifdef PCM_MUSIC
 	stmInit();
 	SetStreamPCM();
 	PCM_Start(pcmStream);
+#endif	
 //-------------------------------------------------
 	return 0;
 }
@@ -820,12 +824,12 @@ static void dummy(void)
 #endif
 	MSM6295ROM = NULL;
 	if (DrvHasEEPROM) EEPROMExit();
-
+#ifdef PCM_MUSIC
 	STM_ResetTrBuf(stm);
 	PCM_MeStop(pcmStream);
 	PCM_DestroyStmHandle(pcmStream);
 	stmClose(stm);
-
+#endif
 	MSM6295Context = NULL;
 	CZ80Context = DrvZ80Rom = DrvZ80Code = DrvSoundRom = DrvZ80Ram = NULL;
 	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam = MSM6295ROM = NULL;

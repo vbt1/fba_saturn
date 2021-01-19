@@ -219,13 +219,15 @@ int ovlInit(char *szShortName)
 // 1 bank de 16k																  
 	if(DrvZ80Bank0)
 	{
-		CZetMapArea(0xa000, 0xdfff, 0, DrvMainROM + 0x10000);
-		CZetMapArea(0xa000, 0xdfff, 2, DrvMainROM + 0x10000);
+//		CZetMapArea(0xa000, 0xdfff, 0, DrvMainROM + 0x10000);
+//		CZetMapArea(0xa000, 0xdfff, 2, DrvMainROM + 0x10000);
+		CZetMapMemory((unsigned char *)(DrvMainROM + 0x10000), 0xa000, 0xdfff, MAP_ROM);
 	}
 	else
 	{
-		CZetMapArea(0xa000, 0xdfff, 0, DrvMainROM + 0x0a000);
-		CZetMapArea(0xa000, 0xdfff, 2, DrvMainROM + 0x0a000);
+//		CZetMapArea(0xa000, 0xdfff, 0, DrvMainROM + 0x0a000);
+//		CZetMapArea(0xa000, 0xdfff, 2, DrvMainROM + 0x0a000);
+		CZetMapMemory((unsigned char *)(DrvMainROM + 0x0a000), 0xa000, 0xdfff, MAP_ROM);
 	}
 }
 
@@ -599,8 +601,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 
 	if (game_select == 1) 
 	{ // map decoded fetch for robowres
-//		CZetMapArea2(0x0000, 0x7fff, 0, DrvFetch, DrvMainROM);
-		CZetMapArea2(0x0000, 0x7fff, 2, DrvFetch, DrvMainROM);
+		CZetMapMemory2(DrvFetch, DrvMainROM, 0x0000, 0x7fff, MAP_ROM);		
 	}
 
 	CZetMapArea(0xe000, 0xe7ff, 0, DrvRAM0);

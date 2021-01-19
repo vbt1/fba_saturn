@@ -369,9 +369,8 @@ INT32 MemIndex()
 
 void PengoMap()
 {
-	CZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM);
-//	CZetMapArea(0x0000, 0x7fff, 2, DrvZ80ROM);
-	CZetMapArea2(0x0000, 0x7fff, 2, DrvZ80ROM + 0x8000, DrvZ80ROM);
+	CZetMapMemory2(DrvZ80ROM + 0x8000, DrvZ80ROM, 0x0000, 0x7fff, MAP_ROM);
+	
 	CZetMapArea(0x8000, 0x83ff, 0, DrvVidRAM);
 #ifndef CACHE
 	CZetMapArea(0x8000, 0x83ff, 1, DrvVidRAM);

@@ -310,9 +310,7 @@ Memory Handlers
 void System1BankRom(UINT32 System1RomBank)
 {
 	UINT32 BankAddress = (System1RomBank * 0x4000) + 0x10000;
-	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
-//	CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + BankAddress, System1Rom1 + BankAddress);
-	CZetMapArea2(0x8000, 0xbfff, 2, System1Rom1 + BankAddress + 0x20000, System1Rom1 + BankAddress);
+	CZetMapMemory2(System1Rom1 + BankAddress + 0x20000, System1Rom1 + BankAddress, 0x8000, 0xbfff, MAP_ROM);
 }
 
 UINT8 __fastcall System1Z801PortRead(unsigned short a)
@@ -776,18 +774,16 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	CZetSetInHandler(System1Z801PortRead);
 	CZetSetOutHandler(System1Z801PortWrite);
-	CZetMapArea(0x0000, 0x7fff, 0, System1Rom1);
-	CZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + 0x8000);
 
 	if (DecodeFunction) 
 	{
-		CZetMapArea2(0x0000, 0x7fff, 2, System1Fetch1, System1Rom1);
-		CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + 0x10000, System1Rom1 + 0x10000);
+		CZetMapMemory2(System1Fetch1, System1Rom1, 0x0000, 0x7fff, MAP_ROM);
+		CZetMapMemory2(System1Fetch1 + 0x10000, System1Rom1 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	}
 	else
 	{
-		CZetMapArea(0x0000, 0x7fff, 2, System1Rom1);
-		CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + 0x8000);
+		CZetMapMemory(System1Rom1, 0x0000, 0x7fff, MAP_ROM);
+		CZetMapMemory(System1Rom1 + 0x8000, 0x8000, 0xbfff, MAP_ROM);		
 	}
 	CZetMapArea(0xc000, 0xcfff, 0, System1Ram1);
 	CZetMapArea(0xc000, 0xcfff, 1, System1Ram1);

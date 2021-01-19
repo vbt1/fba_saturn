@@ -1,6 +1,6 @@
 #include    "machine.h"
 #include "d_sms.h"
-#define OLD_SOUND 1
+//#define OLD_SOUND 1
 #define SAMPLE 7680L
 #define TWO_WORDS 1
 #define MAX_DIR 384*2
@@ -112,15 +112,29 @@ static void	SetVblank2( void )
 #ifndef OLD_SOUND
 /*static*/  void sh2slave(unsigned int *nSoundBufferPos)
 {
-	volatile signed short *nSoundBuffer = (signed short *)0x25a20000;
+//xxxxxxxxxxxxxx
+	volatile signed short *nSoundBuffer = (signed short *)(0x25a20000+*nSoundBufferPos);
 //	PSG_Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
-	PSG_Update(&nSoundBuffer[nSoundBufferPos[0]],  128);
+	PSG_Update(nSoundBuffer,  256);
+//PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);	
 //	SN76496Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
-	nSoundBufferPos[0]+=128;//256; 
-	if(nSoundBufferPos[0]>=SAMPLE)//<<1)//256*hz)
-		nSoundBufferPos[0]=0;
-	PCM_Task(pcm);
+	*nSoundBufferPos+=256;//256; 
+	if(*nSoundBufferPos>=SAMPLE*2)//<<1)//256*hz)
+	{
+		PCM_NotifyWriteSize(pcm, *nSoundBufferPos);
+		*nSoundBufferPos=0;
+		PCM_Task(pcm);
+	}
 
+	
+/*	
+			if(nSoundBufferPos>=SAMPLE)//256*hz)
+			{
+				PCM_NotifyWriteSize(pcm, nSoundBufferPos);
+				nSoundBufferPos=0;
+			}
+			PCM_Task(pcm);	
+*/
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
 #endif
@@ -208,11 +222,12 @@ static void	SetVblank2( void )
 	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
 	CZ80Context	= Next; Next += sizeof(cz80_struc);
+	sms512kbRom	= Next;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void DrvInitSaturn()
 {
-//	SPR_InitSlaveSH();
+	SPR_InitSlaveSH();
 	nBurnSprites  = 67;//131;//27;
 	nBurnLinescrollSize = 0x340;
 	nSoundBufferPos = 0;//sound position à renommer
@@ -271,6 +286,8 @@ static void	SetVblank2( void )
 	drawWindow(0,192,192,2,66);
 #endif
 	SetVblank2();
+	SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
+
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void sms_start()
@@ -358,6 +375,7 @@ static void	SetVblank2( void )
 #endif
 	vdp_reset();
 
+	sms512kbRom = NULL;
 	cart.rom = NULL;
 	__port = NULL;
 
@@ -406,9 +424,10 @@ static void	SetVblank2( void )
 #if 0
 		update_cache();
 #endif
-		sms_frame();
+
 		
 #ifdef OLD_SOUND //
+		sms_frame();
 //		if(sound)
 		{
 			signed short *nSoundBuffer = (signed short *)0x25a20000;
@@ -427,9 +446,11 @@ static void	SetVblank2( void )
  #else
 //		if(sound)
 		{
-//			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-			SPR_WaitEndSlaveSH();
+			sms_frame();
+			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
+				SPR_WaitEndSlaveSH();				
 			SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
+				
 //			vb=1;
 		}		
 #endif
@@ -437,13 +458,17 @@ static void	SetVblank2( void )
 	}
 	else
 	{
+#ifndef OLD_SOUND //		
+			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
+				SPR_WaitEndSlaveSH();			
+#endif		
 		sms_start();
 	}
 
 //__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void sms_frame(void)
+/*static*/ void sms_frame(void)
 {
 #if PROFILING
 //		TIM_FRT_SET_16(0);
@@ -459,11 +484,33 @@ static void	SetVblank2( void )
 #endif
 			first = 0;
 	}
-	vdp.line = 0;
+/*	
+	vdp.left = vdp.reg[10];
+    for(vdp.line = 0; vdp.line < 0xc0; vdp.line++)
+	{
+#ifdef RAZE
+		z80_emulate(228);
+#else
+		CZetRun(228);
+#endif		
+
+		if 	(vdp.line < 0x10 && (vdp.reg[0] & 0x40))
+
+			ls_tbl[vdp.line] = (-47<<16);
+		else
+
+			if (vdp.line < 0xC0)
+				ls_tbl[vdp.line] = x-(47<<16);
+
+		vdp_run(&vdp);
+	}
+*/	
+	
+//	vdp.line = 0;
 	vdp.left = vdp.reg[10];
 
 //    for(vdp.line = 0; vdp.line < 262; vdp.line++)
-    for(; vdp.line <= 0xc0; ++vdp.line)
+    for(vdp.line = 0; vdp.line <= 0xc0; ++vdp.line)
 	{
 #ifdef RAZE
 		z80_emulate(228);
@@ -474,27 +521,6 @@ static void	SetVblank2( void )
 #ifdef GG0
 	render_obj(vdp.line);
 #endif
-		++vdp.line;
-#ifdef RAZE
-		z80_emulate(228);
-#else
-		CZetRun(228);
-#endif
-		vdp_run(&vdp);
-#ifdef GG0
-	render_obj(vdp.line);
-#endif
-		++vdp.line;
-#ifdef RAZE
-		z80_emulate(228);
-#else
-		CZetRun(228);
-#endif
-		vdp_run(&vdp);
-#ifdef GG0
-	render_obj(vdp.line);
-#endif
-//		++vdp.line;
 	}
 
     for(; vdp.line < 0xE0; ++vdp.line)
@@ -526,19 +552,25 @@ static void	SetVblank2( void )
 		CZetRun(228);
 #endif
        vdp.left = vdp.reg[10];
-		++vdp.line;
+/*		++vdp.line;
 #ifdef RAZE
 		z80_emulate(228);
 #else
 		CZetRun(228);
 #endif
        vdp.left = vdp.reg[10];
+	   */
 	}
+	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void load_rom(void)
 {
 	long fileSize = GetFileSize(file_id);//dir_name[file_id].dirrec.size;
+	
+	
+	if(fileSize<=0x80000)
+	cart.rom	 = (UINT8 *) sms512kbRom;
 	cart.rom	 = (UINT8 *) 0x00200000;
 //	memset4_fast((Uint8 *)&cart.rom[0],0,0x100000);
 	cart.pages	 = fileSize /0x4000;
@@ -934,7 +966,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 				// Clip sprites on left edge 
 				ss_spritePtr->control = ( JUMP_NEXT | FUNC_NORMALSP);
 				ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-				ss_spritePtr->charSize    = (width<<5) + height;  //0x100
+				ss_spritePtr->charSize    = (width<<5) | height;  //0x100
 			}
 
 // VBT 04/02/2007 : modif compilo
@@ -1018,8 +1050,8 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 					{
 						case 8 :
 		//					x =  ((vdp.reg[r]) ^ 0xff) & 0xff;
-							scroll_x =  ((vdp.reg[r]) ^ 0xff) ;
-							scroll_x<<=16;
+							scroll_x =  ((vdp.reg[r]) ^ 0xff) <<16;
+//							scroll_x<<=16;
 							break;
 
 						case 9 :
@@ -1107,7 +1139,8 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 				// Clip sprites on left edge 
 				ss_spritePtr->control = ( JUMP_NEXT | FUNC_NORMALSP);
 				ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-				ss_spritePtr->charSize   = 0x100+ height;  //0x100
+				ss_spritePtr->charSize   = 0x100| height;  //0x100
+				break;
 			}
 
 // VBT 04/02/2007 : modif compilo
@@ -1128,6 +1161,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 
 //					ss_sprite[delta+3].charAddr   =  0x110+(n<<2);
 					ss_sprite[delta+3].charAddr   =  0x220+(n<<2);
+					break;					
 				}
 				else
 				{
@@ -1161,14 +1195,14 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Read data from the VDP's data port */
-/*static*/  int vdp_data_r(void)
+/*static*/  int vdp_data_r(t_vdp *vdp)
 {
-    UINT8 temp = 0;
-    vdp.pending = 0;
-    temp = vdp.buffer;
+ //   UINT8 temp = 0;
+    vdp->pending = 0;
+    UINT8 temp = vdp->buffer;
 //    vdp.buffer = vdp.vram[(vdp.addr & 0x3FFF)^1];
-    vdp.buffer = vdp.vram[(vdp.addr & 0x3FFF)];
-    vdp.addr = (vdp.addr + 1) & 0x3FFF;
+   vdp->buffer = vdp->vram[(vdp->addr & 0x3FFF)];
+    vdp->addr = (vdp->addr + 1) & 0x3FFF;
     return temp;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1275,7 +1309,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  UINT8 vdp_vcounter_r(void)
+/*static*/inline  UINT8 vdp_vcounter_r(void)
 {
     return (vcnt[(vdp.line & 0x1FF)]);
 }
@@ -1350,7 +1384,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 
         case 0xBE: /* VDP DATA */
 //			printf ("read port vdp_data_r\n");
-            return (vdp_data_r());
+            return (vdp_data_r(&vdp));
     
         case 0xBD:
         case 0xBF: /* VDP CTRL */
@@ -1581,40 +1615,47 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 #endif
     /* Load memory maps with default values */
 #ifdef RAZE
-	z80_map_read (0x0000, 0x3FFF, &cart.rom[0]); 
+	z80_map_read (0x0000, 0x3FFF, cart.rom); 
 
 	z80_map_read (0x4000, 0x7FFF, &cart.rom[0x4000]); 
 	z80_map_read (0x8000, 0xBFFF, &cart.rom[0x8000]); 
 	z80_map_write(0x0000, 0xBFFF, (unsigned char*)dummy_write);
 
-	z80_map_read (0xC000, 0xDFFF, (unsigned char *)(&sms.ram[0])); 
-	z80_map_write (0xC000, 0xDFFF, (unsigned char *)(&sms.ram[0])); 
+	z80_map_read (0xC000, 0xDFFF, (unsigned char *)sms.ram); 
+	z80_map_write (0xC000, 0xDFFF, (unsigned char *)sms.ram); 
 
-	z80_map_read (0xE000, 0xFFFF, (unsigned char *)(&sms.ram[0])); 
-	z80_map_write (0xE000, 0xFFFF, (unsigned char *)(&sms.ram[0])); 
+	z80_map_read (0xE000, 0xFFFF, (unsigned char *)sms.ram); 
+	z80_map_write (0xE000, 0xFFFF, (unsigned char *)sms.ram); 
 
 #define Z80_MAP_HANDLED 1
 //	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 #else
-	CZetMapArea(0x0000, 0x3FFF, 0, &cart.rom[0]); 
+//	CZetMapArea(0x0000, 0x3FFF, 0, cart.rom); 
+	CZetMapMemory((unsigned char *)cart.rom, 0x0000, 0x3FFF, MAP_READ);
 //	CZetMapArea(0x0000, 0x3FFF, 2, &cart.rom[0]); 
-	CZetMapArea (0x4000, 0x7FFF, 0, &cart.rom[0x4000]); 
+//	CZetMapArea (0x4000, 0x7FFF, 0, &cart.rom[0x4000]); 
+	CZetMapMemory((unsigned char *)&cart.rom[0x4000], 0x4000, 0x7FFF, MAP_READ);	
 //	CZetMapArea (0x4000, 0x7FFF, 2, &cart.rom[0x4000]); 
-	CZetMapArea (0x8000, 0xBFFF, 0, &cart.rom[0x8000]); 
+//	CZetMapArea (0x8000, 0xBFFF, 0, &cart.rom[0x8000]); 
+	CZetMapMemory((unsigned char *)&cart.rom[0x8000], 0x8000, 0xBFFF, MAP_READ);		
 //	CZetMapArea (0x8000, 0xBFFF, 2, &cart.rom[0x8000]); 
-	CZetMapArea (0x0000, 0xBFFF , 1, (unsigned char*)dummy_write);
+//	CZetMapArea (0x0000, 0xBFFF , 1, (unsigned char*)dummy_write);
+	CZetMapMemory((unsigned char *)dummy_write, 0x0000, 0xBFFF, MAP_WRITE);	
 //	CZetMapArea (0x0000, 0xBFFF , 2, (unsigned char*)dummy_write);
 
-	CZetMapArea (0xC000, 0xDFFF, 0, (unsigned char *)(&sms.ram[0])); 
-	CZetMapArea (0xC000, 0xDFFF, 1, (unsigned char *)(&sms.ram[0])); 
-	CZetMapArea (0xC000, 0xDFFF, 2, (unsigned char *)(&sms.ram[0])); 
+//	CZetMapArea (0xC000, 0xDFFF, 0, (unsigned char *)sms.ram); 
+//	CZetMapArea (0xC000, 0xDFFF, 1, (unsigned char *)sms.ram); 
+//	CZetMapArea (0xC000, 0xDFFF, 2, (unsigned char *)sms.ram); 
+	CZetMapMemory((unsigned char *)sms.ram, 0xC000, 0xDFFF, MAP_RAM);
 
-	CZetMapArea (0xE000, 0xFFFF, 0, (unsigned char *)(&sms.ram[0])); 
-//	CZetMapArea (0xE000, 0xFFFF, 1, (unsigned char *)(&sms.ram[0])); 
-//	CZetMapArea (0xE000, 0xFFFF, 2, (unsigned char *)(&sms.ram[0])); 
+//	CZetMapArea (0xE000, 0xFFFF, 0, (unsigned char *)sms.ram); 
+	CZetMapMemory((unsigned char *)sms.ram, 0xE000, 0xFFFF, MAP_READ);
+//	CZetMapArea (0xE000, 0xFFFF, 1, (unsigned char *)sms.ram); 
+//	CZetMapArea (0xE000, 0xFFFF, 2, (unsigned char *)sms.ram); 
 
-	CZetSetWriteHandler(cpu_writemem8);
+//	CZetSetWriteHandler(cpu_writemem8);
+	CZetSetWriteHandler2(0xFFFC, 0xFFFF,cpu_writemem8);
 
 	CZetSetSP(0xdff0);
 #endif
@@ -1629,84 +1670,89 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 {
 	sms.ram[address & 0x1FFF] = data;
 
-#ifdef CZ80
-	if(address >= 0xFFFC)
-	{
-#endif
 // data & cart.pages, and set cart.pages to one less than you are
-        UINT32 offset = (data % cart.pages) << 14; // VBT à corriger
+	UINT32 offset; // = (data % cart.pages) << 14; // VBT à corriger
 // vbt 15/05/2008 : exophase :	 data & cart.pages, and set cart.pages to one less than you are
-		sms.fcr[address& 3] = data;
+	sms.fcr[address& 3] = data;
 
-        switch(address & 3)
-        {
-			case 0:
+	switch(address & 3)
+	{
+		case 0:
 
-                if(data & 8)
-                {
-					offset = (data & 0x4) ? 0x4000 : 0x0000;
+			if(data & 8)
+			{
+				offset = (data & 0x4) ? 0x4000 : 0x0000;
 #ifdef RAZE
-					z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
-					z80_map_read(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
-					z80_map_write(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
+				z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
+				z80_map_read(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
+				z80_map_write(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
 #else
-					CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(sms.sram + offset));
-					CZetMapArea(0x8000, 0xBFFF, 1, (unsigned char *)(sms.sram + offset));
-					CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(sms.sram + offset));
+/*
+				CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(sms.sram + offset));
+				CZetMapArea(0x8000, 0xBFFF, 1, (unsigned char *)(sms.sram + offset));
+				CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(sms.sram + offset));
+*/
+				CZetMapMemory((unsigned char *)(sms.sram + offset), 0x8000, 0xBFFF, MAP_RAM); // ok
+
 #endif
-                }
-                else
-                {
-					offset = ((sms.fcr[3] % cart.pages) << 14);
+			}
+			else
+			{
+				offset = ((sms.fcr[3] % cart.pages) << 14);
 // vbt 15/05/2008 : exophase :	 data & cart.pages, and set cart.pages to one less than you are
 #ifdef RAZE
-					z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
-					z80_map_read(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
-					z80_map_write(0x8000, 0xBFFF, (unsigned char *)(dummy_write));
+				z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
+				z80_map_read(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
+				z80_map_write(0x8000, 0xBFFF, (unsigned char *)(dummy_write));
 #else
-					CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(cart.rom + offset));
-					CZetMapArea(0x8000, 0xBFFF, 1, (unsigned char *)(dummy_write));
-					CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(cart.rom + offset));
+				CZetMapMemory((unsigned char *)(cart.rom + offset), 0x8000, 0xBFFF, MAP_ROM);
+//				CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(cart.rom + offset));
+				CZetMapMemory((unsigned char *)(dummy_write), 0x8000, 0xBFFF, MAP_WRITE);
+//				CZetMapArea(0x8000, 0xBFFF, 1, (unsigned char *)(dummy_write));
+//				CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(cart.rom + offset));
 #endif
-                }
-				break;
-            case 1:
-#ifdef RAZE
-				z80_map_fetch(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
-				z80_map_read(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
-#else
-				CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)(cart.rom + offset));
-				CZetMapArea(0x0000, 0x3FFF, 2, (unsigned char *)(cart.rom + offset));
-#endif
+			}
 			break;
-
-            case 2:
+		case 1:
+			offset = (data % cart.pages) << 14;
 #ifdef RAZE
-				z80_map_fetch(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
-				z80_map_read(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
+			z80_map_fetch(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
+			z80_map_read(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
 #else
-				CZetMapArea(0x4000, 0x7FFF, 0, (unsigned char *)(cart.rom + offset));
-				CZetMapArea(0x4000, 0x7FFF, 2, (unsigned char *)(cart.rom + offset));
+//			CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)(cart.rom + offset));
+//			CZetMapArea(0x0000, 0x3FFF, 2, (unsigned char *)(cart.rom + offset));
+			CZetMapMemory((unsigned char *)(cart.rom + offset), 0x0000, 0x3FFF, MAP_ROM);
 #endif
-            break;
+		break;
 
-            case 3:
-
-			if(!(sms.fcr[0] & 0x08))
-            {
+		case 2:
+			offset = (data % cart.pages) << 14;
 #ifdef RAZE
-					z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
-					z80_map_read(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
+			z80_map_fetch(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
+			z80_map_read(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
 #else
-				CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(cart.rom + offset));
-				CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(cart.rom + offset));
+//			CZetMapArea(0x4000, 0x7FFF, 0, (unsigned char *)(cart.rom + offset));
+//			CZetMapArea(0x4000, 0x7FFF, 2, (unsigned char *)(cart.rom + offset));
+			CZetMapMemory((unsigned char *)(cart.rom + offset), 0x4000, 0x7FFF, MAP_ROM);
 #endif
-            }
-            break;
-        }
-#ifdef CZ80
+		break;
+
+		case 3:
+
+		if(!(sms.fcr[0] & 0x08))
+		{
+			offset = (data % cart.pages) << 14;
+#ifdef RAZE
+			z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
+			z80_map_read(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
+#else
+//			CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(cart.rom + offset));
+//			CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(cart.rom + offset));
+			CZetMapMemory((unsigned char *)(cart.rom + offset), 0x8000, 0xBFFF, MAP_ROM);			
+#endif
+		}
+		break;
 	}
-#endif
     return;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1728,28 +1774,28 @@ static void cpu_writemem16(unsigned int address, unsigned int data)
 #define Z80_MAP_DIRECT  0  /* Reads/writes are done directly */
 
 /* Bank #0 */ 
-z80_map_fetch (0x0000, 0x3FFF, (unsigned char *)(&cart.rom[0])); 
-z80_map_read (0x0000, 0x3FFF, (unsigned char *)(&cart.rom[0])); 
+z80_map_fetch (0x0000, 0x3FFF, (unsigned char *)cart.rom); 
+z80_map_read (0x0000, 0x3FFF, (unsigned char *)cart.rom); 
 
 /* Bank #1 */ 
-z80_map_fetch (0x4000, 0x7FFF, (unsigned char *)(&cart.rom[0x4000])); 
-z80_map_read (0x4000, 0x7FFF, (unsigned char *)(&cart.rom[0x4000])); 
+z80_map_fetch (0x4000, 0x7FFF, (unsigned char *)(cart.rom+0x4000)); 
+z80_map_read (0x4000, 0x7FFF, (unsigned char *)(cart.rom+0x4000)); 
 
 /* Bank #2 */ 
-z80_map_fetch (0x8000, 0xBFFF, (unsigned char *)(&cart.rom[0x8000])); 
-z80_map_read (0x8000, 0xBFFF, (unsigned char *)(&cart.rom[0x8000])); 
+z80_map_fetch (0x8000, 0xBFFF, (unsigned char *)(cart.rom+0x8000)); 
+z80_map_read (0x8000, 0xBFFF, (unsigned char *)(cart.rom+0x8000)); 
 
 /* RAM */ 
-z80_map_fetch (0xC000, 0xDFFF, (unsigned char *)(&sms.ram[0])); 
-z80_map_read (0xC000, 0xDFFF, (unsigned char *)(&sms.ram[0])); 
-z80_map_write (0xC000, 0xDFFF, (unsigned char *)(&sms.ram[0])); 
+z80_map_fetch (0xC000, 0xDFFF, (unsigned char *)sms.ram); 
+z80_map_read (0xC000, 0xDFFF, (unsigned char *)sms.ram); 
+z80_map_write (0xC000, 0xDFFF, (unsigned char *)sms.ram); 
 
 /* RAM (mirror) */ 
-z80_map_fetch (0xE000, 0xFFFF, (unsigned char *)(&sms.ram[0])); 
-z80_map_read (0xE000, 0xFFFF, (unsigned char *)(&sms.ram[0])); 
-z80_map_write (0xE000, 0xFFFF, (unsigned char *)(&sms.ram[0])); 
+z80_map_fetch (0xE000, 0xFFFF, (unsigned char *)sms.ram); 
+z80_map_read (0xE000, 0xFFFF, (unsigned char *)sms.ram); 
+z80_map_write (0xE000, 0xFFFF, (unsigned char *)sms.ram); 
 
-//z80_add_write(0xC000, 0xFFFF, Z80_MAP_DIRECT, (void *)(&sms.ram[0]));
+//z80_add_write(0xC000, 0xFFFF, Z80_MAP_DIRECT, (void *)sms.ram);
 //z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 
@@ -1765,27 +1811,32 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 /* Bank #0 */ 
-	CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)(&cart.rom[0]));
-	CZetMapArea(0x0000, 0x3FFF, 2, (unsigned char *)(&cart.rom[0]));
-
+//	CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)cart.rom);
+//	CZetMapArea(0x0000, 0x3FFF, 2, (unsigned char *)cart.rom);
+	CZetMapMemory((unsigned char *)cart.rom, 0x0000, 0x3FFF, MAP_ROM);
+				
 /* Bank #1 */ 
-	CZetMapArea(0x4000, 0x7FFF, 0, (unsigned char *)(&cart.rom[0x4000]));
-	CZetMapArea(0x4000, 0x7FFF, 2, (unsigned char *)(&cart.rom[0x4000]));
+//	CZetMapArea(0x4000, 0x7FFF, 0, (unsigned char *)(cart.rom+0x4000));
+//	CZetMapArea(0x4000, 0x7FFF, 2, (unsigned char *)(cart.rom+0x4000));
+	CZetMapMemory((unsigned char *)cart.rom+0x4000, 0x4000, 0x7FFF, MAP_ROM);
 
 /* Bank #2 */ 
-	CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(&cart.rom[0x8000]));
-	CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(&cart.rom[0x8000]));
-
+//	CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(cart.rom+0x8000));
+//	CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(cart.rom+0x8000));
+	CZetMapMemory((unsigned char *)cart.rom+0x8000, 0x8000, 0xBFFF, MAP_ROM);
+	
 /* RAM */
-	CZetMapArea(0xC000, 0xDFFF, 0, (unsigned char *)(&cart.rom[0]));
-	CZetMapArea(0xC000, 0xDFFF, 1, (unsigned char *)(&cart.rom[0]));
-	CZetMapArea(0xC000, 0xDFFF, 2, (unsigned char *)(&cart.rom[0]));
-
+//	CZetMapArea(0xC000, 0xDFFF, 0, (unsigned char *)cart.rom);
+//	CZetMapArea(0xC000, 0xDFFF, 1, (unsigned char *)cart.rom);
+//	CZetMapArea(0xC000, 0xDFFF, 2, (unsigned char *)cart.rom);
+	CZetMapMemory((unsigned char *)cart.rom, 0xC000, 0xDFFF, MAP_RAM);
+	
 /* RAM (mirror) */ 
-	CZetMapArea(0xE000, 0xFFFF, 0, (unsigned char *)(&cart.rom[0]));
-//	CZetMapArea(0xE000, 0xFFFF, 1, (unsigned char *)(&cart.rom[0]));
-	CZetMapArea(0xE000, 0xFFFF, 2, (unsigned char *)(&cart.rom[0]));
-
+//	CZetMapArea(0xE000, 0xFFFF, 0, (unsigned char *)cart.rom);
+//	CZetMapArea(0xE000, 0xFFFF, 1, (unsigned char *)cart.rom);
+//	CZetMapArea(0xE000, 0xFFFF, 2, (unsigned char *)cart.rom);
+	CZetMapMemory((unsigned char *)cart.rom, 0xE000, 0xFFFF, MAP_ROM);
+	
 	CZetSetWriteHandler(cpu_writemem8);
 	CZetSetInHandler(cz80_z80_readport16);
 	CZetSetOutHandler(cz80_z80_writeport16);

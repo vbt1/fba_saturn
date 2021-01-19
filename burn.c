@@ -4,7 +4,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 58
+#define NB_DRV 55
 struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -139,7 +139,7 @@ void BurnDrvAssignList()
 
 //	static struct BurnDriver BurnDrvHangonjr = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvTetrisse = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-	static struct BurnDriver BurnDrvTransfrm = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+//	static struct BurnDriver BurnDrvTransfrm = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvFantzn2  = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvAstrofl = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvOpaopa = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
@@ -149,11 +149,11 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvSidearms = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvRobokid = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvNinjakd2a = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};	
-	static struct BurnDriver BurnDrvNineteen43 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+//	static struct BurnDriver BurnDrvNineteen43 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvOmegafs = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvMnight = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 
-	static struct BurnDriver BurnDrvNineteen43b = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+//	static struct BurnDriver BurnDrvNineteen43b = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 
 BurnDrvsms_akmw.szShortName="sms";
 BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
@@ -390,11 +390,11 @@ BurnDrvHangonjr.szParent="segae"	;
 BurnDrvTetrisse.szShortName="tetrisse";
 BurnDrvTetrisse.szFullNameA="Tetris (Japan, System E)";
 BurnDrvTetrisse.szParent="segae";
-
+/*
 BurnDrvTransfrm.szShortName="transfrm";
 BurnDrvTransfrm.szFullNameA="Transformer";
 BurnDrvTransfrm.szParent="segae";
-
+*/
 BurnDrvFantzn2.szShortName="fantzn2";
 BurnDrvFantzn2.szFullNameA="Fantasy Zone 2 - The Tears of Opa-Opa";
 BurnDrvFantzn2.szParent="segae";
@@ -434,14 +434,14 @@ BurnDrvNinjakd2a.szParent="ninkd2";
 BurnDrvMnight.szShortName="mnight";
 BurnDrvMnight.szFullNameA="Mutant Night";
 BurnDrvMnight.szParent="ninkd2";
-
+/*
 BurnDrvNineteen43b.szShortName="1943b";
 BurnDrvNineteen43b.szFullNameA="1943: The Battle of Midway (btlg1 JP)";
 BurnDrvNineteen43b.szParent="1943";
 
 BurnDrvNineteen43.szShortName="1943";
 BurnDrvNineteen43.szFullNameA="1943: The Battle of Midway (Euro)";
-
+*/
 //BurnDrvFM.szShortName="fm";
 //BurnDrvFM.szFullNameA="FM Test Driver";
 //BurnDrvFM.szParent="blktgr";
@@ -454,8 +454,8 @@ pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 pDriver[i++] = &BurnDrvsg1k_wboy;
 pDriver[i++] = &BurnDrvMSX_1942;
-pDriver[i++] = &BurnDrvNineteen43;
-pDriver[i++] = &BurnDrvNineteen43b;
+//pDriver[i++] = &BurnDrvNineteen43;
+//pDriver[i++] = &BurnDrvNineteen43b;
 
 pDriver[i++] = &BurnDrvAppoooh;
 //pDriver[i++] = &BurnDrvAstrofl;
@@ -511,7 +511,7 @@ pDriver[i++] = &BurnDrvSzaxxon;
 pDriver[i++] = &BurnDrvTeddybb;
 pDriver[i++] = &BurnDrvTetrisse;
 pDriver[i++] = &BurnDrvTigerHB1;
-pDriver[i++] = &BurnDrvTransfrm;
+//pDriver[i++] = &BurnDrvTransfrm;
 //pDriver[i++] = &BurnDrvVigilant;
 pDriver[i++] = &BurnDrvWiz;
 pDriver[i++] = &BurnDrvWboyu;

@@ -704,9 +704,7 @@ void ninjakd2_sound_init()
 	CZetOpen(1);
 
 //	CZetMapMemory(DrvZ80ROM1, 0x0000, 0xbfff, MAP_ROM);
-
-	CZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM1);
-	CZetMapArea2(0x0000, 0xbfff, 2, DrvZ80ROM1 + 0x10000, DrvZ80ROM1);
+	CZetMapMemory2(DrvZ80ROM1 + 0x10000, DrvZ80ROM1, 0x0000, 0xbfff, MAP_ROM);
 
 	CZetMapMemory(DrvZ80RAM1,		0xc000, 0xc7ff, MAP_RAM);
 	CZetSetOutHandler(ninjakd2_sound_write_port);
