@@ -17,14 +17,14 @@ int ovlInit(char *szShortName)
 		wizRomInfo, wizRomName, WizInputInfo, WizDIPInfo,
 		WizInit, DrvExit, DrvFrame
 	};
-
+/*
 	struct BurnDriver nBurnDrvKungfut = {
 		"kungfut", "wiz", 
 		"Kung-Fu Taikun",
 		kungfutRomInfo, kungfutRomName, KungfutInputInfo, KungfutDIPInfo,
 		KungfutInit, DrvExit, DrvFrame 
 	};
-/*
+
 	struct BurnDriver nBurnDrvStinger = {
 		"stinger", "wiz", 
 		"Stinger",
@@ -41,8 +41,8 @@ int ovlInit(char *szShortName)
 
 	if (strcmp(nBurnDrvWiz.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvWiz,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvKungfut.szShortName, szShortName) == 0) 
-	memcpy(shared,&nBurnDrvKungfut,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvKungfut.szShortName, szShortName) == 0) 
+//	memcpy(shared,&nBurnDrvKungfut,sizeof(struct BurnDriver));
 //	if (strcmp(nBurnDrvStinger.szShortName, szShortName) == 0) 
 //	memcpy(shared,&nBurnDrvStinger,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvScion.szShortName, szShortName) == 0) 

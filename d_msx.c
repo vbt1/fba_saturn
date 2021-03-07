@@ -39,7 +39,7 @@ static void ChangeDir(char *dirname)
     Sint32 fid;
 	GfsDirTbl dirtbl;
 	static GfsDirId dir_name[MAX_DIR];
-	char dir_upr[12];
+	char dir_upr[13];
 	char *ptr=&dir_upr[0];
 	strcpy(dir_upr,dirname);
 	ptr = strupr(ptr);
@@ -54,31 +54,6 @@ static void ChangeDir(char *dirname)
     file_max = GFS_LoadDir(fid, &dirtbl)-2;
 	GFS_SetDir(&dirtbl) ;
 }
-
-/*
-static void ChangeDir(char *dirname)
-{
-    Sint32 fid;
-	GfsDirTbl dirtbl;
-	static GfsDirId dir_name[MAX_DIR];
-//	char dir_upr[12];
-//	char *ptr=&dir_upr[0];
-//	strcpy(dir_upr,dirname);
-//	ptr = strupr(ptr);
-//    fid = GFS_NameToId((Sint8 *)dir_upr);
-    fid = GFS_NameToId((Sint8 *)dirname);
-//	ptr = NULL;
-
-	GFS_DIRTBL_TYPE(&dirtbl) = GFS_DIR_NAME;
-	GFS_DIRTBL_DIRNAME(&dirtbl) = dir_name;
-	GFS_DIRTBL_NDIR(&dirtbl) = MAX_DIR;
-
-//	for (;;) {
-    file_max = GFS_LoadDir(fid, &dirtbl)-2;
-	GFS_SetDir(&dirtbl) ;
-}
-*/
-
 
 //int vbt=0;
 //-------------------------------------------------------------------------------------------------------------------------------------

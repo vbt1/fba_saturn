@@ -276,8 +276,9 @@ static void SCL_CopyReg(void);
 static void SCL_SetLineParamNBG0(SclLineparam *lp);
 /*static*/ void SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
 static void SCL_ParametersInit(void);
-static void ss_main(void);
+static inline void ss_main(void);
 static void VDP2_InitVRAM(void);
+static void SCL_InitLineParamTb(SclLineparam *lp);
 //void displayMenu(void);
 //trigger_t	PER_GetTrigger( const SysDevice	*this );
 

@@ -12,7 +12,7 @@ unsigned char curr_sprite=0;
 
 /* Attribute expansion table */
 //-------------------------------------------------------------------------------------------------------------------------------------
-int ovlInit(char *szShortName)
+volatile int ovlInit(char *szShortName)
 {
 	cleanBSS();
 #ifdef RAZE
@@ -1887,7 +1887,7 @@ Bit 08 - 00 : Pattern Index
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/inline  void make_bp_lut(void)
+/*static*/ void make_bp_lut(void)
 {
     unsigned int i, j;
     for(j = 0; j < 0x10000; j++)

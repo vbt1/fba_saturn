@@ -1,6 +1,7 @@
 //#define DEBUG 1
 #include "saturn_snd.h"
-PcmHn 	pcmStream = NULL;
+char *itoa(int i);
+PcmHn 	pcmStream = {NULL};
 PcmCreatePara	paraStream = {.ring_size = 0, .pcm_size = 0, .ring_addr = NULL, .pcm_addr = NULL};
 unsigned char stm_work[STM_WORK_SIZE(12, 24)] = {NULL};
 StmHn stm = NULL;
@@ -54,7 +55,6 @@ void stmClose(StmHn fp)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifdef DEBUG
-
 void errStmFunc(void *obj, Sint32 ec)
 {
 	char texte[50];
@@ -141,7 +141,104 @@ void SetStreamPCM()
 	pcmStream = PCM_CreateStmHandle(&paraStream, stm);
 	PCM_SetPcmStreamNo(pcmStream, 0);
 	PCM_SetInfo(pcmStream, &info);
-	PCM_ChangePcmPara(pcmStream);	
+	PCM_ChangePcmPara(pcmStream);
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+		{
+/*			extern PcmHn pcm;
+	//			PCM_MeStop(pcm);
+	
+	PcmCreatePara	para;
+	PCM_PARA_WORK(&para)			= (struct PcmWork *)&g_movie_work[1];
+	
+	st = &g_movie_work[1].status;
+	st->need_ci = PCM_OFF;
+	 
+		PCM_INFO_FILE_TYPE(&info[1]) = PCM_FILE_TYPE_NO_HEADER;			
+		PCM_INFO_DATA_TYPE(&info[1])=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+		PCM_INFO_CHANNEL(&info[1]) = 0x01;
+		PCM_INFO_SAMPLING_BIT(&info[1]) = 16;
+
+		PCM_INFO_SAMPLING_RATE(&info[1])	= SOUNDRATE;//30720L;//44100L;
+	
+	
+	
+	
+	
+
+
+	
+			PCM_PARA_RING_ADDR(&para)	= (Sint8 *)PCM_ADDR+0x40000+PCM_BLOCK_SIZE;
+			PCM_PARA_RING_SIZE(&para)		= RING_BUF_SIZE;//<<1;
+
+			PCM_PARA_PCM_ADDR(&paraStream)	= PCM_ADDR+PCM_BLOCK_SIZE;
+			PCM_INFO_SAMPLE_FILE(&info[1]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
+			PCM_INFO_FILE_SIZE(&info[1]) = PCM_COPY_SIZE;//SOUNDRATE*2;//0x4000;//214896;
+			
+			pcm = PCM_CreateMemHandle(&para);
+
+			PCM_SetPcmStreamNo(pcm, 1);
+
+			PCM_SetInfo(pcm, &info[1]);
+// vbt : ajout
+//			PCM_SetPcmCmdBlockNo(pcm14[i], i);
+//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
+			PCM_ChangePcmPara(pcm);	
+			
+			PCM_Start(pcm);
+			
+			*/
+			
+		
+			
+			
+		}
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+	
+/*
+
+			PCM_PARA_RING_ADDR(&paraStream)	= (Sint8 *)PCM_ADDR+0x40000;
+			PCM_PARA_RING_SIZE(&paraStream)		= RING_BUF_SIZE; //0x20000;
+			
+		PCM_PARA_PCM_ADDR(&paraStream)	= PCM_ADDR+(PCM_BLOCK_SIZE*0); //*(i+1));
+		PCM_PARA_PCM_SIZE(&paraStream)		= PCM_SIZE;
+
+		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
+		st = &g_movie_work.status;
+		st->need_ci = PCM_OFF;
+//		st->audio_process_fp = vbt_pcm_AudioProcess;
+	 
+		PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
+		PCM_INFO_DATA_TYPE(&info)=PCM_DATA_TYPE_RLRLRL;//PCM_DATA_TYPE_LRLRLR;
+		PCM_INFO_CHANNEL(&info) = 0x01;
+		PCM_INFO_SAMPLING_BIT(&info) = 16;
+
+		PCM_INFO_SAMPLING_RATE(&info)	= SOUNDRATE;//30720L;//44100L;		
+
+			PCM_INFO_FILE_SIZE(&info) = sfx_list[0].size;//SOUNDRATE*2;//0x4000;//214896;
+
+
+			STM_ResetTrBuf(stm);
+			pcmStream = PCM_CreateStmHandle(&paraStream, stm);
+			PCM_SetPcmStreamNo(pcmStream, 0);
+			PCM_SetInfo(pcmStream, &info);
+// vbt ajout 
+//			PCM_SetPcmCmdBlockNo(pcm14[i], i);
+//			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
+			PCM_ChangePcmPara(pcmStream);
+	*/		
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void UpdateStreamPCM(Uint8 data, PcmHn *hn, PcmCreatePara *para)
@@ -194,6 +291,8 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void playMusic(PcmHn *hn)
 {
+	 Sint32 stat;
+/*	// wrong !
 #ifdef DEBUG
 	PcmWork		*work = *(PcmWork **)hn;
 	PcmStatus	*st= &work->status;
@@ -213,15 +312,59 @@ void playMusic(PcmHn *hn)
 	else if (st->play ==PCM_STAT_PLAY_END)
 			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,40);
 	else
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40);
-#endif
-    STM_ExecServer();
-
-	PCM_MeTask(hn[0]);
-
-	if (STM_IsTrBufFull(hn[0]) == TRUE) 
 	{
-		STM_ResetTrBuf(hn[0]);
+			char toto[50];
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40);
+			sprintf(toto,"errcode : %04x ",st->play);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)toto,40,50);
+			st->play=PCM_STAT_PLAY_ERR_STOP;
+//			while(1);
+	}
+#endif
+*/
+//	if(st->play>PCM_STAT_PLAY_ERR_STOP && st->play<=PCM_STAT_PLAY_END)
+	{
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ExecServer   ",80,140);	
+			stat = STM_ExecServer();
+#ifdef DEBUG
+		if(stat ==STM_EXEC_COMPLETED)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"EXEC_COMPLETED",40,40);
+		else if (stat ==STM_EXEC_PAUSE)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"EXEC_PAUSE   ",40,40);
+		else if (stat ==STM_EXEC_DOING)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"EXEC_DOING   ",40,40);
+		else if (stat ==STM_EXEC_WAIT)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"EXEC_WAIT   ",40,40);
+		else if (stat ==STM_EXEC_TSKEND)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"EXEC_TSKEND",40,40);
+		else if (stat ==STM_EXEC_END)
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"EXEC_END   ",40,40);
+		else
+		{
+				char toto[50];
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40);
+				sprintf(toto,"errcode : %04x ",stat);
+				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)toto,40,50);
+	//			stat=PCM_STAT_PLAY_ERR_STOP;
+	//			while(1);
+		}
+#endif		
+		
+		
+//		if(stat==STM_EXEC_DOING)
+		{		
+			
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"PCM_MeTaskX      ",80,140);
+			PCM_MeTask(hn[0]);
+
+			if (STM_IsTrBufFull(hn[0]) == TRUE) 
+			{
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ResetTrBuf   ",80,140);
+				
+				STM_ResetTrBuf(hn[0]);
+			}
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ResetTrend   ",80,140);
+		}
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

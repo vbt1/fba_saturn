@@ -5,7 +5,7 @@
 
 //char toto[0xF00] ={'0','0'};
 #define NB_DRV 55
-struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
+volatile struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
 
@@ -122,7 +122,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvRobowres = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvBlktiger = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvWiz	= {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-	static struct BurnDriver BurnDrvKungfut = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+//	static struct BurnDriver BurnDrvKungfut = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvStinger = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvScion = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvTigerHB1 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
@@ -334,11 +334,11 @@ BurnDrvBlktiger.szParent="blktgr";
 BurnDrvWiz.szShortName="wiz";
 BurnDrvWiz.szFullNameA="Wiz";
 //BurnDrvWiz.szParent=NULL;
-
+/*
 BurnDrvKungfut.szShortName="kungfut";
 BurnDrvKungfut.szFullNameA="Kung-Fu Taikun";
 BurnDrvKungfut.szParent="wiz";
-/*
+
 BurnDrvStinger.szShortName="stinger";
 BurnDrvStinger.szFullNameA="Stinger";
 BurnDrvStinger.szParent="wiz";

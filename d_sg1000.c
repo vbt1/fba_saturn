@@ -35,7 +35,7 @@ static void ChangeDir(char *dirname)
     Sint32 fid;
 	GfsDirTbl dirtbl;
 	static GfsDirId dir_name[MAX_DIR];
-	char dir_upr[12];
+	char dir_upr[13];
 	char *ptr=&dir_upr[0];
 	strcpy(dir_upr,dirname);
 	ptr = strupr(ptr);

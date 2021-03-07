@@ -17,7 +17,7 @@ void heapWalk(void);
 #endif
 
 //#define DEBUG_DRV 1
-/*volatile*/ SysPort	*__port;
+volatile SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
 extern unsigned char play;
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ void	UsrVblankIn( void )
 #endif
 	PCM_MeVblIn();
 	SCL_ScrollShow();
-	
+
 #ifndef ACTION_REPLAY
 
 	if(play)
@@ -90,7 +90,6 @@ int main(void)
 	set_imask(0); 
 	
 	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
-	
 	ss_main();
 	return 0;
 }
@@ -297,17 +296,17 @@ static void initSaturn()
 //	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00000000,0x80000);
 	resetLayers();
 
-
 //	memset(pltrigger[0],0x00,sizeof(trigger_t));
 //	memset(pltriggerE[0],0x00,sizeof(trigger_t));
 
 	play = 0;
+
 	resetColors();
 	initSprites(352-1,240-1,0,0,0,0);
-	
 	SetVblank();
+
 	SCL_SetLineParamNBG0(&lp);
-		memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
+	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
 
 wait_vblank();
 	play=1;
@@ -338,7 +337,7 @@ wait_vblank();
 	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void ss_main(void)
+static inline void ss_main(void)
 {
 //		DMA_ScuInit();
 
@@ -347,6 +346,7 @@ static void ss_main(void)
 	InitCD();
 #endif
 	hz = get_hz();
+	
 	initSound();
 	CSH_Init(CSH_4WAY);
 	initSaturn();
@@ -355,7 +355,7 @@ static void ss_main(void)
 #ifndef ACTION_REPLAY
 	if(FntAsciiFontData2bpp==NULL)
 		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
-	GFS_Load(GFS_NameToId("FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
+	GFS_Load(GFS_NameToId((Sint8*)"FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
 #endif
 //	unsigned char *Mem = malloc((unsigned char *)MALLOC_MAX);
 //	memset(Mem,0x00,MALLOC_MAX);
@@ -368,14 +368,14 @@ static void ss_main(void)
 	}
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
-static void wait_key(Uint8 key)
+static void wait_key() //Uint8 key)
 {
 	SysDevice	*device;
 	do
 	{
 		device = PER_GetDeviceR( &__port[0], 0 );
 		pltrigger[0]  = PER_GetTrigger( device );
-	}while((pltrigger[0] & PER_DGT_B)==0) ;
+	}while((pltrigger[0] & PER_DGT_B)==0);
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 static void load_img(int id)
@@ -387,7 +387,7 @@ static void load_img(int id)
 
 	if(id!=0)
 	{
-	 	wait_key((Uint8)PER_DGT_B);
+	 	wait_key();//(Uint8)PER_DGT_B);
 		load_img(0);
 	}
 }
@@ -488,7 +488,6 @@ static void display_menu(void)
 		{
 // nettoyage emplacement du driver
 			memset((volatile void *)OVLADDR,0x00,SIZEMAX);
-// vbt à remette			
 #ifndef DEBUG_DRV
 			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			load_img(0);	
@@ -572,6 +571,7 @@ static void SCL_CopyReg()
 		regaddr[0] = Scl_s_reg.tvmode;		/* add				by C.Y	*/
 		regaddr[1] = Scl_s_reg.extenbl;		/* add				by C.Y	*/
 		regaddr[3] = Scl_s_reg.vramsize;		/* add				by C.Y	*/
+
 		memcpyw(&regaddr[7] , &Scl_s_reg.ramcontrl , 26 );
 		memcpyl(&regaddr[0x14], &Scl_d_reg, sizeof(SclDataset));
 	    memcpyw(&regaddr[0x60], &Scl_w_reg, sizeof(SclWinscl));
@@ -579,13 +579,13 @@ static void SCL_CopyReg()
 		memcpyl((SclOtherPriRegister *)0x25F800E0, &SclOtherPri, sizeof(SclOtherPri));
 		memcpyl((SclSpPriNumRegister *)0x25F800F0, &SclSpPriNum, sizeof(SclSpPriNum));
 		memcpyl((SclBgPriNumRegister *)0x25F800F8, &SclBgPriNum, sizeof(SclBgPriNum));
-		memcpyl((SclBgColMixRegister *)0x25F80108, &SclBgColMix, sizeof(SclBgColMix));
+		memcpyw((SclBgColMixRegister *)0x25F80108, &SclBgColMix, sizeof(SclBgColMix));
 	}
     //SCL_Memcpyw(&regaddr[0x38], &Scl_n_reg, sizeof(SclNorscl));
 //	memcpyl(&regaddr[0x38], &Scl_n_reg, sizeof(SclNorscl));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void SCL_InitLineParamTb(SclLineparam *lp)
+static inline void SCL_InitLineParamTb(SclLineparam *lp)
 {
 	lp->h_enbl = OFF;
 	lp->v_enbl = OFF;
@@ -1245,7 +1245,7 @@ static int DoInputBlank()
   int iJoyNum = 0;
    int i=0; 
   // Reset all inputs to undefined (even dip switches, if bDipSwitch==1)
-  char controlName[12];
+  char controlName[13];
   
   DIPInfo.nDIP = 0;
   // Get the targets in the library for the Input Values
@@ -1622,7 +1622,7 @@ static void do_keypad(unsigned int key[])
 		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- I/O Error",3,170);		
 		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"- Memory error",3,180);
 		
-		wait_key((Uint8)PER_DGT_A);
+		wait_key();//(Uint8)PER_DGT_A);
 	}
 	else
 	{
@@ -1630,9 +1630,10 @@ static void do_keypad(unsigned int key[])
 		InpInit();
 		InpDIP();
 		play = 1;
-	//	PCM_Start(pcm);
+
 		PCM_MeSetVolume(pcm,255);
 		PCM_DrvChangePcmPara(pcm,-1,-1);
+
 	//	PER_SMPC_SND_ON();
 //		SetVblank(); // a garder
 // vbt 23/04/2020 : ne devrait pas servir
@@ -1644,7 +1645,6 @@ static void do_keypad(unsigned int key[])
 			while (play)
 			{
 				Frame();
-	 
 				SCL_SetLineParamNBG0(&lp);
 				_spr2_transfercommand();
 				frame_x++;

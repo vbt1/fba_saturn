@@ -26,10 +26,10 @@ typedef unsigned int dword;
 typedef void (*write_func)(unsigned short a, byte d);
 typedef byte (*read_func)(unsigned short a);
 
-extern unsigned char *Read[0x100];
-extern unsigned char *Write[0x100];
-extern write_func wf[0x100];
-extern read_func rf[0x100];
+static unsigned char *Read[0x100];
+static unsigned char *Write[0x100];
+static write_func wf[0x100];
+static read_func rf[0x100];
 extern unsigned char *Drv6502RAM;
 extern unsigned char *Drv6502ROM;
 

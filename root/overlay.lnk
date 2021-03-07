@@ -78,7 +78,9 @@ SECTIONS {
 		. = ALIGN(4);
 		
 	   __rodata_start = .;
+	   . = ALIGN(4);
 	   *(.rodata)
+	   *(.rodata.*)	   
 	   __rodata_end = .;	
 	   
 		__dendo = . ;

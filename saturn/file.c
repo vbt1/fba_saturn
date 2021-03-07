@@ -34,7 +34,7 @@
 #ifndef ACTION_REPLAY
 //extern signed int file_max;
 static GfsDirId dir_name[MAX_DIR];
-static Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
+//static Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
 #endif
 
 //#define VBT
@@ -79,7 +79,7 @@ void ChangeDir(char *dirname)
 #ifndef ACTION_REPLAY	
     Sint32 fid;
 	GfsDirTbl dirtbl; 
-	char dir_upr[12];
+	char dir_upr[13];
 	strcpy(dir_upr,dirname);
     fid = GFS_NameToId((Sint8 *)strupr(dir_upr));
 

@@ -9,8 +9,8 @@ static cz80_struc* CZetCPUContext = NULL;
 //static 
 //cz80_struc CZetCPUContext[2];
 static cz80_struc* lastCZetCPUContext = NULL;
-/*static*/ int nOpenedCPU = -1;
-/*static*/ int nCPUCount = 0;
+static int nOpenedCPU = -1;
+static int nCPUCount = 0;
 
 unsigned char __fastcall CZetDummyReadHandler(unsigned short a) { return 0; }
 void __fastcall CZetDummyWriteHandler(unsigned short a, unsigned char b) { }

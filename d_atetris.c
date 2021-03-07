@@ -99,9 +99,10 @@ int ovlInit(char *szShortName)
 		nvram_enable = 0;
 		return;
 	}
-
+#if 0
 	if (is_Bootleg) // Bootleg set 2 sound system
 	{
+#endif		
 		switch (address)
 		{
 			case 0x2802:
@@ -116,6 +117,7 @@ int ovlInit(char *szShortName)
 //				SN76496Write(2, data);
 			return;
 		}
+#if 0		
 	}
 	else
 	{
@@ -128,6 +130,7 @@ int ovlInit(char *szShortName)
 			return;
 		}
 	}			
+#endif
 
 	switch (address & ~0x03ff)
 	{

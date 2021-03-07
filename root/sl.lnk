@@ -65,6 +65,7 @@ SECTIONS {
 	{			
 /*	   __rodata_start = .;*/
 	   *(.rodata)
+	   *(.rodata.*)
 /*	   __rodata_end = .;*/
 	} > ram
 
