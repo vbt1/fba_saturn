@@ -2,6 +2,23 @@
 #include "SEGA_INT.H"
 #include "SEGA_DMA.H"
 
+#define	SZ_PERIPHERAL	20
+typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
+
+typedef	struct	{
+	UINT8			id;
+	UINT8			connectable;
+	SysPeripheral	*peripheral;
+} SysPort;
+
+extern SysPort	*__port;
+
+typedef	struct	SysDevice	{
+	UINT8	type;
+	UINT8	size;
+	UINT8	data[1];
+} SysDevice;
+
 void dummy();
 
 /*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
@@ -300,6 +317,7 @@ Reset Functions
 	System1BankedRom = 0;
 	System1BankSwitch = 0;
 	memset(map_dirty,1,8);
+		__port = PER_OpenPort();
 	return 0;
 }
 
@@ -359,6 +377,7 @@ void __fastcall System1Z801PortWrite(unsigned short a, UINT8 d)
 		case 0x1c: return; // NOP
 	}
 }
+//unsigned short ss_mapx[0x4000];
 
 void system1_backgroundram_w(unsigned short a, UINT8 d)
 {	 
@@ -425,9 +444,9 @@ void system1_paletteram2_w(unsigned short a, UINT8 d)
 
 void system1_paletteram3_w(unsigned short a, UINT8 d)
 {
-		a&= 0x5ff;	
-		if(System1PaletteRam[a]!=d)
-			{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d]; System1PaletteRam[a] = d;}
+	a&= 0x5ff;	
+	if(System1PaletteRam[a]!=d)
+		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d]; System1PaletteRam[a] = d;}
 }
 
 UINT8 __fastcall System1Z802ProgRead(unsigned int a)
@@ -485,10 +504,10 @@ void initColors()
 void initLayers()
 {
     Uint16	CycleTb[]={
-		0x1f56, 0xeeee, //A0
-		0xffff, 0xffff,	//A1
-		0xf5f2,0x4eee,   //B0
-		0xffff, 0xffff  //B1
+		0x1e56, 0xeeee, //A0
+		0xeeee, 0xeeee,	//A1
+		0xe5e2,0x4eee,   //B0
+		0xeeee, 0xeeee  //B1
 	};
  	SclConfig	scfg;
 
@@ -637,7 +656,7 @@ void initLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2Size, int nTileRomNum, int nTileRomSize, int nSpriteRomNum, int nSpriteRomSize, bool bReset)
 {
-	int nRet = 0, n, i, RomOffset;
+	int nRet = 0, i, RomOffset;
 	struct BurnRomInfo ri;
 
 	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
@@ -713,15 +732,15 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
 	}
 
-	UINT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
+	INT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
 
-	UINT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
-	UINT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
+	INT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	INT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"GfxDecode4Bpp                     ",20,100);
 
 	if (System1NumTiles > 0x800)
 	{
-		UINT32 NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
+		INT32 NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
 		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, NoboranbTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, cache);
 	}
 	else
@@ -888,34 +907,35 @@ int System1Exit()
 	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
 	nBurnFunction = NULL;
 
-    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
-    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
-	memset(map_dirty,1,0);
+//    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
+//    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
+	
+	memset(map_dirty,0,8);
 	CZ80Context = NULL;
 
 	SN76496Exit();
 
-RamStart1 = RamStart               = NULL;
-System1Rom1 = System1Rom2 = NULL;
-System1PromRed = System1PromGreen = System1PromBlue = NULL;
-System1Ram1 = System1Ram2 = NULL;
-System1SpriteRam = System1PaletteRam = NULL;
-System1BgRam = System1VideoRam = NULL;
-System1ScrollXRam = System1BgCollisionRam = NULL;
-System1SprCollisionRam = NULL;
-System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
-/*System1Tiles =*/ SpriteOnScreenMap = NULL;
-System1Fetch1 = NULL;
-System1ScrollX = System1ScrollY = NULL;
+	RamStart1 = RamStart               = NULL;
+	System1Rom1 = System1Rom2 = NULL;
+	System1PromRed = System1PromGreen = System1PromBlue = NULL;
+	System1Ram1 = System1Ram2 = NULL;
+	System1SpriteRam = System1PaletteRam = NULL;
+	System1BgRam = System1VideoRam = NULL;
+	System1ScrollXRam = System1BgCollisionRam = NULL;
+	System1SprCollisionRam = NULL;
+	System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
+	/*System1Tiles =*/ SpriteOnScreenMap = NULL;
+	System1Fetch1 = NULL;
+	System1ScrollX = System1ScrollY = NULL;
 
-remap8to16_lut = NULL;
-map_offset_lut = NULL;
-cpu_lut = NULL;
-cram_lut = NULL;
-width_lut = NULL;
-spriteCache = NULL;
-map_cache = NULL;
-map_dirty = NULL;
+	remap8to16_lut = NULL;
+	map_offset_lut = NULL;
+	cpu_lut = NULL;
+	cram_lut = NULL;
+	width_lut = NULL;
+	spriteCache = NULL;
+	map_cache = NULL;
+	map_dirty = NULL;
 
 	System1Sprites = NULL;
 	free(Mem);
@@ -998,7 +1018,7 @@ Graphics Rendering
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void renderSpriteCache(int *values)
+inline void renderSpriteCache(int *values)
 //(int Src,unsigned int Height,INT16 Skip,unsigned int Width, int Bank)
 {
 	int Src = values[0];
@@ -1097,12 +1117,15 @@ void System1DrawSprites()
 			if (spriteCache[addr]!=0xFFFF)
 				DrawSpriteCache(i,addr,Skip,ss_spritePtr,SpriteBase);
 			else
-				 DrawSprite(i,Bank,addr,Skip,ss_spritePtr,SpriteBase);
+			{
+				 spriteCache[addr]=nextSprite;				
+				 DrawSprite(i,Bank,Skip,ss_spritePtr,SpriteBase);
+			}
 		}
 		else
 		{
 			ss_spritePtr->ax = ss_spritePtr->ay = ss_spritePtr->charSize = ss_spritePtr->charAddr = 0;
-			sprites_collision[i].width=0;
+//			sprites_collision[i].width=0;
 		}
 		
 		ss_spritePtr++;

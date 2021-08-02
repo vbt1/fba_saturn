@@ -4,6 +4,12 @@
 
 #define MAX_CPU		1
 
+static UINT8 *Read[0x100];
+static UINT8 *Write[0x100];
+static UINT8 *Fetch[0x100];
+static write_func wf[0x100];
+static read_func rf[0x100];
+
 INT32 M6502Init(INT32 cpu, INT32 type)
 {
 	for (INT32 j = 0; j < (0x0100); j++) {

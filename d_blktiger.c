@@ -1,12 +1,14 @@
 // FB Alpha Black Tiger driver module
 // Based on MAME driver by Paul Leaman
 
+//#pragma GCC optimize("Os")
+
 #include "d_blktiger.h"
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
 //#define DEBUG_PCM 1
-#define PCM_SFX 1
-#define PCM_MUSIC 1
+//#define PCM_SFX 1
+//#define PCM_MUSIC 1
 
 /*
 <vbt1> where and when you update the nbg map
@@ -41,7 +43,7 @@ vbt> <Kale_> Ok, have you asked to Arbee?
 //---------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
 {
-	cleanBSS();
+//	cleanBSS();
 
 	struct BurnDriver nBurnDrvBlktiger = {
 		"blktiger", "blktgr",
@@ -56,6 +58,8 @@ int ovlInit(char *szShortName)
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs = (SclSysreg *)SS_REGS;
 	ss_regd = (SclDataset *)SS_REGD;
+	
+	return 0;
 }
 
 /*static*/void palette_write(UINT32 offset)
@@ -105,7 +109,7 @@ int ovlInit(char *szShortName)
 #endif
 }
 
-void __fastcall blacktiger_write(UINT16 address, UINT8 data)
+void blacktiger_write(UINT16 address, UINT8 data)
 {
 	if ((address & 0xf800) == 0xd800) 				  // 	CZetMapArea(0xd800, 0xdfff, 0, DrvPalRAM);
 	{
@@ -162,18 +166,19 @@ void __fastcall blacktiger_write(UINT16 address, UINT8 data)
 	return;
 }
 
-UINT8 __fastcall blacktiger_read(UINT16 address)
+UINT8 blacktiger_read(UINT16 address)
 {
 	return 0;
 }
 
-void __fastcall blacktiger_out(UINT16 port, UINT8 data)
+void blacktiger_out(UINT16 port, UINT8 data)
 {
 	switch (port & 0xff)
 	{
 		case 0x00:
 		{
 			*soundlatch = data;
+#ifdef PLAY_SFX	
 			unsigned int i;
 			PcmStatus	*st=NULL;
 
@@ -269,6 +274,7 @@ if(i==0)
 					UpdateStreamPCM(data, &pcm14[0], &para[0]);
 				}
 			}
+#endif
 		}
 		return;
 
@@ -365,7 +371,7 @@ if(i==0)
 	}
 }
 
-UINT8 __fastcall blacktiger_in(UINT16 port)
+UINT8 blacktiger_in(UINT16 port)
 {
 	switch (port & 0xff)
 	{
@@ -390,7 +396,7 @@ UINT8 __fastcall blacktiger_in(UINT16 port)
 	return 0;
 }
 
-void __fastcall blacktiger_sound_write(UINT16 address, UINT8 data)
+void blacktiger_sound_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -420,7 +426,7 @@ void __fastcall blacktiger_sound_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 __fastcall blacktiger_sound_read(UINT16 address)
+UINT8 blacktiger_sound_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -547,15 +553,15 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 
 /*static*/ INT32 DrvGfxDecode()
 {
-	const UINT32 Plane[4] = { ((0x40000 * 8) / 2) + 4, ((0x40000 * 8) / 2) + 0, 4, 0 };
-	const UINT32 XOffs[16] = { 0, 1, 2, 3, 8+0, 8+1, 8+2, 8+3,
+	UINT32 Plane[4] = { ((0x40000 * 8) / 2) + 4, ((0x40000 * 8) / 2) + 0, 4, 0 };
+	UINT32 XOffs[16] = { 0, 1, 2, 3, 8+0, 8+1, 8+2, 8+3,
 			16*16+0, 16*16+1, 16*16+2, 16*16+3, 16*16+8+0, 16*16+8+1, 16*16+8+2, 16*16+8+3 };
-	const UINT32 YOffs[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16,
+	UINT32 YOffs[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16,
 			8*16, 9*16, 10*16, 11*16, 12*16, 13*16, 14*16, 15*16 };
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	UINT8 *DrvGfxROM0	= SS_CACHE; //Next; Next += 0x020000;
-	UINT8 *DrvGfxROM1	= SS_CACHE + 0x08000;
+	UINT8 *DrvGfxROM0	= (UINT8 *)SS_CACHE; //Next; Next += 0x020000;
+	UINT8 *DrvGfxROM1	= (UINT8 *)(SS_CACHE + 0x08000);
 	UINT8 *DrvGfxROM2	= (UINT8 *)(ss_vram+0x1100);
 
 	UINT8 *tmp = (UINT8*)0x00200000;
@@ -600,8 +606,8 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 #endif
 
 		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-		UINT8 *DrvGfxROM0	= SS_CACHE; //Next; Next += 0x020000;
-		UINT8 *DrvGfxROM1	= SS_CACHE + 0x08000;
+		UINT8 *DrvGfxROM0	= (UINT8 *)SS_CACHE; //Next; Next += 0x020000;
+		UINT8 *DrvGfxROM1	= (UINT8 *)(SS_CACHE + 0x08000);
 		UINT8 *DrvGfxROM2	= (UINT8 *)(ss_vram+0x1100);
 	
 		if (BurnLoadRom(DrvGfxROM0, 6, 1)) return 1;
@@ -618,10 +624,10 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	long fileSize	= GetFileSize(fid);
 
 	GFS_Load(fid, 0, (UINT8*)0x00200000, fileSize);
-
+#ifdef PCM_MUSIC
 	stmInit();
 	Set14PCM();
-
+#endif
 	drawWindow(0,224,240,0,64);
 #ifdef CZET
 #ifndef RAZE
@@ -698,10 +704,11 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 		PCM_MeStop(pcm14[i]);
 	}
 	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);
+#ifdef PCM_MUSIC	
 	STM_ResetTrBuf(stm);
 	PCM_DestroyStmHandle(pcm14[0]);
 	stmClose(stm);
-
+#endif
 	CZ80Context = DrvZ80ROM0 = DrvZ80ROM1 = /*DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =*/ NULL;
 	DrvZ80RAM0	 = DrvZ80RAM1 = DrvPalRAM = DrvTxRAM = DrvBgRAM = DrvSprRAM = DrvSprBuf = NULL;
 	DrvBgEnable = DrvFgEnable = /*DrvSprEnable =*/ DrvVidBank = DrvRomBank	= NULL;
@@ -995,7 +1002,7 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 //			int fz = GetFileSize(fid);
 			PCM_INFO_FILE_SIZE(&info[i]) = sfx_list[0].size;//SOUNDRATE*2;//0x4000;//214896;
 
-
+#ifdef PCM_MUSIC
 			STM_ResetTrBuf(stm);
 			pcm14[i] = PCM_CreateStmHandle(&para[i], stm);
 			PCM_SetPcmStreamNo(pcm14[i], i);
@@ -1003,13 +1010,14 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 // vbt ajout 
 //			PCM_SetPcmCmdBlockNo(pcm14[i], i);
 //			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
-			PCM_ChangePcmPara(pcm14[i]);	
+			PCM_ChangePcmPara(pcm14[i]);
+#endif			
 		}
 		else
 		{
 			PCM_INFO_SAMPLE_FILE(&info[i]) = RING_BUF_SIZE;//SOUNDRATE*2;//30720L;//214896;
 			PCM_INFO_FILE_SIZE(&info[i]) = PCM_COPY_SIZE;//SOUNDRATE*2;//0x4000;//214896;
-			
+#ifdef PCM_MUSIC			
 			pcm14[i] = createHandle(&para[i]);
 
 			PCM_SetPcmStreamNo(pcm14[i], i);
@@ -1018,7 +1026,8 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 // vbt : ajout
 //			PCM_SetPcmCmdBlockNo(pcm14[i], i);
 //			*(volatile UINT16*)(0x25A00000 + 0x100000 + 0x20 * i) &= 0xFF9F;//~0x60;
-			PCM_ChangePcmPara(pcm14[i]);	
+			PCM_ChangePcmPara(pcm14[i]);
+#endif			
 		}
 // VBT : enleve la lecture en boucle !! merci zeromu!!!
 		PCM_Start(pcm14[i]);
@@ -1161,15 +1170,16 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 //SS_FONT = ss_font		=(Uint16 *)NULL;
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
-	ss_BgPriNum	 = (SclSpPriNumRegister *)SS_N0PRI;
+	ss_BgPriNum	 = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum	 = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri	= (SclOtherPriRegister *)SS_OTHR;
 	ss_BgColMix	= (SclBgColMixRegister *)SS_BGMIX;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
+#ifdef PCM_SFX	
 	sfx_list		= &sfx_blktiger[0];
-
+#endif
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 128+3;
 //	nBurnFunction = PCM_VblIn;//smpVblIn;
@@ -1252,7 +1262,7 @@ UINT8 __fastcall blacktiger_sound_read(UINT16 address)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
+/*inline*/ void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
 {
 	UINT32 attr  = DrvBgRAM[(offs<<1) + 1];
 	UINT32 color = (attr >> 3) & 0x0f;

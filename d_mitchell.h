@@ -22,7 +22,7 @@
 /*static*/ unsigned char 	color_dirty = 0;
 unsigned char current_pcm=255;
 
-#define nBurnSoundLen 128
+//#define nBurnSoundLen 128
 
 SFX sfx_pang[50] = {
 /*000.pcm*/{0,PCM_000_SIZE,10},

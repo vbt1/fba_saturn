@@ -16,7 +16,7 @@ int ovlInit(char *szShortName)
 		"atetris", "tetris",
 		"Tetris (set 1)",
 		atetrisRomInfo, atetrisRomName, AtetrisInputInfo, AtetrisDIPInfo,
-		DrvInit, DrvExit, DrvFrame, NULL
+		DrvInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
@@ -24,6 +24,8 @@ int ovlInit(char *szShortName)
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+	
+	return 0;
 }
 
 static UINT8 atetris_slapstic_read(UINT16 offset)
@@ -124,11 +126,11 @@ INT32 DrvDoReset(INT32 full_reset)
 	}
 //FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502OpenR             ",10,70);	
 //	M6502Open(0);
-//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Reset             ",10,70);	
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Reset             ",10,70);	
 	M6502_Reset();
-//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);	
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);	
 //	M6502Close();
-//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             ",10,70);
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             ",10,70);
 	SlapsticReset();
 
 	watchdog = 0;
@@ -174,10 +176,10 @@ INT32 CommonInit(INT32 boot)
 //		if (BurnLoadRom(DrvGfxROM , 1, 1)) return 1;
 		if (BurnLoadRom(cache , 1, 1)) return 1;
 	}
-//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Init             ",10,70);	
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Init             ",10,70);	
 	M6502Init(0, TYPE_M6502);
 //	M6502Open(0);
-//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502MapMemory             ",10,70);
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502MapMemory             ",10,70);
 	M6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, M6502_RAM);
 //	M6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
 	M6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, M6502_ROM);
@@ -187,7 +189,7 @@ INT32 CommonInit(INT32 boot)
 	M6502MapMemory(DrvNVRAM,		0x2400, 0x25ff, M6502_ROM);
 	M6502MapMemory(DrvNVRAM,		0x2600, 0x27ff, M6502_ROM);
 	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
-//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502SetReadHandler             ",10,70);
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502SetReadHandler             ",10,70);
 	M6502SetReadHandler(0x2800, 0x281f,atetris_read_0x2800);
 //	M6502SetReadHandler(0x4000, 0x7fff,atetris_read_0x4000);	
 	M6502SetReadHandler(0x4000, 0x7fff,atetris_slapstic_read);	
@@ -198,7 +200,7 @@ INT32 CommonInit(INT32 boot)
 	M6502SetWriteHandler(0x2000, 0x20ff,atetris_write_0x2000);
 	M6502SetWriteHandler(0x1000, 0x1fff,atetris_write_0x1000);
 //	M6502Close();
-
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticInit             ",10,70);
 	SlapsticInit(101);
 
 //	is_Bootleg = boot;
@@ -216,9 +218,9 @@ INT32 CommonInit(INT32 boot)
 	}
 */
 	memset (DrvNVRAM, 0xff, 0x200);
-
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvDoReset             ",10,70);
 	DrvDoReset(1);
-
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvPaletteUpdate             ",10,70);
 	for (UINT32 i = 0; i < 0x100; i++) 
 	{
 		DrvPaletteUpdate(i);
@@ -246,7 +248,7 @@ INT32 DrvExit()
 
 void DrvFrame()
 {
-//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvFrame                 ",10,70);	
+FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvFrame                 ",10,70);	
 	watchdog++;
 	if (watchdog >= 180) {
 		DrvDoReset(0);
@@ -345,7 +347,7 @@ void initLayers()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void make_lut(void)
 {
-	unsigned int i,delta=0;
+	unsigned int i; //,delta=0;
 	int sx, sy;
 
 	for (i = 0; i < 256;i++) 

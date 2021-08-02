@@ -1,5 +1,6 @@
 #ifndef _OVL_H_
 #define _OVL_H_
+
 #define OVLADDR 0x060DB000
 #define MAINSTART 0x0601C000
 #define MALLOC_MAX  OVLADDR-MAINSTART-0x3000 //0x30000 //0x060FFC00-0x060CC000
@@ -183,12 +184,12 @@ void cleanDATA()
 	for( unsigned char *dst = (unsigned char *)&_rodata_start; dst < (unsigned char *)&_rodata_end; dst++ ) 
 	{
 		*dst = 0;
-	}
+	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void cleanBSS()
 {
-	memset((volatile UINT8*)0x00200000,0x00,0x80000);
+//	memset((volatile UINT8*)0x00200000,0x00,0x80000);
 	extern unsigned int _bstarto, _bendo;
 
 	for( unsigned char *dst = (unsigned char *)&_bstarto; dst < (unsigned char *)&_bendo; dst++ ) 

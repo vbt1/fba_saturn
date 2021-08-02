@@ -24,7 +24,7 @@ void initColorsS(UINT8 game);
 void ninjakd2_bgconfig(UINT32 sel, UINT32 offset, UINT8 data);
 inline void DrvCalculatePalette();
 void draw_sprites(UINT32 robokid);
-inline void draw_bg_layer();
+//inline void draw_bg_layer();
 void draw_fg_layer();
  void tile16x16toSaturn (unsigned int num, unsigned char *pDest);
 void cleanSprites();

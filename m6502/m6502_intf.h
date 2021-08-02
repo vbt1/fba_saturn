@@ -18,12 +18,6 @@ typedef UINT8 (*pReadOpHandler)(UINT16 a);
 typedef UINT8 (*pReadOpArgHandler)(UINT16 a);
 typedef void (*write_func)(unsigned short a, UINT8 d);
 typedef UINT8 (*read_func)(unsigned short a);
-static write_func wf[0x100];
-static read_func rf[0x100];
-
-static UINT8 *Read[0x100];
-static UINT8 *Write[0x100];
-static UINT8 *Fetch[0x100];
 
 #define M6502_IRQSTATUS_NONE	0
 #define M6502_IRQSTATUS_ACK	1

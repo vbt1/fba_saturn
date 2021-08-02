@@ -3,7 +3,8 @@
 char *itoa(int i);
 PcmHn 	pcmStream = {NULL};
 PcmCreatePara	paraStream = {.ring_size = 0, .pcm_size = 0, .ring_addr = NULL, .pcm_addr = NULL};
-unsigned char stm_work[STM_WORK_SIZE(12, 24)] = {NULL};
+//unsigned char stm_work[STM_WORK_SIZE(12, 24)] __attribute__((section("COMMON")));
+unsigned char stm_work[0x780] __attribute__((section("COMMON")));
 StmHn stm = NULL;
 StmGrpHn grp_hd = NULL;
 SFX *sfx_list = NULL;
@@ -63,7 +64,7 @@ void errStmFunc(void *obj, Sint32 ec)
 	do{
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"plante stm                         ",40,120);
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,130);
-	wait_vblank();
+//	wait_vblank();
 
 	}while(1);
 }
@@ -86,7 +87,7 @@ void errGfsFunc(void *obj, Sint32 ec)
 	texte[49]='\0';
 
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,150);
-	wait_vblank();
+//	wait_vblank();
 
 	}while(1);
 }
@@ -104,7 +105,7 @@ ec = 0x305
 voir sega_stm.h à traduire
 */
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
-	wait_vblank();
+//	wait_vblank();
 
 	}while(1);
 }
@@ -212,7 +213,7 @@ void SetStreamPCM()
 			PCM_PARA_RING_ADDR(&paraStream)	= (Sint8 *)PCM_ADDR+0x40000;
 			PCM_PARA_RING_SIZE(&paraStream)		= RING_BUF_SIZE; //0x20000;
 			
-		PCM_PARA_PCM_ADDR(&paraStream)	= PCM_ADDR+(PCM_BLOCK_SIZE*0); //*(i+1));
+		PCM_PARA_PCM_ADDR(&paraStream)	= PCM_ADDR+(PCM_BLOCK_SIZE*0); //        *(i+1));
 		PCM_PARA_PCM_SIZE(&paraStream)		= PCM_SIZE;
 
 		memset((Sint8 *)SOUND_BUFFER,0,SOUNDRATE*16);
@@ -351,7 +352,7 @@ void playMusic(PcmHn *hn)
 #endif		
 		
 		
-//		if(stat==STM_EXEC_DOING)
+		if(stat==STM_EXEC_DOING)
 		{		
 			
 		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"PCM_MeTaskX      ",80,140);

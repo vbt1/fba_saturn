@@ -126,9 +126,9 @@ typedef	struct	SysDevice	{
 } SysDevice;
 
 /*static*/  INT32 SMSInit();
-/*static*/  INT32 SMSExit();
+/*static*/  void SMSExit();
 /*static*/  INT32 SMSDraw();
-/*static*/  INT32 SMSFrame();
+/*static*/  void SMSFrame();
 /*static*/  void z80_init(void);
 /*static*/  void sms_init(void);
 /*static*/  void sms_reset(void);

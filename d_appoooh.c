@@ -13,7 +13,7 @@ static void Set4PCM();
 
 int ovlInit(char *szShortName)
 {
-	cleanBSS();
+//	cleanBSS();
 	
 	struct BurnDriver nBurnDrvAppoooh = {
 		"appoooh", "appooo",
@@ -71,7 +71,7 @@ int ovlInit(char *szShortName)
 		bit2 = (DrvColPROM[pen] >> 7) & 0x01;
 		b = 0x21 * bit0 + 0x47 * bit1 + 0x97 * bit2;
 
-		if (i>=0x00 && i < 0x100)
+		if (i < 0x100)
 		{
 			colBgAddr2[delta] = BurnHighCol(r, g, b, 0); // fg
 			delta++; if ((delta & 7) == 0) delta += 8;
@@ -115,7 +115,7 @@ int ovlInit(char *szShortName)
 		bit2 = (DrvColPROM[pen] >> 7) & 0x01;
 		b = 0x21 * bit0 + 0x47 * bit1 + 0x97 * bit2;
 
-		if (i>=0x00 && i < 0x100)
+		if (i < 0x100)
 		{
 			colBgAddr2[delta] = RGB(r,g,b); // fg
 			delta++; if ((delta & 7) == 0) delta += 8;
@@ -153,7 +153,7 @@ int ovlInit(char *szShortName)
 //	DrvSoundROM	= (UINT8*)0x2F6000;
 	CZ80Context		= (UINT8 *)Next; Next += (sizeof(cz80_struc));
 //	DrvPalette        = (UINT16*)colBgAddr;
-	map_offset_lut  =  Next; Next +=0x400*sizeof(UINT16);
+	map_offset_lut  =  (UINT16*)Next; Next +=0x400*sizeof(UINT16);
 	is_fg_dirty			=  Next; Next +=0x400;
 
 	return 0;
@@ -161,25 +161,25 @@ int ovlInit(char *szShortName)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void DrvGfxDecode()
 {
-	const UINT32 Planes0[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
-	const UINT32 XOffs0[8] = {7, 6, 5, 4, 3, 2, 1, 0};
-	const UINT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
+	INT32 Planes0[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
+	INT32 XOffs0[8] = {7, 6, 5, 4, 3, 2, 1, 0};
+	INT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
 
 	UINT8 *DrvGfxTMP0		= (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1		= (UINT8 *)0x00218000;
 	
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	UINT8 *DrvGfxROM0		= SS_CACHE;
-	UINT8 *DrvGfxROM1		= SS_CACHE + 0x30000;
-	UINT8 *DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);
+	UINT8 *ss_vram			= (UINT8 *)SS_SPRAM;
+	UINT8 *DrvGfxROM0		= (UINT8 *)SS_CACHE;
+	UINT8 *DrvGfxROM1		= (UINT8 *)(SS_CACHE + 0x30000);
+	UINT8 *DrvGfxROM2		= (UINT8 *)(ss_vram + 0x1100);
 	UINT8 *DrvGfxROM3		= DrvGfxROM2 + 0x18000;
 
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP0, DrvGfxROM0); // modulo 0x040 to verify !!!
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP1, DrvGfxROM1); // modulo 0x040 to verify !!!
 
 //	const UINT32 Planes1[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
-	const UINT32 XOffs1[16] = {7, 6, 5, 4, 3, 2, 1, 0 , 8*8+7,8*8+6,8*8+5,8*8+4,8*8+3,8*8+2,8*8+1,8*8+0};
-	const UINT32 YOffs1[16] = {0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8};
+	INT32 XOffs1[16] = {7, 6, 5, 4, 3, 2, 1, 0 , 8*8+7,8*8+6,8*8+5,8*8+4,8*8+3,8*8+2,8*8+1,8*8+0};
+	INT32 YOffs1[16] = {0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8};
 
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes0, XOffs1, YOffs1, 0x100, DrvGfxTMP0, DrvGfxROM2);
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes0, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM3);
@@ -187,16 +187,16 @@ int ovlInit(char *szShortName)
 
 /*static*/  void DrvRobowresGfxDecode()
 {
-	const INT32 Planes0[3] = { RGN_FRAC(0x18000, 2,3), RGN_FRAC(0x18000, 1,3), RGN_FRAC(0x18000, 0,3) };
-	const INT32 XOffs0[8] = { 7, 6, 5, 4, 3, 2, 1, 0 };
-	const INT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
+	INT32 Planes0[3] = { RGN_FRAC(0x18000, 2,3), RGN_FRAC(0x18000, 1,3), RGN_FRAC(0x18000, 0,3) };
+	INT32 XOffs0[8] = { 7, 6, 5, 4, 3, 2, 1, 0 };
+	INT32 YOffs0[8] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 };
 
 	UINT8 *DrvGfxTMP0		= (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1		= (UINT8 *)0x00218000;
 
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	UINT8 *DrvGfxROM0		= SS_CACHE;
-	UINT8 *DrvGfxROM1		= SS_CACHE + 0x30000;
+	UINT8 *ss_vram			= (UINT8 *)SS_SPRAM;
+	UINT8 *DrvGfxROM0		= (UINT8 *)SS_CACHE;
+	UINT8 *DrvGfxROM1		= (UINT8 *)(SS_CACHE + 0x30000);
 	UINT8 *DrvGfxROM2		= (UINT8 *)(ss_vram+0x1100);
 	UINT8 *DrvGfxROM3		= DrvGfxROM2 + 0x18000;
 
@@ -204,8 +204,8 @@ int ovlInit(char *szShortName)
 	GfxDecode4Bpp(0x1000, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x040, DrvGfxTMP1, DrvGfxROM1);
 
 //	const INT32 Planes1[3] = { RGN_FRAC(0x18000, 2,3),RGN_FRAC(0x18000, 1,3),RGN_FRAC(0x18000, 0,3) };
-	const INT32 XOffs1[16] = { 7, 6, 5, 4, 3, 2, 1, 0, 8*8+7, 8*8+6, 8*8+5, 8*8+4, 8*8+3, 8*8+2, 8*8+1, 8*8+0 };
-	const INT32 YOffs1[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
+	INT32 XOffs1[16] = { 7, 6, 5, 4, 3, 2, 1, 0, 8*8+7, 8*8+6, 8*8+5, 8*8+4, 8*8+3, 8*8+2, 8*8+1, 8*8+0 };
+	INT32 YOffs1[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
 
 	GfxDecode4Bpp(0x0400, 3, 16, 16, Planes0, XOffs1, YOffs1, 0x100, DrvGfxTMP0, &DrvGfxTMP1[0x30000]);
 	memcpy(DrvGfxROM2,&DrvGfxTMP1[0x40000],0x18000);
@@ -289,7 +289,7 @@ int ovlInit(char *szShortName)
 		return;
 	}
 
-	if(address >= 0xfc20 && address <= 0xffff)
+	if(address >= 0xfc20) // && address <= 0xffff)
 	{
 		address-=0xfc20;
 
@@ -337,7 +337,7 @@ int ovlInit(char *szShortName)
 		return DrvBgVidRAM[address-0xf820];
 	}
 
-	if(address >= 0xfc20 && address <= 0xffff)
+	if(address >= 0xfc20) // && address <= 0xffff)
 	{
 		return DrvBgColRAM[address-0xfc20];
 	}
@@ -477,7 +477,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | flipx);
 		ss_spritePtr->charAddr 	= 0x220 +(code << 4);
 		ss_spritePtr->color     = (color<<4);
-		*ss_spritePtr++;
+		ss_spritePtr++;
 	}
 }
 
@@ -803,8 +803,8 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr2  = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 	SCL_AllocColRam(SCL_NBG0,OFF);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+	SCL_AllocColRam(SCL_NBG3,ON);
+	SCL_AllocColRam(SCL_NBG3,ON);
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
@@ -829,7 +829,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
-	ss_BgPriNum	 = (SclSpPriNumRegister *)SS_N0PRI;
+	ss_BgPriNum	 = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum	 = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri	= (SclOtherPriRegister *)SS_OTHR;
 	ss_BgColMix	= (SclBgColMixRegister *)SS_BGMIX;

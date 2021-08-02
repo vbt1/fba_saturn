@@ -125,7 +125,7 @@ typedef struct TC_TRANSFER {
     Uint32 size;
     void *target;
     void *source;
-} TC_transfer __attribute__ ((aligned (8)));
+} TC_transfer; // __attribute__ ((aligned (8)));
 
 void DMA_ScuIndirectMemCopy(void *dst, void *src, Uint32 cnt)
 {

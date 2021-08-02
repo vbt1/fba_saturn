@@ -35,13 +35,13 @@ UINT8 *map_dirty = NULL;
 typedef int bool;
 
 typedef struct { UINT8 x, y, width, yend } sprite_collision; 
-sprite_collision sprites_collision[32]={0};
+//sprite_collision sprites_collision[32]={0};
 UINT16 nextSprite=0;
 UINT8 flipscreen=0;
 void make_cram_lut(void);
 void updateCollisions(int *values);
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
-void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr,UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase);
+void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase);
 void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase);
 void *memset4_fast(void *, long, size_t);
 void System1BankRom(UINT32 System1RomBank);

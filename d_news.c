@@ -368,7 +368,7 @@ int ovlInit(char *szShortName)
 	SS_MAP2 = ss_map2 = (Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT =  ss_font =  NULL; //(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = cache     = (Uint8  *)SCL_VDP2_VRAM_A0;				
-	ss_BgPriNum     = (SclSpPriNumRegister *)SS_N0PRI;
+	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 
 
 	SS_SET_N0PRIN(7);

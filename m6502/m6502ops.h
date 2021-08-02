@@ -159,9 +159,6 @@ static inline unsigned short M6502ReadWord(unsigned short Address)
 		M6502WriteByte(addr,data);								\
 	else														\
 		Write[(addr) >> (ABITS2_16 + ABITS_MIN_16)][addr&0xff] = data		
-//		cpu_writemem16(addr,data);								\
-	else														\
-		RAM[addr] = data
 #define WRMEMD(addr,data) Write[(addr) >> 8][addr&0xff]=data
 #define WRMEM16D(addr,data,data2) Write[(addr) >> 8][addr&0xff]=data;Write[(addr) >> 8][(addr&0xff)+1]=data2
 
@@ -357,7 +354,7 @@ static inline void M6502WriteByte(unsigned short Address, unsigned char Data)
  * pull a register from the stack
  ***************************************************************/
 #define PULL(Rg) S++; Rg = RDMEMD(SPD)
-#define PULL16(Rg) S+=2; Rg = RDMEM16D(SPD-1)
+#define PULL16(Rg) S+=2; Rg = RDMEM16D((SPD-1))
 
 /* 6502 ********************************************************
  *	ADC Add with carry

@@ -181,14 +181,14 @@ Driver Inits
 /*==============================================================================================
 Graphics Rendering
 ===============================================================================================*/
-void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
+void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[ABS(Skip)];
 	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	renderSpriteCache(values);
-	spriteCache[addr]=nextSprite;
+//	spriteCache[addr]=nextSprite;
 
 	ss_spritePtr->ay			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2-8;
 	if(flipscreen==2)

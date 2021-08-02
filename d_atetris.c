@@ -8,8 +8,7 @@
 
 int ovlInit(char *szShortName)
 {
-	cleanBSS();
-
+//	cleanBSS();
 	struct BurnDriver nBurnDrvAtetris = {
 		"atetris", "tetris", 
 		"Tetris (set 1)\0", 
@@ -22,6 +21,8 @@ int ovlInit(char *szShortName)
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+	
+	return 0;
 }
 
 /*static*/ inline UINT8 atetris_slapstic_read(UINT16 offset)

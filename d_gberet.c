@@ -8,7 +8,7 @@
 
 int ovlInit(char *szShortName)
 {
-	cleanBSS();
+//	cleanBSS();
 
 	struct BurnDriver nBurnDrvGberet = {
 		"gberet", NULL,
@@ -29,6 +29,8 @@ int ovlInit(char *szShortName)
 	else
 		memcpy(shared,&nBurnDrvMrgoemon,sizeof(struct BurnDriver));
 	ss_reg          = (SclNorscl *)SS_REG;
+	
+	return 0;
 }
 
 /*static*/ void mrgoemon_bankswitch(int nBank)
@@ -48,7 +50,7 @@ int ovlInit(char *szShortName)
 #endif
 }
 
-/*static*/ void __fastcall gberet_write(unsigned short address, unsigned char data)
+/*static*/ void gberet_write(unsigned short address, unsigned char data)
 {
 	switch (address)
 	{
@@ -117,7 +119,7 @@ int ovlInit(char *szShortName)
 
 #ifdef RAZE
 #ifdef CACHE
-/*static*/ void __fastcall gberet_write_cxxx(unsigned short address, unsigned char data)
+/*static*/ void gberet_write_cxxx(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
@@ -129,7 +131,7 @@ int ovlInit(char *szShortName)
 #endif
 
 
-/*static*/ unsigned char __fastcall gberet_read(unsigned short address)
+/*static*/ unsigned char gberet_read(unsigned short address)
 {
 
 	unsigned char nRet = 0xff;
@@ -265,9 +267,9 @@ int ovlInit(char *szShortName)
 
 /*static*/ void DrvGfxDecode()
 {
-	/*static*/ unsigned int Planes[4] = { 0, 1, 2, 3 };
-	/*static*/ unsigned int XOffs[16] = { 0, 4, 8, 12, 16, 20, 24, 28, 256, 260, 264, 268, 272, 276, 280, 284 };
-	/*static*/ unsigned int YOffs[16] = { 0, 32, 64, 96, 128, 160, 192, 224, 512, 544, 576, 608, 640, 672, 704, 736 };
+	/*static*/ int Planes[4] = { 0, 1, 2, 3 };
+	/*static*/ int XOffs[16] = { 0, 4, 8, 12, 16, 20, 24, 28, 256, 260, 264, 268, 272, 276, 280, 284 };
+	/*static*/ int YOffs[16] = { 0, 32, 64, 96, 128, 160, 192, 224, 512, 544, 576, 608, 640, 672, 704, 736 };
 
 	Graphics_Decode(Planes, XOffs, YOffs, Planes, XOffs, YOffs, 0x400);
 }
@@ -440,7 +442,6 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	DrvDoReset();
 	return 0;
 }
-/*
 
 /*static*/ INT32 DrvExit()
 {
@@ -517,7 +518,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 {
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
 	SCL_AllocColRam(SCL_SPR,OFF);
-	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+	SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -614,7 +615,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 			unsigned int color = attr & 0x0f;
 			unsigned int flip = attr & 0x30;
 
-			ss_map2[offs] = ss_map2[offs+0x1000] = ss_map[offs] = ss_map[offs+0x1000] = (color << 12 | flip << 6 | code&0x1FF) ;
+			ss_map2[offs] = ss_map2[offs+0x1000] = ss_map[offs] = ss_map[offs+0x1000] = (color << 12 | flip << 6 | (code&0x1FF)) ;
 #ifdef CACHE
 		}
 #endif

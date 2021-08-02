@@ -1,11 +1,13 @@
+//#pragma GCC optimize("Os")
+
 // Burn - Drivers module // ok
 
 #include "burnint.h"
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 55
-volatile struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));
+#define NB_DRV 56
+volatile struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4))) __attribute__((section("COMMON")));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
 
@@ -99,7 +101,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvpengo2u = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvStarjack = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvRaflesia = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvAtetris = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvAtetris = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_cz80 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_gg = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
@@ -267,9 +269,9 @@ BurnDrvRaflesia.szShortName="raflesia";
 BurnDrvRaflesia.szFullNameA="Rafflesia (315-5162)";
 BurnDrvRaflesia.szParent="sys1h";
 
-//BurnDrvAtetris.szShortName="atetris";
-//BurnDrvAtetris.szFullNameA="Tetris (set 1)";
-//BurnDrvAtetris.szParent="tetris";
+BurnDrvAtetris.szShortName="atetris";
+BurnDrvAtetris.szFullNameA="Tetris (set 1)";
+BurnDrvAtetris.szParent="tetris";
 			
 //BurnDrvCongo.szShortName="congo";
 //BurnDrvCongo.szFullNameA="Congo Bongo";
@@ -462,7 +464,7 @@ pDriver[i++] = &BurnDrvAppoooh;
 pDriver[i++] = &BurnDrvRobokid;
 //pDriver[i++] = &BurnDrvOmegafs;
 //pDriver[i++] = &BurnDrvGnga;
-//pDriver[i++] = &BurnDrvAtetris;
+pDriver[i++] = &BurnDrvAtetris;
 //pDriver[i++] = &BurnDrvKungfut;
 //pDriver[i++] = &BurnDrvStinger;
 //pDriver[i++] = &BurnDrvScion;

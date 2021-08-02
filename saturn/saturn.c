@@ -1,3 +1,5 @@
+//#pragma GCC optimize("Os")
+
 #include "saturn.h" // ok
 
 //#include "sc_saturn.h"
@@ -17,7 +19,7 @@ void heapWalk(void);
 #endif
 
 //#define DEBUG_DRV 1
-volatile SysPort	*__port;
+SysPort	*__port;
 static trigger_t	pltrigger[2],pltriggerE[2];
 extern unsigned char play;
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -370,7 +372,7 @@ static inline void ss_main(void)
 //--------------------------------------------------------------------------------------------------------------------------------------
 static void wait_key() //Uint8 key)
 {
-	SysDevice	*device;
+	const SysDevice	*device;
 	do
 	{
 		device = PER_GetDeviceR( &__port[0], 0 );
@@ -487,9 +489,9 @@ static void display_menu(void)
 		if(!loaded)
 		{
 // nettoyage emplacement du driver
-			memset((volatile void *)OVLADDR,0x00,SIZEMAX);
+			memset((void *)OVLADDR,0x00,SIZEMAX);
 #ifndef DEBUG_DRV
-			GFS_Load(GFS_NameToId("IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
+			GFS_Load(GFS_NameToId((Sint8 *)"IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			load_img(0);	
 #endif
 			loaded=1;
@@ -918,6 +920,7 @@ Uint32  SCL_AllocColRam(Uint32 Surface, Uint8 transparent)
 			return(SCL_COLRAM_ADDR+(512*i));
 		}
 	}
+	return 0;	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 // VBT passage en static
@@ -938,6 +941,7 @@ static Uint32  SCL_GetColRamOffset(Uint32 Object)
       default:
 	break;
     }
+	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void SCL_SetLineParamNBG0(SclLineparam *lp)
@@ -1055,7 +1059,7 @@ static void sndInit(void)
 //unsigned char sound_map[]={ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x00, 0x00, 0x07, 0x4D, 0x8C, 0xFF, 0xFF };
 
 #ifndef ACTION_REPLAY
-	GFS_Load(GFS_NameToId(SDDRV_NAME),0,(void *)SDDRV_ADDR,SDDRV_SIZE);
+	GFS_Load(GFS_NameToId((Sint8 *)SDDRV_NAME),0,(void *)SDDRV_ADDR,SDDRV_SIZE);
 	SND_INI_PRG_ADR(snd_init) = (Uint16 *)SDDRV_ADDR;
 	SND_INI_PRG_SZ(snd_init)  = (Uint16)  SDDRV_SIZE;
 #else
@@ -1243,7 +1247,7 @@ static unsigned int get_hz(void)
 static int DoInputBlank()
 {
   int iJoyNum = 0;
-   int i=0; 
+  unsigned int i=0; 
   // Reset all inputs to undefined (even dip switches, if bDipSwitch==1)
   char controlName[13];
   
@@ -1395,15 +1399,15 @@ static int DoInputBlank()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void InpExit()
 {
-	if (DIPInfo.nDIP!=NULL)
+	if (DIPInfo.nDIP!=0)
 	{
 		memset(DIPInfo.DIPData,0,4 * sizeof(struct GameInp));
 		memset(GameInp,0,12*4*sizeof(struct GameInp));
 		nGameInpCount = 0;
-		DIPInfo.nDIP = NULL;
+		DIPInfo.nDIP = 0;
 		FBA_KEYPAD[0] = 0;
 		P1P2Start = 0;
-		P1Start = P2Start = NULL;
+		P1Start = P2Start = 0;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1491,7 +1495,7 @@ static void InpDIP()
 //		char toto[100];
 //		sprintf(toto,"%2d. %02x '%s'\n", bdi.nInput, bdi.nFlags, bdi.szText);
 //		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)toto,10,60);
-		
+
 		if (bdi.nFlags == 0xFF) 
 		{
 			pgi = DIPInfo.DIPData + (bdi.nInput + nDIPOffset - DIPInfo.nFirstDIP);
@@ -1506,10 +1510,10 @@ static void InpDIP()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int DoLibInit() // Do Init of Burn library driver
+/*static int DoLibInit() // Do Init of Burn library driver
 {
 	return (BurnDrvInit()) ? 3 : 0 ;
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 static int nDrvInit(int nDrvNum)
 {
@@ -1527,7 +1531,7 @@ static int nDrvInit(int nDrvNum)
 
 // vbt à remettre    
 #ifndef DEBUG_DRV 
-	GFS_Load(GFS_NameToId(strupr(drv_file)), 0, (void *)OVLADDR, GFS_BUFSIZ_INF);
+	GFS_Load(GFS_NameToId((Sint8 *)strupr(drv_file)), 0, (void *)OVLADDR, GFS_BUFSIZ_INF);
 #endif
 	ChangeDir(BurnDrvGetTextA(DRV_NAME));
 
@@ -1562,7 +1566,7 @@ static void check_exit(Uint16 data)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void do_keypad(unsigned int key[])
+static inline void do_keypad(unsigned int key[])
 {
 	key[0] = 0;
 //	key[1] = 0;
@@ -1571,7 +1575,7 @@ static void do_keypad(unsigned int key[])
 //	ServiceRequest =0;
 	P1P2Start = 0;
 
-	SysDevice	*device;
+	const SysDevice	*device;
 
 	if(( device = PER_GetDeviceR( &__port[0], 0 )) != NULL )
 //	device = PER_GetDeviceR( &__port[0], 0 ); 
@@ -1649,8 +1653,8 @@ static void do_keypad(unsigned int key[])
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 		else
@@ -1662,8 +1666,8 @@ static void do_keypad(unsigned int key[])
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 	}

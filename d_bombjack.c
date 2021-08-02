@@ -9,8 +9,7 @@ UINT32 BgSel=0xFFFF;
 
 int ovlInit(char *szShortName)
 {
-	cleanBSS();
-
+//	cleanBSS();
 	struct BurnDriver nBurnDrvBombjack = {
 		"bombja", NULL,
 		"Bomb Jack (set 1)",
@@ -21,16 +20,17 @@ int ovlInit(char *szShortName)
 	memcpy(shared,&nBurnDrvBombjack,sizeof(struct BurnDriver));
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initLayers()
 {
 
     Uint16	CycleTb[]={
-		0x4e12, 0x6fff, //A0
-		0xffff, 0xffff,	//A1
-		0xff5f, 0xffff,   //B0
-		0xffff, 0xffff  //B1
+		0x4e12, 0x6eee, //A0
+		0xeeee, 0xeeee,	//A1
+		0xff5f, 0xeeee,   //B0
+		0xeeee, 0xeeee  //B1
 //		0x4eff, 0x1fff, //B1
 	};
 
@@ -415,7 +415,7 @@ INT32 DrvZInit()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DecodeTiles4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
-	INT32 c,y,x,dat1,dat2,dat3,col1,col2;
+	INT32 c,y,x,dat1,dat2,dat3,col1;
 	for (c=0;c<num;c++)
 	{
 		for (y=0;y<8;y++)
@@ -441,13 +441,13 @@ void DecodeTiles4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 
 	{
 		unsigned char c1 = TilePointer[c]&0x0f;
 		unsigned char c2 = TilePointer[c+1]&0x0f;
-	   TilePointer[c>>1]=c2| (c1<<4)& 0xf0;
+	   TilePointer[c>>1]=c2| ((c1<<4)& 0xf0);
 	}	  
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DecodeTiles(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
-	INT32 c,y,x,dat1,dat2,dat3,col1,col2;
+	INT32 c,y,x,dat1,dat2,dat3,col1;
 	for (c=0;c<num;c++)
 	{
 		for (y=0;y<8;y++)
@@ -925,8 +925,7 @@ void draw_sprites()
 			ss_spritePtr->charSize= 0x420;
 		}
 		ss_spritePtr->charAddr	= 0x220+((code)<<4 );
-
-		*ss_spritePtr++;
+		ss_spritePtr++;
 	}
 }
 

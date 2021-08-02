@@ -1,3 +1,5 @@
+#pragma GCC optimize("Os")
+
 #include <stdarg.h>
 #include "SEGA_DMA.H"
 #include "SEGA_SPR.H"
@@ -52,7 +54,7 @@ void dummy()
 {
 //	wait_vblank();
 	for (unsigned int c = 0; c < num; c++) {
-		int plane;//, x, y;
+		unsigned int plane;//, x, y;
 	
 		unsigned char *dp = pDest + (c * (xSize/2) * ySize);
 		memset((void *)dp, 0, (xSize/2) * ySize);
@@ -219,24 +221,24 @@ static void InitSlaveSH(void)
 {
     volatile unsigned short i;
 
-static void **SlaveSHEntry = (void **)0x6000250;   //* BOOT ROMs dispatch address 
-static volatile unsigned char *SMPC_COM = (unsigned char *)0x2010001F;   //* SMPC command register 
-static volatile unsigned char *SMPC_RET = (unsigned char *)0x2010005f;   //* SMPC result register 
-static volatile unsigned char *SMPC_SF  = (unsigned char *)0x20100063;   //* SMPC status flag 
-static const unsigned char SMPC_SSHON  = 0x02;          //* SMPC slave SH on command 
-static const unsigned char SMPC_SSHOFF = 0x03;          //* SMPC slave SH off command 
+static void **SlaveSHEntry = (void **)0x6000250;   // * BOOT ROMs dispatch address 
+static volatile unsigned char *SMPC_COM = (unsigned char *)0x2010001F;   // * SMPC command register 
+static volatile unsigned char *SMPC_RET = (unsigned char *)0x2010005f;   // * SMPC result register 
+static volatile unsigned char *SMPC_SF  = (unsigned char *)0x20100063;   // * SMPC status flag 
+static const unsigned char SMPC_SSHON  = 0x02;          // * SMPC slave SH on command 
+static const unsigned char SMPC_SSHOFF = 0x03;          // * SMPC slave SH off command 
 
-    *(volatile unsigned char *)0xfffffe10  = 0x01;    //* TIER FRT INT disable 
-//    SPR_SlaveState = 0;                //* set RUNNING state 
-    //* SlaveSH ????Z?b?g?????????? 
+    *(volatile unsigned char *)0xfffffe10  = 0x01;    // * TIER FRT INT disable 
+//    SPR_SlaveState = 0;                // * set RUNNING state 
+    // * SlaveSH ????Z?b?g?????????? 
     while((*SMPC_SF & 0x01) == 0x01);
-    *SMPC_SF = 1;                 //* --- SMPC StatusFlag SET 
-    *SMPC_COM = SMPC_SSHOFF;      //* --- Slave SH OFF SET 
+    *SMPC_SF = 1;                 // * --- SMPC StatusFlag SET 
+    *SMPC_COM = SMPC_SSHOFF;      // * --- Slave SH OFF SET 
     while((*SMPC_SF & 0x01) == 0x01);
-    for(i = 0 ; i < 1000; i++);   //* slave reset assert length 
-    *(void **)SlaveSHEntry = (void *)0x6000646; //* dispatch address set 
-    //* SlaveSH ????Z?b?g????????????? 
-    *SMPC_SF = 1;                 //* --- SMPC StatusFlag SET 
+    for(i = 0 ; i < 1000; i++);   // * slave reset assert length 
+    *(void **)SlaveSHEntry = (void *)0x6000646; // * dispatch address set 
+    // * SlaveSH ????Z?b?g????????????? 
+    *SMPC_SF = 1;                 // * --- SMPC StatusFlag SET 
     *SMPC_COM = SMPC_SSHON;       // --- Slave SH ON SET 
     while((*SMPC_SF & 0x01) == 0x01);
 }

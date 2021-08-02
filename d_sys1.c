@@ -81,6 +81,8 @@ int ovlInit(char *szShortName)
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+	
+	return 0;
 }
 
 /*==============================================================================================
@@ -140,12 +142,12 @@ Driver Inits
 }
 
 
-/*static*/ /*int SeganinuInit()
+/*int SeganinuInit()
 {
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }
 
-/*static*/ /*int NprincsuInit()
+/*int NprincsuInit()
 {
 	return System1Init(6, 0x2000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }
@@ -204,16 +206,16 @@ void fillSpriteCollision(unsigned int Num, int *values)
 		sprites_collision[Num].yend=(values[1]+values[3]) & 0xff; // height max 255
 }
 */
+inline void renderSpriteCache(int *values);
 
-void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
+void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
 {
 	int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[ABS(Skip)];
+	unsigned int Width = width_lut[Skip];
 
 	int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
 	renderSpriteCache(values);
-	spriteCache[addr]=nextSprite;
 
 	ss_spritePtr->ax		= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
 	ss_spritePtr->ay		= SpriteBase[0] + 1;
@@ -233,7 +235,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Sk
 void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[ABS(Skip)];
+	unsigned int Width = width_lut[Skip];
 
 	ss_spritePtr->ax		= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
 	ss_spritePtr->ay		= SpriteBase[0] + 1;

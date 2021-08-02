@@ -12,9 +12,9 @@ unsigned char curr_sprite=0;
 
 /* Attribute expansion table */
 //-------------------------------------------------------------------------------------------------------------------------------------
-volatile int ovlInit(char *szShortName)
+int ovlInit(char *szShortName)
 {
-	cleanBSS();
+//	cleanBSS();
 #ifdef RAZE
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"sms", NULL,
@@ -57,7 +57,7 @@ volatile int ovlInit(char *szShortName)
 
 	ss_reg    = (SclNorscl *)SS_REG;
 //	ss_regs  = (SclSysreg *)SS_REGS;
-//	slob_init();
+	return 0;
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
 static Sint32 GetFileSize(int file_id)
@@ -104,7 +104,7 @@ static void	SetVblank2( void )
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
 	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
-	(Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
+	SCL_AllocColRam(SCL_NBG1,OFF);
 //	SCL_SetColRam(SCL_NBG1,0,8,palette);
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
@@ -275,7 +275,7 @@ static void	SetVblank2( void )
 
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 	initSprites(256-1,192-1,0,0,0,0);
-	 initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+	 initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
 		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 
 //	drawWindow(32,192,192,14,52);
@@ -352,7 +352,7 @@ static void	SetVblank2( void )
      while((TVSTAT & 8) == 8);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  INT32 SMSExit(void)
+/*static*/  void SMSExit(void)
 {
 	nBurnFunction = NULL;
 	SS_SET_N0SPRM(0);
@@ -372,6 +372,7 @@ static void	SetVblank2( void )
 #endif
 #ifdef CZ80
 	CZetExit2();
+	CZ80Context = NULL;
 #endif
 	vdp_reset();
 
@@ -384,7 +385,6 @@ static void	SetVblank2( void )
 
 	bp_lut = NULL;
 	name_lut = NULL;
-	CZ80Context = NULL;
 
 #ifdef GG0
 	disp_spr = NULL;
@@ -411,7 +411,7 @@ static void	SetVblank2( void )
 	nSoundBufferPos=0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  INT32 SMSFrame(void)
+/*static*/  void SMSFrame(void)
 {
 #ifdef GG0
 	cleanSpritesGG();

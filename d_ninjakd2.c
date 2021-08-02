@@ -10,11 +10,9 @@
 unsigned int bg_cache[3][0x1000];
 unsigned int nextTile[3]={0,0,0};
 
-
 int ovlInit(char *szShortName)
 {
-	cleanBSS();
-
+//	cleanBSS();
 	struct BurnDriver nBurnDrvRobokid = {
 		"robokid", "ninkd2",
 		"Atomic Robo-kid (World, Type-2)", 
@@ -65,6 +63,8 @@ int ovlInit(char *szShortName)
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 	ss_regd  = (SclDataset *)SS_REGD;
+	
+	return 0;
 }
 
 void DrvOverDraw()
@@ -200,7 +200,7 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
 			
 			code |= (attr & 0x20) << 3;
-			ss_map[off2s] = (attr & 0x0f) <<12 | code & 0xfff;
+			ss_map[off2s] = (attr & 0x0f) <<12 | (code & 0xfff);
 		}
 		return;
 	}
@@ -218,7 +218,7 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 			
 			UINT16 *map = (UINT16 *)&ss_map2[address];
 			map[0] = (attr & 0x0f);
-			map[1] = 0x400 + (code<<2) & 0xffff;
+			map[1] = (0x400 + (code<<2)) & 0xffff;
 		}
 		return;
 	}	
@@ -245,7 +245,7 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xc203:
-			if(overdraw_enable != data & 0x01)
+			if(overdraw_enable != (data & 0x01))
 			{
 				overdraw_enable = data & 0x01;
 			}
@@ -284,7 +284,7 @@ void __fastcall mnight_main_write(UINT16 address, UINT8 data)
 			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
 			
 			code |= (attr & 0x20) << 3;
-			ss_map[off2s] = (attr & 0x0f) <<12 | code & 0xfff;
+			ss_map[off2s] = (attr & 0x0f) <<12 | (code & 0xfff);
 		}
 		return;
 	}
@@ -302,7 +302,7 @@ void __fastcall mnight_main_write(UINT16 address, UINT8 data)
 			
 			UINT16 *map = (UINT16 *)&ss_map2[address];
 			map[0] = (attr & 0x0f);
-			map[1] = 0x400 + (code<<2) & 0xffff;
+			map[1] = (0x400 + (code<<2)) & 0xffff;
 		}
 		return;
 	}	
@@ -374,7 +374,7 @@ void __fastcall robokid_main_write(UINT16 address, UINT8 data)
 			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
 			
 			code |= (attr & 0x20) << 3;
-			ss_map[off2s] = (attr & 0x0f) <<12 | code & 0xfff;
+			ss_map[off2s] = (attr & 0x0f) <<12 | (code & 0xfff);
 		}
 		return;
 	}	
@@ -781,11 +781,11 @@ INT32 MemIndex(UINT32 game)
 
 INT32 DrvGfxDecode(UINT8 *rom, UINT32 len, UINT32 type)
 {
-	UINT32 Plane[4]   = { STEP4(0,1) };
-	UINT32 XOffs0[16] = { STEP8(0,4), STEP8(32*8,4) };
-	UINT32 XOffs1[16] = { STEP8(0,4), STEP8(64*8,4) };
-	UINT32 YOffs0[16] = { STEP8(0,32), STEP8(64*8,32) };
-	UINT32 YOffs1[16] = { STEP16(0,32) };
+	INT32 Plane[4]   = { STEP4(0,1) };
+	INT32 XOffs0[16] = { STEP8(0,4), STEP8(32*8,4) };
+	INT32 XOffs1[16] = { STEP8(0,4), STEP8(64*8,4) };
+	INT32 YOffs0[16] = { STEP8(0,32), STEP8(64*8,32) };
+	INT32 YOffs1[16] = { STEP16(0,32) };
 
 	UINT8 *tmp = (UINT8*)0x00200000;
 
@@ -1618,7 +1618,7 @@ SprSpCmd ss_spriteBuff[96];
 						ss_spritePtr->color			= color<<4;
 						ss_spritePtr->charAddr		= 0x220+(tile<<4);
 //						memcpy(ss_spritePtrBuff,ss_spritePtr,sizeof(SprSpCmd));						
-						*ss_spritePtr++;
+						ss_spritePtr++;
 //						*ss_spritePtrBuff++;						
 
 						++sprites_drawn;
@@ -1694,8 +1694,8 @@ SprSpCmd ss_spriteBuff[96];
 						ss_spritePtr->charAddr		= 0x220+(tile<<4);
 						memcpy(ss_spritePtrBuff,ss_spritePtr,sizeof(SprSpCmd));
 
-						*ss_spritePtr++;
-						*ss_spritePtrBuff++;
+						ss_spritePtr++;
+						ss_spritePtrBuff++;
 
 						++sprites_drawn;
 

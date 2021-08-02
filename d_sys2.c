@@ -55,6 +55,8 @@ int ovlInit(char *szShortName)
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+	
+	return 0;
 }
 /*
 inline void chplft_bankswitch_w (UINT8 d)
@@ -304,7 +306,7 @@ int ChplftbInit()
 
 	SS_SET_N0SPRM(1);  // 1 for special priority
 
-	initScrolling(ON,SCL_VDP2_VRAM_B0+0x4000);
+	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
 	drawWindow(0,224,0,0,64);
 	
 	CurrentBank						= System1VideoRam;			
@@ -814,14 +816,14 @@ inline void System1Render()
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #if 1
-void DrawSprite(unsigned int Num,unsigned int Bank, unsigned int addr, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
+void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[ABS(Skip)];
+	unsigned int Width = width_lut[Skip];
 
 	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
-	spriteCache[addr]=nextSprite;
+//	spriteCache[addr]=nextSprite;
 	renderSpriteCache(values);
 
 	ss_spritePtr->ax		= 11 + ((((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2);

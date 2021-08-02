@@ -740,7 +740,7 @@ static void DrvInitSaturn()
 	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
-	ss_BgPriNum	 = (SclSpPriNumRegister *)SS_N0PRI;
+	ss_BgPriNum	 = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum	 = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri	= (SclOtherPriRegister *)SS_OTHR;
 	ss_BgColMix	= (SclBgColMixRegister *)SS_BGMIX;

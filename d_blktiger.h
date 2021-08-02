@@ -28,7 +28,7 @@ Sint32 GetFileSize(int file_id);
 unsigned char current_pcm=255;
 //char *itoa(int i);
 
-PCM_INFO pcm_info[8] = {NULL};
+PCM_INFO pcm_info[8];
 
 SFX sfx_blktiger[68]=
 {
@@ -320,15 +320,15 @@ void vbt_pcm_EndProcess(PcmHn hn);
 void vbt_PCM_DrvStopPcm(PcmHn hn);
 void vbt_PCM_MeStop(PcmHn hn);
 void vbt_PCM_MeTask(PcmHn hn);
-static void vbt_pcm_AudioMix(PcmHn hn);
+//static void vbt_pcm_AudioMix(PcmHn hn);
 SndRet vbt_SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm);
 void vbt_PCM_DrvStartPcm(PcmHn hn);
 void vbt_pcm_AudioProcess(PcmHn hn);
 
 
-static void pcm_Wait(int cnt);
-static Uint8 GetComBlockAdr(void);
-static Uint16 ChgPan(SndPan pan);
+//static void pcm_Wait(int cnt);
+//static Uint8 GetComBlockAdr(void);
+//static Uint16 ChgPan(SndPan pan);
 
 PcmHn 	pcm14[8] = {NULL};
 PcmCreatePara	para[8] = {NULL};
