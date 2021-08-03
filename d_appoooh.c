@@ -520,7 +520,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	CZetClose();
 	memset((Uint8 *)ss_map  ,0,0x2000);
 	memset(is_fg_dirty,1,0x400);
-
+//	__port = PER_OpenPort();
 	return 0;
 }
 

@@ -192,6 +192,8 @@ int ovlInit(char *szShortName)
 	DrvPaletteRamBank = 0;
 	DrvVideoBank = 0;
 //	DrvDialSelected = 0;
+	__port = PER_OpenPort();
+
 	return 0;
 }
 
@@ -615,7 +617,7 @@ extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned c
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut   ",80,130);	
 	make_lut();
 
-/*static*/ INT32 CharPlaneOffsets[4]          = { 0x400004, 0x400000, 4, 0 };
+/*static*/ INT32 CharPlaneOffsets[4]           = { 0x400004, 0x400000, 4, 0 };
 /*static*/ INT32 CharXOffsets[8]              = { 0, 1, 2, 3, 8, 9, 10, 11 };
 /*static*/ INT32 CharYOffsets[8]              = { 0, 16, 32, 48, 64, 80, 96, 112 };
 /*static*/ INT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };

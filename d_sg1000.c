@@ -322,6 +322,8 @@ static void ChangeDir(char *dirname)
 	CZetClose();
 #endif
 	TMS9928AReset();
+	__port = PER_OpenPort();
+
 	return 0;
 }
 

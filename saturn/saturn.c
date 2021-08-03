@@ -497,9 +497,12 @@ static void display_menu(void)
 			loaded=1;
 		}
 		m=0;
-//		char page_header[50];
+		char page_header[50];
 //		sprintf(page_header,"Game list:                       %02d/%02d",current_page, (nBurnDrvCount+GAME_BY_PAGE-1)/GAME_BY_PAGE);
-//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)page_header,12,12);
+
+		sprintf(page_header,"port size %02d",sizeof(__port));
+
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)page_header,12,12);
 
 		if(modified==1)
 		{
@@ -1653,8 +1656,8 @@ static inline void do_keypad(unsigned int key[])
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 		else
@@ -1666,8 +1669,8 @@ static inline void do_keypad(unsigned int key[])
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 	}

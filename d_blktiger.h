@@ -17,7 +17,7 @@ void draw_sprites();
 void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 void Set14PCM();
 PcmHn createHandle(PcmCreatePara *para);
-inline void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
+static inline void updateBgTile2Words(/*INT32 type,*/ UINT32 offs);
 void dummy();
 void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
 Sint32 GetFileSize(int file_id);

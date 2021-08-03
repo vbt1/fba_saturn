@@ -86,17 +86,6 @@ PER_DGT_C,PER_DGT_S,PER_DGT_X,PER_DGT_Y,PER_DGT_TR,PER_DGT_TL,
 
 static trigger_t	pltrigger[2],pltriggerE[2];
 
-#define	SZ_PERIPHERAL	20
-typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
-
-typedef	struct	SysPort	{
-	UINT8			id;
-	UINT8			connectable;
-	SysPeripheral	*peripheral;
-} SysPort;
-
-static SysPort	*__port;
-
 const SysDevice	*PER_GetDeviceR( const SysPort	*port, Uint32	n );
 SysPort	*PER_OpenPort( void );
 trigger_t	PER_GetTrigger( const SysDevice	*this );

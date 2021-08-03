@@ -276,6 +276,7 @@ int ovlInit(char *szShortName)
 #endif
 	/*scroll_x = 0, */priority = 0;// flipscreen = 0;
 	interrupt_enable = 0;
+	__port = PER_OpenPort();
 }
 
 /*static*/ void bankp_palette_init()

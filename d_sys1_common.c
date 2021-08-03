@@ -2,23 +2,6 @@
 #include "SEGA_INT.H"
 #include "SEGA_DMA.H"
 
-#define	SZ_PERIPHERAL	20
-typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
-
-typedef	struct	{
-	UINT8			id;
-	UINT8			connectable;
-	SysPeripheral	*peripheral;
-} SysPort;
-
-extern SysPort	*__port;
-
-typedef	struct	SysDevice	{
-	UINT8	type;
-	UINT8	size;
-	UINT8	data[1];
-} SysDevice;
-
 void dummy();
 
 /*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
@@ -317,7 +300,8 @@ Reset Functions
 	System1BankedRom = 0;
 	System1BankSwitch = 0;
 	memset(map_dirty,1,8);
-		__port = PER_OpenPort();
+	__port = PER_OpenPort();
+	
 	return 0;
 }
 

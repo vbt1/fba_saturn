@@ -10,9 +10,9 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile  # -fuse-linker-plugin -flto 
 #CCFLAGS2 = -m2 -Os -Wall -Wextra --save-temps -ffreestanding -fno-web -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
-CCFLAGS2 = -m2 -Os -Wall -Wno-missing-braces -Wextra -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCFLAGS2 = -m2 -Os -Wall --save-temps -Wno-missing-braces -Wextra -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
-CCOVLFLAGS = -m2 -O2 -Wall -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCOVLFLAGS = -m2 -O2 -Wall --save-temps -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
 OLVSCRIPT = root/overlay.lnk
 #LDCMNFLAGS = -m2 -O2 -flto -fuse-linker-plugin  -Xlinker -n -Xlinker -S -Xlinker

@@ -61,17 +61,6 @@ UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 UINT8 DrvDips[2] = {0,0};
 UINT8 Wizmode = 0;
 
-#define	SZ_PERIPHERAL	20
-typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
-
-typedef	struct	SysPort	{
-	UINT8			id;
-	UINT8			connectable;
-	SysPeripheral	*peripheral;
-} SysPort;
-
-extern SysPort	*__port;
-
 struct BurnInputInfo WizInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 start"	},

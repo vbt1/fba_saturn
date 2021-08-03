@@ -1710,6 +1710,7 @@ And the address to change banks:
 #ifdef DAC
 	DACReset();
 #endif
+	__port = PER_OpenPort();
 }
 
 /*static*/ INT32 MemIndex()

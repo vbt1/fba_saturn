@@ -4,7 +4,7 @@ char *itoa(int i);
 PcmHn 	pcmStream = {NULL};
 PcmCreatePara	paraStream = {.ring_size = 0, .pcm_size = 0, .ring_addr = NULL, .pcm_addr = NULL};
 //unsigned char stm_work[STM_WORK_SIZE(12, 24)] __attribute__((section("COMMON")));
-unsigned char stm_work[0x780] __attribute__((section("COMMON")));
+unsigned char stm_work[0x780] = {NULL};// __attribute__((section("COMMON")));
 StmHn stm = NULL;
 StmGrpHn grp_hd = NULL;
 SFX *sfx_list = NULL;
@@ -325,7 +325,7 @@ void playMusic(PcmHn *hn)
 */
 //	if(st->play>PCM_STAT_PLAY_ERR_STOP && st->play<=PCM_STAT_PLAY_END)
 	{
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ExecServer   ",80,140);	
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ExecServer   ",80,140);	
 			stat = STM_ExecServer();
 #ifdef DEBUG
 		if(stat ==STM_EXEC_COMPLETED)
@@ -352,19 +352,19 @@ void playMusic(PcmHn *hn)
 #endif		
 		
 		
-		if(stat==STM_EXEC_DOING)
+//		if(stat==STM_EXEC_DOING)
 		{		
 			
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"PCM_MeTaskX      ",80,140);
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"PCM_MeTaskX      ",80,140);
 			PCM_MeTask(hn[0]);
 
 			if (STM_IsTrBufFull(hn[0]) == TRUE) 
 			{
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ResetTrBuf   ",80,140);
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ResetTrBuf   ",80,140);
 				
 				STM_ResetTrBuf(hn[0]);
 			}
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ResetTrend   ",80,140);
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ResetTrend   ",80,140);
 		}
 	}
 }

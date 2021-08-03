@@ -98,23 +98,6 @@ PER_DGT_C,PER_DGT_S,PER_DGT_X,PER_DGT_Y,PER_DGT_TR,PER_DGT_TL,
 
 trigger_t	pltrigger[2]={0,0},pltriggerE[2]={0,0};
 
-#define	SZ_PERIPHERAL	20
-typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
-
-typedef	struct	SysPort	{
-	UINT8			id;
-	UINT8			connectable;
-	SysPeripheral	*peripheral;
-} SysPort;
-
-typedef	struct	SysDevice	{
-	UINT8	type;
-	UINT8	size;
-	UINT8	data[1];
-} SysDevice;
-
-extern SysPort	*__port;
-
 struct BurnInputInfo TransfrmInputList[] = {
 
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy0 + 0,	"p1 coin"},

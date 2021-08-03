@@ -697,6 +697,9 @@ INT32 DrvDoReset()
 	for (INT32 i = 0; i < 3; i++) {
 		AY8910Reset(i);
 	}
+	
+	__port = PER_OpenPort();
+
 	return 0;
 }
 

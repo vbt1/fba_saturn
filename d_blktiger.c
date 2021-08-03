@@ -7,8 +7,8 @@
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
 //#define DEBUG_PCM 1
-//#define PCM_SFX 1
-//#define PCM_MUSIC 1
+#define PCM_SFX 1
+#define PCM_MUSIC 1
 
 /*
 <vbt1> where and when you update the nbg map
@@ -109,9 +109,31 @@ int ovlInit(char *szShortName)
 #endif
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------------
+static inline void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
+{
+	UINT32 attr  = DrvBgRAM[(offs<<1) + 1];
+	UINT32 color = (attr >> 3) & 0x0f;
+	UINT32 code  = DrvBgRAM[(offs<<1)] + ((attr & 0x07) << 8);
+	UINT32 flipx = attr & 0x80;
+
+	UINT16 *map2 = (UINT16 *)&ss_map2[bg_map_lut[offs]];
+	map2[0] = (flipx << 7) | color;
+	map2[1] = (code*4)+0x1000;
+
+/*
+01:51:39<derek>	m_bg_tilemap8x4->set_transmask(0, 0xffff, 0x8000);  // split type 0 is totally transparent in front half 
+01:51:40<derek>	m_bg_tilemap8x4->set_transmask(1, 0xfff0, 0x800f);  // split type 1 has pens 4-15 transparent in front half 
+01:51:41<derek>	m_bg_tilemap8x4->set_transmask(2, 0xff00, 0x80ff);  // split type 1 has pens 8-15 transparent in front half 
+01:51:42<derek>	m_bg_tilemap8x4->set_transmask(3, 0xf000, 0x8fff);  // split type 1 has pens 12-15 transparent in front half 
+*/
+}
+//---------------------------------------------------------------------------------------------------------------
+
 void blacktiger_write(UINT16 address, UINT8 data)
 {
-	if ((address & 0xf800) == 0xd800) 				  // 	CZetMapArea(0xd800, 0xdfff, 0, DrvPalRAM);
+//	if ((address & 0xf800) == 0xd800) 				  // 	CZetMapArea(0xd800, 0xdfff, 0, DrvPalRAM);
+	if (address >= 0xd800 && address <= 0xdfff)
 	{
 		if(DrvPalRAM[address & 0x7ff] != data)
 		{
@@ -547,6 +569,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 #endif
 	watchdog = 0;
 	current_pcm = 0;
+	__port = PER_OpenPort();
 
 	return 0;
 }
@@ -1203,9 +1226,9 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	SCL_Close();
 
 
-	memset((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x8000);
+	memset((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x10000);
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
-	memset((Uint8 *)ss_map2,0x11,0x8000);
+	memset((Uint8 *)ss_map2,0x11,0x10000);
 	SprSpCmd *ss_spritePtr;
 	
 	for (unsigned int i = 3; i <nBurnSprites; i++) 
@@ -1219,65 +1242,49 @@ UINT8 blacktiger_sound_read(UINT16 address)
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
+void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
 {
 	unsigned int c;
+	UINT8 *dpM = pDest;	
+		
 	for (c = 0; c < num; c++) 
 	{
-		unsigned char new_tile[128];
-		UINT8 *dpM = pDest + (c * 128);
-		memcpyl(new_tile,dpM,128);
-		unsigned int i=0,j=0,k=0;
+		unsigned char xnew_tile[128];
 
-		for (k=0;k<128;k+=64)
+		memcpyl(xnew_tile,dpM,128);
+		unsigned char i=0,k=0;
+		unsigned char *new_tile=(unsigned char *)xnew_tile;
+
+		for (k=0;k<2;k++)
 		{
-			dpM = pDest + ((c * 128)+k);
-
-			for (i=0;i<32;i+=4,j+=8)
+			for (i=0;i<8;i++)
 			{
 				if(reverse)
 				{
-					dpM[i]=new_tile[j];
-					dpM[i+1]=new_tile[j+1];
-					dpM[i+2]=new_tile[j+2];
-					dpM[i+3]=new_tile[j+3];
-					dpM[i+32]=new_tile[j+4];
-					dpM[i+33]=new_tile[j+5];
-					dpM[i+34]=new_tile[j+6];
-					dpM[i+35]=new_tile[j+7];
+					dpM[0]=*new_tile++;
+					dpM[1]=*new_tile++;
+					dpM[2]=*new_tile++;
+					dpM[3]=*new_tile++;
+					dpM[32]=*new_tile++;
+					dpM[33]=*new_tile++;
+					dpM[34]=*new_tile++;
+					dpM[35]=*new_tile++;
+					dpM+=4;
 				}
 				else
-				{
-					dpM[i+32]=new_tile[j];
-					dpM[i+33]=new_tile[j+1];
-					dpM[i+34]=new_tile[j+2];
-					dpM[i+35]=new_tile[j+3];
-					dpM[i+0]=new_tile[j+4];
-					dpM[i+1]=new_tile[j+5];
-					dpM[i+2]=new_tile[j+6];
-					dpM[i+3]=new_tile[j+7];
+				{					
+					dpM[32]=*new_tile++;
+					dpM[33]=*new_tile++;
+					dpM[34]=*new_tile++;
+					dpM[35]=*new_tile++;
+					dpM[0]=*new_tile++;
+					dpM[1]=*new_tile++;
+					dpM[2]=*new_tile++;
+					dpM[3]=*new_tile++;
+					dpM+=4;
 				}
 			}
+			dpM+=32;
 		}
 	}
 }
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*inline*/ void updateBgTile2Words(/*INT32 type,*/ UINT32 offs)
-{
-	UINT32 attr  = DrvBgRAM[(offs<<1) + 1];
-	UINT32 color = (attr >> 3) & 0x0f;
-	UINT32 code  = DrvBgRAM[(offs<<1)] + ((attr & 0x07) << 8);
-	UINT32 flipx = attr & 0x80;
-
-	UINT16 *map2 = (UINT16 *)&ss_map2[bg_map_lut[offs]];
-	map2[0] = (flipx << 7) | color;
-	map2[1] = (code*4)+0x1000;
-
-/*
-01:51:39<derek>	m_bg_tilemap8x4->set_transmask(0, 0xffff, 0x8000);  // split type 0 is totally transparent in front half 
-01:51:40<derek>	m_bg_tilemap8x4->set_transmask(1, 0xfff0, 0x800f);  // split type 1 has pens 4-15 transparent in front half 
-01:51:41<derek>	m_bg_tilemap8x4->set_transmask(2, 0xff00, 0x80ff);  // split type 1 has pens 8-15 transparent in front half 
-01:51:42<derek>	m_bg_tilemap8x4->set_transmask(3, 0xf000, 0x8fff);  // split type 1 has pens 12-15 transparent in front half 
-*/
-}
-//---------------------------------------------------------------------------------------------------------------

@@ -13,6 +13,19 @@ extern Uint32 *shared;
 //static Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
 extern unsigned int  nSoundBufferPos;
 extern unsigned int nBurnSprites;
+
+#define	SZ_PERIPHERAL	20
+typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
+
+typedef	struct	SysPort	{
+	UINT8			id;
+	UINT8			connectable;
+	SysPeripheral	*peripheral;
+} SysPort;
+
+extern SysPort	*__port;
+SysPort	*PER_OpenPort( void );
+
 int ovlInit(char *szShortName) __attribute__ ((section(".boot")));
 void cleanBSS() __attribute__ ((section(".clean")));
 void cleanDATA() __attribute__ ((section(".clean")));
