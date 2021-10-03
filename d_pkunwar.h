@@ -8,41 +8,40 @@
 
 #define SOUND_LEN 128
 void dummy();
+inline void make_nova_lut();
 /*static*/ void updateSound();
-/*static*/ unsigned char DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0}, DrvJoy2[8] = {0, 0, 0, 0, 0, 0, 0, 0}, DrvJoy3[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvDips[2]={0,0},DrvReset=0;
-/*static*/ UINT8 DrvInputs[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ short *pAY8910Buffer[6]= {NULL, NULL, NULL, NULL, NULL, NULL}, *pFMBuffer = NULL;
-/*static*/ unsigned char *Mem = NULL;
-/*static*/ UINT8 *DrvMainROM = NULL;
-/*static*/ UINT8 *DrvSubROM = NULL;
-/*static*/ UINT8 *DrvGfxROM0 = NULL;
-/*static*/ UINT8 *DrvGfxROM1 = NULL;
-/*static*/ UINT8 *AllMem = NULL;
-/*static*/ UINT8 *MemEnd = NULL;
-/*static*/ UINT8 *DrvMainRAM = NULL;
-/*static*/ UINT8 *DrvColPROM = NULL;
-/*static*/ UINT8 *DrvBgRAM = NULL;
-/*static*/ UINT8 *DrvFgRAM = NULL;
-/*static*/ UINT8 *DrvSprRAM = NULL;
-/*static*/ UINT8 *DrvPalRAM = NULL;
-/*static*/ UINT8 *DrvSubRAM = NULL;
-/*static*/ UINT32 *offs_lut = NULL;
-/*static*/ UINT16 *cram_lut = NULL;
-/*static*/ UINT8 *CZ80Context = NULL;
+static unsigned char DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0}, DrvJoy2[8] = {0, 0, 0, 0, 0, 0, 0, 0}, DrvJoy3[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvDips[2]={0,0}; //,DrvReset=0;
+static UINT8 DrvInputs[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static short *pAY8910Buffer[6]= {NULL, NULL, NULL, NULL, NULL, NULL}, *pFMBuffer = NULL;
+static UINT8 *DrvMainROM = NULL;
+static UINT8 *DrvSubROM = NULL;
+static UINT8 *DrvGfxROM0 = NULL;
+static UINT8 *DrvGfxROM1 = NULL;
+static UINT8 *MemEnd = NULL;
+static UINT8 *DrvMainRAM = NULL;
+static UINT8 *DrvColPROM = NULL;
+static UINT8 *DrvBgRAM = NULL;
+static UINT8 *DrvFgRAM = NULL;
+static UINT8 *DrvSprRAM = NULL;
+static UINT8 *DrvPalRAM = NULL;
+static UINT8 *DrvSubRAM = NULL;
+static UINT32 *offs_lut = NULL;
+static UINT16 *cram_lut = NULL;
+static UINT8 *CZ80Context = NULL;
 
-/*static*/ UINT32 DrvCoinHold = 0;
-/*static*/ UINT32 DrvCoinHoldframecnt = 0;
-/*static*/ UINT32 flipscreen = 0;
-/*static*/ INT32 xscroll = 0;
-/*static*/ INT32 yscroll = 0;
-/*static*/ UINT32 watchdog = 0;
-/*static*/ UINT8 ninjakun_ioctrl = 0;
+static UINT32 DrvCoinHold = 0;
+static UINT32 DrvCoinHoldframecnt = 0;
+static UINT32 flipscreen = 0;
+static INT32 xscroll = 0;
+static INT32 yscroll = 0;
+static UINT32 watchdog = 0;
+static UINT8 ninjakun_ioctrl = 0;
 
  void cleanSprites();
 ///*static*/ int flipscreen, vblank;
-/*static*/ int vblank = 0;
-/*static*/ int DrvDraw();
+static int vblank = 0;
+/*static*/ inline void DrvDraw();
 /*static*/ int DrvFrame();
 /*static*/ int DrvExit();
  /*static*/ int DrvInit();
@@ -51,7 +50,7 @@ void dummy();
 /*static*/ INT32 NovaDraw();
 /*static*/ INT32 NinjakunInit();
 /*static*/ INT32 NinjakunFrame();
-/*static*/ INT32 NinjakunDraw();
+/*static*/ inline void NinjakunDraw();
 /*static*/ INT32 Raiders5Init();
 /*static*/ INT32 Raiders5Frame();
 /*static*/ INT32 Raiders5Draw();
@@ -62,7 +61,7 @@ void dummy();
 /*static*/ void make_nova_lut();
 //-------------------------------------------------------------------------------------------------
 // Input Handlers
-/*static*/ struct BurnInputInfo DrvInputList[] = {
+static struct BurnInputInfo DrvInputList[] = {
 	{"P1 Coin"      , BIT_DIGITAL  , DrvJoy2 + 7,	"p1 coin"  },
 	{"P1 start"  ,    BIT_DIGITAL  , DrvJoy1 + 5,	"p1 start" },
 	{"P1 Left"      , BIT_DIGITAL  , DrvJoy1 + 0, 	"p1 left"  },
@@ -76,13 +75,13 @@ void dummy();
 
 	{"Service Mode",  BIT_DIGITAL,   DrvJoy2 + 6,   "diag"     },
 
-	{"Reset",	  BIT_DIGITAL  , &DrvReset,	"reset"    },
+	{"Reset",	  BIT_DIGITAL  , NULL,	"reset"    },
 	{"Dip 1",	  BIT_DIPSWITCH, DrvDips + 0,	"dip"	   },
 };
 
 STDINPUTINFO(Drv)
-
-/*static*/ struct BurnInputInfo Raiders5InputList[] = {
+/*
+static struct BurnInputInfo Raiders5InputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy2 + 7,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 up"},
@@ -98,14 +97,14 @@ STDINPUTINFO(Drv)
 	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 right"},
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 };
 
 STDINPUTINFO(Raiders5)
-
-/*static*/ struct BurnDIPInfo DrvDIPList[]=
+*/
+static struct BurnDIPInfo DrvDIPList[]=
 {
 	// Default Values
 	{0x0b, 0xff, 0xff, 0xfb, NULL 			},
@@ -141,7 +140,7 @@ STDINPUTINFO(Raiders5)
 
 STDDIPINFO(Drv)
 
-/*static*/ struct BurnDIPInfo Nova2001DIPList[]=
+static struct BurnDIPInfo Nova2001DIPList[]=
 {
 	{0x10, 0xff, 0xff, 0xfe, NULL			},
 	{0x11, 0xff, 0xff, 0xf8, NULL			},
@@ -195,7 +194,7 @@ STDDIPINFO(Drv)
 
 STDDIPINFO(Nova2001)
 
-/*static*/ struct BurnInputInfo Nova2001InputList[] = {
+static struct BurnInputInfo Nova2001InputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 1,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
@@ -213,14 +212,14 @@ STDDIPINFO(Nova2001)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 7,	"p2 fire 1"	},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 6,	"p2 fire 2"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };
 
 STDINPUTINFO(Nova2001)
 
-/*static*/ struct BurnInputInfo NinjakunInputList[] = {
+static struct BurnInputInfo NinjakunInputList[] = {
 	{"P1 coin",		BIT_DIGITAL,	DrvJoy2 + 7,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 start"	},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 left"	},
@@ -234,14 +233,14 @@ STDINPUTINFO(Nova2001)
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 1"	},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 fire 2"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };
 
 STDINPUTINFO(Ninjakun)
 
-/*static*/ struct BurnDIPInfo NinjakunDIPList[]=
+static struct BurnDIPInfo NinjakunDIPList[]=
 {
 	{0x0c, 0xff, 0xff, 0xac, NULL			},
 	{0x0d, 0xff, 0xff, 0xcf, NULL			},
@@ -302,8 +301,8 @@ STDINPUTINFO(Ninjakun)
 };
 
 STDDIPINFO(Ninjakun)
-
-/*static*/ struct BurnDIPInfo Raiders5DIPList[]=
+/*
+static struct BurnDIPInfo Raiders5DIPList[]=
 {
 	{0x0e, 0xff, 0xff, 0xfe, NULL		},
 	{0x0f, 0xff, 0xff, 0xff, NULL		},
@@ -363,13 +362,13 @@ STDDIPINFO(Ninjakun)
 	{0x0f, 0x01, 0x80, 0x00, "On"		},
 };
 
-STDDIPINFO(Raiders5)
+STDDIPINFO(Raiders5)*/
 //-------------------------------------------------------------------------------------------------
 // Game drivers
 
 // Penguin-Kun Wars (US)
 
-/*static*/ struct BurnRomInfo pkunwarRomDesc[] = {
+static struct BurnRomInfo pkunwarRomDesc[] = {
 	{ "pkwar.01r",    0x4000, 0xce2d2c7b, 1 | BRF_PRG | BRF_ESS },	//  0 Z80 Code
 	{ "pkwar.02r",    0x4000, 0xabc1f661, 1 | BRF_PRG | BRF_ESS },	//  1
 	{ "pkwar.03r",    0x2000, 0x56faebea, 1 | BRF_PRG | BRF_ESS },	//  2
@@ -387,7 +386,7 @@ STD_ROM_FN(pkunwar)
 
 // Nova 2001 (US)
 
-/*static*/ struct BurnRomInfo nova2001uRomDesc[] = {
+static struct BurnRomInfo nova2001uRomDesc[] = {
 	{ "nova2001.1",		0x2000, 0xb79461bd, 1 | BRF_PRG | BRF_ESS}, //  0 Z80 Code
 	{ "nova2001.2",	        0x2000, 0xfab87144, 1 | BRF_PRG | BRF_ESS}, //  1
 	{ "3.6f",		0x2000, 0xb2849038, 1 | BRF_PRG | BRF_ESS}, //  2
@@ -406,7 +405,7 @@ STD_ROM_FN(nova2001u)
 
 // Ninjakun Majou no Bouken
 
-/*static*/ struct BurnRomInfo ninjakunRomDesc[] = {
+static struct BurnRomInfo ninjakunRomDesc[] = {
 	{ "ninja_1.7a",		0x2000, 0x1c1dc141, 1 | BRF_PRG | BRF_ESS}, //  0 Z80 #0 Code
 	{ "ninja_2.7b",		0x2000, 0x39cc7d37, 1 | BRF_PRG | BRF_ESS}, //  1
 	{ "ninja_3.7d",		0x2000, 0xd542bfe3, 1 | BRF_PRG | BRF_ESS}, //  2
@@ -428,8 +427,8 @@ STD_ROM_PICK(ninjakun)
 STD_ROM_FN(ninjakun)
 
 // Raiders5
-
-/*static*/ struct BurnRomInfo raiders5RomDesc[] = {
+/*
+static struct BurnRomInfo raiders5RomDesc[] = {
 	{ "raiders5.1",		0x4000, 0x47cea11f, 1 }, //  0 maincpu
 	{ "raiders5.2",		0x4000, 0xeb2ff410, 1 }, //  1
 
@@ -442,5 +441,5 @@ STD_ROM_FN(ninjakun)
 };
 STD_ROM_PICK(raiders5)
 STD_ROM_FN(raiders5)
-
+*/
 #endif

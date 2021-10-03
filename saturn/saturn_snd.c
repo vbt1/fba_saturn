@@ -6,7 +6,7 @@ PcmCreatePara	paraStream = {.ring_size = 0, .pcm_size = 0, .ring_addr = NULL, .p
 //unsigned char stm_work[STM_WORK_SIZE(12, 24)] __attribute__((section("COMMON")));
 unsigned char stm_work[0x780] = {NULL};// __attribute__((section("COMMON")));
 StmHn stm = NULL;
-StmGrpHn grp_hd = NULL;
+static StmGrpHn grp_hd = NULL;
 SFX *sfx_list = NULL;
 
 void vout(char *string, char *fmt, ...)                                         
@@ -16,6 +16,7 @@ void vout(char *string, char *fmt, ...)
    vsprintf(string, fmt, arg_ptr);                                              
    va_end(arg_ptr);                                                             
 }
+
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmInit(void)
 {

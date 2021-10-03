@@ -10,30 +10,30 @@ int xScroll,yScroll;
 unsigned int color[16];
  //unsigned int nNext[25];
 
-UINT16 map_offset_lut[2048];
-UINT16 map_offset_lut_fg[1024];
+//UINT16 map_offset_lut[2048];
+//UINT16 map_offset_lut_fg[1024];
 
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
-
-struct BurnDriver nBurnDrvGng = {
+/*
+	struct BurnDriver nBurnDrvGng = {
 	"gng", NULL,
 	"Ghosts'n Goblins (World? set 1)\0",
 	DrvRomInfo, DrvRomName, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame//, NULL
 };
-
+*/
 struct BurnDriver nBurnDrvGnga = {
 	"gnga", "gng",
 	"Ghosts'n Goblins (World? set 2)\0",
 	DrvaRomInfo, DrvaRomName, DrvInputInfo, DrvDIPInfo,
 	GngaInit, DrvExit, DrvFrame//, NULL
 };
-
+/*
     if (strcmp(nBurnDrvGng.szShortName, szShortName) == 0)
 		memcpy(shared,&nBurnDrvGng,sizeof(struct BurnDriver));
-	else
+	else*/
 		memcpy(shared,&nBurnDrvGnga,sizeof(struct BurnDriver));
 	ss_reg          = (SclNorscl *)SS_REG;
 }
@@ -68,7 +68,10 @@ struct BurnDriver nBurnDrvGnga = {
 
 /*static*/ int MemIndex()
 {
-	unsigned char *Next; Next = Mem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
+	
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 
 	DrvM6809Rom            = Next; Next += 0x14000;
@@ -92,6 +95,8 @@ struct BurnDriver nBurnDrvGnga = {
 	DrvSprites             = ss_vram+0x1100;//Next; Next += 0x400 * 16 * 16;
 	//DrvPalette             = (unsigned int*)Next; Next += 0x00100 * sizeof(unsigned int);
 	cram_lut				= Next; Next += 65536*2;
+	map_offset_lut			= Next; Next += 2048*2;
+	map_offset_lut_fg		= Next; Next += 1024*2;	
 	MemEnd                 = Next;
 
 	return 0;
@@ -366,11 +371,6 @@ void __fastcall DrvGngZ80Write(unsigned short a, unsigned char d)
 	DrvInitSaturn();
 
 	// Allocate and Blank all required memory
-	Mem = NULL;
-
-	MemIndex();
-	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 	unsigned char *	DrvTempRom = (unsigned char *)0x00200000;
@@ -484,7 +484,25 @@ void __fastcall DrvGngZ80Write(unsigned short a, unsigned char d)
 // vbt : test utilisation des opcodes
 	memset(DrvTempRom,0x00,0x20000);
 //---------------
+	int j=0;
+	for (int my = 0; my < 64; my++) 
+	{
+		for (int mx = 0; mx < 32; mx++) 
+		{
+			map_offset_lut[j] = my|(mx<<5);
+			j++;
+		}
+	}
+	 j=0;
 
+	for (int my = 0; my < 32; my++) 
+	{
+		for (int mx = 0; mx < 32; mx++) 
+		{
+ 			map_offset_lut_fg[j] = (mx|(my<<6));
+			j++;
+		}
+	}
 	return 0;
 }
 
@@ -498,10 +516,10 @@ void __fastcall DrvGngZ80Write(unsigned short a, unsigned char d)
 /*static*/ void initLayers()
 {
     Uint16	CycleTb[]={
-		0x1f56, 0x4eff, //A0
-		0xffff, 0xffff,	//A1
-		0xf5f2, 0xffff,   //B0
-		0xffff, 0xffff  //B1
+		0x1f56, 0x4eee, //A0
+		0xeeee, 0xeeee,	//A1
+		0xf5f2, 0xeeee,   //B0
+		0xeeee, 0xeeee  //B1
 //		0x4eff, 0x1fff, //B1
 	};
 /*
@@ -604,24 +622,6 @@ voir plutot p355 vdp2
 
 //	make_cram_lut();
 	int j=0;
-	for (int my = 0; my < 64; my++) 
-	{
-		for (int mx = 0; mx < 32; mx++) 
-		{
-			map_offset_lut[j] = my|(mx<<5);
-			j++;
-		}
-	}
-	j=0;
-
-	for (int my = 0; my < 32; my++) 
-	{
-		for (int mx = 0; mx < 32; mx++) 
-		{
- 			map_offset_lut_fg[j] = (mx|(my<<6));
-			j++;
-		}
-	}
 	
 	for (j = 0; j < 16; j++) 
 	{
@@ -648,9 +648,6 @@ voir plutot p355 vdp2
 //	BurnYM2203Exit();
 	
 //	GenericTilesExit();
-	
-	free(Mem);
-	Mem = NULL;
 	
 	DrvRomBank = 0;
 	DrvBgScrollX[0] = DrvBgScrollX[1] = 0;

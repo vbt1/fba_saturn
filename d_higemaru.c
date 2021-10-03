@@ -119,7 +119,9 @@ int ovlInit(char *szShortName)
 
 /*static*/  int MemIndex()
 {
-	unsigned char *Next; Next = Mem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
 
 	Rom           = Next; Next += 0x10000;
 	Gfx0           = Next; Next += 0x08000;
@@ -205,11 +207,6 @@ for (i = 0; i < 0x80; i+=4)
 /*static*/  int DrvInit()
 {
 	DrvInitSaturn();
-
-	Mem = NULL;
-	MemIndex();
-	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 //	for (i = 0; i < 6; i++) {
@@ -401,9 +398,6 @@ for (i = 0; i < 0x80; i+=4)
 	
 	CZ80Context = MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
 	map_offset_lut = NULL;
-
-	free (Mem);
-	Mem = NULL;
 
 	cleanDATA();
 	cleanBSS();

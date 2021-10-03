@@ -10,14 +10,14 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvpkunwar = {
 		"pkunw", NULL,
-		"Penguin-Kun Wars (US)\0",
+		"Penguin-Kun Wars (US)",
 		pkunwarRomInfo, pkunwarRomName, DrvInputInfo, DrvDIPInfo,
 		DrvInit, DrvExit, DrvFrame
 	};
 
 	struct BurnDriver nBurnDrvNova2001u = {
 		"nova2001", "pkunw",
-		"Nova 2001 (US)\0",
+		"Nova 2001 (US)",
 		nova2001uRomInfo, nova2001uRomName, Nova2001InputInfo, Nova2001DIPInfo,
 		NovaInit, DrvExit, NovaFrame
 	};
@@ -28,23 +28,25 @@ int ovlInit(char *szShortName)
 		ninjakunRomInfo, ninjakunRomName, NinjakunInputInfo, NinjakunDIPInfo,
 		NinjakunInit, DrvExit, NinjakunFrame
 	};
-
+/*
 	struct BurnDriver nBurnDrvRaiders5 = {
 		"raiders5", "pkunw",
 		"Raiders5\0",
 		raiders5RomInfo, raiders5RomName, Raiders5InputInfo, Raiders5DIPInfo,
 		Raiders5Init, DrvExit, Raiders5Frame
 	};
-
+*/
 	if (strcmp(nBurnDrvpkunwar.szShortName, szShortName) == 0)
 		memcpy(shared,&nBurnDrvpkunwar,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvNova2001u.szShortName, szShortName) == 0)
 		memcpy(shared,&nBurnDrvNova2001u,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvNinjakun.szShortName, szShortName) == 0)
 		memcpy(shared,&nBurnDrvNinjakun,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvRaiders5.szShortName, szShortName) == 0)
-		memcpy(shared,&nBurnDrvRaiders5,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvRaiders5.szShortName, szShortName) == 0)
+//		memcpy(shared,&nBurnDrvRaiders5,sizeof(struct BurnDriver));
 	ss_reg = (SclNorscl *)SS_REG;
+	
+	return 0;
 }
 
 // Memory Handlers
@@ -134,7 +136,7 @@ int ovlInit(char *szShortName)
 		case 0xc003:
 			return AY8910Read(1);
 	}
-
+	
 	return 0;
 }
 //---------------------------------------------------------------------------------------------------------
@@ -665,9 +667,9 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 // Initialization Routines
 
 
-/*static*/ int DrvDoReset()
+void DrvDoReset()
 {
-	DrvReset = 0;
+//	DrvReset = 0;
 
 	memset (DrvBgRAM, 0, 0x1000);
 	memset (DrvMainRAM, 0, 0x0800);
@@ -688,7 +690,6 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	xscroll = 0;
 	yscroll = 0;
-	return 0;
 }
 
 /*static*/ void pkunwar_palette_init()
@@ -754,8 +755,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 /*static*/ int LoadRoms()
 {
-	UINT8 *tmp = (UINT8*)0x00200000;
-	memset(tmp,0x00,0x20000);
+	UINT8 *tmp = (UINT8*)LOWADDR;
+	memset4_fast(tmp,0x00,0x20000);
 
 	if (BurnLoadRom(DrvMainROM  + 0x0000, 0, 1)) return 1;
 	if (BurnLoadRom(DrvMainROM  + 0x4000, 1, 1)) return 1;
@@ -776,7 +777,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	if (BurnLoadRom(DrvColPROM +  0x0000, 7, 1)) return 1;
 
 	pkunwar_palette_init();
-	memset(tmp,0x00,0x20000);
+	memset4_fast(tmp,0x00,0x20000);
 	tmp = NULL;
 
 	return 0;
@@ -785,7 +786,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 /*static*/ int NovaLoadRoms()
 {
 	UINT8 *tmp = (UINT8*)0x00240000;
-	memset(tmp,0x00,0x20000);
+	memset4_fast(tmp,0x00,0x20000);
 	if (BurnLoadRom(DrvMainROM + 0x0000, 0, 1)) return 1;
 	if (BurnLoadRom(DrvMainROM + 0x2000, 1, 1)) return 1;
 	if (BurnLoadRom(DrvMainROM + 0x4000, 2, 1)) return 1;
@@ -802,7 +803,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	if (BurnLoadRom(DrvColPROM, 8, 1)) return 1;
 
 	pkunwar_palette_init();
-	memset(tmp,0x00,0x20000);
+	memset4_fast(tmp,0x00,0x20000);
 	tmp = NULL;
 
 	return 0;
@@ -811,7 +812,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 /*static*/ int NinjakunLoadRoms()
 {
 	UINT8 *tmp = (UINT8*)0x00240000;
-	memset(tmp,0x00,0x20000);
+	memset4_fast(tmp,0x00,0x20000);
 
 	if (BurnLoadRom(DrvMainROM + 0x0000,  0, 1)) return 1;
 	if (BurnLoadRom(DrvMainROM + 0x2000,  1, 1)) return 1;
@@ -839,7 +840,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 /*static*/ int Raiders5LoadRoms()
 {
 	UINT8 *tmp = (UINT8*)0x00240000;
-	memset(tmp,0x00,0x20000);
+	memset4_fast(tmp,0x00,0x20000);
 	if (BurnLoadRom(DrvMainROM + 0x0000,  0, 1)) return 1;
 	if (BurnLoadRom(DrvMainROM + 0x4000,  1, 1)) return 1;
 	if (BurnLoadRom(DrvSubROM  + 0x0000,  2, 1)) return 1;
@@ -857,9 +858,12 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	return 0;
 }
 
-/*static*/ INT32 MemIndex()
+inline void MemIndex()
 {
-	UINT8 *Next; Next = AllMem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset4_fast(Next, 0, MALLOC_MAX);
+	
 	DrvMainROM	 = Next; Next += 0x020000;
 	DrvSubROM	= Next; Next += 0x010000;
 	DrvGfxROM0	= Next; Next += 0x020000;
@@ -874,15 +878,6 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 /*static*/ int DrvInit()
 {
 	DrvInitSaturn(0);
-
-	AllMem = NULL;
-	MemIndex();
-	if ((AllMem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) 
-	{	
-		return 1;
-	}
-
-	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	DrvBgRAM = DrvMainROM + 0x8000;
@@ -944,10 +939,6 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 /*static*/ INT32 NovaInit()
 {
 	DrvInitSaturn(1);
-	AllMem = NULL;
-	MemIndex();
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	
 	DrvFgRAM = DrvMainROM + 0xa000;
@@ -1012,11 +1003,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 /*static*/ INT32 NinjakunInit()
 {
 	DrvInitSaturn(3);
-	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, MALLOC_MAX);
-	MemIndex();
+
 	DrvFgRAM = DrvMainROM + 0xc000;
 	DrvBgRAM = DrvMainROM + 0xc800;
 	DrvSprRAM = DrvMainROM + 0xd000;
@@ -1129,15 +1117,10 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ INT32 Raiders5Init()
+/* INT32 Raiders5Init()
 {
 	DrvInitSaturn(2);
 	make_lut();
-
-	AllMem = NULL;
-	MemIndex();
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	DrvSprRAM = DrvMainROM + 0x8000;
@@ -1217,9 +1200,9 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	NinjakunDoReset();
 
 	return 0;
-}
+} */
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initLayers()
+inline void initLayers()
 {
     Uint16	CycleTb[]={
 		0x4eff, 0x1fff, //A0
@@ -1253,10 +1236,10 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	SCL_SetCycleTable(CycleTb);
 
-	memset(SCL_VDP2_VRAM_B0,0x00,0x2000);
+	memset4_fast(SCL_VDP2_VRAM_B0,0x00,0x2000);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initPosition()
+inline void initPosition()
 {
 	SCL_Open();
 	ss_reg->n1_move_y =  (32<<16) ;
@@ -1267,7 +1250,7 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initNinjaKunColors()
+inline void initNinjaKunColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	 // nbg2 bg
@@ -1275,33 +1258,33 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
-	SCL_SetColRam(SCL_NBG0,8,8,palette);
+//	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initRaiders5Colors()
+/* void initRaiders5Colors()
 {
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initNovaColors()
+inline void initNovaColors()
 {
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_AllocColRam(SCL_NBG2,OFF);
-	SCL_SetColRam(SCL_NBG0,8,8,palette);
+//	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initColors()
+inline void initColors()
 {
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	colAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_AllocColRam(SCL_NBG2,OFF);
-	SCL_SetColRam(SCL_NBG0,8,8,palette);
+//	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void DrvInitSaturn(INT32 i)
@@ -1332,10 +1315,11 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	}
 	if (i == 1)
 		initNovaColors();
-	if(i == 2)
-		initRaiders5Colors();
+//	if(i == 2)
+//		initRaiders5Colors();
 	if(i == 3)
 		initNinjaKunColors();
+	SCL_SetColRam(SCL_NBG0,8,8,palette);
 	initLayers();
 
 	initSprites(264-1,216-1,0,0,8,-32);
@@ -1354,24 +1338,23 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 #ifndef RAZE
 	CZetExit2();
 #endif
-
+/*
 	DrvMainROM = DrvGfxROM0 = DrvGfxROM1 = DrvColPROM = DrvMainRAM = NULL;
 	MemEnd	= DrvBgRAM = DrvFgRAM = DrvSprRAM = DrvPalRAM = NULL;
 	DrvSubRAM = DrvSubROM = CZ80Context = NULL;
 	cram_lut = NULL;
 	offs_lut = NULL;
-
+*/
 	for (UINT32 i = 0; i < 6; i++) {
 		pAY8910Buffer[i] = NULL;
 	}
 
 	pFMBuffer = NULL;
-	free (AllMem);
-	AllMem = NULL;
+/*
 	DrvCoinHold = DrvCoinHoldframecnt = flipscreen = watchdog = 0;
 	xscroll = yscroll = 0;
 	ninjakun_ioctrl = 0;
-
+*/
 	cleanDATA();
 	cleanBSS();
 
@@ -1411,51 +1394,46 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	return 0;
 }
 
-/*static*/ int DrvDraw()
+inline void DrvDraw()
 { 
-	int offs;
-
 	DrawChars(0);
 //	SPR_RunSlaveSH((PARA_RTN*)DrawChars, 0);
 	cleanSprites();
 
-	for (offs = 0;offs < 0x800;offs += 32)
+	SprSpCmd *ss_spritePtr;
+	
+	for (UINT16 offs = 0;offs < 0x800;offs += 32)
 	{
-		int sx,sy,num,color,flip;
-		unsigned int delta;
+		int sx,sy,num,flip;
 
 		sx = DrvBgRAM[1 + offs];
 		sy = DrvBgRAM[2 + offs];
-		delta = (offs>>5)+3;
 
 		if (sy < 16 || sy > 215) 
 		{	
 //			ss_sprite[3+delta].charSize=0;
 			continue;
 		}
+		
+		ss_spritePtr = &ss_sprite[(offs>>5)+3];
+		
 //		sy -= 32;
 		flip  = (DrvBgRAM[offs] & 0x03)<<4;
 		num   = ((DrvBgRAM[offs] & 0xfc) >> 2) + ((DrvBgRAM[offs + 3] & 7) << 6);
-		color = DrvBgRAM[offs + 3] & 0xf0;
 
-		ss_sprite[delta].ax = sx;
-		ss_sprite[delta].ay = sy;
-		ss_sprite[delta].color      = color;
-		ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
-		ss_sprite[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);
-		ss_sprite[delta].charSize   = 0x210;  //0x100 16*16
-		ss_sprite[delta].charAddr   = 0x220+(num<<4);
+		ss_spritePtr->ax = sx;
+		ss_spritePtr->ay = sy;
+		ss_spritePtr->color      = DrvBgRAM[offs + 3] & 0xf0;
+		ss_spritePtr->control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
+		ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);
+		ss_spritePtr->charSize   = 0x210;  //0x100 16*16
+		ss_spritePtr->charAddr   = 0x220+(num<<4);
 	}
 	DrawChars(1);
-
-	return 0;
 }
 
 /*static*/ INT32 NovaFrame()
 {
-	if (DrvReset) {
-		DrvDoReset();
-	}
 	watchdog++;
 
 	{
@@ -1510,8 +1488,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	SPR_WaitEndSlaveSH();
 	return 0;
 }
-
-/*static*/ void DrvPalRAMUpdate()
+/*
+void DrvPalRAMUpdate()
 {
 	for (UINT32 i = 0; i < 16; i++) {
 		if (i != 1) { // ??
@@ -1528,13 +1506,12 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 		colAddr[i] = colBgAddr[i] = cram_lut[color];
 	}
 }
-
-/*static*/ inline INT32 NinjakunDraw()
+*/
+/*static*/ inline void NinjakunDraw()
 {
 	ss_reg->n2_move_x =   xscroll - 8;
 	ss_reg->n2_move_y =  yscroll+32;//-64;
 	nova_draw_sprites(0x200);
-	return 0;
 }
 
 //0x100
@@ -1610,8 +1587,8 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 	SPR_WaitEndSlaveSH();
 	return 0;
 }
-
-/*static*/ INT32 Raiders5Frame()
+#if 0
+INT32 Raiders5Frame()
 {
 /*	if (DrvReset) 
 	{
@@ -1673,67 +1650,69 @@ void nova2001_scroll_y_w(UINT32 offset,UINT32 data)
 
 	return 0;
 }
-
+#endif
 /*static*/ void pkunwar_draw_sprites()
 {
-	for (INT32 offs = 0; offs < 0x800; offs += 32)
+	SprSpCmd *ss_spritePtr;
+	
+	for (UINT32 offs = 0; offs < 0x800; offs += 32)
 	{
 		UINT32 attr = DrvSprRAM[offs+3];
 		UINT32 flip = (DrvSprRAM[offs+0] & 0x03)<<4;
 		UINT32 code = ((DrvSprRAM[offs+0] & 0xfc) >> 2) + ((attr & 0x07) << 6);
-		UINT32 delta = (offs>>5)+3;
 
-		ss_sprite[delta].ax = DrvSprRAM[offs+1];
-		ss_sprite[delta].ay = DrvSprRAM[offs+2];
-		ss_sprite[delta].color      = (attr & 0x0f);
-		ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
-		ss_sprite[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);
-		ss_sprite[delta].charSize   = 0x210;  //0x100 16*16
-		ss_sprite[delta].charAddr   = 0x220+(code<<4);
+		ss_spritePtr = &ss_sprite[(offs>>5)+3];	
+
+		ss_spritePtr->ax = DrvSprRAM[offs+1];
+		ss_spritePtr->ay = DrvSprRAM[offs+2];
+		ss_spritePtr->color      = (attr & 0x0f);
+		ss_spritePtr->control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
+		ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);
+		ss_spritePtr->charSize   = 0x210;  //0x100 16*16
+		ss_spritePtr->charAddr   = 0x220+(code<<4);
 	}
 }
-
-/*static*/ INT32 Raiders5Draw()
+/*
+INT32 Raiders5Draw()
 {
 	pkunwar_draw_sprites();
 	ss_reg->n2_move_x =   xscroll-16;
 	ss_reg->n2_move_y =  yscroll+32 ;
 	return 0;
 }
-
+*/
 /*static*/ void nova_draw_sprites(INT32 color_base)
 {
-	for (INT32 offs = 0; offs < 0x800; offs += 32)
+	SprSpCmd *ss_spritePtr;	
+	
+	for (UINT32 offs = 0; offs < 0x800; offs += 32)
 	{
 		UINT32 attr = DrvSprRAM[offs+3];
-		UINT32 delta = (offs>>5)+3;
 		UINT32 code = DrvSprRAM[offs+0];
-
+	
+		ss_spritePtr = &ss_sprite[(offs>>5)+3];	
+		
 		if (attr & 0x80)
 		{
-			ss_sprite[delta].charSize   = 0;
-			ss_sprite[delta].charAddr   = 0;
-			ss_sprite[delta].ax   = 0;
-			ss_sprite[delta].ay   = 0;
+			ss_spritePtr->charSize   = 0;
+			ss_spritePtr->charAddr   = 0;
+			ss_spritePtr->ax   = 0;
+			ss_spritePtr->ay   = 0;
 			continue;
 		}
 
-		ss_sprite[delta].ax = DrvSprRAM[offs+1] - ((attr & 0x40) << 2);
-		ss_sprite[delta].ay = DrvSprRAM[offs+2];
-		ss_sprite[delta].color      = attr & 0x0f;
-		ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP | (attr & 0x30));
-		ss_sprite[delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);
-		ss_sprite[delta].charSize   = 0x210;  //0x100 16*16
-		ss_sprite[delta].charAddr   = 0x220+(code<<4);
+		ss_spritePtr->ax = DrvSprRAM[offs+1] - ((attr & 0x40) << 2);
+		ss_spritePtr->ay = DrvSprRAM[offs+2];
+		ss_spritePtr->color      = attr & 0x0f;
+		ss_spritePtr->control    = ( JUMP_NEXT | FUNC_NORMALSP | (attr & 0x30));
+		ss_spritePtr->drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);
+		ss_spritePtr->charSize   = 0x210;  //0x100 16*16
+		ss_spritePtr->charAddr   = 0x220+(code<<4);
 	}
 }
 
 /*static*/ int DrvFrame()
 {
-	if (DrvReset) {
-		DrvDoReset();
-	}
-
 	vblank = 0;
 #ifdef RAZE
 	z80_emulate(3000000 / 60);
@@ -1818,7 +1797,7 @@ void make_lut()
 	}
 }
 //-------------------------------------------------------------------------------------------------
-void make_nova_lut()
+inline void make_nova_lut()
 {
 	for (INT32 i = 0; i < 0x400; i++) 
 	{

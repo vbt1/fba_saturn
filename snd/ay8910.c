@@ -20,7 +20,7 @@
 /*static*/// void (*AYStreamUpdate)(void) = NULL;
 
 //int ay8910_index_ym = 0;
-/*static*/ int num = 0;//, ym_num = 0;
+//static int num = 0;//, ym_num = 0;
 
 /*static*/ //double AY8910Volumes[3 * 6];
 /*static*/ //int AY8910RouteDirs[3 * 6];
@@ -68,12 +68,12 @@ struct AY8910
 #define AY_PORTB	(15)
 
 
-/*static*/ struct AY8910 AYPSG[MAX_8910] = {
+struct AY8910 AYPSG[MAX_8910] = {
 	{ .Channel = 0, .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0},
 	{ .Channel = 0, .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0},
 	{ .Channel = 0, .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0}};		/* array of PSG's */
 
-/*static*/ void _AYWriteReg(int n, int r, int v)
+static inline void _AYWriteReg(int n, int r, int v)
 {
 	struct AY8910 *PSG = &AYPSG[n];
 	int old;
@@ -249,7 +249,7 @@ struct AY8910
 
 
 /* write a register on AY8910 chip number 'n' */
-/*static*/ void AYWriteReg(int chip, int r, int v)
+static void AYWriteReg(int chip, int r, int v)
 {
 	if (r > 15) return;
 #ifdef YM2203
@@ -872,7 +872,7 @@ void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 <MartinMan> unsigned can be faster
 */
 
-void AY8910_set_clock(int chip, int clock)
+static void AY8910_set_clock(int chip, int clock)
 {
 	struct AY8910 *PSG = &AYPSG[chip];
 
@@ -888,7 +888,7 @@ void AY8910_set_clock(int chip, int clock)
 }
 
 
-/*static*/ void build_mixer_table(int chip)
+/*static*/inline void build_mixer_table(int chip)
 {
 	struct AY8910 *PSG = &AYPSG[chip];
 	int i;
@@ -931,9 +931,10 @@ void AY8910Reset(int chip)
 
 void AY8910Exit(int chip)
 {
-	(void)chip;
+//	(void)chip;
+	memset(&AYPSG[chip],0x00,sizeof(struct AY8910));
 
-	num = 0;
+//	num = 0;
 //	ym_num = 0;
 
 //	ay8910_index_ym = 0;
@@ -951,11 +952,11 @@ int AY8910Init(int chip, int clock, int sample_rate,
 	struct AY8910 *PSG = &AYPSG[chip];
 
 //	AYStreamUpdate = dummy_callback;
-
+/*
 	if (chip != num) {
 		return 1;
 	}
-
+*/
 	memset((void *)PSG, 0, sizeof(struct AY8910));
 	PSG->SampleRate = sample_rate;
 	PSG->PortAread = portAread;
@@ -969,7 +970,7 @@ int AY8910Init(int chip, int clock, int sample_rate,
 
 	AY8910Reset(chip);
 
-	num++;
+//	num++;
 
 	return 0;
 }

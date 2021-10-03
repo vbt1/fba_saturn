@@ -26,7 +26,7 @@ typedef struct {
 	int nPlaying;
 }MSM6295ChannelInfo;
 
-static struct {
+struct {
 	int nVolume;
 	int nSampleRate;
 	int nSampleSize;
@@ -322,7 +322,7 @@ void MSM6295Exit(int nChip)
 {
 	unsigned int nChannel;
 	for (nChannel = 0; nChannel < 4; nChannel++) {
-		free(MSM6295ChannelData[nChip][3-nChannel]);
+//		free(MSM6295ChannelData[nChip][3-nChannel]);
 //		free(MSM6295ChannelData[nChip][nChannel]);
 //		MSM6295ChannelData[nChip][3-nChannel] = NULL;
 		MSM6295ChannelData[nChip][3-nChannel] = NULL;

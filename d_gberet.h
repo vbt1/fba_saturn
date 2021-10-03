@@ -8,8 +8,8 @@
 #include "raze/raze.h"
 
 #define SOUND_LEN 256
-/*static*/ int DrvFrame();
-/*static*/ int DrvDraw();
+/*static*/ void DrvFrame();
+void DrvDraw();
 /*static*/ INT32 DrvExit();
 /*static*/ int gberetInit();
 /*static*/ int mrgoemonInit();
@@ -20,24 +20,24 @@ void SN76489Init(int Num, int Clock, int SignalAdd);
 void cleanSprites();
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 #ifdef CACHE
-/*static*/ unsigned char 	bg_dirtybuffer[2048];
+static UINT8 	*bg_dirtybuffer=NULL;//[2048];
 #endif
 
-/*static*/ unsigned int _30_HZ=0;
-/*static*/ unsigned char *Mem = NULL, *MemEnd = NULL, *Rom = NULL;
-/*static*/ unsigned char DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-/*static*/ unsigned char DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-/*static*/ unsigned char DrvJoy3[8] = {0,0,0,0,0,0,0,0};
-/*static*/ unsigned char DrvDips[4] = {0,0,0,0};
+unsigned int _30_HZ=0;
+static UINT8 *MemEnd = NULL, *Rom = NULL, *load_rom=NULL;
+static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+unsigned char DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+unsigned char DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+unsigned char DrvDips[4] = {0,0,0,0};
 /*static*/ //unsigned char DrvReset = 0;
 
-/*static*/ unsigned char nmi_enable = 0, irq_enable = 0;
-/*static*/ unsigned char gberet_spritebank = 0;
+unsigned char nmi_enable = 0, irq_enable = 0;
+unsigned char gberet_spritebank = 0;
 /*static*/// int mrgoemon_bank = 0;
 
-/*static*/ int game_type = 0; // 0 gberet / rushatck, 1 gberetb, 2 mrgoemon
+int game_type = 0; // 0 gberet / rushatck, 1 gberetb, 2 mrgoemon
 
-/*static*/ struct BurnInputInfo DrvInputList[] = {
+static struct BurnInputInfo DrvInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy3 + 0,	"p1 coin"   },
 	{"Coin 2"       , BIT_DIGITAL  , DrvJoy3 + 1,	"p2 coin"   },
 	{"P1 Start"     , BIT_DIGITAL  , DrvJoy3 + 3,	"p1 start"  },
@@ -68,7 +68,7 @@ void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 
 STDINPUTINFO(Drv)
 
-/*static*/ struct BurnDIPInfo gberetDIPList[]=
+static struct BurnDIPInfo gberetDIPList[]=
 {
 	{0x12, 0xff, 0xff, 0xff, NULL },
 
@@ -162,7 +162,7 @@ STDINPUTINFO(Drv)
 };
 
 STDDIPINFO(gberet)
-/*static*/ struct BurnDIPInfo mrgoemonDIPList[]=
+static struct BurnDIPInfo mrgoemonDIPList[]=
 {
 	{0x12, 0xff, 0xff, 0xff, NULL },
 
@@ -263,7 +263,7 @@ STDDIPINFO(mrgoemon)
 
 // Green Beret
 
-/*static*/ struct BurnRomInfo gberetRomDesc[] = {
+static struct BurnRomInfo gberetRomDesc[] = {
 	{ "577l03.10c",   0x4000, 0xae29e4ff, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 Code
 	{ "577l02.8c",    0x4000, 0x240836a5, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "577l01.7c",    0x4000, 0x41fa3e1f, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -286,7 +286,7 @@ STD_ROM_FN(gberet)
 
 // Mr. Goemon (Japan)
 
-/*static*/ struct BurnRomInfo mrgoemonRomDesc[] = {
+static struct BurnRomInfo mrgoemonRomDesc[] = {
 	{ "621d01.10c",   0x8000, 0xb2219c56, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 Code
 	{ "621d02.12c",   0x8000, 0xc3337a97, 1 | BRF_PRG | BRF_ESS }, //  1
 

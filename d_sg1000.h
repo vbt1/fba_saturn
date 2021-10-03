@@ -87,7 +87,6 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
 #define MAPPER_MSX         (0x21)
 #define MAPPER_MSX_NEMESIS (0x22)
 
-/*static*/ UINT8 *AllMem	= NULL;
 /*static*/ UINT8 *MemEnd	= NULL;
 /*static*/ UINT8 *AllRam	= NULL;
 /*static*/ UINT8 *RamEnd	= NULL;

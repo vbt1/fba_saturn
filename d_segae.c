@@ -10,21 +10,21 @@
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
-
+/*
 	struct BurnDriver nBurnDrvHangonjr = {
 		"hangonjr", "segae", 
 		"Hang-On Jr.", 
 		hangonjrRomInfo, hangonjrRomName, HangonjrInputInfo, HangonjrDIPInfo,
 		DrvHangonJrInit, DrvExit, DrvFrame
 	};
-
+*/
 	struct BurnDriver nBurnDrvTetrisse = {
 		"tetrisse", "segae",
 		"Tetris (Japan, System E)",
 		TetrisseRomInfo, TetrisseRomName, TetrisseInputInfo, TetrisseDIPInfo,
 		DrvTetrisInit, DrvExit, DrvFrame
 	};
-
+/*
 	struct BurnDriver nBurnDrvTransfrm = {
 		"transfrm", "segae",
 		"Transformer",
@@ -38,7 +38,7 @@ int ovlInit(char *szShortName)
 		AstroflRomInfo, AstroflRomName, TransfrmInputInfo, TransfrmDIPInfo,
 		DrvAstroflInit, DrvExit, DrvFrame
 	};
-
+*/
 	struct BurnDriver nBurnDrvFantzn2 = {
 		"fantzn2", "segae",
 		"Fantasy Zone 2 - The Tears of Opa-Opa",
@@ -52,28 +52,28 @@ int ovlInit(char *szShortName)
 		opaopaRomInfo, opaopaRomName, Segae2pInputInfo, OpaopaDIPInfo,
 		DrvOpaopaInit, DrvExit, DrvFrame
 	};
-
+/*
 	struct BurnDriver nBurnDrvSlapshtr = {
 		"slapshtr", "segae",
 		"Slap Shooter",
 		slapshtrRomInfo, slapshtrRomName, TransfrmInputInfo, TransfrmDIPInfo,
 		DrvSlapshtrInit, DrvExit, DrvFrame
 	};
-
-	if (strcmp(nBurnDrvHangonjr.szShortName, szShortName) == 0) 
-	memcpy(shared,&nBurnDrvHangonjr,sizeof(struct BurnDriver));
+*/
+//	if (strcmp(nBurnDrvHangonjr.szShortName, szShortName) == 0) 
+//	memcpy(shared,&nBurnDrvHangonjr,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvTetrisse.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvTetrisse,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvTransfrm.szShortName, szShortName) == 0) 
-	memcpy(shared,&nBurnDrvTransfrm,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvTransfrm.szShortName, szShortName) == 0) 
+//	memcpy(shared,&nBurnDrvTransfrm,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvFantzn2.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvFantzn2,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvAstrofl.szShortName, szShortName) == 0) 
-	memcpy(shared,&nBurnDrvAstrofl,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvAstrofl.szShortName, szShortName) == 0) 
+//	memcpy(shared,&nBurnDrvAstrofl,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvOpaopa.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvOpaopa,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvSlapshtr.szShortName, szShortName) == 0) 
-	memcpy(shared,&nBurnDrvSlapshtr,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvSlapshtr.szShortName, szShortName) == 0) 
+//	memcpy(shared,&nBurnDrvSlapshtr,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -101,7 +101,7 @@ void __fastcall systeme_main_write(UINT16 address, UINT8 data)
 		}
 	}
 }
-
+#if 0
 UINT32 scalerange(UINT32 x, UINT32 in_min, UINT32 in_max, UINT32 out_min, UINT32 out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -126,7 +126,6 @@ UINT8 scale_accel(UINT32 PaddlePortnum) {
 
 	return Temp;
 }
-
 
 UINT8 __fastcall hangonjr_port_f8_read (UINT8 port)
 {
@@ -209,8 +208,9 @@ inline void __fastcall hangonjr_port_fa_write (UINT8 data)
 	/* Seems to write the same pattern again and again bits ---- xx-x used */
 	port_fa_last = data;
 }
+#endif
 
-void segae_bankswitch (void)
+inline void segae_bankswitch (void)
 {
 	UINT32 bankloc = 0x10000 + (rombank * 0x4000);
 
@@ -227,7 +227,7 @@ void segae_bankswitch (void)
 	}
 }
 
-void __fastcall bank_write(UINT8 data)
+inline void __fastcall bank_write(UINT8 data)
 {
 	segae_vdp_vrambank[0]	= (data & 0x80) >> 7; /* Back  Layer VDP (0) VRAM Bank */
 	segae_vdp_vrambank[1]	= (data & 0x40) >> 6; /* Front Layer VDP (1) VRAM Bank */
@@ -484,7 +484,7 @@ UINT8 __fastcall systeme_main_in(UINT16 port)
 		case 0xe2: return 0xff - DrvInput[2];
 		case 0xf2: return DrvDip[0];
 		case 0xf3: return DrvDip[1];
-		case 0xf8: return hangonjr_port_f8_read(port);
+//		case 0xf8: return hangonjr_port_f8_read(port);
 	}	
 	////bprintf(PRINT_NORMAL, _T("IO Read %x\n"), a);
 	return 0;
@@ -515,7 +515,7 @@ void __fastcall systeme_main_out(UINT16 port, UINT8 data)
 		case 0xf7:	bank_write(data);
 		return;
 
-		case 0xfa:	hangonjr_port_fa_write(data);
+//		case 0xfa:	hangonjr_port_fa_write(data);
 		return;
 	}
 }
@@ -560,9 +560,9 @@ void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],con
 		rom[A] = BITSWAP08(src,7,tbl[0],5,tbl[1],3,tbl[2],1,tbl[3]) ^ data_xor[row];
 	}
 	
-	memcpy(pDestDec + 0x8000, pDest + 0x8000, 0x4000);
+	memcpyl(pDestDec + 0x8000, pDest + 0x8000, 0x4000);
 }
-
+/*
 void astrofl_decode(void)
 {
 	const UINT8 opcode_xor[64] =
@@ -604,15 +604,17 @@ void astrofl_decode(void)
 	};
 	sega_decode_2(DrvMainROM, DrvMainROMFetch, opcode_xor,opcode_swap_select,data_xor,data_swap_select);
 }
-
+*/
 INT32 MemIndex(UINT32 game)
 {
-	UINT8 *Next; Next	= AllMem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
 
 	DrvMainROM	 	    = (UINT8 *)Next; Next += 0x80000;// 0x00200000;
 	
 	if(game>2)
-		DrvMainROMFetch	= (UINT8 *)0x00280000;
+		DrvMainROMFetch	= (UINT8 *)LOWADDR+0x80000;
 
 	mc8123key           = Next; Next += 0x02000;
 	CZ80Context			= Next; Next += sizeof(cz80_struc);
@@ -630,8 +632,8 @@ INT32 MemIndex(UINT32 game)
 
 	RamEnd		= Next;
 	
-	name_lut	= (UINT16 *)0x00200000;//Next; Next += 0x10000*sizeof(UINT16);
-	bp_lut		= (UINT32 *)0x00220000;//Next; Next += 0x10000*sizeof(UINT32);
+	name_lut	= (UINT16 *)LOWADDR;//Next; Next += 0x10000*sizeof(UINT16);
+	bp_lut		= (UINT32 *)(LOWADDR+0x20000);//Next; Next += 0x10000*sizeof(UINT32);
 	cram_lut	= (UINT16 *)Next; Next += 0x40*sizeof(UINT16);
 	map_lut	 	= Next; Next += 0x800*sizeof(UINT16);	
 //	map_lut	 	= (UINT16 *)0x00260000;	
@@ -646,8 +648,15 @@ INT32 DrvExit()
 	nBurnFunction = NULL;
 	wait_vblank();
 	DrvDoReset();
-	CZetExit2();
+
 	SN76496Exit();
+
+	CZetSetWriteHandler(NULL);
+	CZetSetReadHandler(NULL);
+	CZetSetInHandler(NULL);
+	CZetSetOutHandler(NULL);
+
+	CZetExit2();
 	
 	memset(ss_scl,0x00,SCL_MAXLINE*sizeof(Fixed32));
 	memset(ss_scl1,0x00,SCL_MAXLINE*sizeof(Fixed32));
@@ -655,26 +664,65 @@ INT32 DrvExit()
 	initPosition();
 //	wait_vblank();
 
-	CZ80Context = mc8123key = DrvMainROM	=DrvMainROMFetch = DrvRAM = RamEnd = NULL;
+	memset(CZ80Context,0x00,sizeof(cz80_struc));
+	CZ80Context	=  NULL;
+
+	mc8123key = DrvMainROM	=DrvMainROMFetch = DrvRAM = RamEnd = NULL;
+/*
+	memset(segae_vdp_cram[0],0x00,0x20);
+	memset(segae_vdp_cram[1],0x00,0x20);
+	memset(mc8123key,0x00,0x2000);
+	memset((UINT8*)LOWADDR,0x00,0x40000);
+	memset((UINT8*)LOWADDR+0x80000,0x00,0x40000);	
 	segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
 	segae_vdp_cram[0] = segae_vdp_regs[0] = segae_vdp_cram[1] = segae_vdp_regs[1] = NULL;
+segae_vdp_vrambank[0]= segae_vdp_vrambank[1]=0;
+ntab[0]= ntab[1]=0;
+satb[0]= satb[1]=0;
+scroll_x[0]= scroll_x[1]=0;
+scroll_y[0]= scroll_y[1]=0;
+segae_vdp_cmdpart[0]= segae_vdp_cmdpart[1]=0;
+segae_vdp_command[0]= segae_vdp_command[1]=0;
+segae_vdp_accessmode[0]= segae_vdp_accessmode[1]=0;
+segae_vdp_accessaddr[0]= segae_vdp_accessaddr[1]=0;
+segae_vdp_readbuffer[0]= segae_vdp_readbuffer[1]=0;
+	
 	name_lut = cram_lut = map_lut = NULL;
 	bp_lut = NULL;
 	ss_scl1 = NULL;
-	
+	__port = NULL;
+	memset(DrvJoy0,0x00,8);	
+	memset(DrvJoy1,0x00,8);
+	memset(DrvJoy2,0x00,8);
+	memset(DrvJoy3,0x00,8);
+	memset(DrvJoy4,0x00,8);
+	DrvDip[0] = DrvDip[1] = 0;
+	DrvInput[0] = DrvInput[1] = DrvInput[2] = DrvInput[3] = DrvInput[4] = 0;
+*/
 	mc8123_banked = 0;
 	segae_8000bank = 0;
-	port_fa_last = 0;
+	rombank = 0;
 	currentLine = 0;
+//	DrvWheel = DrvAccel = 0;
 
-	free(AllMem);
-	AllMem = NULL;
-//	ss_port = NULL;
-
-	SCL_SetWindow(SCL_W0,(UINT32)NULL,(UINT32)NULL,(UINT32)NULL,0,0,0,0);
- 	SCL_SetWindow(SCL_W1,(UINT32)NULL,(UINT32)NULL,(UINT32)NULL,0,0,0,0);
+hintcount = 0;
+vintpending = 0;
+hintpending = 0;
+currentLine = 0;	
+	
+//	SCL_SetWindow(SCL_W0,(UINT32)NULL,OFF,(UINT32)NULL,0xff,0xff,0xff,0xff);
+// 	SCL_SetWindow(SCL_W1,(UINT32)NULL,OFF,(UINT32)NULL,0xff,0xff,0xff,0xff);
+	memset ((SclWinscl *)SS_REGW,0x00,sizeof(SclWinscl));
 	initScrollingNBG1(OFF,(UINT32)NULL);
+SclProcess = 2;
+	wait_vblank();
+/*
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);	
 
+	cleanSprites();	
+*/	
 	cleanDATA();
 	cleanBSS();
 
@@ -682,7 +730,7 @@ INT32 DrvExit()
 	return 0;
 }
 
-INT32 DrvDoReset()
+void DrvDoReset()
 {
 	memset (DrvRAM, 0, RamEnd - DrvRAM);
 	
@@ -698,10 +746,9 @@ INT32 DrvDoReset()
 	CZetReset();
 	CZetClose();
 	nSoundBufferPos=0;	
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
- void DrvClearOpposites(UINT8* nJoystickInputs)
+inline void DrvClearOpposites(UINT8* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x03) == 0x03) {
 		*nJoystickInputs &= ~0x03;
@@ -711,7 +758,7 @@ INT32 DrvDoReset()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
- void DrvMakeInputs()
+inline void DrvMakeInputs()
 {
 	// Reset Inputs
 	DrvInput[0] = DrvInput[1] = DrvInput[2] = DrvInput[3] = DrvInput[4] = 0x00;
@@ -843,35 +890,30 @@ INT32 DrvInit(UINT8 game)
 	UINT8 mc8123 = 0;
 	DrvInitSaturnS(game);
 
-	AllMem = NULL;
-	MemIndex(game);
-	
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
-	{
-		return 1;
-	}
-	memset(AllMem, 0, MALLOC_MAX);
 	memset(cache, 0, 0x80000);
-
 	MemIndex(game);
 
+	if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
+	if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
+	
+	
 	switch (game) {
 		case 0:
-			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
-			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
+//			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
+//			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
 			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;	// ( "rom3.ic4",   0x18000, 0x08000, CRC(d2ba9bc9) SHA1(85cf2a801883bf69f78134fc4d5075134f47dc03) )
 			break;
 		case 1:
-		case 2: // transfrm
-			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
+/*		case 2: // transfrm
+			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) // Fixed Code
 			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
 			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;	// ( "rom3.ic4",   0x18000, 0x08000, CRC(d2ba9bc9) SHA1(85cf2a801883bf69f78134fc4d5075134f47dc03) )
 			if (BurnLoadRom(DrvMainROM + 0x20000,  3, 1)) return 1;	// ( "rom2.ic3",   0x20000, 0x08000, CRC(e14da070) SHA1(f8781f65be5246a23c1f492905409775bbf82ea8) )
 			if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1; // ( "rom1.ic2",   0x28000, 0x08000, CRC(3810cbf5) SHA1(c8d5032522c0c903ab3d138f62406a66e14a5c69) )
-			break;
+			break; */
 		case 3: // fantzn2
-			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
-			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;
+//			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
+//			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x20000,  2, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x30000,  3, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x40000,  4, 1)) return 1;
@@ -881,8 +923,8 @@ INT32 DrvInit(UINT8 game)
 			mc8123 = 1;
 			break;
 		case 4: // opaopa
-			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
-			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;
+//			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
+//			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x20000,  3, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1;
@@ -892,7 +934,7 @@ INT32 DrvInit(UINT8 game)
 			mc8123 = 1;
 			mc8123_banked = 1;
 			break;
-		case 5: // astrofl
+/*		case 5: // astrofl
 			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;
@@ -900,7 +942,7 @@ INT32 DrvInit(UINT8 game)
 			if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1;
 			mc8123 = 1;
 			astrofl_decode();
-			break;
+			break;*/
 	}
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
@@ -954,7 +996,7 @@ INT32 DrvTransfrmInit()
 
 	return DrvInit(2);
 }
-
+/*
 INT32 DrvAstroflInit()
 {
 //	leftcolumnblank = 1;
@@ -972,18 +1014,19 @@ INT32 DrvHangonJrInit()
 //	leftcolumnblank = 1;
 	return DrvInit(1);
 }
-
+*/
 INT32 DrvTetrisInit()
 {
 	return DrvInit(0);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void	SetVblank2( void )
+/*
+inline void	SetVblank2( void )
 {
 	__port = PER_OpenPort();
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
-void initColors()
+inline void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
@@ -993,7 +1036,7 @@ void initColors()
 	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void initLayers(void)
+inline void initLayers(void)
 {
 //    SclConfig	config;
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
@@ -1047,7 +1090,7 @@ void initLayers(void)
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void initPosition(void)
+inline void initPosition(void)
 {
 	SCL_Open();
 	ss_reg->n1_move_x = 0;
@@ -1093,15 +1136,15 @@ void DrvInitSaturnS(UINT8 game)
 
 	if(game==1)
 	{
-			initSprites(240-1,192-1,16,0,0,0);
-			SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17+8,0,240+8,191);
-			SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17+8,0,240+8,191);
+		initSprites(240-1,192-1,16,0,0,0);
+		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,17+8,0,240+8,191);
+		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,17+8,0,240+8,191);
 	}
 	else if(game==5 || game==3 || game==2)
 	{
-			initSprites(248-1,192-1,8,0,0,0);
-			SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,9,0,248,191);
-			SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,9,0,248,191);
+		initSprites(248-1,192-1,8,0,0,0);
+		SCL_SetWindow(SCL_W0,SCL_NBG0,SCL_NBG1,SCL_NBG1,9,0,248,191);
+		SCL_SetWindow(SCL_W1,SCL_NBG1,SCL_NBG0,SCL_NBG0,9,0,248,191);
 	}
 	else
 	{
@@ -1114,22 +1157,22 @@ void DrvInitSaturnS(UINT8 game)
 	initScrollingNBG1(ON, (UINT32)SCL_VDP2_VRAM_B0+0x8000);
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	memset(&ss_vram[0x1100],0,0x12000);
+	memset4_fast(&ss_vram[0x1100],0,0x12000);
 	
 // vbt : remis
 	memset(ss_scl,0xff,SCL_MAXLINE*sizeof(Fixed32));
 	memset(ss_scl1,0xff,SCL_MAXLINE*sizeof(Fixed32));
 	nBurnFunction = SCL_SetLineParamNBG1;
-	SetVblank2();	
+	__port = PER_OpenPort();	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void SCL_SetLineParamNBG1()
+ void SCL_SetLineParamNBG1()
 {
 	UINT32 *address		=(UINT32 *)(SCL_VDP2_VRAM_B0+0x8000);	
 	memcpyl((void *)address,(void *)&ss_scl1[0], nBurnLinescrollSize);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void initScrollingNBG1(UINT8 enabled,UINT32 address)
+inline void initScrollingNBG1(UINT8 enabled,UINT32 address)
 {
 	UINT16 temp = ss_reg->linecontrl;
 	UINT32	*addr;
@@ -1183,11 +1226,12 @@ void update_sprites(UINT8 chip, UINT32 index)
 			return;
 		}
 		unsigned int inv_delta=INV-delta;
+		ss_spritePtr+=inv_delta;
 		//Actual Y position is +1 
 		yp ++;
 		//Wrap Y coordinate for sprites > 240 
 		if(yp > 240) yp -= 256;
-		ss_spritePtr[inv_delta].ay = yp;
+		ss_spritePtr->ay = yp;
 
 		/* Adjust dimensions for double size sprites */
 		if(segae_vdp_regs[chip][1] & 0x01)
@@ -1197,22 +1241,23 @@ void update_sprites(UINT8 chip, UINT32 index)
 		}
 
 		// Clip sprites on left edge 
-		ss_spritePtr[inv_delta].control = ( JUMP_NEXT | FUNC_NORMALSP);
-		ss_spritePtr[inv_delta].drawMode   = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
-		ss_spritePtr[inv_delta].charSize    = (width<<5) + height;  //0x100
-		ss_spritePtr[inv_delta].color    = chip<<4;
+		ss_spritePtr->control  = ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_spritePtr->drawMode = ( COLOR_0 | ECD_DISABLE | COMPO_REP);		
+		ss_spritePtr->charSize = (width<<5) + height;  //0x100
+		ss_spritePtr->color    = chip<<4;
 	}
 
 	if(index>=satb[chip]+0x80)
 		if(index < satb[chip]+0x100)
 	{
 		SprSpCmd *ss_spritePtr;
-		ss_spritePtr = &ss_sprite[3+(chip<<6)];
 
 		UINT8 *st = (UINT8 *)&segae_vdp_vram[chip][satb[chip]];
 		unsigned int delta=(((index-(satb[chip]+0x80)))>>1);
 		unsigned int inv_delta=INV-delta;
 
+		ss_spritePtr = &ss_sprite[3+(chip<<6)+inv_delta];
+		
 //		delta &= 0x1f;
 
 		if((index-satb[chip]) &1)
@@ -1224,7 +1269,7 @@ void update_sprites(UINT8 chip, UINT32 index)
 			if(segae_vdp_regs[chip][1] & 0x02) n &= 0x01FE;
 
 //					ss_sprite[delta+3].charAddr   =  0x220; //+(n<<2);
-			ss_spritePtr[inv_delta].charAddr   =  0x220+(0x2000*chip) +(n<<2); // +((64*chip)<<2);
+			ss_spritePtr->charAddr   =  0x220+(0x2000*chip) +(n<<2); // +((64*chip)<<2);
 		}
 		else
 		{
@@ -1232,13 +1277,13 @@ void update_sprites(UINT8 chip, UINT32 index)
 			int xp = st[0x80 + (delta << 1)];
 			//X position shift 
 			if(segae_vdp_regs[chip][0] & 0x08) xp -= 8;
-			ss_spritePtr[inv_delta].ax = xp;
+			ss_spritePtr->ax = xp;
 		}
 
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void update_bg(UINT8 chip, UINT32 index)
+inline void update_bg(UINT8 chip, UINT32 index)
 {
 /// 		segae_vdp_vram[chip][ segae_vdp_vrambank[chip]*0x4000 + segae_vdp_accessaddr[chip] ] = data;
 
@@ -1272,7 +1317,7 @@ void update_bg(UINT8 chip, UINT32 index)
 	*sg= *pg = (temp1<<2 | temp2 );
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void make_map_lut()
+inline void make_map_lut()
 {
 	UINT32 row,column;
 
@@ -1288,7 +1333,7 @@ void make_map_lut()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void make_name_lut()
+inline void make_name_lut()
 {
 	for(UINT32 j = 0; j < 0x10000; j++)
 	{
@@ -1315,6 +1360,7 @@ Bit 08 - 00 : Pattern Index
 //-------------------------------------------------------------------------------------------------------------------------------------
 void make_bp_lut(void)
 {
+	UINT32 *bp_l =(UINT32 *)bp_lut;
     for(UINT32 j = 0; j < 0x10000; j++)
     {
         UINT32 row = 0;
@@ -1336,11 +1382,11 @@ void make_bp_lut(void)
         if(i & 0x0004) row |= 0x00000100;
         if(i & 0x0002) row |= 0x00000010;
         if(i & 0x0001) row |= 0x00000001;
-        bp_lut[j] = row;
+        *bp_l++ = row;
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void make_cram_lut(void)
+inline void make_cram_lut(void)
 {
     for(UINT32 j = 0; j < 0x40; j++)
     {
@@ -1362,7 +1408,7 @@ void make_cram_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void make_lut()
 {
-	memset((UINT8 *)0x00200000,0x00,0x80000);
+//	memset((UINT8 *)LOwADDR,0x00,0x80000);
 	make_name_lut();
 	make_bp_lut();
 	make_cram_lut();
@@ -2200,3 +2246,63 @@ void make_lut()
  End
  ----------------------------------------------------------------------------
 */
+//-------------------------------------------------------------------------------------------------------------------------------------
+void	SCL_SetWindow(Uint8 win,Uint32 logic,Uint32 enable,Uint32 area,		Uint16 sx,Uint16 sy,Uint16 ex,Uint16 ey)
+{
+    Uint16	*sxy=NULL,*exy=NULL;
+    Uint8	*contrl=NULL;
+    Uint8	en_on,en_off;
+    Uint8	ar_on,ar_off;
+	SclWinscl *ss_regw = (SclWinscl *)SS_REGW;
+
+if(win==SCL_W0){
+	ss_regw->win0_start[0] = sx*2;
+	ss_regw->win0_end[0] = ex*2;
+	ss_regw->win0_start[1] = sy;
+    ss_regw->win0_end[1] = ey;
+		en_on  = 0x02;
+		en_off = 0xfd;
+		ar_on  = 0x01;
+		ar_off = 0xfe;
+}else
+{
+	ss_regw->win1_start[0] = sx*2;
+	ss_regw->win1_end[0] = ex*2;
+
+	ss_regw->win1_start[1] = sy;
+    ss_regw->win1_end[1] = ey;	
+		en_on  = 0x08;
+		en_off = 0xf7;
+		ar_on  = 0x04;
+		ar_off = 0xfb;	
+}
+    contrl = (Uint8 *)&ss_regw->wincontrl[0];
+	
+	if( enable & SCL_NBG0 )
+	{	
+		if( logic & SCL_NBG0 )
+				contrl[1] |= 0x80;
+		else	contrl[1] &= 0x7f;
+
+//		if(area | enable)
+		if( area & SCL_NBG0 )
+				contrl[1] |= ar_on;
+		else	contrl[1] &= ar_off;
+		
+		contrl[1] |= en_on;
+	}
+
+	if( enable & SCL_NBG1 )
+	{
+		if( logic & SCL_NBG1 )
+				contrl[0] |= 0x80;
+		else	contrl[0] &= 0x7f;
+		
+		if( area & SCL_NBG1 )
+				contrl[0] |= ar_on;
+		else	contrl[0] &= ar_off;
+
+		contrl[0] |= en_on;		
+	}
+	SCL_Open();
+}

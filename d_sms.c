@@ -14,7 +14,7 @@ unsigned char curr_sprite=0;
 //-------------------------------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
 {
-//	cleanBSS();
+	cleanBSS();
 #ifdef RAZE
 	struct BurnDriver nBurnDrvsms_akmw = {
 		"sms", NULL,
@@ -207,19 +207,24 @@ static void	SetVblank2( void )
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  void SaturnInitMem()
 {
-	UINT8 *Next; Next = (UINT8 *)SaturnMem;
-	name_lut		= Next; Next += 0x10000*sizeof(UINT16);
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
+
+//	vdp.vram		= (UINT8 *)Next; Next += 0x4000*sizeof(UINT8);	
+	name_lut		= (UINT16 *)Next; Next += 0x10000*sizeof(UINT16);
 	bp_lut			= Next; Next += 0x10000*sizeof(UINT32);
 #ifdef GG
-	cram_lut		= Next; Next += 0x1000*sizeof(UINT16);
+	cram_lut		= (UINT16 *)Next; Next += 0x1000*sizeof(UINT16);
 	vram_dirty		= Next; Next += 0x200;
 #else
-	cram_lut		= Next; Next += 0x40*sizeof(UINT16);
+	cram_lut		= (UINT16 *)Next; Next += 0x40*sizeof(UINT16);
 #endif
 #ifdef GG0
 	disp_spr		= Next; Next += 64;
 #endif
-	map_lut	 		= Next; Next += 0x800*sizeof(UINT16);
+	map_lut	 		= (UINT16 *)Next; Next += 0x800*sizeof(UINT16);
+
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
 	CZ80Context	= Next; Next += sizeof(cz80_struc);
 	sms512kbRom	= Next;
@@ -251,11 +256,9 @@ static void	SetVblank2( void )
 	initColors();
 	initPosition();
 
-//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
-	SaturnInitMem();
-	SaturnMem = (UINT8 *)BurnMalloc(MALLOC_MAX);
-	SaturnInitMem();
-	memset(SaturnMem,0x00,MALLOC_MAX);
+	SaturnInitMem();	
+	
+//	SaturnInitMem();
 //		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
 	make_lut();
 #ifdef TWO_WORDS
@@ -379,7 +382,7 @@ static void	SetVblank2( void )
 	sms512kbRom = NULL;
 	cart.rom = NULL;
 	__port = NULL;
-
+//	vdp.vram = NULL;
 	dummy_write = NULL;
 	cram_lut = map_lut = NULL;
 
@@ -395,9 +398,6 @@ static void	SetVblank2( void )
 	memset(ss_scl,0x00,192*4);
 	vram_dirty =  NULL;
 #endif
-
-	free(SaturnMem);
-	SaturnMem = NULL;
 	running = 0;
 	first = 0;
 	vsynch = 0;
@@ -1861,7 +1861,7 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/inline  void make_name_lut()
+/*static*/inline  void make_name_lut(void)
 {
 	unsigned int i, j;
 	for(j = 0; j < 0x10000; j++)
@@ -1887,7 +1887,7 @@ Bit 08 - 00 : Pattern Index
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_bp_lut(void)
+static void make_bp_lut(void)
 {
     unsigned int i, j;
     for(j = 0; j < 0x10000; j++)

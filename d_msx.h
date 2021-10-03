@@ -96,7 +96,6 @@ trigger_t	PER_GetTrigger( const SysDevice	*this );
  UINT8 *CZ80Context = NULL;
 #endif
  UINT8 *TMSContext = NULL;
- UINT8 *AllMem	= NULL;
  //UINT8 *MemEnd	= NULL;
  UINT8 *AllRam	= NULL;
 // UINT8 *RamEnd	= NULL;

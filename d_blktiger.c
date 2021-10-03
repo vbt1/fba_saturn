@@ -43,7 +43,7 @@ vbt> <Kale_> Ok, have you asked to Arbee?
 //---------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
 {
-//	cleanBSS();
+	cleanBSS();
 
 	struct BurnDriver nBurnDrvBlktiger = {
 		"blktiger", "blktgr",
@@ -488,8 +488,10 @@ UINT8 blacktiger_sound_read(UINT16 address)
 
 /*static*/ INT32 MemIndex()
 {
-	UINT8 *Next; Next = AllMem;
-
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
+	
 	DrvZ80ROM0	= Next; Next += 0x050000;
 #ifdef SND
 	DrvZ80ROM1	= Next; Next += 0x008000;
@@ -569,25 +571,26 @@ UINT8 blacktiger_sound_read(UINT16 address)
 #endif
 	watchdog = 0;
 	current_pcm = 0;
-	__port = PER_OpenPort();
+//	__port = PER_OpenPort();
 
 	return 0;
 }
 
 /*static*/ INT32 DrvGfxDecode()
 {
-	UINT32 Plane[4] = { ((0x40000 * 8) / 2) + 4, ((0x40000 * 8) / 2) + 0, 4, 0 };
-	UINT32 XOffs[16] = { 0, 1, 2, 3, 8+0, 8+1, 8+2, 8+3,
+	INT32 Plane[4] = { ((0x40000 * 8) / 2) + 4, ((0x40000 * 8) / 2) + 0, 4, 0 };
+	INT32 XOffs[16] = { 0, 1, 2, 3, 8+0, 8+1, 8+2, 8+3,
 			16*16+0, 16*16+1, 16*16+2, 16*16+3, 16*16+8+0, 16*16+8+1, 16*16+8+2, 16*16+8+3 };
-	UINT32 YOffs[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16,
+	INT32 YOffs[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16,
 			8*16, 9*16, 10*16, 11*16, 12*16, 13*16, 14*16, 15*16 };
 
-	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+			UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	UINT8 *DrvGfxROM0	= (UINT8 *)SS_CACHE; //Next; Next += 0x020000;
 	UINT8 *DrvGfxROM1	= (UINT8 *)(SS_CACHE + 0x08000);
 	UINT8 *DrvGfxROM2	= (UINT8 *)(ss_vram+0x1100);
 
-	UINT8 *tmp = (UINT8*)0x00200000;
+	UINT8 *tmp = (UINT8*)LOWADDR;
+	memset(tmp,0x00,0x40000);
 // texte
 	memcpyl (tmp, DrvGfxROM0, 0x08000);
 	GfxDecode4Bpp(0x0800, 2,  8,  8, Plane + 2, XOffs, YOffs, 0x080, tmp, DrvGfxROM0);
@@ -608,17 +611,8 @@ UINT8 blacktiger_sound_read(UINT16 address)
 /*static*/ INT32 DrvInit()
 {
 	DrvInitSaturn();
-	AllMem = NULL;
+	MemIndex();
 
-	MemIndex();
-#if  1
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL)
-	{
-		return 1;
-	}
-#endif
-	memset(AllMem, 0, MALLOC_MAX);
-	MemIndex();
 	make_lut();
 	{
 		for (INT32 i = 0; i < 5; i++) {
@@ -646,7 +640,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	int fid			= GFS_NameToId((Sint8 *)"SFX.ROM");
 	long fileSize	= GetFileSize(fid);
 
-	GFS_Load(fid, 0, (UINT8*)0x00200000, fileSize);
+	GFS_Load(fid, 0, (UINT8*)LOWADDR, fileSize);
 #ifdef PCM_MUSIC
 	stmInit();
 	Set14PCM();
@@ -722,11 +716,13 @@ UINT8 blacktiger_sound_read(UINT16 address)
 #ifdef CZET
 	CZetExit2();
 #endif
+#ifdef PCM_SFX
 	for(unsigned int i=0;i<8;i++)
 	{
 		PCM_MeStop(pcm14[i]);
 	}
 	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);
+#endif	
 #ifdef PCM_MUSIC	
 	STM_ResetTrBuf(stm);
 	PCM_DestroyStmHandle(pcm14[0]);
@@ -740,14 +736,21 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	remap16_lut = remap4to16_lut	= cram_lut = fg_map_lut = bg_map_lut2x1 = bg_map_lut2x2 = NULL;
 	MemEnd = AllRam = RamEnd = NULL;
 
-	free (AllMem);
-	AllMem = NULL;
+//	free (AllMem);
+//	AllMem = NULL;
 
 	cleanDATA();
 	cleanBSS();
     SCL_SET_S0PRIN(0);
 	nSoundBufferPos=0;
 
+	SS_SET_N1SPRM(0);
+	SclProcess = 2;
+	ss_regs->specialcode=0x0000;		
+	wait_vblank();
+	
+	
+	
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -963,6 +966,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	SCL_SetColRamOffset(SCL_NBG0, 3,OFF);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);	 // vbt ? remettre
 }
+#ifdef PCM_SFX
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ PcmHn createHandle(PcmCreatePara *para)
 {
@@ -975,6 +979,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	return pcm;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+
 /*static*/ void Set14PCM()
 {
 //	PcmCreatePara	para[14];
@@ -1056,6 +1061,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 		PCM_Start(pcm14[i]);
 	}
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_lut(void)
 {
@@ -1203,7 +1209,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 #ifdef PCM_SFX	
 	sfx_list		= &sfx_blktiger[0];
 #endif
-	nBurnLinescrollSize = 0;
+	nBurnLinescrollSize = 1;
 	nBurnSprites = 128+3;
 //	nBurnFunction = PCM_VblIn;//smpVblIn;
 

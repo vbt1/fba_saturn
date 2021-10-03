@@ -1715,7 +1715,10 @@ And the address to change banks:
 
 /*static*/ INT32 MemIndex()
 {
-	UINT8 *Next; Next = AllMem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
+	
 	maincpu		    = Next; Next += 0x020000;
 	game		    = (UINT8 *)0x00200000; //MAX_MSX_CARTSIZE;
 
@@ -1934,11 +1937,6 @@ And the address to change banks:
 {
 	ChangeDir(".");		
 	DrvInitSaturn();
-	AllMem = NULL;
-	MemIndex();
-//FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnMalloc		",24,40);
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	{
@@ -2189,10 +2187,6 @@ void cleanmemmap()
 #ifndef RAZE
 	/*tmpbmp =*/ CZ80Context		= NULL;
 #endif
-
-	free (AllMem);
-	AllMem = NULL;
-	
 	stop = 0;
 	DrvNMI = 0;
 	file_max = 0;

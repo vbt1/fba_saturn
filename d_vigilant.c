@@ -36,7 +36,9 @@ int ovlInit(char *szShortName)
 
 /*static*/int MemIndex()
 {
-	UINT8 *Next; Next = Mem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
 
 	DrvZ80Rom1             = Next; Next += 0x28000;
 	DrvZ80Rom2             = Next; Next += 0x10000;
@@ -504,10 +506,6 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 /*static*/UINT32 BackTileYOffsets[1]         = { 0 };
 
 	// Allocate and Blank all required memory
-	Mem = NULL;
-	MemIndex();
-	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 	vbmap[0] = vb_buffer + (0x1000*0);
@@ -1021,11 +1019,6 @@ static void Set8PCM()
 	/*DrvPalette =*/ //lBuffer = NULL;
 	vb_buffer = NULL;
 
-	if (Mem) {
-		free(Mem);
-		Mem = NULL;
-	}
-	
 	DrvRomBank = 0;
 	DrvSoundLatch = 0;
 	DrvIrqVector = 0;

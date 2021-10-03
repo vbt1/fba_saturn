@@ -51,10 +51,10 @@ struct value_table_tag
   unsigned char byFlag;
 };
 static unsigned int M6502_byTestTable[256];
-static struct value_table_tag M6502_ASL[256];
-static struct value_table_tag M6502_LSR[256];
-static struct value_table_tag M6502_ROL[2][256];
-static struct value_table_tag M6502_ROR[2][256];
+struct value_table_tag M6502_ASL[256];
+struct value_table_tag M6502_LSR[256];
+struct value_table_tag M6502_ROL[2][256];
+struct value_table_tag M6502_ROR[2][256];
 
 extern	unsigned char *Read[0x100];
 extern 	unsigned char *Write[0x100];

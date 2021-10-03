@@ -141,7 +141,9 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             
 
 INT32 MemIndex()
 {
-	UINT8 *Next; Next = AllMem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
 
 	Drv6502ROM		= Next; Next += 0x010000;
 	DrvNVRAM		= Next; Next += 0x000200;
@@ -162,12 +164,6 @@ INT32 MemIndex()
 
 INT32 CommonInit(INT32 boot)
 {
-	AllMem = NULL;
-	MemIndex();
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, MALLOC_MAX);
-//	if ((AllMem = (UINT8 *)BurnMalloc(0x14500)) == NULL) return 1;
-//	memset(AllMem, 0, 0x14500);
 	MemIndex();
 	make_lut();
 	
@@ -240,8 +236,6 @@ INT32 DrvExit()
 	Drv6502ROM = DrvNVRAM = AllRam = DrvVidRAM = NULL;
 	Drv6502RAM = DrvPalRAM = RamEnd  = NULL;
 	cram_lut = map_offset_lut= NULL;
-	free (AllMem);
-	AllMem = NULL;
 
 	return 0;
 }

@@ -1,9 +1,9 @@
 #ifndef _OVL_H_
 #define _OVL_H_
 
-#define OVLADDR 0x060DB000
+#define OVLADDR 0x060DE000
 #define MAINSTART 0x0601C000
-#define MALLOC_MAX  OVLADDR-MAINSTART-0x3000 //0x30000 //0x060FFC00-0x060CC000
+#define MALLOC_MAX  OVLADDR-MAINSTART-0x4000 //0x30000 //0x060FFC00-0x060CC000
 #define LOWADDR 0x00200000
 
 //extern Uint32   _bstart, _bend;
@@ -24,7 +24,8 @@ typedef	struct	SysPort	{
 } SysPort;
 
 extern SysPort	*__port;
-SysPort	*PER_OpenPort( void );
+extern SysPort	PortData[2];
+//SysPort	*PER_OpenPort( void );
 
 int ovlInit(char *szShortName) __attribute__ ((section(".boot")));
 void cleanBSS() __attribute__ ((section(".clean")));
@@ -90,8 +91,8 @@ static unsigned char *cache = NULL;
 #define SS_BGMIX *(&shared + 14)
 //#define SS_SCL1 *(&shared + 16)
 #define SS_Z80CY *(&shared + 15)
-#define SS_PORT *(&shared + 16)
-#define SS_SCL *(&shared + 17)
+//#define SS_PORT *(&shared + 16)
+#define SS_SCL *(&shared + 16)
 //#define SS_Z80CY (unsigned int*)0x00200000
 /* // old
 #define FBA_DRV	 shared
@@ -184,6 +185,7 @@ static unsigned char *cache = NULL;
 //-------------------------------------------------------------------------------------------------------------------------------------
 void cleanDATA()
 {
+/*
 	extern unsigned int _dstarto, _dendo;
 
 	for( unsigned char *dst = (unsigned char *)&_dstarto; dst < (unsigned char *)&_dendo; dst++ ) 
@@ -197,18 +199,19 @@ void cleanDATA()
 	for( unsigned char *dst = (unsigned char *)&_rodata_start; dst < (unsigned char *)&_rodata_end; dst++ ) 
 	{
 		*dst = 0;
-	} 
+	}
+	*/
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void cleanBSS()
 {
-//	memset((volatile UINT8*)0x00200000,0x00,0x80000);
-	extern unsigned int _bstarto, _bendo;
+	memset((UINT8*)LOWADDR,0x00,0x80000);
+/*	extern unsigned int _bstarto, _bendo;
 
 	for( unsigned char *dst = (unsigned char *)&_bstarto; dst < (unsigned char *)&_bendo; dst++ ) 
 	{
 		*dst = 0;
-	}
+	}*/
 //	int size = ((unsigned char *)&_bendo)-((unsigned char *)&_bstarto);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

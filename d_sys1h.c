@@ -38,22 +38,24 @@ int ovlInit(char *szShortName)
 		StarjackRomInfo, StarjackRomName, MyheroInputInfo, StarjackDIPInfo,
 		StarjackInit, System1Exit, System1Frame
 	};
-
+/*
 struct BurnDriver nBurnDrvRaflesia = {
 	"raflesia", "sys1h",
 	"Rafflesia (315-5162)\0", 
 	RaflesiaRomInfo, RaflesiaRomName, MyheroInputInfo, RaflesiaDIPInfo,
-	RaflesiaInit, System1Exit, System1Frame, NULL
+	RaflesiaInit, System1Exit, System1Frame
 };
-
+*/
 //	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
     if (strcmp(nBurnDrvBlockgal.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvBlockgal,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvGardia.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvGardia,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvStarjack.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvStarjack,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvRaflesia.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvRaflesia,sizeof(struct BurnDriver));
+//    if (strcmp(nBurnDrvRaflesia.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvRaflesia,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+	
+	return 0;
 }
 
 /*static*/ void BlockgalMakeInputs()
@@ -81,7 +83,7 @@ Decode Functions
 
 /*static*/ void blockgal_decode()
 {
-	mc8123_decrypt_rom(0, 0, System1Rom1, System1Fetch1, (UINT8*)0x002FC000);
+	mc8123_decrypt_rom(0, 0, System1Rom1, System1Fetch1, (UINT8*)System1MC8123Key);
 }
 /*==============================================================================================
 Memory Handlers
@@ -148,8 +150,9 @@ Driver Inits
 {
 	int nRet;
 	flipscreen = 1;
-	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
-	BurnLoadRom(System1MC8123Key, 14, 1);
+//	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
+//	memset(System1MC8123Key,0x00,0x2000);
+//	BurnLoadRom(System1MC8123Key, 14, 1);
 	DecodeFunction = blockgal_decode;
 
 	nRet = System1Init(2, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
@@ -172,12 +175,13 @@ Driver Inits
 	return System1Init(6, 0x2000, 1, 0x2000, 6, 0x2000, 2, 0x4000, 1);
 }
 
-/*static*/ INT32 RaflesiaInit()
+/* INT32 RaflesiaInit()
 {
 	DecodeFunction = fdwarrio_decode;
 	flipscreen = 2;
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }
+*/
 /*==============================================================================================
 Graphics Rendering
 ===============================================================================================*/
@@ -231,7 +235,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spr
 
 void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
-	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
+//	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[ABS(Skip)];
 

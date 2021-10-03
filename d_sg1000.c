@@ -198,6 +198,7 @@ static void ChangeDir(char *dirname)
 		{
 			load_rom();
 		}
+		check_exit(pltrigger[0]);
 
 		for(UINT32 i=10;i<12;i++)
 		{
@@ -329,7 +330,9 @@ static void ChangeDir(char *dirname)
 
 /*static*/ int MemIndex()
 {
-	UINT8 *Next; Next = AllMem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
 
 	DrvZ80ROM		= Next; Next += 0x010000;
 	DrvZ80ExtRAM	= Next; Next += 0x010000;
@@ -410,11 +413,8 @@ static void ChangeDir(char *dirname)
 {
 	DrvInitSaturn();
 	ChangeDir(".");
-	AllMem = NULL;
 	MemIndex();
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(AllMem, 0, MALLOC_MAX);
-	MemIndex();
+	
 	#ifndef RAZE
 	CZetInit2(1,CZ80Context);
 	#endif
@@ -462,13 +462,10 @@ static void ChangeDir(char *dirname)
 	SN76496Exit();
 
 	memset((void *)SOUND_BUFFER,0x00,0x20000);
-	memset(TMSContext,0x00,(0x4000+0x6000+0x1000+8));
-	memset(CZ80Context,0x00,sizeof(cz80_struc));
+//	memset(TMSContext,0x00,(0x4000+0x6000+0x1000+8));
+//	memset(CZ80Context,0x00,sizeof(cz80_struc));
 
 	CZ80Context = TMSContext = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
-//	__port = NULL;
-	free (AllMem);
-	AllMem = NULL;
 
 	file_max = 0;
 	file_id = 0;

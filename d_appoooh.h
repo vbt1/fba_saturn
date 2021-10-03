@@ -29,7 +29,7 @@ PcmHn 			pcm4[4] = {NULL, NULL, NULL, NULL};
 
 /*static*/ INT16 *MSM5205Context = NULL;
 /*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ UINT8 *AllMem = NULL;
+/*static*/ //UINT8 *AllMem = NULL;
 /*static*/ UINT8 *AllRam = NULL;
 /*static*/ UINT8 *RamEnd = NULL;
 /*static*/ UINT8 *DrvRAM0 = NULL;

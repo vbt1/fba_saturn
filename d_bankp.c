@@ -48,29 +48,23 @@ int ovlInit(char *szShortName)
 	ss_reg->n2_move_x =  0;
 }
 
-/*static*/ INT32 MemIndex()
+inline void MemIndex()
 {
-	unsigned char *Next; Next = Mem;
-
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
+	
 	Rom  = (UINT8 *)Next; Next += 0x0e000;
 	Gfx0 = (UINT8 *)Next; Next += 0x10000;
 	Gfx1 = (UINT8 *)Next; Next += 0x20000;
 	Prom = (UINT8 *)Next; Next += 0x220;
 	Palette = (UINT32 *)Next; Next += 0x100 * sizeof(UINT32);
 	map_offset_lut	= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
-	return 0;
 }
 
 /*static*/ INT32 DrvInit()
 {
 	DrvInitSaturn();
-
-	MemIndex();
-	if ((Mem = (unsigned char *)BurnMalloc(MALLOC_MAX)) == NULL) 
-	{
-		return 1;
-	}
-	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 	for (UINT32 i = 0; i < 4; i++)
@@ -264,9 +258,9 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/ void DrvDoReset()
+void DrvDoReset()
 {
-	memset (Mem + 0xe000, 0, 0x2000);
+	memset (Gfx0, 0, 0x2000);
 #ifdef RAZE
 //	z80_reset();
 #else
@@ -276,10 +270,10 @@ int ovlInit(char *szShortName)
 #endif
 	/*scroll_x = 0, */priority = 0;// flipscreen = 0;
 	interrupt_enable = 0;
-	__port = PER_OpenPort();
+//	__port = PER_OpenPort();
 }
 
-/*static*/ void bankp_palette_init()
+void bankp_palette_init()
 {
 	unsigned int t_pal[32];
 	unsigned int i;
@@ -304,13 +298,13 @@ int ovlInit(char *szShortName)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void bankp_gfx_decode()
+static inline void bankp_gfx_decode()
 {
-	 UINT32 Char1PlaneOffsets[2] = { 0x00, 0x04 };
-	 UINT32 Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
-	 UINT32 Char1XOffsets[8]     = { 0x43, 0x42, 0x41, 0x40, 0x03, 0x02, 0x01, 0x00 };
-	 UINT32 Char2XOffsets[8]     = { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
-	 UINT32 CharYOffsets[8]      = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
+	 INT32 Char1PlaneOffsets[2] = { 0x00, 0x04 };
+	 INT32 Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
+	 INT32 Char1XOffsets[8]     = { 0x43, 0x42, 0x41, 0x40, 0x03, 0x02, 0x01, 0x00 };
+	 INT32 Char2XOffsets[8]     = { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
+	 INT32 CharYOffsets[8]      = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
 
 	GfxDecode4Bpp(0x400, 2, 8, 8, Char1PlaneOffsets, Char1XOffsets, CharYOffsets, 0x080, Gfx0, cache+0x10000);
 	GfxDecode4Bpp(0x800, 3, 8, 8, Char2PlaneOffsets, Char2XOffsets, CharYOffsets, 0x040, Gfx1, cache);
@@ -320,12 +314,24 @@ int ovlInit(char *szShortName)
 		rotate_tile(0x800,0,cache);
 	}
 
+	unsigned char *cache_ptr1=(unsigned char *)(cache+0x30000);
+	unsigned char *cache_ptr2=(unsigned char *)(cache+0x10000);
+	unsigned char *cache_ptr3=(unsigned char *)(cache+0x50000);
+	unsigned char *cache_ptr4=(unsigned char *)(cache+0x00000);
+	
+	for (UINT32 i=0x00000;i<0x10000;i++ ) 
+	{
+		*cache_ptr1++=(*cache_ptr2++)+0x44;
+		*cache_ptr3++=(*cache_ptr4++)+0x88;
+	}
+/*	
 //nbg2  
 	for (UINT32 i=0x10000;i<0x20000;i++ )
 		cache[i+0x20000] = cache[i]+0x44;
  //nbg1
 	for (UINT32 i=0x00000;i<0x10000;i++ )
 		cache[i+0x50000] = cache[i]+0x88;
+*/	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void initLayers()
@@ -451,15 +457,15 @@ int ovlInit(char *szShortName)
 	CZ80Context = NULL;
 #endif	
 	SN76496Exit();
-
+/*
 	Rom  = Gfx0 = Gfx1 = Prom = NULL;
 	Palette = NULL;
 	map_offset_lut = NULL;
 
-	free(Mem);
-	Mem = NULL;
+//	free(Mem);
+//	Mem = NULL;
 	DrvDips=priority=flipscreen=interrupt_enable=0;
-	
+*/	
 	cleanDATA();
 	cleanBSS();
 
@@ -468,7 +474,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void 	 bg_line(UINT16 offs)
+inline void 	 bg_line(UINT16 offs)
 {
 	UINT32 code, color;
 	UINT32 flipx = 0xC000;
@@ -488,7 +494,7 @@ int ovlInit(char *szShortName)
 	else						map2[1] = map2[0x41] = code+0x2800;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void 	 fg_line(UINT16 offs)
+inline void 	 fg_line(UINT16 offs)
 {
 	UINT32 code, color;
 	UINT32 flipx = 0xC000;

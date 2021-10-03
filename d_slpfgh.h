@@ -13,52 +13,51 @@
 void updateSound(unsigned int *nSoundBufferPos);
 INT32 DrvInit();
 INT32 DrvExit();
-INT32 DrvFrame();
+void DrvFrame();
 void DrvDoReset();
 void Set6PCM();
 void PCM_MeStop(PcmHn hn);
-void rotate_tile16x16(unsigned int size, unsigned char *target);
+static void rotate_tile16x16(unsigned int size, unsigned char *target);
 void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
 INT32 DrvLoadRoms(UINT8 nWhichGame);
 
 //typedef int bool;
-UINT8 irq_enable = 0;
-UINT8 sound_nmi_enable = 0;
+static UINT8 irq_enable = 0;
+static UINT8 sound_nmi_enable = 0;
 
-UINT32 nStatusIndex = 0;
-UINT32 nProtectIndex = 0;
-UINT32 nSndIrqFrame = 0; //tigerh 6, slapf 3, perfr 4
+static UINT32 nStatusIndex = 0;
+static UINT8 nProtectIndex = 0;
+static UINT32 nSndIrqFrame = 0; //tigerh 6, slapf 3, perfr 4
 
-INT32 scrollx = 0;
-INT32 scrolly = 0;
-UINT32 nTigerHeliTileMask = 0; 
+static INT32 scrollx = 0;
+static INT32 scrolly = 0;
+static UINT32 nTigerHeliTileMask = 0; 
 
-UINT8 *Mem = NULL;
-UINT8 *DrvZ80ROM0 = NULL;
-UINT8 *DrvZ80RAM0 = NULL;
-UINT8 *RamShared = NULL;
-UINT8 *DrvVidRAM = NULL;
-UINT8 *DrvSprRAM = NULL;
-UINT8 *DrvSprBuf = NULL;
-UINT8 *DrvTxtRAM = NULL;
-UINT8 *CZ80Context = NULL;
-UINT16 *map_offset_lut = NULL;
-UINT16 *map_offset_lut2 = NULL;
+static UINT8 *DrvZ80ROM0 = NULL;
+static UINT8 *DrvZ80RAM0 = NULL;
+static UINT8 *RamShared = NULL;
+static UINT8 *DrvVidRAM = NULL;
+static UINT8 *DrvSprRAM = NULL;
+static UINT8 *DrvSprBuf = NULL;
+static UINT8 *DrvTxtRAM = NULL;
+static UINT8 *CZ80Context = NULL;
+static UINT16 *map_offset_lut = NULL;
+static UINT16 *map_offset_lut2 = NULL;
 
-PcmHn 			pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
+static PcmHn pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L
 // ---------------------------------------------------------------------------
 // Inputs
 
-UINT8 DrvDips[2] = {0,0};
-UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-UINT8 DrvInputs[2] = {0,0};
+static UINT8 DrvDips[2] = {0,0};
+static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvInputs[2] = {0,0};
 // Dip Switch and Input Definitions
 
-/*static*/ struct BurnInputInfo SlapfighInputList[] = {
+static struct BurnInputInfo SlapfighInputList[] = {
 	{"P1 Coin",			BIT_DIGITAL,	DrvJoy2 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 start"	},
 	{"P1 Up",			BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
@@ -84,7 +83,7 @@ UINT8 DrvInputs[2] = {0,0};
 
 STDINPUTINFO(Slapfigh)
 
-/*static*/ struct BurnInputInfo TigerhInputList[] = {
+static struct BurnInputInfo TigerhInputList[] = {
 	{"P1 Coin",			BIT_DIGITAL,	DrvJoy2 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 start"	},
 	{"P1 Up",			BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
@@ -110,7 +109,7 @@ STDINPUTINFO(Slapfigh)
 
 STDINPUTINFO(Tigerh)
 
-/*static*/ struct BurnDIPInfo TigerhDIPList[]=
+static struct BurnDIPInfo TigerhDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x6f, NULL							},
 	{0x12, 0xff, 0xff, 0xeb, NULL							},
@@ -163,7 +162,7 @@ STDINPUTINFO(Tigerh)
 
 STDDIPINFO(Tigerh)
 
-/*static*/ struct BurnDIPInfo SlapfighDIPList[]=
+static struct BurnDIPInfo SlapfighDIPList[]=
 {
 	{0x11, 0xff, 0xff, 0x7f, NULL							},
 	{0x12, 0xff, 0xff, 0xff, NULL							},
@@ -221,7 +220,7 @@ STDDIPINFO(Tigerh)
 
 STDDIPINFO(Slapfigh)
 
-/*static*/ struct BurnRomInfo tigerhb1RomDesc[] = {
+static struct BurnRomInfo tigerhb1RomDesc[] = {
 	{ "b0.5",         0x004000, 0x6ae7e13c, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
 	{ "a47_01.8n",    0x004000, 0x65df2152, BRF_ESS | BRF_PRG }, //  1
 	{ "a47_02.8k",    0x004000, 0x633d324b, BRF_ESS | BRF_PRG }, //  2
@@ -248,7 +247,7 @@ STDDIPINFO(Slapfigh)
 STD_ROM_PICK(tigerhb1)
 STD_ROM_FN(tigerhb1)
 
-/*static*/ struct BurnRomInfo slapbtjpRomDesc[] = {
+static struct BurnRomInfo slapbtjpRomDesc[] = {
 	{ "sfr19jb.bin", 0x008000, 0x9a7ac8b3, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
 	{ "sfrh.bin",    0x008000, 0x3c42e4a7, BRF_ESS | BRF_PRG }, //  1
 

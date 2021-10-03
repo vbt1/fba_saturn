@@ -17,20 +17,6 @@
 
 #define	RING_BUF_SIZE	(2048L*5)//(2048L*10)
 #define SOUND_BUFFER    0x25a20000
-#define BurnFree(a) free(a)
-#define BurnMallocOld(a) malloc(a)
-
-#define BurnMalloc(a) \
-({ unsigned char *x;\
-			x = (unsigned char *)malloc(a); \
-			if(!(x)) \
-			{ \
-			char error[50]; \
-			sprintf(error,"Out of memory at %s:%i", __FILE__, __LINE__); \
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)error,4,50); \
-			} \
-x;})
-
 
 #undef  SCL_MAXLINE
 #undef  SCL_MAXCELL

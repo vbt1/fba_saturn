@@ -1,17 +1,18 @@
 MEMORY 
   {
   ram  : ORIGIN = 0x6000000, l = 1M
+  ovl  : ORIGIN = 0x60DE000, l = 1M
   }
 
 SECTIONS {
 
-	.stack 0x6002000 (NOLOAD):
+	.stack 0x060fff00 (NOLOAD):
 	{
 	        *(.stack)
          	_stack = .;
-	} > ram
+	} > ram		
 
-	.shared 0x6003600 (NOLOAD):
+	.shared 0x6003700 (NOLOAD):
 	{
 	    *(.shared)
 		_play = .;
@@ -26,15 +27,19 @@ SECTIONS {
 		_nBurnFunction = _nBurnLinescrollSize + 4;
 		_nSoundBufferPos = _nBurnFunction + 4;
 		_SclProcess = _nSoundBufferPos + 4;
-		_SclColRamAlloc256 = _SclProcess + 4; /* size 32 */
+/*		_SclColRamAlloc256 = _SclProcess + 4;*/ /* size 32 */
+/*		_per_buff = _SclProcess + 4;*/ /* pointer size 61 */
+/*		_per_data = _per_buff + 64; */ /* pointer size 4 */
+/*		_mul_info2 = _per_data + 4; */ /* pointer size 16  ??? */
+		___port = _SclProcess + 4; /* pointer size 4 */
 
-		_SPR_SlaveParam = _SclColRamAlloc256 + 32; /* pointer size 4 */
+		_SPR_SlaveParam = ___port + 16; /* pointer size 4 */
 		_SPR_SlaveState = _SPR_SlaveParam + 4; /* pointer size 4 */
 		_SPR_SlaveCommand = _SPR_SlaveState + 4; /* pointer size 4 */
 
 		_shared = _SPR_SlaveCommand + 4; /* shared size is 17*4 + 384*4 */
 		_shared_end = _shared + 1604; /* 17*4 + 384*4 */
-
+		
 /*		_SclAddrLsTbl = _SclColRamAlloc256 + 32; */ /* size 8 */
 /*		_SclBgColMix = . + 112;  size 8 */
 /*		_SclBgPriNum = . + 120;  size 6 */
@@ -45,44 +50,58 @@ SECTIONS {
 
         .entry 0x06004000 :
         {
-		*(.entry)
+		saturn/strt1_vbt.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o (.entry)
         } > ram
 
-	.text ALIGN(4) :
+	.text ALIGN(0x10) :
 	{
 		*(.text)
-		*("SEGA_P")
+		*(".text*")
+		*(.rodata*)		
 		*(.strings)
                 ___dtors = . ;
+/*				__D_BGN = .; */
                 *(.dtors)
+/*				__D_END = .; */
                 ___dtors_end = . ;
                 *(.data)
-		*(.eh_frame_hdr)
-		*(.eh_frame)
 	} > ram
 
-	.rodata ALIGN(4) :			
+	.rodata ALIGN(0x10) :			
 	{			
 /*	   __rodata_start = .;*/
-	   *(.rodata)
-	   *(.rodata.*)
+	   *(.rodata*)
 /*	   __rodata_end = .;*/
 	} > ram
 
 	
-	.bss  ALIGN(4) (NOLOAD):
+	.bss  ALIGN(0x10) (NOLOAD):
 	{
 		__bstart = . ;
+/*		__B_BGN = . ; */
 		*(.bss)
 		*(COMMON)
-		. = ALIGN(4);
+		. = ALIGN(0x10);
+/*		__B_END = . ;	*/	
 		__bend = . ;
 		_end = .;
  	} > ram
-	
-	.overlay 0x060DB000:
+
+	.malloc_max 0x0601c000 (NOLOAD):
         {
-		__start_ram = .;		
-			boot = .;
+		__malloc_max_ram = .;
         } > ram
+		
+  OVERLAY 0x60de000 : NOCROSSREFS AT (0x60DE000) 
+  {
+	.ovly0   { 
+		__start_ram = .;
+			boot = .;
+/*
+	d_bankp.o load.o raze/raze.o snd/sn76496.o saturn/saturn.o saturn/ovl2.o (.boot .text .data)
+*/
+	}
+  }  
+		
+
 }

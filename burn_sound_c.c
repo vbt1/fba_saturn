@@ -14,6 +14,7 @@ void BurnSoundCopyClamp_C(int *Src, short *Dest, int Len)
 	}
 }
 */
+/*
 void BurnSoundCopyClamp_Add_C(int *Src, short *Dest, int Len)
 {
 	Len *= 2;
@@ -23,6 +24,7 @@ void BurnSoundCopyClamp_Add_C(int *Src, short *Dest, int Len)
 		Dest++;
 	}
 }
+*/
 /*
 // Byteswaps an area of memory
 int BurnByteswap(UINT8* pMem, int nLen)

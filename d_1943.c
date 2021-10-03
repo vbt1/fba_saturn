@@ -739,7 +739,10 @@ INT32 DrvDoReset(INT32 clear_mem)
 
 INT32 MemIndex()
 {
-	UINT8 *Next; Next = Mem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
+	
 	CZ80Context			   = Next; Next += 2* sizeof(cz80_struc);
 	DrvZ80Rom1             = Next; Next += 0x30000;
 //	DrvZ80Rom2             = Next; Next += 0x08000;
@@ -791,12 +794,6 @@ INT32 CommonInit(INT32 (*load)())
 {
 	DrvInitSaturn();
 	// Allocate and Blank all required memory
-	Mem = NULL;
-	MemIndex();
-
-FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"BurnMalloc      ",70,130);
-	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"load      ",70,130);
 
@@ -929,7 +926,6 @@ FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"GfxDecode 
 	GfxDecode4Bpp(2048, 2, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, DrvChars);
 	rotate_tile(2048,1,DrvChars);
 	
-//	BurnFree(DrvTempRom);
 	DrvTempRom = NULL;	
 
 	return nRet;
@@ -1001,7 +997,6 @@ INT32 DrvbLoad()
 	nRet = BurnLoadRom(DrvPromSpriteLookup,  29, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvPromSpritePalBank, 30, 1); if (nRet != 0) return 1;
 	
-//	BurnFree(DrvTempRom);
 	DrvTempRom = NULL;
 	
 	return nRet;
@@ -1054,7 +1049,6 @@ INT32 DrvbjLoad()
 	memcpy(DrvTempRom + 0x30000, pTemp + 0x28000, 0x8000);
 	memcpy(DrvTempRom + 0x28000, pTemp + 0x30000, 0x8000);
 	memcpy(DrvTempRom + 0x38000, pTemp + 0x38000, 0x8000);
-//	BurnFree(pTemp);
 	pTemp = NULL;
 
 	GfxDecode4Bpp(512, 4, 32, 32, BgTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x800, DrvTempRom, DrvBgTiles);
@@ -1091,7 +1085,6 @@ INT32 DrvbjLoad()
 	nRet = BurnLoadRom(DrvPromSpriteLookup,  29, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvPromSpritePalBank, 30, 1); if (nRet != 0) return 1;
 	
-//	BurnFree(DrvTempRom);
 	DrvTempRom = NULL;
 
 	return nRet;
@@ -1145,7 +1138,7 @@ INT32 Drvb2Load()
 	memcpy(DrvTempRom + 0x30000, pTemp + 0x28000, 0x8000);
 	memcpy(DrvTempRom + 0x28000, pTemp + 0x30000, 0x8000);
 	memcpy(DrvTempRom + 0x38000, pTemp + 0x38000, 0x8000);
-//	BurnFree(pTemp);
+
 	pTemp = NULL;
 
 	GfxDecode4Bpp(512, 4, 32, 32, BgTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x800, DrvTempRom, DrvBgTiles);
@@ -1180,7 +1173,6 @@ INT32 Drvb2Load()
 	nRet = BurnLoadRom(DrvPromSpriteLookup,  27, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvPromSpritePalBank, 28, 1); if (nRet != 0) return 1;
 	
-//	BurnFree(DrvTempRom);
 	DrvTempRom = NULL;
 
 	return nRet;
@@ -1213,8 +1205,6 @@ INT32 DrvExit()
 	DrvCharsOn = 0;
 	DrvProtValue = 0;
 	bootleg = 0;
-
-	BurnFree(Mem);
 
 	return 0;
 }

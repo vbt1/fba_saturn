@@ -778,7 +778,7 @@ static UINT8 bit_bank;
 static UINT8 add_bank;
 static UINT8 bit_xor;
 
-static struct slapstic_data slapstic;
+struct slapstic_data slapstic;
 
 
 /*************************************

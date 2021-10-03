@@ -5,21 +5,18 @@ MEMORY
 
 SECTIONS {
 
-	.stack 0x6002000 (NOLOAD):
+	.stack 0x060fff00 (NOLOAD):
 	{
-		root/sl.coff (".stack")
+		root/sl.elf (".stack")
          	_stack = . ;
-	} > ram
+	} > ram	
 
-	.shared 0x6003600 (NOLOAD):
+	.shared 0x6003700 (NOLOAD):
 	{
-		root/sl.coff (".shared")
+		root/sl.elf (".shared")
 		_play = .;
 		_hz = _play + 2;
-/*		_file_id2 = _hz + 2;
-		_file_max = _hz + 2;*/
 		_col = _hz + 2; /* size 16 */
-/*		_palette = _col + 16;*/ /* size 16 */		
 		_pcm = _col + 16; /* pointer size 4 */		
 		_nBurnDrvCount = _pcm + 16;
 		_nBurnDrvSelect = _nBurnDrvCount + 4;
@@ -29,9 +26,13 @@ SECTIONS {
 		_nBurnFunction = _nBurnLinescrollSize + 4;
 		_nSoundBufferPos = _nBurnFunction + 4;
 		_SclProcess = _nSoundBufferPos + 4;
-		_SclColRamAlloc256 = _SclProcess + 4; /* size 32 */
+/*		_SclColRamAlloc256 = _SclProcess + 4;*/ /* size 32 */
+/*		_per_buff = _SclProcess + 4;*/ /* pointer size 61 */
+/*		_per_data = _per_buff + 64; */ /* pointer size 4 */
+/*		_mul_info2 = _per_data + 4; */ /* pointer size 16  ??? */
+		___port = _SclProcess + 4; /* pointer size 4 */
 
-		_SPR_SlaveParam = _SclColRamAlloc256 + 32; /* pointer size 4 */
+		_SPR_SlaveParam = ___port + 16; /* pointer size 4 */
 		_SPR_SlaveState = _SPR_SlaveParam + 4; /* pointer size 4 */
 		_SPR_SlaveCommand = _SPR_SlaveState + 4; /* pointer size 4 */
 
@@ -44,43 +45,59 @@ SECTIONS {
 /*		_SclOtherPri = . + 126;  size 16 */
 /*		_SclSpPriNum = . + 130;  size 8 */
 	} > ram
-
+	
+	.clean 0x6003e00 (NOLOAD):
+	{
+		*(.clean)
+				. = ALIGN(0x10);
+	} > ram
+	
+		
 	.entry 0x6004000  (NOLOAD):
 	{
-		root/sl.coff (".entry")
+		root/sl.elf (".entry")
 	}  > ram
 
-	text ALIGN(4)  (NOLOAD):
+	text ALIGN(0x10)  (NOLOAD):
 	{
-		root/sl.coff (".text")
+		root/sl.elf (".text")
+		root/sl.elf (".text.startup")
+		root/sl.elf (".rodata*")
+		root/sl.elf (".strings")
+	} > ram
+	
+	.rodata ALIGN(0x10)   (NOLOAD):		
+	{			
+	   root/sl.elf (.rodata*)
+	} > ram	
+	
+	.bss ALIGN(0x10) (NOLOAD):			
+	{
+		root/sl.elf (".bss")
+		root/sl.elf ("COMMON")
 	} > ram
 
-	.bss ALIGN(4) (NOLOAD):			
-	{
-		__bstart = . ;
-		root/sl.coff (.bss)
-		root/sl.coff (COMMON)
-		. = ALIGN(4);
-		__bend = . ;
-	} > ram
-
-        .overlay 0x060DB000 :
+	.malloc_max 0x0601c000 (NOLOAD):
         {
-		. = ALIGN(4);
+		__malloc_max_ram = .;
+        } > ram			
+	
+        .overlay 0x060DE000 :
+        {
+		. = ALIGN(0x10);
 		*(.boot)
-		*(.clean)
 		*(".text")
+		*(".text*")		
 		*(".strings")
 		*(.ctors)
 		*(.dtors)
 		__dstarto = . ;
 		*(.data)
-		. = ALIGN(4);
+		. = ALIGN(0x10);
 		
 	   __rodata_start = .;
-	   . = ALIGN(4);
-	   *(.rodata)
-	   *(.rodata.*)	   
+	   . = ALIGN(0x10);
+	   *(.rodata*)	   
 	   __rodata_end = .;	
 	   
 		__dendo = . ;
@@ -91,4 +108,4 @@ SECTIONS {
 
 	
         } > ram
- }
+}

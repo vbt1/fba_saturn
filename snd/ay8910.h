@@ -24,7 +24,7 @@ struct AY8910interface
 
 extern int ay8910_index_ym;
 
-void AY8910_set_clock(int chip, int clock);
+static void AY8910_set_clock(int chip, int clock);
 void AY8910Reset(int chip);
 
 void AY8910Update(int chip, signed short** buffer, int length);

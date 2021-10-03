@@ -22,17 +22,17 @@ INT32 DrvFantzn2Init();
 INT32 DrvOpaopaInit();
 INT32 DrvHangonJrInit();
 INT32 DrvTetrisInit();
-INT32 DrvTransfrmInit();
+//INT32 DrvTransfrmInit();
 INT32 DrvSlapshtrInit();
-INT32 DrvAstroflInit();
+//INT32 DrvAstroflInit();
 INT32 DrvExit();
 INT32 DrvFrame();
-INT32 DrvDoReset();
-void initPosition(void);
+void DrvDoReset();
+inline void initPosition(void);
 void DrvInitSaturnS(UINT8 game);
 void update_bg(UINT8 chip, UINT32 index);
 void update_sprites(UINT8 chip, UINT32 index);
-void initScrollingNBG1(UINT8 enabled,UINT32 address);
+inline void initScrollingNBG1(UINT8 enabled,UINT32 address);
 void SCL_SetLineParamNBG1();
 void dummy();
 
@@ -45,11 +45,9 @@ UINT8 DrvJoy4[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 UINT8 DrvInput[5] = {0,0,0,0,0};
 UINT8 DrvDip[2] = {0, 0};
 
-INT32 DrvWheel = 0;
-INT32 DrvAccel = 0;
+//static INT32 DrvWheel = 0;
+//static INT32 DrvAccel = 0;
 
-UINT8 *AllRam = NULL;
-UINT8 *AllMem = NULL;
 UINT8 *RamEnd = NULL;
 UINT8 *DrvRAM = NULL;
 UINT8 *DrvMainROM = NULL;
@@ -57,7 +55,7 @@ UINT8 *DrvMainROMFetch = NULL;
 UINT8 *mc8123key = NULL;
 
 UINT8 segae_8000bank = 0;
-UINT8 port_fa_last = 0;
+//UINT8 port_fa_last = 0;
 UINT8 rombank = 0;
 
 /*static*/// UINT8 mc8123 = 0; // enabled?
@@ -86,19 +84,19 @@ UINT8 *segae_vdp_regs[CHIPS] = {NULL,NULL};		/* Pointer to the VDP's Registers *
 UINT8 segae_vdp_vrambank[CHIPS]={0,0};		/* Current VRAM Bank number (from writes to Port 0xf7) */
 UINT32 ntab[CHIPS]={0,0};
 UINT32 satb[CHIPS]={0,0};
-int scroll_x[CHIPS]={0,0};
-int scroll_y[CHIPS]={0,0};
-
+ int scroll_x[CHIPS]={0,0};
+ int scroll_y[CHIPS]={0,0};
+/*
 typedef UINT16	trigger_t;
 
 UINT16 pad_asign[]={
 PER_DGT_U,PER_DGT_D,PER_DGT_R,PER_DGT_L,PER_DGT_A,PER_DGT_B,
 PER_DGT_C,PER_DGT_S,PER_DGT_X,PER_DGT_Y,PER_DGT_TR,PER_DGT_TL,
 };
+*/
+//trigger_t	pltrigger[2]={0,0},pltriggerE[2]={0,0};
 
-trigger_t	pltrigger[2]={0,0},pltriggerE[2]={0,0};
-
-struct BurnInputInfo TransfrmInputList[] = {
+static struct BurnInputInfo TransfrmInputList[] = {
 
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy0 + 0,	"p1 coin"},
 	{"P1 Start",	BIT_DIGITAL,	DrvJoy0 + 6,	"p1 start"},
@@ -119,7 +117,7 @@ struct BurnInputInfo TransfrmInputList[] = {
 };
 STDINPUTINFO(Transfrm)
 
-struct BurnInputInfo Segae2pInputList[] = {
+static struct BurnInputInfo Segae2pInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy0 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy0 + 6,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"},
@@ -147,7 +145,7 @@ struct BurnInputInfo Segae2pInputList[] = {
 
 STDINPUTINFO(Segae2p)
 
-struct BurnDIPInfo TransfrmDIPList[]=
+static struct BurnDIPInfo TransfrmDIPList[]=
 {
 	{0x0d, 0xff, 0xff, 0xff, NULL		},
 	{0x0e, 0xff, 0xff, 0xfc, NULL		},
@@ -180,9 +178,9 @@ struct BurnDIPInfo TransfrmDIPList[]=
 };
 
 STDDIPINFO(Transfrm)
-
+/*
 #define A(a, b, c, d) {a, b, (UINT8*)(c), d}
-struct BurnInputInfo HangonjrInputList[] = {
+static struct BurnInputInfo HangonjrInputList[] = {
 
     {"P1 Coin",     BIT_DIGITAL,    DrvJoy0 + 0,    "p1 coin"},
     {"P1 Start",    BIT_DIGITAL,    DrvJoy0 + 4,    "p1 start"},
@@ -200,7 +198,7 @@ STDINPUTINFO(Hangonjr)
 #undef A
 
 
-struct BurnDIPInfo HangonjrDIPList[]=
+static struct BurnDIPInfo HangonjrDIPList[]=
 {
 	{0x07, 0xff, 0xff, 0xff, NULL		},
 	{0x08, 0xff, 0xff, 0x14, NULL		},
@@ -219,8 +217,8 @@ struct BurnDIPInfo HangonjrDIPList[]=
 };
 
 STDDIPINFO(Hangonjr)
-
-struct BurnInputInfo TetrisseInputList[] = {
+*/
+static struct BurnInputInfo TetrisseInputList[] = {
 
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy0 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy0 + 6,	"p1 start"},
@@ -240,7 +238,7 @@ struct BurnInputInfo TetrisseInputList[] = {
 STDINPUTINFO(Tetrisse)
 
 
-struct BurnDIPInfo TetrisseDIPList[]=
+static struct BurnDIPInfo TetrisseDIPList[]=
 {
 	{0x0a, 0xff, 0xff, 0xff, NULL		},
 	{0x0b, 0xff, 0xff, 0x30, NULL		},
@@ -257,7 +255,7 @@ struct BurnDIPInfo TetrisseDIPList[]=
 };
 STDDIPINFO(Tetrisse)
 
-struct BurnDIPInfo Fantzn2DIPList[]=
+static struct BurnDIPInfo Fantzn2DIPList[]=
 {
 	{0x0d, 0xff, 0xff, 0xff, NULL		}, // coinage (missing for now)
 	{0x0e, 0xff, 0xff, 0xfc, NULL		},
@@ -287,7 +285,7 @@ struct BurnDIPInfo Fantzn2DIPList[]=
 
 STDDIPINFO(Fantzn2)
 
-struct BurnDIPInfo OpaopaDIPList[]=
+static struct BurnDIPInfo OpaopaDIPList[]=
 {
 	{0x13, 0xff, 0xff, 0xff, NULL		}, // coinage defs.
 	{0x14, 0xff, 0xff, 0xff, NULL		},
@@ -318,10 +316,10 @@ struct BurnDIPInfo OpaopaDIPList[]=
 STDDIPINFO(Opaopa)
 
 //-----------------------
-
+/*
 // Hang-On Jr.
 
-struct BurnRomInfo hangonjrRomDesc[] = {
+static struct BurnRomInfo hangonjrRomDesc[] = {
 	{ "rom5.ic7",	0x8000, 0xd63925a7, 1 }, //  0 maincpu
 	{ "rom4.ic5",	0x8000, 0xee3caab3, 1 }, //  1
 	{ "rom3.ic4",	0x8000, 0xd2ba9bc9, 1 }, //  2
@@ -331,10 +329,10 @@ struct BurnRomInfo hangonjrRomDesc[] = {
 
 STD_ROM_PICK(hangonjr)
 STD_ROM_FN(hangonjr)
-
+*/
 //  Tetris (Japan, System E)
 
-struct BurnRomInfo TetrisseRomDesc[] = {
+static struct BurnRomInfo TetrisseRomDesc[] = {
 
 	{ "epr12213.7", 0x8000, 0xef3c7a38, BRF_ESS | BRF_PRG }, // 0 maincpu
 	{ "epr12212.5", 0x8000, 0x28b550bf, BRF_ESS | BRF_PRG }, // 1
@@ -346,7 +344,7 @@ STD_ROM_FN(Tetrisse)
 
 //  Transformer
 
-struct BurnRomInfo TransfrmRomDesc[] = {
+static struct BurnRomInfo TransfrmRomDesc[] = {
 
 	{ "ic7.top", 0x8000, 0xccf1d123, BRF_ESS | BRF_PRG }, // 0 maincpu
 	{ "epr7347.ic5", 0x8000, 0xdf0f639f, BRF_ESS | BRF_PRG }, // 1
@@ -360,7 +358,7 @@ STD_ROM_FN(Transfrm)
 
 //  Astro Flash
 
-struct BurnRomInfo AstroflRomDesc[] = {
+static struct BurnRomInfo AstroflRomDesc[] = {
 
 	{ "epr7723.ic7", 0x8000, 0x66061137, BRF_ESS | BRF_PRG }, // 0 maincpu
 	{ "epr7347.ic5", 0x8000, 0xdf0f639f, BRF_ESS | BRF_PRG }, // 1
@@ -374,7 +372,7 @@ STD_ROM_FN(Astrofl)
 
 // Fantasy Zone II - The Tears of Opa-Opa (MC-8123, 317-0057)
 
-struct BurnRomInfo fantzn2RomDesc[] = {
+static struct BurnRomInfo fantzn2RomDesc[] = {
 	{ "epr11416.ic7",	0x08000, 0x76db7b7b, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu (encr)
 	{ "epr11415.ic5",	0x10000, 0x57b45681, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "epr11413.ic3",	0x10000, 0xa231dc85, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -389,7 +387,7 @@ STD_ROM_FN(fantzn2)
 
 // Opa Opa (MC-8123, 317-0042)
 
-struct BurnRomInfo opaopaRomDesc[] = {
+static struct BurnRomInfo opaopaRomDesc[] = {
 	{ "epr11054.ic7",	0x8000, 0x024b1244, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu  (encr)
 	{ "epr11053.ic5",	0x8000, 0x6bc41d6e, 1 | BRF_PRG | BRF_ESS }, //  1          ""
 	{ "epr11052.ic4",	0x8000, 0x395c1d0a, 1 | BRF_PRG | BRF_ESS }, //  2          ""
@@ -404,7 +402,7 @@ STD_ROM_FN(opaopa)
 
 //  Slap Shooter
 
-struct BurnRomInfo slapshtrRomDesc[] = {
+static struct BurnRomInfo slapshtrRomDesc[] = {
 
 	{ "epr7351.ic7", 0x8000, 0x894adb04, BRF_ESS | BRF_PRG }, // 0 maincpu
 	{ "epr7352.ic5", 0x8000, 0x61c938b6, BRF_ESS | BRF_PRG }, // 1

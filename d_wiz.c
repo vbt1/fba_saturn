@@ -254,7 +254,9 @@ void DrvPaletteInit()
 
 INT32 MemIndex()
 {
-	UINT8 *Next; Next = AllMem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
 
 	DrvZ80ROM0		= Next; Next += 0x010000;
 	DrvZ80Dec		= Next; Next += 0x010000;
@@ -482,14 +484,6 @@ INT32 ScionLoadRoms()
 INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 {
 	DrvInitSaturn();
-
-	AllMem = NULL;
-	MemIndex();
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL)
-	{
-		return 1;
-	}
-	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	make_lut_r(rotated);
@@ -607,7 +601,7 @@ INT32 DrvInit(int (*RomLoadCallback)(), int rotated)
 	AY8910Init(2, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	DrvDoReset();
 
-	__port = PER_OpenPort();
+//	__port = PER_OpenPort();
 
 	return 0;
 }
@@ -792,9 +786,6 @@ INT32 DrvExit()
 
 	interrupt_enable = palette_bank = char_bank_select = screen_flip = NULL;
 	DrvPalette = NULL;
-
-	free(AllMem);
-	AllMem = NULL;
 
 	soundlatch = background_color = sprite_bank = Wizmode = 0;
 

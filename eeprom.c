@@ -5,21 +5,21 @@
 #define SERIAL_BUFFER_LENGTH 40
 #define MEMORY_SIZE 1024
 
-/*static*/  const eeprom_interface *intf = NULL;
+static  const eeprom_interface *intf = NULL;
 
-/*static*/  int serial_count = 0;
-/*static*/  unsigned char serial_buffer[SERIAL_BUFFER_LENGTH] = {0};
-/*static*/  unsigned char eeprom_data[MEMORY_SIZE] = {0};
-/*static*/  int eeprom_data_bits = 0;
-/*static*/  int eeprom_read_address = 0;
-/*static*/  int eeprom_clock_count = 0;
-/*static*/  int latch = 0, reset_line = 0, clock_line = 0, sending = 0;
-/*static*/  int locked = 0;
-/*static*/  int reset_delay = 0;
+static  int serial_count = 0;
+static  unsigned char serial_buffer[SERIAL_BUFFER_LENGTH] = {0};
+static  unsigned char eeprom_data[MEMORY_SIZE] = {0};
+static  int eeprom_data_bits = 0;
+static  int eeprom_read_address = 0;
+static  int eeprom_clock_count = 0;
+static  int latch = 0, reset_line = 0, clock_line = 0, sending = 0;
+static  int locked = 0;
+static  int reset_delay = 0;
 
-/*static*/  int neeprom_available = 0;
+static  int neeprom_available = 0;
 
-/*static*/  int eeprom_command_match(const char *buf, const char *cmd, int len)
+static  int eeprom_command_match(const char *buf, const char *cmd, int len)
 {
 	if ( cmd == 0 )	return 0;
 	if ( len == 0 )	return 0;
@@ -114,7 +114,7 @@ void EEPROMExit()
 */
 }
 
-static void eeprom_write(int bit)
+static inline void eeprom_write(int bit)
 {
 	if (serial_count >= SERIAL_BUFFER_LENGTH-1)
 	{

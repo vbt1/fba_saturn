@@ -13,7 +13,7 @@ typedef struct //dac_info
 	INT32	(*pSyncCallback)();
 }dac_info;
 
-//static struct dac_info dac_table[DAC_NUM];
+//struct dac_info dac_table[DAC_NUM];
 /*static*/ dac_info dac_table[DAC_NUM];
 
 /*static*/ INT16 UnsignedVolTable[256];

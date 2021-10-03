@@ -341,8 +341,10 @@ INT32 pacman_load(UINT32 game_select)
 
 INT32 MemIndex()
 {
-	UINT8 *Next; Next = (UINT8 *)AllMem;
-
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
+	
 	DrvZ80ROM		= (UINT8 *)Next; Next += 0x020000;
 
 //	DrvColPROM		= (UINT8 *)Next; Next += 0x000500;
@@ -412,16 +414,6 @@ void StandardMap()
 INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), UINT32 select)
 {
 	DrvInitSaturn();
-
-	AllMem = NULL;
-	MemIndex();
-	
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL)
-	{
-		return 1;
-	}
-
-	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 
 	make_lut();
@@ -573,8 +565,6 @@ INT32 DrvExit()
 	p = NULL;
 	if(chip)
 		chip = NULL;
-	free (AllMem);
-	AllMem = NULL;
 
 	cleanDATA();
 	cleanBSS();

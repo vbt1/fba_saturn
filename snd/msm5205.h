@@ -20,7 +20,7 @@ void MSM5205VCLKWrite(INT32 chip, INT32 reset);
 void MSM5205PlaymodeWrite(INT32 chip, INT32 select);
 
 //void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd, float nVolume);
-void MSM5205Init(INT32 chip, INT16 *addr, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd);
+void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd);
 void MSM5205RenderDirect(INT32 chip, INT16 *buffer, INT32 len);
 void MSM5205_vclk_callback(INT32 chip);
 void MSM5205RenderDirectSlave(INT32 chip);
@@ -34,7 +34,7 @@ void MSM5205Reset();
 void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len);
 void MSM5205Exit();
 
-void MSM5205Scan(INT32 nAction, INT32 *pnMin);
+//void MSM5205Scan(INT32 nAction, INT32 *pnMin);
 
 /*
 	MSM5205CalcInterleave is used to calculate after how

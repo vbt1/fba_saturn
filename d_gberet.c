@@ -8,7 +8,7 @@
 
 int ovlInit(char *szShortName)
 {
-//	cleanBSS();
+	cleanBSS();
 
 	struct BurnDriver nBurnDrvGberet = {
 		"gberet", NULL,
@@ -33,7 +33,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/ void mrgoemon_bankswitch(int nBank)
+inline void mrgoemon_bankswitch(int nBank)
 {
 #ifdef CZ80
 	CZetMapArea(0xf800, 0xffff, 0, Rom + 0x10000 + nBank);
@@ -189,7 +189,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/ int DrvDoReset()
+/*static*/ void DrvDoReset()
 {
 	nmi_enable = 0;
 	irq_enable = 0;
@@ -218,54 +218,57 @@ int ovlInit(char *szShortName)
 //	ZetClose();
 //#endif
 #endif
-
-	return 0;
 }
 
 
-/*static*/ int MemIndex()
+inline void MemIndex()
 {
-	unsigned char *Next; Next = Mem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
 
 	Rom            = Next; Next += 0x14000;
 	MemEnd         = Next;
-
-	return 0;
+	bg_dirtybuffer = Next; Next += 2048;
+	load_rom	   = Next;
 }
 
-/*static*/ void DrvCreatePalette()
-{
-	unsigned int tmp[0x20];
-	unsigned char *Prom = (unsigned char *)0x00240000;
+inline void DrvCreatePalette()
+{ 
+	unsigned int *tmp = (unsigned int *)load_rom+0x30000;
+	unsigned char *Prom = (unsigned char *)load_rom+0x20000;
 	unsigned short *Palette = (unsigned short*)colBgAddr;//(unsigned int*)Next; Next += 0x00200 * sizeof(unsigned int);
-
-	init_32_colors(tmp,Prom);
+	UINT16  *Palette2=(UINT16  *)colBgAddr2;
+	unsigned char ctabentry;
+		
+	init_32_colors(&tmp[0],Prom);
 
 	Prom += 0x20;
 
 	for (unsigned int i = 0; i < 0x100; i++)
 	{
-		unsigned char ctabentry;
-
-		ctabentry = (Prom[0x000 + i] & 0x0f) | 0x10;
-		colBgAddr2[i]=Palette[0x000 + i] = tmp[ctabentry];
-		ctabentry = (Prom[0x100 + i] & 0x0f);
-		colBgAddr2[0x100 +i ]=Palette[0x100 + i] = tmp[ctabentry];
+		ctabentry = (*Prom & 0x0f) | 0x10;
+		*Palette2=*Palette = tmp[ctabentry];
+		ctabentry = (Prom[0x100] & 0x0f);
+		Palette2[0x100]=Palette[0x100] = tmp[ctabentry];
+		Palette2++;
+		Palette++;
+		Prom++;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void Graphics_Decode(int *CharPlanes, int *CharXOffs, int *CharYOffs, int *SprPlanes, int *SprXOffs, int *SprYOffs, int SprMod)
+/*static*/ inline void Graphics_Decode(int *CharPlanes, int *CharXOffs, int *CharYOffs, int *SprPlanes, int *SprXOffs, int *SprYOffs, int SprMod)
 {
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	memset(cache,0x00,0x40000);
-	UINT8 *Gfx0 = (unsigned char *)0x00200000;
-	UINT8 *Gfx1 = (unsigned char *)0x00220000;
+//	memset(cache,0x00,0x40000);
+	UINT8 *Gfx0 = (unsigned char *)load_rom;
+	UINT8 *Gfx1 = (unsigned char *)load_rom+0x10000;
 	
 	GfxDecode4Bpp(0x200, 4,  8,  8, CharPlanes, CharXOffs, CharYOffs, 0x100, Gfx0, cache);
 	GfxDecode4Bpp(0x200, 4, 16, 16, SprPlanes, SprXOffs, SprYOffs, SprMod, Gfx1, &ss_vram[0x1100]);
 }
 
-/*static*/ void DrvGfxDecode()
+inline void DrvGfxDecode()
 {
 	/*static*/ int Planes[4] = { 0, 1, 2, 3 };
 	/*static*/ int XOffs[16] = { 0, 4, 8, 12, 16, 20, 24, 28, 256, 260, 264, 268, 272, 276, 280, 284 };
@@ -274,43 +277,43 @@ int ovlInit(char *szShortName)
 	Graphics_Decode(Planes, XOffs, YOffs, Planes, XOffs, YOffs, 0x400);
 }
 
-/*static*/ int GetRoms()
+/*static*/ void GetRoms()
 {
 	char* pRomName;
 	struct BurnRomInfo ri;
 	unsigned char *Load0 = Rom;
-	unsigned char *Load1 = (unsigned char *)0x00200000;
-	unsigned char *Load2 = (unsigned char *)0x00220000;
-	unsigned char *Load3 = (unsigned char *)0x00240000;
-	memset(Load1,0x00,0x60000);
+	unsigned char *Load1 = (unsigned char *)load_rom;
+	unsigned char *Load2 = (unsigned char *)load_rom+0x10000;
+	unsigned char *Load3 = (unsigned char *)load_rom+0x20000;
+	memset4_fast(Load1,0x00,0x30000);
 	
 	for (unsigned int i = 0; !BurnDrvGetRomName(&pRomName, i, 0); i++) {
 
 		BurnDrvGetRomInfo(&ri, i);
 
 		if ((ri.nType & 7) == 1) {
-			if (BurnLoadRom(Load0, i, 1)) return 1;
+			if (BurnLoadRom(Load0, i, 1)) return ;
 			Load0 += ri.nLen;
 
 			continue;
 		}
 
 		if ((ri.nType & 7) == 2) {
-			if (BurnLoadRom(Load1, i, 1)) return 1;
+			if (BurnLoadRom(Load1, i, 1)) return ;
 			Load1 += ri.nLen;
 
 			continue;
 		}
 
 		if ((ri.nType & 7) == 3) {
-			if (BurnLoadRom(Load2, i, 1)) return 1;
+			if (BurnLoadRom(Load2, i, 1)) return ;
 			Load2 += ri.nLen;
 
 			continue;
 		}
 
 		if ((ri.nType & 7) == 4) {
-			if (BurnLoadRom(Load3, i, 1)) return 1;
+			if (BurnLoadRom(Load3, i, 1)) return ;
 			Load3 += ri.nLen;
 
 			continue;
@@ -319,28 +322,21 @@ int ovlInit(char *szShortName)
 
 	if (game_type == 2) {
 		memcpy (Rom + 0x10000, Rom + 0x0c000, 0x04000);
-		memset (Rom + 0x0c000, 0, 0x04000);
+		memset4_fast (Rom + 0x0c000, 0, 0x04000);
 	} 		  
-	return 0;
 }
 
 /*static*/ int DrvInit()
 {
 	DrvInitSaturn();
-
-	Mem = NULL;
 	MemIndex();
-	if ((Mem = (unsigned char *)malloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, MALLOC_MAX);
-	MemIndex();
-	if (GetRoms()) return 1;
-	/*if (game_type == 1) {
-		BootGfxDecode();
-	} else*/ 
 
-	{
-		DrvGfxDecode();
-	}
+#ifdef CACHE
+	memset4_fast(bg_dirtybuffer,1,2048);
+#endif	
+	
+	GetRoms();
+	DrvGfxDecode();
 	DrvCreatePalette();
 
 #ifdef CZ80
@@ -470,11 +466,21 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	nBurnSprites=128;
 	cleanSprites();
 	memset(ss_scl,0x00,nBurnLinescrollSize);
-	MemEnd=Rom=NULL;
-	free(Mem);
-	Mem=NULL;
+/*
+	bg_dirtybuffer=MemEnd=Rom=NULL;
 	game_type=0;
 	_30_HZ=0;
+	
+
+nmi_enable = irq_enable = 0;
+gberet_spritebank = 0;
+
+	
+	memset(DrvJoy1,0x00,8);
+	memset(DrvJoy2,0x00,8);
+	memset(DrvJoy3,0x00,8);
+	DrvDips[0] = DrvDips[1] = 0;
+*/	
 	cleanDATA();
 	cleanBSS();
 
@@ -483,7 +489,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initLayers()
+inline void initLayers()
 {
 
     Uint16	CycleTb[]={
@@ -507,14 +513,14 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initPosition()
+inline void initPosition()
 {
 	SCL_Open();
 	ss_reg->n0_move_y =  (16<<16) ;
 	SCL_Close();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initColors()
+inline void initColors()
 {
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
 	SCL_AllocColRam(SCL_SPR,OFF);
@@ -522,7 +528,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn()
+void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
@@ -538,9 +544,6 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
 	ss_scl			= (Fixed32 *)SS_SCL;
-#ifdef CACHE
-	memset(bg_dirtybuffer,1,2048);
-#endif
 
 	SS_SET_S0PRIN(6);
 	SS_SET_N1PRIN(7);
@@ -556,71 +559,74 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
 //	memset(&ss_scl[0],16<<16,64);
 	memset(&ss_scl[0],16<<16,128);
+	memset4_fast(&ss_map[0],0,0x4000);
+	memset4_fast(&ss_map2[0],0,0x4000);
 	drawWindow(0,240,0,2,66);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void gberet_draw_sprites()
+void gberet_draw_sprites()
 {
 	unsigned char *sr = Rom + 0xd000 + ((~gberet_spritebank & 8) << 5);
-
-	for (unsigned int offs = 0; offs < 0xc0; offs += 4)
+	SprSpCmd *ss_spritePtr;
+	
+	ss_spritePtr = &ss_sprite[3];
+	
+	for (unsigned int offs = 0; offs < 48; offs++)
 	{
-		unsigned int delta=(offs>>2)+3;
-//		ss_sprite[delta].charSize   = 0;  //0x100 16*16
-
-		if (sr[offs + 3])
+		if (sr[3])
 		{
-			unsigned int  attr = sr[offs + 1];
-			unsigned int  code = sr[offs + 0] + ((attr & 0x40) << 2);
+			unsigned int  attr = sr[1];
+			unsigned int  code = sr[0] + ((attr & 0x40) << 2);
 			unsigned int flip = attr & 0x30;
 
-			ss_sprite[delta].ax			= sr[offs + 2] - 2 * (attr & 0x80);
-			ss_sprite[delta].ay			= sr[offs + 3];
-			ss_sprite[delta].color      = (attr & 0x0f) << 4;
-			ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
-			ss_sprite[delta].drawMode   = ( ECD_DISABLE | COMPO_REP);		
-			ss_sprite[delta].charSize   = 0x210;  //0x100 16*16
-			ss_sprite[delta].charAddr   = 0x220+(code<<4);
+			ss_spritePtr->ax		 = sr[2] - 2 * (attr & 0x80);
+			ss_spritePtr->ay		 = sr[3];
+			ss_spritePtr->color      = (attr & 0x0f) << 4;
+			ss_spritePtr->control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
+			ss_spritePtr->drawMode   = ( ECD_DISABLE | COMPO_REP);		
+			ss_spritePtr->charSize   = 0x210;  //0x100 16*16
+			ss_spritePtr->charAddr   = 0x220+(code<<4);
+			ss_spritePtr++;
 		}
+		sr+=4;
 	}
 }
 
-/*static*/ int DrvDraw()
+inline void DrvDraw()
 {
 	unsigned int offs;
- 
-//	if (DrvRecalcPal) 
-/*	{
-		for (int i = 0; i < 0x200; i++) 
-		{
-			DrvPalette[i] = BurnHighCol(Palette[i] >> 16, Palette[i] >> 8, Palette[i], 0);
-		}	
-	}*/  
-	unsigned char *ColorRom = &Rom[0xc000];
-	unsigned char *VideoRom = &Rom[0xc800];
+	unsigned char *ColorRom = &Rom[0xc040];
+	unsigned char *VideoRom = &Rom[0xc840];
 	int scroll = Rom[0xe006] | (Rom[0xe026] << 8);
-
+	UINT8 	*bg_dirty=&bg_dirtybuffer[0x40];
+	UINT16*map  =(Uint16 *)SCL_VDP2_VRAM_B0;
+	UINT16*map2 =(Uint16 *)SCL_VDP2_VRAM_A0;
 	memset4_fast(&ss_scl[16],scroll | (scroll<<16),0x340);
 
-	for (offs = 0x40; offs < 0x7c0; offs++)
+	for (offs = 0; offs < 0x780; offs++)
 	{
 #ifdef CACHE
-		if (bg_dirtybuffer[offs])
+		if (*bg_dirty)
 		{
-			bg_dirtybuffer[offs] = 0;
+			*bg_dirty = 0;
 #endif
-			unsigned int attr = ColorRom[offs];
-			unsigned int code = VideoRom[offs] + ((attr & 0x40)<<2);
+			unsigned int attr = *ColorRom;
+			unsigned int code = *VideoRom + ((attr & 0x40)<<2);
 			unsigned int color = attr & 0x0f;
 			unsigned int flip = attr & 0x30;
 
-			ss_map2[offs] = ss_map2[offs+0x1000] = ss_map[offs] = ss_map[offs+0x1000] = (color << 12 | flip << 6 | (code&0x1FF)) ;
+			*map2 = map2[0x1000] = *map = map[0x1000] = (color << 12 | flip << 6 | (code&0x1FF)) ;
 #ifdef CACHE
 		}
+		bg_dirty++;
+		ColorRom++;
+		VideoRom++;
+		map2++;
+		map++;
 #endif
 	}
-	return 0;
+
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void renderSound(unsigned int *nSoundBufferPos)
@@ -637,13 +643,9 @@ void renderSound(unsigned int *nSoundBufferPos)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ int DrvFrame()
+/*static*/ void DrvFrame()
 {
 	unsigned int nInterleave = game_type ? 16 : 32;
-/*	if (DrvReset) {
-		DrvDoReset();
-	}
-	*/
 #ifdef CZ80
 	if(game_type & 2)
 		CZetOpen(0);
@@ -707,8 +709,6 @@ else
 	cleanSprites();
 	gberet_draw_sprites();
 	SPR_WaitEndSlaveSH();
-
-	return 0;
 }
 /*static*/ int gberetInit()
 {

@@ -59,7 +59,7 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/ void bankswitch(UINT32 data)
+inline void bankswitch(UINT32 data)
 {
 	UINT8 bank_data = data & 0x0f;
 
@@ -289,8 +289,10 @@ int ovlInit(char *szShortName)
 
 /*static*/ INT32 MemIndex()
 {
-	UINT8 *Next; 
-	Next			= AllMem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
+	
 	CZ80Context		= Next; Next += sizeof(cz80_struc);
 	DrvZ80ROM0		= Next; Next += 0x018000;
 #ifdef SOUND
@@ -335,13 +337,15 @@ int ovlInit(char *szShortName)
 	INT32 XOffs0[16] = { STEP4(0,1), STEP4(8,1), STEP4(256,1), STEP4(256+8,1) };
 	INT32 XOffs1[32] = { STEP4(0,1), STEP4(8,1), STEP4(512,1), STEP4(512+8,1), STEP4(1024,1), STEP4(1024+8,1), STEP4(1536,1), STEP4(1536+8,1) };
 	INT32 YOffs[32]  = { STEP32(0,16) };
-	UINT8 *DrvGfxROM1	 = (UINT8 *)0x00250000;	
-	UINT8 *DrvGfxROM1b	 = (UINT8 *)(SS_CACHE + 0x8000);
+
+
 	UINT8 *DrvGfxROM0	 = (UINT8 *)SS_CACHE;
-	UINT8 *DrvGfxROM2	 = (UINT8*)0x00210000;
+	UINT8 *DrvGfxROM1	 = (UINT8 *)(LOWADDR + 0x50000);		
+	UINT8 *DrvGfxROM2	 = (UINT8 *)(LOWADDR + 0x10000);
+	UINT8 *DrvGfxROM1b	 = (UINT8 *)(SS_CACHE + 0x8000);	
 	UINT8 *DrvGfxROM2b	 = (UINT8*)(ss_vram + 0x1100);
 	
-	UINT8 *tmp = (UINT8*)0x00200000; 
+	UINT8 *tmp = (UINT8*)LOWADDR; 
 
 	memcpyl (tmp, DrvGfxROM0, 0x08000);
 // text
@@ -369,18 +373,10 @@ int ovlInit(char *szShortName)
 {
 	DrvInitSaturn();
 
-	AllMem = NULL;
-	MemIndex();
 //	UINT8 *ss_vram		 = (UINT8 *)SS_SPRAM;
-	UINT8 *DrvGfxROM1	 = (UINT8 *)0x00250000;
-	UINT8 *DrvGfxROM2	 = (UINT8*)0x00210000;
+	UINT8 *DrvGfxROM1	 = (UINT8 *)(LOWADDR + 0x50000);		
+	UINT8 *DrvGfxROM2	 = (UINT8 *)(LOWADDR + 0x10000);
 //	UINT8 *DrvGfxROM2	 = (UINT8*)(ss_vram + 0x1100);
-	
-	if ((AllMem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
-	{
-		return 1;
-	}
-	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex();
 	
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
@@ -515,11 +511,10 @@ int ovlInit(char *szShortName)
 	cram_lut = bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = NULL;
 	CZ80Context = RamEnd = DrvZ80ROM0 = NULL;
 	DrvStarMap = DrvTileMap = DrvVidRAM = DrvSprBuf = DrvSprRAM = DrvPalRAM = DrvZ80RAM0 = bgscrollx = bgscrolly = NULL;
-	free (AllMem);
-	AllMem = NULL;
 
 	vblank=0;
-
+	
+	cleanSprites();
 	cleanDATA();
 	cleanBSS();
 
@@ -544,21 +539,22 @@ inline void transfer_bg_layer()
 
 	INT32 offs = 2 * (scrollx >> 5) + 0x100 * (scrolly >> 5);
 
-	for (UINT32 k=0;k<32 ;k++ ) // row
+	for (UINT8 k=0;k<32 ;k++ ) // row
 	{
-		for (UINT32 i=0;i<32 ;i+=2 ) // colon
+		for (UINT8 i=0;i<16 ;i++ ) // colon
 		{
-			UINT32 offset = offs + i;
+			UINT32 offset = offs + (i<<1);
 			offset = (offset & 0xf801) | ((offset & 0x0700) >> 7) | ((offset & 0x00fe) << 3) & 0x7fff;
 			UINT32 *pDrvTileMap = ((UINT32 *)bgmap_lut)+(offset<<1);
 
-			map[i+0]	= pDrvTileMap[0];
-			map[i+1]	= pDrvTileMap[1];
-			map[i+32]	= pDrvTileMap[2];
-			map[i+33]	= pDrvTileMap[3];
+			map[0]	= pDrvTileMap[0];
+			map[1]	= pDrvTileMap[1];
+			map[32]	= pDrvTileMap[2];
+			map[33]	= pDrvTileMap[3];
+			map+=2;
 		}
 		offs += 256;
-		map+= 64;
+		map+= 32;
 	}
 	ss_reg->n1_move_x =  (((scrollx&0x1f)+16)<<16) ;
 	ss_reg->n1_move_y =  (((scrolly&0x1f))<<16) ;
@@ -579,11 +575,11 @@ inline void transfer_bg_layer()
 		ss_spritePtr->ay			= DrvSprBuf[offs + 2];
 		ss_spritePtr->color		= (attr & 0xf)<<4;//Colour<<4;
 		ss_spritePtr->charAddr	= 0x220+(code<<4);
-		*ss_spritePtr++;
+		ss_spritePtr++;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ UINT32 SidearmsDraw()
+inline void SidearmsDraw()
 {
 	if (starfield_enable)
 	{
@@ -610,8 +606,6 @@ inline void transfer_bg_layer()
 		draw_sprites_region(0x0000, 0x0700);
 	}
 	SPR_WaitEndSlaveSH();
-
-	return 0;
 }
 
 /*static*/ INT32 DrvFrame()
@@ -759,7 +753,7 @@ static void DrvInitSaturn()
 
 	initLayers();
 	initColors();
-	memset (SS_SPRAM,0x00,0x1100);
+//	memset (SS_SPRAM,0x00,0x1100);
 	initSprites(352-1,224-1,0,0,-80,-16); // ne plus modifier
 
 	SCL_Open();
@@ -767,23 +761,26 @@ static void DrvInitSaturn()
 	ss_reg->n2_move_x =  80;
 	SCL_Close();
 
-	memset((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x8000);
+//	memset((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x8000);
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
 	SprSpCmd *ss_spritePtr;
-	
-	for (unsigned int i = 3; i <nBurnSprites; i++) 
+
+	ss_spritePtr				= &ss_sprite[3];
+		
+	for (unsigned int i = 0; i <nBurnSprites; i++) 
 	{
-		ss_spritePtr				= &ss_sprite[i];
+
 		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
+		ss_spritePtr++;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_lut(void)
 {
     UINT32 j=0,my;
-	UINT8 r,g,b;
+	UINT32 r,g,b;
 
    	for (UINT32 i = 0; i < 4096;i++) 
 	{
@@ -797,32 +794,34 @@ static void DrvInitSaturn()
 		cram_lut[i] = BurnHighCol(r,g,b,0);
 	}
 
+	UINT16 *lutptr1=(UINT16 *)remap4to16_lut;
+	
 	for (UINT32 i = 0; i < 256;i++) 
 	{
 		if ((i%4)==0)
 		{
-			remap4to16_lut[i] = j+3;
+			*lutptr1++ = j+3;
 		}
 		else if (((i+1)%4)==0)
 		{
-			remap4to16_lut[i] = j-3;
+			*lutptr1++ = j-3;
 		} 
 		else
 		{
-			remap4to16_lut[i] = j;
+			*lutptr1++ = j;
 		}
 		j++; if ((j & 3) == 0) j += 12;
 
 		map_lut[i] = ((i & 0x80)<<7) | i & 0x7f;
 	}
 
-	j = 0;
+	lutptr1=(UINT16 *)map_offset_lut;
+		
 	for (my = 0; my < 64; my++) 
 	{
 		for (UINT32 i = 0; i < 128; i++) 
 		{
-			map_offset_lut[j] = ((i)|(my<<7))<<1;
-			j++;
+			*lutptr1++ = ((i)|(my<<7))<<1;
 		}
 	}
 
@@ -947,7 +946,7 @@ static void DrvInitSaturn()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
+inline void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest)
 {
 	for (unsigned int c = 0; c < num; c++) 
 	{

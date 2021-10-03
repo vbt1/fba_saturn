@@ -3,20 +3,20 @@
 
 #include "d_sys1_common.h"
 
-/*static*/ INT32 WboyuInit();
-/*static*/ INT32 TeddybbInit();
-/*static*/ INT32 PitfalluInit();
-/*static*/ INT32 MyheroInit();
-/*static*/ INT32 Wboy2uInit();
+static INT32 WboyuInit();
+/*static*/ //INT32 TeddybbInit();
+static INT32 PitfalluInit();
+static INT32 MyheroInit();
+static INT32 Wboy2uInit();
 ///*static*/ int NprincsuInit();
 ///*static*/ int SeganinuInit();
-/*static*/ INT32 Flicks2Init();
+static INT32 Flicks2Init();
 ///*static*/ INT32 FourdwarrioInit();
 
 /*==============================================================================================
 Input Definitions
 ===============================================================================================*/
-/*static*/ struct BurnInputInfo WboyInputList[] = {
+static struct BurnInputInfo WboyInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
@@ -42,7 +42,7 @@ Input Definitions
 STDINPUTINFO(Wboy)
 
 
-/*static*/ /*struct BurnInputInfo WbmljbInputList[] = {
+/*static*/ /*static struct BurnInputInfo WbmljbInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
@@ -71,7 +71,7 @@ STDINPUTINFO(Wboy)
 
 STDINPUTINFO(Wbmljb)
 */
-/*static*/ /*struct BurnInputInfo SeganinjInputList[] = {
+/*static*/ /*static struct BurnInputInfo SeganinjInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
@@ -102,7 +102,7 @@ STDINPUTINFO(Wbmljb)
 
 STDINPUTINFO(Seganinj)
 */
-/*static*/ struct BurnInputInfo FlickyInputList[] = {
+static struct BurnInputInfo FlickyInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
@@ -126,7 +126,7 @@ STDINPUTINFO(Seganinj)
 STDINPUTINFO(Flicky)
 
 /*
-/*static*/ /*struct BurnDIPInfo WboyDIPList[]=
+/*static*/ /*static struct BurnDIPInfo WboyDIPList[]=
 {
 	// Default Values
 	{0x0f, 0xff, 0xff, 0xff, NULL                     },
@@ -166,7 +166,7 @@ STDINPUTINFO(Flicky)
 STDDIPINFO(Wboy)
  */
 
-/*static*/ struct BurnDIPInfo WboyuDIPList[]=
+static struct BurnDIPInfo WboyuDIPList[]=
 {
 	// Default Values
 	{0x0f, 0xff, 0xff, 0xbe, NULL                     },
@@ -210,8 +210,8 @@ STDDIPINFO(Wboy)
 };
 
 STDDIPINFO(Wboyu)
-
-/*static*/ struct BurnDIPInfo TeddybbDIPList[]=
+/*
+static struct BurnDIPInfo TeddybbDIPList[]=
 {
 	// Default Values
 	{0x13, 0xff, 0xff, 0xff, NULL                     },
@@ -247,8 +247,8 @@ STDDIPINFO(Wboyu)
 };
 
 STDDIPINFO(Teddybb)
-
-/*static*/ struct BurnDIPInfo PitfalluDIPList[]=
+*/
+static struct BurnDIPInfo PitfalluDIPList[]=
 {
 	// Default Values
 	{0x13, 0xff, 0xff, 0xff, NULL                     },
@@ -285,7 +285,7 @@ STDDIPINFO(Teddybb)
 
 STDDIPINFO(Pitfallu)
 
-/*static*/ struct BurnDIPInfo MyheroDIPList[]=
+static struct BurnDIPInfo MyheroDIPList[]=
 {
 	// Default Values
 	{0x13, 0xff, 0xff, 0xff, NULL                     },
@@ -320,7 +320,7 @@ STDDIPINFO(Pitfallu)
 STDDIPINFO(Myhero)
 
 /*
-/*static*/ /*struct BurnDIPInfo WbmljbDIPList[]=
+/*static*/ /*static struct BurnDIPInfo WbmljbDIPList[]=
 {
 	// Default Values
 	{0x0f, 0xff, 0xff, 0xbe, NULL                     },
@@ -365,7 +365,7 @@ STDDIPINFO(Myhero)
 STDDIPINFO(Wbmljb)
 */
 
-/*static*/ /*struct BurnDIPInfo SeganinjDIPList[]=
+/*static*/ /*static struct BurnDIPInfo SeganinjDIPList[]=
 {
 	// Default Values
 	{0x15, 0xff, 0xff, 0xff, NULL                     },
@@ -405,7 +405,7 @@ STDDIPINFO(Wbmljb)
 STDDIPINFO(Seganinj)
 */
 
-/*static*/ struct BurnDIPInfo FlickyDIPList[]=
+static struct BurnDIPInfo FlickyDIPList[]=
 {
 	// Default Values
 	{0x0d, 0xff, 0xff, 0xff, NULL                     },
@@ -438,7 +438,7 @@ STDDIPINFO(Seganinj)
 
 STDDIPINFO(Flicky)
 
-/*static*/ struct BurnDIPInfo WbdeluxeDIPList[]=
+static struct BurnDIPInfo WbdeluxeDIPList[]=
 {
 	// Default Values
 	{0x0f, 0xff, 0xff, 0xff, NULL                     },
@@ -481,7 +481,7 @@ STDDIPINFO(Flicky)
 
 STDDIPINFO(Wbdeluxe)
 
-/*static*/ /*struct BurnDIPInfo FourdwarrioDIPList[]=
+/*static*/ /*static struct BurnDIPInfo FourdwarrioDIPList[]=
 {
 	// Default Values
 	{0x13, 0xff, 0xff, 0xff, NULL                     },
@@ -524,7 +524,7 @@ STDDIPINFO(Fourdwarrio)
 ROM Descriptions
 ===============================================================================================*/
 /*
-/*static*/ /*struct BurnRomInfo WboyRomDesc[] = {
+/*static*/ /*static struct BurnRomInfo WboyRomDesc[] = {
 	{ "epr7489.116",      0x004000, 0x130f4b70, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr7490.109",      0x004000, 0x9e656733, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "epr7491.96",       0x004000, 0x1f7d0efe, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -550,7 +550,7 @@ STD_ROM_PICK(Wboy)
 STD_ROM_FN(Wboy)
 */
 
-/*static*/ struct BurnRomInfo WboyuRomDesc[] = {
+static struct BurnRomInfo WboyuRomDesc[] = {
 	{ "ic11689.bin",      0x004000, 0x73d8cef0, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "ic10990.bin",      0x004000, 0x29546828, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "ic09691.bin",      0x004000, 0xc7145c2a, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -574,8 +574,8 @@ STD_ROM_FN(Wboy)
 
 STD_ROM_PICK(Wboyu)
 STD_ROM_FN(Wboyu)
-
-/*static*/ struct BurnRomInfo TeddybbRomDesc[] = {
+/*
+static struct BurnRomInfo TeddybbRomDesc[] = {
 	{ "epr6768.116",      0x004000, 0x5939817e, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr6769.109",      0x004000, 0x14a98ddd, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "epr6770.96",       0x004000, 0x67b0c7c2, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -599,8 +599,8 @@ STD_ROM_FN(Wboyu)
 
 STD_ROM_PICK(Teddybb)
 STD_ROM_FN(Teddybb)
-
-/*static*/ struct BurnRomInfo Pitfall2uRomDesc[] = {
+*/
+static struct BurnRomInfo Pitfall2uRomDesc[] = {
 	{ "epr6623.116",      0x004000, 0xbcb47ed6, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr6624a.109",      0x004000, 0x6e8b09c1, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "epr6625.96",       0x004000, 0xdc5484ba, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -623,7 +623,7 @@ STD_ROM_FN(Teddybb)
 STD_ROM_PICK(Pitfall2u)
 STD_ROM_FN(Pitfall2u)
 
-/*static*/ struct BurnRomInfo MyheroRomDesc[] = {
+static struct BurnRomInfo MyheroRomDesc[] = {
 	{ "epr6963b.116",      0x004000, 0x4daf89d4, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr6964a.109",      0x004000, 0xc26188e5, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "epr6927.96",       0x004000, 0x3cbbaf64, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -649,7 +649,7 @@ STD_ROM_PICK(Myhero)
 STD_ROM_FN(Myhero)
 
 
-/*static*/ /*struct BurnRomInfo WbmljbRomDesc[] = {
+/*static*/ /*static struct BurnRomInfo WbmljbRomDesc[] = {
 	{ "wbml.bin",      0x008000, 0x66482638, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "m6.bin",      0x008000, 0x8c08cd11, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "m7.bin",       0x008000, 0x11881703, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -676,7 +676,7 @@ STD_ROM_PICK(Wbmljb)
 STD_ROM_FN(Wbmljb)
 */
 
-/*static*/ /*struct BurnRomInfo NprincesuRomDesc[] = {
+/*static*/ /*static struct BurnRomInfo NprincesuRomDesc[] = {
 	{ "epr6573.129",      0x002000, 0xd2919c7d, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr6574.130",      0x002000, 0x5a132833, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "epr6575.131",      0x002000, 0xa94b0bd4, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -705,7 +705,7 @@ STD_ROM_PICK(Nprincesu)
 STD_ROM_FN(Nprincesu)
 */
 
-/*static*/ /*struct BurnRomInfo SeganinjuRomDesc[] = {
+/*static*/ /*static struct BurnRomInfo SeganinjuRomDesc[] = {
 	{ "epr7149.116",      0x004000, 0xcd9fade7, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr7150.109",      0x004000, 0xc36351e2, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "epr6552.96",       0x004000, 0xf2eeb0d8, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -731,7 +731,7 @@ STD_ROM_PICK(Seganinju)
 STD_ROM_FN(Seganinju)
 */
 
-/*static*/ struct BurnRomInfo Flickys2RomDesc[] = {
+static struct BurnRomInfo Flickys2RomDesc[] = {
 	{ "epr6621.bin",      0x004000, 0xb21ff546, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr6622.bin",      0x004000, 0x133a8bf1, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	
@@ -753,7 +753,7 @@ STD_ROM_FN(Seganinju)
 STD_ROM_PICK(Flickys2)
 STD_ROM_FN(Flickys2)
 
-/*static*/ struct BurnRomInfo WbdeluxeRomDesc[] = {
+static struct BurnRomInfo WbdeluxeRomDesc[] = {
 	{ "wbd1.bin",          0x002000, 0xa1bedbd7, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "ic13003.bin",      0x002000, 0x56463ede, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "wbd3.bin",          0x002000, 0x6fcdbd4c, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -781,7 +781,7 @@ STD_ROM_FN(Flickys2)
 STD_ROM_PICK(Wbdeluxe)
 STD_ROM_FN(Wbdeluxe)
 
-/*static*/ /*struct BurnRomInfo FourdwarrioRomDesc[] = {
+/*static*/ /*static struct BurnRomInfo FourdwarrioRomDesc[] = {
 	{ "4d.116",            0x004000, 0x546d1bc7, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "4d.109",            0x004000, 0xf1074ec3, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "4d.96",             0x004000, 0x387c1e8f, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -806,7 +806,7 @@ STD_ROM_FN(Wbdeluxe)
 STD_ROM_PICK(Fourdwarrio)
 STD_ROM_FN(Fourdwarrio)
 */
-/*static*/ /*struct BurnRomInfo WbmljbRomDesc[] = {
+/*static*/ /*static struct BurnRomInfo WbmljbRomDesc[] = {
 	{ "wbml.01",          0x010000, 0x66482638, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "m6.bin",             0x010000, 0x8c08cd11, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "m7.bin",             0x010000, 0x11881703, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
@@ -839,7 +839,7 @@ STD_ROM_FN(Wbmljb)
 Driver defs
 ===============================================================================================*/
 /*
-struct BurnDriver BurnDrvWboy = {
+static struct BurnDriver BurnDrvWboy = {
 	"wboy", NULL, NULL, "1986",
 	"Wonder Boy (set 1, 315-5177)\0", NULL, "Sega (Escape License)", "System 1",
 	NULL, NULL, NULL, NULL,
@@ -851,7 +851,7 @@ struct BurnDriver BurnDrvWboy = {
 */
 
 /*
-struct BurnDriver BurnDrvWbmljb = {
+static struct BurnDriver BurnDrvWbmljb = {
 	"wbmljb", NULL, NULL, "1987",
 	"Wonder Boy in Monster Land (Japan not encrypted)\0", NULL, "Sega", "System 2",
 	NULL, NULL, NULL, NULL,
@@ -862,7 +862,7 @@ struct BurnDriver BurnDrvWbmljb = {
 };
 */
 /*
-struct BurnDriver BurnDrvNprincesu = {
+static struct BurnDriver BurnDrvNprincesu = {
 	"nprincsu", "seganinj", NULL, "1985",
 	"Ninja Princess (64k Ver.not encrypted)\0", NULL, "Sega", "System 1",
 	NULL, NULL, NULL, NULL,
@@ -873,7 +873,7 @@ struct BurnDriver BurnDrvNprincesu = {
 };
 */
 /*
-struct BurnDriver BurnDrvSeganinju = {
+static struct BurnDriver BurnDrvSeganinju = {
 	"seganinu", "seganinj", NULL, "1985",
 	"Sega Ninja (not encrypted)\0", NULL, "Sega", "System 1",
 	NULL, NULL, NULL, NULL,

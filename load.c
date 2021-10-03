@@ -3,7 +3,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------
 static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor)
 {
-	int nRet = 0;
+//	int nRet = 0;
 	char* pszFilename;
 	struct BurnRomInfo ri;
 	BurnDrvGetRomName(&pszFilename, i, 0);
@@ -23,7 +23,7 @@ static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int
 		sprintf(text,"%d %d %s %d ", fid,fileSize,pszFilename,ri.nLen);
 		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)text,10,(20*i)+60);
 */
-	return nRet;
+	return 0;
 }
 // Load a rom and separate out the bytes by nGap
 // Dest is the memory block to insert the rom into
@@ -145,7 +145,7 @@ int BurnLoadBitField(unsigned char *pDest,unsigned char *pSrc,int nField,int nSr
 //-------------------------------------------------------------------------------------------------------------------------------------
 static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor)
 {
-	int nRet = 0;
+//	int nRet = 0;
 	char* pszFilename;
 	struct BurnRomInfo ri;
 	BurnDrvGetRomName(&pszFilename, i, 0);
@@ -159,13 +159,13 @@ static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int
 	long fileSize	= GetFileSize(fid);
 	GFS_Load(fid, 0, Dest, ri.nLen);
 	pnWrote[0] = ri.nLen;
-//	wait_vblank();
+	wait_vblank();
 /*
 		char text[100];
 		sprintf(text,"%d %d %s %d ", fid,fileSize,pszFilename,ri.nLen);
 		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)text,10,(20*i)+60);
 */
-	return nRet;
+	return 0;
 }
 // Load a rom and separate out the bytes by nGap
 // Dest is the memory block to insert the rom into

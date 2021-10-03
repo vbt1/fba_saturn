@@ -78,7 +78,7 @@ void InitCD();
 #endif
 
 #define SystemWork  0x060ffc00              /* System Variable Address */
-#define SystemSize  (0x06100000-0x060ffc00) /* System Variable Size */
+#define SystemSize  (0x06100000-0x060ff800) /* System Variable Size */
 
 #define TVSTAT      (*(volatile Uint16 *)0x25F80004)
 
@@ -135,8 +135,8 @@ unsigned char hz=0;
 #endif
 
 static Uint8        *aVRAM;
-static SprSpCmd     smsSprite[256+3];
-SclLineparam lp; //  __attribute__((section("COMMON")));
+static SprSpCmd     smsSprite[256+4];
+volatile SclLineparam lp; //  __attribute__((section("COMMON")));
 static Uint32	SclAddrLsTbl[2];
 static Fixed32	ls_tbl[SCL_MAXLINE];
 extern Uint16	SclProcess;
@@ -151,7 +151,7 @@ SclBgPriNumRegister SclBgPriNum;// __attribute__((section("COMMON")));
 SclBgColMixRegister  SclBgColMix;// __attribute__((section("COMMON")));
 //SclPriBuffDirtyFlags SclPriBuffDirty;
 //-------------------------------------------------------------------------------------------------------------------------------------
-extern Uint8	*FntAsciiFontData2bpp;
+extern Uint8	FntAsciiFontData2bpp[1600];
 extern PcmHn 			pcm;
 
 extern Uint32   _bstart, _bend;

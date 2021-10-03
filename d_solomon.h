@@ -17,40 +17,39 @@ void updateSound();
 void CZetRunSlave(int *nCycles);
 void dummy();
 
-/*static*/ UINT8 SolomonInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ UINT8 SolomonInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ UINT8 SolomonInputPort2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ UINT8 SolomonDip[2]        = {0, 0};
-/*static*/ UINT8 SolomonInput[3]      = {0x00, 0x00, 0x00};
+static UINT8 SolomonInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static UINT8 SolomonInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static UINT8 SolomonInputPort2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static UINT8 SolomonDip[2]        = {0, 0};
+static UINT8 SolomonInput[3]      = {0x00, 0x00, 0x00};
 
-/*static*/ UINT8 *Mem                 = NULL;
-/*static*/ UINT8 *MemEnd              = NULL;
-/*static*/ UINT8 *RamStart            = NULL;
-/*static*/ UINT8 *SolomonZ80Rom1      = NULL;
-/*static*/ UINT8 *SolomonZ80Rom2      = NULL;
-/*static*/ UINT8 *SolomonZ80Ram1      = NULL;
-/*static*/ UINT8 *SolomonZ80Ram2      = NULL;
-/*static*/ UINT8 *SolomonColourRam    = NULL;
-/*static*/ UINT8 *SolomonVideoRam     = NULL;
-/*static*/ UINT8 *SolomonBgColourRam  = NULL;
-/*static*/ UINT8 *SolomonBgVideoRam   = NULL;
-/*static*/ UINT8 *SolomonSpriteRam    = NULL;
-/*static*/ UINT8 *SolomonPaletteRam   = NULL;
-/*static*/ UINT8 *CZ80Context = NULL;
+static UINT8 *MemEnd              = NULL;
+static UINT8 *RamStart            = NULL;
+static UINT8 *SolomonZ80Rom1      = NULL;
+static UINT8 *SolomonZ80Rom2      = NULL;
+static UINT8 *SolomonZ80Ram1      = NULL;
+static UINT8 *SolomonZ80Ram2      = NULL;
+static UINT8 *SolomonColourRam    = NULL;
+static UINT8 *SolomonVideoRam     = NULL;
+static UINT8 *SolomonBgColourRam  = NULL;
+static UINT8 *SolomonBgVideoRam   = NULL;
+static UINT8 *SolomonSpriteRam    = NULL;
+static UINT8 *SolomonPaletteRam   = NULL;
+static UINT8 *CZ80Context = NULL;
 #ifdef USE_IDMA
-/*static*/ UINT16 *bgmap_buf = NULL;
-/*static*/ UINT16 *bgmap2_buf = NULL;
+static UINT16 *bgmap_buf = NULL;
+static UINT16 *bgmap2_buf = NULL;
 #endif
 
 UINT16* map_offset_lut      = NULL;
 UINT16 *cram_lut = NULL;
 
-/*static*/ INT32 SolomonIrqFire = 0;
-/*static*/ INT32 SolomonSoundLatch = 0;
-/*static*/ INT16* pFMBuffer = NULL;
-/*static*/ INT16* pAY8910Buffer[9] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+static INT32 SolomonIrqFire = 0;
+static INT32 SolomonSoundLatch = 0;
+static INT16* pFMBuffer = NULL;
+static INT16* pAY8910Buffer[9] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
-/*static*/ struct BurnInputInfo SolomonInputList[] =
+static struct BurnInputInfo SolomonInputList[] =
 {
 	{"Coin 1"            , BIT_DIGITAL  , SolomonInputPort2 + 2, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , SolomonInputPort2 + 0, "p1 start"  },
@@ -78,7 +77,7 @@ UINT16 *cram_lut = NULL;
 
 STDINPUTINFO(Solomon)
 
-/*static*/ struct BurnDIPInfo SolomonDIPList[]=
+static struct BurnDIPInfo SolomonDIPList[]=
 {
 	// Default Values
 	{0x11, 0xff, 0xff, 0x02, NULL                     },
@@ -141,7 +140,7 @@ STDINPUTINFO(Solomon)
 
 STDDIPINFO(Solomon)
 
-/*static*/ struct BurnRomInfo SolomonRomDesc[] = {
+static struct BurnRomInfo SolomonRomDesc[] = {
 	{ "6.3f",          0x04000, 0x645eb0f3, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "7.3h",          0x08000, 0x1bf5c482, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "8.3jk",         0x08000, 0x0a6cdefc, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code

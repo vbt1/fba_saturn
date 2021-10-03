@@ -9,7 +9,7 @@ UINT32 BgSel=0xFFFF;
 
 int ovlInit(char *szShortName)
 {
-//	cleanBSS();
+	cleanBSS();
 	struct BurnDriver nBurnDrvBombjack = {
 		"bombja", NULL,
 		"Bomb Jack (set 1)",
@@ -698,14 +698,16 @@ INT32 DrvDoReset()
 		AY8910Reset(i);
 	}
 	
-	__port = PER_OpenPort();
+//	__port = PER_OpenPort();
 
 	return 0;
 }
 
 INT32 MemIndex()
 {
-	UINT8 *Next; Next = Mem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
 
 	BjRom		  = Next; Next += 0x10000;
 //	BjGfx		  = Next; Next += 0x0F000;
@@ -735,13 +737,8 @@ INT32 MemIndex()
 INT32 DrvInit()
 {
 	DrvInitSaturn();
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvInitSaturn             ",10,70);
-	// Allocate and Blank all required memory
-	Mem = NULL;
 	MemIndex();
-	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, MALLOC_MAX);
-	MemIndex();
+
 	make_lut();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnMalloc                  ",10,70);
 	
@@ -823,9 +820,6 @@ INT32 DrvExit()
 
 //	free (pFMBuffer);
 	pFMBuffer = NULL;
-//	GenericTilesExit();
-	free(Mem);
-	Mem = NULL;
 	BgSel = 0;
 
 	cleanDATA();

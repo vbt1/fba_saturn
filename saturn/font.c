@@ -208,8 +208,8 @@ static Uint8	FntAsciiFontData2bpp[] = {
 #define FONT_ADDR &FntAsciiFontData2bpp[0]
 #else
 //
-Uint8	*FntAsciiFontData2bpp = NULL;
-//Uint8	FntAsciiFontData2bpp[1600];
+//Uint8	*FntAsciiFontData2bpp = NULL;
+Uint8	FntAsciiFontData2bpp[1600];
 #define FONT_ADDR &FntAsciiFontData2bpp[0]
 #endif
 extern unsigned char col[4];

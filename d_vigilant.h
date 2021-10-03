@@ -32,7 +32,6 @@ unsigned char DrvDip[3]        = {0, 0, 0};
 unsigned char DrvInput[3]      = {0x00, 0x00, 0x00};
 //unsigned char DrvReset         = 0;
 
-unsigned char *Mem			= NULL;
 unsigned char *MemEnd			= NULL;
 //unsigned char *RamStart		= NULL;
 //unsigned char *RamEnd		= NULL;

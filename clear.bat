@@ -8,5 +8,5 @@ del sms\*.o
 del gg\*.o
 del ggcz\*.o
 del snd\*.o
-del root\*.coff
+del root\*.elf
 

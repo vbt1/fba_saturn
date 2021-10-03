@@ -9,19 +9,19 @@
 INT32 SidearmsInit();
 INT32 DrvExit();
 INT32 DrvFrame();
-UINT32 SidearmsDraw();
-void bankswitch(UINT32 data);
+inline void SidearmsDraw();
+inline void bankswitch(UINT32 data);
 void sidearms_draw_starfield(int *starfield_enable);
 inline void transfer_bg_layer();
 //void vblIn();
 void cleanSprites();
-void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
+inline void tile32x32toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);
 void SDMA_ScuCst(Uint32 ch, void *dst, void *src, Uint32 cnt);
 Uint32 SDMA_ScuResult(Uint32 ch);
 void *memset4_fast(void *, long, size_t);
 void dummy();
 
-SFX sfx_sidarm[96] = {
+static SFX sfx_sidarm[96] = {
 /*000.pcm*/{0,230400,10},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
@@ -64,7 +64,6 @@ UINT16 *map_offset_lut = NULL;  //[2048];
 UINT16 *cram_lut = NULL;  //[4096];
 
 UINT8 *CZ80Context = NULL;
-UINT8 *AllMem= NULL;
 //UINT8 *AllRam= NULL;
 UINT8 *RamEnd= NULL;
 UINT8 *DrvZ80ROM0= NULL;
@@ -101,7 +100,7 @@ UINT8 DrvJoy5[8]={0,0,0,0,0,0,0,0};
 UINT8 DrvDips[4]={0,0,0,0};
 UINT8 DrvInputs[5]={0,0,0,0,0};
 
-struct BurnInputInfo SidearmsInputList[] = {
+static struct BurnInputInfo SidearmsInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 up"		},
@@ -129,7 +128,7 @@ struct BurnInputInfo SidearmsInputList[] = {
 
 STDINPUTINFO(Sidearms)
 
-struct BurnDIPInfo SidearmsDIPList[]=
+static struct BurnDIPInfo SidearmsDIPList[]=
 {
 	{0x13, 0xff, 0xff, 0xfc, NULL			},
 	{0x14, 0xff, 0xff, 0xff, NULL			},
@@ -195,7 +194,7 @@ STDDIPINFO(Sidearms)
 
 // Side Arms - Hyper Dyne (World, 861129)
 
-struct BurnRomInfo sidearmsRomDesc[] = {
+static struct BurnRomInfo sidearmsRomDesc[] = {
 	{ "sa03.bin",		0x8000, 0xe10fe6a0, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
 	{ "a_14e.rom",		0x8000, 0x4925ed03, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "a_12e.rom",		0x8000, 0x81d0ece7, 1 | BRF_PRG | BRF_ESS }, //  2

@@ -11,20 +11,21 @@
 #include "snd/msm6295.h"
 #include "czet.h"
 /*static*/ int DrvFrame();
-/*static*/ int DrvExit();
-/*static*/ int SpangInit();
-/*static*/ int PangInit();
-/*static*/ void DrvCalcPalette();
-/*static*/ UINT16 *map_lut = NULL;  //[256];
-/*static*/ UINT16 *map_offset_lut = NULL;  //[2048];
-/*static*/ UINT16 *charaddr_lut = NULL; //[0x0800];
-/*static*/ UINT16 *cram_lut = NULL; //[4096];
-/*static*/ unsigned char 	color_dirty = 0;
+static int DrvExit();
+static int SpangInit();
+static int PangInit();
+static void DrvCalcPalette();
+static inline void DrvMakeInputs();
+static UINT16 *map_lut = NULL;  //[256];
+static UINT16 *map_offset_lut = NULL;  //[2048];
+static UINT16 *charaddr_lut = NULL; //[0x0800];
+static UINT16 *cram_lut = NULL; //[4096];
+static unsigned char 	color_dirty = 0;
 unsigned char current_pcm=255;
 
 //#define nBurnSoundLen 128
 
-SFX sfx_pang[50] = {
+static SFX sfx_pang[50] = {
 /*000.pcm*/{0,PCM_000_SIZE,10},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
@@ -50,7 +51,7 @@ SFX sfx_pang[50] = {
 /*049.PCM*/	{0,752732,10}, // Stage 28-30 (Barcelona) / Stage 49-50 (Easter Island)
 };
 
-SFX sfx_spang[60] = {
+static SFX sfx_spang[60] = {
 /*000.pcm*/{0,PCM_000_SIZE,10},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
@@ -85,48 +86,47 @@ SFX sfx_spang[60] = {
 /*059.PCM*/	{0,199678,10},	// World Cleared
 };
 
-/*static*/ unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort1[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort2[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort3[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort4[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort5[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort6[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort7[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort8[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort9[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort10[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInputPort11[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-/*static*/ unsigned char DrvInput[12]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-/*static*/ unsigned char DrvDip[2]         = {0, 0};
+static unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort1[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort2[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort3[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort4[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort5[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort6[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort7[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort8[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort9[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort10[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInputPort11[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char DrvInput[12]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static unsigned char DrvDip[2]         = {0, 0};
 /*static*/ //unsigned char DrvReset          = 0;
 
 extern unsigned char* MSM6295ROM;
 extern int* pBuffer;
-
-/*static*/  unsigned char *Mem				= NULL;
-/*static*/  unsigned char *RamStart			= NULL;
-/*static*/  unsigned char *DrvZ80Rom		= NULL;
-/*static*/  unsigned char *DrvZ80Code		= NULL;
-/*static*/  unsigned char *DrvSoundRom		= NULL;
-/*static*/  unsigned char *DrvZ80Ram		= NULL;
-/*static*/  unsigned char *DrvPaletteRam	= NULL;
-/*static*/  unsigned char *DrvAttrRam		= NULL;
-/*static*/  unsigned char *DrvVideoRam		= NULL;
-/*static*/  unsigned char *DrvSpriteRam		= NULL;
+static  unsigned char *Mem				= NULL;
+static  unsigned char *RamStart			= NULL;
+static  unsigned char *DrvZ80Rom		= NULL;
+static  unsigned char *DrvZ80Code		= NULL;
+static  unsigned char *DrvSoundRom		= NULL;
+static  unsigned char *DrvZ80Ram		= NULL;
+static  unsigned char *DrvPaletteRam	= NULL;
+static  unsigned char *DrvAttrRam		= NULL;
+static  unsigned char *DrvVideoRam		= NULL;
+static  unsigned char *DrvSpriteRam		= NULL;
 /*static*/  //unsigned char *DrvChars            = NULL;
 /*static*/  //unsigned char *DrvSprites          = NULL;
-/*static*/  UINT8 *CZ80Context				= NULL;
-/*static*/  INT32 *MSM6295Context			= NULL;
+static  UINT8 *CZ80Context				= NULL;
+static  INT32 *MSM6295Context			= NULL;
 
-/*static*/  unsigned char DrvRomBank = 0;
-/*static*/  unsigned char DrvPaletteRamBank = 0;
-/*static*/  unsigned char DrvOkiBank = 0;
-/*static*/  unsigned char DrvFlipScreen = 0;
-/*static*/  unsigned char DrvVideoBank = 0;
-/*static*/  unsigned char DrvInput5Toggle = 0;
+static  unsigned char DrvRomBank = 0;
+static  unsigned char DrvPaletteRamBank = 0;
+static  unsigned char DrvOkiBank = 0;
+static  unsigned char DrvFlipScreen = 0;
+static  unsigned char DrvVideoBank = 0;
+static  unsigned char DrvInput5Toggle = 0;
 /*static*///  unsigned char DrvPort5Kludge = 0;
-/*static*/  unsigned char DrvHasEEPROM = 0;
+static  unsigned char DrvHasEEPROM = 0;
 
 #define DRV_INPUT_TYPE_BLOCK		2
 
@@ -217,7 +217,7 @@ static struct BurnRomInfo SpangRomDesc[] = {
 STD_ROM_PICK(Spang)
 STD_ROM_FN(Spang)
 
-/*static*/ /*struct BurnRomInfo BlockRomDesc[] = {
+/*struct BurnRomInfo BlockRomDesc[] = {
 	{ "ble_05.rom",    0x08000, 0xc12e7f4c, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "ble_06.rom",    0x20000, 0xcdb13d55, BRF_ESS | BRF_PRG }, //	 1
 	{ "ble_07.rom",    0x20000, 0x1d114f13, BRF_ESS | BRF_PRG }, //	 2
@@ -236,7 +236,7 @@ STD_ROM_FN(Spang)
 STD_ROM_PICK(Block)
 STD_ROM_FN(Block)
 */
-/*static*/ const eeprom_interface MitchellEEPROMIntf =
+static const eeprom_interface MitchellEEPROMIntf =
 {
 	6,
 	16,

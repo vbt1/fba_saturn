@@ -33,10 +33,13 @@ extern SprSpCmd *ss_sprite;
 //-------------------------------------------------------------------------------------------------------------------------------------
 void cleanSprites()
 {
-	for (unsigned int delta=3; delta<nBurnSprites; delta++)
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
+	
+	for (unsigned short delta=0; delta<nBurnSprites; delta++)
 	{
-		ss_sprite[delta].ax   = -16;
-		ss_sprite[delta].ay   = -16;
+		ss_spritePtr->ax   = -16;
+		ss_spritePtr->ay   = -16;
+		ss_spritePtr++;
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -45,7 +48,7 @@ void dummy()
 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*inline*/ /*static*/ int readbit(const unsigned char *src, int bitnum)
+static inline int readbit(const unsigned char *src, int bitnum)
 {
 	return src[bitnum / 8] & (0x80 >> (bitnum % 8));
 }
@@ -94,8 +97,10 @@ void swapFirstLastColor(unsigned char *mem,unsigned char mask,unsigned int size)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 {
-	unsigned int i,j,k;
-	unsigned char temp[8][8];
+	unsigned char i=0,j=0;
+	unsigned int k=0;
+//	unsigned char temp[8][8];
+	unsigned char temp[64];
 	unsigned char rot[8][8];
 
 	for (k=0;k<size;k++)
@@ -103,8 +108,8 @@ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 		for(i=0;i<8;i++)
 			for(j=0;j<4;j++)
 			{
-				temp[i][j<<1]=target[(i*4)+j]>>4;
-				temp[i][(j<<1)+1]=target[(i*4)+j]&0x0f;
+				temp[(i*8)+(j<<1)]=target[(i*4)+j]>>4;
+				temp[(i*8)+(j<<1)+1]=target[(i*4)+j]&0x0f;
 			}
 
 		memset(target,0,32);
@@ -113,9 +118,9 @@ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 			for(j=0;j<8;j++)
 			{
 				if(flip)
-				 rot[7-i][j]= temp[j][i] ;
+				 rot[7-i][j]= temp[(j*8)+i] ;
 				else
-				 rot[i][7-j]= temp[j][i] ;
+				 rot[i][7-j]= temp[(j*8)+i] ;
 			}
 
 		for(i=0;i<8;i++)

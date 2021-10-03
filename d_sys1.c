@@ -22,42 +22,42 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvWboyu = {
 		"wboyu",  "sys1",
-		"Wonder Boy (not encrypted)\0",
+		"Wonder Boy (not encrypted)",
 		WboyuRomInfo, WboyuRomName, WboyInputInfo, WboyuDIPInfo,
 		WboyuInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvWbdeluxe = {
 		"wbdeluxe", "sys1",
-		"Wonder Boy Deluxe\0",
+		"Wonder Boy Deluxe",
 		WbdeluxeRomInfo, WbdeluxeRomName, WboyInputInfo, WbdeluxeDIPInfo,
 		Wboy2uInit, System1Exit, System1Frame
 	};
-
+	
 	struct BurnDriver nBurnDrvFlickys2 = {
 		"flickys2", "sys1",
-		"Flicky (128k, System 2, not encrypted)\0",
+		"Flicky (128k, System 2, not encrypted)",
 		Flickys2RomInfo, Flickys2RomName, FlickyInputInfo, FlickyDIPInfo,
 		Flicks2Init, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvMyhero = {
 	"myhero", "sys1",
-	"My Hero (US, not encrypted)\0",
+	"My Hero (US, not encrypted)",
 	MyheroRomInfo, MyheroRomName, MyheroInputInfo, MyheroDIPInfo,
 	MyheroInit, System1Exit, System1Frame
 	};
-
+/*
 	struct BurnDriver nBurnDrvTeddybb = {
 		"teddybb", "sys1",
 		"TeddyBoy Blues (315-5115, New Ver.)\0",
 		TeddybbRomInfo, TeddybbRomName, MyheroInputInfo, TeddybbDIPInfo,
 		TeddybbInit, System1Exit, System1Frame
 	};
-
+*/
 	struct BurnDriver nBurnDrvPitfall2u = {
 		"pitfal2u", "sys1",
-		"Pitfall II (not encrypted)\0",
+		"Pitfall II (not encrypted)",
 		Pitfall2uRomInfo, Pitfall2uRomName, MyheroInputInfo, PitfalluDIPInfo,
 		PitfalluInit, System1Exit, System1Frame
 	};
@@ -69,29 +69,29 @@ int ovlInit(char *szShortName)
 		FourdwarrioInit, System1Exit, System1Frame
 	};
 */
+
 //	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
     if (strcmp(nBurnDrvWboyu.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvWboyu,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvFlickys2.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvFlickys2,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvMyhero.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvMyhero,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvMyhero,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvPitfall2u.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvPitfall2u,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvTeddybb,sizeof(struct BurnDriver));
+//    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvTeddybb,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvWbdeluxe.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvWbdeluxe,sizeof(struct BurnDriver));
 //    if (strcmp(nBurnDrvFourdwarrio.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvFourdwarrio,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
-	
+
 	return 0;
 }
 
 /*==============================================================================================
 Decode Functions
 ===============================================================================================*/
-
-/*static*/ void teddybb_decode(void)
+/*
+void teddybb_decode(void)
 {
-	/*static*/ const UINT8 convtable[32][4] =
+	static const UINT8 convtable[32][4] =
 	{
 		//       opcode                   data                     address      
 		//  A    B    C    D         A    B    C    D                           
@@ -115,10 +115,11 @@ Decode Functions
 
 	sega_decode(convtable);
 }
+*/
 /*==============================================================================================
 Driver Inits
 ===============================================================================================*/
-/*static*/ INT32 WboyuInit()
+INT32 WboyuInit()
 {
 	INT32 nRet = 0;
 	nRet = System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
@@ -126,7 +127,7 @@ Driver Inits
 	return nRet;
 }
 
-/*static*/ INT32 Wboy2uInit()
+INT32 Wboy2uInit()
 {
 	INT32 nRet = 0;
 	nRet = System1Init(6, 0x2000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
@@ -134,14 +135,13 @@ Driver Inits
 	return nRet;
 }
 
-/*static*/ INT32 TeddybbInit()
+/*INT32 TeddybbInit()
 {
 	DecodeFunction = teddybb_decode;
 
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }
-
-
+*/
 /*int SeganinuInit()
 {
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
@@ -153,22 +153,22 @@ Driver Inits
 }
 */
 
-/*static*/ int Flicks2Init()
+int Flicks2Init()
 {
 	return System1Init(2, 0x4000, 1, 0x2000, 6, 0x2000, 2, 0x4000, 1);
 }
 
-/*static*/ INT32 PitfalluInit()
+INT32 PitfalluInit()
 {
 	int nRet;
-	
+
 	nRet = System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 2, 0x4000, 1);
 	nCyclesTotal[0] = 3600000 / 60;
-	
+
 	return nRet;
 }
 
-/*static*/ INT32 MyheroInit()
+INT32 MyheroInit()
 {
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }
@@ -206,7 +206,7 @@ void fillSpriteCollision(unsigned int Num, int *values)
 		sprites_collision[Num].yend=(values[1]+values[3]) & 0xff; // height max 255
 }
 */
-inline void renderSpriteCache(int *values);
+inline void renderSpriteCache(unsigned int *values);
 
 void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
 {

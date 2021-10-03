@@ -14,20 +14,20 @@ unsigned int SDMA_ScuResult(unsigned int ch);
 void CZetSetWriteHandler2(unsigned short nStart, unsigned short nEnd,void (*pHandler)(unsigned short, unsigned char));
 #include "d_sys2.h"
 #include "d_sys1_common.c"
-UINT8 *CurrentBank = NULL; // vbt à mettre dans drvexit !!!
+static UINT8 *CurrentBank = NULL; // vbt à mettre dans drvexit !!!
 
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
-
+/*
 	struct BurnDriver nBurnDrvChplftb = {
 		"chplftb", "sys2",
 		"Choplifter (Alternate)",
 		ChplftbRomInfo, ChplftbRomName, ChplftbInputInfo, ChplftbDIPInfo,
 		ChplftbInit, System1Exit, System1Frame
 	};
-
-	struct BurnDriver nBurnDrvWbml = {
+*/
+/*	struct BurnDriver nBurnDrvWbml = {
 		"wbml", "sys2",
 		"Wonder Boy in Monster Land (Jp New)",
 		wbmlRomInfo, wbmlRomName, MyheroInputInfo, WbmlDIPInfo,
@@ -40,7 +40,7 @@ int ovlInit(char *szShortName)
 		wbmlbRomInfo, wbmlbRomName, MyheroInputInfo, WbmlDIPInfo,
 		WbmljbInit, System1Exit, System1Frame
 	};
-
+*/
 	struct BurnDriver nBurnDrvWbmlvc = {
 		"wbmlvc", "sys2",
 		"Wonder Boy in Monster Land (EN VC)",
@@ -48,9 +48,9 @@ int ovlInit(char *szShortName)
 		WbmljbInit, System1Exit, System1Frame
 	};
 
-	if (strcmp(nBurnDrvChplftb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvChplftb,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvWbml.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvWbml,sizeof(struct BurnDriver));
-	if (strcmp(nBurnDrvWbmlb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvWbmlb,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvChplftb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvChplftb,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvWbml.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvWbml,sizeof(struct BurnDriver));
+//	if (strcmp(nBurnDrvWbmlb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvWbmlb,sizeof(struct BurnDriver));
 	if (strcmp(nBurnDrvWbmlvc.szShortName, szShortName) == 0)memcpy(shared,&nBurnDrvWbmlvc,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
@@ -232,7 +232,7 @@ static void System2PPI0WriteC(UINT8 data)
 
 	System2_videoram_bank_latch_w(data);
 }
-
+/*
 void System1BankRomNoDecode(UINT32 System1RomBank)
 {
 	int BankAddress = (System1RomBank << 14) + 0x10000;
@@ -240,7 +240,7 @@ void System1BankRomNoDecode(UINT32 System1RomBank)
 //	CZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
 	CZetMapMemory(System1Rom1 + BankAddress, 0x8000, 0xbfff, MAP_ROM);
 }
-
+*/
 inline void System2_bankswitch_w (UINT8 d)
 {
 	if(System1BankSwitch!=d)
@@ -249,7 +249,7 @@ inline void System2_bankswitch_w (UINT8 d)
 	System1BankSwitch = d;
 	}
 }
-
+/*
 void __fastcall ChplftZ801ProgWrite(UINT16 a, UINT8 d)
 {
 	if (a >= 0xe000 && a <= 0xe7bf) { system1_foregroundram_w(a,d); return; }
@@ -261,7 +261,7 @@ void __fastcall ChplftZ801ProgWrite(UINT16 a, UINT8 d)
 	if (a >= 0xdc00 && a <= 0xddff) { system1_paletteram3_w(a,d); return; }
    if (a == 0xefbd) { ss_reg->n0_move_y = d<<16; return; }
 }
-
+*/
 int System1CalcSprPalette()
 {
 	Uint16 *color = &colAddr[0];
@@ -280,9 +280,9 @@ static void wbmljb_decode()
 
 static void wbml_decode()
 {
-	mc8123_decrypt_rom(1, 4, System1Rom1, System1Rom1 + 0x20000, (UINT8*)0x002FC000);
+	mc8123_decrypt_rom(1, 4, System1Rom1, System1Rom1 + 0x20000, (UINT8*)System1MC8123Key);
 }
-
+#if 0
 int ChplftbInit()
 {
 	int nRet;
@@ -363,6 +363,7 @@ int ChplftbInit()
 
 	return nRet;
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 void CommonWbmlInit()
 {
@@ -480,14 +481,6 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	CollisionFunction = updateCollisions;
 	//System1BgRamSize = 0x800;
 	// Allocate and Blank all required memory
-	Mem = NULL;
-	MemIndex();
-
-	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) 
-	{	
-		return 1;
-	}
-	memset(Mem, 0, MALLOC_MAX);
 	MemIndex();
 
 	UINT8 *	System1TempRom = (UINT8*)0x00200000;
@@ -711,8 +704,8 @@ int WbmlInit()
 	System1BankedRom = 1;
 
 	DecodeFunction = wbml_decode;
-	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
-	BurnLoadRom(System1MC8123Key, 15, 1);
+//	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
+//	BurnLoadRom(System1MC8123Key, 15, 1);
 	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
 	CommonWbmlInit();
 	return nRet;

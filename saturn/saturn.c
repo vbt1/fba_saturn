@@ -1,29 +1,30 @@
-//#pragma GCC optimize("Os")
+#pragma GCC optimize("Os")
 
-#include "saturn.h" // ok
+#include "saturn/saturn.h" // ok
 
 //#include "sc_saturn.h"
 //#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR 0x060DB000
+#define OVLADDR 0x060DE000
 #define OVLAEND 0x060FF000
-#define SIZEMAX  0x20000 //OVLAEND-OVLADDR //0x30000 //0x060FFC00-0x060CC000
+#define SIZEMAX  0x20000 //OVLAEND-OVLADDR //0x30000 //0x060FF800-0x060CC000
 #define LOWADDR 0x00200000
 //#define MALLOC_MAX 0xAA000
-#define MAINSTART 0x0601C000
-#define MALLOC_MAX  OVLADDR-MAINSTART-0x3000 //0x30000 //0x060FFC00-0x060CC000
+#define MAINSTART 0x0601c000 //6019a00
+#define MALLOC_MAX  OVLADDR-MAINSTART-0x3000 //0x30000 //0x060FF800-0x060CC000
 #define LOWADDR 0x00200000
 #ifdef HEAP_WALK
 void heapWalk(void);
 #endif
 
 //#define DEBUG_DRV 1
-SysPort	*__port;
+extern SysPort	*__port; // __attribute__((section("COMMON")));
 static trigger_t	pltrigger[2],pltriggerE[2];
 extern unsigned char play;
+Uint32 SclColRamAlloc256[8];
 //-------------------------------------------------------------------------------------------------------------------------------------
-void	UsrVblankIn( void )
+static void	UsrVblankIn( void )
 {
 #ifdef FONT
 	char xx[4];
@@ -66,7 +67,7 @@ static void   UsrVblankOut( void )
 	InpMake(FBA_KEYPAD);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void	SetVblank()
+void	SetVblank()
 {
 	INT_ChgMsk(INT_MSK_NULL,INT_MSK_VBLK_IN | INT_MSK_VBLK_OUT);
 	INT_SetScuFunc(INT_SCU_VBLK_IN,UsrVblankIn);
@@ -79,13 +80,13 @@ int main(void)
 {
 	Uint8	*dst;
     Uint16  loop;	
-   
+
     // 1.Zero Set .bss Section
     for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)&_bend; dst++)
 		*dst = 0;
 	
-    for (dst = (Uint8 *)SystemWork, loop = 0; loop < SystemSize; loop++)
-		*dst = 0;
+//    for (dst = (Uint8 *)SystemWork, loop = 0; loop < SystemSize; loop++)
+//		*dst = 0;
 
 	memset(&play,0x00,1024);
 	SYS_CHGSYSCK(1);             //28mhz
@@ -272,6 +273,7 @@ static void resetSound()
 	PCM_MeStart(pcm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#if 0
 void ShutdownSlave(void)
 {
 	volatile Uint8 *SMPC_COM = (Uint8 *)0x2010001F;   /* SMPC command register */
@@ -286,38 +288,43 @@ void ShutdownSlave(void)
 
     while((*SMPC_SF & 0x01) == 0x01);           
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void initSaturn()
 {
 	nBurnFunction = NULL;
 	play=1;
-
+//memset((void *)LOWADDR,0x1,16); 
 	initScrolling(OFF,NULL);
-
+//memset((void *)LOWADDR,0x02,16); 
 	InitCD();
+//memset((void *)LOWADDR,0x03,16); 	
 //	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00000000,0x80000);
 	resetLayers();
 
 //	memset(pltrigger[0],0x00,sizeof(trigger_t));
 //	memset(pltriggerE[0],0x00,sizeof(trigger_t));
-
+//memset((void *)LOWADDR,0x04,16); 
 	play = 0;
 
 	resetColors();
+//memset((void *)LOWADDR,0x05,16); 	
 	initSprites(352-1,240-1,0,0,0,0);
+//memset((void *)LOWADDR,0x06,16); 	
 	SetVblank();
-
+//memset((void *)LOWADDR,0x07,16); 
 	SCL_SetLineParamNBG0(&lp);
+//memset((void *)LOWADDR,0x08,16); 	
 	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
-
+//memset((void *)LOWADDR,0x09,16); 
 wait_vblank();
 	play=1;
-
+//memset((void *)LOWADDR,0x10,16); 
 	resetSound();
-
+//memset((void *)LOWADDR,0x11,16); 
 	play = 0;
 	wait_vblank();
-
+//memset((void *)LOWADDR,0x12,16);
 	SS_REG	=	(Uint32 *)&Scl_n_reg;
 	SS_REGD =	(Uint32 *)&Scl_d_reg;
 	SS_REGS =	(Uint32 *)&Scl_s_reg;
@@ -329,14 +336,14 @@ wait_vblank();
 	SS_BGMIX =	(Uint32 *)&SclBgColMix;
 	SS_SPRIT = 	(Uint32 *)smsSprite;
 	SS_SCL	 = 	(Uint32 *)ls_tbl;
-	SS_PORT  =	(Uint32 *)__port;
+//	SS_PORT  =	(Uint32 *)__port;
 //	SS_SCL1	 = &ls_tbl1[0];
 
 	col[0]=0;
 	col[1]=9;
 	col[2]=10;
 	col[3]=11;
-	
+//memset((void *)LOWADDR,0x13,16);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static inline void ss_main(void)
@@ -348,16 +355,17 @@ static inline void ss_main(void)
 	InitCD();
 #endif
 	hz = get_hz();
-	
+
 	initSound();
 	CSH_Init(CSH_4WAY);
+	
 	initSaturn();
 	BurnDrvAssignList();
 
 #ifndef ACTION_REPLAY
-	if(FntAsciiFontData2bpp==NULL)
-		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
-	GFS_Load(GFS_NameToId((Sint8*)"FONT.BIN"),0,(void *)FntAsciiFontData2bpp,1600);
+//	if(FntAsciiFontData2bpp==NULL)
+//		FntAsciiFontData2bpp = (Uint8*)malloc(1600);
+	GFS_Load(GFS_NameToId((Sint8*)"FONT.BIN"),0,(void *)&FntAsciiFontData2bpp[0],1600);
 #endif
 //	unsigned char *Mem = malloc((unsigned char *)MALLOC_MAX);
 //	memset(Mem,0x00,MALLOC_MAX);
@@ -473,8 +481,12 @@ static void display_menu(void)
 {
 	unsigned int l;
 	unsigned char loaded = 0;
-
-
+/*
+	extern SysPort	PortData[2];
+		char toto[100];
+		sprintf(toto,"size SZ_BUFFER %d  ", SZ_BUFFER);
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto,10,10);
+while(1); */
 //	sc_init();
 //	the_loop = 1;
 #ifdef HEAP_WALK
@@ -489,35 +501,33 @@ static void display_menu(void)
 		if(!loaded)
 		{
 // nettoyage emplacement du driver
-			memset((void *)OVLADDR,0x00,SIZEMAX);
+//			InitCD();
+			//memset((void *)LOWADDR,0x18,16);
 #ifndef DEBUG_DRV
-			GFS_Load(GFS_NameToId((Sint8 *)"IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
-			load_img(0);	
+//			GFS_Load(GFS_NameToId((Sint8 *)"IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
+			//memset((void *)LOWADDR,0x19,16);
+//			load_img(0);
+			//memset((void *)LOWADDR,0x20,16);
 #endif
 			loaded=1;
+			//memset((void *)LOWADDR,0x21,16);
 		}
-		m=0;
-		char page_header[50];
-//		sprintf(page_header,"Game list:                       %02d/%02d",current_page, (nBurnDrvCount+GAME_BY_PAGE-1)/GAME_BY_PAGE);
-
-		sprintf(page_header,"port size %02d",sizeof(__port));
-
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)page_header,12,12);
+		m=40;
 
 		if(modified==1)
 		{
 			for (l=(current_page-1)*GAME_BY_PAGE;l<(current_page)*GAME_BY_PAGE && l<nBurnDrvCount;l++ )
 			{
 				sprintf(game_name,"%-38s",pDriver[l]->szFullNameA);
-				if(l==nBurnDrvSelect)	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);	  //12+m
-				else					 FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
+				if(l==nBurnDrvSelect)	 FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,m);	  //12+m
+				else					 FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,m);
 				m+=10;
 			}
 
 			for (;l<(current_page)*GAME_BY_PAGE;l++ )
 			{
 				sprintf(game_name,"%-38s"," ");
-				FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,40+m);
+				FNT_Print256_2bpp   ((volatile Uint8 *)SS_FONT,(Uint8 *)game_name,20,m);
 				m+=10;
 			}
 			modified=0;
@@ -527,7 +537,7 @@ static void display_menu(void)
 		update_input(&current_page,&loaded,&modified);
 		//sc_check();
 //		scd_logout("display_menu",0);
-
+//memset((void *)LOWADDR,0x17,16);
 
 	}while(1);
 }
@@ -1247,7 +1257,7 @@ static unsigned int get_hz(void)
 		return 50;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int DoInputBlank()
+inline int DoInputBlank()
 {
   int iJoyNum = 0;
   unsigned int i=0; 
@@ -1416,11 +1426,11 @@ static void InpExit()
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void InpMake(unsigned int key[])
 {
-	int i=0; 
-	int down = 0;
+	unsigned char i=0; 
+	unsigned int down = 0;
 
 	short joyNum=0;
-//	for (joyNum=0;joyNum<numJoy;joyNum++)
+//	for (joyNum=0;joyNum<2;joyNum++)
 	{
 		for (i=0; i<12; i++)
 		{
@@ -1550,7 +1560,7 @@ static int nDrvInit(int nDrvNum)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void check_exit(Uint16 data)
+void check_exit(Uint16 data)
 {
 	 if(            ((data & PER_DGT_S) != 0) 
 			   && ((data & PER_DGT_X) != 0) 
@@ -1678,9 +1688,14 @@ static inline void do_keypad(unsigned int key[])
 	{
 		if (nBurnDrvSelect < nBurnDrvCount) 
 			BurnDrvExit();
+		memset((void *)OVLADDR,0x00,SIZEMAX);
+		memset((void *)SCL_COLRAM_ADDR,0x00,4096);
 		initSaturn();
+//memset((void *)LOWADDR,0x14,16);		
 		InpExit();
+//memset((void *)LOWADDR,0x15,16);		
 		BurnDrvAssignList();
+//memset((void *)LOWADDR,0x16,16);		
 	}
 //	asm("nop\n");
 }
@@ -1694,7 +1709,7 @@ void initSprites(int sx,int sy,int sx2, int sy2,int lx,int ly)
 
 	SPR_WRITE_REG(SPR_W_TVMR, 0x0007 & SPR_TV_NORMAL);
 	SPR_SetEraseData( 0x0000, 0, 0, sx, sy );
-	memset(smsSprite,0,259*sizeof(SprSpCmd));
+	memset(smsSprite,0,260*sizeof(SprSpCmd));
 //	memset(aVRAM,0,0x9000);	
 
     smsSprite[0].control    = (JUMP_NEXT | FUNC_SCLIP);

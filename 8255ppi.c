@@ -47,8 +47,8 @@ typedef struct
 	UINT8 output[3];	/* actual output data */
 } ppi8255;
 
-/*static*/ ppi8255 chips[MAX_PPIS] = {0};
-/*static*/ INT32 nNumChips = 0;
+static ppi8255 chips[MAX_PPIS] = {0};
+static INT32 nNumChips = 0;
 
 /*static*/ void ppi8255_get_handshake_signals(ppi8255 *chip, UINT8 *result)
 {

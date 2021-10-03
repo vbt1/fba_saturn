@@ -32,7 +32,6 @@ UINT8 DrvInputs[3] = {0, 0, 0};
 INT32 nmi_mask = 0;
 UINT8 soundlatch = 0;
 
-UINT8 *Mem = NULL;
 UINT8 *MemEnd = NULL;
 UINT8 *RamStart = NULL;
 UINT8 *RamEnd = NULL;

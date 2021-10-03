@@ -25,7 +25,6 @@ void dummy();
 void make_lut_r(int rotated);
 INT32 (*DrvDraw)() = NULL;
 
-UINT8 *AllMem = NULL;
 UINT8 *AllRam = NULL;
 UINT8 *RamEnd = NULL;
 UINT8 *DrvZ80ROM0 = NULL;

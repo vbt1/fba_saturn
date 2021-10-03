@@ -27,6 +27,8 @@ int ovlInit(char *szShortName)
 	memcpy(shared,&nBurnDrvSolomon,sizeof(struct BurnDriver));
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs = (SclSysreg *)SS_REGS;
+	
+	return 0;
 }
 
 inline void SolomonClearOpposites(UINT8* nJoystickInputs)
@@ -265,9 +267,11 @@ void __fastcall SolomonPortWrite2(UINT16 a, UINT8 d)
 	}
 }
 
-/*static*/ INT32 SolomonMemIndex()
+inline void SolomonMemIndex()
 {
-	UINT8 *Next; Next = Mem;
+	extern unsigned int _malloc_max_ram;
+	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
+	memset(Next, 0, MALLOC_MAX);
 
 	SolomonZ80Rom1         = Next; Next += 0x10000;
 	SolomonZ80Rom2         = Next; Next += 0x04000;
@@ -296,8 +300,6 @@ void __fastcall SolomonPortWrite2(UINT16 a, UINT8 d)
 	bgmap2_buf				= Next; Next += 0x1000 * sizeof (UINT16);//bgmap_lut + 0x20000;
 #endif
 	MemEnd                 = Next;
-
-	return 0;
 }
 
 INT32 SolomonInit()
@@ -305,23 +307,19 @@ INT32 SolomonInit()
 	DrvInitSaturn();
 	INT32 nRet = 0;
 
-	UINT32 TilePlaneOffsets[4]   = { 0, 1, 2, 3 };
-	UINT32 TileXOffsets[8]       = { 0, 4, 8, 12, 16, 20, 24, 28 };
-	UINT32 TileYOffsets[8]       = { 0, 32, 64, 96, 128, 160, 192, 224 };
-	UINT32 SpritePlaneOffsets[4] = { 0, 131072, 262144, 393216 };
-	UINT32 SpriteXOffsets[16]    = { 0, 1, 2, 3, 4, 5, 6, 7, 64, 65, 66, 67, 68, 69, 70, 71 };
-	UINT32 SpriteYOffsets[16]    = { 0, 8, 16, 24, 32, 40, 48, 56, 128, 136, 144, 152, 160, 168, 176, 184 };
+	static INT32 TilePlaneOffsets[4]   = { 0, 1, 2, 3 };
+	static INT32 TileXOffsets[8]       = { 0, 4, 8, 12, 16, 20, 24, 28 };
+	static INT32 TileYOffsets[8]       = { 0, 32, 64, 96, 128, 160, 192, 224 };
+	static INT32 SpritePlaneOffsets[4] = { 0, 131072, 262144, 393216 };
+	static INT32 SpriteXOffsets[16]    = { 0, 1, 2, 3, 4, 5, 6, 7, 64, 65, 66, 67, 68, 69, 70, 71 };
+	static INT32 SpriteYOffsets[16]    = { 0, 8, 16, 24, 32, 40, 48, 56, 128, 136, 144, 152, 160, 168, 176, 184 };
 
 	// Allocate and Blank all required memory
-	Mem = NULL;
-	SolomonMemIndex();
-	if ((Mem = (UINT8 *)BurnMalloc(MALLOC_MAX)) == NULL) return 1;
-	memset(Mem, 0, MALLOC_MAX);
 	SolomonMemIndex();
 	make_lut();
 
 //	SolomonTempRom = (UINT8 *)BurnMalloc(0x10000);
-	UINT8 *SolomonTempRom	= (UINT8 *)0x00200000;
+	UINT8 *SolomonTempRom	= (UINT8 *)LOWADDR;
 	UINT8 *ss_vram			= (UINT8 *)SS_SPRAM;
 	UINT8 *SolomonBgTiles	= (UINT8 *)cache;
 	UINT8 *SolomonFgTiles	= (UINT8 *)cache+0x10000;
@@ -508,9 +506,6 @@ INT32 SolomonExit()
 	}
 	pFMBuffer = NULL;
 
-	free(Mem);
-	Mem = NULL;
-
 	cleanDATA();
 	cleanBSS();
 
@@ -518,7 +513,7 @@ INT32 SolomonExit()
 	return 0;
 }
 
-void SolomonRenderSpriteLayer()
+inline void SolomonRenderSpriteLayer()
 {
 	SprSpCmd *ss_spritePtr = &ss_sprite[3];
 
@@ -717,7 +712,7 @@ voir plutot p355 vdp2
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_lut(void)
 {
-	for (UINT32 i = 0; i < 1024;i++) 
+	for (UINT16 i = 0; i < 1024;i++) 
 	{
 		UINT32 sx		= i & 0x1f;
 		UINT32 sy		= ((i<<1) & (~0x3f));
@@ -725,7 +720,7 @@ voir plutot p355 vdp2
 		map_offset_lut[i] = (sx| sy)<<1;
 	}
 
-	for (UINT32 i = 0; i < 4096; i++) 
+	for (UINT16 i = 0; i < 4096; i++) 
 	{
 		cram_lut[i] = CalcCol(i);
 	}
@@ -768,13 +763,18 @@ voir plutot p355 vdp2
 
 	memset(ss_map,0,0x20000);
 
-	for (UINT32 i = 3; i <nBurnSprites; i++) 
+	SprSpCmd *ss_spritePtr;
+
+	ss_spritePtr = &ss_sprite[3];	
+	
+	for (UINT32 i = 0; i <nBurnSprites; i++) 
 	{
-		ss_sprite[i].control   = ( JUMP_NEXT | FUNC_NORMALSP);
-		ss_sprite[i].charSize  = 0x210;
-		ss_sprite[i].drawMode  = ( ECD_DISABLE | COMPO_REP);
-		ss_sprite[i].ax    = -48;
-		ss_sprite[i].ay    =  -32;
+		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP);
+		ss_spritePtr->charSize  = 0x210;
+		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);
+		ss_spritePtr->ax    = -48;
+		ss_spritePtr->ay    =  -32;
+		ss_spritePtr++;		
 	}
 	drawWindow(0,240,0,0,62); 
 }

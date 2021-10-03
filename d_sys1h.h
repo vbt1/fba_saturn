@@ -183,8 +183,9 @@ ROM Descriptions
 	{ "bg.05",             0x004000, 0x02e0b040, BRF_GRA },		  //  12 Sprites
 
 	{ "pr5317.76",         0x000100, 0x648350b8, BRF_OPT },		  //  13 Timing PROM
+	{ "pr5317.76",         0x000100, 0x648350b8, BRF_OPT },		  //  14 Timing PROM doublon pour alignement :)
 	
-	{ "3170029.key",      0x002000, 0x350d7f93, BRF_ESS | BRF_PRG }, //  14 MC8123 Key
+	{ "3170029.key",      0x002000, 0x350d7f93, BRF_ESS | BRF_PRG }, //  15 MC8123 Key
 };
 STD_ROM_PICK(Blockgal)
 STD_ROM_FN(Blockgal)

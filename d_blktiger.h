@@ -25,12 +25,12 @@ Sint32 GetFileSize(int file_id);
 #define nBurnSoundLen 128
 #define SOUNDRATE   7680L
 //---------------------------------------------------------------------------------------------------------------
-unsigned char current_pcm=255;
+static unsigned char current_pcm=255;
 //char *itoa(int i);
 
-PCM_INFO pcm_info[8];
+static PCM_INFO pcm_info[8];
 
-SFX sfx_blktiger[68]=
+static SFX sfx_blktiger[68]=
 {
 /*000.pcm*/{0,230400,10},
 /*001.pcm*/{0,10290,0},
@@ -109,49 +109,49 @@ SFX sfx_blktiger[68]=
 #define PNCN1   (*(volatile unsigned short *)(VDP2_REGISTER_BASE+0x32))
 
 //#define SND 1
-UINT8 *CZ80Context = NULL;
-UINT16 *remap4to16_lut = NULL;//[256];
-UINT16 *remap16_lut = NULL;//[768];
-UINT16 *cram_lut = NULL;//[4096];
-UINT16 *fg_map_lut = NULL;//[0x400];
-UINT16 *bg_map_lut2x1 = NULL;//[0x2000];
-UINT16 *bg_map_lut2x2 = NULL;//[0x2000];
-UINT16 *bg_map_lut = NULL;
+static UINT8 *CZ80Context = NULL;
+static UINT16 *remap4to16_lut = NULL;//[256];
+static UINT16 *remap16_lut = NULL;//[768];
+static UINT16 *cram_lut = NULL;//[4096];
+static UINT16 *fg_map_lut = NULL;//[0x400];
+static UINT16 *bg_map_lut2x1 = NULL;//[0x2000];
+static UINT16 *bg_map_lut2x2 = NULL;//[0x2000];
+static UINT16 *bg_map_lut = NULL;
 /*static*/// INT16 *ym_buffer = NULL;
 
-UINT8 *AllMem = NULL;
-UINT8 *MemEnd = NULL;
-UINT8 *AllRam = NULL;
-UINT8 *RamEnd = NULL;
-UINT8 *DrvZ80ROM0 = NULL;
-UINT8 *DrvZ80ROM1 = NULL;
-UINT8 *DrvZ80RAM0 = NULL;
-UINT8 *DrvZ80RAM1 = NULL;
-UINT8 *DrvSprRAM = NULL;
-UINT8 *DrvSprBuf = NULL;
-UINT8 *DrvPalRAM = NULL;
-UINT8 *DrvBgRAM = NULL;
-UINT8 *DrvTxRAM = NULL;
+//UINT8 *AllMem = NULL;
+static UINT8 *MemEnd = NULL;
+static UINT8 *AllRam = NULL;
+static UINT8 *RamEnd = NULL;
+static UINT8 *DrvZ80ROM0 = NULL;
+static UINT8 *DrvZ80ROM1 = NULL;
+static UINT8 *DrvZ80RAM0 = NULL;
+static UINT8 *DrvZ80RAM1 = NULL;
+static UINT8 *DrvSprRAM = NULL;
+static UINT8 *DrvSprBuf = NULL;
+static UINT8 *DrvPalRAM = NULL;
+static UINT8 *DrvBgRAM = NULL;
+static UINT8 *DrvTxRAM = NULL;
 //UINT16 *DrvPalette = NULL;
 
-UINT8 *DrvBgEnable = NULL;
-UINT8 *DrvFgEnable = NULL;
+static UINT8 *DrvBgEnable = NULL;
+static UINT8 *DrvFgEnable = NULL;
 //UINT8 *DrvSprEnable = NULL;
-UINT8 *DrvVidBank = NULL;
-UINT8 *DrvRomBank = NULL;
+static UINT8 *DrvVidBank = NULL;
+static UINT8 *DrvRomBank = NULL;
 
-UINT8 *soundlatch = NULL;
-UINT16 *DrvScrollx = NULL;
-UINT16 *DrvScrolly = NULL;
+static UINT8 *soundlatch = NULL;
+static UINT16 *DrvScrollx = NULL;
+static UINT16 *DrvScrolly = NULL;
 UINT8 coin_lockout = 0;
 
-UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
-UINT8 DrvDips[3] = {0,0,0};
-UINT8 DrvInputs[3] = {0,0,0};
+static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvJoy3[8] = {0,0,0,0,0,0,0,0};
+static UINT8 DrvDips[3] = {0,0,0};
+static UINT8 DrvInputs[3] = {0,0,0};
 //UINT8 DrvReset = 0;
-INT32 watchdog = 0;
+static INT32 watchdog = 0;
 
 //static INT32 nCyclesTotal[2];
 
@@ -330,8 +330,8 @@ void vbt_pcm_AudioProcess(PcmHn hn);
 //static Uint8 GetComBlockAdr(void);
 //static Uint16 ChgPan(SndPan pan);
 
-PcmHn 	pcm14[8] = {NULL};
-PcmCreatePara	para[8] = {NULL};
+static PcmHn 	pcm14[8] = {NULL};
+static PcmCreatePara	para[8] = {NULL};
 
 //---------------------------------------------------------------------------------------------------------------
 //PcmInfo 		info[14];

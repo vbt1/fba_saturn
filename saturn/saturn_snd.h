@@ -59,7 +59,7 @@ extern PcmHn 	pcmStream;
 extern PcmCreatePara	paraStream;
 extern unsigned char stm_work[STM_WORK_SIZE(12, 24)];
 extern StmHn stm;
-extern StmGrpHn grp_hd;
+//extern StmGrpHn grp_hd;
 extern void PCM_MeTask(PcmHn hn);
 extern void PCM_MeStop(PcmHn hn);
 extern SFX *sfx_list;

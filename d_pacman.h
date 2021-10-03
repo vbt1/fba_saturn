@@ -20,7 +20,6 @@ INT32 pacman_load(UINT32 game_select);
 void convert_gfx(UINT32 game_select);
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 
-UINT8 *AllMem = NULL;
 UINT8 *AllRam = NULL;
 UINT8 *RamEnd = NULL;
 UINT8 *PengoStart = NULL;
