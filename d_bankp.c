@@ -39,6 +39,7 @@ int ovlInit(char *szShortName)
 	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 //	ss_regd  = (SclDataset *)SS_REGD;
+	return 0;
 }
 
 /*static*/ INT32 DrvChInit()
@@ -48,7 +49,7 @@ int ovlInit(char *szShortName)
 	ss_reg->n2_move_x =  0;
 }
 
-inline void MemIndex()
+void MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;

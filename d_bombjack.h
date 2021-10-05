@@ -32,7 +32,7 @@ UINT8 DrvInputs[3] = {0, 0, 0};
 INT32 nmi_mask = 0;
 UINT8 soundlatch = 0;
 
-UINT8 *MemEnd = NULL;
+//UINT8 *MemEnd = NULL;
 UINT8 *RamStart = NULL;
 UINT8 *RamEnd = NULL;
 UINT8 *BjGfx = NULL;
@@ -55,7 +55,7 @@ INT16* pFMBuffer = NULL;
 INT16* pAY8910Buffer[9];
 
 // Dip Switch and Input Definitions
-struct BurnInputInfo BombjackInputList[] = {
+static struct BurnInputInfo BombjackInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 2,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 up"		},
@@ -79,7 +79,7 @@ struct BurnInputInfo BombjackInputList[] = {
 
 STDINPUTINFO(Bombjack)
 
-struct BurnDIPInfo BombjackDIPList[]=
+static struct BurnDIPInfo BombjackDIPList[]=
 {
 	{0x0f, 0xff, 0xff, 0xc0, NULL			},
 	{0x10, 0xff, 0xff, 0x50, NULL			},
@@ -140,7 +140,7 @@ struct BurnDIPInfo BombjackDIPList[]=
 STDDIPINFO(Bombjack)
 
 // Bomb Jack (set 1)
-struct BurnRomInfo BombjackRomDesc[] = {
+static struct BurnRomInfo BombjackRomDesc[] = {
 	{ "09j01b.bin",    0x2000, 0xc668dc30, BRF_ESS | BRF_PRG },		//  0 Z80 code
 	{ "10l01b.bin",    0x2000, 0x52a1e5fb, BRF_ESS | BRF_PRG },		//  1
 	{ "11m01b.bin",    0x2000, 0xb68a062a, BRF_ESS | BRF_PRG },		//  2

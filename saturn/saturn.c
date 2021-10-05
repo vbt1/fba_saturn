@@ -504,9 +504,9 @@ while(1); */
 //			InitCD();
 			//memset((void *)LOWADDR,0x18,16);
 #ifndef DEBUG_DRV
-//			GFS_Load(GFS_NameToId((Sint8 *)"IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
+			GFS_Load(GFS_NameToId((Sint8 *)"IMG.BIN"),  0,(void *)LOWADDR, GFS_BUFSIZ_INF);
 			//memset((void *)LOWADDR,0x19,16);
-//			load_img(0);
+			load_img(0);
 			//memset((void *)LOWADDR,0x20,16);
 #endif
 			loaded=1;

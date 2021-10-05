@@ -14,7 +14,7 @@ CCFLAGS2 = -m2 -Os -Wall --save-temps -Wno-missing-braces -Wextra -fno-unit-at-a
 
 CCOVLFLAGS = -m2 -O2 -Wall --save-temps -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
-OLVSCRIPT = root/overlay.lnk
+OLVSCRIPT = root/sl2.lnk
 #LDCMNFLAGS = -m2 -O2 -flto -fuse-linker-plugin  -Xlinker -n -Xlinker -S -Xlinker
 LDCMNFLAGS = -m2  -O2 -v -Xlinker -n -Xlinker -S -Xlinker -fno-lto -Xlinker
 LDCMNFLAGS2 = -m2  -Os -v -Xlinker -S -Xlinker -fno-lto -Xlinker
@@ -32,7 +32,7 @@ OVLIMG                 = root/img.elf
 OVLIMG1               = root/img.bin
 LDOVLIMGFILE     = ./$(OVLIMG:.elf=.lnk)
 MPOVLIMGFILE    = $(OVLIMG:.elf=.maps)
-LDOVLIMGFLAGS = $(LDCMNFLAGS2) -T$(LDOVLIMGFILE) -Xlinker -Map -Xlinker $(MPOVLIMGFILE) -Xlinker -e -Xlinker _ovlstart -nostartfiles
+LDOVLIMGFLAGS = $(LDCMNFLAGS2) -T$(LDOVLIMGFILE) -Xlinker -Map -Xlinker $(MPOVLIMGFILE) -Xlinker -e -Xlinker 0x00200000 -nostartfiles
 SRCOVLIMG         = saturn/img.c libyaul/libtga/tga.c
 OBJOVLIMG         = $(SRCOVLIMG:.c=.o)
 

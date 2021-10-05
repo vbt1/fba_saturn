@@ -8,8 +8,8 @@ SECTIONS {
 
 	.stack 0x060fff00 (NOLOAD):
 	{
-		root/sl.elf (".stack")
-         	_stack = . ;
+	        *(.stack)
+         	_stack = .;
 	} > ram	
 
 	.shared 0x6003700 (NOLOAD):
@@ -47,16 +47,22 @@ SECTIONS {
 /*		_SclSpPriNum = . + 130;  size 8 */
 	} > ram
 
+	.clean 0x6003e00 (NOLOAD):
+	{
+		*(.clean)
+				. = ALIGN(0x10);
+	} > ram
+
 	.entry 0x6004000  (NOLOAD):
 	{
 		root/sl.elf (".entry")
 	}  > ram
 
-	.text ALIGN(0x10)  (NOLOAD):
+	text ALIGN(0x10)  (NOLOAD):
 	{
 		root/sl.elf (".text")
 		root/sl.elf (".text.startup")
-		root/sl.elf (".rodata*")
+/*		root/sl.elf (".rodata*") */
 		root/sl.elf (".strings")
 	} > ram
 	
@@ -70,7 +76,12 @@ SECTIONS {
 		root/sl.elf (".bss")
 		root/sl.elf ("COMMON")
 	} > ram
- 
+
+	.malloc_max 0x0601c000 (NOLOAD):
+        {
+		__malloc_max_ram = .;
+        } > ram
+ /*
   .overlaydma ALIGN(0x10) (NOLOAD):
   {
 	__bstarto = . ;
@@ -80,28 +91,18 @@ SECTIONS {
 	__bendo = . ;
 	_end = .;
   } > ram
-
-         .ovl 0x00200000:
-        {
-                _ovlstart = .;
+*/
+	OVERLAY 0x00200000 : NOCROSSREFS AT (0x00200000)    
+  {
+	.ovly0   { 
+		__start_ram = .;
+			boot = .;
 		*(.boot)
-		*(.clean)
 		*(".text")
-		*(".strings")
-		. = ALIGN(0x10);
-		*(.dtors)
-		. = ALIGN(0x10);
-		
-		__rodata_start = .;
-		*(.rodata*)
-		__rodata_end = .;	
-	   
-		__dstarto = . ;
+		*(".text*")	
 		*(.data)
-		. = ALIGN(0x10);
-		__dendo = . ;
-
-        } > ram2
-		
+		*(.rodata*)		
+	}
+  }	
 	
 }
