@@ -704,8 +704,8 @@ int WbmlInit()
 	System1BankedRom = 1;
 
 	DecodeFunction = wbml_decode;
-//	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
-//	BurnLoadRom(System1MC8123Key, 15, 1);
+	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
+	BurnLoadRom(System1MC8123Key, 15, 1);
 	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
 	CommonWbmlInit();
 	return nRet;

@@ -48,6 +48,12 @@ SECTIONS {
 
 	} > ram
 
+	.clean 0x6003e00 (NOLOAD):
+	{
+		*(.clean)
+				. = ALIGN(0x10);
+	} > ram
+
         .entry 0x06004000 :
         {
 		saturn/strt1_vbt.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o (.entry)

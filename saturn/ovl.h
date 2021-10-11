@@ -206,12 +206,20 @@ void cleanDATA()
 void cleanBSS()
 {
 	memset((UINT8*)LOWADDR,0x00,0x80000);
-/*	extern unsigned int _bstarto, _bendo;
+//	memset((UINT8*)LOWADDR,0x00,0x80000);
+	extern unsigned int _malloc_max_ram, _start_ram;
 
-	for( unsigned char *dst = (unsigned char *)&_bstarto; dst < (unsigned char *)&_bendo; dst++ ) 
+	for( unsigned char *dst = (unsigned char *)&_malloc_max_ram; dst < (unsigned char *)&_start_ram; dst++ ) 
 	{
 		*dst = 0;
-	}*/
+	}
+	extern unsigned int _bstart, _bend;
+
+	for( unsigned char *dst = (unsigned char *)&_bstart; dst < (unsigned char *)&_bend; dst++ ) 
+	{
+		*dst = 0;
+	}	
+	
 //	int size = ((unsigned char *)&_bendo)-((unsigned char *)&_bstarto);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

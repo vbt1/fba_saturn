@@ -1,10 +1,27 @@
 #define nInterleave 10
 #include "SEGA_INT.H"
-//#include "SEGA_DMA.H"
+#include "SEGA_DMA.H"
+
+#define	SZ_PERIPHERAL	20
+typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
+/*
+typedef	struct	{
+	UINT8			id;
+	UINT8			connectable;
+	SysPeripheral	*peripheral;
+} SysPort;
+*/
+extern SysPort	*__port;
+
+typedef	struct	SysDevice	{
+	UINT8	type;
+	UINT8	size;
+	UINT8	data[1];
+} SysDevice;
 
 void dummy();
 
-static inline void System1ClearOpposites(UINT8* nJoystickInputs)
+/*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x30) == 0x30) {
 		*nJoystickInputs &= ~0x30;
@@ -88,7 +105,7 @@ Decode Functions
 		const UINT8 data_xor[64],const INT32 data_swap_select[64])
 {
 	INT32 A;
-	const UINT8 swaptable[24][4] =
+	/*static*/ const UINT8 swaptable[24][4] =
 	{
 		{ 6,4,2,0 }, { 4,6,2,0 }, { 2,4,6,0 }, { 0,4,2,6 },
 		{ 6,2,4,0 }, { 6,0,2,4 }, { 6,4,0,2 }, { 2,6,4,0 },
@@ -130,7 +147,7 @@ Decode Functions
 
 /*static*/ void sega_decode_317(UINT8 *pDest, UINT8 *pDestDec, INT32 order, INT32 opcode_shift, INT32 data_shift)
 {
-	const UINT8 xor1_317[1+64] =
+	/*static*/ const UINT8 xor1_317[1+64] =
 	{
 		0x54,
 		0x14,0x15,0x41,0x14,0x50,0x55,0x05,0x41,0x01,0x10,0x51,0x05,0x11,0x05,0x14,0x55,
@@ -139,7 +156,7 @@ Decode Functions
 		0x10,0x15,0x51,0x50,0x00,0x15,0x51,0x44,0x15,0x04,0x44,0x44,0x50,0x10,0x04,0x04,
 	};
 
-	const UINT8 xor2_317[2+64] =
+	/*static*/ const UINT8 xor2_317[2+64] =
 	{
 		0x04,
 		0x44,
@@ -149,7 +166,7 @@ Decode Functions
 		0x14,0x40,0x50,0x45,0x10,0x05,0x50,0x01,0x40,0x01,0x50,0x50,0x50,0x44,0x40,0x10,
 	};
 
-	const INT32 swap1_317[1+64] =
+	/*static*/ const INT32 swap1_317[1+64] =
 	{
 		 7,
 		 1,11,23,17,23, 0,15,19,
@@ -162,7 +179,7 @@ Decode Functions
 		 6, 1, 1,18, 5,15,15,20,
 	};
 
-	const INT32 swap2_317[2+64] =
+	/*static*/ const INT32 swap2_317[2+64] =
 	{
 		 7,
 		12,
@@ -181,10 +198,10 @@ Decode Functions
 	else
 		sega_decode_2( pDest, pDestDec, xor1_317+opcode_shift, swap1_317+opcode_shift, xor2_317+data_shift, swap2_317+data_shift );
 }
-/*
-void fdwarrio_decode(void)
+
+/*static*/ void fdwarrio_decode(void)
 {
-	const UINT8 opcode_xor[64] =
+	/*static*/ const UINT8 opcode_xor[64] =
 	{
 		0x40,0x50,0x44,0x54,0x41,0x51,0x45,0x55,
 		0x40,0x50,0x44,0x54,0x41,0x51,0x45,0x55,
@@ -196,7 +213,7 @@ void fdwarrio_decode(void)
 		0x40,0x50,0x44,0x54,0x41,0x51,0x45,0x55,
 	};
 
-	const UINT8 data_xor[64] =
+	/*static*/ const UINT8 data_xor[64] =
 	{
 		0x10,0x04,0x14,0x01,0x11,0x05,0x15,0x00,
 		0x10,0x04,0x14,0x01,0x11,0x05,0x15,0x00,
@@ -208,7 +225,7 @@ void fdwarrio_decode(void)
 		0x10,0x04,0x14,0x01,0x11,0x05,0x15,0x00,
 	};
 
-	const INT32 opcode_swap_select[64] =
+	/*static*/ const INT32 opcode_swap_select[64] =
 	{
 		4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,
 		6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,
@@ -216,7 +233,7 @@ void fdwarrio_decode(void)
 		10,10,10,10,10,10,10,10,11,11,11,11,11,11,11,11,
 	};
 
-	const INT32 data_swap_select[64] =
+	/*static*/ const INT32 data_swap_select[64] =
 	{
 		  4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,
 		6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,
@@ -227,17 +244,17 @@ void fdwarrio_decode(void)
 
 	sega_decode_2(System1Rom1, System1Fetch1, opcode_xor,opcode_swap_select,data_xor,data_swap_select);
 }
-*/
+
 /*==============================================================================================
 Allocate Memory
 ===============================================================================================*/
 
-inline void MemIndex()
+/*static*/ int MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
 	memset(Next, 0, MALLOC_MAX);
-	
+
 	System1Rom1            = Next; Next += 0x040000;
 	System1Fetch1          = Next; Next += 0x010000;
 	System1Rom2            = Next; Next += 0x008000;
@@ -267,7 +284,6 @@ inline void MemIndex()
 	SpriteOnScreenMap      = Next; Next += 0x10000;
 	System1Sprites         = Next; Next += System1SpriteRomSize;
 
-	System1MC8123Key	= Next; Next += 0x2000;
 	width_lut			= Next; Next += 256 * sizeof(UINT8);
 	cram_lut			= (UINT16 *)Next; Next += 256 * sizeof(UINT16);
 	remap8to16_lut		= (UINT16 *)Next; Next += 512 * sizeof(UINT16);
@@ -278,10 +294,13 @@ inline void MemIndex()
 	map_cache			= (UINT16 *)Next; Next += (0x800*16) * sizeof(UINT32);
 	map_dirty			= Next; Next += 0x0008;
 	CZ80Context			= Next; Next += 2*sizeof(cz80_struc);
+
+	return 0;
 }
 /*==============================================================================================
 Reset Functions
 ===============================================================================================*/
+
 /*static*/ int System1DoReset()
 {
 	CZetOpen(0);
@@ -300,8 +319,7 @@ Reset Functions
 	System1BankedRom = 0;
 	System1BankSwitch = 0;
 	memset(map_dirty,1,8);
-//	__port = PER_OpenPort();
-	
+		__port = PER_OpenPort();
 	return 0;
 }
 
@@ -309,7 +327,7 @@ Reset Functions
 Memory Handlers
 ===============================================================================================*/
 
-inline void System1BankRom(UINT32 System1RomBank)
+void System1BankRom(UINT32 System1RomBank)
 {
 	UINT32 BankAddress = (System1RomBank * 0x4000) + 0x10000;
 	CZetMapMemory2(System1Rom1 + BankAddress + 0x20000, System1Rom1 + BankAddress, 0x8000, 0xbfff, MAP_ROM);
@@ -393,10 +411,10 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 		RamStart1[a] = d;
 		a&=~1;
 
-		unsigned short Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
+		unsigned int Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
-		unsigned short x = map_offset_lut[a&0x7ff];
+		unsigned int x = map_offset_lut[a&0x7ff];
 		UINT16 *map = &ss_map2[x];		
 		map[0] = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
 		map[1] = Code & (System1NumTiles-1);
@@ -472,11 +490,10 @@ void __fastcall System1Z802ProgWrite(unsigned int a, UINT8 d)
 /*==============================================================================================
 Driver Inits
 ===============================================================================================*/
-inline void initColors()
+void initColors()
 {
-//	memset((void*)COLADDR,0x00,0x800);
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));	
- 	colAddr           = (Uint16*)COLADDR;//(Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+ 	colAddr             = (Uint16*)COLADDR;//(Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 	colBgAddr         = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
 	SCL_AllocColRam(SCL_NBG3,OFF);
@@ -486,7 +503,7 @@ inline void initColors()
 	SCL_SetColRam(SCL_NBG0,8,4,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void initLayers()
+void initLayers()
 {
     Uint16	CycleTb[]={
 		0x1e56, 0xeeee, //A0
@@ -531,28 +548,26 @@ inline void initLayers()
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void initSpritesS1(void)
+/*static*/ void initSpritesS1(void)
 {
+    int i;
 	initSprites(256-1,240-1,0,0,-8,0);
-	SprSpCmd *ss_spritePtr = &ss_sprite[3];	
-	
-	for (unsigned char i=0;i<32 ;i++ )
+
+	for (i=3;i<35 ;i++ )
 	{
 		if(flipscreen)
-			ss_spritePtr->control = ( JUMP_NEXT |  FUNC_DISTORSP );
+			ss_sprite[i].control = ( JUMP_NEXT |  FUNC_DISTORSP );
 		else
-			ss_spritePtr->control = ( JUMP_NEXT | FUNC_NORMALSP );
+			ss_sprite[i].control = ( JUMP_NEXT | FUNC_NORMALSP );
 
-		ss_spritePtr->drawMode   = ( COLOR_1 | ECD_DISABLE | COMPO_REP);
-		ss_spritePtr++;
+		ss_sprite[i].drawMode   = ( COLOR_1 | ECD_DISABLE | COMPO_REP);		
 	}
-
 	SS_SET_SPCLMD(1);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void make_lut(void)
 {
-	unsigned short i,delta=0;
+	unsigned int i,delta=0;
 	int sx, sy;
 
 	for (i = 0; i < 512;i++) 
@@ -570,13 +585,13 @@ inline void initSpritesS1(void)
 		}
 		else if(flipscreen==1)
 		{
-			sx = ((i) & 0x3f)*32;//% 32;
+			sx = ((i) & 0x3f)<<5;//% 32;
 			sy = (32-(i >> 6)) & 0x1f;
 		}
 		else
 		{
 			sx = 36-(32-(i >> 6)) & 0x1f;	
-			sy = ((64-i) & 0x3f)*32;//% 32;
+			sy = ((64-i) & 0x3f)<<5;//% 32;
 		}
 
 		map_offset_lut[i] = ((sx) | sy)<<1;
@@ -592,7 +607,7 @@ inline void initSpritesS1(void)
 /*static*/ void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-//	INT_ChgMsk(INT_MSK_DMA2, INT_MSK_NULL);	
+	INT_ChgMsk(INT_MSK_DMA2, INT_MSK_NULL);	
 	nSoundBufferPos = 0;
 	nBurnSprites  = 35;
 	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
@@ -620,8 +635,7 @@ inline void initSpritesS1(void)
 		}
 	}
 	UINT8 *ss_vram   = (UINT8 *)SS_SPRAM;
-//	memset(&ss_vram[0],0x00,0x1100);	
-	memset(&ss_vram[0],0x00,0x80000);
+	memset(&ss_vram[0x1100],0x00,0x7EF00);
 	SS_SET_N2PRIN(4);
 	SS_SET_S0PRIN(4);
 	SS_SET_N1PRIN(6);
@@ -644,23 +658,26 @@ inline void initSpritesS1(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2Size, int nTileRomNum, int nTileRomSize, int nSpriteRomNum, int nSpriteRomSize, bool bReset)
 {
-	int nRet = 0;
-	unsigned char i;
-	int RomOffset;
+	int nRet = 0, i, RomOffset;
 	struct BurnRomInfo ri;
-		
+
 	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
 	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
 
 	DrvInitSaturn();
-	CollisionFunction = updateCollisions;
-	MemIndex();
 
-	UINT8 *System1TempRom = (UINT8*)LOWADDR;
-//	memset((void *)System1TempRom, 0, 0x40000);
+	CollisionFunction = updateCollisions;
+	//System1BgRamSize = 0x800;
+	// Allocate and Blank all required memory
+//	Mem = NULL;
+	MemIndex();
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnMalloc                     ",20,100);
+
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"memset                     ",20,100);
+	UINT8 *System1TempRom = (UINT8*)0x00200000;
+	memset((void *)System1TempRom, 0, 0x40000);
 	// Load Z80 #1 Program roms
 	RomOffset = 0;
-	
 	for (i = 0; i < nZ80Rom1Num; i++) {
 		nRet = BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1); if (nRet != 0) return 1;
 		BurnDrvGetRomInfo(&ri, i);
@@ -669,7 +686,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	if (System1BankedRom)
 	{
 		memcpyl(System1TempRom, System1Rom1, 0x40000);
-		memset4_fast(System1Rom1, 0, 0x40000);
+		memset(System1Rom1, 0, 0x40000);
 
 		if (System1BankedRom == 1)
 		{ // Encrypted, banked
@@ -694,34 +711,28 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		}
 	}
 
-	memset4_fast((void *)System1Rom2, 0, 0x10000);
+	memset((void *)System1Rom2, 0, 0x10000);
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DecodeFunction                     ",20,100);
 //wait_vblank();
-	if (DecodeFunction) 
-	{
-		BurnLoadRom(System1MC8123Key, 15, 1);
-		DecodeFunction();
-	}
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Program roms                     ",20,100);	
+	if (DecodeFunction) DecodeFunction();
+	
 	// Load Z80 #2 Program roms
 	RomOffset += nZ80Rom1Num;
 	for (i = 0; i < nZ80Rom2Num; i++) {
 		nRet = BurnLoadRom(System1Rom2 + (i * nZ80Rom2Size), i + RomOffset, 1); if (nRet != 0) return 1;
 	}
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Load and decode tiles                     ",20,100);	
-
+	
 	// Load and decode tiles
-//	memset4_fast(System1TempRom, 0, 0x20000);
+	memset(System1TempRom, 0, 0x20000);
 	RomOffset += nZ80Rom2Num;
 	for (i = 0; i < nTileRomNum; i++) {
-//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"Load tile                   ",20,10*(i+1));	
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
 	}
 
 	INT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
 
-	static INT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
-	static INT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
+	INT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	INT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"GfxDecode4Bpp                     ",20,100);
 
 	if (System1NumTiles > 0x800)
@@ -734,15 +745,15 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	System1TempRom = NULL;
 	
-	memset4_fast((void *)&ss_map2[2048],0,768);
+	memset((void *)&ss_map2[2048],0,768);
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"rotate_tile                     ",20,100);
 
 	if(flipscreen==1)		rotate_tile(System1NumTiles,0,cache);
 	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,cache);
 
-	spriteCache = (UINT16*)LOWADDR;
+	spriteCache = (UINT16*)(0x00200000);
 
-	memset4_fast((unsigned char *)spriteCache,0xFF,0x80000);
+	memset((unsigned char *)spriteCache,0xFF,0x80000);
 
 	memset(System1Sprites, 0x00, System1SpriteRomSize);
 	
@@ -847,7 +858,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	z80_reset();
 
 //	memset4_fast(SpriteOnScreenMap, 255, 256 * 256); plante sur saturn
-	memset4_fast(SpriteOnScreenMap, 255, 0x10000);
+	memset(SpriteOnScreenMap, 255, 0x10000);
 
 	nCyclesTotal[0] = 2500000 / hz ;//3500000
 	nCyclesTotal[1] = 2500000 / hz ;//3500000
@@ -896,12 +907,11 @@ int System1Exit()
 //    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
 //    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
 	
-//	memset(map_dirty,0,8);
-//	memset(CZ80Context,0x00,sizeof(cz80_struc)*2);
-//	CZ80Context = NULL;
+	memset(map_dirty,0,8);
+	CZ80Context = NULL;
 
 	SN76496Exit();
-/*
+
 	RamStart1 = RamStart               = NULL;
 	System1Rom1 = System1Rom2 = NULL;
 	System1PromRed = System1PromGreen = System1PromBlue = NULL;
@@ -911,10 +921,9 @@ int System1Exit()
 	System1ScrollXRam = System1BgCollisionRam = NULL;
 	System1SprCollisionRam = NULL;
 	System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
-	SpriteOnScreenMap = NULL;
+	/*System1Tiles =*/ SpriteOnScreenMap = NULL;
 	System1Fetch1 = NULL;
 	System1ScrollX = System1ScrollY = NULL;
-	System1MC8123Key = NULL;
 
 	remap8to16_lut = NULL;
 	map_offset_lut = NULL;
@@ -927,14 +936,12 @@ int System1Exit()
 
 	System1Sprites = NULL;
 //	free(Mem);
-//	Mem = NULL; */
+//	Mem = NULL;
 	DecodeFunction = NULL;
 	MakeInputsFunction = NULL;
 	CollisionFunction = NULL;
 
 	SPR_InitSlaveSH();
-
-	System1Input[0] = System1Input[1] = System1Input[2] = 0x00;
 	
 	cleanDATA();
 	cleanBSS();
@@ -961,7 +968,7 @@ Graphics Rendering
 	{
 		if (y > 255) continue;
 
-		int yr = (((y - System1BgScrollY) & 0xff) >>3)*32;
+		int yr = (((y - System1BgScrollY) & 0xff) >>3)<<5;
 //		y256 = y<<8;
 //		register UINT8 *sprScreenMap= &SpriteOnScreenMap[(y<<8)+x];
 		register UINT8 *sprScreenMap= (UINT8 *)tmp;
@@ -988,7 +995,7 @@ Graphics Rendering
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void System1CalcPalette()
+/*static*/ void System1CalcPalette()
 {
 	unsigned int delta=0;		
 	UINT8 *System1PaletteRam512   = System1PaletteRam+512;
@@ -1008,11 +1015,10 @@ inline void System1CalcPalette()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static inline void renderSpriteCache(unsigned int *values)
+inline void renderSpriteCache(int *values)
 //(int Src,unsigned int Height,INT16 Skip,unsigned int Width, int Bank)
 {
 	int Src = values[0];
-	unsigned int add = values[3];
 	UINT32 Height = values[1];
 	INT32 Skip = values[2];
 //	UINT32 Width  = values[3];
@@ -1068,7 +1074,7 @@ static inline void renderSpriteCache(unsigned int *values)
 				spriteVRam[n++]=Data ;//Colour2 | (Colour1<<4);
 			}
 		}
-		spriteVRam+=add;
+		spriteVRam+=values[3];
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1085,17 +1091,16 @@ void System1DrawSprites()
 // VBT 25/06/2017 : coorection dink pour pitfall 2
 	if (System1SpriteRam[0] == 0xff)
 	{
-		for (UINT8 i = 0; i < 32; ++i)
+		for (UINT32 i = 0; i < 32; ++i)
 		{
-			ss_spritePtr->ax = ss_spritePtr->ay = ss_spritePtr->charSize = ss_spritePtr->charAddr = 0;
-			ss_spritePtr++;
+			ss_spritePtr[i].ax = ss_spritePtr[i].ay = ss_spritePtr[i].charSize = ss_spritePtr[i].charAddr = 0;
 		}
 		return; // 0xff in first byte of spriteram is sprite-disable mode
 	}
-	ss_spritePtr = &ss_sprite[3];
+
 	SpriteBase = System1SpriteRam;
 	
-	for (UINT8 i = 0; i < 32; ++i) 
+	for (UINT32 i = 0; i < 32; ++i) 
 	{
 
 		if (SpriteBase[1] && (SpriteBase[1] - SpriteBase[0] > 0))
@@ -1145,7 +1150,6 @@ int System1Frame()
 {
 	MakeInputsFunction();
 	unsigned int nCyclesDone[2] = {0,0};
-//	PortData[0].peripheral = 0x6003644;
 	
 	for (UINT32 i = 0; i < nInterleave; i++) {
 		
@@ -1194,19 +1198,17 @@ int System1Frame()
 	}
 	PCM_Task(pcm);
 // evite plantage sur teddy boy	
-//	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-//		SPR_WaitEndSlaveSH();
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();
 //	sc_check();
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void make_cram_lut(void)
+/*static*/ void make_cram_lut(void)
 {
-	UINT16 *lutptr=(UINT16 *)cram_lut;
-	
 	if (System1ColourProms) 
 	{
-		for (UINT16 j = 0; j < 256; j++) 
+		for (UINT32 j = 0; j < 256; j++) 
 		{
 			UINT32 bit0, bit1, bit2, bit3, r, g, b, val;
 
@@ -1223,7 +1225,7 @@ void make_cram_lut(void)
 			bit2 = (val >> 2) & 0x01;
 			bit3 = (val >> 3) & 0x01;
 			g = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
-			
+		
 			val = System1PromBlue[j];
 			bit0 = (val >> 0) & 0x01;
 			bit1 = (val >> 1) & 0x01;
@@ -1231,12 +1233,12 @@ void make_cram_lut(void)
 			bit3 = (val >> 3) & 0x01;
 			b = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
 
-			*lutptr++ = BurnHighCol(r, g, b, 0);	 // on garde burnhighcol
+			cram_lut[j] = BurnHighCol(r, g, b, 0);	
 		}
 	}
 	else
 	{
-		for(UINT16 j = 0; j < 256; j++)
+		for(UINT32 j = 0; j < 256; j++)
 		{
 			int r = (j >> 0) & 7;
 			int g = (j >> 3) & 7;
@@ -1245,7 +1247,7 @@ void make_cram_lut(void)
 			r = (r << 2) | (r >> 1);
 			g = (g << 2) | (g >> 1);
 			b = (b << 3) | (b << 1) | (b >> 1);
-			*lutptr++ = RGB(r,g,b);
+			cram_lut[j] = RGB(r,g,b);
 		}
 	}
 }

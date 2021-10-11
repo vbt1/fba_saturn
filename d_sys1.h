@@ -42,7 +42,7 @@ static struct BurnInputInfo WboyInputList[] = {
 STDINPUTINFO(Wboy)
 
 
-/*static*/ /*static struct BurnInputInfo WbmljbInputList[] = {
+/*static struct BurnInputInfo WbmljbInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
@@ -70,8 +70,8 @@ STDINPUTINFO(Wboy)
 };
 
 STDINPUTINFO(Wbmljb)
-*/
-/*static*/ /*static struct BurnInputInfo SeganinjInputList[] = {
+
+static struct BurnInputInfo SeganinjInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
@@ -126,7 +126,7 @@ static struct BurnInputInfo FlickyInputList[] = {
 STDINPUTINFO(Flicky)
 
 /*
-/*static*/ /*static struct BurnDIPInfo WboyDIPList[]=
+static struct BurnDIPInfo WboyDIPList[]=
 {
 	// Default Values
 	{0x0f, 0xff, 0xff, 0xff, NULL                     },
@@ -320,7 +320,7 @@ static struct BurnDIPInfo MyheroDIPList[]=
 STDDIPINFO(Myhero)
 
 /*
-/*static*/ /*static struct BurnDIPInfo WbmljbDIPList[]=
+static struct BurnDIPInfo WbmljbDIPList[]=
 {
 	// Default Values
 	{0x0f, 0xff, 0xff, 0xbe, NULL                     },
@@ -524,7 +524,7 @@ STDDIPINFO(Fourdwarrio)
 ROM Descriptions
 ===============================================================================================*/
 /*
-/*static*/ /*static struct BurnRomInfo WboyRomDesc[] = {
+static struct BurnRomInfo WboyRomDesc[] = {
 	{ "epr7489.116",      0x004000, 0x130f4b70, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr7490.109",      0x004000, 0x9e656733, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "epr7491.96",       0x004000, 0x1f7d0efe, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code

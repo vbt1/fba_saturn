@@ -99,7 +99,7 @@ void DrvPaletteUpdate(INT32 offset)
 	}
 }
 
-static inline void ninjakd2_bankswitch(INT32 data)
+inline void ninjakd2_bankswitch(INT32 data)
 {
 	UINT32 nBank = 0x10000 + (data * 0x4000);
 
@@ -366,16 +366,20 @@ void robokid_main_write(UINT16 address, UINT8 data)
 		if(DrvFgRAM[address]!=data)
 		{
 			DrvFgRAM[address] = data;
-			UINT32 sx = ((address>>1) & 0x1f);
-			UINT32 off2s = sx | (address/0x40) <<6;
-
-			address &=0x7fe;
-			UINT8 *vram = &DrvFgRAM[address];
-			UINT32 attr  = vram[1];
-			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
 			
-			code |= (attr & 0x20) << 3;
-			ss_map[off2s] = (attr & 0x0f) <<12 | (code & 0xfff);
+			if((address/ 0x40)<28)
+			{
+				UINT32 sx = ((address>>1) & 0x1f);
+				UINT32 off2s = sx | (address/0x40) <<6;
+
+				address &=0x7fe;
+				UINT8 *vram = &DrvFgRAM[address];
+				UINT32 attr = vram[1];
+				UINT32 code = vram[0] + ((attr & 0xc0) << 2);
+				
+				code |= (attr & 0x20) << 3;
+				ss_map[off2s] = (attr & 0x0f) <<12 | (code & 0xfff);
+			}
 		}
 		return;
 	}	
@@ -715,7 +719,7 @@ void ninjakd2_sound_init()
 }
 #endif
 
-static void DrvDoReset()
+void DrvDoReset()
 {
 	memset(DrvZ80RAM0, 0, RamEnd-DrvZ80RAM0);
 
@@ -732,7 +736,7 @@ static void DrvDoReset()
 
 }
 
-static void MemIndex(UINT32 game)
+void MemIndex(UINT32 game)
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -767,7 +771,7 @@ static void MemIndex(UINT32 game)
 }
 
 
-static void DrvGfxDecode(UINT8 *rom, UINT32 len, UINT32 type)
+void DrvGfxDecode(UINT8 *rom, UINT32 len, UINT32 type)
 {
 	INT32 Plane[4]   = { STEP4(0,1) };
 	INT32 XOffs0[16] = { STEP8(0,4), STEP8(32*8,4) };
@@ -815,7 +819,7 @@ static void DrvGfxDecode(UINT8 *rom, UINT32 len, UINT32 type)
 	}
 }
 
-static void lineswap_gfx_roms(UINT8 *rom, INT32 len, const INT32 bit)
+void lineswap_gfx_roms(UINT8 *rom, INT32 len, const INT32 bit)
 {
 	UINT8 *tmp = (UINT8*)DrvGfxROM4Data1;
 
@@ -830,7 +834,7 @@ static void lineswap_gfx_roms(UINT8 *rom, INT32 len, const INT32 bit)
 	memcpy (rom, tmp, len);
 }
 
-static void gfx_unscramble(INT32 gfxlen)
+void gfx_unscramble(INT32 gfxlen)
 {
 	UINT8 *DrvGfxROM0	= (UINT8 *)cache;// fg
 	UINT8 *ss_vram 		= (UINT8 *)SS_SPRAM;
@@ -842,7 +846,7 @@ static void gfx_unscramble(INT32 gfxlen)
 	lineswap_gfx_roms(DrvGfxROM2, gfxlen, 14);
 }
 
-static void DrvCalculatePalette()
+void DrvCalculatePalette()
 {
 	for (UINT32 i = 0; i < 0x800; i+=2)
 	{
@@ -1087,6 +1091,13 @@ INT32 RobokidInit()
 	DrvDoReset();
 	DrvCalculatePalette();
 	nBurnFunction = DrvOverDraw;
+	
+	UINT16 *map =(UINT16 *)ss_map;
+	for (UINT32 offs = 0; offs < (64 * 32); offs++)
+	{
+		*map++=0x5;
+	}
+
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1654,7 +1665,7 @@ void Ninjakd2Draw()
 	draw_sprites(0); // 0x100
 }
 
-static void inline draw_robokid_bg_layer() //INT32 width)
+static inline void  draw_robokid_bg_layer() //INT32 width)
 {
 //	if (tilemap_enable[sel] == 0) return;
 //	UINT32 wide = (width) ? 128 : 32;
@@ -1691,24 +1702,6 @@ static void inline draw_robokid_bg_layer() //INT32 width)
 		map[0] = (attr & 0x0f);
 		map[1] = (0x400+bg1[code]);
 //-----------------------------------------------------------------------------------------------------------------
-// nbg0			
-		attr = DrvBgRAM1[ofst + 1];
-		code = DrvBgRAM1[ofst] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
-		
-		if(bg2[code]==0)
-		{
-			bg2[code]=(nextTile[1]<<2);
-			UINT8 *addr = (UINT8*)0x00270000+(code*128);
-			memcpyl((UINT8 *)cache+0x28000+bg2[code]*32,addr,128);
-
-			if(nextTile[1]++>0xfff)
-				nextTile[1]=0;
-		}
-		map = (UINT16 *)(SCL_VDP2_VRAM_B1+0x18000+offs2);
-				
-		map[0] = (attr & 0x0f);
-		map[1] = (0x1400+bg2[code]);			
-//-----------------------------------------------------------------------------------------------------------------
 // nbg3			
 		attr = DrvBgRAM2[ofst + 1];
 		code = DrvBgRAM2[ofst] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
@@ -1722,10 +1715,30 @@ static void inline draw_robokid_bg_layer() //INT32 width)
 			if(nextTile[2]++>0xfff)
 				nextTile[2]=0;
 		}
-		map = (UINT16 *)(SCL_VDP2_VRAM_B1+0xa000+offs2);
+//		map = (UINT16 *)(SCL_VDP2_VRAM_B1+0xa000+offs2);
+		map += 0x4000;
 		
 		map[0] = (attr & 0x0f);
 		map[1] = (0x2400+bg3[code]); // si 0x20000 pour bg2
+//-----------------------------------------------------------------------------------------------------------------
+// nbg0			
+		attr = DrvBgRAM1[ofst + 1];
+		code = DrvBgRAM1[ofst] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
+		
+		if(bg2[code]==0)
+		{
+			bg2[code]=(nextTile[1]<<2);
+			UINT8 *addr = (UINT8*)0x00270000+(code*128);
+			memcpyl((UINT8 *)cache+0x28000+bg2[code]*32,addr,128);
+
+			if(nextTile[1]++>0xfff)
+				nextTile[1]=0;
+		}
+//		map = (UINT16 *)(SCL_VDP2_VRAM_B1+0x18000+offs2);
+		map += 0x7000;
+		
+		map[0] = (attr & 0x0f);
+		map[1] = (0x1400+bg2[code]);		
 //-----------------------------------------------------------------------------------------------------------------
 	}
 }
@@ -1752,28 +1765,9 @@ void RobokidDraw()
 	ss_reg->n1_move_y =  (scrolly[0]+32)<<16;
 	ss_reg->n3_move_x =  (scrollx[2]-8);
 	ss_reg->n3_move_y =  (scrolly[2]+32);
-
-	for (UINT32 offs = 0; offs < (64 * 32); offs++)
-	{
-		UINT32 sx = (offs & 0x3f);
-
-//		UINT8 attr  = DrvFgRAM[offs*2+1];
-//		UINT16 code  = DrvFgRAM[offs*2+0] + ((attr & 0xc0) << 2);
-
-		if((sx<32)&& (offs / 0x40)<28)
-		{
-		
-		}
-		else
-		{
-			UINT16 off2s = sx | (offs / 0x40) <<6;
-			ss_map[off2s] = 0x5;
-		}
-	}
-	
 }
 
-static inline void DrvClearOpposites(UINT8* nJoystickInputs)
+inline void DrvClearOpposites(UINT8* nJoystickInputs)
 { // for active LOW
 	if ((*nJoystickInputs & 0x03) == 0x00) {
 		*nJoystickInputs |= 0x03;
