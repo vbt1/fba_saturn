@@ -33,7 +33,7 @@ int ovlInit(char *szShortName)
 	ss_reg          = (SclNorscl *)SS_REG;
 }
 
-/*static*/inline  void NewsMakeInputs()
+inline  void NewsMakeInputs()
 {
 	// Reset Inputs
 	NewsInput[0] = 0x00;
@@ -53,7 +53,7 @@ int ovlInit(char *szShortName)
 }
 
 // Misc Driver Functions and Memory Handlers
-/*static*/ int NewsDoReset()
+void NewsDoReset()
 {
 	BgPic = 0;
 
@@ -67,11 +67,9 @@ int ovlInit(char *szShortName)
 	z80_reset();
 #endif
 	MSM6295Reset(0);
-
-	return 0;
 }
 
-/*static*/ void make_lut(void)
+void make_lut(void)
 {
     UINT32 j;
 	for(j = 0; j < 4096; j++)
@@ -100,7 +98,7 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/ unsigned char __fastcall NewsRead(unsigned short a)
+unsigned char __fastcall NewsRead(unsigned short a)
 {
 	switch (a) {
 		case 0xc000: {
@@ -118,7 +116,7 @@ int ovlInit(char *szShortName)
 
 	return 0;
 }
-/*static*/ void __fastcall NewsWrite(unsigned short a, unsigned char d)
+void __fastcall NewsWrite(unsigned short a, unsigned char d)
 {
 	switch (a) {
 		case 0xc002: {
@@ -177,7 +175,7 @@ int ovlInit(char *szShortName)
 }
 
 // Function to Allocate and Index required memory
-inline int MemIndex()
+inline void MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -198,17 +196,15 @@ inline int MemIndex()
 	bg_dirtybuffer	= Next; Next += 1024;
 	fg_dirtybuffer	= Next; Next += 1024;
 	MSM6295Context	= (int *)Next; Next += 4 * 0x1000 * sizeof(int);
-	MemEnd = Next;
-
-	return 0;
+//	MemEnd = Next;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 // Driver Init and Exit Functions
-/*static*/ int NewsInit()
+int NewsInit()
 {
-	static INT32 TilePlaneOffsets[4] = { 0, 1, 2, 3 };
-	static INT32 TileXOffsets[8]     = { 0, 4, 8, 12, 16, 20, 24, 28 };
-	static INT32 TileYOffsets[8]     = { 0, 32, 64, 96, 128, 160, 192, 224 };
+	INT32 TilePlaneOffsets[4] = { 0, 1, 2, 3 };
+	INT32 TileXOffsets[8]     = { 0, 4, 8, 12, 16, 20, 24, 28 };
+	INT32 TileYOffsets[8]     = { 0, 32, 64, 96, 128, 160, 192, 224 };
 
 	int nRet = 0;
 	DrvInitSaturn();
@@ -294,7 +290,7 @@ inline int MemIndex()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void initLayers()
+void initLayers()
 {
     Uint16	CycleTb[]={
 		0x1f56, 0xffff, //A0
@@ -346,13 +342,13 @@ inline void initPosition()
 	SCL_Close();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/inline void initColors()
+inline void initColors()
 {
 	colBgAddr =(Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	colBgAddr2=(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn()
+void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
@@ -376,7 +372,7 @@ inline void initPosition()
 //	drawWindow(0,240,0,0,64);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ int NewsExit()
+int NewsExit()
 {
 	NewsDoReset();
 	MSM6295Exit(0);
@@ -397,7 +393,7 @@ inline void initPosition()
 //	PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 //	PCM_Task(pcm);			
 
-	memset(MSM6295ROM,0x00,0x40000);	
+//	memset(MSM6295ROM,0x00,0x40000);	
 	MSM6295ROM = NULL;
 	pBuffer = NULL;	
 /*	MSM6295Context = NULL;
@@ -413,6 +409,7 @@ inline void initPosition()
 //		SPR_InitSlaveSH();
 
 	memset(ss_map,0,0x20000);
+	memset(ss_map2,0,0x20000);	
 //	memset(NewsInputPort0,0x00,8);
 	NewsDip[0] = NewsInput[0]      = 0;
 
@@ -422,42 +419,16 @@ inline void initPosition()
 	nSoundBufferPos=0;
 
 }
-#if 0
-// Graphics Emulation
-/*static*/ void NewsRenderBgLayer()
+
+void NewsRenderFgLayer()
 {
 	UINT16 Code, Colour;
-	UINT16 x;
-	
-	 for (UINT16 TileIndex=0;TileIndex<0x400 ; TileIndex++)
-	 {
-#ifdef CACHE2
-		if (bg_dirtybuffer[TileIndex])
-		{
-			bg_dirtybuffer[TileIndex] = 0;
-#endif
-			Code = (NewsBgVideoRam[TileIndex * 2] << 8) | NewsBgVideoRam[TileIndex * 2 + 1];
-			Colour = Code >> 12;
-			Code &= 0x0fff;
-			if ((Code & 0x0e00) == 0xe00) Code = (Code & 0x1ff) | (BgPic << 9);
-
-			x = map_offset_lut[TileIndex];
-			UINT16 *map = &ss_map2[x];
-			map[0] = Colour;
-			map[1] =  Code;
-
-#ifdef CACHE2
-		}
-#endif
-	}
-}
-#endif
-/*static*/ void NewsRenderFgLayer()
-{
-	UINT16 Code, Colour;
-	UINT16 x;
+//	UINT16 x;
 	UINT16 *map;
-
+	UINT16 *lut_ptr=(UINT16 *)map_offset_lut;
+	UINT8 *fg_ptr =(UINT8 *)NewsFgVideoRam;
+	UINT8 *bg_ptr =(UINT8 *)NewsBgVideoRam;
+	
 	for (UINT16 TileIndex=0;TileIndex<0x400 ; TileIndex++)
 	{
 
@@ -466,12 +437,12 @@ inline void initPosition()
 		{
 			fg_dirtybuffer[TileIndex] = 0;
 #endif
-			Code = (NewsFgVideoRam[TileIndex * 2] << 8) | NewsFgVideoRam[TileIndex * 2 + 1];
+			Code = (fg_ptr[0] << 8) | fg_ptr[1];
 			Colour = Code >> 12;
 			Code &= 0x0fff;
 			
-			x = map_offset_lut[TileIndex];
-			map = &ss_map[x];
+//			x = map_offset_lut[TileIndex];
+			map = &ss_map[*lut_ptr];
 			map[0] = Colour;
 			map[1] =  Code;
 
@@ -487,26 +458,28 @@ inline void initPosition()
 		{
 			bg_dirtybuffer[TileIndex] = 0;
 #endif
-			Code = (NewsBgVideoRam[TileIndex * 2] << 8) | NewsBgVideoRam[TileIndex * 2 + 1];
+			Code = (bg_ptr[0] << 8) | bg_ptr[1];			
 			Colour = Code >> 12;
 			Code &= 0x0fff;
 			if ((Code & 0x0e00) == 0xe00) Code = (Code & 0x1ff) | (BgPic << 9);
 
-			x = map_offset_lut[TileIndex];
-			map = &ss_map2[x];
+//			x = map_offset_lut[TileIndex];
+			map = &ss_map2[*lut_ptr];
 			map[0] = Colour;
 			map[1] =  Code;
 
 #ifdef CACHE2
 		}
 #endif
-
+		lut_ptr++;
+		fg_ptr+=2;
+		bg_ptr+=2;		
 	}
 
 }
 
 // Frame Function
-/*static*/ int NewsFrame()
+int NewsFrame()
 {
 
 //	if (NewsReset) NewsDoReset();

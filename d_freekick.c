@@ -68,7 +68,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-static void DrvDoReset()
+void DrvDoReset()
 {
 	memset(AllRam, 0, RamEnd - AllRam);
 	coin = 0;
@@ -85,7 +85,7 @@ static void DrvDoReset()
 	CZetClose();
 }
 
-static void pbillrd_draw_sprite(INT32 offs)
+void pbillrd_draw_sprite(INT32 offs)
 {
 	INT8 sx = DrvSprRAM[offs + 3];
 	INT8 sy = 224 - DrvSprRAM[offs + 2];
@@ -109,7 +109,7 @@ static void pbillrd_draw_sprite(INT32 offs)
 	sprite_number++;
 }
 
-static void countrun_draw_sprite(INT32 offs)
+void countrun_draw_sprite(INT32 offs)
 {
 	INT32 sx = DrvSprRAM[offs + 3];
 	INT32 sy = 232-DrvSprRAM[offs + 0];
@@ -156,7 +156,7 @@ void freekick_draw_sprite(INT32 offs)
 	}
 }
 
-static void gigas_draw_sprite(INT32 offs)
+void gigas_draw_sprite(INT32 offs)
 {
 	INT32 sx = 224 - DrvSprRAM[offs + 3];
 	INT32 sy = 240 - DrvSprRAM[offs + 2];
@@ -174,7 +174,7 @@ static void gigas_draw_sprite(INT32 offs)
 	}
 }
 
-static inline void DrvDraw()
+inline void DrvDraw()
 {
 	UINT16 *map;	
 	// Draw tiles
@@ -194,7 +194,7 @@ static inline void DrvDraw()
 	}
 }
 
-static void __fastcall freekick_write(UINT16 address, UINT8 data)
+void __fastcall freekick_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -294,7 +294,7 @@ UINT8 __fastcall freekick_read(UINT16 address)
 	return 0;
 }
 
-static inline void pbillrd_setbank(UINT8 banknum)
+inline void pbillrd_setbank(UINT8 banknum)
 {
 	DrvZ80Bank0 = banknum; // for savestates
 
@@ -308,7 +308,7 @@ static inline void pbillrd_setbank(UINT8 banknum)
 //	}
 }
 
-static void __fastcall gigas_write(UINT16 address, UINT8 data)
+void __fastcall gigas_write(UINT16 address, UINT8 data)
 {
 //	AM_RANGE(0xe000, 0xe000) AM_WRITENOP
 //	AM_RANGE(0xe002, 0xe003) AM_WRITE(coin_w)
@@ -414,32 +414,32 @@ void __fastcall freekick_out(UINT16 address, UINT8 data)
 	}
 }
 
-static UINT8 freekick_ppiread_1_c()
+UINT8 freekick_ppiread_1_c()
 {
 	return DrvSndROM[romaddr & 0x7fff];
 }
 
-static void freekick_ppi_write_1_a(UINT8 data)
+void freekick_ppi_write_1_a(UINT8 data)
 {
 	romaddr = (romaddr & 0xff00) | data;
 }
 
-static void freekick_ppi_write_1_b(UINT8 data)
+void freekick_ppi_write_1_b(UINT8 data)
 {
 	romaddr = (romaddr & 0x00ff) | (data << 8);
 }
 
-static UINT8 freekick_ppiread_2_a()
+UINT8 freekick_ppiread_2_a()
 {
 	return DrvDip[0];
 }
 
-static UINT8 freekick_ppiread_2_b()
+UINT8 freekick_ppiread_2_b()
 {
 	return DrvDip[1];
 }
 
-static UINT8 freekick_ppiread_2_c()
+UINT8 freekick_ppiread_2_c()
 {
 	return DrvDip[2];
 }
@@ -501,7 +501,7 @@ inline void MemIndex()
 	LoadRoms();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvGfxDecode()
+void DrvGfxDecode()
 {
 	static INT32 Planes0[3] = { RGN_FRAC(0xc000, 2,3), RGN_FRAC(0xc000, 1,3), RGN_FRAC(0xc000, 0,3) };
 	static INT32 XOffs0[8]  = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -529,7 +529,7 @@ static void DrvGfxDecode()
 	}
 }
 
-static void DrvPaletteInit()
+void DrvPaletteInit()
 {
 	UINT32 len = 0x200;
 	UINT32 delta = 0;
@@ -570,7 +570,7 @@ static void DrvPaletteInit()
 	return 0;
 }*/
 
-static inline void LoadRoms()
+void LoadRoms()
 {
 	UINT32 rom_number = 0;
 
@@ -647,7 +647,7 @@ static inline void LoadRoms()
 	if (BurnLoadRom(DrvColPROM + 0x000500,	rom_number++, 1)) return 1; // ( "3c.bin", 0x0500, 0x0100
 }
 
-static INT32 DrvFreeKickInit()
+INT32 DrvFreeKickInit()
 {
 	DrvInitSaturn();
 	MemIndex();
@@ -698,7 +698,7 @@ static INT32 DrvFreeKickInit()
 	return 0;
 }
 
-static INT32 DrvInit()
+INT32 DrvInit()
 {
 	DrvInitSaturn();
 	DrawSprite = gigas_draw_sprite;
@@ -840,7 +840,7 @@ inline void initColors()
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_lut(void)
+void make_lut(void)
 {
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
@@ -862,7 +862,7 @@ static void make_lut(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void DrvInitSaturn()
+void DrvInitSaturn()
 {
 //	SPR_InitSlaveSH();
 //	cleanSprites();
@@ -915,7 +915,7 @@ static void DrvInitSaturn()
 	drawWindow(0,240,240,4,68);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static INT32 DrvExit()
+INT32 DrvExit()
 {
 	DrawSprite = NULL;
 	DrvDoReset();
@@ -949,7 +949,7 @@ static INT32 DrvExit()
 	return 0;
 }
 
-static INT32 DrvFrame()
+INT32 DrvFrame()
 {
 	sprite_number = 3;
 	DrvInputs[0] = 0xff; // Active LOW
@@ -1009,7 +1009,7 @@ static INT32 DrvFrame()
 	return 0;
 }
 
-static INT32 pbillrdInit()
+INT32 pbillrdInit()
 {
 	pbillrdmode = 1;
 

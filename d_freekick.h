@@ -10,51 +10,51 @@
 #include "czet.h"
 
 #define nBurnSoundLen 128
-static INT32 DrvInit();
-static INT32 DrvFreeKickInit();
-static INT32 pbillrdInit();
-static INT32 DrvExit();
-static INT32 DrvFrame();
-static inline void LoadRoms();
-static inline void DrvDraw();
-static void DrvPaletteInit();
+INT32 DrvInit();
+INT32 DrvFreeKickInit();
+INT32 pbillrdInit();
+INT32 DrvExit();
+INT32 DrvFrame();
+inline void LoadRoms();
+inline void DrvDraw();
+void DrvPaletteInit();
 inline void rotate_tile16x16(unsigned int size,unsigned char *target);
 
-static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
 
-static UINT8 DrvInputs[2] = {0,0};
-static UINT8 DrvDip[3] = {0,0,0};
-static INT16 DrvDial1 = 0;
-static INT16 DrvDial2 = 0;
-static UINT8 *CZ80Context = NULL;
-static UINT8 *AllRam = NULL;
-static UINT8 *RamEnd = NULL;
-static UINT8 *DrvRAM = NULL;
-static UINT8 *DrvMainROM = NULL;
-static UINT8 *DrvMainROMdec = NULL;
-static UINT8 *DrvSndROM = NULL;
-static UINT8 *DrvVidRAM = NULL;
-static UINT8 *DrvSprRAM = NULL;
-static UINT8 *DrvColRAM = NULL;
-static UINT8 *DrvColPROM = NULL;
-static UINT8 *MC8123Key = NULL;
-static UINT16 *map_offset_lut = NULL;
+UINT8 DrvInputs[2] = {0,0};
+UINT8 DrvDip[3] = {0,0,0};
+INT16 DrvDial1 = 0;
+INT16 DrvDial2 = 0;
+UINT8 *CZ80Context = NULL;
+UINT8 *AllRam = NULL;
+UINT8 *RamEnd = NULL;
+UINT8 *DrvRAM = NULL;
+UINT8 *DrvMainROM = NULL;
+UINT8 *DrvMainROMdec = NULL;
+UINT8 *DrvSndROM = NULL;
+UINT8 *DrvVidRAM = NULL;
+UINT8 *DrvSprRAM = NULL;
+UINT8 *DrvColRAM = NULL;
+UINT8 *DrvColPROM = NULL;
+UINT8 *MC8123Key = NULL;
+UINT16 *map_offset_lut = NULL;
 typedef void (*RenderSprite)(INT32);
-static RenderSprite DrawSprite = NULL;
+RenderSprite DrawSprite = NULL;
 
-static UINT8 DrvZ80Bank0 = 0;
-static UINT8 nmi_enable = 0;
-static UINT8 coin = 0;
-static UINT8 spinner = 0;
-static UINT8 ff_data = 0;
-static UINT16 romaddr = 0;
+UINT8 DrvZ80Bank0 = 0;
+UINT8 nmi_enable = 0;
+UINT8 coin = 0;
+UINT8 spinner = 0;
+UINT8 ff_data = 0;
+UINT16 romaddr = 0;
 
 /*static*/// UINT8 use_encrypted = 0;
-static UINT8 countrunbmode = 0;
-static UINT8 pbillrdmode = 0;
+UINT8 countrunbmode = 0;
+UINT8 pbillrdmode = 0;
 
-static UINT16 sprite_number = 3;
+UINT16 sprite_number = 3;
 
 static struct BurnInputInfo PbillrdInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 coin"},

@@ -12,39 +12,39 @@
 #define SOUND_LEN 192
 void dummy();
 inline void initColors();
-/*static*/ int NewsFrame();
-/*static*/ int NewsInit();
-/*static*/ int NewsExit();
+int NewsFrame();
+int NewsInit();
+int NewsExit();
 int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength);
 
-static Uint16 *cram_lut = NULL;//[4096];
-static UINT16 *map_offset_lut = NULL;//[0x400];
+Uint16 *cram_lut = NULL;//[4096];
+UINT16 *map_offset_lut = NULL;//[0x400];
 ///*static*/ Uint16 *cram_lut;
 #ifdef CACHE2
-static unsigned char 	*bg_dirtybuffer = NULL;
-static unsigned char 	*fg_dirtybuffer = NULL;
-static int	 			*MSM6295Context	= NULL;
+unsigned char 	*bg_dirtybuffer = NULL;
+unsigned char 	*fg_dirtybuffer = NULL;
+int	 			*MSM6295Context	= NULL;
 #endif
 extern unsigned char* MSM6295ROM;
 extern int* pBuffer;
 // Input Related Variables
-static unsigned char NewsInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char NewsDip[1]        = {0};
-static unsigned char NewsInput[1]      = {0x00};
-//static unsigned char NewsReset         = 0;
+unsigned char NewsInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char NewsDip[1]        = {0};
+unsigned char NewsInput[1]      = {0x00};
+//unsigned char NewsReset         = 0;
 
 // Memory Holders
-static unsigned char *MemEnd           = NULL;
-static unsigned char *NewsRom          = NULL;
-static unsigned char *NewsRam          = NULL;
-static unsigned char *NewsFgVideoRam   = NULL;
-static unsigned char *NewsBgVideoRam   = NULL;
-static unsigned char *NewsPaletteRam   = NULL;
-static unsigned char *RamStart = NULL;
-static unsigned char *CZ80Context = NULL;
+//unsigned char *MemEnd           = NULL;
+unsigned char *NewsRom          = NULL;
+unsigned char *NewsRam          = NULL;
+unsigned char *NewsFgVideoRam   = NULL;
+unsigned char *NewsBgVideoRam   = NULL;
+unsigned char *NewsPaletteRam   = NULL;
+unsigned char *RamStart = NULL;
+unsigned char *CZ80Context = NULL;
 
 // Misc Variables, system control values, etc.
-static int BgPic = 1;
+int BgPic = 1;
 
 // Dip Switch and Input Definitions
 static struct BurnInputInfo NewsInputList[] =
