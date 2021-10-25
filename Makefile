@@ -48,7 +48,7 @@ OVLNEWS                 = root/d_news.elf
 OVLNEWS1               = root/d_news.bin
 MPOVLNEWSFILE    = $(OVLNEWS:.elf=.maps)
 LDOVLNEWSFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNEWSFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLNEWS         = d_news.c czet.c cz80/cz80.c snd/msm6295.c burn_sound_c.c load.c saturn/ovl.c
+SRCOVLNEWS         = d_news.c czet.c cz80/cz80.c snd/msm6295.c load.c saturn/ovl.c
 OBJOVLNEWS         = $(SRCOVLNEWS:.c=.o)
 
 OVLGBERET                 = root/d_gberet.elf

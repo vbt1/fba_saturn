@@ -51,10 +51,10 @@ int ovlInit(char *szShortName)
 
 // Memory Handlers
 //---------------------------------------------------------------------------------------------------------
-void fg_nova2001_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
+inline void fg_nova2001_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
 {
-	UINT8 attr = ram_base[offs + 0x400];
-	UINT8 group = (attr >> 4) & 1;
+	UINT32 attr = ram_base[offs + 0x400];
+	UINT32 group = (attr >> 4) & 1;
 
 	if (group != 0) return;
 	UINT32 code = ram_base[offs + 0x000];
@@ -65,9 +65,9 @@ void fg_nova2001_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
 
 //UINT32 offs_calc[512];
 //---------------------------------------------------------------------------------------------------------
-void bg_nova2001_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
+inline void bg_nova2001_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
 {
-	UINT8 code = ram_base[offs + 0x000] + 0x200;
+	UINT32 code = ram_base[offs + 0x000] + 0x200;
 	UINT32 attr = ram_base[offs + 0x400];
 //	offs = (offs & 0x1f) | (offs / 0x20) <<6;
 	offs = offs_lut[offs];
@@ -76,7 +76,7 @@ void bg_nova2001_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
 	ss_map[offs] = (attr & 0x0f) <<12 | code;
 }
 //---------------------------------------------------------------------------------------------------------
-void fg_ninjakun_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
+void fg_ninjakun_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
 {
 	UINT8 attr = ram_base[offs + 0x400];
 	UINT32 code = ram_base[offs + 0x000];
@@ -87,7 +87,7 @@ void fg_ninjakun_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
 	ss_map[offs] = (attr & 0x0f) <<12 | code & 0xfff;
 }
 //---------------------------------------------------------------------------------------------------------
-void bg_ninjakun_line(UINT32 offs,UINT8 *ram_base, UINT16 *ss_map)
+void bg_ninjakun_line(UINT16 offs,UINT8 *ram_base, UINT16 *ss_map)
 {
 	UINT8 attr = ram_base[offs + 0x400];
 	UINT32 code = ram_base[offs + 0x000] + 0x400;
@@ -377,7 +377,7 @@ void __fastcall nova2001_write(UINT16 address, UINT8 data)
 	switch (address)
 	{
 		case 0xbfff:
-			flipscreen = ~data & 0x01;
+//			flipscreen = ~data & 0x01;
 			break;
 
 		case 0xc000:
@@ -462,13 +462,13 @@ void __fastcall ninjakun_main_write(UINT16 address, UINT8 data)
 				unsigned int delta = 0x200 + offset * 16 + 1;
 				colBgAddr[delta] = colAddr[delta] = cram_lut[data];
 
-				if (offset != 1) {
+				/*if (offset != 1) {
 					for (UINT32 i = 0; i < 16; i++) 
 					{
 						unsigned int delta = 0x200 + offset + i * 16;
 						colBgAddr[delta] = colAddr[delta] = cram_lut[data];
 					}
-				}
+				}*/
 			}
 		}
 		return;
@@ -498,7 +498,7 @@ void __fastcall ninjakun_main_write(UINT16 address, UINT8 data)
 			break;
 
 		case 0xa003:
-			flipscreen = ~data & 0x01;
+//			flipscreen = ~data & 0x01;
 			break;
 	}
 }
@@ -691,7 +691,7 @@ void DrvDoReset()
 	AY8910Reset(0);
 	AY8910Reset(1);
 
-	flipscreen = 0;
+//	flipscreen = 0;
 	watchdog = 0;
 
 	xscroll = 0;
@@ -761,7 +761,7 @@ void nova_gfx_decode(unsigned char *Gfx)
 
 void LoadRoms()
 {
-//	UINT8 *tmp = (UINT8*)LOWADDR;
+	UINT8 *DrvGfxTmp = (UINT8*)0x00240000;
 	memset(DrvGfxTmp,0x00,0x20000);
 
 	if (BurnLoadRom(DrvMainROM  + 0x0000, 0, 1)) return;
@@ -783,13 +783,13 @@ void LoadRoms()
 	if (BurnLoadRom(DrvColPROM +  0x0000, 7, 1)) return;
 
 	pkunwar_palette_init();
-	memset4_fast(DrvGfxTmp,0x00,0x20000);
+//	memset(DrvGfxTmp,0x00,0x20000);
 //	tmp = NULL;
 }
 
 void NovaLoadRoms()
 {
-//	UINT8 *tmp = (UINT8*)0x00240000;
+	UINT8 *DrvGfxTmp = (UINT8*)0x00240000;
 	memset(DrvGfxTmp,0x00,0x20000);
 	if (BurnLoadRom(DrvMainROM + 0x0000, 0, 1)) return;
 	if (BurnLoadRom(DrvMainROM + 0x2000, 1, 1)) return;
@@ -807,13 +807,13 @@ void NovaLoadRoms()
 	if (BurnLoadRom(DrvColPROM, 8, 1)) return;
 
 	pkunwar_palette_init();
-	memset4_fast(DrvGfxTmp,0x00,0x20000);
+//	memset(DrvGfxTmp,0x00,0x20000);
 //	DrvGfxTmp = NULL;
 }
 
 void NinjakunLoadRoms()
 {
-//	UINT8 *tmp = (UINT8*)0x00240000;
+	UINT8 *DrvGfxTmp = (UINT8*)0x00240000;
 	memset(DrvGfxTmp,0x00,0x20000);
 
 	if (BurnLoadRom(DrvMainROM + 0x0000,  0, 1)) return;
@@ -840,7 +840,7 @@ void NinjakunLoadRoms()
 int Raiders5LoadRoms()
 {
 	UINT8 *tmp = (UINT8*)0x00240000;
-	memset4_fast(tmp,0x00,0x20000);
+	memset(tmp,0x00,0x20000);
 	if (BurnLoadRom(DrvMainROM + 0x0000,  0, 1)) return 1;
 	if (BurnLoadRom(DrvMainROM + 0x4000,  1, 1)) return 1;
 	if (BurnLoadRom(DrvSubROM  + 0x0000,  2, 1)) return 1;
@@ -869,10 +869,10 @@ void MemIndex()
 	DrvGfxROM0	= Next; Next += 0x020000;
 	DrvColPROM  = Next; Next += 0x000020;
 	pFMBuffer	= (short *)Next; Next += SOUND_LEN * 6 * sizeof(short);
-	offs_lut = (UINT32 *)Next; Next += 0x400 * (sizeof(UINT32));
+	offs_lut = (UINT16 *)Next; Next += 0x400 * (sizeof(UINT16));
 	cram_lut = (UINT16 *)Next; Next += 256 * (sizeof(UINT16));
 	CZ80Context	= Next; Next += sizeof(cz80_struc)*2;
-	DrvGfxTmp	= Next; Next += 0x020000;	
+//	DrvGfxTmp	= Next; Next += 0x020000;	
 //	MemEnd	= Next;
 }
 
@@ -913,16 +913,10 @@ int DrvInit()
 	CZetSetWriteHandler(pkunwar_write);
 	
 	CZetMapMemory(DrvMainROM,	0x0000, 0x7fff, MAP_ROM);
-//	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM + 0x00000);
-//	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM + 0x00000);
-	CZetMapArea(0x8000, 0x8fff, 0, DrvMainROM + 0x08000);
-	CZetMapArea(0x8000, 0x8fff, 1, DrvMainROM + 0x08000);
-	CZetMapArea(0xc000, 0xc7ff, 0, DrvMainROM + 0x0c000);
-	CZetMapArea(0xc000, 0xc7ff, 1, DrvMainROM + 0x0c000);
-	CZetMapArea(0xc000, 0xc7ff, 2, DrvMainROM + 0x0c000);
-	CZetMapArea(0xe000, 0xffff, 0, DrvMainROM + 0x0e000);
-	CZetMapArea(0xe000, 0xffff, 2, DrvMainROM + 0x0e000);
-	CZetMemEnd();
+	CZetMapMemory(DrvMainROM + 0x8000,	0x8000, 0x8fff, MAP_READ|MAP_WRITE);	
+	CZetMapMemory(DrvMainROM + 0x0c000,	0xc000, 0xc7ff, MAP_RAM);		
+	CZetMapMemory(DrvMainROM + 0x0e000,	0xe000, 0xffff, MAP_ROM);	
+//	CZetMemEnd();
 	CZetClose();
 #endif
 	pAY8910Buffer[0] = pFMBuffer + SOUND_LEN * 0;
@@ -958,20 +952,16 @@ INT32 NovaInit()
 	CZetSetWriteHandler(nova2001_write);
 
 	CZetMapMemory(DrvMainROM,	0x0000, 0x7fff, MAP_ROM);
-//	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM);
-//	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM);
-
-	CZetMapArea(0xa000, 0xa7ff, 0, DrvFgRAM);
+	CZetMapMemory(DrvFgRAM,	0xa000, 0xa7ff, MAP_READ);
+//	CZetMapArea(0xa000, 0xa7ff, 0, DrvFgRAM);
 //	CZetMapArea(0xa000, 0xa7ff, 1, DrvFgRAM);
 
-	CZetMapArea(0xa800, 0xafff, 0, DrvBgRAM);
+//	CZetMapArea(0xa800, 0xafff, 0, DrvBgRAM);
+	CZetMapMemory(DrvBgRAM,	0xa800, 0xafff, MAP_READ);	
 //	CZetMapArea(0xa800, 0xafff, 1, DrvBgRAM); // write
 
-	CZetMapArea(0xb000, 0xb7ff, 0, DrvSprRAM);
-	CZetMapArea(0xb000, 0xb7ff, 1, DrvSprRAM);
-
-	CZetMapArea(0xe000, 0xe7ff, 0, DrvMainRAM);
-	CZetMapArea(0xe000, 0xe7ff, 1, DrvMainRAM);
+	CZetMapMemory(DrvSprRAM,	0xb000, 0xb7ff, MAP_READ|MAP_WRITE);
+	CZetMapMemory(DrvMainRAM,	0xe000, 0xe7ff, MAP_READ|MAP_WRITE);
 	CZetClose();
 
 	pAY8910Buffer[0] = pFMBuffer + SOUND_LEN * 0;
@@ -1022,26 +1012,14 @@ INT32 NinjakunInit()
 	CZetOpen(0);
 	CZetSetReadHandler(ninjakun_main_read);
 	CZetSetWriteHandler(ninjakun_main_write);
-// 	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM);
-//	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM);
 	CZetMapMemory(DrvMainROM,	0x0000, 0x7fff, MAP_ROM);
 
-	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
-//	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
-
-//	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
-//	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
-
-//	CZetMapArea(0xd000, 0xd7ff, 0, DrvSprRAM);
-//	CZetMapArea(0xd000, 0xd7ff, 1, DrvSprRAM);
-	CZetMapMemory(DrvSprRAM,	0xd000, 0xd7ff, MAP_RAM);
-	
-	CZetMapArea(0xd800, 0xd9ff, 0, DrvPalRAM);
-//	CZetMapArea(0xd800, 0xd9ff, 1, DrvPalRAM);
-
-// 	CZetMapArea(0xe000, 0xe7ff, 0, DrvMainRAM);
-//	CZetMapArea(0xe000, 0xe7ff, 1, DrvMainRAM);
-	CZetMapMemory(DrvMainRAM,	0xe000, 0xe7ff, MAP_RAM);
+//	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
+	CZetMapMemory(DrvFgRAM,		0xc000, 0xc7ff, MAP_READ);
+	CZetMapMemory(DrvSprRAM,	0xd000, 0xd7ff, MAP_READ|MAP_WRITE);
+//	CZetMapArea(0xd800, 0xd9ff, 0, DrvPalRAM);
+	CZetMapMemory(DrvPalRAM,	0xd800, 0xd9ff, MAP_READ);
+	CZetMapMemory(DrvMainRAM,	0xe000, 0xe7ff, MAP_READ|MAP_WRITE);
 
 	CZetClose();
 
@@ -1082,35 +1060,18 @@ INT32 NinjakunInit()
 	CZetSetReadHandler(ninjakun_sub_read);
 	CZetSetWriteHandler(ninjakun_sub_write);
 
-//	CZetMapArea(0x0000, 0x1fff, 0, DrvSubROM);
-//	CZetMapArea(0x0000, 0x1fff, 2, DrvSubROM);
 	CZetMapMemory(DrvSubROM,	0x0000, 0x1fff, MAP_ROM);
-
-
-//	CZetMapArea(0x2000, 0x7fff, 0, DrvMainROM + 0x2000);
-//	CZetMapArea(0x2000, 0x7fff, 2, DrvMainROM + 0x2000);
 	CZetMapMemory(DrvMainROM + 0x2000,	0x2000, 0x7fff, MAP_ROM);
 
-	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
-//	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
+//	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
+	CZetMapMemory(DrvFgRAM,	0xc000, 0xc7ff, MAP_READ);
+	CZetMapMemory(DrvBgRAM,	0xc800, 0xcfff, MAP_READ|MAP_WRITE);
+	CZetMapMemory(DrvSprRAM,	0xd000, 0xd7ff, MAP_READ|MAP_WRITE);
 
-//	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
-//	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
-
-//	CZetMapArea(0xd000, 0xd7ff, 0, DrvSprRAM);
-//	CZetMapArea(0xd000, 0xd7ff, 1, DrvSprRAM);
-	CZetMapMemory(DrvSprRAM,	0xd000, 0xd7ff, MAP_RAM);
-
-	CZetMapArea(0xd800, 0xd9ff, 0, DrvPalRAM);
-//	CZetMapArea(0xd800, 0xd9ff, 1, DrvPalRAM);
-
-// 	CZetMapArea(0xe000, 0xe3ff, 0, DrvMainRAM+ 0x0400);
-//	CZetMapArea(0xe000, 0xe3ff, 1, DrvMainRAM+ 0x0400);
-	CZetMapMemory(DrvMainRAM+ 0x0400,	0xe000, 0xe3ff, MAP_RAM);
-
-//	CZetMapArea(0xe400, 0xe7ff, 0, DrvMainRAM+ 0x0000);
-//	CZetMapArea(0xe400, 0xe7ff, 1, DrvMainRAM+ 0x0000);
-	CZetMapMemory(DrvMainRAM+ 0x0000,	0xe400, 0xe7ff, MAP_RAM);
+//	CZetMapArea(0xd800, 0xd9ff, 0, DrvPalRAM);
+	CZetMapMemory(DrvPalRAM,			0xd800, 0xd9ff, MAP_READ);
+	CZetMapMemory(DrvMainRAM+ 0x0400,	0xe000, 0xe3ff, MAP_READ|MAP_WRITE);
+	CZetMapMemory(DrvMainRAM+ 0x0000,	0xe400, 0xe7ff, MAP_READ|MAP_WRITE);
 	
 	CZetClose();
 #endif
@@ -1303,7 +1264,7 @@ inline void initColors()
 void DrvInitSaturn(INT32 i)
 {
 	cleanSprites();
-//	SPR_InitSlaveSH();
+	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 67;
 
@@ -1447,7 +1408,7 @@ inline void DrvDraw()
 	DrawChars(1);
 }
 
-INT32 NovaFrame()
+void NovaFrame()
 {
 	watchdog++;
 
@@ -1481,7 +1442,8 @@ INT32 NovaFrame()
 	UINT32 nInterleave = 32;
 	UINT32 nCyclesTotal = 3000000 / 60;
 
- 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
+// 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
+	updateSound();
 
 	CZetOpen(0);
 	for (UINT32 i = 0; i < nInterleave; i++) 
@@ -1500,8 +1462,8 @@ INT32 NovaFrame()
 	ss_reg->n2_move_y =  yscroll+32 ;
 	nova_draw_sprites();
 
-	SPR_WaitEndSlaveSH();
-	return 0;
+//	SPR_WaitEndSlaveSH();
+
 }
 /*
 void DrvPalRAMUpdate()
@@ -1553,7 +1515,7 @@ void NinjakunFrame()
 	UINT32 nCyclesTotal = 1500000 / 60;
 	UINT32 nCyclesSegment = nCyclesTotal / nInterleave;	
 //	UINT32 nCyclesDone = 0;
-//	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
+	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 	
 	for (UINT32 i = 0; i < nInterleave; i++) {
 		CZetOpen(0);
@@ -1598,12 +1560,15 @@ void NinjakunFrame()
 		CZetClose();
 
 #endif
-//		SPR_WaitEndSlaveSH();
+
 
 	}
 	NinjakunDraw();
-	updateSound();
+//	updateSound();
 //	SPR_WaitEndSlaveSH();
+//	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//		SPR_WaitEndSlaveSH();
+
 }
 #if 0
 INT32 Raiders5Frame()

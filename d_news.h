@@ -9,20 +9,20 @@
 //#include "saturn/sc_saturn.h"
 //#include "psg.h"
 
-#define SOUND_LEN 192
+#define SOUND_LEN 128
 void dummy();
 inline void initColors();
-int NewsFrame();
+void NewsFrame();
 int NewsInit();
 int NewsExit();
-int MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength);
+void MSM6295RenderVBT(int nChip, short* pSoundBuf, int nSegmentLength);
 
 Uint16 *cram_lut = NULL;//[4096];
 UINT16 *map_offset_lut = NULL;//[0x400];
 ///*static*/ Uint16 *cram_lut;
 #ifdef CACHE2
-unsigned char 	*bg_dirtybuffer = NULL;
-unsigned char 	*fg_dirtybuffer = NULL;
+unsigned char 	*dirty_buffer = NULL;
+//unsigned char 	*fg_dirtybuffer = NULL;
 int	 			*MSM6295Context	= NULL;
 #endif
 extern unsigned char* MSM6295ROM;

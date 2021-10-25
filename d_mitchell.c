@@ -543,7 +543,7 @@ static void MitchellMachineInit()
 
 //	MSM6295Init(0, 1000000 / 132, 10.0, 1);
 //	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
-	MSM6295Init(0, 1000000 / 132, 10.0, 0, MSM6295Context);// � remettre
+	MSM6295Init(0, 1000000 / 132, 0, MSM6295Context);// � remettre
 //	MSM6295Init(0, 8000, 100, 0);
 	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
 

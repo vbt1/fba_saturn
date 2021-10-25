@@ -31,6 +31,8 @@ int ovlInit(char *szShortName)
 	else
 		memcpy(shared,&nBurnDrvNews,sizeof(struct BurnDriver));
 	ss_reg          = (SclNorscl *)SS_REG;
+	
+	return 0;
 }
 
 inline  void NewsMakeInputs()
@@ -86,11 +88,11 @@ void make_lut(void)
 
 	UINT16 *map_lut = &map_offset_lut[0];
 	
-	for (UINT32 my = 0; my < 64; my+=2) 
+	for (UINT32 my = 0; my < 32; my++) 
 	{
 		for (UINT32 mx = 0; mx < 64; mx+=2) 
 		{
-			*map_lut = (mx|(my*64));
+			*map_lut = (mx|(my*128));
 			ss_map[*map_lut+0x40] =  0x00;
 			ss_map[*map_lut+0x41] =  0x01;
 			map_lut++;
@@ -129,7 +131,7 @@ void __fastcall NewsWrite(unsigned short a, unsigned char d)
 			if(BgPic != d)
 			{
 				BgPic = d;
-				memset(bg_dirtybuffer,1,1024);
+				memset(dirty_buffer+0x400,1,1024);
 			}
 #else
 				BgPic = d;
@@ -144,7 +146,7 @@ void __fastcall NewsWrite(unsigned short a, unsigned char d)
 		if(RamStart[a]!=d)
 		{
 			RamStart[a]=d;
-			bg_dirtybuffer[(a>>1)&0x3ff] = 1; 
+			dirty_buffer[(a>>1)&0x7ff] = 1; 
 		}
 		return;
 	}
@@ -156,7 +158,7 @@ void __fastcall NewsWrite(unsigned short a, unsigned char d)
 		if(RamStart[a]!=d)
 		{
 			RamStart[a]=d;
-			fg_dirtybuffer[(a>>1)&0x3ff] = 1; 
+			dirty_buffer[(a>>1)&0x3ff] = 1; 
 		}
 		return;
 	}
@@ -189,12 +191,12 @@ inline void MemIndex()
 	NewsFgVideoRam	= Next; Next += 0x00800;
 	NewsBgVideoRam	= Next; Next += 0x00800;
 	NewsPaletteRam	= Next; Next += 0x00200;
-	CZ80Context		= Next; Next += sizeof(cz80_struc);
 	pBuffer			= (int *)Next; Next += nBurnSoundRate * sizeof(int);
 	cram_lut		= (UINT16*)Next; Next += (4096*2);
 	map_offset_lut	= (UINT16*)Next; Next += (0x400*2);
-	bg_dirtybuffer	= Next; Next += 1024;
-	fg_dirtybuffer	= Next; Next += 1024;
+	dirty_buffer	= Next; Next += 2048;
+//	fg_dirtybuffer	= Next; Next += 1024;
+	CZ80Context		= Next; Next += sizeof(cz80_struc);
 	MSM6295Context	= (int *)Next; Next += 4 * 0x1000 * sizeof(int);
 //	MemEnd = Next;
 }
@@ -206,25 +208,23 @@ int NewsInit()
 	INT32 TileXOffsets[8]     = { 0, 4, 8, 12, 16, 20, 24, 28 };
 	INT32 TileYOffsets[8]     = { 0, 32, 64, 96, 128, 160, 192, 224 };
 
-	int nRet = 0;
+//	int nRet = 0;
 	DrvInitSaturn();
 	MemIndex();
 
 #ifdef CACHE2
-	memset(bg_dirtybuffer,1,1024);
+	memset(dirty_buffer,1,2048);
 #endif
-#ifdef CACHE
-	memset(fg_dirtybuffer,1,1024);
-#endif
+
 	make_lut();
 
 	unsigned char *NewsTempGfx = (unsigned char*)(0x00240000);
 
 	// Load Z80 Program Rom
-	nRet = BurnLoadRom(NewsRom, 0, 1); if (nRet != 0) return 1;
+	BurnLoadRom(NewsRom, 0, 1); //if (nRet != 0) return 1;
 // Load, byte-swap and decode Tile Roms
-	nRet = BurnLoadRom(NewsTempGfx + 0x00000, 1, 2); //if (nRet != 0) return 1;
-	nRet = BurnLoadRom(NewsTempGfx + 0x00001, 2, 2); //if (nRet != 0) return 1;
+	BurnLoadRom(NewsTempGfx + 0x00000, 1, 2); //if (nRet != 0) return 1;
+	BurnLoadRom(NewsTempGfx + 0x00001, 2, 2); //if (nRet != 0) return 1;
 
 	GfxDecode4Bpp(16384, 4, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x100, NewsTempGfx, cache);//NewsTiles);
 //	NewsTempGfx = NULL;
@@ -232,27 +232,27 @@ int NewsInit()
 //	MSM6295ROM = (unsigned char *)LOWADDR;
 //	memset(MSM6295ROM,0x00,0x40000);
 
-	nRet = BurnLoadRom(MSM6295ROM, 3, 1); //if (nRet != 0) return 1;
+	BurnLoadRom(MSM6295ROM, 3, 1); //if (nRet != 0) return 1;
 	// Setup the Z80 emulation
 #ifdef CZ80
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
-	CZetMapArea(0x0000, 0x7fff, 0, NewsRom        );
-	CZetMapArea(0x0000, 0x7fff, 2, NewsRom        );
-	CZetMapArea(0x8000, 0x87ff, 0, NewsFgVideoRam );
+	CZetMapMemory(NewsRom,	0x0000, 0x7fff, MAP_ROM);
+	CZetMapMemory(NewsFgVideoRam,	0x8000, 0x87ff, MAP_READ);
+//	CZetMapArea(0x8000, 0x87ff, 0, NewsFgVideoRam );
 #ifndef CACHE
-	CZetMapArea(0x8000, 0x87ff, 1, NewsFgVideoRam );
+//	CZetMapArea(0x8000, 0x87ff, 1, NewsFgVideoRam );
+	CZetMapMemory(NewsFgVideoRam,	0x8000, 0x87ff, MAP_WRITE);	
 #endif
-	CZetMapArea(0x8000, 0x87ff, 2, NewsFgVideoRam );
-	CZetMapArea(0x8800, 0x8fff, 0, NewsBgVideoRam );
+	CZetMapMemory(NewsBgVideoRam,	0x8000, 0x87ff, MAP_ROM);	
 #ifndef CACHE2
-	CZetMapArea(0x8800, 0x8fff, 1, NewsBgVideoRam );
+//	CZetMapArea(0x8800, 0x8fff, 1, NewsBgVideoRam );
+	CZetMapMemory(NewsBgVideoRam,	0x8800, 0x8fff, MAP_WRITE);
 #endif
-	CZetMapArea(0x8800, 0x8fff, 2, NewsBgVideoRam );
-	CZetMapArea(0xe000, 0xffff, 0, NewsRam        );
-	CZetMapArea(0xe000, 0xffff, 1, NewsRam        );
-	CZetMapArea(0xe000, 0xffff, 2, NewsRam        );
-	CZetMemEnd();
+//	CZetMapArea(0x8800, 0x8fff, 2, NewsBgVideoRam );
+	CZetMapMemory(NewsBgVideoRam,	0x8800, 0x8fff, MAP_FETCH);	
+	CZetMapMemory(NewsRam,	0xe000, 0xffff, MAP_READ|MAP_WRITE);
+//	CZetMemEnd();
 	CZetSetReadHandler(NewsRead);
 	CZetSetWriteHandler(NewsWrite);
 //	CZetClose();
@@ -283,7 +283,7 @@ int NewsInit()
 	z80_end_memmap();   
 #endif
 	// Setup the OKIM6295 emulation
-	MSM6295Init(0, 8000, 100, 0, MSM6295Context);
+	MSM6295Init(0, 8000, 0, MSM6295Context);
 	// Reset the driver
 	NewsDoReset();
 
@@ -351,21 +351,21 @@ inline void initColors()
 void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 3;
 	
 	SS_MAP  = ss_map   = (Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2 = (Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_MAP2 = ss_map2  = (Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT =  ss_font =  NULL; //(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE = cache     = (Uint8  *)SCL_VDP2_VRAM_A0;				
-	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
-
+	SS_CACHE = cache   = (Uint8  *)SCL_VDP2_VRAM_A0;				
+	ss_BgPriNum        = (SclBgPriNumRegister *)SS_N0PRI;
 
 	SS_SET_N0PRIN(7);
 	SS_SET_N2PRIN(5);
 	SS_SET_N1PRIN(4);
 
 	initLayers();
+	initSprites(264-1,216-1,0,0,8,-32);
 	initPosition();
 	initColors();
 
@@ -374,11 +374,12 @@ void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 int NewsExit()
 {
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	NewsDoReset();
 	MSM6295Exit(0);
 #ifdef CZ80
-	CZetSetReadHandler(NULL);
-	CZetSetWriteHandler(NULL);
+//	CZetSetReadHandler(NULL);
+//	CZetSetWriteHandler(NULL);
 	CZetExit2();
 #endif
 
@@ -394,18 +395,18 @@ int NewsExit()
 //	PCM_Task(pcm);			
 
 //	memset(MSM6295ROM,0x00,0x40000);	
-	MSM6295ROM = NULL;
+/*	MSM6295ROM = NULL;
 	pBuffer = NULL;	
-/*	MSM6295Context = NULL;
+	MSM6295Context = NULL;
 	memset(CZ80Context,0x00,sizeof(cz80_struc));	
-	CZ80Context	= MemEnd = RamStart = NewsRom = NewsRam = NULL;
+	CZ80Context	= RamStart = NewsRom = NewsRam = NULL;
 	NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
-	bg_dirtybuffer = fg_dirtybuffer = NULL;
+	dirty_buffer = fg_dirtybuffer = NULL;
 	cram_lut = map_offset_lut = NULL;
-*/
-	BgPic = 0;
-//	NewsReset         = 0;
 
+	BgPic = 0;
+*/	
+//	NewsReset         = 0;
 //		SPR_InitSlaveSH();
 
 	memset(ss_map,0,0x20000);
@@ -417,7 +418,7 @@ int NewsExit()
 	cleanBSS();
 
 	nSoundBufferPos=0;
-
+	return 0;
 }
 
 void NewsRenderFgLayer()
@@ -433,9 +434,9 @@ void NewsRenderFgLayer()
 	{
 
 #ifdef CACHE
-		if (fg_dirtybuffer[TileIndex])
+		if (dirty_buffer[TileIndex])
 		{
-			fg_dirtybuffer[TileIndex] = 0;
+			dirty_buffer[TileIndex] = 0;
 #endif
 			Code = (fg_ptr[0] << 8) | fg_ptr[1];
 			Colour = Code >> 12;
@@ -454,9 +455,9 @@ void NewsRenderFgLayer()
 #endif
 
 #ifdef CACHE2
-		if (bg_dirtybuffer[TileIndex])
+		if (dirty_buffer[TileIndex+0x400])
 		{
-			bg_dirtybuffer[TileIndex] = 0;
+			dirty_buffer[TileIndex+0x400] = 0;
 #endif
 			Code = (bg_ptr[0] << 8) | bg_ptr[1];			
 			Colour = Code >> 12;
@@ -479,7 +480,7 @@ void NewsRenderFgLayer()
 }
 
 // Frame Function
-int NewsFrame()
+void NewsFrame()
 {
 
 //	if (NewsReset) NewsDoReset();
@@ -507,12 +508,11 @@ int NewsFrame()
 	MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 	nSoundBufferPos+=SOUND_LEN;
 
-	if(nSoundBufferPos>0x1B00)
+	if(nSoundBufferPos>0x1200)
 	{
 		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}
 	SPR_WaitEndSlaveSH();  
-	return 0;
 }
