@@ -1566,8 +1566,8 @@ void NinjakunFrame()
 	NinjakunDraw();
 //	updateSound();
 //	SPR_WaitEndSlaveSH();
-//	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
-//		SPR_WaitEndSlaveSH();
+//		if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//			SPR_WaitEndSlaveSH();
 
 }
 #if 0
