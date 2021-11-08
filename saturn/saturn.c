@@ -85,13 +85,10 @@ int main(void)
     for (dst = (Uint8 *)&_bstart; dst < (Uint8 *)&_bend; dst++)
 		*dst = 0;
 	
-//    for (dst = (Uint8 *)SystemWork, loop = 0; loop < SystemSize; loop++)
-//		*dst = 0;
-
 	memset(&play,0x00,1024);
 	SYS_CHGSYSCK(1);             //28mhz
 	set_imask(0); 
-	
+
 	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
 	ss_main();
 	return 0;
@@ -308,6 +305,7 @@ static void initSaturn()
 	play = 0;
 
 	resetColors();
+	
 //memset((void *)LOWADDR,0x05,16); 	
 	initSprites(352-1,240-1,0,0,0,0);
 //memset((void *)LOWADDR,0x06,16); 	
@@ -355,11 +353,12 @@ static inline void ss_main(void)
 	InitCD();
 #endif
 	hz = get_hz();
-
+	
 	initSound();
-	CSH_Init(CSH_4WAY);
+//	CSH_Init(CSH_4WAY);
 	
 	initSaturn();
+
 	BurnDrvAssignList();
 
 #ifndef ACTION_REPLAY
@@ -512,6 +511,7 @@ while(1); */
 			loaded=1;
 			//memset((void *)LOWADDR,0x21,16);
 		}
+	
 		m=40;
 
 		if(modified==1)
@@ -893,7 +893,7 @@ void  SCL_SetColRam(Uint32 Object, Uint32 Index,Uint32 num,void *Color)
 {
 	Uint16	*ram16;
 	ram16   = (Uint16 *)((Uint32)SCL_COLRAM_ADDR + ((SCL_GetColRamOffset(Object) * 0x200))) + Index;
-	memcpyl(ram16,(Uint16 *)Color,num*2);
+	memcpyw(ram16,(Uint16 *)Color,num*2);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent)
