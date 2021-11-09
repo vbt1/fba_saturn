@@ -139,7 +139,7 @@ UINT8 __fastcall raiders5_main_read(UINT16 address)
 		case 0xc003:
 			return AY8910Read(1);
 	}
-	
+
 	return 0;
 }
 //---------------------------------------------------------------------------------------------------------
@@ -1063,16 +1063,26 @@ INT32 NinjakunInit()
 	CZetMapMemory(DrvSubROM,	0x0000, 0x1fff, MAP_ROM);
 	CZetMapMemory(DrvMainROM + 0x2000,	0x2000, 0x7fff, MAP_ROM);
 
-//	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
-	CZetMapMemory(DrvFgRAM,	0xc000, 0xc7ff, MAP_READ);
-	CZetMapMemory(DrvBgRAM,	0xc800, 0xcfff, MAP_READ|MAP_WRITE);
-	CZetMapMemory(DrvSprRAM,	0xd000, 0xd7ff, MAP_READ|MAP_WRITE);
+	CZetMapArea(0x2000, 0x7fff, 0, DrvMainROM + 0x2000);
+	CZetMapArea(0x2000, 0x7fff, 2, DrvMainROM + 0x2000);
 
-//	CZetMapArea(0xd800, 0xd9ff, 0, DrvPalRAM);
-	CZetMapMemory(DrvPalRAM,			0xd800, 0xd9ff, MAP_READ);
-	CZetMapMemory(DrvMainRAM+ 0x0400,	0xe000, 0xe3ff, MAP_READ|MAP_WRITE);
-	CZetMapMemory(DrvMainRAM+ 0x0000,	0xe400, 0xe7ff, MAP_READ|MAP_WRITE);
-	
+	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
+//	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
+
+//	CZetMapArea(0xc800, 0xcfff, 0, DrvBgRAM);
+//	CZetMapArea(0xc800, 0xcfff, 1, DrvBgRAM); // write
+
+	CZetMapArea(0xd000, 0xd7ff, 0, DrvSprRAM);
+	CZetMapArea(0xd000, 0xd7ff, 1, DrvSprRAM);
+
+	CZetMapArea(0xd800, 0xd9ff, 0, DrvPalRAM);
+//	CZetMapArea(0xd800, 0xd9ff, 1, DrvPalRAM);
+
+ 	CZetMapArea(0xe000, 0xe3ff, 0, DrvMainRAM+ 0x0400);
+	CZetMapArea(0xe000, 0xe3ff, 1, DrvMainRAM+ 0x0400);
+
+ 	CZetMapArea(0xe400, 0xe7ff, 0, DrvMainRAM+ 0x0000);
+	CZetMapArea(0xe400, 0xe7ff, 1, DrvMainRAM+ 0x0000);
 	CZetClose();
 #endif
 
@@ -1348,7 +1358,8 @@ void DrawChars(int priority)
 		ss_map =(Uint16 *)SCL_VDP2_VRAM_A0;
 	UINT8* rom_ptr = (UINT8*)DrvMainROM+0x8800;
 
-	for (INT32 offs = 0x3c0 - 1;offs >= 0x40;offs--)
+//	for (INT32 offs = 0x3c0 - 1;offs >= 0x40;offs--)
+	for (UINT32 offs = 0;offs < 0x37f;offs++)
 	{
 		int sx,sy;
 		sx = (offs & 0x1f);
@@ -1387,10 +1398,10 @@ inline void DrvDraw()
 
 		if (sy < 16 || sy > 215) 
 		{	
+			DrvBgRAMptr+=32;
 //			ss_sprite[3+delta].charSize=0;
 			continue;
 		}
-		
 //		sy -= 32;
 		flip  = (DrvBgRAMptr[0] & 0x03)<<4;
 		num   = ((DrvBgRAMptr[0] & 0xfc) >> 2) + ((DrvBgRAMptr[3] & 7) << 6);
@@ -1442,8 +1453,7 @@ void NovaFrame()
 	UINT32 nInterleave = 32;
 	UINT32 nCyclesTotal = 3000000 / 60;
 
-// 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
-	updateSound();
+ 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 
 	CZetOpen(0);
 	for (UINT32 i = 0; i < nInterleave; i++) 
@@ -1460,10 +1470,9 @@ void NovaFrame()
 
 	ss_reg->n2_move_x =   xscroll-8;
 	ss_reg->n2_move_y =  yscroll+32 ;
-	nova_draw_sprites();
+	nova_draw_sprites(0x000);
 
-//	SPR_WaitEndSlaveSH();
-
+	SPR_WaitEndSlaveSH();
 }
 /*
 void DrvPalRAMUpdate()

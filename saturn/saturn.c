@@ -89,7 +89,7 @@ int main(void)
 	SYS_CHGSYSCK(1);             //28mhz
 	set_imask(0); 
 
-	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
+//	memset((UINT8*)SCL_VDP2_VRAM_A0,0x00,0x80000);
 	ss_main();
 	return 0;
 }

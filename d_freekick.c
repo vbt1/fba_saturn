@@ -661,8 +661,13 @@ INT32 DrvFreeKickInit()
 	else
 		DrawSprite = freekick_draw_sprite;
 
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvPaletteInit. Please Wait",24,40);
+
 	DrvPaletteInit();
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvGfxDecode. Please Wait",24,40);
+	
 	DrvGfxDecode();
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit2. Please Wait",24,40);
 
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
@@ -670,6 +675,7 @@ INT32 DrvFreeKickInit()
 	CZetMapMemory(DrvRAM,		0xd000, 0xdfff, MAP_RAM);
 	CZetMapMemory(DrvVidRAM,	0xe000, 0xe7ff, MAP_RAM);
 	CZetMapMemory(DrvSprRAM,	0xe800, 0xe8ff, MAP_RAM);
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"ppi8255_init. Please Wait",24,40);
 
 	ppi8255_init(2);
 
@@ -692,8 +698,10 @@ INT32 DrvFreeKickInit()
 	SN76489AInit(1, 12000000/4, 1);
 	SN76489AInit(2, 12000000/4, 1);
 	SN76489AInit(3, 12000000/4, 1);
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut. Please Wait",24,40);
 
 	make_lut();
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset. Please Wait",24,40);	
 	DrvDoReset();
 	return 0;
 }
@@ -702,7 +710,7 @@ INT32 DrvInit()
 {
 	DrvInitSaturn();
 	DrawSprite = gigas_draw_sprite;
-
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"MemIndex. Please Wait",24,40);
 	MemIndex();
 //	LoadRoms();
 
@@ -712,9 +720,11 @@ INT32 DrvInit()
 		ss_reg->n1_move_y =  16 <<16;
 		drawWindow(0,224,240,0,64);
 	}
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvPaletteInit. Please Wait",24,40);	
 	DrvPaletteInit();
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvGfxDecode. Please Wait",24,40);		
 	DrvGfxDecode();
-
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit2. Please Wait",24,40);		
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 
@@ -745,24 +755,25 @@ INT32 DrvInit()
 	CZetMapMemory(DrvVidRAM,	0xd000, 0xd7ff, MAP_RAM);
 	CZetMapMemory(DrvSprRAM,	0xd800, 0xd8ff, MAP_RAM);
 	CZetMapMemory(DrvRAM + 0x1000,	0xd900, 0xdfff, MAP_RAM);
-
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"ppi8255_init. Please Wait",24,40);
 	ppi8255_init(1);
 
 	CZetSetReadHandler(gigas_read); // Memory
 	CZetSetWriteHandler(gigas_write);
-
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetSetInHandler. Please Wait",24,40);
 	CZetSetInHandler(gigas_in); // IO Port
 	CZetSetOutHandler(gigas_out);
 
 	CZetClose();
-	wait_vblank();
+//	wait_vblank();
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"SN76489AInit. Please Wait",24,40);	
 	SN76489AInit(0, 12000000/4, 0);
 	SN76489AInit(1, 12000000/4, 1);
 	SN76489AInit(2, 12000000/4, 1);
 	SN76489AInit(3, 12000000/4, 1);
-
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut. Please Wait",24,40);
 	make_lut();
-
+FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset. Please Wait",24,40);
 	DrvDoReset();
 
 	return 0;
@@ -857,7 +868,7 @@ void make_lut(void)
 			sy = ((i >> 5)) & 0x3f;
 		}
 		
-		if (sx >=0 && sy >= 0)
+//		if (sx >=0 && sy >= 0)
 			map_offset_lut[i] = (sx | sy)<<1;
 	}
 }
@@ -951,6 +962,7 @@ INT32 DrvExit()
 
 INT32 DrvFrame()
 {
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvFrame. Please Wait",24,40);		
 	sprite_number = 3;
 	DrvInputs[0] = 0xff; // Active LOW
 	DrvInputs[1] = 0xff;
