@@ -2,6 +2,8 @@
 *.coff
 *.exe
 *.EXE
+*.elf
+*.ELF
 *.bak
 *.BAK
 *.bat
@@ -15,6 +17,8 @@
 *.ISO
 *.zip
 *.ZIP
+*.MAP*
+*.map*
 sl.bin
 __*
 befnew*

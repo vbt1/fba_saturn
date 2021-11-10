@@ -478,7 +478,7 @@ inline void MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
-	memset4_fast(Next, 0, MALLOC_MAX);
+	memset(Next, 0, MALLOC_MAX);
 	
 	DrvMainROM	 	= Next; Next += 0x40000;
 	DrvMainROMdec   = Next; Next += 0x20000;
@@ -503,15 +503,15 @@ inline void MemIndex()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvGfxDecode()
 {
-	static INT32 Planes0[3] = { RGN_FRAC(0xc000, 2,3), RGN_FRAC(0xc000, 1,3), RGN_FRAC(0xc000, 0,3) };
-	static INT32 XOffs0[8]  = {0, 1, 2, 3, 4, 5, 6, 7};
-	static INT32 YOffs0[8]  = {STEP8(0, 8)};
+	INT32 Planes0[3] = { RGN_FRAC(0xc000, 2,3), RGN_FRAC(0xc000, 1,3), RGN_FRAC(0xc000, 0,3) };
+	INT32 XOffs0[8]  = {0, 1, 2, 3, 4, 5, 6, 7};
+	INT32 YOffs0[8]  = {STEP8(0, 8)};
 
-	static INT32 Planes1[3] = { RGN_FRAC(0xc000, 0,3),RGN_FRAC(0xc000, 2,3),RGN_FRAC(0xc000, 1,3) };
-	static INT32 XOffs1[16] = {0, 1, 2, 3, 4, 5, 6, 7,128+0,128+1,128+2,128+3,128+4,128+5,128+6,128+7};
+	INT32 Planes1[3] = { RGN_FRAC(0xc000, 0,3),RGN_FRAC(0xc000, 2,3),RGN_FRAC(0xc000, 1,3) };
+	INT32 XOffs1[16] = {0, 1, 2, 3, 4, 5, 6, 7,128+0,128+1,128+2,128+3,128+4,128+5,128+6,128+7};
 
 //	INT32 YOffs1[16] = {0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8, 8*8, 9*8, 10*8, 11*8,12*8,13*8,14*8,15*8};
-	static INT32 YOffs1[16] = {15*8, 14*8, 13*8, 12*8, 11*8, 10*8, 9*8, 8*8, 7*8, 6*8, 5*8, 4*8,3*8,2*8,1*8,0*8};
+	INT32 YOffs1[16] = {15*8, 14*8, 13*8, 12*8, 11*8, 10*8, 9*8, 8*8, 7*8, 6*8, 5*8, 4*8,3*8,2*8,1*8,0*8};
 	UINT8 *DrvGfxTMP0 = (UINT8 *)LOWADDR;
 	UINT8 *DrvGfxTMP1 = (UINT8 *)(LOWADDR+0x18000);
 
@@ -661,13 +661,8 @@ INT32 DrvFreeKickInit()
 	else
 		DrawSprite = freekick_draw_sprite;
 
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvPaletteInit. Please Wait",24,40);
-
 	DrvPaletteInit();
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvGfxDecode. Please Wait",24,40);
-	
 	DrvGfxDecode();
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit2. Please Wait",24,40);
 
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
@@ -675,7 +670,6 @@ INT32 DrvFreeKickInit()
 	CZetMapMemory(DrvRAM,		0xd000, 0xdfff, MAP_RAM);
 	CZetMapMemory(DrvVidRAM,	0xe000, 0xe7ff, MAP_RAM);
 	CZetMapMemory(DrvSprRAM,	0xe800, 0xe8ff, MAP_RAM);
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"ppi8255_init. Please Wait",24,40);
 
 	ppi8255_init(2);
 
@@ -698,10 +692,8 @@ INT32 DrvFreeKickInit()
 	SN76489AInit(1, 12000000/4, 1);
 	SN76489AInit(2, 12000000/4, 1);
 	SN76489AInit(3, 12000000/4, 1);
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut. Please Wait",24,40);
 
 	make_lut();
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset. Please Wait",24,40);	
 	DrvDoReset();
 	return 0;
 }
@@ -710,7 +702,6 @@ INT32 DrvInit()
 {
 	DrvInitSaturn();
 	DrawSprite = gigas_draw_sprite;
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"MemIndex. Please Wait",24,40);
 	MemIndex();
 //	LoadRoms();
 
@@ -720,11 +711,8 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"MemIndex. Please Wait",
 		ss_reg->n1_move_y =  16 <<16;
 		drawWindow(0,224,240,0,64);
 	}
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvPaletteInit. Please Wait",24,40);	
 	DrvPaletteInit();
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvGfxDecode. Please Wait",24,40);		
 	DrvGfxDecode();
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit2. Please Wait",24,40);		
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 
@@ -755,25 +743,20 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit2. Please Wait"
 	CZetMapMemory(DrvVidRAM,	0xd000, 0xd7ff, MAP_RAM);
 	CZetMapMemory(DrvSprRAM,	0xd800, 0xd8ff, MAP_RAM);
 	CZetMapMemory(DrvRAM + 0x1000,	0xd900, 0xdfff, MAP_RAM);
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"ppi8255_init. Please Wait",24,40);
 	ppi8255_init(1);
 
 	CZetSetReadHandler(gigas_read); // Memory
 	CZetSetWriteHandler(gigas_write);
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetSetInHandler. Please Wait",24,40);
 	CZetSetInHandler(gigas_in); // IO Port
 	CZetSetOutHandler(gigas_out);
 
 	CZetClose();
 //	wait_vblank();
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"SN76489AInit. Please Wait",24,40);	
 	SN76489AInit(0, 12000000/4, 0);
 	SN76489AInit(1, 12000000/4, 1);
 	SN76489AInit(2, 12000000/4, 1);
 	SN76489AInit(3, 12000000/4, 1);
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut. Please Wait",24,40);
 	make_lut();
-FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset. Please Wait",24,40);
 	DrvDoReset();
 
 	return 0;
@@ -855,7 +838,7 @@ void make_lut(void)
 {
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
-		UINT32	sx, sy;
+		INT32	sx, sy;
 
 		if(countrunbmode || pbillrdmode)
 		{
@@ -868,15 +851,15 @@ void make_lut(void)
 			sy = ((i >> 5)) & 0x3f;
 		}
 		
-//		if (sx >=0 && sy >= 0)
+		if (sx >=0 && sy >= 0)
 			map_offset_lut[i] = (sx | sy)<<1;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
-//	SPR_InitSlaveSH();
-//	cleanSprites();
+	SPR_InitSlaveSH();
+	cleanSprites();
 		
  	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
@@ -906,14 +889,15 @@ void DrvInitSaturn()
 	initSprites(256-1,256-1,0,0,0,0);
 	ss_reg->n1_move_y =  16 <<16;
 
-	memset4_fast((Uint8 *)ss_map ,0,0x2000);
-	memset4_fast((Uint8 *)ss_map2,0,0x2000);
+	memset((Uint8 *)ss_map ,0,0x2000);
+	memset((Uint8 *)ss_map2,0,0x2000);
 
 	SprSpCmd *ss_spritePtr;
+
+	ss_spritePtr				= &ss_sprite[3];	
 	
-	for (unsigned int i = 3; i <nBurnSprites; i++) 
+	for (unsigned int i = 0; i <nBurnSprites-3; i++) 
 	{
-		ss_spritePtr				= &ss_sprite[i];
 		if (pbillrdmode)
 			ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | DIR_TBREV);
 		else
@@ -960,9 +944,8 @@ INT32 DrvExit()
 	return 0;
 }
 
-INT32 DrvFrame()
+void DrvFrame()
 {
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvFrame. Please Wait",24,40);		
 	sprite_number = 3;
 	DrvInputs[0] = 0xff; // Active LOW
 	DrvInputs[1] = 0xff;
@@ -984,11 +967,12 @@ INT32 DrvFrame()
 		if (DrvDial2 < 0) DrvDial2 = 0xfc;
 	}
 
-	UINT32 nCyclesTotal = nCyclesTotal = (countrunbmode) ? 6000000 / 60 : 3072000 / 60;
-
+	UINT32 nCyclesTotal = (countrunbmode) ? 6000000 / 60 : 3072000 / 60;
+	nCyclesTotal /= nInterleave;
+	
 	CZetOpen(0);
 	for (UINT32 i = 0; i < nInterleave; i++) {
-		CZetRun(nCyclesTotal / nInterleave);
+		CZetRun(nCyclesTotal);
 
 		if (i % 128 == 127)
 			CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO); // audio irq
@@ -1017,8 +1001,6 @@ INT32 DrvFrame()
 	}
 
 	DrvDraw();
-
-	return 0;
 }
 
 INT32 pbillrdInit()

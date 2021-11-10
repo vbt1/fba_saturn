@@ -298,20 +298,23 @@ end:
 {
 	unsigned int i;
 	R->UpdateStep = (unsigned int)(((double)STEP * nBurnSoundRate * 16) / Clock);
-		
 	R->Volume[0] = R->Volume[1] = R->Volume[2] = R->Volume[3] = 0;
 
 	R->LastRegister = 0;
-	for (i = 0; i < 8; i += 2) {
+	
+/*	for (i = 0; i < 8; i += 2) {
 		R->Register[i + 0] = 0x00;
 		R->Register[i + 1] = 0x0f;
 	}
-	
+*/	
 	for (i = 0; i < 4; i++) {
+
+		R->Register[(i<<1) + 0] = 0x00;
+		R->Register[(i<<1) + 1] = 0x0f;
+		
 		R->Output[i] = 0;
 		R->Period[i] = R->Count[i] = R->UpdateStep;
 	}
-	
 	R->FeedbackMask = 0x4000;
 	R->WhitenoiseTaps = 0x03;
 	R->WhitenoiseInvert = 1;
@@ -329,9 +332,7 @@ end:
 	if (Num == 0) {
 	//Chip0 = (struct SN76496*)BurnMalloc(sizeof(*Chip0));
 		memset(&Chip0, 0, sizeof(Chip0));
-	
 		SN76496Init2(&Chip0, Clock);
-
 		SN76496SetGain(&Chip0, 0);
 		
 		Chip0.FeedbackMask = FeedbackMask;
@@ -391,6 +392,7 @@ end:
 		Chip4.WhitenoiseInvert = NoiseInvert;
 		Chip4.bSignalAdd = SignalAdd;
 	}
+
 }
 
 void SN76489Init(int Num, int Clock, int SignalAdd)
