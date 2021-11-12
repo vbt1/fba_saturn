@@ -26,7 +26,7 @@ INT32 DrvTetrisInit();
 INT32 DrvSlapshtrInit();
 //INT32 DrvAstroflInit();
 INT32 DrvExit();
-INT32 DrvFrame();
+void DrvFrame();
 void DrvDoReset();
 inline void initPosition(void);
 void DrvInitSaturnS(UINT8 game);

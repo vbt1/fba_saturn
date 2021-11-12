@@ -62,7 +62,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/void palette_write(UINT32 offset)
+void palette_write(UINT32 offset)
 {
 	UINT16 data = (DrvPalRAM[offset]) | (DrvPalRAM[offset | 0x400] << 8);
 
@@ -82,7 +82,7 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/ void DrvRomBankswitch(INT32 bank)
+ void DrvRomBankswitch(INT32 bank)
 {
 	*DrvRomBank = bank & 0x0f;
 
@@ -94,7 +94,7 @@ int ovlInit(char *szShortName)
 #endif
 }
 
-/*static*/ void DrvVidRamBankswitch(INT32 bank)
+ void DrvVidRamBankswitch(INT32 bank)
 {
 	*DrvVidBank = (bank & 0x03);
 	UINT32 nBank = (bank & 3) * 0x1000;
@@ -200,7 +200,7 @@ void blacktiger_out(UINT16 port, UINT8 data)
 		case 0x00:
 		{
 			*soundlatch = data;
-#ifdef PLAY_SFX	
+#ifdef PCM_SFX	
 			unsigned int i;
 			PcmStatus	*st=NULL;
 
@@ -486,7 +486,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ INT32 MemIndex()
+ INT32 MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -543,7 +543,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ INT32 DrvDoReset(INT32 full_reset)
+ INT32 DrvDoReset(INT32 full_reset)
 {
 	if (full_reset) {
 		memset (AllRam, 0, RamEnd - AllRam);
@@ -576,7 +576,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ INT32 DrvGfxDecode()
+ INT32 DrvGfxDecode()
 {
 	INT32 Plane[4] = { ((0x40000 * 8) / 2) + 4, ((0x40000 * 8) / 2) + 0, 4, 0 };
 	INT32 XOffs[16] = { 0, 1, 2, 3, 8+0, 8+1, 8+2, 8+3,
@@ -608,7 +608,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	return 0;
 }
 
-/*static*/ INT32 DrvInit()
+ INT32 DrvInit()
 {
 	DrvInitSaturn();
 	MemIndex();
@@ -700,7 +700,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ INT32 DrvExit()
+ INT32 DrvExit()
 {
 	DrvDoReset(1);
 #ifdef RAZE0
@@ -754,7 +754,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ INT32 DrvFrame()
+void DrvFrame()
 {
 // cheat code level
 //DrvZ80RAM0[0xF3A1-0xe000]=4; // niveau 4 pour transparence
@@ -862,11 +862,9 @@ UINT8 blacktiger_sound_read(UINT16 address)
 
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x200);
 //FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame end        ",100,40);
-	
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void draw_sprites()
+ void draw_sprites()
 {
 //	UINT32 delta	= 3;
 	SprSpCmd *ss_spritePtr = &ss_sprite[3];
@@ -900,7 +898,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initLayers()
+ void initLayers()
 {
     Uint16	CycleTb[]={
 		0xff56, 0xffff, //A0
@@ -954,7 +952,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initColors()
+ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);
@@ -968,7 +966,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 }
 #ifdef PCM_SFX
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ PcmHn createHandle(PcmCreatePara *para)
+ PcmHn createHandle(PcmCreatePara *para)
 {
 	PcmHn pcm;
 
@@ -980,7 +978,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 
-/*static*/ void Set14PCM()
+ void Set14PCM()
 {
 //	PcmCreatePara	para[14];
 	PcmInfo 		info[8];
@@ -1063,7 +1061,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_lut(void)
+ void make_lut(void)
 {
 	UINT32 i,delta=0;
 
@@ -1183,7 +1181,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn()
+ void DrvInitSaturn()
 {
 //	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);

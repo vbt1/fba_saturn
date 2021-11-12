@@ -2,23 +2,6 @@
 #include "SEGA_INT.H"
 #include "SEGA_DMA.H"
 
-#define	SZ_PERIPHERAL	20
-typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];
-/*
-typedef	struct	{
-	UINT8			id;
-	UINT8			connectable;
-	SysPeripheral	*peripheral;
-} SysPort;
-*/
-extern SysPort	*__port;
-
-typedef	struct	SysDevice	{
-	UINT8	type;
-	UINT8	size;
-	UINT8	data[1];
-} SysDevice;
-
 void dummy();
 
 /*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
@@ -31,7 +14,7 @@ void dummy();
 	}
 }
 
-/*static*/ void System1MakeInputs()
+void System1MakeInputs()
 {
 	// Reset Inputs
 	System1Input[0] = System1Input[1] = System1Input[2] = 0x00;
@@ -53,7 +36,7 @@ void dummy();
 Decode Functions
 ===============================================================================================*/
 
-/*static*/ void sega_decode(const UINT8 convtable[32][4])
+void sega_decode(const UINT8 convtable[32][4])
 {
 	int A;
 
@@ -101,11 +84,11 @@ Decode Functions
 	}
 }
 
-/*static*/ void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],const INT32 opcode_swap_select[64],
+void sega_decode_2(UINT8 *pDest, UINT8 *pDestDec, const UINT8 opcode_xor[64],const INT32 opcode_swap_select[64],
 		const UINT8 data_xor[64],const INT32 data_swap_select[64])
 {
 	INT32 A;
-	/*static*/ const UINT8 swaptable[24][4] =
+	const UINT8 swaptable[24][4] =
 	{
 		{ 6,4,2,0 }, { 4,6,2,0 }, { 2,4,6,0 }, { 0,4,2,6 },
 		{ 6,2,4,0 }, { 6,0,2,4 }, { 6,4,0,2 }, { 2,6,4,0 },
@@ -145,9 +128,9 @@ Decode Functions
 	memcpy(pDestDec + 0x8000, pDest + 0x8000, 0x4000);
 }
 
-/*static*/ void sega_decode_317(UINT8 *pDest, UINT8 *pDestDec, INT32 order, INT32 opcode_shift, INT32 data_shift)
+void sega_decode_317(UINT8 *pDest, UINT8 *pDestDec, INT32 order, INT32 opcode_shift, INT32 data_shift)
 {
-	/*static*/ const UINT8 xor1_317[1+64] =
+	const UINT8 xor1_317[1+64] =
 	{
 		0x54,
 		0x14,0x15,0x41,0x14,0x50,0x55,0x05,0x41,0x01,0x10,0x51,0x05,0x11,0x05,0x14,0x55,
@@ -156,7 +139,7 @@ Decode Functions
 		0x10,0x15,0x51,0x50,0x00,0x15,0x51,0x44,0x15,0x04,0x44,0x44,0x50,0x10,0x04,0x04,
 	};
 
-	/*static*/ const UINT8 xor2_317[2+64] =
+	const UINT8 xor2_317[2+64] =
 	{
 		0x04,
 		0x44,
@@ -166,7 +149,7 @@ Decode Functions
 		0x14,0x40,0x50,0x45,0x10,0x05,0x50,0x01,0x40,0x01,0x50,0x50,0x50,0x44,0x40,0x10,
 	};
 
-	/*static*/ const INT32 swap1_317[1+64] =
+	const INT32 swap1_317[1+64] =
 	{
 		 7,
 		 1,11,23,17,23, 0,15,19,
@@ -179,7 +162,7 @@ Decode Functions
 		 6, 1, 1,18, 5,15,15,20,
 	};
 
-	/*static*/ const INT32 swap2_317[2+64] =
+	const INT32 swap2_317[2+64] =
 	{
 		 7,
 		12,
@@ -199,9 +182,9 @@ Decode Functions
 		sega_decode_2( pDest, pDestDec, xor1_317+opcode_shift, swap1_317+opcode_shift, xor2_317+data_shift, swap2_317+data_shift );
 }
 
-/*static*/ void fdwarrio_decode(void)
+void fdwarrio_decode(void)
 {
-	/*static*/ const UINT8 opcode_xor[64] =
+	const UINT8 opcode_xor[64] =
 	{
 		0x40,0x50,0x44,0x54,0x41,0x51,0x45,0x55,
 		0x40,0x50,0x44,0x54,0x41,0x51,0x45,0x55,
@@ -213,7 +196,7 @@ Decode Functions
 		0x40,0x50,0x44,0x54,0x41,0x51,0x45,0x55,
 	};
 
-	/*static*/ const UINT8 data_xor[64] =
+	const UINT8 data_xor[64] =
 	{
 		0x10,0x04,0x14,0x01,0x11,0x05,0x15,0x00,
 		0x10,0x04,0x14,0x01,0x11,0x05,0x15,0x00,
@@ -225,7 +208,7 @@ Decode Functions
 		0x10,0x04,0x14,0x01,0x11,0x05,0x15,0x00,
 	};
 
-	/*static*/ const INT32 opcode_swap_select[64] =
+	const INT32 opcode_swap_select[64] =
 	{
 		4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,
 		6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,
@@ -233,7 +216,7 @@ Decode Functions
 		10,10,10,10,10,10,10,10,11,11,11,11,11,11,11,11,
 	};
 
-	/*static*/ const INT32 data_swap_select[64] =
+	const INT32 data_swap_select[64] =
 	{
 		  4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,
 		6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,
@@ -249,7 +232,7 @@ Decode Functions
 Allocate Memory
 ===============================================================================================*/
 
-/*static*/ int MemIndex()
+void MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -289,19 +272,17 @@ Allocate Memory
 	remap8to16_lut		= (UINT16 *)Next; Next += 512 * sizeof(UINT16);
 	map_offset_lut		= (UINT16 *)Next; Next += 0x800 * sizeof(UINT16);
 //	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
-	cpu_lut				= (UINT32 *)Next; Next += 10*sizeof(UINT32);
+	cpu_lut				= (UINT32 *)Next; Next += 256*sizeof(UINT32);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
 	map_cache			= (UINT16 *)Next; Next += (0x800*16) * sizeof(UINT32);
 	map_dirty			= Next; Next += 0x0008;
 	CZ80Context			= Next; Next += 2*sizeof(cz80_struc);
-
-	return 0;
 }
 /*==============================================================================================
 Reset Functions
 ===============================================================================================*/
 
-/*static*/ int System1DoReset()
+int System1DoReset()
 {
 	CZetOpen(0);
 	CZetReset();
@@ -319,7 +300,7 @@ Reset Functions
 	System1BankedRom = 0;
 	System1BankSwitch = 0;
 	memset(map_dirty,1,8);
-		__port = PER_OpenPort();
+//		__port = PER_OpenPort();
 	return 0;
 }
 
@@ -548,7 +529,7 @@ void initLayers()
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initSpritesS1(void)
+void initSpritesS1(void)
 {
     int i;
 	initSprites(256-1,240-1,0,0,-8,0);
@@ -565,7 +546,7 @@ void initLayers()
 	SS_SET_SPCLMD(1);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_lut(void)
+void make_lut(void)
 {
 	unsigned int i,delta=0;
 	int sx, sy;
@@ -604,7 +585,7 @@ void initLayers()
 //	for(i=0;i<0x2000;i++)		color_lut[i] = (i>>5) & 0x3f;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn()
+void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	INT_ChgMsk(INT_MSK_DMA2, INT_MSK_NULL);	
@@ -952,7 +933,7 @@ int System1Exit()
 /*==============================================================================================
 Graphics Rendering
 ===============================================================================================*/
-/*static*/ void updateCollisions(int *values)
+void updateCollisions(int *values)
 {
 	int x=values[0],y=values[1];
 	int xr;//,yr;//,SpriteOnScreen;
@@ -995,7 +976,7 @@ Graphics Rendering
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void System1CalcPalette()
+void System1CalcPalette()
 {
 	unsigned int delta=0;		
 	UINT8 *System1PaletteRam512   = System1PaletteRam+512;
@@ -1130,7 +1111,7 @@ void System1DrawSprites()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void renderSound(unsigned int *nSoundBufferPos)
+void renderSound(unsigned int *nSoundBufferPos)
 {
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
@@ -1146,7 +1127,7 @@ void System1DrawSprites()
 /*==============================================================================================
 Frame functions
 ===============================================================================================*/
-int System1Frame()
+void System1Frame()
 {
 	MakeInputsFunction();
 	unsigned int nCyclesDone[2] = {0,0};
@@ -1200,11 +1181,9 @@ int System1Frame()
 // evite plantage sur teddy boy	
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
-//	sc_check();
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_cram_lut(void)
+void make_cram_lut(void)
 {
 	if (System1ColourProms) 
 	{

@@ -21,7 +21,7 @@ typedef void (*write_func)(unsigned short a, UINT8 d);
 
 inline void System1CalcPalette();
 int System1Exit();
-int System1Frame();
+void System1Frame();
 //UINT8 *SaturnMem = NULL;
 static UINT16 *remap8to16_lut = NULL;
 static UINT16 *map_offset_lut = NULL;

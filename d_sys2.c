@@ -15,6 +15,7 @@ void CZetSetWriteHandler2(unsigned short nStart, unsigned short nEnd,void (*pHan
 #include "d_sys2.h"
 #include "d_sys1_common.c"
 static UINT8 *CurrentBank = NULL; // vbt à mettre dans drvexit !!!
+void wbml_draw_bg();
 
 int ovlInit(char *szShortName)
 {
@@ -167,7 +168,7 @@ inline void system2_foregroundram_w(UINT16 a, UINT8 d)
 	}
 }
 
-static void __fastcall system2_backgroundram_w(UINT16 a, UINT8 d)
+void __fastcall system2_backgroundram_w(UINT16 a, UINT8 d)
 {
 	if(CurrentBank[(a & 0xfff)]!=d)
 	{
@@ -188,7 +189,7 @@ static void __fastcall system2_backgroundram_w(UINT16 a, UINT8 d)
 	}
 }
 
-static void __fastcall system2_foregroundram_w2(UINT16 a, UINT8 d)
+void __fastcall system2_foregroundram_w2(UINT16 a, UINT8 d)
 {
 	if(System1BgBank==0)
 	{
@@ -262,7 +263,8 @@ void __fastcall ChplftZ801ProgWrite(UINT16 a, UINT8 d)
    if (a == 0xefbd) { ss_reg->n0_move_y = d<<16; return; }
 }
 */
-int System1CalcSprPalette()
+/*
+void System1CalcSprPalette()
 {
 	Uint16 *color = &colAddr[0];
 	
@@ -270,9 +272,8 @@ int System1CalcSprPalette()
 	{
 		*color++ = cram_lut[System1PaletteRam[i]];
 	}
-	return 0;
 }
-
+*/
 static void wbmljb_decode()
 {
 	return; // fake decode function
@@ -344,21 +345,13 @@ int ChplftbInit()
 */
 	CZetOpen(0);
 
-	CZetMapArea(0xe7c0, 0xe7ff, 0, System1ScrollXRam);
-	CZetMapArea(0xe7c0, 0xe7ff, 1, System1ScrollXRam);
-	CZetMapArea(0xe7c0, 0xe7ff, 2, System1ScrollXRam);
+	CZetMapMemory(System1ScrollXRam,		0xe7c0, 0xe7ff, MAP_RAM);
 
 //	CZetMapArea(0xe000, 0xe7ff, 0, System1VideoRam); //read
 //	CZetMapArea(0xe000, 0xe7ff, 1, System1VideoRam);	//write
 	CZetMapArea(0xe000, 0xe7ff, 2, System1VideoRam); //fetch
+	CZetMapMemory(System1ScrollXRam,		0xe800, 0xeeff, MAP_ROM);
 
-	CZetMapArea(0xe800, 0xeeff, 0, System1BgRam);
-//	CZetMapArea(0xe800, 0xeeff, 1, System1BgRam);
-	CZetMapArea(0xe800, 0xeeff, 2, System1BgRam);
-/*
-	CZetSetInHandler(ChplftZ801PortRead);
-	CZetSetOutHandler(ChplftZ801PortWrite);
-*/	
 	CZetClose();
 
 	return nRet;
@@ -370,8 +363,8 @@ void CommonWbmlInit()
 	System1SpriteRam = &System1Ram1[0x1000];
 	System1PaletteRam = &System1Ram1[0x1800];	 // ? garder
 
-	make_cram_lut();
-	System1CalcPalette();
+//	make_cram_lut();
+//	System1CalcPalette();
 
 //   nBurnFunction = System1CalcPalette;
 //	nBurnFunction = System1CalcSprPalette;//System1CalcPalette;
@@ -404,13 +397,9 @@ void CommonWbmlInit()
 	CZetMapMemory2(System1Rom1 + 0x20000, System1Rom1, 0x0000, 0x7fff, MAP_ROM);
 	CZetMapMemory2(System1Rom1 + 0x30000, System1Rom1 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	
-	CZetMapArea(0xc000, 0xcfff, 0, System1Ram1);
-	CZetMapArea(0xc000, 0xcfff, 1, System1Ram1);
-	CZetMapArea(0xc000, 0xcfff, 2, System1Ram1);
+	CZetMapMemory(System1Ram1,		0xc000, 0xcfff, MAP_RAM);
+	CZetMapMemory(System1SpriteRam,	0xd000, 0xd7ff, MAP_RAM);
 
-	CZetMapArea(0xd000, 0xd7ff, 0, System1SpriteRam);
-	CZetMapArea(0xd000, 0xd7ff, 1, System1SpriteRam);
-	CZetMapArea(0xd000, 0xd7ff, 2, System1SpriteRam);
 
   	CZetMapArea(0xd800, 0xddff, 0, System1PaletteRam);
 //	CZetMapArea(0xd800, 0xddff, 1, System1PaletteRam);
@@ -423,14 +412,9 @@ void CommonWbmlInit()
 //	CZetMapArea(0xe000, 0xefff, 1, System1VideoRam);	 //write
 	CZetMapArea(0xe000, 0xefff, 2, System1VideoRam); //fetch
 
-	CZetMapArea(0xf400, 0xf7ff, 0, System1f4Ram);
-	CZetMapArea(0xf400, 0xf7ff, 1, System1f4Ram);
-	CZetMapArea(0xf400, 0xf7ff, 2, System1f4Ram);
-	CZetMapArea(0xf800, 0xfbff, 0, System1SprCollisionRam);
-	CZetMapArea(0xf800, 0xfbff, 2, System1SprCollisionRam);
-	CZetMapArea(0xfc00, 0xffff, 0, System1fcRam);
-	CZetMapArea(0xfc00, 0xffff, 1, System1fcRam);
-	CZetMapArea(0xfc00, 0xffff, 2, System1fcRam);
+	CZetMapMemory(System1f4Ram,		0xf400, 0xf7ff, MAP_RAM);
+	CZetMapMemory(System1SprCollisionRam,	0xf800, 0xfbff, MAP_ROM);
+	CZetMapMemory(System1fcRam,				0xfc00, 0xffff, MAP_RAM);
 
 	CZetSetReadHandler(System2Z801ProgRead);
 //	CZetSetWriteHandler(System2Z801ProgWrite);
@@ -692,11 +676,12 @@ int WbmljbInit()
 	System1ScrollXRam	= NULL;
  	RamStart			= NULL; //System1VideoRam-0xe000; // bg
 
-	
+//	nBurnFunction = wbml_draw_bg;
 //	System1DoReset();
 	return nRet;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*
 int WbmlInit()
 {
 	int nRet;
@@ -710,13 +695,16 @@ int WbmlInit()
 	CommonWbmlInit();
 	return nRet;
 }
+*/
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void wbml_draw_bg(UINT8* vram)
+void wbml_draw_bg(UINT8* vram)
+//void wbml_draw_bg() //UINT8* vram)
 {
+//	UINT8* vram=&System1VideoRam[0x740];
 	ss_reg->n2_move_x = (255-((vram[0x80] >> 1) + ((vram[0x81] & 1) << 7))) &0xff;
 	ss_reg->n2_move_y = vram[0x7a]; // & 0x1f;
 	unsigned char real_page;
-	
+
 	const unsigned int v[] = {0, 0x40,0x1000,0x1040};
 
 	for (unsigned int page=0; page < 4; page++)
@@ -732,31 +720,6 @@ static void wbml_draw_bg(UINT8* vram)
 			
 			for (unsigned int i=0;i<32 ;i++ )
 			{
-//DMA_ScuIndirectMemCopy(map,mapc,128*32);
-		//		mapc+=128;
-			//	map+=128;	
-		/*SDMA_ScuCst(DMA_SCU_CH2,&map[0],&mapc[0],128);
-				mapc+=128;
-				map+=128;		
-		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
-
-		SDMA_ScuCst(DMA_SCU_CH2,&map[0],&mapc[0],128);
-				mapc+=128;
-				map+=128;		
-		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
-		
-				SDMA_ScuCst(DMA_SCU_CH2,&map[0],&mapc[0],128);
-				mapc+=128;
-				map+=128;		
-		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
-		
-				SDMA_ScuCst(DMA_SCU_CH2,&map[0],&mapc[0],128);
-				mapc+=128;
-				map+=128;		
-		while(SDMA_ScuResult(DMA_SCU_CH2) != DMA_SCU_END);
-		*/
-	
-				
 				memcpyl(map,mapc,128);
 				mapc+=128;
 				map+=128;
@@ -857,9 +820,9 @@ void initLayers2()
 {
     Uint16	CycleTb[]={
 		0x2f64, 0xeeee, //A0
-		0xffff, 0xffff,	//A1
+		0xeeee, 0xeeee,	//A1
 		0xf6f0,0x55ee,   //B0
-		0xffff, 0xffff  //B1
+		0xeeee, 0xeeee  //B1
 	};
  	SclConfig	scfg;
 

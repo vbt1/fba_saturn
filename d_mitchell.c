@@ -43,8 +43,7 @@ int ovlInit(char *szShortName)
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
-
-/*static*/ inline void DrvClearOpposites(unsigned char* nJoystickInputs)
+inline void DrvClearOpposites(unsigned char* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x30) == 0x30) {
 		*nJoystickInputs &= ~0x30;
@@ -54,7 +53,7 @@ int ovlInit(char *szShortName)
 	}
 }
 
-static void DrvMakeInputs()
+void DrvMakeInputs()
 {
 
 	for (unsigned int i = 0; i < 12; i++) DrvInput[i] = 0x00;
@@ -127,8 +126,7 @@ inline void oki_bankswitch(INT32 bank)
 
 	MSM6295SetBank(0, DrvSoundRom + (DrvOkiBank * 0x40000), 0x00000, 0x3ffff);
 }
-
-/*static*/ int DrvDoReset()
+void DrvDoReset()
 {
 #ifdef CZ80
 //	CZetOpen(0);
@@ -178,11 +176,8 @@ inline void oki_bankswitch(INT32 bank)
 	
 	DrvPaletteRamBank = 0;
 	DrvVideoBank = 0;
-//	DrvDialSelected = 0;
-	return 0;
 }
-
-/*static*/ unsigned char __fastcall MitchellZ80Read(unsigned short a)
+unsigned char __fastcall MitchellZ80Read(unsigned short a)
 {
 	if (a >= 0xc000 && a <= 0xc7ff) {
 		return DrvPaletteRam[(a - 0xc000) + (DrvPaletteRamBank ? 0x800 : 0x000)];
@@ -198,8 +193,7 @@ inline void oki_bankswitch(INT32 bank)
 	}
 	return 0;
 }
-
-/*static*/ void __fastcall MitchellZ80Write(unsigned short a, unsigned char d)
+void __fastcall MitchellZ80Write(unsigned short a, unsigned char d)
 {
 	if (a >= 0xc000 && a <= 0xc7ff) 
 	{
@@ -266,8 +260,7 @@ inline void oki_bankswitch(INT32 bank)
 		DrvZ80Ram[a-0xe000]=d;
 	}
 }
-
-/*static*/ unsigned char __fastcall MitchellZ80PortRead(unsigned short a)
+unsigned char __fastcall MitchellZ80PortRead(unsigned short a)
 {
 	a &= 0xff;
 	
@@ -315,8 +308,7 @@ inline void oki_bankswitch(INT32 bank)
 
 	return 0xff;
 }
-
-/*static*/ void __fastcall MitchellZ80PortWrite(unsigned short a, unsigned char d)
+void __fastcall MitchellZ80PortWrite(unsigned short a, unsigned char d)
 {
 	a &= 0xff;
 	
@@ -450,7 +442,7 @@ inline void oki_bankswitch(INT32 bank)
 // Kabuki - we use the module from the CPS-1 Q-Sound games
 extern void kabuki_decode(unsigned char *src, unsigned char *dest_op, unsigned char *dest_data, int base_addr, int length, int swap_key1, int swap_key2, int addr_key, int xor_key);
 
-static void mitchell_decode(int swap_key1, int swap_key2, int addr_key, int xor_key)
+void mitchell_decode(int swap_key1, int swap_key2, int addr_key, int xor_key)
 {
 	UINT8 *rom = DrvZ80Rom;
 	UINT8 *decrypt = DrvZ80Code;
@@ -465,11 +457,11 @@ static void mitchell_decode(int swap_key1, int swap_key2, int addr_key, int xor_
 }
 
 /*static*/// void mgakuen2_decode() { mitchell_decode(0x76543210, 0x01234567, 0xaa55, 0xa5); }
-static void pang_decode()     { mitchell_decode(0x01234567, 0x76543210, 0x6548, 0x24); }
-static void spang_decode()    { mitchell_decode(0x45670123, 0x45670123, 0x5852, 0x43); }
+void pang_decode()     { mitchell_decode(0x01234567, 0x76543210, 0x6548, 0x24); }
+void spang_decode()    { mitchell_decode(0x45670123, 0x45670123, 0x5852, 0x43); }
 /*static*/// void block_decode()    { mitchell_decode(0x02461357, 0x64207531, 0x0002, 0x01); }
 
-static const unsigned char spang_default_eeprom[128] = {
+const unsigned char spang_default_eeprom[128] = {
 	0x00, 0x02, 0x00, 0x01, 0x01, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x01,
 	0xCD, 0x81, 0x0E, 0x10, 0xFD, 0x78, 0x88, 0x81, 0x4D, 0x2E, 0x53, 0xC9, 0xC9, 0xC9, 0xC9, 0xC9,
 	0x20, 0x4D, 0x41, 0x44, 0x45, 0x20, 0x49, 0x4E, 0x20, 0x4A, 0x41, 0x50, 0x41, 0x4E, 0x2E, 0x20,
@@ -480,7 +472,7 @@ static const unsigned char spang_default_eeprom[128] = {
 	0x20, 0x20, 0x20, 0x20, 0x53, 0x68, 0x69, 0x6E, 0x6F, 0x68, 0x61, 0x72, 0x61, 0x2E, 0x20, 0x20
 };
 
-static void MitchellMachineInit()
+void MitchellMachineInit()
 {
 #ifdef CZ80
 	CZetInit2(1,CZ80Context);
@@ -556,7 +548,7 @@ static void MitchellMachineInit()
 	nBurnFunction = DrvCalcPalette;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int PangInit()
+int PangInit()
 {
 	int nRet = 0;
 	DrvInitSaturn();
@@ -565,12 +557,12 @@ static int PangInit()
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut   ",80,130);	
 	make_lut();
 
-static INT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
-static INT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
-static INT32 CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
-static INT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };
-static INT32 SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
-static INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
+INT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
+INT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
+INT32 CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
+INT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };
+INT32 SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
+INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
 
 	unsigned char *DrvTempRom = (unsigned char *)LOWADDR;
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom   ",80,130);	
@@ -609,6 +601,7 @@ static INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 1
 #ifdef PCM_MUSIC
 	stmInit();
 	SetStreamPCM();
+	PCM_SetPcmStreamNo(pcm, 1);
 	PCM_Start(pcmStream);
 #endif	
 //-------------------------------------------------
@@ -616,7 +609,7 @@ static INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 1
 	return 0;
 }
 
-static int SpangInit()
+int SpangInit()
 {
 	int nRet = 0;
 	DrvInitSaturn();
@@ -626,12 +619,12 @@ static int SpangInit()
 	PangMemIndex();
 	make_lut();
 
-static INT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
-static INT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
-static INT32 CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
-static INT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };
-static INT32 SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
-static INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
+INT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
+INT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
+INT32 CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
+INT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };
+INT32 SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
+INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
 
 	unsigned char *DrvTempRom = (unsigned char *)LOWADDR;
  // VBT � remettre
@@ -671,6 +664,7 @@ if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 #ifdef PCM_MUSIC
 	stmInit();
 	SetStreamPCM();
+	PCM_SetPcmStreamNo(pcm, 1);
 	PCM_Start(pcmStream);
 #endif	
 //-------------------------------------------------
@@ -796,7 +790,7 @@ inline void DrvInitSaturn()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int DrvExit()
+int DrvExit()
 {
 	nBurnFunction = NULL;
 	wait_vblank();
@@ -828,7 +822,9 @@ static int DrvExit()
 #ifdef LOOP
 	bg_dirtybuffer = NULL;
 #endif
-
+	PCM_SetPcmStreamNo(pcm, 0);
+	wait_vblank();
+	
 	cleanDATA();
 	cleanBSS();
 
@@ -842,7 +838,7 @@ inline unsigned char pal4bit(unsigned char bits)
 	return ((bits << 4) | bits)>>3;
 }
 
-static void make_lut(void)
+void make_lut(void)
 {
     UINT32 j,mx, my;
     for(j = 0; j < 4096; j++)
@@ -876,7 +872,7 @@ static void make_lut(void)
 }
 
 
-static void DrvCalcPalette()
+void DrvCalcPalette()
 {
 	if (color_dirty==1)
 	{
@@ -889,8 +885,7 @@ static void DrvCalcPalette()
 	}
 //	DrvMakeInputs();
 }
-#ifdef LOOP
-/*static*/ void DrvRenderBgLayer()
+#ifdef LOOPvoid DrvRenderBgLayer()
 {
 	unsigned int Code, Attr, x, TileIndex = 0;
 	UINT16 *map;
@@ -912,7 +907,7 @@ static void DrvCalcPalette()
 	}
 }
 #endif
-static void DrvRenderSpriteLayer()
+void DrvRenderSpriteLayer()
 {
 	SprSpCmd *ss_spritePtr = &ss_sprite[3];
 	UINT32 Code ;
@@ -932,15 +927,14 @@ static void DrvRenderSpriteLayer()
 	}
 }
 #ifdef LOOP
-static void DrvDraw()
+void DrvDraw()
 {			 
 	SPR_RunSlaveSH((PARA_RTN*)DrvRenderBgLayer, NULL);
 	DrvRenderSpriteLayer();
 	SPR_WaitEndSlaveSH();
 }
 #endif
-
-/*static*/ int DrvFrame()
+void DrvFrame()
 {
 #ifndef LOOP
 	SPR_RunSlaveSH((PARA_RTN*)DrvRenderSpriteLayer, NULL);
@@ -1000,7 +994,7 @@ static void DrvDraw()
 	MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nBurnSoundLen);
 	nSoundBufferPos+=nBurnSoundLen;
   
-	if(nSoundBufferPos>=RING_BUF_SIZE/2)
+	if(nSoundBufferPos>=0x1200)
 	{
 		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		nSoundBufferPos=0;
@@ -1014,6 +1008,5 @@ static void DrvDraw()
 #else
 	DrvDraw();
 #endif
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

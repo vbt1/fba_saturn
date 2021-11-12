@@ -22,7 +22,7 @@ int ovlInit(char *szShortName) __attribute__ ((boot,section(".boot")));
 */
 int ChplftbInit();
 int System1Exit();
-int System1Frame();
+void System1Frame();
 int WbmlInit();
 int WbmljbInit();
 void initLayers2();

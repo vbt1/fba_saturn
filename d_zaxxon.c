@@ -2,7 +2,7 @@
 //#define RAZE 1
 #define draw_background(x) draw_background_test2()
 //#define draw_background(x) draw_background_not_rotated(x)
-static inline void bg_layer_init();
+void bg_layer_init();
 
 int ovlInit(char *szShortName)
 {
@@ -174,7 +174,7 @@ void __fastcall zaxxon_sound_write(UINT16 value)
 				break;
 		}
 }*/
-static inline int readbit(const unsigned char *src, int bitnum)
+inline int readbit(const unsigned char *src, int bitnum)
 {
 	return src[bitnum / 8] & (0x80 >> (bitnum % 8));
 }
@@ -636,16 +636,16 @@ void GfxDecode(INT32 num, INT32 numPlanes, INT32 xSize, INT32 ySize, INT32 plane
 	}
 }
 
-inline void DrvGfxDecode()
+void DrvGfxDecode()
 {
-	static INT32 CharPlane[2] = { 0x4000 * 1, 0x4000 * 0 };
-	static INT32 TilePlane[3] = { 0x10000 * 2, 0x10000 * 1, 0x10000 * 0 };
-	static INT32 SpritePlane[3] = { 0x20000 * 2, 0x20000 * 1, 0x20000 * 0 };
-	static INT32 SpriteXOffs[32] = { 0, 1, 2, 3, 4, 5, 6, 7,
+	INT32 CharPlane[2] = { 0x4000 * 1, 0x4000 * 0 };
+	INT32 TilePlane[3] = { 0x10000 * 2, 0x10000 * 1, 0x10000 * 0 };
+	INT32 SpritePlane[3] = { 0x20000 * 2, 0x20000 * 1, 0x20000 * 0 };
+	INT32 SpriteXOffs[32] = { 0, 1, 2, 3, 4, 5, 6, 7,
 			8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7,
 			16*8+0, 16*8+1, 16*8+2, 16*8+3, 16*8+4, 16*8+5, 16*8+6, 16*8+7,
 			24*8+0, 24*8+1, 24*8+2, 24*8+3, 24*8+4, 24*8+5, 24*8+6, 24*8+7 };
-	static UINT32 SpriteYOffs[32] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
+	UINT32 SpriteYOffs[32] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
 			32*8, 33*8, 34*8, 35*8, 36*8, 37*8, 38*8, 39*8,
 			64*8, 65*8, 66*8, 67*8, 68*8, 69*8, 70*8, 71*8,
 			96*8, 97*8, 98*8, 99*8, 100*8, 101*8, 102*8, 103*8 };
@@ -704,7 +704,7 @@ inline void DrvPaletteInit(INT32 len)
 	DrvColPROM += 0x100;
 }
 
-static inline void bg_layer_init()
+void bg_layer_init()
 {
 	UINT8 *zaxxon_bg_pixmap = (UINT8*)LOWADDR;
 	memset(zaxxon_bg_pixmap,0x01,0x100000);
@@ -875,58 +875,21 @@ static inline void bg_layer_init()
 	return 0;
 }
 
-/*static*/INT32 DrvExit()
+INT32 DrvExit()
 {
 	DrvDoReset();
 	while(0 != DMA_ScuResult());
 	wait_vblank();
-	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 #ifndef RAZE
 	CZetExit2();
 #else
 	z80_stop_emulating();
 #endif
+	memset(ss_map2,0x00,0x20000);
+	memset(bitmap,0x00,0xf000);
+	wait_vblank();
 	
-	memset4_fast(ss_map2,0x00,0x20000);
-
-	memset4_fast(bitmap,0x00,0xf000);
-/*	
-	ss_sprite[3].bx	= 0;
-	ss_sprite[3].by	= 0;
-	ss_sprite[3].ax	= 0;
-	ss_sprite[3].ay	= 0;
-	ss_sprite[3].dx	= 0;
-	ss_sprite[3].dy	= 0;
-	ss_sprite[3].cx	= 0;
-	ss_sprite[3].cy	= 0;
-*/	
-//	nBurnLinescrollSize = 1;
-//	nSoundBufferPos = 0;
-//	cleanSprites();
-/*
-	CZ80Context = AllRam = RamEnd = DrvZ80ROM = DrvZ80DecROM = NULL;
-	DrvColPROM = DrvZ80RAM = DrvSprRAM = DrvVidRAM = DrvColRAM = NULL;
-	zaxxon_coin_enable = zaxxon_coin_status = zaxxon_coin_last = NULL;
-	zaxxon_bg_enable = 0;
-	zaxxon_bg_scroll = 0;
-	zaxxon_flipscreen = 0;
-	interrupt_enable = 0;
-	zaxxon_bg_scroll_x2 = 0;	
-
-	ss_map264 = NULL;
-	bitmap = NULL;
-	map_lut = NULL;
-	colpromoffs_lut = NULL;
-	sx_lut = NULL;
-	sy_lut = NULL;
-	charaddr_lut = NULL;
-
-	for (unsigned int i = 0; i < 240; i++) {
-		srcxmask[i] = NULL;
-	}
-	srcx_buffer = NULL;
-*/
-
 	cleanDATA();
 	cleanBSS();
 
@@ -1002,7 +965,7 @@ int find_minimum_x(UINT8 value)
 	return x & 0xff;
 }
 
-/*static*/void draw_sprites()
+void draw_sprites()
 {
 //	int flipmask = *zaxxon_flipscreen ? 0xff : 0x00;
 //#define flipmask 0xff
@@ -1029,7 +992,8 @@ int find_minimum_x(UINT8 value)
 		{
 			ss_spritePtr->ax		= 256;
 			ss_spritePtr->ay		= 256;
-			ss_spritePtr->charAddr	= 0;		
+			ss_spritePtr->charAddr	= 0;
+//			ss_spritePtr->charSize = 0;			
 		}
 		ss_spritePtr++;
 	}
@@ -1041,7 +1005,7 @@ int find_minimum_x(UINT8 value)
 	ss_spritePtr->ay	= 0;
 }
 
-/*static*/inline void DrvDraw()
+inline void DrvDraw()
 {
 	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );
 		SPR_RunSlaveSH((PARA_RTN*)draw_sprites, NULL);
@@ -1078,7 +1042,7 @@ inline void zaxxon_coin_lockout()
 	// end soft-coin lockout
 }
 
-static void DrvFrame()
+void DrvFrame()
 {
 	{
 		DrvInputs[0] = 0x00;
@@ -1114,15 +1078,15 @@ static void DrvFrame()
 //	return 0;
 }
 #if 0
-/*static*/void zaxxonb_decode()
+void zaxxonb_decode()
 {
-	/*static*/const UINT8 data_xortable[2][8] =
+	const UINT8 data_xortable[2][8] =
 	{
 		{ 0x0a,0x0a,0x22,0x22,0xaa,0xaa,0x82,0x82 },	/* ...............0 */
 		{ 0xa0,0xaa,0x28,0x22,0xa0,0xaa,0x28,0x22 },	/* ...............1 */
 	};
 
-	/*static*/const UINT8 opcode_xortable[8][8] =
+	const UINT8 opcode_xortable[8][8] =
 	{
 		{ 0x8a,0x8a,0x02,0x02,0x8a,0x8a,0x02,0x02 },	/* .......0...0...0 */
 		{ 0x80,0x80,0x08,0x08,0xa8,0xa8,0x20,0x20 },	/* .......0...0...1 */
@@ -1170,7 +1134,7 @@ static void DrvFrame()
 	}
 }
 
-/*static*/int ZaxxonbInit()
+int ZaxxonbInit()
 {
 	INT32 nRet = DrvInit();
 
@@ -1181,7 +1145,7 @@ static void DrvFrame()
 	return nRet;
 }
 #endif
-/*static*/void sega_decode(const UINT8 convtable[32][4])
+void sega_decode(const UINT8 convtable[32][4])
 {
 	INT32 A;
 	INT32 length = 0x6000;
@@ -1227,7 +1191,7 @@ static void DrvFrame()
 
 inline void szaxxon_decode()
 {
-	static UINT8 convtable[32][4] =
+	UINT8 convtable[32][4] =
 	{
 		/*       opcode                   data                     address      */
 		/*  A    B    C    D         A    B    C    D                           */
@@ -1252,7 +1216,7 @@ inline void szaxxon_decode()
 	sega_decode(convtable);
 }
 
-/*static*/int sZaxxonInit()
+int sZaxxonInit()
 {
 	DrvInit();
 	szaxxon_decode();
@@ -1262,7 +1226,7 @@ inline void szaxxon_decode()
 #if 0
 void futspy_decode()
 {
-	/*static*/const UINT8 convtable[32][4] =
+	const UINT8 convtable[32][4] =
 	{
 		/*       opcode                   data                     address      */
 		/*  A    B    C    D         A    B    C    D                           */
@@ -1289,7 +1253,7 @@ void futspy_decode()
 }
 
 
-/*static*/int futspyInit()
+int futspyInit()
 {
 	futspy_sprite = 1;
 
@@ -1304,7 +1268,7 @@ void futspy_decode()
 
 void nprinces_decode()
 {
-	/*static*/const UINT8 convtable[32][4] =
+	const UINT8 convtable[32][4] =
 	{
 		/*       opcode                   data                     address      */
 		/*  A    B    C    D         A    B    C    D                           */
@@ -1330,7 +1294,7 @@ void nprinces_decode()
 	sega_decode(convtable);
 }
 
-/*static*/int razmatazInit()
+int razmatazInit()
 {
 	hardware_type = 1;
 
@@ -1343,7 +1307,7 @@ void nprinces_decode()
 	return nRet;
 }
 
-/*static*/int ixionInit()
+int ixionInit()
 {
 	int nRet;
 
@@ -1375,9 +1339,9 @@ inline void initLayers()
 {
     Uint16	CycleTb[]={
 		0x1f56, 0xff26, //A0
-		0xffff, 0xffff,	//A1
+		0xeeee, 0xeeee,	//A1
 		0xf5f2,0x4eff,   //B0
-		0xffff, 0xffff  //B1
+		0xeeee, 0xeeee  //B1
 //		0x4eff, 0x1fff, //B1
 	};
  	SclConfig	scfg;

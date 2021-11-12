@@ -99,14 +99,7 @@ void MSM6295Reset(int nChip)
 void MSM6295RenderVBT(int nChip, short* pBuf, int nSegmentLength)
 {
 //	if (nChip == 0) {
-//		memset(pBuffer, 0, nSegmentLength * sizeof(int));
 		memset(pBuf, 0, nSegmentLength * sizeof(short));
-//		memset(pBufferVBT, 0, nSegmentLength * sizeof(int));
-//	}
-//	MSM6295Render_Linear(nChip, pBuffer, nSegmentLength);
-//	MSM6295Render_Linear(nChip, pSoundBuf, nSegmentLength);
-//	BurnSoundCopyClamp_Mono_C(pBuffer, pSoundBuf, nSegmentLength);
-
 
 	int nVolume = MSM6295[nChip].nVolume;
 	int nFractionalPosition = MSM6295[nChip].nFractionalPosition;

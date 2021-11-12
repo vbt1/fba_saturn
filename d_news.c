@@ -391,9 +391,6 @@ int NewsExit()
 #else
 //	ZetExit();
 #endif
-//	PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-//	PCM_Task(pcm);			
-
 //	memset(MSM6295ROM,0x00,0x40000);	
 /*	MSM6295ROM = NULL;
 	pBuffer = NULL;	
@@ -412,7 +409,8 @@ int NewsExit()
 	memset(ss_map,0,0x20000);
 	memset(ss_map2,0,0x20000);	
 //	memset(NewsInputPort0,0x00,8);
-	NewsDip[0] = NewsInput[0]      = 0;
+//	NewsDip[0] = NewsInput[0]      = 0;
+	wait_vblank();
 
 	cleanDATA();
 	cleanBSS();

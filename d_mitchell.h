@@ -10,17 +10,17 @@
 //#include "burn_ym2413.h"
 #include "snd/msm6295.h"
 #include "czet.h"
-/*static*/ int DrvFrame();
-static int DrvExit();
-static int SpangInit();
-static int PangInit();
-static void DrvCalcPalette();
-static inline void DrvMakeInputs();
-static UINT16 *map_lut = NULL;  //[256];
-static UINT16 *map_offset_lut = NULL;  //[2048];
-static UINT16 *charaddr_lut = NULL; //[0x0800];
-static UINT16 *cram_lut = NULL; //[4096];
-static unsigned char 	color_dirty = 0;
+void DrvFrame();
+int DrvExit();
+int SpangInit();
+int PangInit();
+void DrvCalcPalette();
+inline void DrvMakeInputs();
+UINT16 *map_lut = NULL;  //[256];
+UINT16 *map_offset_lut = NULL;  //[2048];
+UINT16 *charaddr_lut = NULL; //[0x0800];
+UINT16 *cram_lut = NULL; //[4096];
+unsigned char 	color_dirty = 0;
 unsigned char current_pcm=255;
 
 //#define nBurnSoundLen 128

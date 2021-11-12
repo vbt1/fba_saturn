@@ -8,10 +8,10 @@
 #include "machine.h"
 
 INT32 DrvInit();
-INT32 DrvFMInit();
-INT32 DrvFMFrame();
+//INT32 DrvFMInit();
+//INT32 DrvFMFrame();
 INT32 DrvExit();
-INT32 DrvFrame();
+void DrvFrame();
 INT32 DrvDraw();
 void draw_sprites();
 void tile16x16toSaturn (unsigned char reverse, unsigned int num, unsigned char *pDest);

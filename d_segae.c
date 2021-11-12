@@ -78,6 +78,8 @@ int ovlInit(char *szShortName)
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 //	ss_port  = (SysPort *)SS_PORT;
+
+	return 0;
 }
 
 UINT8 __fastcall systeme_main_read(UINT16 address)
@@ -605,7 +607,7 @@ void astrofl_decode(void)
 	sega_decode_2(DrvMainROM, DrvMainROMFetch, opcode_xor,opcode_swap_select,data_xor,data_swap_select);
 }
 */
-INT32 MemIndex(UINT32 game)
+void MemIndex(UINT32 game)
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -638,8 +640,6 @@ INT32 MemIndex(UINT32 game)
 	map_lut	 	= Next; Next += 0x800*sizeof(UINT16);	
 //	map_lut	 	= (UINT16 *)0x00260000;	
 	ss_scl1		= (Fixed32 *)Next; Next += SCL_MAXLINE*sizeof(Fixed32);	
-
-	return 0;
 }
 
 //-----------------------
@@ -648,70 +648,12 @@ INT32 DrvExit()
 	nBurnFunction = NULL;
 	wait_vblank();
 	DrvDoReset();
-
 	SN76496Exit();
-
-	CZetSetWriteHandler(NULL);
-	CZetSetReadHandler(NULL);
-	CZetSetInHandler(NULL);
-	CZetSetOutHandler(NULL);
-
 	CZetExit2();
 	
-	memset(ss_scl,0x00,SCL_MAXLINE*sizeof(Fixed32));
-	memset(ss_scl1,0x00,SCL_MAXLINE*sizeof(Fixed32));
+	memset(ss_scl,0x00,nBurnLinescrollSize);
+	memset(ss_scl1,0x00,nBurnLinescrollSize);
 	SCL_SetLineParamNBG1();
-	initPosition();
-//	wait_vblank();
-
-	memset(CZ80Context,0x00,sizeof(cz80_struc));
-	CZ80Context	=  NULL;
-
-	mc8123key = DrvMainROM	=DrvMainROMFetch = DrvRAM = RamEnd = NULL;
-/*
-	memset(segae_vdp_cram[0],0x00,0x20);
-	memset(segae_vdp_cram[1],0x00,0x20);
-	memset(mc8123key,0x00,0x2000);
-	memset((UINT8*)LOWADDR,0x00,0x40000);
-	memset((UINT8*)LOWADDR+0x80000,0x00,0x40000);	
-	segae_vdp_vram[0]	= segae_vdp_vram[1]	= NULL;
-	segae_vdp_cram[0] = segae_vdp_regs[0] = segae_vdp_cram[1] = segae_vdp_regs[1] = NULL;
-segae_vdp_vrambank[0]= segae_vdp_vrambank[1]=0;
-ntab[0]= ntab[1]=0;
-satb[0]= satb[1]=0;
-scroll_x[0]= scroll_x[1]=0;
-scroll_y[0]= scroll_y[1]=0;
-segae_vdp_cmdpart[0]= segae_vdp_cmdpart[1]=0;
-segae_vdp_command[0]= segae_vdp_command[1]=0;
-segae_vdp_accessmode[0]= segae_vdp_accessmode[1]=0;
-segae_vdp_accessaddr[0]= segae_vdp_accessaddr[1]=0;
-segae_vdp_readbuffer[0]= segae_vdp_readbuffer[1]=0;
-	
-	name_lut = cram_lut = map_lut = NULL;
-	bp_lut = NULL;
-	ss_scl1 = NULL;
-	__port = NULL;
-	memset(DrvJoy0,0x00,8);	
-	memset(DrvJoy1,0x00,8);
-	memset(DrvJoy2,0x00,8);
-	memset(DrvJoy3,0x00,8);
-	memset(DrvJoy4,0x00,8);
-	DrvDip[0] = DrvDip[1] = 0;
-	DrvInput[0] = DrvInput[1] = DrvInput[2] = DrvInput[3] = DrvInput[4] = 0;
-*/
-	mc8123_banked = 0;
-	segae_8000bank = 0;
-	rombank = 0;
-	currentLine = 0;
-//	DrvWheel = DrvAccel = 0;
-
-hintcount = 0;
-vintpending = 0;
-hintpending = 0;
-currentLine = 0;	
-	
-//	SCL_SetWindow(SCL_W0,(UINT32)NULL,OFF,(UINT32)NULL,0xff,0xff,0xff,0xff);
-// 	SCL_SetWindow(SCL_W1,(UINT32)NULL,OFF,(UINT32)NULL,0xff,0xff,0xff,0xff);
 	memset ((SclWinscl *)SS_REGW,0x00,sizeof(SclWinscl));
 	initScrollingNBG1(OFF,(UINT32)NULL);
 SclProcess = 2;
@@ -827,7 +769,7 @@ void segae_interrupt ()
 	}
 }
 
-INT32 DrvFrame()
+void DrvFrame()
 {
 //	*(Uint16 *)0x25E00000 = colBgAddr[256]; // set bg_color
 	
@@ -881,8 +823,6 @@ INT32 DrvFrame()
 
 	ss_reg->n0_move_y = scroll_y[0]<<16;
 	ss_reg->n1_move_y = scroll_y[1]<<16;
-
-	return 0;
 }
 
 INT32 DrvInit(UINT8 game)
@@ -1043,9 +983,9 @@ inline void initLayers(void)
 
     Uint16	CycleTb[]={
 		0xfff4, 0x5fff, //A0
-		0xffff, 0xffff,	//A1
-		0x01e,0xffff,   //B0
-		0xffff, 0xffff  //B1
+		0xeeee, 0xeeee,	//A1
+		0x01e,0xeeee,   //B0
+		0xeeee, 0xeeee  //B1
 //		0x4eff, 0x1fff, //B1
 	};
  	SclConfig	scfg;
@@ -1160,10 +1100,10 @@ void DrvInitSaturnS(UINT8 game)
 	memset4_fast(&ss_vram[0x1100],0,0x12000);
 	
 // vbt : remis
-	memset(ss_scl,0xff,SCL_MAXLINE*sizeof(Fixed32));
-	memset(ss_scl1,0xff,SCL_MAXLINE*sizeof(Fixed32));
+	memset(ss_scl,0xff,nBurnLinescrollSize);
+	memset(ss_scl1,0xff,nBurnLinescrollSize);
 	nBurnFunction = SCL_SetLineParamNBG1;
-	__port = PER_OpenPort();	
+//	__port = PER_OpenPort();	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
  void SCL_SetLineParamNBG1()
