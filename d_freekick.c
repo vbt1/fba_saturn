@@ -786,10 +786,10 @@ inline void rotate_tile16x16(unsigned int size, unsigned char *target)
 inline void initLayers()
 {
     Uint16	CycleTb[]={
-		0xff56, 0xffff, //A0
-		0xffff, 0xffff,	//A1
+		0xff56, 0xeeee, //A0
+		0xeeee, 0xeeee,	//A1
 		0x15f2,0x4eff,   //B0
-		0xffff, 0xffff  //B1
+		0xeeee, 0xeeee  //B1
 //		0x4eff, 0x1fff, //B1
 	};
  	SclConfig	scfg;

@@ -1107,7 +1107,7 @@ static void Set8PCM()
 		ss_spritePtr->control      = (DrvSpriteRam[i + 5] & 0xC0)>>2;
 		ss_spritePtr->charSize   = 0x200|(h<<4);  //0x100 16*16
 		ss_spritePtr->charAddr  = 0x220+(Code<<4);
-		*ss_spritePtr++;
+		ss_spritePtr++;
 	}
 }
 

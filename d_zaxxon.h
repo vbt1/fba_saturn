@@ -15,7 +15,7 @@ void DrvFrame();
 inline void DrvDraw();
 void dummy();
 inline void copyBitmap();
-inline void rotate32_tile(unsigned int size,unsigned char flip, unsigned char *target);
+inline void rotate32_tile(unsigned int size,/*unsigned char flip,*/ unsigned char *target);
 
 UINT8 *bitmap = NULL;
 UINT8 *ss_map264 = NULL;
@@ -36,7 +36,7 @@ UINT8 *DrvZ80RAM = NULL;
 // UINT8 *DrvZ80RAM2 = NULL;
 UINT8 *DrvSprRAM = NULL;
 UINT8 *DrvVidRAM = NULL;
-UINT8 *DrvColRAM = NULL;
+//UINT8 *DrvColRAM = NULL;
 UINT8 *CZ80Context = NULL;
 
 UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
@@ -54,7 +54,7 @@ UINT8 zaxxon_bg_enable = 0;
 UINT8 interrupt_enable = 0;
 UINT32  zaxxon_bg_scroll_x2=0;
 UINT32  zaxxon_bg_scroll = 0;
-UINT8 zaxxon_flipscreen = 0;
+//UINT8 zaxxon_flipscreen = 0;
 
 /*static*/ //UINT8 *congo_color_bank = NULL;
 /*static*/// UINT8 *congo_fg_bank = NULL;
@@ -62,30 +62,30 @@ UINT8 zaxxon_flipscreen = 0;
 /*static*/// UINT8 *soundlatch = NULL;
 
 static struct BurnInputInfo ZaxxonInputList[] = {
-	{"P1 Coin",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 coin"},
-	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 2,	"p1 start"},
-	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 up"},
-	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 down"},
-	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 left"},
-	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 right"},
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"},
+	{"P1 Coin",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 coin"	},
+	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 2,	"p1 start"	},
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 up"		},
+	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 down"	},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 left"	},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 right"	},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"	},
 
-	{"P2 Coin",		BIT_DIGITAL,	DrvJoy4 + 1,	"p2 coin"},
-	{"P2 Start",		BIT_DIGITAL,	DrvJoy3 + 3,	"p2 start"},
-	{"P2 Up",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 up"},
-	{"P2 Down",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 down"},
-	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 left"},
-	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 right"},
-	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"},
+	{"P2 Coin",		BIT_DIGITAL,	DrvJoy4 + 1,	"p2 coin"	},
+	{"P2 Start",		BIT_DIGITAL,	DrvJoy3 + 3,	"p2 start"	},
+	{"P2 Up",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 up"}	,
+	{"P2 Down",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 down"	},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 left"	},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 right"	},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"	},
 
-	{"Reset",		BIT_DIGITAL,	NULL,	"reset"},
-	{"Service",		BIT_DIGITAL,	DrvJoy4 + 2,	"service"},
-	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
-	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
+	{"Service",		BIT_DIGITAL,	DrvJoy4 + 2,	"service"	},
+	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };
 
 STDINPUTINFO(Zaxxon)
-
+/*
 static struct BurnInputInfo CongoBongoInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 6,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 3,	"p1 start"},
@@ -110,18 +110,17 @@ static struct BurnInputInfo CongoBongoInputList[] = {
 };
 
 STDINPUTINFO(CongoBongo)
-
+*/
 
 static struct BurnDIPInfo ZaxxonDIPList[]=
 {
-	// Default Values
 	{0x10, 0xff, 0xff, 0x7f, NULL		},
 	{0x11, 0xff, 0xff, 0x33, NULL		},
 
 	{0   , 0xfe, 0   ,    1, "Service Mode (No Toggle)"		},
 	{0x10, 0x01, 0x01, 0x00, "Off"		},
 
-	{0   , 0xfe, 0   ,    4, "Bonus_Life"		},
+	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
 	{0x10, 0x01, 0x03, 0x03, "10000"		},
 	{0x10, 0x01, 0x03, 0x01, "20000"		},
 	{0x10, 0x01, 0x03, 0x02, "30000"		},
@@ -139,7 +138,7 @@ static struct BurnDIPInfo ZaxxonDIPList[]=
 	{0x10, 0x01, 0x30, 0x30, "3"		},
 	{0x10, 0x01, 0x30, 0x10, "4"		},
 	{0x10, 0x01, 0x30, 0x20, "5"		},
-	{0x10, 0x01, 0x30, 0x00, "Free_Play"		},
+	{0x10, 0x01, 0x30, 0x00, "Free Play"		},
 
 	{0   , 0xfe, 0   ,    2, "Sound"		},
 	{0x10, 0x01, 0x40, 0x00, "Off"		},
@@ -149,47 +148,126 @@ static struct BurnDIPInfo ZaxxonDIPList[]=
 	{0x10, 0x01, 0x80, 0x00, "Upright"		},
 	{0x10, 0x01, 0x80, 0x80, "Cocktail"		},
 
-	{0   , 0xfe, 0   ,    16, "SW2:!1,!2,!3,!4"		},
-	{0x11, 0x01, 0x0f, 0x0f, "SW2:!1,!2,!3,!4"		},
-	{0x11, 0x01, 0x0f, 0x07, "SW2:!1,!2,!3,!4"		},
-	{0x11, 0x01, 0x0f, 0x0b, "SW2:!1,!2,!3,!4"		},
-	{0x11, 0x01, 0x0f, 0x06, "2C/1C 5C/3C 6C/4C"		},
-	{0x11, 0x01, 0x0f, 0x0a, "2C/1C 3C/2C 4C/3C"		},
-	{0x11, 0x01, 0x0f, 0x03, "SW2:!1,!2,!3,!4"		},
-	{0x11, 0x01, 0x0f, 0x02, "1C/1C 5C/6C"		},
-	{0x11, 0x01, 0x0f, 0x0c, "1C/1C 4C/5C"		},
-	{0x11, 0x01, 0x0f, 0x04, "1C/1C 2C/3C"		},
-	{0x11, 0x01, 0x0f, 0x0d, "SW2:!1,!2,!3,!4"		},
-	{0x11, 0x01, 0x0f, 0x08, "1C/2C 5C/11C"		},
-	{0x11, 0x01, 0x0f, 0x00, "1C/2C 4C/9C"		},
-	{0x11, 0x01, 0x0f, 0x05, "SW2:!1,!2,!3,!4"		},
-	{0x11, 0x01, 0x0f, 0x09, "SW2:!1,!2,!3,!4"		},
-	{0x11, 0x01, 0x0f, 0x01, "SW2:!1,!2,!3,!4"		},
-	{0x11, 0x01, 0x0f, 0x0e, "SW2:!1,!2,!3,!4"		},
+	{0   , 0xfe, 0   ,    16, "Coin B"		},
+	{0x11, 0x01, 0x0f, 0x0f, "4 Coins / 1 Credit"		},
+	{0x11, 0x01, 0x0f, 0x07, "3 Coins / 1 Credit"		},
+	{0x11, 0x01, 0x0f, 0x0b, "2 Coins / 1 Credit"		},
+	{0x11, 0x01, 0x0f, 0x06, "2 Coins / 1 Credit + Bonus each 5"		},
+	{0x11, 0x01, 0x0f, 0x0a, "2 Coins / 1 Credit + Bonus each 2"		},
+	{0x11, 0x01, 0x0f, 0x03, "1 Coin / 1 Credit"		},
+	{0x11, 0x01, 0x0f, 0x02, "1 Coin / 1 Credit + Bonus each 5"		},
+	{0x11, 0x01, 0x0f, 0x0c, "1 Coin / 1 Credit + Bonus each 4"		},
+	{0x11, 0x01, 0x0f, 0x04, "1 Coin / 1 Credit + Bonus each 2"		},
+	{0x11, 0x01, 0x0f, 0x0d, "1 Coin / 2 Credits"		},
+	{0x11, 0x01, 0x0f, 0x08, "1 Coin / 2 Credits + Bonus each 5"		},
+	{0x11, 0x01, 0x0f, 0x00, "1 Coin / 2 Credits + Bonus each 4"		},
+	{0x11, 0x01, 0x0f, 0x05, "1 Coin / 3 Credits"		},
+	{0x11, 0x01, 0x0f, 0x09, "1 Coin / 4 Credits"		},
+	{0x11, 0x01, 0x0f, 0x01, "1 Coin / 5 Credits"		},
+	{0x11, 0x01, 0x0f, 0x0e, "1 Coin / 6 Credits"		},
 
-	{0   , 0xfe, 0   ,    16, "SW2:!5,!6,!7,!8"		},
-	{0x11, 0x01, 0xf0, 0xf0, "SW2:!5,!6,!7,!8"		},
-	{0x11, 0x01, 0xf0, 0x70, "SW2:!5,!6,!7,!8"		},
-	{0x11, 0x01, 0xf0, 0xb0, "SW2:!5,!6,!7,!8"		},
-	{0x11, 0x01, 0xf0, 0x60, "2C/1C 5C/3C 6C/4C"		},
-	{0x11, 0x01, 0xf0, 0xa0, "2C/1C 3C/2C 4C/3C"		},
-	{0x11, 0x01, 0xf0, 0x30, "SW2:!5,!6,!7,!8"		},
-	{0x11, 0x01, 0xf0, 0x20, "1C/1C 5C/6C"		},
-	{0x11, 0x01, 0xf0, 0xc0, "1C/1C 4C/5C"		},
-	{0x11, 0x01, 0xf0, 0x40, "1C/1C 2C/3C"		},
-	{0x11, 0x01, 0xf0, 0xd0, "SW2:!5,!6,!7,!8"		},
-	{0x11, 0x01, 0xf0, 0x80, "1C/2C 5C/11C"		},
-	{0x11, 0x01, 0xf0, 0x00, "1C/2C 4C/9C"		},
-	{0x11, 0x01, 0xf0, 0x50, "SW2:!5,!6,!7,!8"		},
-	{0x11, 0x01, 0xf0, 0x90, "SW2:!5,!6,!7,!8"		},
-	{0x11, 0x01, 0xf0, 0x10, "SW2:!5,!6,!7,!8"		},
-	{0x11, 0x01, 0xf0, 0xe0, "SW2:!5,!6,!7,!8"		},
+	{0   , 0xfe, 0   ,    16, "Coin A"		},
+	{0x11, 0x01, 0xf0, 0xf0, "4 Coins / 1 Credit"		},
+	{0x11, 0x01, 0xf0, 0x70, "3 Coins / 1 Credit"		},
+	{0x11, 0x01, 0xf0, 0xb0, "2 Coins / 1 Credit"		},
+	{0x11, 0x01, 0xf0, 0x60, "2 Coins / 1 Credit + Bonus each 5"		},
+	{0x11, 0x01, 0xf0, 0xa0, "2 Coins / 1 Credit + Bonus each 2"		},
+	{0x11, 0x01, 0xf0, 0x30, "1 Coin / 1 Credit"		},
+	{0x11, 0x01, 0xf0, 0x20, "1 Coin / 1 Credit + Bonus each 5"		},
+	{0x11, 0x01, 0xf0, 0xc0, "1 Coin / 1 Credit + Bonus each 4"		},
+	{0x11, 0x01, 0xf0, 0x40, "1 Coin / 1 Credit + Bonus each 2"		},
+	{0x11, 0x01, 0xf0, 0xd0, "1 Coin / 2 Credits"		},
+	{0x11, 0x01, 0xf0, 0x80, "1 Coin / 2 Credits + Bonus each 5"		},
+	{0x11, 0x01, 0xf0, 0x00, "1 Coin / 2 Credits + Bonus each 4"		},
+	{0x11, 0x01, 0xf0, 0x50, "1 Coin / 3 Credits"		},
+	{0x11, 0x01, 0xf0, 0x90, "1 Coin / 4 Credits"		},
+	{0x11, 0x01, 0xf0, 0x10, "1 Coin / 5 Credits"		},
+	{0x11, 0x01, 0xf0, 0xe0, "1 Coin / 6 Credits"		},
 };
 
 STDDIPINFO(Zaxxon)
 
-// Congo Bongo
+static struct BurnDIPInfo SzaxxonDIPList[]=
+{
+	{0x10, 0xff, 0xff, 0x7f, NULL		},
+	{0x11, 0xff, 0xff, 0x33, NULL		},
 
+	{0   , 0xfe, 0   ,    1, "Service Mode (No Toggle)"		},
+	{0x10, 0x01, 0x01, 0x00, "Off"		},
+
+	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
+	{0x10, 0x01, 0x03, 0x03, "10000"		},
+	{0x10, 0x01, 0x03, 0x01, "20000"		},
+	{0x10, 0x01, 0x03, 0x02, "30000"		},
+	{0x10, 0x01, 0x03, 0x00, "40000"		},
+
+	{0   , 0xfe, 0   ,    2, "Unused"		},
+	{0x10, 0x01, 0x04, 0x00, "Off"		},
+	{0x10, 0x01, 0x04, 0x04, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Unused"		},
+	{0x10, 0x01, 0x08, 0x00, "Off"		},
+	{0x10, 0x01, 0x08, 0x08, "On"		},
+
+	{0   , 0xfe, 0   ,    4, "Lives"		},
+	{0x10, 0x01, 0x30, 0x30, "3"		},
+	{0x10, 0x01, 0x30, 0x10, "4"		},
+	{0x10, 0x01, 0x30, 0x20, "5"		},
+	{0x10, 0x01, 0x30, 0x00, "Free Play"		},
+
+	{0   , 0xfe, 0   ,    2, "Sound"		},
+	{0x10, 0x01, 0x40, 0x00, "Off"		},
+	{0x10, 0x01, 0x40, 0x40, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Cabinet"		},
+	{0x10, 0x01, 0x80, 0x00, "Upright"		},
+	{0x10, 0x01, 0x80, 0x80, "Cocktail"		},
+
+	{0   , 0xfe, 0   ,    2, "Difficulty"		},
+	{0x10, 0x01, 0x04, 0x04, "Normal"		},
+	{0x10, 0x01, 0x04, 0x00, "Hard"		},
+
+	{0   , 0xfe, 0   ,    16, "Coin B"		},
+	{0x11, 0x01, 0x0f, 0x0f, "4 Coins / 1 Credit"		},
+	{0x11, 0x01, 0x0f, 0x07, "3 Coins / 1 Credit"		},
+	{0x11, 0x01, 0x0f, 0x0b, "2 Coins / 1 Credit"		},
+	{0x11, 0x01, 0x0f, 0x06, "2 Coins / 1 Credit + Bonus each 5"		},
+	{0x11, 0x01, 0x0f, 0x0a, "2 Coins / 1 Credit + Bonus each 2"		},
+	{0x11, 0x01, 0x0f, 0x03, "1 Coin / 1 Credit"		},
+	{0x11, 0x01, 0x0f, 0x02, "1 Coin / 1 Credit + Bonus each 5"		},
+	{0x11, 0x01, 0x0f, 0x0c, "1 Coin / 1 Credit + Bonus each 4"		},
+	{0x11, 0x01, 0x0f, 0x04, "1 Coin / 1 Credit + Bonus each 2"		},
+	{0x11, 0x01, 0x0f, 0x0d, "1 Coin / 2 Credits"		},
+	{0x11, 0x01, 0x0f, 0x08, "1 Coin / 2 Credits + Bonus each 5"		},
+	{0x11, 0x01, 0x0f, 0x00, "1 Coin / 2 Credits + Bonus each 4"		},
+	{0x11, 0x01, 0x0f, 0x05, "1 Coin / 3 Credits"		},
+	{0x11, 0x01, 0x0f, 0x09, "1 Coin / 4 Credits"		},
+	{0x11, 0x01, 0x0f, 0x01, "1 Coin / 5 Credits"		},
+	{0x11, 0x01, 0x0f, 0x0e, "1 Coin / 6 Credits"		},
+
+	{0   , 0xfe, 0   ,    16, "Coin A"		},
+	{0x11, 0x01, 0xf0, 0xf0, "4 Coins / 1 Credit"		},
+	{0x11, 0x01, 0xf0, 0x70, "3 Coins / 1 Credit"		},
+	{0x11, 0x01, 0xf0, 0xb0, "2 Coins / 1 Credit"		},
+	{0x11, 0x01, 0xf0, 0x60, "2 Coins / 1 Credit + Bonus each 5"		},
+	{0x11, 0x01, 0xf0, 0xa0, "2 Coins / 1 Credit + Bonus each 2"		},
+	{0x11, 0x01, 0xf0, 0x30, "1 Coin / 1 Credit"		},
+	{0x11, 0x01, 0xf0, 0x20, "1 Coin / 1 Credit + Bonus each 5"		},
+	{0x11, 0x01, 0xf0, 0xc0, "1 Coin / 1 Credit + Bonus each 4"		},
+	{0x11, 0x01, 0xf0, 0x40, "1 Coin / 1 Credit + Bonus each 2"		},
+	{0x11, 0x01, 0xf0, 0xd0, "1 Coin / 2 Credits"		},
+	{0x11, 0x01, 0xf0, 0x80, "1 Coin / 2 Credits + Bonus each 5"		},
+	{0x11, 0x01, 0xf0, 0x00, "1 Coin / 2 Credits + Bonus each 4"		},
+	{0x11, 0x01, 0xf0, 0x50, "1 Coin / 3 Credits"		},
+	{0x11, 0x01, 0xf0, 0x90, "1 Coin / 4 Credits"		},
+	{0x11, 0x01, 0xf0, 0x10, "1 Coin / 5 Credits"		},
+	{0x11, 0x01, 0xf0, 0xe0, "1 Coin / 6 Credits"		},
+};
+
+STDDIPINFO(Szaxxon)
+
+// Congo Bongo
+/*
 static struct BurnRomInfo congoRomDesc[] = {
 	{ "congo1.u35",		0x2000, 0x09355b5b, 1 }, //  0 main
 	{ "congo2.u34",		0x2000, 0x1c5e30ae, 1 }, //  1
@@ -219,7 +297,7 @@ static struct BurnRomInfo congoRomDesc[] = {
 
 STD_ROM_PICK(congo)
 STD_ROM_FN(congo)
-
+*/
 // Zaxxon (set 1)
 
 static struct BurnRomInfo zaxxonRomDesc[] = {
@@ -249,7 +327,7 @@ static struct BurnRomInfo zaxxonRomDesc[] = {
 
 STD_ROM_PICK(zaxxon)
 STD_ROM_FN(zaxxon)
-
+/*
 static struct BurnRomInfo zaxxonbRomDesc[] = {
 	{ "zaxxonb3.u27",	0x2000, 0x125bca1c, 1 }, //  0 main
 	{ "zaxxonb2.u28",	0x2000, 0xc088df92, 1 }, //  1
@@ -277,7 +355,7 @@ static struct BurnRomInfo zaxxonbRomDesc[] = {
 
 STD_ROM_PICK(zaxxonb)
 STD_ROM_FN(zaxxonb)
-
+*/
 // Super Zaxxon
 
 static struct BurnRomInfo szaxxonRomDesc[] = {
@@ -321,7 +399,7 @@ struct BurnDriver BurnDrvCongo = {
 
 
 // Tip Top
-
+/*
 static struct BurnRomInfo tiptopRomDesc[] = {
 	{ "tiptop1.u35",	0x2000, 0xe19dc77b, 1 }, //  0 main
 	{ "tiptop2.u34",	0x2000, 0x3fcd3b6e, 1 }, //  1
@@ -351,7 +429,7 @@ static struct BurnRomInfo tiptopRomDesc[] = {
 
 STD_ROM_PICK(tiptop)
 STD_ROM_FN(tiptop)
-/*
+
 struct BurnDriver BurnDrvTiptop = {
 	"tiptop", "congo", NULL, NULL, "1983",
 	"Tip Top\0", NULL, "Sega", "hardware",

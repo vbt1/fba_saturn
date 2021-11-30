@@ -1062,8 +1062,8 @@ INT32 NinjakunInit()
 	CZetMapMemory(DrvSubROM,	0x0000, 0x1fff, MAP_ROM);
 	CZetMapMemory(DrvMainROM + 0x2000,	0x2000, 0x7fff, MAP_ROM);
 
-	CZetMapArea(0x2000, 0x7fff, 0, DrvMainROM + 0x2000);
-	CZetMapArea(0x2000, 0x7fff, 2, DrvMainROM + 0x2000);
+//	CZetMapArea(0x2000, 0x7fff, 0, DrvMainROM + 0x2000);
+//	CZetMapArea(0x2000, 0x7fff, 2, DrvMainROM + 0x2000);
 
 	CZetMapArea(0xc000, 0xc7ff, 0, DrvFgRAM);
 //	CZetMapArea(0xc000, 0xc7ff, 1, DrvFgRAM);
@@ -1680,7 +1680,7 @@ void nova_draw_sprites()
 	for (UINT8 offs = 0; offs < 0x40; offs++)
 	{
 		UINT8 attr = DrvSprRAMptr[3];
-		UINT8 code = DrvSprRAMptr[0];
+
 		
 		if (attr & 0x80)
 		{
@@ -1692,6 +1692,8 @@ void nova_draw_sprites()
 			DrvSprRAMptr+=32;
 			continue;
 		}
+		
+		UINT8 code = DrvSprRAMptr[0];		
 /*
 		ss_spritePtr->ax = DrvSprRAM[offs+1] - ((attr & 0x40) << 2);
 		ss_spritePtr->ay = DrvSprRAM[offs+2];
@@ -1726,8 +1728,8 @@ void DrvFrame()
 
 	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
 	DrvDraw();
-
-	SPR_WaitEndSlaveSH();
+	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();
 }
 //-------------------------------------------------------------------------------------------------
 void updateSound()

@@ -13,10 +13,10 @@ INT32 puckmanInit();
 INT32 pengouInit();
 //INT32 pengobInit();
 INT32 DrvExit();
-INT32 DrvFrame();
+void DrvFrame();
 inline void DrvDrawPacMan();
 INT32 DrvInit(void (*mapCallback)(), void (*pInitCallback)(), UINT32 select);
-INT32 pacman_load(UINT32 game_select);
+void pacman_load(UINT32 game_select);
 void convert_gfx(UINT32 game_select);
 void init_32_colors(unsigned int *t_pal,unsigned char *color_prom);
 
@@ -48,13 +48,13 @@ extern struct namco_sound *chip;
 //UINT8 game_select = 0;
 UINT8 interrupt_mode = 0;
 UINT8 interrupt_mask = 0;
-UINT8 colortablebank = 0;
-UINT8 palettebank = 0;
-UINT8 spritebank = 0;
-UINT8 charbank = 0;
+UINT16 colortablebank = 0;
+UINT16 palettebank = 0;
+UINT16 spritebank = 0;
+UINT16 charbank = 0;
 UINT32 watchdog = 0;
 //------------------------------------------------------------------------------------------------------
-struct BurnInputInfo DrvInputList[] = {
+static struct BurnInputInfo DrvInputList[] = {
 	{"Coin 1",		  BIT_DIGITAL,	DrvJoy1 + 5,	"p1 coin"},
 	{"Coin 2",		  BIT_DIGITAL,	DrvJoy1 + 6,	"p2 coin"},
 	{"Start 1",		  BIT_DIGITAL,	DrvJoy2 + 5,	"p1 start"},
@@ -82,7 +82,7 @@ struct BurnInputInfo DrvInputList[] = {
 STDINPUTINFO(Drv)
 
 
-struct BurnInputInfo PengoInputList[] = {
+static struct BurnInputInfo PengoInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 start"},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"},
@@ -108,7 +108,7 @@ struct BurnInputInfo PengoInputList[] = {
 
 STDINPUTINFO(Pengo)
 
-struct BurnDIPInfo PengoDIPList[]=
+static struct BurnDIPInfo PengoDIPList[]=
 {
 	{0x0f, 0xff, 0xff, 0xff, NULL				},
 	{0x10, 0xff, 0xff, 0xff, NULL				},
@@ -185,7 +185,7 @@ struct BurnDIPInfo PengoDIPList[]=
 
 STDDIPINFO(Pengo)
 
-struct BurnDIPInfo DrvDIPList[]=
+static struct BurnDIPInfo DrvDIPList[]=
 {
 	{0x0e, 0xff, 0xff, 0xc9, NULL                     },
 	{0x0f, 0xff, 0xff, 0xff, NULL                     },
@@ -230,7 +230,7 @@ STDDIPINFO(Drv)
 
 // Pengo (set 2 not encrypted)
 
-struct BurnRomInfo pengo2uRomDesc[] = {
+static struct BurnRomInfo pengo2uRomDesc[] = {
 	{ "epr5128.u8",   0x1000, 0x3dfeb20e, 1 | BRF_ESS | BRF_PRG },	//  0 Z80 Code
 	{ "epr5129.u7",   0x1000, 0x1db341bd, 1 | BRF_ESS | BRF_PRG },	//  1
 	{ "epr5130.u15",  0x1000, 0x7c2842d5, 1 | BRF_ESS | BRF_PRG },	//  2
@@ -256,7 +256,7 @@ STD_ROM_FN(pengo2u)
 
 // Puck Man (Japan set 1)
 
-struct BurnRomInfo puckmanRomDesc[] = {
+static struct BurnRomInfo puckmanRomDesc[] = {
 	{ "pm1prg1.6e",  0x0800, 0xf36e88ab, 1 | BRF_ESS | BRF_PRG },	//  0 Z80 Code
 	{ "pm1prg2.6k",  0x0800, 0x618bd9b3, 1 | BRF_ESS | BRF_PRG },	//  1
 	{ "pm1prg3.6f",  0x0800, 0x7d177853, 1 | BRF_ESS | BRF_PRG },	//  2

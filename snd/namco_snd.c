@@ -17,13 +17,12 @@ INT16 *p = NULL; //(INT16*)0x00200000;
 
 /*static*/// struct namco_sound chip[1];// = NULL;
  struct namco_sound *chip = NULL;
-
 /*static*/ void update_namco_waveform(INT32 offset, UINT8 data)
 {
-	if (chip->wave_size == 1)
+/*	if (chip->wave_size == 1)
 	{
 		INT16 wdata;
-		/* use full byte, first 4 high bits, then low 4 bits */
+		// use full byte, first 4 high bits, then low 4 bits 
 		for (UINT32 v = 0; v < MAX_VOLUME; v++)
 		{
 			wdata = ((data >> 4) & 0x0f) - 8;
@@ -32,7 +31,7 @@ INT16 *p = NULL; //(INT16*)0x00200000;
 			chip->waveform[v][offset * 2 + 1] = OUTPUT_LEVEL(wdata * v);
 		}
 	}
-	else
+	else*/
 	{
 		/* use only low 4 bits */
 		for (UINT32 v = 0; v < MAX_VOLUME; v++)
@@ -49,8 +48,8 @@ INT16 *p = NULL; //(INT16*)0x00200000;
 		nLeftSample = BURN_SND_CLIPVBT(nLeftSample);
 		
 		*buffer++ += nLeftSample;
-//		counter += freq * chip->update_step;
-		counter += (UINT32)((float)freq * chip->update_step);
+		counter += freq * chip->update_step;
+//		counter += (UINT32)((float)freq * chip->update_step);
 	}
 
 	return counter;
@@ -66,7 +65,8 @@ void NamcoSoundUpdate(INT16* buffer, INT32 length)
 
 	/* zap the contents of the buffer */
 //	memset(buffer, 0, length * sizeof(*buffer) * 2);
-	memset(&buffer[0], 0, length * 2);
+//	memset(&buffer[0], 0, length * 2);
+	memset(buffer, 0, length * 2 * sizeof(INT16));
 
 
 	/* if no sound, we're done */
@@ -90,7 +90,7 @@ void NamcoSoundUpdate(INT16* buffer, INT32 length)
 				INT32 hold_time = 1 << (chip->f_fracbits - 16);
 				INT32 hold = voice->noise_hold;
 				UINT32 delta = f << 4;
-				UINT32 c = 0; voice->noise_counter;
+				UINT32 c = voice->noise_counter;
 				INT16 noise_data =OUTPUT_LEVEL(0x07 * (v >> 1));
 
 				// add our contribution 
@@ -346,8 +346,8 @@ void NamcoSoundInit(INT32 clock, INT32 num_voices, UINT8 *Namcocontext)
 		voice->noise_hold = 0;
 	}
 //	voice = NULL; 
-//	chip->update_step = INTERNAL_RATE / SOUNDRATE;
-	chip->update_step = ((float)INTERNAL_RATE / (float)SOUNDRATE);
+	chip->update_step = INTERNAL_RATE / SOUNDRATE;
+//	chip->update_step = ((float)INTERNAL_RATE / (float)SOUNDRATE);
 
 }
 

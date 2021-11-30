@@ -529,7 +529,7 @@ inline void SolomonRenderSpriteLayer()
 		ss_spritePtr->ay			= 225 - SolomonSpriteRam[Offs + 2];
 		ss_spritePtr->ax			=  8 + SolomonSpriteRam[Offs + 3];
 		ss_spritePtr->color		=  (Attr & 0x0e)*8;
-		*ss_spritePtr++;
+		ss_spritePtr++;
 	}
 }
 

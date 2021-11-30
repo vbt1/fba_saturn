@@ -761,7 +761,7 @@ int sms_irq_callback(int param)
 //		ss_sprite[delta].charAddr   = 0;
 		ss_spritePtr->ax   = -16;
 		ss_spritePtr->ay   = -16;
-		*ss_spritePtr++;
+		ss_spritePtr++;
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

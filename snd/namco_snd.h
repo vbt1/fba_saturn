@@ -4,7 +4,7 @@ void NamcoSoundUpdateStereo(INT16* buffer, INT32 length);
 void NamcoSoundWrite(UINT32 offset, UINT8 data);
 //void NamcoSoundInit(INT32 clock, INT32 num_voices);
 void NamcoSoundInit(INT32 clock, INT32 num_voices, UINT8 *Namcocontext);
-void NacmoSoundSetRoute(INT32 nIndex, double nVolume, INT32 nRouteDir);
+//void NacmoSoundSetRoute(INT32 nIndex, int nVolume, INT32 nRouteDir);
 void NamcoSoundExit();
 void NamcoSoundScan(INT32 nAction,INT32 *pnMin);
 
@@ -49,7 +49,7 @@ typedef struct namco_sound
 
 	INT16 *waveform[MAX_VOLUME];
 	
-	float update_step;
+	UINT32 update_step;
 	
 //	double gain[2];
 //	INT32 output_dir[2];

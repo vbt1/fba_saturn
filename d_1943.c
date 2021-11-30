@@ -1365,7 +1365,7 @@ void DrvRenderSprites(INT32 Priority)
 		ss_spritePtr->charSize	= 0x210;
 		ss_spritePtr->color		= (Attr & 0x0f)<<4;//Colour<<4;
 		ss_spritePtr->charAddr	= 0x220+((DrvSpriteRam[Offs] + ((Attr & 0xe0) << 3))<<4);
-		*ss_spritePtr++;
+		ss_spritePtr++;
 	//	}
 	}
 	
