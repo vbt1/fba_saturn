@@ -1,0 +1,109 @@
+MEMORY 
+  {
+  ram  : ORIGIN = 0x6000000, l = 909312
+  ovl  : ORIGIN = 0x60DE000, l = 139264
+  }
+
+SECTIONS {
+
+	.stack 0x060fff00 (NOLOAD):
+	{
+	        *(.stack)
+         	_stack = .;
+	} > ram		
+
+	.shared 0x6003700 (NOLOAD):
+	{
+	    root/sl.elf (".shared")
+		_play = .;
+		_hz = _play + 2;
+		_col = _hz + 2; /* size 16 */
+		_pcm = _col + 16; /* pointer size 4 */		
+		_nBurnDrvCount = _pcm + 16;
+		_nBurnDrvSelect = _nBurnDrvCount + 4;
+		_nBurnSoundRate = _nBurnDrvSelect + 4;
+		_nBurnSprites = _nBurnSoundRate + 4;
+		_nBurnLinescrollSize = _nBurnSprites + 4;
+		_nBurnFunction = _nBurnLinescrollSize + 4;
+		_nSoundBufferPos = _nBurnFunction + 4;
+		_SclProcess = _nSoundBufferPos + 4;
+/*		_SclColRamAlloc256 = _SclProcess + 4;*/ /* size 32 */
+/*		_per_buff = _SclProcess + 4;*/ /* pointer size 61 */
+/*		_per_data = _per_buff + 64; */ /* pointer size 4 */
+/*		_mul_info2 = _per_data + 4; */ /* pointer size 16  ??? */
+		___port = _SclProcess + 4; /* pointer size 4 */
+
+		_SPR_SlaveParam = ___port + 16; /* pointer size 4 */
+		_SPR_SlaveState = _SPR_SlaveParam + 4; /* pointer size 4 */
+		_SPR_SlaveCommand = _SPR_SlaveState + 4; /* pointer size 4 */
+
+		_shared = _SPR_SlaveCommand + 4; /* shared size is 17*4 + 384*4 */
+		_shared_end = _shared + 1604; /* 17*4 + 384*4 */
+		
+/*		_SclAddrLsTbl = _SclColRamAlloc256 + 32; */ /* size 8 */
+/*		_SclBgColMix = . + 112;  size 8 */
+/*		_SclBgPriNum = . + 120;  size 6 */
+/*		_SclOtherPri = . + 126;  size 16 */
+/*		_SclSpPriNum = . + 130;  size 8 */
+
+	} > ram
+
+	.clean 0x6003e00 (NOLOAD):
+	{
+		*(.clean)
+				. = ALIGN(0x10);
+	} > ram
+		
+	.entry 0x6004000  (NOLOAD):
+	{
+		root/sl.elf (".entry")
+	}  > ram
+
+	text ALIGN(0x10)  (NOLOAD):
+	{
+		root/sl.elf (".text")
+		root/sl.elf (".text*")
+		root/sl.elf (.rodata*) 
+		root/sl.elf (.strings)
+		root/sl.elf (.dtors)
+	} > ram
+	
+	.rodata ALIGN(0x10)   (NOLOAD):		
+	{			
+	   root/sl.elf (.rodata*)
+	} > ram	
+	
+	.bss ALIGN(0x10) (NOLOAD):			
+	{
+		__bstart = . ;
+		. = ALIGN(0x10);
+		root/sl.elf (".bss")
+		. = ALIGN(0x10);		
+		root/sl.elf ("COMMON")
+		. = ALIGN(0x10);		
+		_end = .;		
+	} > ram
+
+	.malloc_max 0x0601c000:
+        {
+		__malloc_max_ram = .;
+        } > ram
+		
+  OVERLAY 0x60DE000 : NOCROSSREFS AT (0x60DE000) 
+  {
+	.ovly0 { 
+		__start_ram = .;
+		boot = .;
+		*(.boot)
+		*(".text")
+		*(".text*")	
+		*(.data)
+		*(.rodata*)
+		
+		__bstart = . ;
+		*(.bss)
+		*(COMMON)
+		__bend = . ;		
+	}
+  }  
+}

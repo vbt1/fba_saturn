@@ -5,7 +5,7 @@
 
 #include "d_pacman.h"
 #define nBurnSoundLen 192
-#define nInterleave 192 //264
+#define nInterleave 264 //264
 #define nCyclesTotal  (18432000 / 6) / 60
 #define runCycles nCyclesTotal / nInterleave
 #define nSegmentLength 1 //nBurnSoundLen / nInterleave
@@ -151,8 +151,6 @@ void __fastcall pengo_write(UINT16 a, UINT8 d)
 
 		case 0x9043:
 //			*flipscreen = d & 1;
-		return;
-
 		case 0x9044:
 		case 0x9045: // coin counter
 		return;
@@ -214,7 +212,7 @@ void pacman_palette_init()
 {
 	UINT32 t_pal[32];
 	UINT32 delta=0;
-	UINT8 *DrvColPROM = (UINT8*)0x00280000;
+	UINT8 *DrvColPROM = (UINT8*)LOWADDR;
 	
 	init_32_colors(t_pal,DrvColPROM);
 
@@ -222,15 +220,15 @@ void pacman_palette_init()
 	{
 		UINT8 ctabentry = DrvColPROM[i + 0x100] & 0x0f;
 
-		/*colAddr[i]=*/colBgAddr[delta] = /*Palette[0x000 + i] =*/ t_pal[ctabentry + 0x00];
-		/*colAddr[i+256]=*/colBgAddr[delta+1024] = /*Palette[0x100 + i] =*/ t_pal[ctabentry + 0x10];
+		colBgAddr[delta] = t_pal[ctabentry + 0x00];
+		colBgAddr[delta+1024] = t_pal[ctabentry + 0x10];
 		delta++; if ((delta & 3) == 0) delta += 12;
 	}
 
 //	DrvRecalc = 1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void rotate_tile16x16(unsigned int size, unsigned char *target)
+inline void rotate_tile16x16(unsigned int size, unsigned char *target)
 {
 	unsigned int i,j,k; //,l=0;
 	unsigned char temp[16][16];
@@ -279,19 +277,19 @@ void pacman_load(UINT32 game_select)
 {
 	char* pRomName = NULL;
 	struct BurnRomInfo ri;
-	
-	UINT32 pOffset = 0;
+
+	INT32 pOffset = 0;
 	UINT8 *gLoad = cache;
-	UINT8 *cLoad = (UINT8*)0x00280000;
+	UINT8 *cLoad = (UINT8*)LOWADDR;
 	UINT8 *sLoad = (UINT8*)NamcoSoundProm;
-	UINT8 *qLoad = (UINT8*)0x00200000;
+//	UINT8 *qLoad = (UINT8*)0x00200000;
 
 	for (UINT32 i = 0; !BurnDrvGetRomName(&pRomName, i, 0); i++) {
 
 		BurnDrvGetRomInfo(&ri, i);
 
 		if ((ri.nType & 7) == 1) {
-			if (BurnLoadRom(DrvZ80ROM + pOffset, i, 1)) return 1;
+			if (BurnLoadRom(DrvZ80ROM + pOffset, i, 1)) return;
 		  
 		/*	if (game_select == MSPACMAN) {
 				pOffset += 0x1000;
@@ -307,34 +305,34 @@ void pacman_load(UINT32 game_select)
 		}
 
 		if ((ri.nType & 7) == 2) {
-			if (BurnLoadRom(gLoad, i, 1)) return 1;
+			if (BurnLoadRom(gLoad, i, 1)) return;
 			gLoad += ri.nLen;
 
 			continue;
 		}
 
 		if ((ri.nType & 7) == 3) {
-			if (BurnLoadRom(cLoad, i, 1)) return 1;
+			if (BurnLoadRom(cLoad, i, 1)) return;
 			cLoad += 0x100;
 
 			continue;
 		}
 		
 		if ((ri.nType & 7) == 4) {
-			if (BurnLoadRom(sLoad, i, 1)) return 1;
+			if (BurnLoadRom(sLoad, i, 1)) return;
 			sLoad += 0x100;
 
 			continue;
 		}
-
+/*
 		if ((ri.nType & 7) == 7) {
 			if (BurnLoadRom(qLoad, i, 1)) return 1;
 			qLoad += ri.nLen;
 
 			continue;
-		}	
+		}	*/
 	}
-	gLoad = cLoad = sLoad = qLoad = NULL;
+	gLoad = cLoad = sLoad = /*qLoad =*/ NULL;
 }
 
 inline void MemIndex()
@@ -367,7 +365,7 @@ inline void MemIndex()
 	NamcoContext	= (UINT8 *)Next; Next += 420;//sizeof(namco_sound);
 }
 
-void PengoMap()
+ void PengoMap()
 {
 	CZetMapMemory2(DrvZ80ROM + 0x8000, DrvZ80ROM, 0x0000, 0x7fff, MAP_ROM);
 	
@@ -500,7 +498,7 @@ inline void make_lut(void)
 			ofst_lut[i] = col + (row << 5);
 
 		sy = (col+2)<<6;
-		sx = 	30-row;
+		sx = 30-row;
 		
 		if (sx >= 0)
 //			sx = row;
@@ -627,8 +625,8 @@ inline void DrawSprites()
 
 		INT16 sx     = DrvSprRAM2[offs + 1];
 		INT16 sy     = DrvSprRAM2[offs];
-		UINT16 flipx  = *sprRAM1 & 1;
-		UINT16 flipy  = *sprRAM1 & 2;
+		UINT8 flipx  = *sprRAM1 & 1;
+		UINT8 flipy  = *sprRAM1 & 2;
 
 		UINT16 flip  = (flipy>>1| flipx<<1)<<4;
 
@@ -687,24 +685,22 @@ void DrvFrame()
 	}
 
 	CZetOpen(0);
-	Sint16 *nSoundBuffer = (Sint16 *)0x25a20000+nSoundBufferPos;	
+	Sint16 *nSoundBuffer = (Sint16 *)(0x25a20000+nSoundBufferPos*sizeof(Sint16));	
 	
-	for (INT32 i = 0; i < nInterleave; i++) 
+	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
 		CZetRun(runCycles);
 		
-		if (i == (nInterleave-1) && interrupt_mask) 
+		if (i == (223) && interrupt_mask) 
 		{
 			CZetRaiseIrq(interrupt_mode);
 			CZetRun(100);
 			CZetLowerIrq();
 		}
-	
-		NamcoSoundUpdate(nSoundBuffer, nSegmentLength);
-		nSoundBufferPos += nSegmentLength;
-		nSoundBuffer += nSegmentLength;
 	}
 	CZetClose();
+	NamcoSoundUpdate(nSoundBuffer, 224);
+	nSoundBufferPos += 224;
 
     DrvDrawPacMan();
 	

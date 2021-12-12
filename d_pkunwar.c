@@ -44,7 +44,8 @@ int ovlInit(char *szShortName)
 		memcpy(shared,&nBurnDrvNinjakun,sizeof(struct BurnDriver));
 //	if (strcmp(nBurnDrvRaiders5.szShortName, szShortName) == 0)
 //		memcpy(shared,&nBurnDrvRaiders5,sizeof(struct BurnDriver));
-	ss_reg = (SclNorscl *)SS_REG;
+	ss_reg   = (SclNorscl *)SS_REG;
+	ss_regs  = (SclSysreg *)SS_REGS;
 	
 	return 0;
 }
@@ -318,12 +319,13 @@ void __fastcall pkunwar_write(unsigned short address, unsigned char data)
 	}
 }
 //---------------------------------------------------------------------------------------------------------
+/*
 void __fastcall pkunwar_out(unsigned short address, unsigned char data)
 {
 	address &= 0xff;
 
 //	if (address == 0) flipscreen = data & 1;
-}
+}*/
 //---------------------------------------------------------------------------------------------------------
 UINT8 __fastcall nova2001_read(UINT16 address)
 {
@@ -720,7 +722,7 @@ void pkunwar_palette_init()
 		g = (((DrvColPROM[entry] >> 2) & 0x0c) | intensity) * 0x11;
 		b = (((DrvColPROM[entry] >> 4) & 0x0c) | intensity) * 0x11;
 
-		colAddr[i] = colBgAddr[i] = BurnHighCol(r,g,b,0);
+		colAddr[i] = colBgAddr[i] = RGB(r>>3,g>>3,b>>3);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -905,11 +907,11 @@ int DrvInit()
 	z80_add_write(0xa000, 0xa003, 1, (void *)&pkunwar_write);
 	z80_add_read(0xa000,  0xa003, 1, (void *)&pkunwar_read);
 	z80_end_memmap();   
-	z80_set_out((void (*)(unsigned short int, unsigned char))&pkunwar_out);
+//	z80_set_out((void (*)(unsigned short int, unsigned char))&pkunwar_out);
 #else
 //	CZetInit(1);
 	CZetOpen(0);
-	CZetSetOutHandler(pkunwar_out);
+//	CZetSetOutHandler(pkunwar_out);
 	CZetSetReadHandler(pkunwar_read);
 	CZetSetWriteHandler(pkunwar_write);
 	
@@ -1756,9 +1758,9 @@ void updateSound()
 
 		nSample /=4;
 
-		BURN_SND_CLIP(nSample);
 		
-		*nSoundBuffer++ = nSample;//pAY8910Buffer[5][n];//nSample;
+		
+		*nSoundBuffer++ = BURN_SND_CLIP(nSample);//pAY8910Buffer[5][n];//nSample;
 	}
 
 	if(deltaSlave>=RING_BUF_SIZE/2)
