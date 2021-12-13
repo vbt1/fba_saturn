@@ -70,7 +70,7 @@ int ovlInit(char *szShortName)
 
 void DrvDoReset()
 {
-	memset(AllRam, 0, RamEnd - AllRam);
+	memset(DrvRAM, 0, (UINT8 *)map_offset_lut - DrvRAM);
 	coin = 0;
 	nmi_enable = 0;
 	ff_data = 0;
@@ -85,107 +85,121 @@ void DrvDoReset()
 	CZetClose();
 }
 
-void pbillrd_draw_sprite(INT32 offs)
+void pbillrd_draw_sprite(UINT32 offs)
 {
-	INT8 sx = DrvSprRAM[offs + 3];
-	INT8 sy = 224 - DrvSprRAM[offs + 2];
-
+	UINT8* spram = (UINT8*)&DrvSprRAM[offs];
+	
+	INT8 sx = spram[3];
+	INT8 sy = 224 - spram[2];
+	SprSpCmd *ss_spritePtr = &ss_sprite[sprite_number];
+	
 	if(sx > 0 && sy > 0)
 	{
+		UINT32 code = spram[0];
+		UINT32 color = spram[1] & 0x0f;
 
-		UINT32 code = DrvSprRAM[offs + 0];
-		UINT32 color = DrvSprRAM[offs + 1] & 0x0f;
-
-		ss_sprite[sprite_number].ax		= sx;
-		ss_sprite[sprite_number].ay		= sy;
-		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4);
-		ss_sprite[sprite_number].color     = (color<<4);
+		ss_spritePtr->ax		= sx;
+		ss_spritePtr->ay		= sy;
+		ss_spritePtr->charAddr	= 0x220 +(code << 4);
+		ss_spritePtr->color     = (color<<4);
 	}
 	else
 	{
-		ss_sprite[sprite_number].ax		= -16;
-		ss_sprite[sprite_number].ay		= -16;
+		ss_spritePtr->ax		= -16;
+		ss_spritePtr->ay		= -16;
 	}
 	sprite_number++;
 }
 
-void countrun_draw_sprite(INT32 offs)
+void countrun_draw_sprite(UINT32 offs)
 {
-	INT32 sx = DrvSprRAM[offs + 3];
-	INT32 sy = 232-DrvSprRAM[offs + 0];
+	UINT8* spram = (UINT8*)&DrvSprRAM[offs];
+	INT32 sx = spram[3];
+	INT32 sy = 232-spram[0];
+	SprSpCmd *ss_spritePtr = &ss_sprite[sprite_number];
 
 	if(sx > 0 && sy > 0)
 	{	
-		UINT16 code = (DrvSprRAM[offs + 1] + ((DrvSprRAM[offs + 2] & 0x20) << 3))  & 0x1ff;
-		UINT8 color = DrvSprRAM[offs + 2] & 0x1f;
-		UINT8 flipx	= (DrvSprRAM[offs + 2] & 0x80) >> 3;    //?? unused ?
-		UINT8 flipy	= 0x20 - (((DrvSprRAM[offs + 2] & 0x40)) >> 1);
+		UINT16 code = (spram[1] + ((spram[2] & 0x20) << 3))  & 0x1ff;
+		UINT8 color = spram[2] & 0x1f;
+		UINT8 flipx	= (spram[2] & 0x80) >> 3;    //?? unused ?
+		UINT8 flipy	= 0x20 - (((spram[2] & 0x40)) >> 1);
 
-		ss_sprite[sprite_number].ax		= sx;
-		ss_sprite[sprite_number].ay		= sy;
-		ss_sprite[sprite_number].control   = ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
-		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4);
-		ss_sprite[sprite_number].color     = (color<<4);
+		ss_spritePtr->ax		= sx;
+		ss_spritePtr->ay		= sy;
+		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
+		ss_spritePtr->charAddr	= 0x220 +(code << 4);
+		ss_spritePtr->color     = (color<<4);
 	}
 	else
 	{
-		ss_sprite[sprite_number].ax		= -16;
-		ss_sprite[sprite_number].ay		= -16;
+		ss_spritePtr->ax		= -16;
+		ss_spritePtr->ay		= -16;
 	}
 	sprite_number++;
 }
 
-void freekick_draw_sprite(INT32 offs)
+void freekick_draw_sprite(UINT32 offs)
 {
-	INT32 sx = 224 - DrvSprRAM[offs + 3];
-	INT32 sy = 240 - DrvSprRAM[offs + 0];
+	UINT8* spram = (UINT8*)&DrvSprRAM[offs];
+	
+	INT32 sx = 224 - spram[3];
+	INT32 sy = 240 - spram[0];
 
 	if(sx > 0 && sy > 0)
 	{	
-		UINT16 code = (DrvSprRAM[offs + 1] + ((DrvSprRAM[offs + 2] & 0x20) << 3))  & 0x1ff;
-		UINT8 color = DrvSprRAM[offs + 2] & 0x1f;
-		UINT8 flipx	= ((!DrvSprRAM[offs + 2]) & 0x80) >> 2;    //?? unused ?
-		UINT8 flipy	= 0x10-(((DrvSprRAM[offs + 2] & 0x40)) >> 2);
+		SprSpCmd *ss_spritePtr = &ss_sprite[sprite_number];
+	
+		UINT16 code = (spram[1] + ((spram[2] & 0x20) << 3))  & 0x1ff;
+		UINT8 color = spram[2] & 0x1f;
+		UINT8 flipx	= ((!spram[2]) & 0x80) >> 2;    //?? unused ?
+		UINT8 flipy	= 0x10-(((spram[2] & 0x40)) >> 2);
 
-		ss_sprite[sprite_number].ax		= sy;
-		ss_sprite[sprite_number].ay		= sx;
-		ss_sprite[sprite_number].control   = ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
-		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4);
-		ss_sprite[sprite_number].color     = (color<<4);
+		ss_spritePtr->ax		= sy;
+		ss_spritePtr->ay		= sx;
+		ss_spritePtr->control	= ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
+		ss_spritePtr->charAddr	= 0x220 +(code << 4);
+		ss_spritePtr->color     = (color<<4);
 		sprite_number++;
 	}
 }
 
-void gigas_draw_sprite(INT32 offs)
+void gigas_draw_sprite(UINT32 offs)
 {
-	INT32 sx = 224 - DrvSprRAM[offs + 3];
-	INT32 sy = 240 - DrvSprRAM[offs + 2];
+	UINT8* spram = (UINT8*)&DrvSprRAM[offs];
+	
+	INT32 sx = 224 - spram[3];
+	INT32 sy = 240 - spram[2];
 
 	if(sx > 0 && sy > 0)
 	{
-		UINT16 code = (DrvSprRAM[offs + 0] | ((DrvSprRAM[offs + 1] & 0x20) << 3)) & 0x1ff;
-		UINT8 color = DrvSprRAM[offs + 1] & 0x1f;
+		SprSpCmd *ss_spritePtr = &ss_sprite[sprite_number];
+		
+		UINT16 code = (spram[0] | ((spram[1] & 0x20) << 3)) & 0x1ff;
+		UINT8 color = spram[1] & 0x1f;
 
-		ss_sprite[sprite_number].ax		= sy;
-		ss_sprite[sprite_number].ay		= sx;
-		ss_sprite[sprite_number].charAddr = 0x220 +(code << 4);
-		ss_sprite[sprite_number].color     = (color<<4);
+		ss_spritePtr->ax		= sy;
+		ss_spritePtr->ay		= sx;
+		ss_spritePtr->charAddr	= 0x220 +(code << 4);
+		ss_spritePtr->color     = (color<<4);
 		sprite_number++;
 	}
 }
 
 inline void DrvDraw()
 {
-	UINT16 *map;	
+	UINT16 *map;
+	UINT8 *vidram = (UINT8*)&DrvVidRAM[0x3ff];	
 	// Draw tiles
 	for (INT32 offs = 0x3ff; offs >= 0; offs--)
 	{
-		UINT16 code  = DrvVidRAM[offs] + ((DrvVidRAM[offs + 0x400] & 0xe0) << 3);
-		UINT8 color = DrvVidRAM[offs + 0x400] & 0x1f;
+		UINT16 code  = vidram[0] + ((vidram[0x400] & 0xe0) << 3);
+		UINT8 color = vidram[0x400] & 0x1f;
 		UINT16 x = map_offset_lut[offs]; 
 		map = &ss_map2[x];
 		map[0] = color;
-		map[1] =code; 
+		map[1] =code;
+		vidram--;
 	}
 
 	for (UINT32 offs = 0; offs < 0x100; offs += 4)
@@ -296,7 +310,7 @@ UINT8 __fastcall freekick_read(UINT16 address)
 
 inline void pbillrd_setbank(UINT8 banknum)
 {
-	DrvZ80Bank0 = banknum; // for savestates
+//	DrvZ80Bank0 = banknum; // for savestates
 
 	UINT32 bankloc = 0x10000 + banknum * 0x4000;
 
@@ -485,14 +499,14 @@ inline void MemIndex()
 	DrvSndROM		= Next; Next += 0x10000;
 	MC8123Key		= Next; Next += 0x02000;
 	DrvColPROM		= Next; Next += 0x00600;
-	AllRam			= Next;
+//	AllRam			= Next;
 
 	DrvRAM			= Next; Next += 0x02000; // 0x0e000 - 0x0c000
 	DrvVidRAM		= Next; Next += 0x00800;
 	DrvSprRAM		= Next; Next += 0x00100;
-	DrvColRAM		= Next; Next += 0x00600;
+//	DrvColRAM		= Next; Next += 0x00600;
 
-	RamEnd			= Next;
+//	RamEnd			= Next;
 
 	map_offset_lut  = (UINT16 *)Next; Next +=0x400*sizeof(UINT16);	
 	CZ80Context		= (UINT8 *)Next; Next += sizeof(cz80_struc);
@@ -517,7 +531,7 @@ void DrvGfxDecode()
 
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	UINT8 *DrvGfxROM1		= (UINT8 *)(ss_vram+0x1100); // 0x200 * 16 * 16
-	UINT8 *DrvGfxROM0		= SS_CACHE; // 0x800 * 8 * 8
+	UINT8 *DrvGfxROM0		= (UINT8 *)SS_CACHE; // 0x800 * 8 * 8
 
 	GfxDecode4Bpp(0x0800, 3,  8,  8, Planes0, XOffs0, YOffs0, 0x40, DrvGfxTMP0, DrvGfxROM0);
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes1, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM1);
@@ -559,7 +573,8 @@ void DrvPaletteInit()
 		cprom_ptr++;
 		b = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
 
-		colBgAddr[delta] = BurnHighCol(r,g,b,0); // fg
+		colBgAddr[delta] = RGB(r>>3, g>>3, b>>3);
+ // fg
 		delta++; if ((delta & 7) == 0) delta += 8;
 	}
 }
@@ -580,27 +595,27 @@ void LoadRoms()
 		!strcmp(BurnDrvGetTextA(DRV_NAME), "freekb1") 
 	) 
 	{
-		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return;
 
-		if (BurnLoadRom(DrvSndROM,   rom_number++, 1)) return 1;	// sound rom
+		if (BurnLoadRom(DrvSndROM,   rom_number++, 1)) return;	// sound rom
 	}
 
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "pbillrd") 
 //	||	!strcmp(BurnDrvGetTextA(DRV_NAME), "pbillrdsa")
 		)
 	{
-		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return 1;
-		if (BurnLoadRom(DrvMainROM + 0x04000,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return;
+		if (BurnLoadRom(DrvMainROM + 0x04000,  rom_number++, 1)) return;
 		memmove(DrvMainROM + 0x10000, DrvMainROM + 0x08000, 0x4000);
-		if (BurnLoadRom(DrvMainROM + 0x14000,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM + 0x14000,  rom_number++, 1)) return;
 	}
 
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "omega"))
 	{
-		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return 1;
-		if (BurnLoadRom(DrvMainROM + 0x04000,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return;
+		if (BurnLoadRom(DrvMainROM + 0x04000,  rom_number++, 1)) return;
 
-		if (BurnLoadRom(MC8123Key,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(MC8123Key,  rom_number++, 1)) return;
 
 		mc8123_decrypt_rom(0, 1, DrvMainROM, DrvMainROMdec, MC8123Key);
 		//use_encrypted = 1;
@@ -608,43 +623,43 @@ void LoadRoms()
 
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "gigasb")) 
 	{
-		if (BurnLoadRom(DrvMainROM + 0x10000,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM + 0x10000,  rom_number++, 1)) return;
 		memmove(DrvMainROM + 0x00000, DrvMainROM + 0x14000, 0x4000);
-		if (BurnLoadRom(DrvMainROM + 0x14000,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM + 0x14000,  rom_number++, 1)) return;
 		memmove(DrvMainROM + 0x04000, DrvMainROM + 0x1c000, 0x8000);
 	}
 
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "gigasm2b")) 
 	{
-		if (BurnLoadRom(DrvMainROM + 0x10000,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM + 0x10000,  rom_number++, 1)) return;
 		memmove(DrvMainROM + 0x00000, DrvMainROM + 0x14000, 0x4000);
 
-		if (BurnLoadRom(DrvMainROM + 0x14000,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM + 0x14000,  rom_number++, 1)) return;
 		memmove(DrvMainROM + 0x04000, DrvMainROM + 0x18000, 0x4000);
 
-		if (BurnLoadRom(DrvMainROM + 0x18000,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM + 0x18000,  rom_number++, 1)) return;
 		memmove(DrvMainROM + 0x08000, DrvMainROM + 0x1c000, 0x4000);
 	}
 	UINT8 *DrvGfxTMP0 = (UINT8 *)LOWADDR;
 	UINT8 *DrvGfxTMP1 = (UINT8 *)0x00218000;
-	memset4_fast(DrvGfxTMP0, 0xff, 0x40000);
+	memset(DrvGfxTMP0, 0xff, 0x40000);
 	// Gfx char
-	if (BurnLoadRom(DrvGfxTMP0  + 0x00000,  rom_number++, 1)) return 1; // ( "4.3k", 0x00000, 0x04000
-	if (BurnLoadRom(DrvGfxTMP0  + 0x04000,  rom_number++, 1)) return 1; // ( "5.3h", 0x04000, 0x04000
-	if (BurnLoadRom(DrvGfxTMP0  + 0x08000,  rom_number++, 1)) return 1; // ( "6.3g", 0x08000, 0x04000
+	if (BurnLoadRom(DrvGfxTMP0  + 0x00000,  rom_number++, 1)) return; // ( "4.3k", 0x00000, 0x04000
+	if (BurnLoadRom(DrvGfxTMP0  + 0x04000,  rom_number++, 1)) return; // ( "5.3h", 0x04000, 0x04000
+	if (BurnLoadRom(DrvGfxTMP0  + 0x08000,  rom_number++, 1)) return; // ( "6.3g", 0x08000, 0x04000
 	// Gfx sprite
-	if (BurnLoadRom(DrvGfxTMP1  + 0x00000,  rom_number++, 1)) return 1; // ( "1.3p", 0x00000, 0x04000
-	if (BurnLoadRom(DrvGfxTMP1  + 0x04000,  rom_number++, 1)) return 1; // ( "3.3l", 0x04000, 0x04000
-	if (BurnLoadRom(DrvGfxTMP1  + 0x08000,  rom_number++, 1)) return 1; // ( "2.3n", 0x08000, 0x04000
+	if (BurnLoadRom(DrvGfxTMP1  + 0x00000,  rom_number++, 1)) return; // ( "1.3p", 0x00000, 0x04000
+	if (BurnLoadRom(DrvGfxTMP1  + 0x04000,  rom_number++, 1)) return; // ( "3.3l", 0x04000, 0x04000
+	if (BurnLoadRom(DrvGfxTMP1  + 0x08000,  rom_number++, 1)) return; // ( "2.3n", 0x08000, 0x04000
 	// Opcode Decryption PROMS
 	//		GigasDecode(); - not used due to incomplete "gigas" romset.
 	// Palette
-	if (BurnLoadRom(DrvColPROM + 0x000000,	rom_number++, 1)) return 1; // ( "3a.bin", 0x0000, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000100,  rom_number++, 1)) return 1; // ( "4d.bin", 0x0100, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000200,	rom_number++, 1)) return 1; // ( "4a.bin", 0x0200, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000300,	rom_number++, 1)) return 1; // ( "3d.bin", 0x0300, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000400,	rom_number++, 1)) return 1; // ( "3b.bin", 0x0400, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000500,	rom_number++, 1)) return 1; // ( "3c.bin", 0x0500, 0x0100
+	if (BurnLoadRom(DrvColPROM + 0x000000,	rom_number++, 1)) return; // ( "3a.bin", 0x0000, 0x0100
+	if (BurnLoadRom(DrvColPROM + 0x000100,  rom_number++, 1)) return; // ( "4d.bin", 0x0100, 0x0100
+	if (BurnLoadRom(DrvColPROM + 0x000200,	rom_number++, 1)) return; // ( "4a.bin", 0x0200, 0x0100
+	if (BurnLoadRom(DrvColPROM + 0x000300,	rom_number++, 1)) return; // ( "3d.bin", 0x0300, 0x0100
+	if (BurnLoadRom(DrvColPROM + 0x000400,	rom_number++, 1)) return; // ( "3b.bin", 0x0400, 0x0100
+	if (BurnLoadRom(DrvColPROM + 0x000500,	rom_number++, 1)) return; // ( "3c.bin", 0x0500, 0x0100
 }
 
 INT32 DrvFreeKickInit()
@@ -858,8 +873,8 @@ void make_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
-	SPR_InitSlaveSH();
-	cleanSprites();
+//	SPR_InitSlaveSH();
+//	cleanSprites();
 		
  	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
@@ -931,8 +946,8 @@ INT32 DrvExit()
 	sprite_number = 0;
 */	
 /*	
-	memset4_fast(DrvJoy1,0x00,8);
-	memset4_fast(DrvJoy2,0x00,8);
+	memset(DrvJoy1,0x00,8);
+	memset(DrvJoy2,0x00,8);
 
 	DrvDip[0] = DrvDip[1] = DrvDip[2] = 0;
 	DrvInputs[0] = DrvInputs[1] = DrvInputs[2] = 0;	
@@ -993,7 +1008,7 @@ void DrvFrame()
 
 	nSoundBufferPos+=(nBurnSoundLen); // DOIT etre deux fois la taille copiee
 
-	if(nSoundBufferPos>=0x3C00)
+	if(nSoundBufferPos>=0x1200)
 	{
 		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm); // bon emplacement

@@ -17,13 +17,13 @@
 
 #define STEP 0x8000
 
-/*static*/// void (*AYStreamUpdate)(void) = NULL;
+// void (*AYStreamUpdate)(void) = NULL;
 
 //int ay8910_index_ym = 0;
-//static int num = 0;//, ym_num = 0;
+//int num = 0;//, ym_num = 0;
 
-/*static*/ //double AY8910Volumes[3 * 6];
-/*static*/ //int AY8910RouteDirs[3 * 6];
+//double AY8910Volumes[3 * 6];
+//int AY8910RouteDirs[3 * 6];
 
 struct AY8910
 {
@@ -249,7 +249,7 @@ void _AYWriteReg(int n, int r, int v)
 
 
 /* write a register on AY8910 chip number 'n' */
-static void AYWriteReg(int chip, int r, int v)
+void AYWriteReg(int chip, int r, int v)
 {
 	if (r > 15) return;
 #ifdef YM2203
@@ -270,7 +270,7 @@ static void AYWriteReg(int chip, int r, int v)
 
 
 
-/*static*/ inline unsigned char AYReadReg(int n, int r)
+inline unsigned char AYReadReg(int n, int r)
 {
 	struct AY8910 *PSG = &AYPSG[n];
 
@@ -592,7 +592,6 @@ void AY8910Update(int chip, signed short **buffer, int length)
 	}
 }
 
-
 #define OPEN_CSH_VAR(a) (((int)&a | 0x20000000))
 
 void AY8910UpdateDirect(int chip, signed short *buffer, int length)
@@ -872,7 +871,7 @@ void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 <MartinMan> unsigned can be faster
 */
 
-static void AY8910_set_clock(int chip, int clock)
+void AY8910_set_clock(int chip, int clock)
 {
 	struct AY8910 *PSG = &AYPSG[chip];
 
@@ -887,8 +886,7 @@ static void AY8910_set_clock(int chip, int clock)
 	PSG->UpdateStep = ((double)STEP * PSG->SampleRate * 8 + clock/2) / clock;
 }
 
-
-/*static*/inline void build_mixer_table(int chip)
+inline void build_mixer_table(int chip)
 {
 	struct AY8910 *PSG = &AYPSG[chip];
 	int i;
@@ -940,7 +938,7 @@ void AY8910Exit(int chip)
 //	ay8910_index_ym = 0;
 }
 
-/*static*//* void dummy_callback(void)
+/* void dummy_callback(void)
 {
 	return;
 }

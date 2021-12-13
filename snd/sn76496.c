@@ -2,7 +2,7 @@
 #include "../burn_sound.h"
 #include "sn76496.h"
 
-#define MAX_SN76496_CHIPS 5
+#define MAX_SN76496_CHIPS 4
 
 #define MAX_OUTPUT 0x4FFF//0x7fff
 
@@ -30,7 +30,7 @@ struct SN76496 Chip0 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackM
 struct SN76496 Chip1 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
 struct SN76496 Chip2 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
 struct SN76496 Chip3 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
-struct SN76496 Chip4 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
+//struct SN76496 Chip4 = { .LastRegister = 0, .RNG = 0, .NoiseMode = 0, .FeedbackMask = 0, .bSignalAdd = 0, .WhitenoiseInvert = 0, .WhitenoiseTaps = 0 };
 
 void SN76496Update(int Num, short* pSoundBuf, int Length)
 {
@@ -44,7 +44,7 @@ void SN76496Update(int Num, short* pSoundBuf, int Length)
 	if (Num == 1) R = &Chip1;
 	if (Num == 2) R = &Chip2;
 	if (Num == 3) R = &Chip3;
-	if (Num == 4) R = &Chip4;
+//	if (Num == 4) R = &Chip4;
 	
 	/* If the volume is 0, increase the counter */
 	for (i = 0;i < 4;i++)
@@ -174,7 +174,7 @@ void SN76496Write(int Num, int Data)
 	if (Num == 1) R = &Chip1;
 	if (Num == 2) R = &Chip2;
 	if (Num == 3) R = &Chip3;
-	if (Num == 4) R = &Chip4;
+//	if (Num == 4) R = &Chip4;
 	
 	if (Data & 0x80) {
 		r = (Data & 0x70) >> 4;
@@ -270,7 +270,7 @@ lbl06:	/* noise  : frequency, mode */
 end:
 ;
 }
-
+#if 1
 /*static*/ void SN76496SetGain(struct SN76496 *R,int Gain)
 {
 	// doit rester en type double !!
@@ -279,8 +279,8 @@ end:
 
 	/* increase max output basing on gain (0.2 dB per step) */
 	Out = MAX_OUTPUT / 3;
-	while (Gain-- > 0)
-		Out *= ((double)1.023292992);	/* = (10 ^ (0.2/20)) */
+//	while (Gain-- > 0)
+//		Out *= ((double)1.023292992);	/* = (10 ^ (0.2/20)) */
 
 	/* build volume table (2dB per step) */
 	for (unsigned int i = 0;i < 15;i++)
@@ -293,7 +293,7 @@ end:
 	}
 	R->VolTable[15] = 0;
 }
-
+#endif
 /*static*/ void SN76496Init2(struct SN76496 *R, unsigned int Clock)
 {
 	unsigned int i;
@@ -379,7 +379,7 @@ end:
 		Chip3.WhitenoiseInvert = NoiseInvert;
 		Chip3.bSignalAdd = SignalAdd;
 	}
-	
+/*	
 	if (Num == 4) {
 //		Chip4 = (struct SN76496*)BurnMalloc(sizeof(*Chip4));
 		memset(&Chip4, 0, sizeof(Chip4));
@@ -392,7 +392,7 @@ end:
 		Chip4.WhitenoiseInvert = NoiseInvert;
 		Chip4.bSignalAdd = SignalAdd;
 	}
-
+*/
 }
 
 void SN76489Init(int Num, int Clock, int SignalAdd)
@@ -421,7 +421,7 @@ void SN76496Exit()
 	memset(&Chip1, 0, sizeof(struct SN76496));
 	memset(&Chip2, 0, sizeof(struct SN76496));
 	memset(&Chip3, 0, sizeof(struct SN76496));
-	memset(&Chip4, 0, sizeof(struct SN76496));
+//	memset(&Chip4, 0, sizeof(struct SN76496));
 }
 /*
 void SN76496SetRoute(int Num, double nVolume, int nRouteDir)

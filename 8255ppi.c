@@ -47,8 +47,8 @@ typedef struct
 	UINT8 output[3];	/* actual output data */
 } ppi8255;
 
-static ppi8255 chips[MAX_PPIS] = {0};
-static INT32 nNumChips = 0;
+ppi8255 chips[MAX_PPIS] = {0};
+//INT32 nNumChips = 0;
 
 /*static*/ void ppi8255_get_handshake_signals(ppi8255 *chip, UINT8 *result)
 {
@@ -423,7 +423,7 @@ void ppi8255_init(INT32 num)
 		set_mode(i, 0x1b, 0);
 	}
 	
-	nNumChips = num;
+//	nNumChips = num;
 }
 
 void ppi8255_exit()
@@ -458,7 +458,7 @@ void ppi8255_exit()
 	PPI2PortWriteC = NULL;
 	
 //	DebugDev_8255PPIInitted = 0;
-	nNumChips = 0;
+//	nNumChips = 0;
 }
 
 void ppi8255_set_portC( INT32 which, UINT8 data )
