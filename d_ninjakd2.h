@@ -16,7 +16,7 @@ INT32 MnightInit();
 INT32 Ninjakd2CommonInit();
 //static INT32 OmegafInit();
 INT32 DrvExit();
-INT32 DrvFrame();
+void DrvFrame();
 void Ninjakd2Draw();
 void RobokidDraw();
 void MnightDraw();

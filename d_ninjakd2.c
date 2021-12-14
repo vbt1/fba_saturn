@@ -193,7 +193,8 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 		{
 			DrvFgRAM[address] = data;
 			UINT32 sx = ((address>>1) & 0x1f);
-			UINT32 off2s = sx | (address/0x40) <<6;
+//			UINT32 off2s = sx | (address/0x40) <<6;
+			UINT32 off2s = sx | (address & 0xffc0);
 
 			address &=0x7fe;
 			UINT8 *vram = &DrvFgRAM[address];
@@ -277,7 +278,8 @@ void mnight_main_write(UINT16 address, UINT8 data)
 		{
 			DrvFgRAM[address] = data;
 			UINT32 sx = ((address>>1) & 0x1f);
-			UINT32 off2s = sx | (address/0x40) <<6;
+//			UINT32 off2s = sx | (address>>6) <<6;
+			UINT32 off2s = sx | (address & 0xffc0);
 
 			address &=0x7fe;
 			UINT8 *vram = &DrvFgRAM[address];
@@ -343,10 +345,10 @@ void mnight_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-void robokid_rambank(INT32 sel, UINT8 data)
+void robokid_rambank(UINT8 sel, UINT8 data)
 {
 	UINT8 *ram[3] = { DrvBgRAM0, DrvBgRAM1, DrvBgRAM2 };
-	UINT32 off[2][3]  = { { 0xd800, 0xd400, 0xd000 }, { 0xc400, 0xc800, 0xcc00 } };
+	UINT16 off[2][3]  = { { 0xd800, 0xd400, 0xd000 }, { 0xc400, 0xc800, 0xcc00 } };
 
 	UINT32 nBank = 0x400 * data;
 	CZetMapMemory(ram[sel&3] + nBank, off[sel>>2][sel&3], off[sel>>2][sel&3] | 0x3ff, MAP_RAM);
@@ -367,10 +369,11 @@ void robokid_main_write(UINT16 address, UINT8 data)
 		{
 			DrvFgRAM[address] = data;
 			
-			if((address/ 0x40)<28)
+			if((address>>6)<28)
 			{
 				UINT32 sx = ((address>>1) & 0x1f);
-				UINT32 off2s = sx | (address/0x40) <<6;
+//				UINT32 off2s = sx | (address/0x40) <<6;
+				UINT32 off2s = sx | (address & 0xffc0);
 
 				address &=0x7fe;
 				UINT8 *vram = &DrvFgRAM[address];
@@ -763,11 +766,13 @@ void MemIndex(UINT32 game)
 	DrvSprRAM	= (UINT8 *)Next; Next += 0x000600;
 	DrvPalRAM	= (UINT8 *)Next; Next += 0x000800;
 	DrvFgRAM	= (UINT8 *)Next; Next += 0x000800;
-	DrvBgRAM0	= (UINT8 *)Next; Next += 0x002000;
 	DrvBgRAM	= (UINT8 *)Next; Next += 0x002000;
-	DrvBgRAM1	= (UINT8 *)Next; Next += 0x002000;
+	DrvBgRAM0	= (UINT8 *)Next; Next += 0x002000;
 	DrvBgRAM2	= (UINT8 *)Next; Next += 0x002000;
+	DrvBgRAM1	= (UINT8 *)Next; Next += 0x002000;
 	RamEnd		= (UINT8 *)Next;
+
+	make_lut();
 }
 
 
@@ -780,39 +785,34 @@ void DrvGfxDecode(UINT8 *rom, UINT32 len, UINT32 type)
 	INT32 YOffs1[16] = { STEP16(0,32) };
 
 	UINT8 *tmp = (UINT8*)LOWADDR;
-	
+	if(type==3)
+		tmp = (UINT8 *)cache;
+	memcpyl (tmp, rom, len);
+			
 	switch (type)
 	{
 		case 0:
-			memcpyl (tmp, rom, len);
 			GfxDecode4Bpp((len * 2) / ( 8 *  8), 4,  8,  8, Plane, XOffs0, YOffs0, 0x100, tmp, rom);
 			break;			
 		case 1:
-			memcpyl (tmp, rom, len);
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs0, YOffs0, 0x400, tmp, rom);
 			tile16x16toSaturn((len * 2) / (16 * 16), rom);			
 			break;			
 //		case 10:
 //			// decode pour sprites		
-//			memcpyl (tmp, rom, len);
 //			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs0, YOffs0, 0x400, tmp, rom);
 //			break;				
 		case 2:
 			// decode pour sprites
-			memcpyl (tmp, rom, len);
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs1, YOffs1, 0x400, tmp, rom);
 			break;
 		case 10:			
 		case 4:
 			// decode pour sprites
-			memcpyl (tmp, rom, len);
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs0, YOffs0, 0x400, tmp, rom);
 			break;			
 		case 3:
 			// decode pour bg1, bg2 et 3
-			tmp = (UINT8 *)cache; // utilisation temporaire de la vram
-			memcpyl (tmp, rom, len);
-
 			GfxDecode4Bpp((len * 2) / (16 * 16), 4, 16, 16, Plane, XOffs1, YOffs1, 0x400, tmp, rom);
 			tile16x16toSaturn((len * 2) / (16 * 16), rom);
 			break;		
@@ -822,13 +822,14 @@ void DrvGfxDecode(UINT8 *rom, UINT32 len, UINT32 type)
 void lineswap_gfx_roms(UINT8 *rom, INT32 len, const INT32 bit)
 {
 	UINT8 *tmp = (UINT8*)DrvGfxROM4Data1;
+	UINT8 *r = (UINT8*)rom;
 
 	const INT32 mask = (1 << (bit + 1)) - 1;
 
 	for (INT32 sa = 0; sa < len; sa++)
 	{
 		const INT32 da = (sa & ~mask) | ((sa << 1) & mask) | ((sa >> bit) & 1);
-		tmp[da] = rom[sa];
+		tmp[da] = *r++;
 	}
 
 	memcpy (rom, tmp, len);
@@ -861,7 +862,7 @@ INT32 Ninjakd2CommonInit()
 	
 	DrvDraw = Ninjakd2Draw;
 	
-	make_lut();
+//	make_lut();
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  1, 1)) return 1;
@@ -929,7 +930,7 @@ INT32 MnightInit()
 	DrvDraw = Ninjakd2Draw;
 	MemIndex(1);
 	
-	make_lut();
+//	make_lut();
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  1, 1)) return 1;
@@ -995,15 +996,15 @@ INT32 RobokidInit()
 {
 	DrvInitSaturnS(0);
 	DrvDraw = RobokidDraw;
-	memset4_fast((void *)0x2F0000, 0, 0x9c00);
+	memset((void *)0x2F0000, 0, 0x9c00);
 	MemIndex(0);
 	
-	memset4_fast(&addr_cache[0], 0, 0x3000*sizeof(UINT32));
+	memset(&addr_cache[0], 0, 0x3000*sizeof(UINT32));
 	bg_cache[0] =&addr_cache[0];
 	bg_cache[1] =&addr_cache[0x1000];
 	bg_cache[2] =&addr_cache[0x2000];	
 	
-	make_lut();
+//	make_lut();
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  0, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM0 + 0x20000,  1, 1)) return 1;
@@ -1114,7 +1115,7 @@ INT32 OmegafInit()
 	memset(AllMem, 0, MALLOC_MAX);
 	MemIndex(0);
 	
-	make_lut();	
+//	make_lut();	
 	
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000,  0, 1)) return 1;
@@ -1299,7 +1300,7 @@ void DrvInitSaturnS(UINT8 game)
 {
 	//nBurnSprites  = 196;
 	nBurnSprites  = 100;
-	cleanSprites();
+//	cleanSprites();
 	
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -1308,20 +1309,22 @@ void DrvInitSaturnS(UINT8 game)
 
  	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;		    // fg
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x1000;			// bg0
-	if(game)
-		SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B0;			// window
-	else
-		SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
 //	ss_map3				=(Uint16 *)SCL_VDP2_VRAM_B1+0xa000;			// bg2
 
 	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
 
 	SS_SET_S0PRIN(4);
-	if(game)	
+	if(game)
+	{
+		SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B0;			// window
 		SS_SET_N0PRIN(7);
+	}
 	else
+	{
+		SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
 		SS_SET_N0PRIN(3);
-		
+	}
+	
 	SS_SET_N2PRIN(6);
 	SS_SET_N1PRIN(2);
 	SS_SET_N3PRIN(5);
@@ -1380,36 +1383,14 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	wait_vblank();	
 	DrvDoReset();
 	CZetExit2();
-/*
-	previous_bank[0]=previous_bank[1]=previous_bank[2]=0;
-	memset(CZ80Context,0x00,sizeof(cz80_struc));
-	CZ80Context	=  NULL;
 
-
-	RamEnd = DrvZ80ROM0 = NULL;
-	DrvGfxROM4Data1 = DrvZ80RAM0 = DrvSprRAM = DrvPalRAM = NULL;
-	DrvFgRAM = DrvBgRAM = DrvBgRAM0 = DrvBgRAM1 = DrvBgRAM2 = NULL;
-	cram_lut = NULL;
-	ss_spriteBuff = NULL;
-//	free(AllMem);
-//	AllMem = NULL;
-	ss_map3 = NULL;
-
-
-	memset(DrvJoy1,0x00,8);
-	memset(DrvJoy2,0x00,8);
-	memset(DrvJoy3,0x00,8);
-	DrvDips[0] = DrvDips[1] = DrvDips[2] = DrvDips[3] = 0;
-	DrvInputs[0] = DrvInputs[1] = DrvInputs[2] = 0;
-*/
 	nSoundBufferPos=0;
 	cleanDATA();
 	cleanBSS();
 	
 	return 0;
 }
-
-#if 1
+//-------------------------------------------------------------------------------------------------------------------------------------
  void draw_sprites(UINT32 robokid)
 {
 	int const big_xshift = robokid ? 0 : 1;
@@ -1419,10 +1400,9 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	unsigned int sprites_drawn = 0;
 	SprSpCmd *ss_spritePtr;
 	
-	ss_spritePtr = &ss_sprite[3];
-	
 	if(!overdraw_enable)
 	{
+		ss_spritePtr = &ss_sprite[3];
 		cleanSprites();
 	}
 	else
@@ -1496,249 +1476,75 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 		memcpy((void *)ss_spriteBuff,(void *)ss_spritePtr,sizeof(SprSpCmd)*96);			
 	}*/
 }
-	
-#else
- void draw_sprites(UINT32 robokid)
-{
-	int const big_xshift = robokid ? 0 : 1;
-	int const big_yshift = robokid ? 1 : 0;
-
-	UINT8* sprptr = DrvSprRAM + 11;
-	unsigned int sprites_drawn = 0;
-	SprSpCmd *ss_spritePtr;
-	
-	if(!overdraw_enable)
-	{
-		ss_spritePtr = &ss_sprite[3];		
-//		nBurnSprites  = 100;
-		cleanSprites();
-		
-//		SprSpCmd *ss_spritePtrBuff;
-//		ss_spritePtrBuff = &ss_spriteBuff[0];		
-
-	// en cas d'overdraw : envoyer ceux en cours + ceux de la frame pr?c?dente
-	// ? faire !!!
-
-		while (1)
-		{
-			if (sprptr[2] & 0x02)
-			{
-				int sx = sprptr[1] - ((sprptr[2] & 0x01) << 8);
-				int sy = sprptr[0];
-
-				int code = sprptr[3] + ((sprptr[2] & 0xc0) << 2) + ((sprptr[2] & 0x08) << 7);
-
-				unsigned int flip = (sprptr[2] & 0x30);
-				unsigned int color = (sprptr[4] & 0x0f)<<4;
-				unsigned int big = (sprptr[2] & 0x04) >> 2;
-
-				if (big)
-				{
-					unsigned int flipx = (sprptr[2] & 0x10) >> 4;
-					unsigned int flipy = (sprptr[2] & 0x20) >> 5;
-				
-					code &= ~3;
-//					code ^= flipx << big_xshift;
-//					code ^= flipy << big_yshift;
-					code ^= flipy << big_xshift;
-					code ^= flipx << big_yshift;
-				}
-
-				for (unsigned int y = 0; y <= big; ++y)
-				{
-					for (unsigned int x = 0; x <= big; ++x)
-					{
-						unsigned int tile = code ^ (y << big_xshift) ^ (x << big_yshift);
-
-						ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP) | flip;
-						ss_spritePtr->drawMode		= ( ECD_DISABLE | COMPO_REP);
-
-						ss_spritePtr->ax			= sx + (x<<4);
-						ss_spritePtr->ay			= sy + (y<<4);
-						ss_spritePtr->charSize		= 0x210;
-						ss_spritePtr->color			= color;
-						ss_spritePtr->charAddr		= 0x220+(tile<<4);
-//						memcpy(ss_spritePtrBuff,ss_spritePtr,sizeof(SprSpCmd));						
-						ss_spritePtr++;
-//						*ss_spritePtrBuff++;						
-
-						++sprites_drawn;
-
-						if (sprites_drawn >= 96)
-							break;
-					}
-				}
-			}
-			else
-			{
-				++sprites_drawn;
-
-				if (sprites_drawn >= 96)
-					break;
-			}
-
-			sprptr += 16;
-		}
-	}
-	else
-	{
-		ss_spritePtr = &ss_sprite[3+96];
-//		nBurnSprites  = 196;
-
-		SprSpCmd *ss_spritePtrBuff;
-		ss_spritePtrBuff = &ss_spriteBuff[0];
-		memcpy(&ss_sprite[3],&ss_spriteBuff[0],sizeof(SprSpCmd)*96);
-
-		while (1)
-		{
-			if (sprptr[2] & 0x02)
-			{
-				int sx = sprptr[1] - ((sprptr[2] & 0x01) << 8);
-				int sy = sprptr[0];
-
-				int code = sprptr[3] + ((sprptr[2] & 0xc0) << 2) + ((sprptr[2] & 0x08) << 7);
-
-				unsigned int flip = (sprptr[2] & 0x30);
-				unsigned int color = (sprptr[4] & 0x0f)<<4;
-				unsigned int big = (sprptr[2] & 0x04) >> 2;
-	/*
-				if (*flipscreen)
-				{
-					sx = 240 - 16*big - sx;
-					sy = 240 - 16*big - sy;
-					flipx ^= 1;
-					flipy ^= 1;
-				}
-	*/
-				if (big)
-				{
-					unsigned int flipx = (sprptr[2] & 0x10) >> 4;
-					unsigned int flipy = (sprptr[2] & 0x20) >> 5;					
-					code &= ~3;
-					code ^= flipx << big_xshift;
-					code ^= flipy << big_yshift;
-				}
-
-				for (unsigned int y = 0; y <= big; ++y)
-				{
-					for (unsigned int x = 0; x <= big; ++x)
-					{
-						unsigned int tile = code ^ (x << big_xshift) ^ (y << big_yshift);
-
-						ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP) | flip;
-						ss_spritePtr->drawMode		= ( ECD_DISABLE | COMPO_REP);
-
-						ss_spritePtr->ax			= sx + (x<<4);
-						ss_spritePtr->ay			= sy + (y<<4);
-						ss_spritePtr->charSize		= 0x210;
-						ss_spritePtr->color			= color;
-						ss_spritePtr->charAddr		= 0x220+(tile<<4);
-//						memcpy(ss_spritePtrBuff,ss_spritePtr,sizeof(SprSpCmd));
-
-						ss_spritePtr++;
-//						ss_spritePtrBuff++;
-
-						++sprites_drawn;
-
-						if (sprites_drawn >= 96)
-							break;
-					}
-				}
-			}
-			else
-			{
-				++sprites_drawn;
-
-				if (sprites_drawn >= 96)
-					break;
-			}
-
-			sprptr += 16;
-		}
-	}
-}
-#endif
+//-------------------------------------------------------------------------------------------------------------------------------------	
 void Ninjakd2Draw()
 {
 	ss_reg->n1_move_x =  (scrollx[0]-8)<<16;
 	ss_reg->n1_move_y =  (scrolly[0]+32)<<16;
 	draw_sprites(0); // 0x100
 }
+//-------------------------------------------------------------------------------------------------------------------------------------
+// .bss           0x00000000060e7aa4        0x0 saturn/ovl.o
+//  .bss           0x00000000060e7adc        0x0 saturn/ovl.o
+inline UINT32 cacheTile(UINT8 *bgram,UINT32 *nt, UINT32 *bg1, UINT8 *src,UINT8 *dst)
+{
+	UINT32 attr = bgram[1];
+	UINT16 code = bgram[0] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
 
+	UINT32 *new_code=(UINT32 *)&bg1[code];
+	
+	if(*new_code==0)
+	{
+		*new_code=(*nt<<2);
+		UINT8 *addr = (UINT8*)src+(code*128);
+		memcpyl((UINT8 *)dst+*new_code*32,addr,128);
+		if((*nt)++>0xfff)
+			*nt=0;
+	}
+	return *new_code;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
 static inline void  draw_robokid_bg_layer() //INT32 width)
 {
 //	if (tilemap_enable[sel] == 0) return;
 //	UINT32 wide = (width) ? 128 : 32;
 
-	UINT32 attr;
 	UINT16 code;
-	UINT16 ofst;
 	register UINT16 *map;
-	register UINT16 offs2;
-	UINT32 *bg1=(UINT32 *)bg_cache[0];
-	UINT32 *bg2=(UINT32 *)bg_cache[1];
-	UINT32 *bg3=(UINT32 *)bg_cache[2];
+	UINT16 *ml=(UINT16 *)map_lut;
+	UINT16 *ml2=(UINT16 *)&map_lut[1024];
 	
 	for (UINT32 offs = 0; offs < 32 * 32; offs++)
 	{
-		offs2 = map_lut[offs+1024];
-		ofst  = map_lut[offs];
+		UINT8 *bgram = (UINT8 *)DrvBgRAM0+*ml++;
+		UINT16 *map = (UINT16 *)(SCL_VDP2_VRAM_B1+0x2000+(*ml2++));	
+		UINT32 *nt =(UINT32 *)nextTile;
 //-----------------------------------------------------------------------------------------------------------------
 // nbg1
-		attr = DrvBgRAM0[ofst + 1];
-		code = DrvBgRAM0[ofst] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
+		code = cacheTile(bgram,nt,bg_cache[0],(UINT8*)LOWADDR,(UINT8 *)cache+0x08000);
 	
-		if(bg1[code]==0)
-		{
-			bg1[code]=(nextTile[0]<<2);
-			UINT8 *addr = (UINT8*)LOWADDR+(code*128);
-			memcpyl((UINT8 *)cache+0x08000+bg1[code]*32,addr,128);
-
-			if(nextTile[0]++>0xfff)
-				nextTile[0]=0;
-		}
-		map = (UINT16 *)(SCL_VDP2_VRAM_B1+0x2000+offs2);	
-	
-		map[0] = (attr & 0x0f);
-		map[1] = (0x400+bg1[code]);
+		map[0] = (bgram[1] & 0x0f);
+		map[1] = (code+0x400);
 //-----------------------------------------------------------------------------------------------------------------
-// nbg3			
-		attr = DrvBgRAM2[ofst + 1];
-		code = DrvBgRAM2[ofst] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
-	
-		if(bg3[code]==0)
-		{
-			bg3[code]=(nextTile[2]<<2);
-			UINT8 *addr = (UINT8*)DrvGfxROM4Data1+(code*128);
-			memcpyl((UINT8 *)cache+0x48000+bg3[code]*32,addr,128);
-
-			if(nextTile[2]++>0xfff)
-				nextTile[2]=0;
-		}
-//		map = (UINT16 *)(SCL_VDP2_VRAM_B1+0xa000+offs2);
-		map += 0x4000;
+// nbg3
+		bgram+=0x2000;
+		map += 0x4000;		
+		nt++;
 		
-		map[0] = (attr & 0x0f);
-		map[1] = (0x2400+bg3[code]); // si 0x20000 pour bg2
+		code = cacheTile(bgram,nt,bg_cache[2],(UINT8*)DrvGfxROM4Data1,(UINT8 *)cache+0x48000);
+		
+		map[0] = (bgram[1] & 0x0f);
+		map[1] = (code+0x2400); // si 0x20000 pour bg2
 //-----------------------------------------------------------------------------------------------------------------
-// nbg0			
-		attr = DrvBgRAM1[ofst + 1];
-		code = DrvBgRAM1[ofst] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);
-		
-		if(bg2[code]==0)
-		{
-			bg2[code]=(nextTile[1]<<2);
-			UINT8 *addr = (UINT8*)0x00270000+(code*128);
-			memcpyl((UINT8 *)cache+0x28000+bg2[code]*32,addr,128);
+// nbg0	
+		bgram+=0x2000; //DrvBgRAM1
+		map += 0x7000;		
+		nt++;
 
-			if(nextTile[1]++>0xfff)
-				nextTile[1]=0;
-		}
-//		map = (UINT16 *)(SCL_VDP2_VRAM_B1+0x18000+offs2);
-		map += 0x7000;
+		code = cacheTile(bgram,nt,bg_cache[1],(UINT8*)0x00270000,(UINT8 *)cache+0x28000);
 		
-		map[0] = (attr & 0x0f);
-		map[1] = (0x1400+bg2[code]);		
+		map[0] = (bgram[1] & 0x0f);
+		map[1] = (code+0x1400);
 //-----------------------------------------------------------------------------------------------------------------
 	}
 }
@@ -1779,7 +1585,7 @@ inline void DrvClearOpposites(UINT8* nJoystickInputs)
 
 //int vbt=0;
 
- INT32 DrvFrame()
+ void DrvFrame()
 {
 //	if (DrvReset) {
 //		DrvDoReset();
@@ -1846,19 +1652,16 @@ DrvZ80ROM0[0x13566]=0x30;
 		CZetClose();
 	}
 
-
 	DrvDraw();
-	
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------
-void make_lut()
+inline void make_lut()
 {
-	for (UINT32 i = 0; i < 0x1000; i++) 
+	for (UINT16 i = 0; i < 0x1000; i++) 
 	{
-		UINT32 r = i >> 8;
-		UINT32 g = (i >> 4) & 0xf;
-		UINT32 b = (i >> 0) & 0xf;
+		UINT8 r = i >> 8;
+		UINT8 g = (i >> 4) & 0xf;
+		UINT8 b = (i >> 0) & 0xf;
 
 		r |= r << 4;
 		g |= g << 4;
@@ -1867,15 +1670,14 @@ void make_lut()
 		cram_lut[i] = BurnHighCol(r, g, b, 0);
 	}
 	
-	for(unsigned int i=0;i<1024;i++)
+	for(UINT16 i=0;i<1024;i++)
 	{
-		UINT32 sx = (i % 32);
-		UINT32 sy = (i / 32);
+		UINT16 sx = (i % 32);
+		UINT16 sy = (i / 32);
 
-		UINT32 ofst = (sx & 0x0f) + (sy * 16) + ((sx & 0x70) * 0x20);
-		ofst<<=1;
-
-		map_lut[i]= ofst;
+		UINT16 ofst = (sx & 0x0f) + (sy * 16) + ((sx & 0x70) * 0x20);
+		map_lut[i]= ofst<<1;
+		
 		map_lut[i+1024]= (sx | sy <<5)*4;
 	}	
 }
