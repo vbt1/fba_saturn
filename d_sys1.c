@@ -22,49 +22,49 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvWboyu = {
 		"wboyu",  "sys1",
-		"Wonder Boy (not encrypted)\0",
+		"Wonder Boy (not encrypted)",
 		WboyuRomInfo, WboyuRomName, WboyInputInfo, WboyuDIPInfo,
 		WboyuInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvWbdeluxe = {
 		"wbdeluxe", "sys1",
-		"Wonder Boy Deluxe\0",
+		"Wonder Boy Deluxe",
 		WbdeluxeRomInfo, WbdeluxeRomName, WboyInputInfo, WbdeluxeDIPInfo,
 		Wboy2uInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvFlickys2 = {
 		"flickys2", "sys1",
-		"Flicky (128k, System 2, not encrypted)\0",
+		"Flicky (128k, System 2, not encrypted)",
 		Flickys2RomInfo, Flickys2RomName, FlickyInputInfo, FlickyDIPInfo,
 		Flicks2Init, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvMyhero = {
 	"myhero", "sys1",
-	"My Hero (US, not encrypted)\0",
+	"My Hero (US, not encrypted)",
 	MyheroRomInfo, MyheroRomName, MyheroInputInfo, MyheroDIPInfo,
 	MyheroInit, System1Exit, System1Frame
 	};
 /*
 	struct BurnDriver nBurnDrvTeddybb = {
 		"teddybb", "sys1",
-		"TeddyBoy Blues (315-5115, New Ver.)\0",
+		"TeddyBoy Blues (315-5115, New Ver.)",
 		TeddybbRomInfo, TeddybbRomName, MyheroInputInfo, TeddybbDIPInfo,
 		TeddybbInit, System1Exit, System1Frame
 	};
 */
 	struct BurnDriver nBurnDrvPitfall2u = {
 		"pitfal2u", "sys1",
-		"Pitfall II (not encrypted)\0",
+		"Pitfall II (not encrypted)",
 		Pitfall2uRomInfo, Pitfall2uRomName, MyheroInputInfo, PitfalluDIPInfo,
 		PitfalluInit, System1Exit, System1Frame
 	};
  /*
 	struct BurnDriver nBurnDrvFourdwarrio = {
 		"4dwarrio", "sys1",
-		"4-D Warriors (315-5162)\0",
+		"4-D Warriors (315-5162)",
 		FourdwarrioRomInfo, FourdwarrioRomName, MyheroInputInfo, FourdwarrioDIPInfo,
 		FourdwarrioInit, System1Exit, System1Frame
 	};

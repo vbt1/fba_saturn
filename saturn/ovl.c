@@ -105,13 +105,16 @@ void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target)
 
 	for (k=0;k<size;k++)
 	{
-		for(i=0;i<8;i++)
+		for(i=0;i<32;i+=4)
+		{
+			unsigned char *t=(unsigned char *)&temp[(i<<1)];
 			for(j=0;j<4;j++)
 			{
-				temp[(i*8)+(j<<1)]=target[(i*4)+j]>>4;
-				temp[(i*8)+(j<<1)+1]=target[(i*4)+j]&0x0f;
+				t[0]=target[i+j]>>4;
+				t[1]=target[i+j]&0x0f;
+				t+=2;
 			}
-
+		}
 		memset(target,0,32);
 		
 		for(i=0;i<8;i++)

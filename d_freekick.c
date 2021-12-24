@@ -70,6 +70,7 @@ int ovlInit(char *szShortName)
 
 void DrvDoReset()
 {
+	make_lut();
 	memset(DrvRAM, 0, (UINT8 *)map_offset_lut - DrvRAM);
 	coin = 0;
 	nmi_enable = 0;
@@ -497,8 +498,8 @@ inline void MemIndex()
 	DrvMainROM	 	= Next; Next += 0x40000;
 	DrvMainROMdec   = Next; Next += 0x20000;
 	DrvSndROM		= Next; Next += 0x10000;
-	MC8123Key		= Next; Next += 0x02000;
-	DrvColPROM		= Next; Next += 0x00600;
+	MC8123Key		= Next; Next += 0x02600;
+//	DrvColPROM		= Next; Next += 0x00600;
 //	AllRam			= Next;
 
 	DrvRAM			= Next; Next += 0x02000; // 0x0e000 - 0x0c000
@@ -547,8 +548,8 @@ void DrvPaletteInit()
 {
 	UINT32 len = 0x200;
 	UINT32 delta = 0;
-	UINT8 *cprom_ptr=(UINT8 *)DrvColPROM;
-
+	UINT8 *cprom_ptr=(UINT8 *)MC8123Key+0x600;
+	
 	for (UINT32 i = 0; i < len; i++)
 	{
 		UINT32 bit0,bit1,bit2,bit3,r,g,b;
@@ -654,12 +655,12 @@ void LoadRoms()
 	// Opcode Decryption PROMS
 	//		GigasDecode(); - not used due to incomplete "gigas" romset.
 	// Palette
-	if (BurnLoadRom(DrvColPROM + 0x000000,	rom_number++, 1)) return; // ( "3a.bin", 0x0000, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000100,  rom_number++, 1)) return; // ( "4d.bin", 0x0100, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000200,	rom_number++, 1)) return; // ( "4a.bin", 0x0200, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000300,	rom_number++, 1)) return; // ( "3d.bin", 0x0300, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000400,	rom_number++, 1)) return; // ( "3b.bin", 0x0400, 0x0100
-	if (BurnLoadRom(DrvColPROM + 0x000500,	rom_number++, 1)) return; // ( "3c.bin", 0x0500, 0x0100
+	if (BurnLoadRom(MC8123Key+0x600 + 0x000000,	rom_number++, 1)) return; // ( "3a.bin", 0x0000, 0x0100
+	if (BurnLoadRom(MC8123Key+0x600 + 0x000100,  rom_number++, 1)) return; // ( "4d.bin", 0x0100, 0x0100
+	if (BurnLoadRom(MC8123Key+0x600 + 0x000200,	rom_number++, 1)) return; // ( "4a.bin", 0x0200, 0x0100
+	if (BurnLoadRom(MC8123Key+0x600 + 0x000300,	rom_number++, 1)) return; // ( "3d.bin", 0x0300, 0x0100
+	if (BurnLoadRom(MC8123Key+0x600 + 0x000400,	rom_number++, 1)) return; // ( "3b.bin", 0x0400, 0x0100
+	if (BurnLoadRom(MC8123Key+0x600 + 0x000500,	rom_number++, 1)) return; // ( "3c.bin", 0x0500, 0x0100
 }
 
 INT32 DrvFreeKickInit()
@@ -708,7 +709,7 @@ INT32 DrvFreeKickInit()
 	SN76489AInit(2, 12000000/4, 1);
 	SN76489AInit(3, 12000000/4, 1);
 
-	make_lut();
+//	make_lut();
 	DrvDoReset();
 	return 0;
 }
@@ -771,7 +772,7 @@ INT32 DrvInit()
 	SN76489AInit(1, 12000000/4, 1);
 	SN76489AInit(2, 12000000/4, 1);
 	SN76489AInit(3, 12000000/4, 1);
-	make_lut();
+//	make_lut();
 	DrvDoReset();
 
 	return 0;
@@ -784,16 +785,25 @@ inline void rotate_tile16x16(unsigned int size, unsigned char *target)
 
 	for (k=0;k<size;k++)
 	{
+		for(i=0;i<128;i+=8)
+		{
+			unsigned char *t=(unsigned char *)&temp[(i<<1)];
+			for(j=0;j<8;j++)
+			{
+				t[0]=target[i+j]>>4;
+				t[1]=target[i+j]&0x0f;
+				t+=2;
+			}
+		}
 		for(i=0;i<16;i++)
+		{
+			unsigned char *t=(unsigned char *)temp+i;			
 			for(j=0;j<16;j+=2)
 			{
-				temp[(i*16)+j]=target[(i*8)+(j/2)]>>4;
-				temp[(i*16)+j+1]=target[(i*8)+(j/2)]&0x0f;
+				target[((15-i)*8)+(j)/2]    = (t[j*16]<<4)|(t[(j+1)*16]&0xf);
+				t++;
 			}
-
-		for(i=0;i<16;i++)
-			for(j=0;j<16;j+=2)
-				target[((15-i)*8)+(j)/2]    = (temp[(j*16)+i]<<4)|(temp[((j+1)*16)+i]&0xf);
+		}
 		target+=128;
 	}
 }
@@ -937,7 +947,7 @@ INT32 DrvExit()
 	SN76496Exit();	
 /*
 	CZ80Context = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
-	DrvVidRAM = DrvSprRAM = DrvColRAM = DrvColPROM = NULL;
+	DrvVidRAM = DrvSprRAM = DrvColRAM = NULL;
 	MC8123Key = NULL;
 	map_offset_lut = NULL;
 	DrawSprite = NULL;

@@ -1486,7 +1486,7 @@ void Ninjakd2Draw()
 //-------------------------------------------------------------------------------------------------------------------------------------
 // .bss           0x00000000060e7aa4        0x0 saturn/ovl.o
 //  .bss           0x00000000060e7adc        0x0 saturn/ovl.o
-inline UINT32 cacheTile(UINT8 *bgram,UINT32 *nt, UINT32 *bg1, UINT8 *src,UINT8 *dst)
+UINT32 cacheTile(UINT8 *bgram,UINT32 *nt, UINT32 *bg1, UINT8 *src,UINT8 *dst)
 {
 	UINT32 attr = bgram[1];
 	UINT16 code = bgram[0] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 7) + ((attr & 0x20) << 5);

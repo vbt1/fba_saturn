@@ -42,6 +42,8 @@ int ovlInit(char *szShortName)
 //	ss_map   = (Uint16 *)SS_MAP;
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
+	
+	return 0;
 }
 inline void DrvClearOpposites(unsigned char* nJoystickInputs)
 {
@@ -51,9 +53,10 @@ inline void DrvClearOpposites(unsigned char* nJoystickInputs)
 	if ((*nJoystickInputs & 0xc0) == 0xc0) {
 		*nJoystickInputs &= ~0xc0;
 	}
+	return 0;
 }
 
-void DrvMakeInputs()
+static inline void DrvMakeInputs()
 {
 
 	for (unsigned int i = 0; i < 12; i++) DrvInput[i] = 0x00;
@@ -102,10 +105,10 @@ inline void PangMemIndex()
 	
 	DrvZ80Rom			= Next; Next += 0x50000;
 	DrvZ80Code			= (unsigned char *)LOWADDR;//Next; Next += 0x50000;
-	DrvSoundRom			= (unsigned char *)0x00250000; //Next; Next += 0x20000;
+	MSM6295ROM			= (unsigned char *)0x00250000; //Next; Next += 0x20000;
 	DrvZ80Ram			= Next; Next += 0x02000;
-	DrvPaletteRam		= Next; Next += 0x01000;
-	DrvAttrRam			= Next; Next += 0x00800;
+	DrvPaletteRam		= Next; Next += 0x01800;
+//	DrvAttrRam			= Next; Next += 0x00800;
 	RamStart			= Next-0xd000;
 	DrvVideoRam			= Next; Next += 0x01000;
 	DrvSpriteRam		= Next; Next += 0x01000;
@@ -124,10 +127,11 @@ inline void oki_bankswitch(INT32 bank)
 {
 	DrvOkiBank = bank;
 
-	MSM6295SetBank(0, DrvSoundRom + (DrvOkiBank * 0x40000), 0x00000, 0x3ffff);
+	MSM6295SetBank(0, MSM6295ROM + (bank * 0x40000), 0x00000, 0x3ffff);
 }
 void DrvDoReset()
 {
+	make_lut();
 #ifdef CZ80
 //	CZetOpen(0);
 	DrvRomBank = 0;
@@ -213,7 +217,7 @@ void __fastcall MitchellZ80Write(unsigned short a, unsigned char d)
 		if(RamStart[a] != d)
 		{
 			RamStart[a] = d;
-			int x = map_offset_lut[a&0x7ff];
+			UINT16 x = map_offset_lut[a&0x7ff];
 			ss_map2[x] = map_lut[d]; //((d & 0x80)<<7) | d & 0x7f;
 		}
 		return;
@@ -229,8 +233,8 @@ void __fastcall MitchellZ80Write(unsigned short a, unsigned char d)
 			{
 				RamStart[a] = d;
 #ifndef LOOP
-				a&=~1;
-				unsigned int Code = RamStart[a + 0] + (RamStart[a + 1] << 8);
+				UINT8 *r=(UINT8 *)&RamStart[a&~1];
+				UINT16 Code = r[0] | (r[1] << 8);
 				Code &= DrvTileMask;
 				ss_map2[map_offset_lut[(a>>1)&0x7ff]+1] = Code;
 #else
@@ -457,8 +461,8 @@ void mitchell_decode(int swap_key1, int swap_key2, int addr_key, int xor_key)
 }
 
 /*static*/// void mgakuen2_decode() { mitchell_decode(0x76543210, 0x01234567, 0xaa55, 0xa5); }
-void pang_decode()     { mitchell_decode(0x01234567, 0x76543210, 0x6548, 0x24); }
-void spang_decode()    { mitchell_decode(0x45670123, 0x45670123, 0x5852, 0x43); }
+inline void pang_decode()     { mitchell_decode(0x01234567, 0x76543210, 0x6548, 0x24); }
+inline void spang_decode()    { mitchell_decode(0x45670123, 0x45670123, 0x5852, 0x43); }
 /*static*/// void block_decode()    { mitchell_decode(0x02461357, 0x64207531, 0x0002, 0x01); }
 
 const unsigned char spang_default_eeprom[128] = {
@@ -485,18 +489,14 @@ void MitchellMachineInit()
 	CZetMapMemory2(DrvZ80Code + 0x00000, DrvZ80Rom + 0x00000, 0x0000, 0x7fff, MAP_ROM);
 	CZetMapMemory2(DrvZ80Code + 0x10000, DrvZ80Rom + 0x10000, 0x8000, 0xbfff, MAP_ROM);
 	
-	CZetMapArea(0xc800, 0xcfff, 0, DrvAttrRam                               );
 #ifdef LOOP
-	CZetMapArea(0xc800, 0xcfff, 1, DrvAttrRam                               );
+	CZetMapMemory(DrvPaletteRam+0x1000,	0xc800, 0xcfff, MAP_RAM);
+#else
+	CZetMapMemory(DrvPaletteRam+0x1000,	0xc800, 0xcfff, MAP_ROM);	
 #endif
-	CZetMapArea(0xc800, 0xcfff, 2, DrvAttrRam                               );
-	CZetMapArea(0xe000, 0xffff, 0, DrvZ80Ram                                );
-//	CZetMapArea(0xe000, 0xffff, 1, DrvZ80Ram                                );
-	CZetMapArea(0xe000, 0xe0ff, 1, DrvZ80Ram                               );
-	CZetMapArea(0xe200, 0xffff, 1, DrvZ80Ram+0x200                     );
-	CZetMapArea(0xe000, 0xffff, 2, DrvZ80Ram                                );
-	CZetMemEnd();
-//	CZetClose();
+	CZetMapMemory(DrvZ80Ram,	0xe000, 0xffff, MAP_ROM);
+	CZetMapMemory(DrvZ80Ram,	0xe000, 0xe0ff, MAP_WRITE);
+	CZetMapMemory(DrvZ80Ram+0x200, 0xe200, 0xffff, MAP_WRITE|MAP_FETCH);	
 #else
 
 #ifdef RAZE
@@ -530,14 +530,14 @@ void MitchellMachineInit()
 #endif
 //	BurnYM2413Init(4000000, 1.0);
 //	BurnYM2413IncreaseVolume(200);
-	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
+//	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
 	memset(MSM6295ROM,0x00,0x40000);
 
 //	MSM6295Init(0, 1000000 / 132, 10.0, 1);
 //	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
 	MSM6295Init(0, 1000000 / 132, 0, MSM6295Context);// � remettre
 //	MSM6295Init(0, 8000, 100, 0);
-	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
+//	MSM6295ROM = (unsigned char *)0x00250000; //DrvSoundRom;
 
 	EEPROMInit(&MitchellEEPROMIntf);
 	DrvHasEEPROM = 1;
@@ -555,7 +555,7 @@ int PangInit()
 	sfx_list = &sfx_pang[0];
 	PangMemIndex();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut   ",80,130);	
-	make_lut();
+//	make_lut();
 
 INT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
 INT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
@@ -566,14 +566,14 @@ INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144
 
 	unsigned char *DrvTempRom = (unsigned char *)LOWADDR;
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BurnLoadRom   ",80,130);	
-	nRet = BurnLoadRom(DrvZ80Rom  + 0x00000,  0, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvZ80Rom  + 0x10000,  1, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvZ80Rom  + 0x00000,  0, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvZ80Rom  + 0x10000,  1, 1); //if (nRet != 0) return 1;
 
 //	memset(DrvTempRom, 0xff, 0xc0000);
-	nRet = BurnLoadRom(DrvTempRom + 0x00000,  2, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x20000,  3, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x80000,  4, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0xa0000,  5, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x00000,  2, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x20000,  3, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x80000,  4, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0xa0000,  5, 1); //if (nRet != 0) return 1;
 
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"GfxDecode4Bpp   ",80,130);	
 	GfxDecode4Bpp(0x4000, 4, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, cache);
@@ -581,8 +581,8 @@ INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144
 //1024Ko en 4bpp/2048 en 8bpp 
 	memset(DrvTempRom, 0xff, 0x40000);
 //	memset4_fast(DrvSprites, 0xff, 0x40000); // ou 0x80000
-	nRet = BurnLoadRom(DrvTempRom + 0x00000,  6, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x20000,  7, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x00000,  6, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x20000,  7, 1); //if (nRet != 0) return 1;
 
 	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
 	UINT8 *DrvSprites	= (UINT8 *)(ss_vram+0x1100);
@@ -593,7 +593,7 @@ INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144
 	pang_decode();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"MitchellMachineInit   ",80,130);	
 	MitchellMachineInit();
-	nRet = BurnLoadRom(DrvSoundRom + 0x00000, 8, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(MSM6295ROM + 0x00000, 8, 1); //if (nRet != 0) return 1;
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset   ",80,130);	
 	DrvDoReset();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"stmInit   ",80,130);	
@@ -617,7 +617,7 @@ int SpangInit()
 	
 //	Mem = NULL;
 	PangMemIndex();
-	make_lut();
+//	make_lut();
 
 INT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
 INT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
@@ -628,32 +628,32 @@ INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144
 
 	unsigned char *DrvTempRom = (unsigned char *)LOWADDR;
  // VBT � remettre
-	nRet = BurnLoadRom(DrvZ80Rom  + 0x00000,  0, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvZ80Rom  + 0x10000,  1, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvZ80Rom  + 0x30000,  2, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvZ80Rom  + 0x00000,  0, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvZ80Rom  + 0x10000,  1, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvZ80Rom  + 0x30000,  2, 1); //if (nRet != 0) return 1;
 	
 	memset(DrvTempRom, 0xff, 0xc0000);
-	nRet = BurnLoadRom(DrvTempRom + 0x00000,  3, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x20000,  4, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x80000,  5, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0xa0000,  6, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x00000,  3, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x20000,  4, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x80000,  5, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0xa0000,  6, 1); //if (nRet != 0) return 1;
 	GfxDecode4Bpp(0x4000, 4, 8, 8, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x80, DrvTempRom, cache);
 
 	memset(DrvTempRom, 0xff, 0x40000);
-	nRet = BurnLoadRom(DrvTempRom + 0x00000,  7, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvTempRom + 0x20000,  8, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x00000,  7, 1); //if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvTempRom + 0x20000,  8, 1); //if (nRet != 0) return 1;
 
 	UINT8 *ss_vram		= (UINT8 *)SS_SPRAM;
 	UINT8 *DrvSprites	= (UINT8 *)(ss_vram+0x1100);
 	GfxDecode4Bpp(0x0800, 4, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x200, DrvTempRom, DrvSprites);
 	swapFirstLastColor(DrvSprites,0x0f,0x40000);
 	
-	memset4_fast(DrvTempRom, 0x00, 0x50000);
+	memset(DrvTempRom, 0x00, 0x50000);
 	spang_decode();
 	MitchellMachineInit();
 	
-	memset4_fast(DrvSoundRom, 0x00, 0x50000);
-	nRet = BurnLoadRom(DrvSoundRom + 0x00000,  9, 1); if (nRet != 0) return 1;
+	memset(MSM6295ROM, 0x00, 0x50000);
+	nRet = BurnLoadRom(MSM6295ROM + 0x00000,  9, 1); //if (nRet != 0) return 1;
 	
 if (!EEPROMAvailable()) EEPROMFill(spang_default_eeprom, 0, 128);
 	
@@ -737,7 +737,7 @@ inline void DrvInitSaturn()
 	PCM_SetErrFunc(errPcmFunc, NULL);
 #endif
 	nBurnSprites  = 131;
-	nBurnLinescrollSize = 0x0;
+	nBurnLinescrollSize = 0x1;
 //	TVOFF;
 	SS_MAP2    = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT    = ss_font     = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
@@ -811,6 +811,7 @@ int DrvExit()
 	PCM_DestroyStmHandle(pcmStream);
 	stmClose(stm);
 #endif
+
 /*	MSM6295Context = NULL;
 	CZ80Context = DrvZ80Rom = DrvZ80Code = DrvSoundRom = DrvZ80Ram = NULL;
 	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam = MSM6295ROM = NULL;
@@ -838,10 +839,9 @@ inline unsigned char pal4bit(unsigned char bits)
 	return ((bits << 4) | bits)>>3;
 }
 
-void make_lut(void)
+inline void make_lut(void)
 {
-    UINT32 j,mx, my;
-    for(j = 0; j < 4096; j++)
+    for(UINT32 j = 0; j < 0x1000; j++)
     {
 		int r = pal4bit(j >> 8);
 		int g = pal4bit(j >> 4);
@@ -850,25 +850,17 @@ void make_lut(void)
         cram_lut[j] =RGB(r,g,b);
     }
 
-	j = 0;
-	for (my = 0; my < 64; my+=2) 
-	{
-		for (mx = 0; mx < 128; mx+=2) 
-		{
-			map_offset_lut[j] = mx|(my<<6);
-			j++;
-		}
-	}
-
 	for (UINT32 i = 0; i<0x800; i++)
 	{
 		charaddr_lut[i] = 0x220+(i<<4);
+		map_offset_lut[i] = ((i&0x3f)|((i>>5)<<5))<<1;
 	}
 
 	for (UINT32 i = 0; i<256; i++)
 	{
-		map_lut[i] = ((i & 0x80)<<7) | i & 0x7f;
+		*map_lut++ = ((i & 0x80)<<7) | (i & 0x7f);
 	}
+	map_lut-=256;
 }
 
 
@@ -876,16 +868,19 @@ void DrvCalcPalette()
 {
 	if (color_dirty==1)
 	{
+		UINT16 *col =(UINT16 *)colBgAddr;
+		
 		for (UINT32 i = 0; i < DrvNumColours; i += 2) 
 		{
 			unsigned int Val = DrvPaletteRam[i & ~1] + (DrvPaletteRam[i | 1] << 8);
-			colBgAddr[i >> 1] = cram_lut[Val];//CalcCol(Val);
+			*col++ = cram_lut[Val];//CalcCol(Val);
 		}
 		color_dirty = 0;
 	}
 //	DrvMakeInputs();
 }
-#ifdef LOOPvoid DrvRenderBgLayer()
+#ifdef LOOP
+void DrvRenderBgLayer()
 {
 	unsigned int Code, Attr, x, TileIndex = 0;
 	UINT16 *map;
@@ -912,18 +907,20 @@ void DrvRenderSpriteLayer()
 	SprSpCmd *ss_spritePtr = &ss_sprite[3];
 	UINT32 Code ;
 	UINT32 Attr ;
+	UINT8 *spram =&DrvSpriteRam[0x1000 - 0x40];
 
-	for (int Offset = 0x1000 - 0x40; Offset >= 0; Offset -= 0x20) 
+	for (UINT32 i = 0; i<128; i++) 
 	{
-		Code = DrvSpriteRam[Offset + 0];
-		Attr = DrvSpriteRam[Offset + 1];
+		Code = spram[0];
+		Attr = spram[1];
 		Code += (Attr & 0xe0) << 3;
 
-		ss_spritePtr->ax		= DrvSpriteRam[Offset + 3] + ((Attr & 0x10) << 4);
-		ss_spritePtr->ay		= ((DrvSpriteRam[Offset + 2] + 8) & 0xff);// - 8;
+		ss_spritePtr->ax		= spram[3] + ((Attr & 0x10) << 4);
+		ss_spritePtr->ay		= ((spram[2] + 8) & 0xff);// - 8;
 		ss_spritePtr->charAddr	= charaddr_lut[Code];
 		ss_spritePtr->color     = (Attr & 0x0f)<<4;
 		ss_spritePtr++;
+		spram-=0x20;
 	}
 }
 #ifdef LOOP
@@ -990,8 +987,8 @@ void DrvFrame()
 	playMusic(&pcmStream);
 #endif
 
-	signed short *nSoundBuffer = (signed short *)0x25a20000;
-	MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], nBurnSoundLen);
+	signed short *nSoundBuffer = (signed short *)0x25a20000+(nSoundBufferPos<<1);
+	MSM6295RenderVBT(0, nSoundBuffer, nBurnSoundLen);
 	nSoundBufferPos+=nBurnSoundLen;
   
 	if(nSoundBufferPos>=0x1200)

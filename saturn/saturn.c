@@ -626,7 +626,7 @@ static inline void SCL_InitLineParamTb(SclLineparam *lp)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void	SCL_ScrollShow(void)
+static inline void	SCL_ScrollShow(void)
 {
     switch(SclProcess){
 	    case 1:

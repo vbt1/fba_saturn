@@ -190,7 +190,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spr
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = width_lut[ABS(Skip)];
-	unsigned int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
+	unsigned int values[] ={Src,Height,Skip,Width, Bank, nextSprite};
 	renderSpriteCache(values);
 //	spriteCache[addr]=nextSprite;
 

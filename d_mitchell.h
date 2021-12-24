@@ -86,47 +86,47 @@ static SFX sfx_spang[60] = {
 /*059.PCM*/	{0,199678,10},	// World Cleared
 };
 
-static unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort1[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort2[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort3[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort4[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort5[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort6[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort7[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort8[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort9[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort10[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInputPort11[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-static unsigned char DrvInput[12]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static unsigned char DrvDip[2]         = {0, 0};
+unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort1[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort2[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort3[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort4[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort5[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort6[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort7[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort8[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort9[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort10[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInputPort11[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned char DrvInput[12]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+unsigned char DrvDip[2]         = {0, 0};
 /*static*/ //unsigned char DrvReset          = 0;
 
 extern unsigned char* MSM6295ROM;
 extern int* pBuffer;
-static  unsigned char *Mem				= NULL;
-static  unsigned char *RamStart			= NULL;
-static  unsigned char *DrvZ80Rom		= NULL;
-static  unsigned char *DrvZ80Code		= NULL;
-static  unsigned char *DrvSoundRom		= NULL;
-static  unsigned char *DrvZ80Ram		= NULL;
-static  unsigned char *DrvPaletteRam	= NULL;
-static  unsigned char *DrvAttrRam		= NULL;
-static  unsigned char *DrvVideoRam		= NULL;
-static  unsigned char *DrvSpriteRam		= NULL;
+ unsigned char *Mem				= NULL;
+ unsigned char *RamStart			= NULL;
+ unsigned char *DrvZ80Rom		= NULL;
+ unsigned char *DrvZ80Code		= NULL;
+// unsigned char *DrvSoundRom		= NULL;
+ unsigned char *DrvZ80Ram		= NULL;
+ unsigned char *DrvPaletteRam	= NULL;
+// unsigned char *DrvAttrRam		= NULL;
+ unsigned char *DrvVideoRam		= NULL;
+ unsigned char *DrvSpriteRam	= NULL;
 /*static*/  //unsigned char *DrvChars            = NULL;
 /*static*/  //unsigned char *DrvSprites          = NULL;
-static  UINT8 *CZ80Context				= NULL;
-static  INT32 *MSM6295Context			= NULL;
+ UINT8 *CZ80Context				= NULL;
+ INT32 *MSM6295Context			= NULL;
 
-static  unsigned char DrvRomBank = 0;
-static  unsigned char DrvPaletteRamBank = 0;
-static  unsigned char DrvOkiBank = 0;
-static  unsigned char DrvFlipScreen = 0;
-static  unsigned char DrvVideoBank = 0;
-static  unsigned char DrvInput5Toggle = 0;
+ unsigned char DrvRomBank = 0;
+ unsigned char DrvPaletteRamBank = 0;
+ unsigned char DrvOkiBank = 0;
+ unsigned char DrvFlipScreen = 0;
+ unsigned char DrvVideoBank = 0;
+ unsigned char DrvInput5Toggle = 0;
 /*static*///  unsigned char DrvPort5Kludge = 0;
-static  unsigned char DrvHasEEPROM = 0;
+ unsigned char DrvHasEEPROM = 0;
 
 #define DRV_INPUT_TYPE_BLOCK		2
 

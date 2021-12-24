@@ -133,7 +133,7 @@ void __fastcall tigerhWriteCPU0(UINT16 a, UINT8 d)
 			UINT16 code  = attr & nTigerHeliTileMask;
 			UINT16 color = (attr & 0xf000) >> 12;
 
-			UINT16 *map2 = (UINT16 *)&ss_map2[map_offset_lut[a]];
+			UINT16 *map2 = (UINT16 *)ss_map2+(map_offset_lut[a]);
 			map2[0] = color;
 			map2[1] = code+0x1000;				
 		}
@@ -153,7 +153,7 @@ void __fastcall tigerhWriteCPU0(UINT16 a, UINT8 d)
 			UINT16 code  =  attr & 0x03ff;
 			UINT16 color = (attr & 0xfc00) >> 10;
 
-			UINT16 *map = (UINT16 *)&ss_map[map_offset_lut2[a]];
+			UINT16 *map = (UINT16 *)ss_map+map_offset_lut2[a];
 			map[0] = color;
 			map[1] = code;			
 		}
@@ -562,7 +562,7 @@ INT32 DrvExit()
 	scrollx = scrolly = 0;
 	nTigerHeliTileMask = nSndIrqFrame = 0;	
 
-	PcmHn *pcm=&pcm6[0];
+	PcmHn *pcm=(PcmHn *)pcm6;
 
 	for(UINT8 i=0;i<6;i++)
 	{
@@ -771,25 +771,26 @@ void DrvFrame()
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void rotate_tile16x16(unsigned int size, unsigned char *target)
 {
-	unsigned char i,j;
-	unsigned int k; //,l=0;
-	unsigned char temp[16][16];
+	unsigned int i,j,k; //,l=0;
+	unsigned char temp[256];
 
 	for (k=0;k<size;k++)
 	{
-		for(i=0;i<16;i++)
+		for(i=0;i<128;i+=8)
 		{
-			for(j=0;j<16;j+=2)
+			unsigned char *t=(unsigned char *)&temp[(i<<1)];
+			for(j=0;j<8;j++)
 			{
-				temp[i][j]=target[(i*8)+(j/2)]>>4;
-				temp[i][j+1]=target[(i*8)+(j/2)]&0x0f;
+				t[0]=target[i+j]>>4;
+				t[1]=target[i+j]&0x0f;
+				t+=2;
 			}
 		}
 		for(i=0;i<16;i++)
+		{
 			for(j=0;j<16;j+=2)
-			{
-				target[((15-i)*8)+(j)/2]    = (temp[j][i]<<4)|(temp[j+1][i]&0xf);
-			}
+				target[((15-i)*8)+(j)/2]    = (temp[(j*16)+i]<<4)|(temp[((j+1)*16)+i]&0xf);
+		}
 		target+=128;
 	}
 }
@@ -804,7 +805,7 @@ void updateSound(unsigned int *nSoundBufferPos)
 	
 	if(nSoundBufferPos[0]>=RING_BUF_SIZE>>1)
 	{
-		PcmHn *pcm=&pcm6[0];
+		PcmHn *pcm=(PcmHn *)pcm6;
 		
 		for (unsigned char i=0;i<6;i++)
 		{
@@ -816,7 +817,7 @@ void updateSound(unsigned int *nSoundBufferPos)
 	draw_sprites();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void make_lut(void)
+inline void make_lut(void)
 {
 	int sx, sy;
 	UINT16 *lutptr1=(UINT16 *)map_offset_lut;

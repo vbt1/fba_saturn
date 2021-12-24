@@ -601,9 +601,9 @@ void AY8910UpdateDirect(int chip, signed short *buffer, int length)
 	signed short *buf1,*buf2,*buf3;
 	int outn;
 
-	buf1 = &buffer[0x00000];
-	buf2 = &buffer[0x02000];
-	buf3 = &buffer[0x04000];
+	buf1 = (signed short *)buffer;
+	buf2 = (signed short *)buffer+0x04000;
+	buf3 = (signed short *)buffer+0x08000;
 
 	/* The 8910 has three outputs, each output is the mix of one of the three */
 	/* tone generators and of the (single) noise generator. The two are mixed */

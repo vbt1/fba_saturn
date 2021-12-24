@@ -232,7 +232,7 @@ void fdwarrio_decode(void)
 Allocate Memory
 ===============================================================================================*/
 
-void MemIndex()
+inline void MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -274,9 +274,10 @@ void MemIndex()
 //	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
 	cpu_lut				= (UINT32 *)Next; Next += 256*sizeof(UINT32);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
-	map_cache			= (UINT16 *)Next; Next += (0x800*16) * sizeof(UINT32);
+	map_cache			= (UINT16 *)Next; Next += 0x4000 * sizeof(UINT32); // 4 banks de 4096
 	map_dirty			= Next; Next += 0x0008;
 	CZ80Context			= Next; Next += 2*sizeof(cz80_struc);
+//	spriteCache 		= Next;
 }
 /*==============================================================================================
 Reset Functions
@@ -308,10 +309,10 @@ int System1DoReset()
 Memory Handlers
 ===============================================================================================*/
 
-void System1BankRom(UINT32 System1RomBank)
+inline void System1BankRom(UINT32 System1RomBank)
 {
-	UINT32 BankAddress = (System1RomBank * 0x4000) + 0x10000;
-	CZetMapMemory2(System1Rom1 + BankAddress + 0x20000, System1Rom1 + BankAddress, 0x8000, 0xbfff, MAP_ROM);
+	UINT32 BankAddress = System1Rom1 + (System1RomBank * 0x4000) + 0x10000;
+	CZetMapMemory2(BankAddress + 0x20000, BankAddress, 0x8000, 0xbfff, MAP_ROM);
 }
 
 UINT8 __fastcall System1Z801PortRead(unsigned short a)
@@ -332,7 +333,7 @@ UINT8 __fastcall System1Z801PortRead(unsigned short a)
 	return 0;
 }
 
-inline void __fastcall system1_soundport_w(UINT8 d)
+void __fastcall system1_soundport_w(UINT8 d)
 {
 	System1SoundLatch = d;
 	z80_cause_NMI();
@@ -732,8 +733,8 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	if(flipscreen==1)		rotate_tile(System1NumTiles,0,cache);
 	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,cache);
 
-	spriteCache = (UINT16*)(0x00200000);
 
+	spriteCache = (UINT16*)(0x00200000);
 	memset((unsigned char *)spriteCache,0xFF,0x80000);
 
 	memset(System1Sprites, 0x00, System1SpriteRomSize);
@@ -888,11 +889,11 @@ int System1Exit()
 //    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
 //    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
 	
-	memset(map_dirty,0,8);
-	CZ80Context = NULL;
+//	memset(map_dirty,0,8);
+//	CZ80Context = NULL;
 
 	SN76496Exit();
-
+/*
 	RamStart1 = RamStart               = NULL;
 	System1Rom1 = System1Rom2 = NULL;
 	System1PromRed = System1PromGreen = System1PromBlue = NULL;
@@ -902,7 +903,7 @@ int System1Exit()
 	System1ScrollXRam = System1BgCollisionRam = NULL;
 	System1SprCollisionRam = NULL;
 	System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
-	/*System1Tiles =*/ SpriteOnScreenMap = NULL;
+	SpriteOnScreenMap = NULL;
 	System1Fetch1 = NULL;
 	System1ScrollX = System1ScrollY = NULL;
 
@@ -915,7 +916,7 @@ int System1Exit()
 	map_cache = NULL;
 	map_dirty = NULL;
 
-	System1Sprites = NULL;
+	System1Sprites = NULL;*/
 //	free(Mem);
 //	Mem = NULL;
 	DecodeFunction = NULL;
@@ -1004,7 +1005,7 @@ inline void renderSpriteCache(int *values)
 	INT32 Skip = values[2];
 //	UINT32 Width  = values[3];
 	UINT8 *ss_vram   = (UINT8 *)SS_SPRAM;
-	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(values[5]<<3)];
+	UINT8 *spriteVRam=(Uint8 *)&ss_vram[0x1100+(values[5]*8)];
 	UINT8 *spr = &System1Sprites[values[4]];
 
 	for (UINT32 Row = 0; Row < Height; Row++) 
@@ -1096,7 +1097,7 @@ void System1DrawSprites()
 				DrawSpriteCache(i,addr,Skip,ss_spritePtr,SpriteBase);
 			else
 			{
-				 spriteCache[addr]=nextSprite;				
+				 spriteCache[addr]=nextSprite;
 				 DrawSprite(i,Bank,Skip,ss_spritePtr,SpriteBase);
 			}
 		}
@@ -1113,10 +1114,10 @@ void System1DrawSprites()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void renderSound(unsigned int *nSoundBufferPos)
 {
-	signed short *nSoundBuffer = (signed short *)0x25a20000;
+	signed short *nSoundBuffer = (signed short *)(0x25a20000+(*nSoundBufferPos)*(sizeof(signed short)));
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	SN76496Update(0, &nSoundBuffer[*nSoundBufferPos], nSegmentLength);
-	SN76496Update(1, &nSoundBuffer[*nSoundBufferPos], nSegmentLength);
+	SN76496Update(0, nSoundBuffer, nSegmentLength);
+	SN76496Update(1, nSoundBuffer, nSegmentLength);
 	*nSoundBufferPos+=nSegmentLength;
 	
 //	System1Render();

@@ -37,7 +37,7 @@ UINT8 *DrvSndROM = NULL;
 UINT8 *DrvVidRAM = NULL;
 UINT8 *DrvSprRAM = NULL;
 //UINT8 *DrvColRAM = NULL;
-UINT8 *DrvColPROM = NULL;
+//UINT8 *DrvColPROM = NULL;
 UINT8 *MC8123Key = NULL;
 UINT16 *map_offset_lut = NULL;
 typedef void (*RenderSprite)(UINT32);

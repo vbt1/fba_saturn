@@ -894,7 +894,7 @@ void MemIndex()
 
 int DrvInit()
 {
-//	DrvInitSaturn(0);
+	DrvInitSaturn(0);
 	MemIndex();
 
 	DrvBgRAM = DrvMainROM + 0x8000;

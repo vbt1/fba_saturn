@@ -22,39 +22,39 @@ void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
 INT32 DrvLoadRoms(UINT8 nWhichGame);
 
 //typedef int bool;
-static UINT8 irq_enable = 0;
-static UINT8 sound_nmi_enable = 0;
+UINT8 irq_enable = 0;
+UINT8 sound_nmi_enable = 0;
 
-static UINT32 nStatusIndex = 0;
-static UINT8 nProtectIndex = 0;
-static UINT32 nSndIrqFrame = 0; //tigerh 6, slapf 3, perfr 4
+UINT32 nStatusIndex = 0;
+UINT8 nProtectIndex = 0;
+UINT32 nSndIrqFrame = 0; //tigerh 6, slapf 3, perfr 4
 
-static INT32 scrollx = 0;
-static INT32 scrolly = 0;
-static UINT32 nTigerHeliTileMask = 0; 
+INT32 scrollx = 0;
+INT32 scrolly = 0;
+UINT32 nTigerHeliTileMask = 0; 
 
-static UINT8 *DrvZ80ROM0 = NULL;
-static UINT8 *DrvZ80RAM0 = NULL;
-static UINT8 *RamShared = NULL;
-static UINT8 *DrvVidRAM = NULL;
-static UINT8 *DrvSprRAM = NULL;
-static UINT8 *DrvSprBuf = NULL;
-static UINT8 *DrvTxtRAM = NULL;
-static UINT8 *CZ80Context = NULL;
-static UINT16 *map_offset_lut = NULL;
-static UINT16 *map_offset_lut2 = NULL;
+UINT8 *DrvZ80ROM0 = NULL;
+UINT8 *DrvZ80RAM0 = NULL;
+UINT8 *RamShared = NULL;
+UINT8 *DrvVidRAM = NULL;
+UINT8 *DrvSprRAM = NULL;
+UINT8 *DrvSprBuf = NULL;
+UINT8 *DrvTxtRAM = NULL;
+UINT8 *CZ80Context = NULL;
+UINT16 *map_offset_lut = NULL;
+UINT16 *map_offset_lut2 = NULL;
 
-static PcmHn pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
+PcmHn pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L
 // ---------------------------------------------------------------------------
 // Inputs
 
-static UINT8 DrvDips[2] = {0,0};
-static UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
-static UINT8 DrvInputs[2] = {0,0};
+UINT8 DrvDips[2] = {0,0};
+UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvJoy2[8] = {0,0,0,0,0,0,0,0};
+UINT8 DrvInputs[2] = {0,0};
 // Dip Switch and Input Definitions
 
 static struct BurnInputInfo SlapfighInputList[] = {

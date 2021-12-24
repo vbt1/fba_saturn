@@ -8,7 +8,7 @@
 
 INT32 SidearmsInit();
 INT32 DrvExit();
-INT32 DrvFrame();
+void DrvFrame();
 inline void SidearmsDraw();
 inline void bankswitch(UINT32 data);
 void sidearms_draw_starfield(int *starfield_enable);
