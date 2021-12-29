@@ -700,6 +700,7 @@ void wbml_draw_bg(UINT8* vram)
 		for (unsigned int i=0;i<32 ;i++ )
 		{
 			memcpyl(map,mapc,128);
+//			DMA_ScuMemCopy(map, mapc, 128);
 			mapc+=128;
 			map+=128;
 /*		

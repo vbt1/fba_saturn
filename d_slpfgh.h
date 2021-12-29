@@ -10,16 +10,17 @@
 #define	true	1
 #define	false	0
 
-void updateSound(unsigned int *nSoundBufferPos);
+//void updateSound(unsigned int *nSoundBufferPos);
+void updateSound();
 INT32 DrvInit();
 INT32 DrvExit();
 void DrvFrame();
 void DrvDoReset();
-void Set6PCM();
+static void Set6PCM();
 void PCM_MeStop(PcmHn hn);
-static void rotate_tile16x16(unsigned int size, unsigned char *target);
+inline void rotate_tile16x16(unsigned int size, unsigned char *target);
 void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
-INT32 DrvLoadRoms(UINT8 nWhichGame);
+void DrvLoadRoms(UINT8 nWhichGame);
 
 //typedef int bool;
 UINT8 irq_enable = 0;
@@ -35,14 +36,14 @@ UINT32 nTigerHeliTileMask = 0;
 
 UINT8 *DrvZ80ROM0 = NULL;
 UINT8 *DrvZ80RAM0 = NULL;
-UINT8 *RamShared = NULL;
+//UINT8 *RamShared = NULL;
 UINT8 *DrvVidRAM = NULL;
 UINT8 *DrvSprRAM = NULL;
 UINT8 *DrvSprBuf = NULL;
 UINT8 *DrvTxtRAM = NULL;
 UINT8 *CZ80Context = NULL;
 UINT16 *map_offset_lut = NULL;
-UINT16 *map_offset_lut2 = NULL;
+//UINT16 *map_offset_lut2 = NULL;
 
 PcmHn pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 #define	PCM_ADDR	((void*)0x25a20000)

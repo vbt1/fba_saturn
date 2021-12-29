@@ -8,7 +8,7 @@ unsigned char stm_work[0x780] = {NULL};// __attribute__((section("COMMON")));
 StmHn stm = NULL;
 static StmGrpHn grp_hd = NULL;
 SFX *sfx_list = NULL;
-
+/*
 void vout(char *string, char *fmt, ...)                                         
 {                                                                               
    va_list arg_ptr;                                                             
@@ -16,7 +16,7 @@ void vout(char *string, char *fmt, ...)
    vsprintf(string, fmt, arg_ptr);                                              
    va_end(arg_ptr);                                                             
 }
-
+*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmInit(void)
 {
@@ -60,7 +60,7 @@ void stmClose(StmHn fp)
 void errStmFunc(void *obj, Sint32 ec)
 {
 	char texte[50];
-	vout(texte, "ErrStm %X %X",obj, ec); 
+	sprintf(texte, "ErrStm %X %X",obj, ec); 
 	texte[49]='\0';
 	do{
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"plante stm                         ",40,120);
@@ -73,7 +73,7 @@ void errStmFunc(void *obj, Sint32 ec)
 void errGfsFunc(void *obj, Sint32 ec)
 {
 	char texte[50];
-	vout(texte, "ErrGfs %X %X",obj, ec); 
+	sprintf(texte, "ErrGfs %X %X",obj, ec); 
 	texte[49]='\0';
 	do{
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
@@ -84,7 +84,7 @@ void errGfsFunc(void *obj, Sint32 ec)
     GFS_GetErrStat(&stat);
     ret = GFS_ERR_CODE(&stat);
 
-	vout(texte, "ErrGfsCode %X",ret); 
+	sprintf(texte, "ErrGfsCode %X",ret); 
 	texte[49]='\0';
 
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,150);
@@ -97,7 +97,7 @@ void errPcmFunc(void *obj, Sint32 ec)
 {
 //	VTV_PRINTF((VTV_s, "S:ErrPcm %X %X\n", obj, ec));
 	char texte[50];
-	vout(texte, "ErrPcm %X %X",obj, ec); 
+	sprintf(texte, "ErrPcm %X %X",obj, ec); 
 	texte[49]='\0';
 	do{
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté pcm",70,130);
@@ -247,7 +247,7 @@ void UpdateStreamPCM(Uint8 data, PcmHn *hn, PcmCreatePara *para)
 {
 	char pcm_file[14];
 
-	vout(pcm_file, "%03d%s",data,".PCM"); 
+	sprintf(pcm_file, "%03d%s",data,".PCM"); 
 	PcmInfo 		info;
 
 	PCM_INFO_FILE_TYPE(&info) = PCM_FILE_TYPE_NO_HEADER;			
@@ -294,17 +294,17 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 void playMusic(PcmHn *hn)
 {
 	 Sint32 stat;
-/*	// wrong !
+	// wrong !
 #ifdef DEBUG
 	PcmWork		*work = *(PcmWork **)hn;
 	PcmStatus	*st= &work->status;
 
 	if(st->play ==PCM_STAT_PLAY_ERR_STOP)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,40);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp   ",40,40);
 	else if (st->play ==PCM_STAT_PLAY_CREATE)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,40);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create   ",40,40);
 	else if (st->play ==PCM_STAT_PLAY_PAUSE)
-			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,40);
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause   ",40,40);
 	else if (st->play ==PCM_STAT_PLAY_START)
 			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,40);
 	else if (st->play ==PCM_STAT_PLAY_HEADER)
@@ -323,7 +323,7 @@ void playMusic(PcmHn *hn)
 //			while(1);
 	}
 #endif
-*/
+
 //	if(st->play>PCM_STAT_PLAY_ERR_STOP && st->play<=PCM_STAT_PLAY_END)
 	{
 //		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"STM_ExecServer   ",80,140);	
@@ -370,6 +370,7 @@ void playMusic(PcmHn *hn)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef DEBUG
 #define INT_DIGITS 19
 char *itoa(int i)
 {
@@ -392,3 +393,4 @@ char *itoa(int i)
   }
   return p;
 }
+#endif

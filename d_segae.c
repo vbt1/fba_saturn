@@ -1151,22 +1151,24 @@ void update_sprites(UINT8 chip, UINT32 index)
 		UINT8 *st = (UINT8 *)&segae_vdp_vram[chip][satb[chip]];
 		// Sprite Y position 
 		int yp = st[delta];
-
+		unsigned int inv_delta=INV-delta;
+		ss_spritePtr+=inv_delta;
+		
 		if(yp == 208) 
 		{
 //			ss_spritePtr[delta].control = CTRL_END;
 			for(int x=delta;x<64;x++)
 			{
-				ss_spritePtr[INV-x].drawMode = 0;
-				ss_spritePtr[INV-x].charAddr = 0;
-				ss_spritePtr[INV-x].charSize = 0;
-				ss_spritePtr[INV-x].ax	= 0;
-				ss_spritePtr[INV-x].ay	= 0;
+				ss_spritePtr->drawMode	= 0;
+				ss_spritePtr->charAddr	= 0;
+				ss_spritePtr->charSize	= 0;
+				ss_spritePtr->ax		= 0;
+				ss_spritePtr->ay		= 0;
+				ss_spritePtr--;
 			}
 			return;
 		}
-		unsigned int inv_delta=INV-delta;
-		ss_spritePtr+=inv_delta;
+
 		//Actual Y position is +1 
 		yp ++;
 		//Wrap Y coordinate for sprites > 240 
@@ -1257,22 +1259,24 @@ inline void update_bg(UINT8 chip, UINT32 index)
 	*sg= *pg = (temp1<<2 | temp2 );
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void make_map_lut()
+void make_map_lut()
 {
 	UINT32 row,column;
-
+	UINT16 *m =(UINT16 *)map_lut;
+	
 	for (UINT32 i = 0; i < 0x800;i++) 
 	{
 		row = i & 0x7C0;
 		column = (i>>1) & 0x1F;
 #ifdef TWO_WORDS
-		map_lut[i] = (row+column)<<1;
+		*m++ = (row+column)<<1;
 #else
-		map_lut[i] = row+column;
+		*m++ = row+column;
 #endif
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*
 inline void make_name_lut()
 {
 	for(UINT32 j = 0; j < 0x10000; j++)
@@ -1281,14 +1285,14 @@ inline void make_name_lut()
 		UINT16 flip = (i >> 9) & 3;
 		UINT16 pal = (i >> 11) & 1;
 #ifdef TWO_WORDS
-/*
-Bit 15 - 13: Unused
-Bit 12: Priority flag
-Bit 11: Which palette to use
-Bit 10: Vertical Flip Flag
-Bit 09: Horizontal Flip Flag
-Bit 08 - 00 : Pattern Index 
-*/
+
+//Bit 15 - 13: Unused
+//Bit 12: Priority flag
+//Bit 11: Which palette to use
+//Bit 10: Vertical Flip Flag
+//Bit 09: Horizontal Flip Flag
+//Bit 08 - 00 : Pattern Index 
+
 		UINT16 priority = (i >> 12) & 1;
 		name_lut[j] = (flip << 14 | priority << 13 | pal);
 #else
@@ -1296,11 +1300,13 @@ Bit 08 - 00 : Pattern Index
 		name_lut[j] = (pal << 12 | flip << 10 | name);
 #endif
 	}
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 void make_bp_lut(void)
 {
 	UINT32 *bp_l =(UINT32 *)bp_lut;
+	UINT16 *nm_l =(UINT16 *)name_lut;
+	
     for(UINT32 j = 0; j < 0x10000; j++)
     {
         UINT32 row = 0;
@@ -1323,10 +1329,28 @@ void make_bp_lut(void)
         if(i & 0x0002) row |= 0x00000010;
         if(i & 0x0001) row |= 0x00000001;
         *bp_l++ = row;
+		
+		UINT16 flip = (i >> 9) & 3;
+		UINT16 pal = (i >> 11) & 1;
+#ifdef TWO_WORDS
+/*
+Bit 15 - 13: Unused
+Bit 12: Priority flag
+Bit 11: Which palette to use
+Bit 10: Vertical Flip Flag
+Bit 09: Horizontal Flip Flag
+Bit 08 - 00 : Pattern Index 
+*/
+		UINT16 priority = (i >> 12) & 1;
+		*nm_l++ = (flip << 14 | priority << 13 | pal);
+#else
+		UINT16 name = (i & 0x1FF);
+		*nm_l++ = (pal << 12 | flip << 10 | name);
+#endif		
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void make_cram_lut(void)
+void make_cram_lut(void)
 {
     for(UINT32 j = 0; j < 0x40; j++)
     {
@@ -1346,10 +1370,10 @@ inline void make_cram_lut(void)
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void make_lut()
+inline void make_lut()
 {
 //	memset((UINT8 *)LOwADDR,0x00,0x80000);
-	make_name_lut();
+//	make_name_lut();
 	make_bp_lut();
 	make_cram_lut();
 	make_map_lut();

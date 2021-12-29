@@ -426,7 +426,7 @@ static inline void bankp_gfx_decode()
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri     = (SclOtherPriRegister *)SS_OTHR;
 	ss_BgColMix		= (SclBgColMixRegister *)SS_BGMIX;
-	nBurnLinescrollSize = 0;
+	nBurnLinescrollSize = 1;
 	nBurnSprites = 3;
 
 //3 nbg

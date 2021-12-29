@@ -6,12 +6,12 @@
 //#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR 0x060DE000
+#define OVLADDR 0x060DF000
 #define OVLAEND 0x060FF000
 #define SIZEMAX  0x20000 //OVLAEND-OVLADDR //0x30000 //0x060FF800-0x060CC000
 #define LOWADDR 0x00200000
 //#define MALLOC_MAX 0xAA000
-#define MAINSTART 0x0601c000 //6019a00
+#define MAINSTART 0x0601b000 //6019a00
 #define MALLOC_MAX  OVLADDR-MAINSTART-0x3000 //0x30000 //0x060FF800-0x060CC000
 #define LOWADDR 0x00200000
 #ifdef HEAP_WALK
@@ -476,7 +476,7 @@ static unsigned char update_input(unsigned int *current_page,unsigned char *load
 }
 //--------------------------------------------------------------------------------------------------------------
 //int the_loop=1;
-static void display_menu(void)
+inline void display_menu(void)
 {
 	unsigned int l;
 	unsigned char loaded = 0;

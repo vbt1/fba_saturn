@@ -1199,10 +1199,10 @@ INT32 OmegafInit()
 inline void initLayersS(UINT8 game)
 {
     Uint16	CycleTb[]={
-		0xffff,0x4567,  //A0 // nbg1 et 2 ok
-		0xffff, 0x4ff7,	//A1
-		0x0123,0x4ff7 ,  //B0
-		0xffff,0x4ff7   //B1
+		0xeeee,0x4567,  //A0 // nbg1 et 2 ok
+		0xeeee, 0x4ee7,	//A1
+		0x0123,0x4ee7 ,  //B0
+		0xeeee,0x4ee7   //B1
 	};
  	SclConfig	scfg;
 
@@ -1443,7 +1443,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 					unsigned int tile = code ^ (y << big_xshift) ^ (x << big_yshift);
 
 					ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP) | flip;
-					ss_spritePtr->drawMode		= ( ECD_DISABLE | COMPO_REP);
+					ss_spritePtr->drawMode		= ECD_DISABLE;
 
 					ss_spritePtr->ax			= sx + (x<<4);
 					ss_spritePtr->ay			= sy + (y<<4);
@@ -1503,8 +1503,34 @@ UINT32 cacheTile(UINT8 *bgram,UINT32 *nt, UINT32 *bg1, UINT8 *src,UINT8 *dst)
 	}
 	return *new_code;
 }
+
+
+void RobokidDraw()
+{
+//	DrvGfxROM2	 	= (UINT8 *)cache+0x08000;// bg1 //Next; Next += 0x100000;
+//	DrvGfxROM3	 	= (UINT8 *)cache+0x28000;//bg2  //Next; Next += 0x100000;
+//	DrvGfxROM4		= (UINT8 *)cache+0x58000;//bg3 // Next; Next += 0x100000;
+/*
+	if (tilemap_enable[0])prepare_robokid_bg_layer(0, DrvBgRAM0, 0);
+	if (tilemap_enable[1])prepare_robokid_bg_layer(1, DrvBgRAM1, 0);
+	if (tilemap_enable[2])prepare_robokid_bg_layer(2, DrvBgRAM2, 0);
+*/
+	draw_robokid_bg_layer();
+
+	draw_sprites(1);
+	
+//	draw_fg_layer();
+
+	ss_reg->n0_move_x =  (scrollx[1]-8)<<16;
+	ss_reg->n0_move_y =  (scrolly[1]+32)<<16;
+	ss_reg->n1_move_x =  (scrollx[0]-8)<<16;
+	ss_reg->n1_move_y =  (scrolly[0]+32)<<16;
+	ss_reg->n3_move_x =  (scrollx[2]-8);
+	ss_reg->n3_move_y =  (scrolly[2]+32);
+}
+
 //-------------------------------------------------------------------------------------------------------------------------------------
-static inline void  draw_robokid_bg_layer() //INT32 width)
+inline void  draw_robokid_bg_layer() //INT32 width)
 {
 //	if (tilemap_enable[sel] == 0) return;
 //	UINT32 wide = (width) ? 128 : 32;
@@ -1547,30 +1573,6 @@ static inline void  draw_robokid_bg_layer() //INT32 width)
 		map[1] = (code+0x1400);
 //-----------------------------------------------------------------------------------------------------------------
 	}
-}
-
-void RobokidDraw()
-{
-//	DrvGfxROM2	 	= (UINT8 *)cache+0x08000;// bg1 //Next; Next += 0x100000;
-//	DrvGfxROM3	 	= (UINT8 *)cache+0x28000;//bg2  //Next; Next += 0x100000;
-//	DrvGfxROM4		= (UINT8 *)cache+0x58000;//bg3 // Next; Next += 0x100000;
-/*
-	if (tilemap_enable[0])prepare_robokid_bg_layer(0, DrvBgRAM0, 0);
-	if (tilemap_enable[1])prepare_robokid_bg_layer(1, DrvBgRAM1, 0);
-	if (tilemap_enable[2])prepare_robokid_bg_layer(2, DrvBgRAM2, 0);
-*/
-	draw_robokid_bg_layer();
-
-	draw_sprites(1);
-	
-//	draw_fg_layer();
-
-	ss_reg->n0_move_x =  (scrollx[1]-8)<<16;
-	ss_reg->n0_move_y =  (scrolly[1]+32)<<16;
-	ss_reg->n1_move_x =  (scrollx[0]-8)<<16;
-	ss_reg->n1_move_y =  (scrolly[0]+32)<<16;
-	ss_reg->n3_move_x =  (scrollx[2]-8);
-	ss_reg->n3_move_y =  (scrolly[2]+32);
 }
 
 inline void DrvClearOpposites(UINT8* nJoystickInputs)

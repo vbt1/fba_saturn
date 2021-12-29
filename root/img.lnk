@@ -77,7 +77,7 @@ SECTIONS {
 		root/sl.elf ("COMMON")
 	} > ram
 
-	.malloc_max 0x0601c000 (NOLOAD):
+	.malloc_max 0x0601b000 (NOLOAD):
         {
 		__malloc_max_ram = .;
         } > ram

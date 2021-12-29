@@ -20,21 +20,21 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvBlockgal = {
 		"blockgal", "sys1h",
-		"Block Gal (MC-8123B, 317-0029)\0",
+		"Block Gal (MC-8123B, 317-0029)",
 		BlockgalRomInfo, BlockgalRomName, BlockgalInputInfo, BlockgalDIPInfo,
 		BlockgalInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvGardia = {
 		"gardia", "sys1h",
-		"Gardia (317-0006)\0",
+		"Gardia (317-0006)",
 		GardiaRomInfo, GardiaRomName, MyheroInputInfo, GardiaDIPInfo,
 		GardiaInit, System1Exit, System1Frame
 	};
 
 	struct BurnDriver nBurnDrvStarjack = {
 		"starjack", "sys1h",
-		"Star Jacker (Sega)\0", 
+		"Star Jacker (Sega)", 
 		StarjackRomInfo, StarjackRomName, MyheroInputInfo, StarjackDIPInfo,
 		StarjackInit, System1Exit, System1Frame
 	};

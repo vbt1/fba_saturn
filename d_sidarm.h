@@ -83,6 +83,7 @@ UINT8 *DrvZ80RAM1= NULL;
 UINT8 *bgscrollx= NULL;
 UINT8 *bgscrolly= NULL;
 UINT8 starfield_enable=0;
+UINT8 bank_data=0;
 UINT8 sprite_enable=0;
 UINT8 bglayer_enable=0;
 UINT16 starscrollx=0;

@@ -149,9 +149,10 @@ void __fastcall zaxxon_write8000(UINT16 address, UINT8 data)
 	{
 		DrvVidRAM[address] = data;
 		UINT32 colpromoffs = colpromoffs_lut[address];
-		UINT32 x = map_lut[address];
-		ss_map2[x] = (DrvColPROM[colpromoffs] & 0x0f);
-		ss_map2[x+1] = data;
+		UINT16 *map = (UINT16*)ss_map2+map_lut[address];
+
+		map[0] = (DrvColPROM[colpromoffs] & 0x0f);
+		map[1] = data;
 	}
 }
 
@@ -191,9 +192,10 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 		{
 			DrvVidRAM[address] = data;
 			UINT32 colpromoffs = colpromoffs_lut[address];
-			UINT32 x = map_lut[address];
-			ss_map2[x] = (DrvColPROM[colpromoffs] & 0x0f);
-			ss_map2[x+1] = data;
+			UINT16 *map = (UINT16*)ss_map2+map_lut[address];			
+//			UINT32 x = map_lut[address];
+			map[0] = (DrvColPROM[colpromoffs] & 0x0f);
+			map[1] = data;
 		}
 		return;
 	}
@@ -1024,10 +1026,9 @@ inline void SaturnInitMem()
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void rotate32_tile(unsigned int size,/*unsigned char flip,*/ unsigned char *target)
 {
-	unsigned int i,j,k,l=0;
-//	unsigned char temp[32][32];
-//	unsigned char rot[32][32];
-	unsigned char *temp[32],*rot[32];
+	unsigned int i,j,k;
+
+	unsigned char *temp[32],*rot[32], *t;
 	UINT8 *Next=RamEnd;
 
 	for (k=0;k<32;k++)
@@ -1035,33 +1036,32 @@ inline void rotate32_tile(unsigned int size,/*unsigned char flip,*/ unsigned cha
 		rot[k]= Next+32;		
 		temp[k]= Next; Next += 256;
 	}
-		
+	t=target;
 	for (k=0;k<size;k++)
 	{
 		for(i=0;i<32;i++)
+		{
 			for(j=0;j<16;j++)
 			{
-				temp[i][j<<1]=target[l+(i*16)+j]>>4;
-				temp[i][(j<<1)+1]=target[l+(i*16)+j]&0x0f;
+				temp[i][j<<1]=t[(i*16)+j]>>4;
+				temp[i][(j<<1)+1]=t[(i*16)+j]&0x0f;
 			}
+		}
 
-		memset(&target[l],0,32*16);
+		memset(t,0,32*16);
 		
 		for(i=0;i<32;i++)
 		{
 			for(j=0;j<32;j++)
 			{
-//				if(flip)
-//				 rot[31-i][j]= temp[j][i] ;
-//				else
+
 				 rot[i][31-j]= temp[j][i] ;
 			}
 
-//		for(i=0;i<32;i++)
+
 			for(j=0;j<16;j++)
-					target[l+(i*16)+j]    = (rot[i][j*2]<<4)|(rot[i][(j*2)+1]&0xf);
+				*t++    = (rot[i][j*2]<<4)|(rot[i][(j*2)+1]&0xf);
 		}
-		l+=(32*16);
 	}		
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

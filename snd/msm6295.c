@@ -26,7 +26,7 @@ typedef struct {
 	int nPlaying;
 }MSM6295ChannelInfo;
 
-struct {
+typedef struct {
 	int nVolume;
 	int nSampleRate;
 	int nSampleSize;
@@ -39,7 +39,9 @@ struct {
 	bool bIsCommand;
 	int nSampleInfo;
 
-} MSM6295[MAX_MSM6295];
+} MSM6295Struct;
+
+MSM6295Struct MSM6295[MAX_MSM6295];
 
 UINT8 *pBankPointer[MAX_MSM6295][0x40000/0x100];
 int nPreviousSample[MAX_MSM6295]={0,0}, nCurrentSample[MAX_MSM6295]={0,0};

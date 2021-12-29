@@ -62,7 +62,7 @@ void nova_draw_sprites();
 void make_nova_lut();
 //-------------------------------------------------------------------------------------------------
 // Input Handlers
-static struct BurnInputInfo DrvInputList[] = {
+static struct BurnInputInfo PkunwarInputList[] = {
 	{"P1 Coin"      , BIT_DIGITAL  , DrvJoy2 + 7,	"p1 coin"  },
 	{"P1 start"  ,    BIT_DIGITAL  , DrvJoy1 + 5,	"p1 start" },
 	{"P1 Left"      , BIT_DIGITAL  , DrvJoy1 + 0, 	"p1 left"  },
@@ -77,10 +77,59 @@ static struct BurnInputInfo DrvInputList[] = {
 	{"Service Mode",  BIT_DIGITAL,   DrvJoy2 + 6,   "diag"     },
 
 	{"Reset",	  BIT_DIGITAL  , NULL,	"reset"    },
-	{"Dip 1",	  BIT_DIPSWITCH, DrvDips + 0,	"dip"	   },
+	{"Dip 1",	  		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
+	{"Dip 2",	  		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };
 
-STDINPUTINFO(Drv)
+STDINPUTINFO(Pkunwar)
+
+static struct BurnInputInfo Nova2001InputList[] = {
+	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"	},
+	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 1,	"p1 start"	},
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
+	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"	},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"	},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 right"	},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 fire 1"	},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 fire 2"	},
+
+	{"P2 Start",		BIT_DIGITAL,	DrvJoy3 + 2,	"p2 start"	},
+	{"P2 Up",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 up"		},
+	{"P2 Down",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 down"	},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 left"	},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 right"	},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 7,	"p2 fire 1"	},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 6,	"p2 fire 2"	},
+
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
+	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
+};
+
+STDINPUTINFO(Nova2001)
+
+
+static struct BurnInputInfo NinjakunInputList[] = {
+	{"P1 coin",		BIT_DIGITAL,	DrvJoy2 + 7,	"p1 coin"	},
+	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 start"	},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 left"	},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 right"	},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 fire 1"	},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 fire 2"	},
+
+	{"P2 Start",		BIT_DIGITAL,	DrvJoy2 + 5,	"p2 start"	},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 left"	},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 right"	},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 1"	},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 fire 2"	},
+
+	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
+	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
+};
+
+STDINPUTINFO(Ninjakun)
+
 /*
 static struct BurnInputInfo Raiders5InputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy2 + 7,	"p1 coin"},
@@ -105,41 +154,45 @@ static struct BurnInputInfo Raiders5InputList[] = {
 
 STDINPUTINFO(Raiders5)
 */
-static struct BurnDIPInfo DrvDIPList[]=
+static struct BurnDIPInfo PkunwarDIPList[]=
 {
-	// Default Values
-	{0x0b, 0xff, 0xff, 0xfb, NULL 			},
+	{0x0a, 0xff, 0xff, 0xfb, NULL 			},
+	{0x0b, 0xff, 0xff, 0x40, NULL 			},
 
-	{0   , 0xfe, 0   , 4   , "Coinage"		},
-	{0x0b, 0x01, 0x03, 0x00, "3C 1C"		},
-	{0x0b, 0x01, 0x03, 0x02, "2C 1C"		},
-	{0x0b, 0x01, 0x03, 0x03, "1C 1C"		},
-	{0x0b, 0x01, 0x03, 0x01, "1C 2C"		},
+	{0   , 0xfe, 0   , 4   , "Coinage"   	},
+	{0x0a, 0x01, 0x03, 0x00, "3 Coins 1 Credit"		},
+	{0x0a, 0x01, 0x03, 0x02, "2 Coins 1 Credit"		},
+	{0x0a, 0x01, 0x03, 0x03, "1 Coin 1 Credit"		},
+	{0x0a, 0x01, 0x03, 0x01, "1 Coin 2 Credits"		},
 
 	{0   , 0xfe, 0   , 2   , "Cabinet"		},
-	{0x0b, 0x01, 0x04, 0x00, "Upright"		},
-	{0x0b, 0x01, 0x04, 0x04, "Cocktail"		},
+	{0x0a, 0x01, 0x04, 0x00, "Upright"		},
+	{0x0a, 0x01, 0x04, 0x04, "Cocktail"		},
 
 	{0   , 0xfe, 0   , 2   , "Demo Sounds"		},
-	{0x0b, 0x01, 0x08, 0x00, "Off"			},
-	{0x0b, 0x01, 0x08, 0x08, "On"			},
+	{0x0a, 0x01, 0x08, 0x00, "Off"			},
+	{0x0a, 0x01, 0x08, 0x08, "On"			},
 
 	{0   , 0xfe, 0   , 4   , "Difficulty"		},
-	{0x0b, 0x01, 0x30, 0x10, "Easy"			},
-	{0x0b, 0x01, 0x30, 0x30, "Medium"		},
-	{0x0b, 0x01, 0x30, 0x20, "Hard"			},
-	{0x0b, 0x01, 0x30, 0x00, "Hardest"		},
+	{0x0a, 0x01, 0x30, 0x10, "Easy"			},
+	{0x0a, 0x01, 0x30, 0x30, "Medium"		},
+	{0x0a, 0x01, 0x30, 0x20, "Hard"			},
+	{0x0a, 0x01, 0x30, 0x00, "Hardest"		},
 
 	{0   , 0xfe, 0   , 2   , "Flip screen"		},
-	{0x0b, 0x01, 0x40, 0x40, "Off"			},
-	{0x0b, 0x01, 0x40, 0x00, "On"			},
+	{0x0a, 0x01, 0x40, 0x40, "Off"			},
+	{0x0a, 0x01, 0x40, 0x00, "On"			},
 
 	{0   , 0xfe, 0   , 2   , "Free Play"		},
-	{0x0b, 0x01, 0x80, 0x80, "Off"			},
-	{0x0b, 0x01, 0x80, 0x00, "On"			},
+	{0x0a, 0x01, 0x80, 0x80, "Off"			},
+	{0x0a, 0x01, 0x80, 0x00, "On"			},
+
+    {0   , 0xfe, 0   ,    2, "Service Mode"		},
+	{0x0b, 0x01, 0x40, 0x40, "Off"			},
+	{0x0b, 0x01, 0x40, 0x00, "On"			},
 };
 
-STDDIPINFO(Drv)
+STDDIPINFO(Pkunwar)
 
 static struct BurnDIPInfo Nova2001DIPList[]=
 {
@@ -194,52 +247,6 @@ static struct BurnDIPInfo Nova2001DIPList[]=
 };
 
 STDDIPINFO(Nova2001)
-
-static struct BurnInputInfo Nova2001InputList[] = {
-	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"	},
-	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 1,	"p1 start"	},
-	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
-	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"	},
-	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"	},
-	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 right"	},
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 fire 1"	},
-	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 fire 2"	},
-
-	{"P2 Start",		BIT_DIGITAL,	DrvJoy3 + 2,	"p2 start"	},
-	{"P2 Up",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 up"		},
-	{"P2 Down",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 down"	},
-	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 left"	},
-	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 right"	},
-	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 7,	"p2 fire 1"	},
-	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 6,	"p2 fire 2"	},
-
-	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
-	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
-	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
-};
-
-STDINPUTINFO(Nova2001)
-
-static struct BurnInputInfo NinjakunInputList[] = {
-	{"P1 coin",		BIT_DIGITAL,	DrvJoy2 + 7,	"p1 coin"	},
-	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 start"	},
-	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 left"	},
-	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 right"	},
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 fire 1"	},
-	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 fire 2"	},
-
-	{"P2 Start",		BIT_DIGITAL,	DrvJoy2 + 5,	"p2 start"	},
-	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 left"	},
-	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 right"	},
-	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 1"	},
-	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 fire 2"	},
-
-	{"Reset",		BIT_DIGITAL,	NULL,	"reset"		},
-	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
-	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
-};
-
-STDINPUTINFO(Ninjakun)
 
 static struct BurnDIPInfo NinjakunDIPList[]=
 {

@@ -134,12 +134,12 @@ void DrvDoReset()
 	make_lut();
 #ifdef CZ80
 //	CZetOpen(0);
-	DrvRomBank = 0;
+	UINT8 DrvRomBank = 0;
 
 	if (DrvHasEEPROM) {
-		CZetMapMemory2(DrvZ80Code + 0x10000 + (DrvRomBank * 0x4000), DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000), 0x8000, 0xbfff, MAP_ROM);
+		CZetMapMemory2(DrvZ80Code + 0x10000 , DrvZ80Rom + 0x10000 , 0x8000, 0xbfff, MAP_ROM);
 	} else {
-		CZetMapMemory((unsigned char *)(DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000)), 0x8000, 0xbfff, MAP_ROM);
+		CZetMapMemory((unsigned char *)(DrvZ80Rom + 0x10000 ), 0x8000, 0xbfff, MAP_ROM);
 	}	
 	
 	CZetReset();
@@ -309,7 +309,6 @@ unsigned char __fastcall MitchellZ80PortRead(unsigned short a)
 //			bprintf(PRINT_NORMAL, _T("Z80 #1 Port Read => %02X\n"), a);
 		}
 	}
-
 	return 0xff;
 }
 void __fastcall MitchellZ80PortWrite(unsigned short a, unsigned char d)
@@ -318,7 +317,7 @@ void __fastcall MitchellZ80PortWrite(unsigned short a, unsigned char d)
 	
 	switch (a) {
 		case 0x00: {
-			DrvFlipScreen = d & 0x04;
+//			DrvFlipScreen = d & 0x04;
 /*			if (DrvOkiBank != (d & 0x10)) {
 				DrvOkiBank = d & 0x10;
 				if (DrvOkiBank) {
@@ -367,7 +366,7 @@ void __fastcall MitchellZ80PortWrite(unsigned short a, unsigned char d)
 		}
 		
 		case 0x02: {
-			DrvRomBank = d & 0x0f;
+			UINT8 DrvRomBank = d & 0x0f;
 #ifdef CZ80
 			if (DrvHasEEPROM) {
 				CZetMapMemory2(DrvZ80Code + 0x10000 + (DrvRomBank * 0x4000), DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000), 0x8000, 0xbfff, MAP_ROM);

@@ -25,7 +25,7 @@ unsigned char current_pcm=255;
 
 //#define nBurnSoundLen 128
 
-static SFX sfx_pang[50] = {
+ SFX sfx_pang[50] = {
 /*000.pcm*/{0,PCM_000_SIZE,10},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
@@ -105,7 +105,7 @@ unsigned char DrvDip[2]         = {0, 0};
 extern unsigned char* MSM6295ROM;
 extern int* pBuffer;
  unsigned char *Mem				= NULL;
- unsigned char *RamStart			= NULL;
+ unsigned char *RamStart		= NULL;
  unsigned char *DrvZ80Rom		= NULL;
  unsigned char *DrvZ80Code		= NULL;
 // unsigned char *DrvSoundRom		= NULL;
@@ -119,10 +119,10 @@ extern int* pBuffer;
  UINT8 *CZ80Context				= NULL;
  INT32 *MSM6295Context			= NULL;
 
- unsigned char DrvRomBank = 0;
+ //unsigned char DrvRomBank = 0;
  unsigned char DrvPaletteRamBank = 0;
  unsigned char DrvOkiBank = 0;
- unsigned char DrvFlipScreen = 0;
+ //unsigned char DrvFlipScreen = 0;
  unsigned char DrvVideoBank = 0;
  unsigned char DrvInput5Toggle = 0;
 /*static*///  unsigned char DrvPort5Kludge = 0;

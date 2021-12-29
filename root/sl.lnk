@@ -1,7 +1,7 @@
 MEMORY 
   {
   ram  : ORIGIN = 0x6000000, l = 1M
-  ovl  : ORIGIN = 0x60DE000, l = 1M
+  ovl  : ORIGIN = 0x60DF000, l = 1M
   }
 
 SECTIONS {
@@ -93,19 +93,16 @@ SECTIONS {
 		_end = .;
  	} > ram
 
-	.malloc_max 0x0601c000 (NOLOAD):
+	.malloc_max 0x0601b000 (NOLOAD):
         {
 		__malloc_max_ram = .;
         } > ram
 		
-  OVERLAY 0x60de000 : NOCROSSREFS AT (0x60DE000) 
+  OVERLAY 0x60DF000 : NOCROSSREFS AT (0x60DF000) 
   {
 	.ovly0   { 
 		__start_ram = .;
 			boot = .;
-/*
-	d_bankp.o load.o raze/raze.o snd/sn76496.o saturn/saturn.o saturn/ovl2.o (.boot .text .data)
-*/
 	}
   }  
 		

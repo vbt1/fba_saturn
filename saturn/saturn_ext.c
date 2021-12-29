@@ -4,7 +4,7 @@
 #include "..\globals.h"
 #include "machine.h"
 
-/*static*/ SclWinscl	*ss_regw = NULL;
+/*static*/ //SclWinscl	*ss_regw = NULL;
 //-------------------------------------------------------------------------------------------------------------------------------------:/*
 static void SCL_SetWindowSub(Uint32 surfaces,Uint32 enable,Uint8 *contrl,Uint8 on,Uint8 off)
 {
@@ -41,7 +41,7 @@ void	SCL_SetWindow(Uint8 win,Uint32 logic,Uint32 enable,Uint32 area,
     Uint8	en_on,en_off;
     Uint8	ar_on,ar_off;
 
-	ss_regw = (SclWinscl *)SS_REGW;
+	SclWinscl *ss_regw = (SclWinscl *)SS_REGW;
 
     switch(win)
     {
