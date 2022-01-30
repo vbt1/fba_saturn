@@ -656,7 +656,7 @@ voir plutot p355 vdp2
 	
 	RomLoadOffset = 0;
 //	Diamond = 0;
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;

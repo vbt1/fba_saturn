@@ -294,6 +294,48 @@ end:
 	R->VolTable[15] = 0;
 }
 #endif
+
+void SN76496Reset(INT32 Num)
+{
+#if defined FBNEO_DEBUG
+	if (!DebugSnd_SN76496Initted) bprintf(PRINT_ERROR, _T("SN76496Reset called without init\n"));
+#endif
+
+	INT32 i;
+
+//	for (INT32 Num = 0; Num < NumChips; Num++) 
+	{
+		struct SN76496 *R = &Chip0;
+		
+		if (Num >= MAX_SN76496_CHIPS) return;
+		
+		if (Num == 1) R = &Chip1;
+		if (Num == 2) R = &Chip2;
+		if (Num == 3) R = &Chip3;
+
+		for (i = 0; i < 4; i++) R->Volume[i] = 0;
+
+		R->LastRegister = 0;
+		for (i = 0; i < 8; i += 2) {
+			R->Register[i + 0] = 0x00;
+			R->Register[i + 1] = 0x0f;
+		}
+
+		for (i = 0; i < 4; i++) {
+			R->Output[i] = 0;
+			R->Period[i] = R->Count[i] = R->UpdateStep;
+		}
+
+		R->FeedbackMask = 0x4000;
+		R->WhitenoiseTaps = 0x03;
+		R->WhitenoiseInvert = 1;
+//		R->StereoMask = 0xFF;
+
+		R->RNG = R->FeedbackMask;
+		R->Output[3] = R->RNG & 1;
+	}
+}
+
 /*static*/ void SN76496Init2(struct SN76496 *R, unsigned int Clock)
 {
 	unsigned int i;

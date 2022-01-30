@@ -412,7 +412,7 @@ int NewsExit()
 //	NewsDip[0] = NewsInput[0]      = 0;
 	wait_vblank();
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;

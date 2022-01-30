@@ -11,16 +11,15 @@
 #define nBurnSoundLen 128
 
 UINT16 *map_offset_lut = NULL;
-UINT16 *mapbg_offset_lut = NULL;
+//UINT16 *mapbg_offset_lut = NULL;
 UINT8 *CZ80Context = NULL;
 UINT16 *cram_lut = NULL;
 UINT32 CalcCol(UINT16 nColour);
 INT32 DrvInit();
-INT32 DrvZInit();
+void DrvZInit();
 INT32 DrvExit();
-INT32 DrvFrame();
-INT32 DrvDoReset();
-void dummy();
+void DrvFrame();
+void DrvDoReset();
 
 UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 UINT8 DrvJoy2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -33,22 +32,22 @@ INT32 nmi_mask = 0;
 UINT8 soundlatch = 0;
 
 //UINT8 *MemEnd = NULL;
-UINT8 *RamStart = NULL;
-UINT8 *RamEnd = NULL;
+//UINT8 *RamStart = NULL;
+//UINT8 *RamEnd = NULL;
 UINT8 *BjGfx = NULL;
 UINT8 *BjMap = NULL;
 UINT8 *BjRom = NULL;
 UINT8 *BjRam = NULL;
 UINT8 *BjColRam = NULL;
 UINT8 *BjVidRam = NULL;
-UINT8 *BjSprRam = NULL;
+UINT8 *DrvSprRAM = NULL;
 
 // sound cpu
 UINT8 *SndRom = NULL;
 UINT8 *SndRam = NULL;
 
 // pallete
-UINT8 *BjPalSrc = NULL;
+UINT8 *BjPalRam = NULL;
 //UINT32 *BjPalReal = NULL;
 
 INT16* pFMBuffer = NULL;

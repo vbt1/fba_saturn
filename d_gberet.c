@@ -481,7 +481,7 @@ gberet_spritebank = 0;
 	memset(DrvJoy3,0x00,8);
 	DrvDips[0] = DrvDips[1] = 0;
 */	
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;

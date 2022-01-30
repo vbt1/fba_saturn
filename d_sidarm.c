@@ -513,7 +513,7 @@ INT32 DrvExit()
 	vblank=0;
 */	
 	cleanSprites();
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;

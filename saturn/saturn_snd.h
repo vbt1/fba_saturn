@@ -39,6 +39,7 @@ typedef struct
 }PCM_INFO;
 
 
+#ifdef PCM_MUSIC
 void SetStreamPCM();
 void PlayStreamPCM(unsigned char d, unsigned char current_pcm);
 void UpdateStreamPCM(Uint8 data, PcmHn *hn, PcmCreatePara *para);
@@ -53,12 +54,14 @@ void errPcmFunc(void *obj, Sint32 ec);
 void stmInit(void);
 void stmClose(StmHn fp);
 
-StmHn stmOpen(char *fname);
+static StmHn stmOpen(char *fname);
 
 extern PcmHn 	pcmStream;
 extern PcmCreatePara	paraStream;
 extern unsigned char stm_work[STM_WORK_SIZE(12, 24)];
+
 extern StmHn stm;
+#endif
 //extern StmGrpHn grp_hd;
 extern void PCM_MeTask(PcmHn hn);
 extern void PCM_MeStop(PcmHn hn);

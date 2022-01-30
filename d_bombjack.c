@@ -2,8 +2,8 @@
 #define RAZE 1
 #define SOUND 1
 void SoundUpdate2(INT32 *length2);
-void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
-INT32 CalcAll();
+inline void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
+void CalcAll();
 UINT32 BgSel=0xFFFF;
 //UINT32 bg_cache[1024];
 
@@ -83,7 +83,7 @@ voir plutot p355 vdp2
 	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
-	scfg.plate_addr[0]	 = (Uint32)ss_font;
+	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
 
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
@@ -91,7 +91,7 @@ voir plutot p355 vdp2
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void initColors()
+inline void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
@@ -103,39 +103,47 @@ void initColors()
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void make_lut(void)
+inline void make_lut(void)
 {
 	for (UINT32 i = 0; i < 1024;i++) 
 	{
 		INT32 sx = ((i) % 32) <<6; //% 32;
 		INT32 sy = (32 - ((i) / 32));
 		map_offset_lut[i] = (sx| sy);//<<1;
+
+		sy = (i % 16) <<5;//<<6
+		sx = (15 - (i / 16));//<<1;
+		map_offset_lut[0x400+i] = (sx| sy);//<<1;		
 	}
-	
+/*	
 	for (UINT32 i = 0; i < 256;i++) 
 	{
 		INT32 sy = (i % 16) <<5;//<<6
 		INT32 sx = (15 - (i / 16));//<<1;
 		mapbg_offset_lut[i] = (sx| sy);//<<1;
 	}
-
+*/
 	for (UINT32 i = 0; i < 4096; i++) 
 	{
-		cram_lut[i] = CalcCol(i);
+		UINT8 r = (i >> 0) & 0xf;
+		UINT8 g = (i >> 4) & 0x0f;
+		UINT8 b = (i >> 8) & 0x0f;
+
+		cram_lut[i] = BurnHighCol(r+r*16, g+g*16, b+b*16, 0);		
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 	nBurnSprites  = 24+4;//27;
 
-	SS_FONT        = ss_font     =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_MAP          = ss_map    =(Uint16 *)SCL_VDP2_VRAM_A1+0x08000;
-	SS_MAP2        = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1+0x0B000;
-	SS_CACHE      = cache      =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_MAP   = ss_map   =(Uint16 *)SCL_VDP2_VRAM_A1+0x08000;
+	SS_MAP2  = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1+0x0B000;
+	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -153,12 +161,11 @@ void DrvInitSaturn()
 
 	initLayers();
 	initColors();
-	make_lut();
 	initSprites(256-1,240-1,0,0,7,0);
 
-    ss_sprite[nBurnSprites-1].control			= CTRL_END;
-    ss_sprite[nBurnSprites-1].link				= 0;        
-    ss_sprite[nBurnSprites-1].drawMode	= 0;                
+    ss_sprite[nBurnSprites-1].control		= CTRL_END;
+    ss_sprite[nBurnSprites-1].link			= 0;        
+    ss_sprite[nBurnSprites-1].drawMode		= 0;                
     ss_sprite[nBurnSprites-1].color			= 0;                
     ss_sprite[nBurnSprites-1].charAddr		= 0;                
     ss_sprite[nBurnSprites-1].charSize		= 0;
@@ -187,9 +194,8 @@ UINT8 __fastcall bombjack_main_read(UINT16 address)
 	return 0;
 }
 
-
 #ifdef RAZE
-void __fastcall BjMemWrite_9000(UINT16 addr,UINT8 val)
+void __fastcall bombjack_main_write_9000(UINT16 addr,UINT8 val)
 {
 	addr &=0x3ff;
 
@@ -204,7 +210,7 @@ void __fastcall BjMemWrite_9000(UINT16 addr,UINT8 val)
 	}
 }
 
-void __fastcall BjMemWrite_9400(UINT16 addr,UINT8 val)
+void __fastcall bombjack_main_write_9400(UINT16 addr,UINT8 val)
 {
 	addr &=0x3ff;
 
@@ -217,18 +223,18 @@ void __fastcall BjMemWrite_9400(UINT16 addr,UINT8 val)
 		ss_map[offs] = (val & 0x0f) << 12 | code;
 	}
 }
-
+/*
 UINT8 __fastcall BjMemRead_9820(UINT16 addr)
 {
-	return BjSprRam[addr - 0x9820];
+	return DrvSprRAM[addr - 0x9820];
 }
 
-void __fastcall BjMemWrite_9820(UINT16 addr,UINT8 val)
+void __fastcall bombjack_main_write_9820(UINT16 addr,UINT8 val)
 {
-	BjSprRam[addr - 0x9820] = val;
+	DrvSprRAM[addr - 0x9820] = val;
 }
-
-void __fastcall BjMemWrite_b000(UINT16 addr,UINT8 data)
+*/
+void __fastcall bombjack_main_write_b000(UINT16 addr,UINT8 data)
 {
 	if (addr==0xb000)
 	{
@@ -237,14 +243,15 @@ void __fastcall BjMemWrite_b000(UINT16 addr,UINT8 data)
 	BjRam[addr]=data;
 }
 
-void __fastcall BjMemWrite_b800(UINT16 addr,UINT8 data)
+void __fastcall bombjack_main_write_b800(UINT16 addr,UINT8 data)
 {
 	soundlatch=data;
 }
-#endif
-void __fastcall BjMemWrite(UINT16 addr,UINT8 data)
+#else
+void __fastcall bombjack_main_write(UINT16 addr,UINT8 data)
 {
-	if (addr >= 0x9820 && addr <= 0x987f) { BjSprRam[addr - 0x9820] = data; return; }
+
+	if (addr >= 0x9820 && addr <= 0x987f) { DrvSprRAM[addr - 0x9820] = data; return; }
 
 	if(addr==0xb800)
 	{
@@ -258,12 +265,13 @@ void __fastcall BjMemWrite(UINT16 addr,UINT8 data)
 	}
 	BjRam[addr]=data;
 }
-
+#endif
 UINT8 __fastcall bombjack_sound_read(UINT16 address)
 {
-	switch (address)
+//	switch (address)
 	{
-		case 0x6000:
+//		case 0x6000:
+		if(address==0x6000)
 		{
 			UINT8 ret = soundlatch;
 			soundlatch = 0;
@@ -274,7 +282,7 @@ UINT8 __fastcall bombjack_sound_read(UINT16 address)
 	return 0;
 }
 
-void __fastcall bombjack_sound_write_port(UINT16 port, UINT8 data)
+void __fastcall bombjack_sound_write(UINT16 port, UINT8 data)
 {
 	switch (port & 0xff)
 	{
@@ -294,167 +302,32 @@ void __fastcall bombjack_sound_write_port(UINT16 port, UINT8 data)
 		return;
 	}
 }
-
-
-INT32 DrvZInit()
-{
-	// Init the z80
-	CZetInit2(2,CZ80Context);
-	// Main CPU setup
-#ifdef RAZE
-	z80_init_memmap();
-	z80_map_fetch (0x0000,0x7fff,BjRom+0x0000); 
-	z80_map_read  (0x0000,0x7fff,BjRom+0x0000);  
-	z80_map_fetch (0xc000,0xdfff,BjRom+0x8000); 
-	z80_map_read  (0xc000,0xdfff,BjRom+0x8000);  
-
-//	z80_map_fetch (0x8000,0x8fff,BjRam+0x8000);
-	z80_map_read  (0x8000,0x8fff,BjRam+0x8000);
-	z80_map_write (0x8000,0x8fff,BjRam+0x8000);
-
-//	z80_map_fetch (0x9000,0x93ff,BjVidRam);
-	z80_map_read  (0x9000,0x93ff,BjVidRam);
-//	z80_map_write (0x9000,0x93ff,BjVidRam);
-
-//	z80_map_fetch (0x9400,0x97ff,BjColRam);
-	z80_map_read  (0x9400,0x97ff,BjColRam);
-//	z80_map_write (0x9400,0x97ff,BjColRam);
-
-//	z80_map_fetch (0x9c00,0x9cff,BjPalSrc);
-	z80_map_read  (0x9c00,0x9cff,BjPalSrc);
-	z80_map_write (0x9c00,0x9cff,BjPalSrc);
-
-//	z80_map_fetch (0x9e00,0x9e00,BjRam+0x9e00);
-	z80_map_read  (0x9e00,0x9e00,BjRam+0x9e00);
-	z80_map_write (0x9e00,0x9e00,BjRam+0x9e00);
-	z80_end_memmap();
-
-	z80_add_read(0x9820, 0x987f, 1, (void *)&BjMemRead_9820);
-	z80_add_read(0xb000, 0xb005, 1, (void *)&bombjack_main_read);
-
-	z80_add_write(0x9000,0x93ff, 1, (void *)&BjMemWrite_9000);
-	z80_add_write(0x9400,0x97ff, 1, (void *)&BjMemWrite_9400);
-
-	z80_add_write(0x9820, 0x987f, 1, (void *)&BjMemWrite_9820);
-	z80_add_write(0xb000, 0xb000, 1, (void *)&BjMemWrite_b000);
-	z80_add_write(0xb800, 0xb800, 1, (void *)&BjMemWrite_b800);
-#else
-	CZetOpen(0);
-
-	CZetMapArea    (0x0000,0x7fff,0,BjRom+0x0000); // Direct Read from ROM
-	CZetMapArea    (0x0000,0x7fff,2,BjRom+0x0000); // Direct Fetch from ROM
-	CZetMapArea    (0xc000,0xdfff,0,BjRom+0x8000); // Direct Read from ROM
-	CZetMapArea    (0xc000,0xdfff,2,BjRom+0x8000); // Direct Fetch from ROM
-
-	CZetMapArea    (0x8000,0x8fff,0,BjRam+0x8000);
-	CZetMapArea    (0x8000,0x8fff,1,BjRam+0x8000);
-
-	CZetMapArea    (0x9000,0x93ff,0,BjVidRam);
-	CZetMapArea    (0x9000,0x93ff,1,BjVidRam);
-
-	CZetMapArea    (0x9400,0x97ff,0,BjColRam);
-	CZetMapArea    (0x9400,0x97ff,1,BjColRam);
-
-//	CZetMapArea    (0x9820,0x987f,0,BjSprRam);
-//	CZetMapArea    (0x9820,0x987f,1,BjSprRam);
-
-	CZetMapArea    (0x9c00,0x9cff,0,BjPalSrc);
-	CZetMapArea    (0x9c00,0x9cff,1,BjPalSrc);
-
-	CZetMapArea    (0x9e00,0x9e00,0,BjRam+0x9e00);
-	CZetMapArea    (0x9e00,0x9e00,1,BjRam+0x9e00);
-
-	//	CZetMapArea    (0xb000,0xb000,0,BjRam+0xb000);
-	//	CZetMapArea    (0xb000,0xb000,1,BjRam+0xb000);
-
-	//	CZetMapArea    (0xb800,0xb800,0,BjRam+0xb800);
-	//	CZetMapArea    (0xb800,0xb800,1,BjRam+0xb800);
-
-	CZetSetReadHandler(bombjack_main_read);
-	CZetSetWriteHandler(BjMemWrite);
-	CZetClose();
-#endif
-	CZetOpen(1);
-	CZetMapArea    (0x0000,0x1fff,0,SndRom); // Direct Read from ROM
-	CZetMapArea    (0x0000,0x1fff,2,SndRom); // Direct Fetch from ROM
-	CZetMapArea    (0x4000,0x43ff,0,SndRam);
-	CZetMapArea    (0x4000,0x43ff,1,SndRam);
-	CZetMapArea    (0x4000,0x43ff,2,SndRam); // fetch from ram?
-	CZetMapArea    (0xff00,0xffff,0,SndRam);
-	CZetMapArea    (0xff00,0xffff,1,SndRam);
-	CZetMapArea    (0xff00,0xffff,2,SndRam); // more fetch from ram? What the hell . .
-
-	//	CZetMapArea    (0x6000,0x6000,0,BjRam+0xb800);
-	//	CZetMapArea    (0x6000,0x6000,1,BjRam+0xb800);
-	CZetSetReadHandler(bombjack_sound_read);
-	CZetSetOutHandler(bombjack_sound_write_port);
-	CZetClose();
-
-	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
-	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
-	pAY8910Buffer[2] = pFMBuffer + nBurnSoundLen * 2;
-	pAY8910Buffer[3] = pFMBuffer + nBurnSoundLen * 3;
-	pAY8910Buffer[4] = pFMBuffer + nBurnSoundLen * 4;
-	pAY8910Buffer[5] = pFMBuffer + nBurnSoundLen * 5;
-	pAY8910Buffer[6] = pFMBuffer + nBurnSoundLen * 6;
-	pAY8910Buffer[7] = pFMBuffer + nBurnSoundLen * 7;
-	pAY8910Buffer[8] = pFMBuffer + nBurnSoundLen * 8;
-
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(2, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-//	AY8910SetAllRoutes(0, 0.13, BURN_SND_ROUTE_BOTH);
-//	AY8910SetAllRoutes(1, 0.13, BURN_SND_ROUTE_BOTH);
-//	AY8910SetAllRoutes(2, 0.13, BURN_SND_ROUTE_BOTH);
-
-	// remember to do CZetReset() in main driver
-
-	DrvDoReset();
-	return 0;
-}
 //-------------------------------------------------------------------------------------------------------------------------------------
-void DecodeTiles4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+inline void DecodeTiles4Bpp(UINT8 *TilePointer, UINT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
-	INT32 c,y,x,dat1,dat2,dat3,col1;
-	for (c=0;c<num;c++)
+	DecodeTiles(TilePointer, num,off1,off2, off3);	
+	unsigned char *TilePointerP=(unsigned char *)TilePointer;
+
+	for (UINT32 i=0;i<64*num;i+=2)
 	{
-		for (y=0;y<8;y++)
-		{
-			dat1=BjGfx[off1 + (c * 8) + y];
-			dat2=BjGfx[off2 + (c * 8) + y];
-			dat3=BjGfx[off3 + (c * 8) + y];
-			for (x=0;x<8;x++)
-			{
-				col1=0;
-				if (dat1&1){ col1 |= 4;}
-				if (dat2&1){ col1 |= 2;}
-				if (dat3&1){ col1 |= 1;}
-				TilePointer[(c * 64) + ((7-x) * 8) + (7 - y)]=col1;
-			   	dat1>>=1;
-				dat2>>=1;
-				dat3>>=1;
-			}
-		}
+		unsigned char c1 = TilePointer[i]&0x0f;
+		unsigned char c2 = TilePointer[i+1]&0x0f;
+		*TilePointerP++=c2| ((c1<<4)& 0xf0);
 	}
-  
-	for (c=0;c<num*8*8;c+=2)
-	{
-		unsigned char c1 = TilePointer[c]&0x0f;
-		unsigned char c2 = TilePointer[c+1]&0x0f;
-	   TilePointer[c>>1]=c2| ((c1<<4)& 0xf0);
-	}	  
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DecodeTiles(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	INT32 c,y,x,dat1,dat2,dat3,col1;
+	UINT8* gfx = BjGfx;
+	
 	for (c=0;c<num;c++)
 	{
 		for (y=0;y<8;y++)
 		{
-			dat1=BjGfx[off1 + (c * 8) + y];
-			dat2=BjGfx[off2 + (c * 8) + y];
-			dat3=BjGfx[off3 + (c * 8) + y];
+			dat1=gfx[off1];
+			dat2=gfx[off2];
+			dat3=gfx[off3];
 			for (x=0;x<8;x++)
 			{
 				col1=0;
@@ -466,176 +339,182 @@ void DecodeTiles(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3
 				dat2>>=1;
 				dat3>>=1;
 			}
+			gfx++;
 		}
 	}
  }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+inline void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	DecodeTiles(TilePointer, num,off1,off2, off3);
-	unsigned char tiles4[8*8*4];
+	unsigned char tiles4[256];
+	unsigned char *TilePointerP=(unsigned char *)TilePointer;
+	unsigned char *TilePointerP2=(unsigned char *)TilePointer;	
+	unsigned char *tiles4p;	
+	
  /*2,0,3,1 */
 	for (int i=0;i<num;i+=4)
 	{
-		for (int j=0;j<64 ;j++ )
-		{
-			tiles4[j]=TilePointer[((64*i))+j];
-			tiles4[j+64]=TilePointer[(64*(i+1))+j];
-			tiles4[j+128]=TilePointer[(64*(i+2))+j];
-			tiles4[j+192]=TilePointer[(64*(i+3))+j];
-		}	
+		memcpyl(tiles4,TilePointerP,256);
 
+		tiles4p=(unsigned char *)tiles4;
+		
 		for (int j=0;j<8 ;j++ )
 		{
-			TilePointer[(64*i)+j]=tiles4[128+j];
-			TilePointer[(64*i)+j+8]=tiles4[128+j+8];
-			TilePointer[(64*i)+j+16]=tiles4[128+j+16];
-			TilePointer[(64*i)+j+24]=tiles4[128+j+24];
-			TilePointer[(64*i)+j+32]=tiles4[128+j+32];
-			TilePointer[(64*i)+j+40]=tiles4[128+j+40];
-			TilePointer[(64*i)+j+48]=tiles4[128+j+48];
-			TilePointer[(64*i)+j+56]=tiles4[128+j+56];
+			TilePointerP[0]=tiles4p[128];
+			TilePointerP[8]=tiles4p[128+8];
+			TilePointerP[16]=tiles4p[128+16];
+			TilePointerP[24]=tiles4p[128+24];
+			TilePointerP[32]=tiles4p[128+32];
+			TilePointerP[40]=tiles4p[128+40];
+			TilePointerP[48]=tiles4p[128+48];
+			TilePointerP[56]=tiles4p[128+56];
 
-			TilePointer[64*(i+1)+j]=tiles4[0+j];
-			TilePointer[64*(i+1)+j+8]=tiles4[0+j+8];
-			TilePointer[64*(i+1)+j+16]=tiles4[0+j+16];
-			TilePointer[64*(i+1)+j+24]=tiles4[0+j+24];
-			TilePointer[64*(i+1)+j+32]=tiles4[0+j+32];
-			TilePointer[64*(i+1)+j+40]=tiles4[0+j+40];
-			TilePointer[64*(i+1)+j+48]=tiles4[0+j+48];
-			TilePointer[64*(i+1)+j+56]=tiles4[0+j+56];
+			TilePointerP[64]=tiles4p[0];
+			TilePointerP[64+8]=tiles4p[8];
+			TilePointerP[64+16]=tiles4p[16];
+			TilePointerP[64+24]=tiles4p[24];
+			TilePointerP[64+32]=tiles4p[32];
+			TilePointerP[64+40]=tiles4p[40];
+			TilePointerP[64+48]=tiles4p[48];
+			TilePointerP[64+56]=tiles4p[56];
 
-			TilePointer[64*(i+2)+j]=tiles4[192+j];
-			TilePointer[64*(i+2)+j+8]=tiles4[192+j+8];
-			TilePointer[64*(i+2)+j+16]=tiles4[192+j+16];
-			TilePointer[64*(i+2)+j+24]=tiles4[192+j+24];
-			TilePointer[64*(i+2)+j+32]=tiles4[192+j+32];
-			TilePointer[64*(i+2)+j+40]=tiles4[192+j+40];
-			TilePointer[64*(i+2)+j+48]=tiles4[192+j+48];
-			TilePointer[64*(i+2)+j+56]=tiles4[192+j+56];
+			TilePointerP[128]=tiles4p[192];
+			TilePointerP[128+8]=tiles4p[192+8];
+			TilePointerP[128+16]=tiles4p[192+16];
+			TilePointerP[128+24]=tiles4p[192+24];
+			TilePointerP[128+32]=tiles4p[192+32];
+			TilePointerP[128+40]=tiles4p[192+40];
+			TilePointerP[128+48]=tiles4p[192+48];
+			TilePointerP[128+56]=tiles4p[192+56];
 
-			TilePointer[64*(i+3)+j]=tiles4[64+j];
-			TilePointer[64*(i+3)+j+8]=tiles4[64+j+8];
-			TilePointer[64*(i+3)+j+16]=tiles4[64+j+16];
-			TilePointer[64*(i+3)+j+24]=tiles4[64+j+24];
-			TilePointer[64*(i+3)+j+32]=tiles4[64+j+32];
-			TilePointer[64*(i+3)+j+40]=tiles4[64+j+40];
-			TilePointer[64*(i+3)+j+48]=tiles4[64+j+48];
-			TilePointer[64*(i+3)+j+56]=tiles4[64+j+56];
+			TilePointerP[192]=tiles4p[64];
+			TilePointerP[192+8]=tiles4p[64+8];
+			TilePointerP[192+16]=tiles4p[64+16];
+			TilePointerP[192+24]=tiles4p[64+24];
+			TilePointerP[192+32]=tiles4p[64+32];
+			TilePointerP[192+40]=tiles4p[64+40];
+			TilePointerP[192+48]=tiles4p[64+48];
+			TilePointerP[192+56]=tiles4p[64+56];
+			TilePointerP++;
+			tiles4p++;
 		}
-	}
-	
-	for (int c=0;c<num*16*16;c+=2)
-	{
-		unsigned char c1 = TilePointer[c]&0x0f;
-		unsigned char c2 = TilePointer[c+1]&0x0f;
-	   TilePointer[c>>1]=c2| c1<<4;
+		
+		for (int c=0;c<256;c+=2)
+		{
+			unsigned char c1 = TilePointerP[c-8]&0x0f;
+			unsigned char c2 = TilePointerP[c+1-8]&0x0f;
+			*TilePointerP2++=c2| c1<<4;
+		}		
+		TilePointerP+=248;		
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+inline void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
-	unsigned char tiles4[32*16*4];
-	unsigned char *TilePointerP=(unsigned char *)TilePointer;	
+	unsigned char tiles4[512];
+	unsigned char *TilePointerP=(unsigned char *)TilePointer;
+	unsigned char *tiles4p;
+	
  /*2,0,3,1 */
 	for (int i=0;i<num;i++)
 	{
+		tiles4p=(unsigned char *)tiles4;
+		
 		for (int j=0;j<512 ;j++ )
 		{
-			tiles4[j]=TilePointer[((512*i))+j];
+			*tiles4p++=TilePointerP[j];
 		}	
+
+		tiles4p=(unsigned char *)tiles4;
 
 		for (int j=0;j<8 ;j++ )
 		{
-			TilePointerP[0]=tiles4[256+j];
-			TilePointerP[16]=tiles4[256+j+8];
-			TilePointerP[32]=tiles4[256+j+16];
-			TilePointerP[48]=tiles4[256+j+24];
-			TilePointerP[64]=tiles4[256+j+32];
-			TilePointerP[80]=tiles4[256+j+40];
-			TilePointerP[96]=tiles4[256+j+48];
-			TilePointerP[112]=tiles4[256+j+56];
-			TilePointerP[128]=tiles4[256+j+64];
-			TilePointerP[144]=tiles4[256+j+72];
-			TilePointerP[160]=tiles4[256+j+80];
-			TilePointerP[176]=tiles4[256+j+88];
-			TilePointerP[192]=tiles4[256+j+96];
-			TilePointerP[208]=tiles4[256+j+104];
-			TilePointerP[224]=tiles4[256+j+112];
-			TilePointerP[240]=tiles4[256+j+120];
+			TilePointerP[0]=tiles4p[256];
+			TilePointerP[16]=tiles4p[256+8];
+			TilePointerP[32]=tiles4p[256+16];
+			TilePointerP[48]=tiles4p[256+24];
+			TilePointerP[64]=tiles4p[256+32];
+			TilePointerP[80]=tiles4p[256+40];
+			TilePointerP[96]=tiles4p[256+48];
+			TilePointerP[112]=tiles4p[256+56];
+			TilePointerP[128]=tiles4p[256+64];
+			TilePointerP[144]=tiles4p[256+72];
+			TilePointerP[160]=tiles4p[256+80];
+			TilePointerP[176]=tiles4p[256+88];
+			TilePointerP[192]=tiles4p[256+96];
+			TilePointerP[208]=tiles4p[256+104];
+			TilePointerP[224]=tiles4p[256+112];
+			TilePointerP[240]=tiles4p[256+120];
 
-			TilePointerP[8]=tiles4[0+j];
-			TilePointerP[24]=tiles4[0+j+8];
-			TilePointerP[40]=tiles4[0+j+16];
-			TilePointerP[56]=tiles4[0+j+24];
-			TilePointerP[72]=tiles4[0+j+32];
-			TilePointerP[88]=tiles4[0+j+40];
-			TilePointerP[104]=tiles4[0+j+48];
-			TilePointerP[120]=tiles4[0+j+56];
-			TilePointerP[136]=tiles4[0+j+64];
-			TilePointerP[152]=tiles4[0+j+72];
-			TilePointerP[168]=tiles4[0+j+80];
-			TilePointerP[184]=tiles4[0+j+88];
-			TilePointerP[200]=tiles4[0+j+96];
-			TilePointerP[216]=tiles4[0+j+104];
-			TilePointerP[232]=tiles4[0+j+112];
-			TilePointerP[248]=tiles4[0+j+120];
+			TilePointerP[8]=tiles4p[0];
+			TilePointerP[24]=tiles4p[8];
+			TilePointerP[40]=tiles4p[16];
+			TilePointerP[56]=tiles4p[24];
+			TilePointerP[72]=tiles4p[32];
+			TilePointerP[88]=tiles4p[40];
+			TilePointerP[104]=tiles4p[48];
+			TilePointerP[120]=tiles4p[56];
+			TilePointerP[136]=tiles4p[64];
+			TilePointerP[152]=tiles4p[72];
+			TilePointerP[168]=tiles4p[80];
+			TilePointerP[184]=tiles4p[88];
+			TilePointerP[200]=tiles4p[96];
+			TilePointerP[216]=tiles4p[104];
+			TilePointerP[232]=tiles4p[112];
+			TilePointerP[248]=tiles4p[120];
 
- 			TilePointerP[256]=tiles4[384+j];
-			TilePointerP[256+16]=tiles4[384+j+8];
-			TilePointerP[256+32]=tiles4[384+j+16];
-			TilePointerP[256+48]=tiles4[384+j+24];
-			TilePointerP[256+64]=tiles4[384+j+32];
-			TilePointerP[256+80]=tiles4[384+j+40];
-			TilePointerP[256+96]=tiles4[384+j+48];
-			TilePointerP[256+112]=tiles4[384+j+56];
-			TilePointerP[256+128]=tiles4[384+j+64];
-			TilePointerP[256+144]=tiles4[384+j+72];
-			TilePointerP[256+160]=tiles4[384+j+80];
-			TilePointerP[256+176]=tiles4[384+j+88];
-			TilePointerP[256+192]=tiles4[384+j+96];
-			TilePointerP[256+208]=tiles4[384+j+104];
-			TilePointerP[256+224]=tiles4[384+j+112];
-			TilePointerP[256+240]=tiles4[384+j+120];
+ 			TilePointerP[256]=tiles4p[384];
+			TilePointerP[256+16]=tiles4p[384+8];
+			TilePointerP[256+32]=tiles4p[384+16];
+			TilePointerP[256+48]=tiles4p[384+24];
+			TilePointerP[256+64]=tiles4p[384+32];
+			TilePointerP[256+80]=tiles4p[384+40];
+			TilePointerP[256+96]=tiles4p[384+48];
+			TilePointerP[256+112]=tiles4p[384+56];
+			TilePointerP[256+128]=tiles4p[384+64];
+			TilePointerP[256+144]=tiles4p[384+72];
+			TilePointerP[256+160]=tiles4p[384+80];
+			TilePointerP[256+176]=tiles4p[384+88];
+			TilePointerP[256+192]=tiles4p[384+96];
+			TilePointerP[256+208]=tiles4p[384+104];
+			TilePointerP[256+224]=tiles4p[384+112];
+			TilePointerP[256+240]=tiles4p[384+120];
 
-			TilePointerP[256+8]=tiles4[128+j];
-			TilePointerP[256+24]=tiles4[128+j+8];
-			TilePointerP[256+40]=tiles4[128+j+16];
-			TilePointerP[256+56]=tiles4[128+j+24];
-			TilePointerP[256+72]=tiles4[128+j+32];
-			TilePointerP[256+88]=tiles4[128+j+40];
-			TilePointerP[256+104]=tiles4[128+j+48];
-			TilePointerP[256+120]=tiles4[128+j+56];
-			TilePointerP[256+136]=tiles4[128+j+64];
-			TilePointerP[256+152]=tiles4[128+j+72];
-			TilePointerP[256+168]=tiles4[128+j+80];
-			TilePointerP[256+184]=tiles4[128+j+88];
-			TilePointerP[256+200]=tiles4[128+j+96];
-			TilePointerP[256+216]=tiles4[128+j+104];
-			TilePointerP[256+232]=tiles4[128+j+112];
-			TilePointerP[256+248]=tiles4[128+j+120];
+			TilePointerP[256+8]=tiles4p[128];
+			TilePointerP[256+24]=tiles4p[128+8];
+			TilePointerP[256+40]=tiles4p[128+16];
+			TilePointerP[256+56]=tiles4p[128+24];
+			TilePointerP[256+72]=tiles4p[128+32];
+			TilePointerP[256+88]=tiles4p[128+40];
+			TilePointerP[256+104]=tiles4p[128+48];
+			TilePointerP[256+120]=tiles4p[128+56];
+			TilePointerP[256+136]=tiles4p[128+64];
+			TilePointerP[256+152]=tiles4p[128+72];
+			TilePointerP[256+168]=tiles4p[128+80];
+			TilePointerP[256+184]=tiles4p[128+88];
+			TilePointerP[256+200]=tiles4p[128+96];
+			TilePointerP[256+216]=tiles4p[128+104];
+			TilePointerP[256+232]=tiles4p[128+112];
+			TilePointerP[256+248]=tiles4p[128+120];
 			TilePointerP++;
+			tiles4p++;
 		}
 		TilePointerP+=504;		
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+inline void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	DecodeTiles(TilePointer, num,off1,off2, off3);
-	unsigned char tiles4[8*8*4];
+	unsigned char tiles4[256];
 	unsigned char *TilePointerP=(unsigned char *)TilePointer;
+	unsigned char *TilePointerP2=(unsigned char *)TilePointer;		
 	unsigned char *tiles4p;	
 
 	for (int i=0;i<num;i+=4)
 	{
-		for (int j=0;j<64 ;j++ )
-		{
-			tiles4[j]=TilePointer[((64*i))+j];
-			tiles4[j+64]=TilePointer[(64*(i+1))+j];
-			tiles4[j+128]=TilePointer[(64*(i+2))+j];
-			tiles4[j+192]=TilePointer[(64*(i+3))+j];	  
-		}
+		memcpyl(tiles4,TilePointerP,256);
 		
 		tiles4p=(unsigned char *)tiles4;
 		
@@ -679,19 +558,21 @@ void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT
 			TilePointerP++;
 			tiles4p++;
 		}
-		TilePointerP+=248;
-	}
 
-	for (int c=0;c<num*16*16;c+=2)
-	{
-		unsigned char c1 = TilePointer[c]&0x0f;
-		unsigned char c2 = TilePointer[c+1]&0x0f;
-	   TilePointer[c>>1]=c2| c1<<4;
+		for (int c=0;c<256;c+=2)
+		{
+			unsigned char c1 = TilePointerP[c-8]&0x0f;
+			unsigned char c2 = TilePointerP[c+1-8]&0x0f;
+			*TilePointerP2++=c2| c1<<4;
+		}
+		TilePointerP+=248;
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-INT32 DrvDoReset()
+void DrvDoReset()
 {
+	memset (BjRam, 0, CZ80Context - BjRam);
+	
 	nmi_mask = 0;
 	soundlatch = 0;
 	for (INT32 i = 0; i < 2; i++) {
@@ -709,39 +590,34 @@ INT32 DrvDoReset()
 	}
 	
 //	__port = PER_OpenPort();
-
-	return 0;
 }
 
-INT32 MemIndex()
+inline void MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
 	memset(Next, 0, MALLOC_MAX);
 
-	BjRom		  = Next; Next += 0x10000;
-//	BjGfx		  = Next; Next += 0x0F000;
-	BjGfx		  = (UINT8 *)0x00200000;
-	BjMap		  = Next; Next += 0x02000;
+	BjRom	  = Next; Next += 0x10000;
+	BjGfx	  = Next; Next += 0x2A000;
+	BjMap	  = Next; Next += 0x02000;
 	SndRom	  = Next; Next += 0x02000;
-	RamStart  = Next;
-	BjRam		  = Next; Next += 0x10000;
+//	RamStart  = Next;
+	BjRam	  = Next; Next += 0x10000;
 	SndRam	  = Next; Next += 0x01000;
-	BjPalSrc  = Next; Next += 0x00100;
+	BjPalRam  = Next; Next += 0x00100;
 	BjVidRam  = Next; Next += 0x00400;
 	BjColRam  = Next; Next += 0x00400;
-	BjSprRam  = Next; Next += 0x00060;
-	RamEnd	  = Next;
+	DrvSprRAM  = Next; Next += 0x00060;
+//	RamEnd	  = Next;
 
-	CZ80Context					= Next; Next += sizeof(cz80_struc)*2;
+	CZ80Context	= Next; Next += sizeof(cz80_struc)*2;
 	pFMBuffer	= (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
 //	BjPalReal	= (UINT32*)Next; Next += 0x0080 * sizeof(UINT32);
-	map_offset_lut = (UINT16*)Next; Next += 1024 * sizeof(UINT16);
-	mapbg_offset_lut = (UINT16*)Next; Next += 256 * sizeof(UINT16);
+	map_offset_lut = (UINT16*)Next; Next += 2048 * sizeof(UINT16);
+//	mapbg_offset_lut = (UINT16*)Next; Next += 1024 * sizeof(UINT16);
 	cram_lut = (UINT16*)Next; Next += 4096 * sizeof(UINT16);
 //	MemEnd = Next;
-
-	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 INT32 DrvInit()
@@ -780,10 +656,10 @@ INT32 DrvInit()
 	// Set memory access & Init
 	DrvZInit();
 
-	UINT8 *ss_vram    = (UINT8 *)SS_SPRAM;
-	UINT8 *sprites	  = &ss_vram[0x1100];
-	UINT8 *tiles	  = (UINT8 *)SCL_VDP2_VRAM_B0;
-	UINT8 *	text	  = cache;
+	UINT8 *ss_vram  = (UINT8 *)SS_SPRAM;
+	UINT8 *sprites	= &ss_vram[0x1100];
+	UINT8 *tiles	= (UINT8 *)SCL_VDP2_VRAM_B0;
+	UINT8 *text	  	= (UINT8 *)SS_CACHE;
 
 	DecodeTiles4Bpp(text,512,0,0x1000,0x2000);
 	DecodeTiles16_4Bpp(sprites,1024,0x7000,0x5000,0x3000);
@@ -816,132 +692,103 @@ INT32 DrvExit()
 
 	CZetExit2();
 
-	AY8910Exit(0);
-	AY8910Exit(1);
 	AY8910Exit(2);
-
+	AY8910Exit(1);
+	AY8910Exit(0);
+/*
 	cram_lut = map_offset_lut = mapbg_offset_lut = NULL;
 	CZ80Context = RamStart = RamEnd = BjGfx = BjMap = BjRom = BjRam = BjColRam = NULL;
-	BjVidRam = BjSprRam = SndRom = SndRam = BjPalSrc = NULL;
+	BjVidRam = DrvSprRAM = SndRom = SndRam = BjPalRam = NULL;
 
 	for (int i = 0; i < 9; i++) {
 		pAY8910Buffer[i] = NULL;
 	}
-
+*/
 //	free (pFMBuffer);
 	pFMBuffer = NULL;
 	BgSel = 0;
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	return 0;
 }
 
-UINT32 CalcCol(UINT16 nColour)
-{
-	INT32 r, g, b;
-
-	r = (nColour >> 0) & 0x0f;
-	g = (nColour >> 4) & 0x0f;
-	b = (nColour >> 8) & 0x0f;
-
-	r = (r << 4) | r;
-	g = (g << 4) | g;
-	b = (b << 4) | b;
-
-	return BurnHighCol(r, g, b, 0);
-}
-
-INT32 CalcAll()
+void CalcAll()
 {
 	UINT32 delta=0;
+
 	for (UINT32 i = 0; i < 0x100; i+=2) 
 	{
-		colAddr[i / 2] = colBgAddr[delta] = cram_lut[BjPalSrc[i] | (BjPalSrc[i+1] << 8)];
-//		CalcCol(BjPalSrc[i] | (BjPalSrc[i+1] << 8));
+		colAddr[i / 2] = colBgAddr[delta] = cram_lut[BjPalRam[i] | (BjPalRam[i+1] << 8)];
+//		CalcCol(BjPalRam[i] | (BjPalRam[i+1] << 8));
 		 		delta++; if ((delta & 7) == 0) delta += 8;
 	}
-
-	return 0;
 }
 
-void BjRenderBgLayer(UINT32 BgSel)
-{
-//	INT32 BgSel=BjRam[0x9e00];
+ void BjRenderBgLayer(UINT32 BgSel)
+ {
+ //	INT32 BgSel=BjRam[0x9e00];
 
-	for (UINT32 tileCount = 0; tileCount < 256;tileCount++) 
-	{
-		UINT32 offs = (BgSel & 0x07) * 0x200 + tileCount;
+ 	for (UINT32 tileCount = 0; tileCount < 256;tileCount++) 
+ 	{
+ 		UINT32 offs = (BgSel & 0x07) * 0x200 + tileCount;
 		UINT32 Code = (BgSel & 0x10) ? BjMap[offs] : 0;
-
+ 
 		UINT32 attr = BjMap[offs + 0x100];
-		UINT32 Colour = attr & 0x0f;
-
-		offs = mapbg_offset_lut[tileCount];
-		ss_map2[offs] = Colour << 12 | Code;
-	}
-}
+ 		UINT32 Colour = attr & 0x0f;
+ 
+ 		offs = map_offset_lut[0x400+tileCount];
+ 		ss_map2[offs] = Colour << 12 | Code;
+ 	}
+ }
 
 
 void draw_sprites()
 {
-	INT32 offs;
 	SprSpCmd *ss_spritePtr = &ss_sprite[3];
+	UINT8* spr=&DrvSprRAM[0x60 - 4];
 	
-	for (offs = 0x60 - 4; offs >= 0; offs -= 4)
+	for (UINT8 offs = 0; offs <24; offs++)
 	{
-		/*
-		abbbbbbb cdefgggg hhhhhhhh iiiiiiii
-
-		a        use big sprites (32x32 instead of 16x16)
-		bbbbbbb  sprite code
-		c        x flip
-		d        y flip (used only in death sequence?)
-		e        ? (set when big sprites are selected)
-		f        ? (set only when the bonus (B) materializes?)
-		gggg     color
-		hhhhhhhh x position
-		iiiiiiii y position
-		*/
-//		ss_spritePtr->ax				= BjSprRam[offs+2] & 0xff;
 		UINT32 flipx, flipy, code, colour;//, big;
 
-		flipx = (BjSprRam[offs+1] & 0x80)/8;
-		flipy = (BjSprRam[offs+1] & 0x40)>>1;
+		flipx = (spr[1] & 0x80)/8;
+		flipy = (spr[1] & 0x40)>>1;
 
-		code   = BjSprRam[offs] & 0x7f;
-		colour = (BjSprRam[offs+1] & 0x0f);
-//			big      = (BjSprRam[offs] & 0x80);
+		code   = spr[0] & 0x7f;
+		colour = (spr[1] & 0x0f);
+		INT32 size  = spr[0] >> 7;
 
 		ss_spritePtr->control		= ( JUMP_NEXT | FUNC_NORMALSP | flipx | flipy);
 //			ss_spritePtr->drawMode	= ( COLOR_0 | COMPO_REP);
-		ss_spritePtr->ax				= BjSprRam[offs+2];
-		ss_spritePtr->ay				= BjSprRam[offs+3];
-		ss_spritePtr->color			= colour<<3;
+		ss_spritePtr->ax			= spr[2];
+		ss_spritePtr->ay			= spr[3];
+		ss_spritePtr->color			= colour*8;
 
-		if (!(BjSprRam[offs] & 0x80))
+		if (size) 
 		{
-			ss_spritePtr->charSize= 0x210;
+			code = 0x80 | ((code * 4) & 0x7c);
+			ss_spritePtr->charSize= 0x420;
 		}
 		else
 		{
-			code&=31;
-			code*=4;
-			code+=0x80;
-			ss_spritePtr->charSize= 0x420;
+			code &= 0x7f;
+			ss_spritePtr->charSize= 0x210;			
 		}
 		ss_spritePtr->charAddr	= 0x220+((code)<<4 );
+		
 		ss_spritePtr++;
+		spr-=4;
 	}
 }
 
-INT32 DrvFrame()
+void DrvFrame()
 {
 	{
 		DrvInputs[0] = 0x00;
 		DrvInputs[1] = 0x00;
-		DrvInputs[1] = 0x00;
+		DrvInputs[2] = 0x00;
 
 		for (INT32 i = 0; i < 8; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
@@ -1027,7 +874,6 @@ INT32 DrvFrame()
 	//BjRenderFgLayer();
 	draw_sprites();
 //	 SPR_WaitEndSlaveSH();
-	return 0;
 }
 
 void AY8910Update1Slave(INT32 *length)
@@ -1147,4 +993,128 @@ void SoundUpdate(INT16* buffer, INT32 length)
 	}
 
 //	deltaSlave+=nBurnSoundLen;
+}
+
+void DrvZInit()
+{
+	// Init the z80
+	CZetInit2(2,CZ80Context);
+	// Main CPU setup
+#ifdef RAZE
+	z80_init_memmap();
+	z80_map_fetch (0x0000,0x7fff,BjRom+0x0000); 
+	z80_map_read  (0x0000,0x7fff,BjRom+0x0000);  
+	z80_map_fetch (0xc000,0xdfff,BjRom+0x8000); 
+	z80_map_read  (0xc000,0xdfff,BjRom+0x8000);  
+
+	z80_map_fetch (0x8000,0x8fff,BjRam+0x8000);
+	z80_map_read  (0x8000,0x8fff,BjRam+0x8000);
+	z80_map_write (0x8000,0x8fff,BjRam+0x8000);
+
+	z80_map_fetch (0x9000,0x93ff,BjVidRam);
+	z80_map_read  (0x9000,0x93ff,BjVidRam);
+//	z80_map_write (0x9000,0x93ff,BjVidRam);
+
+	z80_map_fetch (0x9400,0x97ff,BjColRam);
+	z80_map_read  (0x9400,0x97ff,BjColRam);
+//	z80_map_write (0x9400,0x97ff,BjColRam);
+
+	z80_map_fetch (0x9820, 0x987f,DrvSprRAM);
+	z80_map_read  (0x9820, 0x987f,DrvSprRAM);
+	z80_map_write (0x9820, 0x987f,DrvSprRAM);
+
+
+	z80_map_fetch (0x9c00,0x9cff,BjPalRam);
+	z80_map_read  (0x9c00,0x9cff,BjPalRam);
+	z80_map_write (0x9c00,0x9cff,BjPalRam);
+
+	z80_map_fetch (0x9e00,0x9e00,BjRam+0x9e00);
+	z80_map_read  (0x9e00,0x9e00,BjRam+0x9e00);
+	z80_map_write (0x9e00,0x9e00,BjRam+0x9e00);
+//	z80_end_memmap();
+
+//	z80_add_read(0x9820, 0x987f, 1, (void *)&BjMemRead_9820);
+	z80_add_read(0xb000, 0xb005, 1, (void *)&bombjack_main_read);
+
+	z80_add_write(0x9000,0x93ff, 1, (void *)&bombjack_main_write_9000);
+	z80_add_write(0x9400,0x97ff, 1, (void *)&bombjack_main_write_9400);
+
+//	z80_add_write(0x9820, 0x987f, 1, (void *)&bombjack_main_write_9820);
+	z80_add_write(0xb000, 0xb000, 1, (void *)&bombjack_main_write_b000);
+	z80_add_write(0xb800, 0xb800, 1, (void *)&bombjack_main_write_b800);
+#else
+	CZetOpen(0);
+
+	CZetMapArea    (0x0000,0x7fff,0,BjRom+0x0000); // Direct Read from ROM
+	CZetMapArea    (0x0000,0x7fff,2,BjRom+0x0000); // Direct Fetch from ROM
+	
+	CZetMapArea    (0xc000,0xdfff,0,BjRom+0x8000); // Direct Read from ROM
+	CZetMapArea    (0xc000,0xdfff,2,BjRom+0x8000); // Direct Fetch from ROM
+
+	CZetMapArea    (0x8000,0x8fff,0,BjRam+0x8000);
+	CZetMapArea    (0x8000,0x8fff,1,BjRam+0x8000);
+
+	CZetMapArea    (0x9000,0x93ff,0,BjVidRam);
+	CZetMapArea    (0x9000,0x93ff,1,BjVidRam);
+
+	CZetMapArea    (0x9400,0x97ff,0,BjColRam);
+	CZetMapArea    (0x9400,0x97ff,1,BjColRam);
+
+//	CZetMapArea    (0x9820,0x987f,0,DrvSprRAM);
+//	CZetMapArea    (0x9820,0x987f,1,DrvSprRAM);
+
+	CZetMapArea    (0x9c00,0x9cff,0,BjPalRam);
+	CZetMapArea    (0x9c00,0x9cff,1,BjPalRam);
+
+	CZetMapArea    (0x9e00,0x9e00,0,BjRam+0x9e00);
+	CZetMapArea    (0x9e00,0x9e00,1,BjRam+0x9e00);
+
+	//	CZetMapArea    (0xb000,0xb000,0,BjRam+0xb000);
+	//	CZetMapArea    (0xb000,0xb000,1,BjRam+0xb000);
+
+	//	CZetMapArea    (0xb800,0xb800,0,BjRam+0xb800);
+	//	CZetMapArea    (0xb800,0xb800,1,BjRam+0xb800);
+
+	CZetSetReadHandler(bombjack_main_read);
+	CZetSetWriteHandler(bombjack_main_write);
+	CZetClose();
+#endif
+	CZetOpen(1);
+//	CZetMapArea    (0x0000,0x1fff,0,SndRom); // Direct Read from ROM
+//	CZetMapArea    (0x0000,0x1fff,2,SndRom); // Direct Fetch from ROM
+	CZetMapMemory(SndRom, 0x0000,0x1fff, MAP_ROM);
+	
+//	CZetMapArea    (0x4000,0x43ff,0,SndRam);
+//	CZetMapArea    (0x4000,0x43ff,1,SndRam);
+//	CZetMapArea    (0x4000,0x43ff,2,SndRam); // fetch from ram?
+	CZetMapMemory(SndRam, 0x4000,0x43ff, MAP_RAM);
+	
+//	CZetMapArea    (0xff00,0xffff,0,SndRam);
+//	CZetMapArea    (0xff00,0xffff,1,SndRam);
+//	CZetMapArea    (0xff00,0xffff,2,SndRam); // more fetch from ram? What the hell . .
+
+	//	CZetMapArea    (0x6000,0x6000,0,BjRam+0xb800);
+	//	CZetMapArea    (0x6000,0x6000,1,BjRam+0xb800);
+	CZetSetReadHandler(bombjack_sound_read);
+	CZetSetOutHandler(bombjack_sound_write);
+	CZetClose();
+
+	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
+	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
+	pAY8910Buffer[2] = pFMBuffer + nBurnSoundLen * 2;
+	pAY8910Buffer[3] = pFMBuffer + nBurnSoundLen * 3;
+	pAY8910Buffer[4] = pFMBuffer + nBurnSoundLen * 4;
+	pAY8910Buffer[5] = pFMBuffer + nBurnSoundLen * 5;
+	pAY8910Buffer[6] = pFMBuffer + nBurnSoundLen * 6;
+	pAY8910Buffer[7] = pFMBuffer + nBurnSoundLen * 7;
+	pAY8910Buffer[8] = pFMBuffer + nBurnSoundLen * 8;
+
+	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(2, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+//	AY8910SetAllRoutes(0, 0.13, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(1, 0.13, BURN_SND_ROUTE_BOTH);
+//	AY8910SetAllRoutes(2, 0.13, BURN_SND_ROUTE_BOTH);
+
+	// remember to do CZetReset() in main driver
 }

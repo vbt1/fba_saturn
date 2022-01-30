@@ -797,12 +797,9 @@ inline void rotate_tile16x16(unsigned int size, unsigned char *target)
 		}
 		for(i=0;i<16;i++)
 		{
-			unsigned char *t=(unsigned char *)temp+i;			
 			for(j=0;j<16;j+=2)
-			{
-				target[((15-i)*8)+(j)/2]    = (t[j*16]<<4)|(t[(j+1)*16]&0xf);
-				t++;
-			}
+//				target[(i*8)+(15-j)/2]    = (temp[((j+1)*16)+i]<<4)|(temp[(j*16)+i]&0xf);
+				target[((15-i)*8)+(j)/2]   = (temp[(j*16)+i]<<4)|(temp[((j+1)*16)+i]&0xf);				
 		}
 		target+=128;
 	}
@@ -962,7 +959,7 @@ INT32 DrvExit()
 	DrvDip[0] = DrvDip[1] = DrvDip[2] = 0;
 	DrvInputs[0] = DrvInputs[1] = DrvInputs[2] = 0;	
 */
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos = 0;

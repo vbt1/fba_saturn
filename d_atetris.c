@@ -323,7 +323,7 @@ memset(DrvTempRom,0x00,0x10000);
 	cram_lut = map_offset_lut = NULL;
 	free(SaturnMem);
 	SaturnMem = NULL;
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 	return 0;
 }

@@ -782,15 +782,15 @@ void DrvGfxDecode(UINT8 *src)
 	GfxDecode4Bpp(0x200, 4, 16, 16, Planes, XOffsets, YOffsets, 0x400, src, &ss_vram[0x1100]);
 }
 
-void DrvGfxDescramble(UINT8 *gfx)
+inline void DrvGfxDescramble(UINT8 *gfx)
 {
 	UINT8 *tmp = (UINT8*)gfx+0x10000;
 
-	memcpy (tmp, gfx, 0x10000);
+	memcpyl (tmp, gfx, 0x10000);
 
 	for (INT32 i = 0; i < 0x10000; i++)
 	{
-		gfx[(i & ~0x3fff) | ((i << 1) & 0x3fff) | ((i >> 13) & 1)] = tmp[i];
+		gfx[(i & ~0x3fff) | ((i << 1) & 0x3fff) | ((i >> 13) & 1)] = *tmp++;
 	}
 }
 
@@ -1306,7 +1306,7 @@ int DrvExit()
 //	memset(cram_lut,0x00,256*sizeof(UINT16));
 //	wait_vblank();
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;

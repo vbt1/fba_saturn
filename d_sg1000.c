@@ -470,7 +470,7 @@ static void ChangeDir(char *dirname)
 	file_max = 0;
 	file_id = 0;
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;	

@@ -37,57 +37,57 @@ void bankp_palette_init();
 static inline void bankp_gfx_decode();
 void DrvDoReset();
 INT32 DrvBpExit();
-INT32 DrvFrame();
+void DrvFrame();
 INT32 DrvInit();
 INT32 DrvChInit();
 inline void MemIndex();
 
 static struct BurnInputInfo bankpInputList[] = {
-	{"Coin 1"       , BIT_DIGITAL  , DrvJoy1 + 5,	"p1 coin"  },
-	{"Coin 2"       , BIT_DIGITAL  , DrvJoy1 + 6,	"p2 coin"  },
-	{"Coin 3"       , BIT_DIGITAL  , DrvJoy1 + 6,	"p3 coin"  },
+	{"P1 Coin"      , BIT_DIGITAL  , DrvJoy1 + 5,	"p1 coin"  },
 	{"P1 Start"     , BIT_DIGITAL  , DrvJoy2 + 5,	"p1 start" },
-	{"P2 Start"     , BIT_DIGITAL  , DrvJoy2 + 6,	"p2 start" },
-
 	{"P1 Left"      , BIT_DIGITAL  , DrvJoy1 + 3, 	"p1 left"  },
 	{"P1 Right"     , BIT_DIGITAL  , DrvJoy1 + 1, 	"p1 right" },
-	{"P1 Button 1"  , BIT_DIGITAL  , DrvJoy1 + 7,	"p1 fire 1"},
-	{"P1 Button 2"  , BIT_DIGITAL  , DrvJoy1 + 4,	"p1 fire 2"},
+	{"P1 Button 1"  , BIT_DIGITAL  , DrvJoy1 + 4,	"p1 fire 1"},
+	{"P1 Button 2"  , BIT_DIGITAL  , DrvJoy1 + 7,	"p1 fire 2"},
 	{"P1 Button 3"  , BIT_DIGITAL  , DrvJoy3 + 0,	"p1 fire 3"},
 
+	{"P2 Coin"      , BIT_DIGITAL  , DrvJoy1 + 6,	"p2 coin"  },
+	{"P2 Start"     , BIT_DIGITAL  , DrvJoy2 + 6,	"p2 start" },
 	{"P2 Left"      , BIT_DIGITAL  , DrvJoy2 + 3, 	"p2 left"  },
 	{"P2 Right"     , BIT_DIGITAL  , DrvJoy2 + 1, 	"p2 right" },
-	{"P2 Button 1"  , BIT_DIGITAL  , DrvJoy2 + 7,	"p2 fire 1"},
-	{"P2 Button 2"  , BIT_DIGITAL  , DrvJoy2 + 4,	"p2 fire 2"},
+	{"P2 Button 1"  , BIT_DIGITAL  , DrvJoy2 + 4,	"p2 fire 1"},
+	{"P2 Button 2"  , BIT_DIGITAL  , DrvJoy2 + 7,	"p2 fire 2"},
 	{"P2 Button 3"  , BIT_DIGITAL  , DrvJoy3 + 1,	"p2 fire 3"},
 
+	{"P3 Coin"      , BIT_DIGITAL  , DrvJoy3 + 2,	"p3 coin"  },
+
 	{"Reset"        , BIT_DIGITAL  , NULL  ,	"reset"    },
-	{"Dip 1"        , BIT_DIPSWITCH, &DrvDips,      "dip"      },
+	{"Dip 1"        , BIT_DIPSWITCH, &DrvDips,   "dip"      },
 };
 
 STDINPUTINFO(bankp)
 
 static struct BurnInputInfo combhInputList[] = {
-	{"Coin 1"       , BIT_DIGITAL  , DrvJoy1 + 5,	"p1 coin"  },
-	{"Coin 2"       , BIT_DIGITAL  , DrvJoy1 + 6,	"p2 coin"  },
-	{"Coin 3"       , BIT_DIGITAL  , DrvJoy1 + 6,	"p3 coin"  },
+	{"P1 Coin"      , BIT_DIGITAL  , DrvJoy1 + 5,	"p1 coin"  },
 	{"P1 Start"     , BIT_DIGITAL  , DrvJoy2 + 5,	"p1 start" },
-	{"P2 Start"     , BIT_DIGITAL  , DrvJoy2 + 6,	"p2 start" },
-
 	{"P1 Up"        , BIT_DIGITAL  , DrvJoy1 + 0, 	"p1 up"    },
 	{"P1 Down"      , BIT_DIGITAL  , DrvJoy1 + 2, 	"p1 down"  },
-	{"P1 Button 1"  , BIT_DIGITAL  , DrvJoy1 + 7,	"p1 fire 1"},
-	{"P1 Button 2"  , BIT_DIGITAL  , DrvJoy1 + 4,	"p1 fire 2"},
+	{"P1 Button 1"  , BIT_DIGITAL  , DrvJoy1 + 4,	"p1 fire 1"},
+	{"P1 Button 2"  , BIT_DIGITAL  , DrvJoy1 + 7,	"p1 fire 2"},
 	{"P1 Button 3"  , BIT_DIGITAL  , DrvJoy3 + 0,	"p1 fire 3"},
 
+	{"P2 Coin"      , BIT_DIGITAL  , DrvJoy1 + 6,	"p2 coin"  },
+	{"P2 Start"     , BIT_DIGITAL  , DrvJoy2 + 6,	"p2 start" },
 	{"P2 Up"        , BIT_DIGITAL  , DrvJoy2 + 0, 	"p2 up"    },
 	{"P2 Down"      , BIT_DIGITAL  , DrvJoy2 + 2, 	"p2 down"  },
-	{"P2 Button 1"  , BIT_DIGITAL  , DrvJoy2 + 7,	"p2 fire 1"},
-	{"P2 Button 2"  , BIT_DIGITAL  , DrvJoy2 + 4,	"p2 fire 2"},
+	{"P2 Button 1"  , BIT_DIGITAL  , DrvJoy2 + 4,	"p2 fire 1"},
+	{"P2 Button 2"  , BIT_DIGITAL  , DrvJoy2 + 7,	"p2 fire 2"},
 	{"P2 Button 3"  , BIT_DIGITAL  , DrvJoy3 + 1,	"p2 fire 3"},
 
+	{"P3 Coin"      , BIT_DIGITAL  , DrvJoy3 + 2,	"p3 coin"  },
+
 	{"Reset"        , BIT_DIGITAL  , NULL  ,	"reset"    },
-	{"Dip 1"        , BIT_DIPSWITCH, &DrvDips,      "dip"      },
+	{"Dip 1"        , BIT_DIPSWITCH, &DrvDips,   "dip"      },
 
 };
 
@@ -95,72 +95,70 @@ STDINPUTINFO(combh)
 
 static struct BurnDIPInfo bankpDIPList[]=
 {
-	// Default Values
-	{0x10, 0xff, 0xff, 0x41, NULL                     },
+	{0x10, 0xff, 0xff, 0xc0, NULL					},
 
-	{0   , 0xfe, 0   , 4   , "Coin A/B"               },
-	{0x10, 0x01, 0x03, 0x03, "3C 1C"     		  },
-	{0x10, 0x01, 0x03, 0x02, "2C 1C"    		  },
-	{0x10, 0x01, 0x03, 0x01, "1C 1C"     		  },
-	{0x10, 0x01, 0x03, 0x00, "1C 2C"    		  },
+	{0   , 0xfe, 0   , 4   , "Coin A/B"				},
+	{0x10, 0x01, 0x03, 0x03, "3C 1C"				},
+	{0x10, 0x01, 0x03, 0x02, "2C 1C"				},
+	{0x10, 0x01, 0x03, 0x00, "1C 1C"				},
+	{0x10, 0x01, 0x03, 0x01, "1C 2C"				},
 
-	{0   , 0xfe, 0   , 2   , "Coin C"                 },
-	{0x10, 0x01, 0x04, 0x04, "2C 1C"     		  },
-	{0x10, 0x01, 0x04, 0x00, "1C 1C"    		  },
+	{0   , 0xfe, 0   , 2   , "Coin C"				},
+	{0x10, 0x01, 0x04, 0x04, "2C 1C"				},
+	{0x10, 0x01, 0x04, 0x00, "1C 1C"				},
 
-	{0   , 0xfe, 0   , 2   , "Lives"	          },
-	{0x10, 0x01, 0x08, 0x00, "3"     		  },
-	{0x10, 0x01, 0x08, 0x08, "4"			  },
+	{0   , 0xfe, 0   , 2   , "Lives"				},
+	{0x10, 0x01, 0x08, 0x00, "3"					},
+	{0x10, 0x01, 0x08, 0x08, "4"					},
 
-	{0   , 0xfe, 0   , 2   , "Bonus Life"	          },
-	{0x10, 0x01, 0x10, 0x00, "70K 200K 500K..."       },
-	{0x10, 0x01, 0x10, 0x10, "100K 400K 800K..."	  },
+	{0   , 0xfe, 0   , 2   , "Bonus Life"	 		},
+	{0x10, 0x01, 0x10, 0x00, "70K 200K 500K..."		},
+	{0x10, 0x01, 0x10, 0x10, "100K 400K 800K..."	},
 
-	{0   , 0xfe, 0   , 2   , "Difficulty"             },
-	{0x10, 0x01, 0x20, 0x00, "Easy"       		  },
-	{0x10, 0x01, 0x20, 0x20, "Hard"       		  },
+	{0   , 0xfe, 0   , 2   , "Difficulty"			},
+	{0x10, 0x01, 0x20, 0x00, "Easy"					},
+	{0x10, 0x01, 0x20, 0x20, "Hard"					},
 
-	{0   , 0xfe, 0   , 2   , "Demo Sounds"            },
-	{0x10, 0x01, 0x40, 0x00, "Off"     		  },
-	{0x10, 0x01, 0x40, 0x40, "On"    		  },
+	{0   , 0xfe, 0   , 2   , "Demo Sounds"			},
+	{0x10, 0x01, 0x40, 0x00, "Off"					},
+	{0x10, 0x01, 0x40, 0x40, "On"					},
 
-	{0   , 0xfe, 0   , 2   , "Cabinet"                },
-	{0x10, 0x01, 0x80, 0x80, "Upright"     		  },
-	{0x10, 0x01, 0x80, 0x00, "Cocktail"    		  },
+	{0   , 0xfe, 0   , 2   , "Cabinet"				},
+	{0x10, 0x01, 0x80, 0x80, "Upright"				},
+	{0x10, 0x01, 0x80, 0x00, "Cocktail"				},
 };
 
 STDDIPINFO(bankp)
 
 static struct BurnDIPInfo combhDIPList[]=
 {
-	// Default Values
-	{0x10, 0xff, 0xff, 0x40, NULL                     },
+	{0x10, 0xff, 0xff, 0x10, NULL					},
 
-	{0   , 0xfe, 0   , 2   , "Flip Screen"            },
-	{0x10, 0x01, 0x01, 0x00, "Off"     		  },
-	{0x10, 0x01, 0x01, 0x01, "On"    		  },
+	{0   , 0xfe, 0   , 2   , "Flip Screen"			},
+	{0x10, 0x01, 0x01, 0x00, "Off"					},
+	{0x10, 0x01, 0x01, 0x01, "On"					},
 
-	{0   , 0xfe, 0   , 4   , "Coinage"                },
-	{0x10, 0x01, 0x06, 0x06, "2C 1C"     		  },
-	{0x10, 0x01, 0x06, 0x00, "1C 1C"    		  },
-	{0x10, 0x01, 0x06, 0x02, "1C 2C"     		  },
-	{0x10, 0x01, 0x06, 0x04, "1C 3C"    		  },
+	{0   , 0xfe, 0   , 4   , "Coinage"				},
+	{0x10, 0x01, 0x06, 0x06, "2C 1C"				},
+	{0x10, 0x01, 0x06, 0x00, "1C 1C"				},
+	{0x10, 0x01, 0x06, 0x02, "1C 2C"				},
+	{0x10, 0x01, 0x06, 0x04, "1C 3C"				},
 
-	{0   , 0xfe, 0   , 2   , "Lives"	          },
-	{0x10, 0x01, 0x08, 0x00, "3"     		  },
-	{0x10, 0x01, 0x08, 0x08, "4"			  },
+	{0   , 0xfe, 0   , 2   , "Lives"				},
+	{0x10, 0x01, 0x08, 0x00, "3"					},
+	{0x10, 0x01, 0x08, 0x08, "4"					},
 
-	{0   , 0xfe, 0   , 2   , "Cabinet"                },
-	{0x10, 0x01, 0x10, 0x10, "Upright"     		  },
-	{0x10, 0x01, 0x10, 0x00, "Cocktail"    		  },
+	{0   , 0xfe, 0   , 2   , "Cabinet"				},
+	{0x10, 0x01, 0x10, 0x10, "Upright" 				},
+	{0x10, 0x01, 0x10, 0x00, "Cocktail"				},
 
-	{0   , 0xfe, 0   , 2   , "Difficulty"             },
-	{0x10, 0x01, 0x40, 0x00, "Easy"       		  },
-	{0x10, 0x01, 0x40, 0x40, "Hard"       		  },
+	{0   , 0xfe, 0   , 2   , "Difficulty"			},
+	{0x10, 0x01, 0x40, 0x00, "Easy"					},
+	{0x10, 0x01, 0x40, 0x40, "Hard"					},
 
-	{0   , 0xfe, 0   , 2   , "Fuel"                   },
-	{0x10, 0x01, 0x80, 0x00, "120 Units"     	  },
-	{0x10, 0x01, 0x80, 0x80, "90 Units"    		  },
+	{0   , 0xfe, 0   , 2   , "Fuel"					},
+	{0x10, 0x01, 0x80, 0x00, "120 Units" 			},
+	{0x10, 0x01, 0x80, 0x80, "90 Units"				},
 };
 
 STDDIPINFO(combh)

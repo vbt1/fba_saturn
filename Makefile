@@ -8,16 +8,16 @@ LD = sh-elf-ld
 RM = rm
 CONV = sh-elf-objcopy
 
-MAKEFILE = Makefile  # -fuse-linker-plugin -flto 
+MAKEFILE = Makefile 
 #CCFLAGS2 = -m2 -Os -Wall -Wextra --save-temps -ffreestanding -fno-web -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
-CCFLAGS2 = -m2 -Os -Wall -Wno-missing-braces -Wextra -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCFLAGS2 = -m2 -O2 -Wall -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
-CCOVLFLAGS = -m2 -O2 -Wall -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCOVLFLAGS = -m2 -O2 -Wall -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
 OLVSCRIPT = root/sl2.lnk
 #LDCMNFLAGS = -m2 -O2 -flto -fuse-linker-plugin  -Xlinker -n -Xlinker -S -Xlinker
-LDCMNFLAGS = -m2  -O2 -v -Xlinker -n -Xlinker -S -Xlinker -fno-lto -Xlinker
-LDCMNFLAGS2 = -m2  -Os -v -Xlinker -S -Xlinker -fno-lto -Xlinker
+LDCMNFLAGS = -m2 -O2 -v --verbose -Xlinker -n -Xlinker -S -Xlinker -fno-lto -Xlinker
+LDCMNFLAGS2 = -m2 -Os -v --verbose -Xlinker -S -Xlinker -fno-lto -Xlinker
 
 TARGET    = root/sl.elf
 TARGET1  = root/sl.bin
@@ -76,7 +76,8 @@ OVLMITCH                 = root/d_mitch.elf
 OVLMITCH1               = root/d_mitch.bin
 MPOVLMITCHFILE    = $(OVLMITCH:.elf=.maps)
 LDOVLMITCHFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMITCHFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c snd/msm6295.c burn_sound_c.c eeprom.c load.c saturn/ovl.c saturn/saturn_snd.c 
+SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c snd/msm6295.c eeprom.c load.c saturn/ovl.c saturn/pcmsys2.c saturn/pcmstm.c
+#saturn/saturn_snd.c 
 #saturn/pcmsys.c
 OBJOVLMITCH         = $(SRCOVLMITCH:.c=.o)
 
@@ -120,28 +121,32 @@ OVLSMS                 = root/d_sms.elf
 OVLSMS1               = root/d_sms.bin
 MPOVLSMSFILE    = $(OVLSMS:.elf=.maps)
 LDOVLSMSFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSMS         = d_sms.c psg_sms.c 
+#SRCOVLSMS         = d_sms.c psg_sms.c 
+SRCOVLSMS         = d_sms.c snd/sn76496.o
 OBJOVLSMS         = $(SRCOVLSMS:d_sms.c=sms/d_sms.o)
 
 OVLSMSCZ80                 = root/d_smscz.elf
 OVLSMSCZ801               = root/d_smscz.bin
 MPOVLSMSCZ80FILE    = $(OVLSMSCZ80:.elf=.maps)
 LDOVLSMSCZ80FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSCZ80FILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c cz80/cz80.c
+#SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c cz80/cz80.c
+SRCOVLSMSCZ80         = d_sms.c snd/sn76496.o czet.c cz80/cz80.c
 OBJOVLSMSCZ80         = $(SRCOVLSMSCZ80:.c=.o)
 
 OVLGG                = root/d_gg.elf
 OVLGG1              = root/d_gg.bin
 MPOVLGGFILE    = $(OVLGG:.elf=.maps)
 LDOVLGGFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLGG         = d_sms.c psg_sms.c 
+#SRCOVLGG         = d_sms.c psg_sms.c 
+SRCOVLGG         = d_sms.c snd/sn76496.o
 OBJOVLGG         = $(SRCOVLGG:d_sms.c=gg/d_sms.o)
 
 OVLGGCZ                = root/d_ggcz.elf
 OVLGGCZ1              = root/d_ggcz.bin
 MPOVLGGCZFILE    = $(OVLGGCZ:.elf=.maps)
 LDOVLGGCZFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGCZFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLGGCZ         = psg_sms.c
+#SRCOVLGGCZ         = psg_sms.c
+SRCOVLGGCZ         = snd/sn76496.o
 SRCOVLGGCZ2        = d_sms.c
 OBJOVLGGCZ         = $(SRCOVLGGCZ::.c=.o) $(SRCOVLGGCZ2:d_sms.c=ggcz/d_sms.o) 
 
@@ -283,7 +288,7 @@ OBJOVLJEDI         = $(SRCOVLJEDI:.c=.o)
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
-../../SBL6/SEGALIB/LIB/vbtelf4/sega_gfs.a \
+../../SBL62/SEGALIB/LIB/elf/sega_gfs.a \
 ../../SBL6/SEGALIB/SPR/vbtelf4/spr_slv.o \
 ../../SBL6/SEGALIB/LIB/vbtelf4/sega_int.a \
 ../../SBL6/SEGALIB/LIB/vbtelf4/cdcrep.a \
@@ -299,7 +304,6 @@ LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf4/sega_dma.a
 sl: $(TARGET) $(TARGET1) 
 
 drv:  $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
-     $(OVLBLKTGR) $(OVLBLKTGR1) $(OVLWIZ) $(OVLWIZ1) \
 	 $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \
      $(OVLHIGEMARU) $(OVLHIGEMARU1) $(OVLPKUNW) $(OVLPKUNW1) \
      $(OVLMITCH) $(OVLMITCH1) $(OVLGNG) $(OVLGNG1) \
@@ -310,11 +314,11 @@ drv:  $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSLPFGHT) $(OVLSLPFGHT1) $(OVLFREEK) $(OVLFREEK1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
      $(OVLMSX) $(OVLMSX1) $(OVLSEGAE) $(OVLSEGAE1) \
-     $(OVLSOLOMN) $(OVLSOLOMN1) $(OVLSIDARM) $(OVLSIDARM1) \
      $(OVLNINKD2) $(OVLNINKD21) $(OVL1943) $(OVL19431) \
 	 $(OVLTETRIS) $(OVLTETRIS1) \
      $(OVLSMS) $(OVLSMS1) $(OVLGGCZ) $(OVLGGCZ1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) 	 
+
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -362,7 +366,8 @@ $(OVLPKUNW1) : $(OBJOVLPKUNW) $(MAKEFILE) $(LDOVLPKUNWFILE)
 	$(CONV) -O binary $(OVLPKUNW) $(OVLPKUNW1)
 
 $(OVLMITCH) : $(OBJOVLMITCH) $(MAKEFILE) $(OBJOVLMITCH) $(LDOVLMITCHFILE)
-	$(CC) $(LDOVLMITCHFLAGS) $(OBJOVLMITCH) $(LIBSOVL) $(LIBSTM) -o $@
+	$(CC) $(LDOVLMITCHFLAGS) $(OBJOVLMITCH) $(LIBSOVL) -o $@
+#	$(CC) $(LDOVLMITCHFLAGS) $(OBJOVLMITCH) $(LIBSOVL) $(LIBSTM) -o $@
 
 $(OVLMITCH1) : $(OBJOVLMITCH) $(MAKEFILE) $(LDOVLMITCHFILE)
 	$(CONV) -O binary $(OVLMITCH) $(OVLMITCH1)

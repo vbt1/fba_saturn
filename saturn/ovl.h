@@ -1,9 +1,9 @@
 #ifndef _OVL_H_
 #define _OVL_H_
 
-#define OVLADDR 0x060DF000
-#define MAINSTART 0x0601b000
-#define MALLOC_MAX  OVLADDR-MAINSTART-0x4000 //0x30000 //0x060FFC00-0x060CC000
+#define OVLADDR 0x060DE000
+#define MAINSTART 0x0601c000
+#define MALLOC_MAX  OVLADDR-MAINSTART //0x30000 //0x060FFC00-0x060CC000
 #define LOWADDR 0x00200000
 
 //extern Uint32   _bstart, _bend;
@@ -183,15 +183,17 @@ static unsigned char *cache = NULL;
   (ss_OtherPri->SpecialPriorityMode \
    = (ss_OtherPri->SpecialPriorityMode & 0xFFF3) | ((n1sprm) << 2))
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*
 void cleanDATA()
 {
-/*
-	extern unsigned int _dstarto, _dendo;
 
-	for( unsigned char *dst = (unsigned char *)&_dstarto; dst < (unsigned char *)&_dendo; dst++ ) 
+	extern unsigned int _dstarto, _dendo;
+	extern unsigned int _bend, stack;
+	for( unsigned char *dst = (unsigned char *)&_bend; dst < (unsigned char *)&stack; dst++ ) 
 	{
 		*dst = 0;
 	}
+	
 //	int size = ((unsigned char *)&_bendo)-((unsigned char *)&_bstarto);
 
 	extern unsigned int _rodata_start, _rodata_end;
@@ -200,8 +202,7 @@ void cleanDATA()
 	{
 		*dst = 0;
 	}
-	*/
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 void cleanBSS()
 {

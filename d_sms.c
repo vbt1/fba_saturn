@@ -1,6 +1,6 @@
 #include    "machine.h"
 #include "d_sms.h"
-//#define OLD_SOUND 1
+#define OLD_SOUND 1
 #define SAMPLE 7680L
 #define TWO_WORDS 1
 #define MAX_DIR 384*2
@@ -99,7 +99,7 @@ static void	SetVblank2( void )
 	__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void initColors()
+ void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,OFF);
@@ -110,36 +110,22 @@ static void	SetVblank2( void )
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifndef OLD_SOUND
-/*static*/  void sh2slave(unsigned int *nSoundBufferPos)
+ void sh2slave(unsigned int *nSoundBufferPosN)
 {
-//xxxxxxxxxxxxxx
-	volatile signed short *nSoundBuffer = (signed short *)(0x25a20000+*nSoundBufferPos);
-//	PSG_Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
-	PSG_Update(nSoundBuffer,  256);
-//PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);	
-//	SN76496Update(0,&nSoundBuffer[nSoundBufferPos[0]],  128);
-	*nSoundBufferPos+=256;//256; 
-	if(*nSoundBufferPos>=SAMPLE*2)//<<1)//256*hz)
+	volatile signed short *nSoundBuffer = (signed short *)SOUND_BUFFER;
+	SN76496Update(0, &nSoundBuffer[nSoundBufferPos],  128);
+//	PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
+	nSoundBufferPos+=128;
+	if(nSoundBufferPos>=SAMPLE)//<<1)//256*hz)
 	{
-		PCM_NotifyWriteSize(pcm, *nSoundBufferPos);
-		*nSoundBufferPos=0;
-		PCM_Task(pcm);
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
+		nSoundBufferPos=0;
 	}
-
-	
-/*	
-			if(nSoundBufferPos>=SAMPLE)//256*hz)
-			{
-				PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-				nSoundBufferPos=0;
-			}
-			PCM_Task(pcm);	
-*/
-//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+	PCM_Task(pcm);
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void initLayers(void)
+ void initLayers(void)
 {
 //    SclConfig	config;
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
@@ -153,10 +139,10 @@ static void	SetVblank2( void )
 		0x0044, 0xeeff,   //B1
 		0xffff, 0xffff  //B0
 #else
-		0xff5e, 0xffff, //A1
-		0xffff, 0xffff,	//A0
-		0x04ee, 0xffff,   //B1
-		0xffff, 0xffff  //B0
+		0xff5e, 0xeeee, //A1
+		0xffee, 0xeeee,	//A0
+		0x04ee, 0xeeee,   //B1
+		0xffee, 0xeeee  //B0
 #endif
 	};
  	SclConfig	scfg;
@@ -181,7 +167,7 @@ static void	SetVblank2( void )
 // vbt : active le prioritybit en mode 1word
 //	scfg.patnamecontrl =  0x020c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
 	scfg.patnamecontrl =  0x000c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
-	scfg.plate_addr[0] = ss_map;
+	scfg.plate_addr[0] = (UINT32 *)SS_MAP;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 /********************************************/	
 
@@ -193,20 +179,22 @@ static void	SetVblank2( void )
 #endif
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
-	scfg.plate_addr[0] = ss_font;
+	scfg.plate_addr[0] = (UINT32 *)SS_FONT;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void initPosition(void)
+inline  void initPosition(void)
 {
 	SCL_Open();
 	ss_reg->n1_move_x = 0;
 	ss_reg->n1_move_y = 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void SaturnInitMem()
+inline  void SaturnInitMem()
 {
+	SPR_InitSlaveSH();
+	
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
 	memset(Next, 0, MALLOC_MAX);
@@ -227,19 +215,19 @@ static void	SetVblank2( void )
 
 	dummy_write= Next; Next += 0x100*sizeof(UINT8);
 	CZ80Context	= Next; Next += sizeof(cz80_struc);
-	sms512kbRom	= Next;
+	sms256kbRom	= Next;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void DrvInitSaturn()
+ void DrvInitSaturn()
 {
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	nBurnSprites  = 67;//131;//27;
 	nBurnLinescrollSize = 0x340;
 	nSoundBufferPos = 0;//sound position à renommer
 
-	SS_CACHE = cache      =(Uint8  *)SCL_VDP2_VRAM_B1;
-	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_CACHE  = (Uint8  *)SCL_VDP2_VRAM_B1;
+	SS_MAP    = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_FONT   = (Uint16 *)SCL_VDP2_VRAM_A1;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -259,7 +247,7 @@ static void	SetVblank2( void )
 	SaturnInitMem();	
 	
 //	SaturnInitMem();
-//		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+//		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" ",0,180);	
 	make_lut();
 #ifdef TWO_WORDS
     SS_SET_N0PRIN(4);
@@ -274,12 +262,12 @@ static void	SetVblank2( void )
 #endif
 	SS_SET_N1PRIN(7);
 
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" ",0,180);	
 
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 	initSprites(256-1,192-1,0,0,0,0);
 	 initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" ",0,180);	
 
 //	drawWindow(32,192,192,14,52);
 	nBurnFunction = update_input1;
@@ -289,24 +277,25 @@ static void	SetVblank2( void )
 	drawWindow(0,192,192,2,66);
 #endif
 	SetVblank2();
-	SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
-
+#ifndef OLD_SOUND
+//	SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
+#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void sms_start()
+ void sms_start()
 {
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)" ",0,180);	
-
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" ",0,180);	
 //	z80_stop_emulating();
 	nSoundBufferPos=0;
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	UINT8 *ss_map = (UINT8 *)SS_MAP;
 	
 	for (int i=0;i<256 ; ++i ) colAddr[i]=colBgAddr[i]=RGB( 0, 0, 0 );
 	*(UINT16 *)0x25E00000=RGB( 0, 0, 0 );
 	
 	memset(&ss_vram[0x1100],0,0x10000-0x1100);
-	memset((Uint8 *)cache,0x0,0x20000);
-	memset((Uint8 *)ss_map,0,0x20000);
+	memset((Uint8 *)SS_CACHE,0x0,0x20000);
+	memset((Uint8 *)SS_MAP,0,0x20000);
 #ifdef TWO_WORDS
 	for (int i=1;i<0x2000 ; i+=2 ) ss_map[i]=0x3000;//palette2[0];
 #endif
@@ -331,7 +320,7 @@ static void	SetVblank2( void )
 	running = 1;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  INT32 SMSInit(void)
+ INT32 SMSInit(void)
 {
 #ifndef RAZE
 #ifdef GG
@@ -343,27 +332,34 @@ static void	SetVblank2( void )
 	ChangeDir(".");
 #endif
 	DrvInitSaturn();
+	SN76489Init(0,MASTER_CLOCK, 0);
 	sms_start();
 
 	return 0;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void wait_vblank(void)
+ void wait_vblank(void)
 {
      while((TVSTAT & 8) == 0);
      while((TVSTAT & 8) == 8);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void SMSExit(void)
+ INT32 SMSExit(void)
 {
 	nBurnFunction = NULL;
 	SS_SET_N0SPRM(0);
 	SclProcess = 2;
 	ss_regs->specialcode=0x0000;	
-	wait_vblank();
-	sms_reset();
+//	wait_vblank();
+//	sms_reset();
 
+//	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//		SPR_WaitEndSlaveSH();
+
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_InitSlaveSH();
+	memset((void *)SOUND_BUFFER,0x00,0x4000*8);
 //	SPR_InitSlaveSH();
 #ifdef RAZE
 	z80_stop_emulating();
@@ -377,9 +373,10 @@ static void	SetVblank2( void )
 	CZetExit2();
 	CZ80Context = NULL;
 #endif
+//	SN76496Exit();
 	vdp_reset();
-
-	sms512kbRom = NULL;
+/*
+	sms256kbRom = NULL;
 	cart.rom = NULL;
 	__port = NULL;
 //	vdp.vram = NULL;
@@ -388,15 +385,15 @@ static void	SetVblank2( void )
 
 	bp_lut = NULL;
 	name_lut = NULL;
-
+*/
 #ifdef GG0
-	disp_spr = NULL;
+//	disp_spr = NULL;
 	curr_sprite=0;	
 #endif
 
 #ifdef GG
 	memset(ss_scl,0x00,192*4);
-	vram_dirty =  NULL;
+//	vram_dirty =  NULL;
 #endif
 	running = 0;
 	first = 0;
@@ -405,13 +402,15 @@ static void	SetVblank2( void )
 	file_max = 0;
 	file_id = 0;	
 	
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;
+	
+	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void SMSFrame(void)
+ void SMSFrame(void)
 {
 #ifdef GG0
 	cleanSpritesGG();
@@ -428,44 +427,47 @@ static void	SetVblank2( void )
 		
 #ifdef OLD_SOUND //
 		sms_frame();
-//		if(sound)
-		{
-			signed short *nSoundBuffer = (signed short *)0x25a20000;
-//			PSG_Update(0,&nSoundBuffer[nSoundBufferPos],  128);
-			PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
-//			SN76496Update(0,&nSoundBuffer[nSoundBufferPos],  128);
-			nSoundBufferPos+=128;//256; // DOIT etre deux fois la taille copiee
 
-			if(nSoundBufferPos>=SAMPLE)//256*hz)
-			{
-				PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-				nSoundBufferPos=0;
-			}
-			PCM_Task(pcm);
-		}
+	volatile signed short *nSoundBuffer = (signed short *)SOUND_BUFFER;
+//	PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
+	SN76496Update(0, &nSoundBuffer[nSoundBufferPos],  128);
+	nSoundBufferPos+=128;
+	if(nSoundBufferPos>=SAMPLE)//<<1)//256*hz)
+	{
+		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
+		nSoundBufferPos=0;
+	}
+	PCM_Task(pcm);
+
  #else
-//		if(sound)
-		{
-			sms_frame();
-			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-				SPR_WaitEndSlaveSH();				
-			SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
-				
-//			vb=1;
-		}		
+		SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
+		sms_frame();
+		
+		if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
+			SPR_WaitEndSlaveSH();				
+
 #endif
 		ss_reg->n0_move_y =  scroll_y; //-(16<<16) ;
 	}
 	else
 	{
-#ifndef OLD_SOUND //		
+#ifndef OLD_SOUND //
+/*	wait_vblank();
+	PCM_MeStop(pcm);
+
+	unsigned int *nSoundBuffer = (unsigned int *)SOUND_BUFFER;
+	memset((void *)nSoundBuffer,0x00,0x2000 *sizeof(INT16) * 8 * 8);
+	nSoundBufferPos=0;
+
+		PCM_MeStart(pcm);
+		*/
 			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-				SPR_WaitEndSlaveSH();			
-#endif		
+			SPR_WaitEndSlaveSH();
+//			wait_vblank();
+//						sh2slave(&nSoundBufferPos);
+#endif	
 		sms_start();
 	}
-
-//__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void sms_frame(void)
@@ -564,35 +566,33 @@ static void	SetVblank2( void )
 	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void load_rom(void)
+ void load_rom(void)
 {
 	long fileSize = GetFileSize(file_id);//dir_name[file_id].dirrec.size;
 	
 	
-	if(fileSize<=0x80000)
-	cart.rom	 = (UINT8 *) sms512kbRom;
-	cart.rom	 = (UINT8 *) 0x00200000;
+	if(fileSize<=0x40000)
+	cart.rom	 = (UINT8 *) sms256kbRom;
+	else
+	cart.rom	 = (UINT8 *) LOWADDR;
 //	memset4_fast((Uint8 *)&cart.rom[0],0,0x100000);
 	cart.pages	 = fileSize /0x4000;
 	GFS_Load(file_id, 0, cart.rom, fileSize);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void system_init()
+ void system_init()
 {
     /* Initialize the VDP emulation */
     vdp_reset();
 
     /* Initialize the SMS emulation */
     sms_init();
-
-//SN76496_init(MASTER_CLOCK, 255, 44100); //VBT sample rate
-//SN76496_init(MASTER_CLOCK, 255, 30720);
-//SN76489Init(0,MASTER_CLOCK, 0);
-//PSG_Init(0,MASTER_CLOCK, 7680);
-	PSG_Init(MASTER_CLOCK, 7680);
+//	PSG_Init(MASTER_CLOCK, 7680);
+//	SN76489AInit(0, MASTER_CLOCK, 0);
+	SN76496Reset(0);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void sms_init(void)
+inline void sms_init(void)
 {
 	z80_init();
 	sms_reset();
@@ -605,13 +605,13 @@ int sms_irq_callback(int param)
 }		   */
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Reset VDP emulation */
-/*static*/  void vdp_reset(void)
+ inline void vdp_reset(void)
 {
     memset(&vdp, 0, sizeof(t_vdp));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Write data to the VDP's control port */
-/*static*/  void vdp_ctrl_w(int data)
+ void vdp_ctrl_w(int data)
 {
     /* Waiting for the reset of the command? */
     if(vdp.pending == 0)
@@ -679,7 +679,7 @@ int sms_irq_callback(int param)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Read the status flags */
-/*static*/ inline int vdp_ctrl_r(void)
+inline int vdp_ctrl_r(void)
 {
     /* Save the status flags */
     UINT8 temp = vdp.status;
@@ -706,8 +706,7 @@ int sms_irq_callback(int param)
 		{
 			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
 			unsigned int delta = map_lut[index - vdp->ntab];
-			UINT16 *map = &ss_map[delta]; 
-//xxxx
+			UINT16 *map = 	(UINT16 *)SS_MAP+delta;
 #ifdef TWO_WORDS
 			map[0] =map[64] =map[0xE00] =map[0xE40] = name_lut[temp];//color + flip + prio
 			map[1] =map[65] =map[0xE01] =map[0xE41] = ((temp >> 8) & 0xFF) | ((temp  & 0x01) <<8) + 0x3000; //tilenum c00 1800
@@ -734,8 +733,10 @@ int sms_irq_callback(int param)
 #endif
 		/* Mark patterns as dirty */
 		UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+		UINT8 *ss_cache = (UINT8 *)SS_CACHE;
+		
 		UINT32 bp = *(UINT32 *)&vdp->vram[index & ~3];
-		UINT32 *pg = (UINT32 *) &cache[0x00000 | (index & ~3)];
+		UINT32 *pg = (UINT32 *)&ss_cache[0x00000 | (index & ~3)];
 		UINT32 *sg = (UINT32 *)&ss_vram[0x1100 + (index & ~3)];
 		UINT32 temp1 = bp_lut[bp & 0xFFFF];
 		UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
@@ -748,7 +749,7 @@ int sms_irq_callback(int param)
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifdef GG
 #ifdef GG0
-/*static*/ void cleanSpritesGG()
+void cleanSpritesGG()
 {
 
 	memset4_fast(disp_spr,0,64);
@@ -1074,7 +1075,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 #else
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Write data to the VDP's data port */
-/*static*/  void vdp_data_w(INT32 offset, UINT8 data)
+ void vdp_data_w(INT32 offset, UINT8 data)
 {
     int index;
     int delta;
@@ -1195,7 +1196,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Read data from the VDP's data port */
-/*static*/  int vdp_data_r(t_vdp *vdp)
+ int vdp_data_r(t_vdp *vdp)
 {
  //   UINT8 temp = 0;
     vdp->pending = 0;
@@ -1217,7 +1218,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 */
 
 
-/*static*/  void vdp_run(t_vdp *vdp)
+ void vdp_run(t_vdp *vdp)
 {
 #ifdef GG
     if(vdp->line <= 0xC0)
@@ -1314,7 +1315,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
     return (vcnt[(vdp.line & 0x1FF)]);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  UINT8 vdp_hcounter_r(void)
+ UINT8 vdp_hcounter_r(void)
 {
 //    int pixel = (((z80_ICount % CYCLES_PER_LINE) / 4) * 3) * 2;
 //  int pixel = (((Cz80_struc.CycleIO % CYCLES_PER_LINE) / 4) * 3) * 2;
@@ -1334,7 +1335,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
     return (hcnt[((pixel >> 1) & 0x1FF)]);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  unsigned char cz80_z80_readport16(unsigned short PortNo)
+ unsigned char cz80_z80_readport16(unsigned short PortNo)
 {
 #ifdef GG
 	UINT8 temp = 0xFF;
@@ -1399,7 +1400,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
     return (0);      
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void cz80_z80_writeport16(unsigned short PortNo, unsigned char data)
+ void cz80_z80_writeport16(unsigned short PortNo, unsigned char data)
 {
     switch(PortNo & 0xFF)
     {
@@ -1418,9 +1419,9 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
         case 0x7F:
 //#ifdef SOUND
 //			if (sound)
-//				SN76496Write(0,data);
+				SN76496Write(0,data);
 //				PSG_Write(0,data);
-				PSG_Write(data);
+//				PSG_Write(data);
 //#endif
            break;
 
@@ -1452,7 +1453,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  UINT8 update_input1(void)
+ UINT8 update_input1(void)
 {
 	unsigned int i=0,k;
 	UINT8 temp = 0xFF;
@@ -1503,7 +1504,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 	{
 		char toto2[50];
 		sprintf(toto2,"%08d", bcount2[k]);
-		FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)toto2,0,k*10);
+		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)toto2,0,k*10);
 	}
 #endif
 					break;
@@ -1559,7 +1560,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 	return temp;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  UINT8 update_input2(void)
+ UINT8 update_input2(void)
 {
 	unsigned int i=0;
 	UINT8 temp = 0xFF;
@@ -1591,7 +1592,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 	return ((temp & 0x3F) | (sms.port_3F & 0xC0));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void sms_reset(void)
+ void sms_reset(void)
 {
 #ifdef RAZE
 	z80_reset();
@@ -1599,10 +1600,10 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 	CZetReset();
 #endif
     /* Clear SMS context */
-    memset4_fast(dummy_write, 0, 0x100);
-    memset4_fast(sms.ram, 0, 0x2000);
-    memset4_fast(sms.sram, 0, 0x8000);
-	memset4_fast(vdp.vram,0, 0x4000);
+    memset(dummy_write, 0, 0x100);
+    memset(sms.ram, 0, 0x2000);
+    memset(sms.sram, 0, 0x8000);
+	memset(vdp.vram,0, 0x4000);
 #ifdef GG0
 	memset(disp_spr,0,64);
 #endif
@@ -1664,12 +1665,18 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
     sms.fcr[1] = 0x00;
     sms.fcr[2] = 0x01;
     sms.fcr[3] = 0x00;
+	
+//	SN76496Reset();
+	nSoundBufferPos=0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void cpu_writemem8(unsigned int address, unsigned int data)
+ void cpu_writemem8(unsigned int address, unsigned int data)
 {
 	sms.ram[address & 0x1FFF] = data;
-
+#ifdef CZ80x
+	if(address >= 0xFFFC)
+	{
+#endif
 // data & cart.pages, and set cart.pages to one less than you are
 	UINT32 offset; // = (data % cart.pages) << 14; // VBT à corriger
 // vbt 15/05/2008 : exophase :	 data & cart.pages, and set cart.pages to one less than you are
@@ -1687,11 +1694,6 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 				z80_map_read(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
 				z80_map_write(0x8000, 0xBFFF, (unsigned char *)(sms.sram + offset));
 #else
-/*
-				CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(sms.sram + offset));
-				CZetMapArea(0x8000, 0xBFFF, 1, (unsigned char *)(sms.sram + offset));
-				CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(sms.sram + offset));
-*/
 				CZetMapMemory((unsigned char *)(sms.sram + offset), 0x8000, 0xBFFF, MAP_RAM); // ok
 
 #endif
@@ -1719,8 +1721,6 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 			z80_map_fetch(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
 			z80_map_read(0x0000, 0x3FFF, (unsigned char *)(cart.rom + offset));
 #else
-//			CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)(cart.rom + offset));
-//			CZetMapArea(0x0000, 0x3FFF, 2, (unsigned char *)(cart.rom + offset));
 			CZetMapMemory((unsigned char *)(cart.rom + offset), 0x0000, 0x3FFF, MAP_ROM);
 #endif
 		break;
@@ -1731,8 +1731,6 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 			z80_map_fetch(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
 			z80_map_read(0x4000, 0x7FFF, (unsigned char *)(cart.rom + offset));
 #else
-//			CZetMapArea(0x4000, 0x7FFF, 0, (unsigned char *)(cart.rom + offset));
-//			CZetMapArea(0x4000, 0x7FFF, 2, (unsigned char *)(cart.rom + offset));
 			CZetMapMemory((unsigned char *)(cart.rom + offset), 0x4000, 0x7FFF, MAP_ROM);
 #endif
 		break;
@@ -1746,14 +1744,14 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 			z80_map_fetch(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
 			z80_map_read(0x8000, 0xBFFF, (unsigned char *)(cart.rom + offset));
 #else
-//			CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(cart.rom + offset));
-//			CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(cart.rom + offset));
 			CZetMapMemory((unsigned char *)(cart.rom + offset), 0x8000, 0xBFFF, MAP_ROM);			
 #endif
 		}
 		break;
 	}
-    return;
+#ifdef CZ80x
+	}
+#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*#ifdef CZ80
@@ -1764,7 +1762,7 @@ static void cpu_writemem16(unsigned int address, unsigned int data)
 }
 #endif	   */
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void z80_init(void)
+inline void z80_init(void)
 {
 #ifdef RAZE
 	z80_init_memmap();
@@ -1807,34 +1805,21 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 
 	z80_reset();
 #else
-//	CZetInit(1);
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 /* Bank #0 */ 
-//	CZetMapArea(0x0000, 0x3FFF, 0, (unsigned char *)cart.rom);
-//	CZetMapArea(0x0000, 0x3FFF, 2, (unsigned char *)cart.rom);
 	CZetMapMemory((unsigned char *)cart.rom, 0x0000, 0x3FFF, MAP_ROM);
 				
 /* Bank #1 */ 
-//	CZetMapArea(0x4000, 0x7FFF, 0, (unsigned char *)(cart.rom+0x4000));
-//	CZetMapArea(0x4000, 0x7FFF, 2, (unsigned char *)(cart.rom+0x4000));
 	CZetMapMemory((unsigned char *)cart.rom+0x4000, 0x4000, 0x7FFF, MAP_ROM);
 
 /* Bank #2 */ 
-//	CZetMapArea(0x8000, 0xBFFF, 0, (unsigned char *)(cart.rom+0x8000));
-//	CZetMapArea(0x8000, 0xBFFF, 2, (unsigned char *)(cart.rom+0x8000));
 	CZetMapMemory((unsigned char *)cart.rom+0x8000, 0x8000, 0xBFFF, MAP_ROM);
 	
 /* RAM */
-//	CZetMapArea(0xC000, 0xDFFF, 0, (unsigned char *)cart.rom);
-//	CZetMapArea(0xC000, 0xDFFF, 1, (unsigned char *)cart.rom);
-//	CZetMapArea(0xC000, 0xDFFF, 2, (unsigned char *)cart.rom);
 	CZetMapMemory((unsigned char *)cart.rom, 0xC000, 0xDFFF, MAP_RAM);
 	
 /* RAM (mirror) */ 
-//	CZetMapArea(0xE000, 0xFFFF, 0, (unsigned char *)cart.rom);
-//	CZetMapArea(0xE000, 0xFFFF, 1, (unsigned char *)cart.rom);
-//	CZetMapArea(0xE000, 0xFFFF, 2, (unsigned char *)cart.rom);
 	CZetMapMemory((unsigned char *)cart.rom, 0xE000, 0xFFFF, MAP_ROM);
 	
 	CZetSetWriteHandler(cpu_writemem8);
@@ -1845,7 +1830,7 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/inline  void make_map_lut()
+inline  void make_map_lut()
 {
 	unsigned int row,column;
 
@@ -1861,7 +1846,7 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/inline  void make_name_lut(void)
+inline  void make_name_lut(void)
 {
 	unsigned int i, j;
 	for(j = 0; j < 0x10000; j++)
@@ -1887,7 +1872,42 @@ Bit 08 - 00 : Pattern Index
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void make_bp_lut(void)
+inline  void make_cram_lut(void)
+{
+#ifdef GG
+    for(unsigned int j = 0; j < 0x1000; j++)
+    {
+       int r = (j >> 0) & 0x0F;
+        int g = (j >> 4) & 0x0F;
+        int b = (j >> 8) & 0x0F;
+		r = (r << 1) | (r >> 3);
+		g = (g << 1) | (g >> 3);
+		b = (b << 1) | (b >> 3);
+		cram_lut[j] =RGB(r,g,b);
+    }
+#else
+    for(unsigned int j = 0; j < 0x40; j++)
+    {
+        int r = (j >> 0) & 3;
+        int g = (j >> 2) & 3;
+        int b = (j >> 4) & 3;
+        r  = (r << 3) | (r << 1) | (r >> 1);
+        g = (g << 3) | (g << 1) | (g >> 1);
+        b = (b << 3) | (b << 1) | (b >> 1);
+        cram_lut[j] =RGB(r,g,b);
+    }
+#endif
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+ void make_lut()
+{
+	make_name_lut();
+	make_bp_lut();
+	make_cram_lut();
+	make_map_lut();
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+inline void make_bp_lut(void)
 {
     unsigned int i, j;
     for(j = 0; j < 0x10000; j++)
@@ -1915,37 +1935,3 @@ static void make_bp_lut(void)
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/inline  void make_cram_lut(void)
-{
-#ifdef GG
-    for(unsigned int j = 0; j < 0x1000; j++)
-    {
-       int r = (j >> 0) & 0x0F;
-        int g = (j >> 4) & 0x0F;
-        int b = (j >> 8) & 0x0F;
-		r = (r << 1) | (r >> 3);
-		g = (g << 1) | (g >> 3);
-		b = (b << 1) | (b >> 3);
-		cram_lut[j] =RGB(r,g,b);
-    }
-#else
-    for(unsigned int j = 0; j < 0x40; j++)
-    {
-        int r = (j >> 0) & 3;
-        int g = (j >> 2) & 3;
-        int b = (j >> 4) & 3;
-        r  = (r << 3) | (r << 1) | (r >> 1);
-        g = (g << 3) | (g << 1) | (g >> 1);
-        b = (b << 3) | (b << 1) | (b >> 1);
-        cram_lut[j] =RGB(r,g,b);
-    }
-#endif
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void make_lut()
-{
-	make_name_lut();
-	make_bp_lut();
-	make_cram_lut();
-	make_map_lut();
-}

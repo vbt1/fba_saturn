@@ -1,4 +1,4 @@
-#pragma GCC optimize("Os")
+//#pragma GCC optimize("Os")
 
 #include "saturn/saturn.h" // ok
 
@@ -6,12 +6,12 @@
 //#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR 0x060DF000
+#define OVLADDR 0x060DE000
 #define OVLAEND 0x060FF000
 #define SIZEMAX  0x20000 //OVLAEND-OVLADDR //0x30000 //0x060FF800-0x060CC000
 #define LOWADDR 0x00200000
 //#define MALLOC_MAX 0xAA000
-#define MAINSTART 0x0601b000 //6019a00
+#define MAINSTART 0x0601c000 //6019a00
 #define MALLOC_MAX  OVLADDR-MAINSTART-0x3000 //0x30000 //0x060FF800-0x060CC000
 #define LOWADDR 0x00200000
 #ifdef HEAP_WALK
@@ -30,7 +30,10 @@ static void	UsrVblankIn( void )
 	char xx[4];
    PER_GetPort(__port);	
 #endif
+
+#ifndef PONY
 	PCM_MeVblIn();
+#endif	
 	SCL_ScrollShow();
 
 #ifndef ACTION_REPLAY
@@ -94,7 +97,7 @@ int main(void)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void	_spr2_initialize( void )
+static inline void	_spr2_initialize( void )
 {
 	set_imask(0);
     SCL_SET_SPTYPE(SCL_TYPE0);
@@ -137,8 +140,9 @@ void initScrolling(Uint8 enabled,void *address)
 	SclProcess = 2;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void initSound()
+inline void initSound()
 {
+#ifndef PONY	
 	sndInit();
 	PCM_MeInit();
 //	Sint8		*input_addr;
@@ -185,9 +189,10 @@ static void initSound()
 //		return;
 //	}
 	PCM_Start(pcm);
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void resetLayers()
+static inline void resetLayers()
 {
 	Uint16	CycleTb[]={
 		0x55ee, 0xeeee, //A1
@@ -236,7 +241,7 @@ static void resetLayers()
 	SCL_SET_N1SPRM(0);
 }
 //--------------------------------------------------------------------------------------------------------------
-static void resetColors()
+static inline void resetColors()
 {
 	Uint16 *VRAM;
 
@@ -257,8 +262,9 @@ static void resetColors()
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void resetSound()
+static inline void resetSound()
 {
+#ifndef PONY
 	PCM_MeSetVolume(pcm,0);
 	PCM_DrvChangePcmPara(pcm,-1,-1);
 	PCM_Task(pcm);
@@ -268,6 +274,7 @@ static void resetSound()
 	memset((int *)SOUND_BUFFER,0x00,RING_BUF_SIZE*16);
 	nSoundBufferPos=0;
 	PCM_MeStart(pcm);
+#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #if 0
@@ -344,7 +351,7 @@ wait_vblank();
 //memset((void *)LOWADDR,0x13,16);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static inline void ss_main(void)
+inline void ss_main(void)
 {
 //		DMA_ScuInit();
 
@@ -371,7 +378,7 @@ static inline void ss_main(void)
 //	free(Mem);
 //	Mem=NULL;
 
-	while(1)
+//	while(1)
 	{
 		display_menu();
 	}
@@ -542,7 +549,7 @@ while(1); */
 	}while(1);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void SCL_ParametersInit(void)
+inline void SCL_ParametersInit(void)
 {
 //	Uint16	i;
 /*
@@ -600,7 +607,7 @@ static void SCL_CopyReg()
 //	memcpyl(&regaddr[0x38], &Scl_n_reg, sizeof(SclNorscl));
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static inline void SCL_InitLineParamTb(SclLineparam *lp)
+inline void SCL_InitLineParamTb(SclLineparam *lp)
 {
 	lp->h_enbl = OFF;
 	lp->v_enbl = OFF;
@@ -609,6 +616,7 @@ static inline void SCL_InitLineParamTb(SclLineparam *lp)
 	lp->line_addr = 0x00;
 	lp->cell_addr = 0x00;
 	lp->interval  = 0;
+	SclLineTb *tbl=(SclLineTb*)lp->line_tbl;
 
 	for(unsigned int i = 0; i< SCL_MAXLINE; i++) 
 	{
@@ -617,16 +625,16 @@ static inline void SCL_InitLineParamTb(SclLineparam *lp)
 		{
 			lp->cell_tbl[i] = 0;
 		}
-		lp->line_tbl[i].h  = FIXED(0);
-		lp->line_tbl[i].v  = FIXED(i);
-		lp->line_tbl[i].dh = FIXED(1);
-//		lp->line_tbl[i].h  = (0<<16);
-//		lp->line_tbl[i].v  = (i<<16);
-//		lp->line_tbl[i].dh = (1<<16);
+		tbl->h  = FIXED(0);
+		tbl->v  = FIXED(i);
+		tbl->dh = FIXED(1);
+//		tbl->h  = (0<<16);
+//		tbl->v  = (i<<16);
+//		tbl->dh = (1<<16);
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static inline void	SCL_ScrollShow(void)
+inline void	SCL_ScrollShow(void)
 {
     switch(SclProcess){
 	    case 1:
@@ -635,7 +643,7 @@ static inline void	SCL_ScrollShow(void)
 		break;
 	    case 2:			/* line scroll setting */
 		//SCL_Memcpyw((void *)SclAddrLsTbl[0],(void *)SclAddrLsTbl[1], 0x300);
-		memcpyl((void *)SclAddrLsTbl[0],(void *)SclAddrLsTbl[1], nBurnLinescrollSize);
+		memcpy((void *)SclAddrLsTbl[0],(void *)SclAddrLsTbl[1], nBurnLinescrollSize);
 //		memcpyl((void *)SclAddrLsTbl[2],(void *)SclAddrLsTbl[3], nBurnLinescrollSize1);
 		SCL_CopyReg();
 		SclProcess = 0;
@@ -896,7 +904,7 @@ void  SCL_SetColRam(Uint32 Object, Uint32 Index,Uint32 num,void *Color)
 	memcpyw(ram16,(Uint16 *)Color,num*2);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent)
+void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent)
 {
     if(Object & SCL_SPR)	SCL_SET_SPCAOS(Offset);
 
@@ -937,7 +945,7 @@ Uint32  SCL_AllocColRam(Uint32 Surface, Uint8 transparent)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 // VBT passage en static
-static Uint32  SCL_GetColRamOffset(Uint32 Object)
+inline Uint32  SCL_GetColRamOffset(Uint32 Object)
 {
     switch(Object){
       case SCL_SPR:
@@ -1003,9 +1011,12 @@ void SPR_SetEraseData(Uint16 eraseData, Uint16 leftX, Uint16 topY,Uint16 rightX,
 	rightX >>= 3;
 	SPR_WRITE_REG(SPR_W_EWRR, (rightX << 9) + botY);   /* set erase screen right bottom */
 }
+
 //-------------------------------------------------------------------------------------------------------------------------------------
+
 void SND_Init(SndIniDt *sys_ini)
 {
+#ifndef PONY	
 	Uint8 *adr_sys_info_tbl;
 	
 	/** BEGIN ****************************************************************/
@@ -1040,11 +1051,14 @@ void SND_Init(SndIniDt *sys_ini)
 /* 1994/02/24 End */
 
     PER_SMPC_SND_ON();                          /* サウンドON                */
+#endif
 
 }
+
 //-------------------------------------------------------------------------------------------------------------------------------------
 Uint8 SND_ChgMap(Uint8 area_no)
  {
+#ifndef PONY	 
 /* 1994/02/24 Start */
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
@@ -1059,12 +1073,14 @@ Uint8 SND_ChgMap(Uint8 area_no)
     SET_COMMAND(COM_CHG_MAP);                   /* コマンドセット            */
     while(PEEK_W(adr_com_block + ADR_COM_DATA)) _WAIT_();
     HOST_SET_RETURN(SND_RET_SET);
+#endif	
 }
 
 #define DMA_SCU_END     0
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void sndInit(void)
 {
+#ifndef PONY	
 	SndIniDt 	snd_init;
 	unsigned char sound_map[]={0xFF,0xFF};
 //	unsigned char sound_map[]={ 0x00, 0x00, 0xB0, 0x00, 0x00, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
@@ -1086,6 +1102,7 @@ static void sndInit(void)
 
 	SND_Init(&snd_init);
 	SND_ChgMap(0);
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static PcmHn createHandle(PcmCreatePara *para)
@@ -1106,6 +1123,7 @@ static PcmHn createHandle(PcmCreatePara *para)
 //-------------------------------------------------------------------------------------------------------------------------------------
 SndRet SND_ChgPcm(SndPcmChgPrm *cprm)
 {
+	#ifndef PONY
 /* 1994/02/24 Start */
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
@@ -1119,6 +1137,7 @@ SndRet SND_ChgPcm(SndPcmChgPrm *cprm)
     SET_PRM(5, (SND_L_EFCT_IN(*cprm) << 3) | SND_L_EFCT_LEV(*cprm));
     SET_COMMAND(COM_CHG_PCM_PRM);               /* コマンドセット            */
     HOST_SET_RETURN(SND_RET_SET);
+	#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 static Uint8 GetComBlockAdr(void)
@@ -1159,6 +1178,7 @@ static Uint16 ChgPan(SndPan pan)
 //-------------------------------------------------------------------------------------------------------------------------------------
 SndRet SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm)
 {
+#ifndef PONY	
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
 /* 1994/02/24 End */
@@ -1176,10 +1196,12 @@ SndRet SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm)
     SET_PRM(11, 0);
     SET_COMMAND(COM_START_PCM);                 /* コマンドセット            */
     HOST_SET_RETURN(SND_RET_SET);
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 SndRet SND_StopPcm(SndPcmNum pcm_num)
 {
+#ifndef PONY	
 /* 1994/02/24 Start */
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
@@ -1188,7 +1210,9 @@ SndRet SND_StopPcm(SndPcmNum pcm_num)
     SET_PRM(0, pcm_num);                        /* パラメータセット          */
     SET_COMMAND(COM_STOP_PCM);                  /* コマンドセット            */
     HOST_SET_RETURN(SND_RET_SET);
+#endif	
 }
+
 //-------------------------------------------------------------------------------------------------------------------------------------
 #define CSH_CCR			(*(volatile Uint8 * )0xfffffe92)	/*	ｷｬｯｼｭｺﾝﾄﾛｰﾙﾚｼﾞｽﾀｱﾄﾞﾚｽ	*/
 
@@ -1242,6 +1266,7 @@ void CSH_Purge(void *adrs, Uint32 P_size)
 		(*ptr)[0] = zero;			/* キャッシュパージ */
 	} while (ptr++ < end);			/* ポストインクリメントはディレイスロット活用の為 */
 }
+
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void wait_vblank(void)
 {
@@ -1302,20 +1327,23 @@ inline int DoInputBlank()
 		}	*/
 		continue;
 	}
+	
+	struct GameInp *gi=&GameInp[iJoyNum];
+	
 	sprintf(controlName,"p%i coin",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][0].nBit = 4;
-		GameInp[iJoyNum][0].pVal = bii.pVal;
-		GameInp[iJoyNum][0].nType = bii.nType;
+    	gi[0].nBit = 4;
+		gi[0].pVal = bii.pVal;
+		gi[0].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i start",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][1].nBit = 5;
-		GameInp[iJoyNum][1].pVal = bii.pVal;
-		GameInp[iJoyNum][1].nType = bii.nType;
+    	gi[1].nBit = 5;
+		gi[1].pVal = bii.pVal;
+		gi[1].nType = bii.nType;
 		switch (iJoyNum)
 		{
 			case 0:
@@ -1330,81 +1358,81 @@ inline int DoInputBlank()
 	sprintf(controlName,"p%i up",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][2].nBit = 0;
-		GameInp[iJoyNum][2].pVal = bii.pVal;
-		GameInp[iJoyNum][2].nType = bii.nType;
+    	gi[2].nBit = 0;
+		gi[2].pVal = bii.pVal;
+		gi[2].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i down",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][3].nBit = 1;
-		GameInp[iJoyNum][3].pVal = bii.pVal;
-		GameInp[iJoyNum][3].nType = bii.nType;
+    	gi[3].nBit = 1;
+		gi[3].pVal = bii.pVal;
+		gi[3].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i left",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][4].nBit = 2;
-		GameInp[iJoyNum][4].pVal = bii.pVal;
-		GameInp[iJoyNum][4].nType = bii.nType;
+    	gi[4].nBit = 2;
+		gi[4].pVal = bii.pVal;
+		gi[4].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i right",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][5].nBit = 3;
-		GameInp[iJoyNum][5].pVal = bii.pVal;
-		GameInp[iJoyNum][5].nType = bii.nType;
+    	gi[5].nBit = 3;
+		gi[5].pVal = bii.pVal;
+		gi[5].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i fire 1",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][6].nBit = 6;
-		GameInp[iJoyNum][6].pVal = bii.pVal;
-		GameInp[iJoyNum][6].nType = bii.nType;
+    	gi[6].nBit = 6;
+		gi[6].pVal = bii.pVal;
+		gi[6].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i fire 2",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][7].nBit = 7;
-		GameInp[iJoyNum][7].pVal = bii.pVal;
-		GameInp[iJoyNum][7].nType = bii.nType;
+    	gi[7].nBit = 7;
+		gi[7].pVal = bii.pVal;
+		gi[7].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i fire 3",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][8].nBit = 8;
-		GameInp[iJoyNum][8].pVal = bii.pVal;
-		GameInp[iJoyNum][8].nType = bii.nType;
+    	gi[8].nBit = 8;
+		gi[8].pVal = bii.pVal;
+		gi[8].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i fire 4",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][9].nBit = 9;
-		GameInp[iJoyNum][9].pVal = bii.pVal;
-		GameInp[iJoyNum][9].nType = bii.nType;
+    	gi[9].nBit = 9;
+		gi[9].pVal = bii.pVal;
+		gi[9].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i fire 5",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][10].nBit = 10;
-		GameInp[iJoyNum][10].pVal = bii.pVal;
-		GameInp[iJoyNum][10].nType = bii.nType;
+    	gi[10].nBit = 10;
+		gi[10].pVal = bii.pVal;
+		gi[10].nType = bii.nType;
     }
     else {
 	sprintf(controlName,"p%i fire 6",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
-    	GameInp[iJoyNum][11].nBit = 11;
-		GameInp[iJoyNum][11].pVal = bii.pVal;
-		GameInp[iJoyNum][11].nType = bii.nType;
+    	gi[11].nBit = 11;
+		gi[11].pVal = bii.pVal;
+		gi[11].nType = bii.nType;
     }}}}}}}}}}}}
   }
   return 0;
@@ -1424,30 +1452,34 @@ static void InpExit()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static void InpMake(unsigned int key[])
+inline void InpMake(unsigned int key[])
 {
-	unsigned char i=0; 
+	unsigned int i=0; 
 	unsigned int down = 0;
 
-	short joyNum=0;
+	
+	char joyNum=0;
+	
+	struct GameInp *gi=&GameInp[0];
+		
 //	for (joyNum=0;joyNum<2;joyNum++)
 	{
 		for (i=0; i<12; i++)
 		{
-			if (GameInp[joyNum][i].pVal == NULL) continue;
+			if (gi[i].pVal == NULL) continue;
 			
-			if ( GameInp[joyNum][i].nBit >= 0 )
+			if ( gi[i].nBit >= 0 )
 			{
-				down = key[joyNum] & (1U << GameInp[joyNum][i].nBit);
+				down = key[joyNum] & (1U << gi[i].nBit);
 				
-				if (GameInp[joyNum][i].nType!=1) {
+				if (gi[i].nType!=1) {
 					// Set analog controls to full
-					if (down) *(GameInp[joyNum][i].pVal)=0xff; else *(GameInp[joyNum][i].pVal)=0x01;
+					if (down) *(gi[i].pVal)=0xff; else *(gi[i].pVal)=0x01;
 				}
 				else
 				{
 					// Binary controls
-					if (down) *(GameInp[joyNum][i].pVal)=1;    else *(GameInp[joyNum][i].pVal)=0;
+					if (down) *(gi[i].pVal)=1;    else *(gi[i].pVal)=0;
 				}
 			}
 		}
@@ -1579,7 +1611,7 @@ void check_exit(Uint16 data)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static inline void do_keypad(unsigned int key[])
+inline void do_keypad(unsigned int key[])
 {
 	key[0] = 0;
 //	key[1] = 0;

@@ -1,4 +1,2 @@
 /=root
 0.BIN=root/sl.bin
-GG=L:/PC/GAME_G~2
-SMS=L:/PC/MASTER~2

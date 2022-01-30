@@ -625,7 +625,7 @@ INT32 DrvExit()
 //wait_vblank();
 //	cleanSprites();
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos = 0;

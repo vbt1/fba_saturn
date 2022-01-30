@@ -14,7 +14,7 @@ static UINT8 update_input1(void);
 static UINT8 update_input2(void);
 void  FNT_Print256_2bpp(volatile Uint8 *vram,volatile Uint8 *str,Uint16 x,Uint16 y);
 void *memset4_fast(void *, long, size_t);
-UINT8 SMSJoy1[1]={NULL};
+UINT8 SMSJoy1[1];
 
 /* Game image structure */
 typedef struct
@@ -80,20 +80,20 @@ typedef struct
 }t_vdp;
 
 /* Global data */
-/*static*/  t_cart cart = {.rom = NULL, .pages = 0};
-/*static*/  t_sms sms = {.paused = 0, .port_3F = 0, .port_F2 = 0, .irq = 0};
-/*static*/  t_vdp vdp = {.status = 0, .latch = 0, .pending = 0, .buffer = 0};
-/*static*/  int running=0;
-/*static*/  unsigned int first = 1;
-/*static*/  unsigned int vsynch = 0;
-/*static*/  int scroll_x=0,scroll_y=0;
-/*static*/  UINT8 *dummy_write  = NULL; //[0x100];
-/*static*/  UINT16 *name_lut = NULL;
-/*static*/  UINT32 *bp_lut = NULL;//[0x10000];
-/*static*/  UINT16 *cram_lut = NULL;//[0x40];
-/*static*/  UINT16 *map_lut = NULL;
-/*static*/  UINT8 *CZ80Context = NULL;
-/*static*/  UINT8 *sms512kbRom = NULL;
+t_cart cart = {.rom = NULL, .pages = 0};
+t_sms sms = {.paused = 0, .port_3F = 0, .port_F2 = 0, .irq = 0};
+t_vdp vdp = {.status = 0, .latch = 0, .pending = 0, .buffer = 0};
+int running=0;
+unsigned int first = 1;
+unsigned int vsynch = 0;
+int scroll_x=0,scroll_y=0;
+UINT8 *dummy_write  = NULL; //[0x100];
+UINT16 *name_lut = NULL;
+UINT32 *bp_lut = NULL;//[0x10000];
+UINT16 *cram_lut = NULL;//[0x40];
+UINT16 *map_lut = NULL;
+UINT8 *CZ80Context = NULL;
+UINT8 *sms256kbRom = NULL;
 //extern unsigned char play;
 int file_id = 2;
 int file_max = 0;
@@ -113,25 +113,23 @@ typedef	struct	SysDevice	{
 	UINT8	data[1];
 } SysDevice;
 
-/*static*/  INT32 SMSInit();
-/*static*/  void SMSExit();
-/*static*/  INT32 SMSDraw();
-/*static*/  void SMSFrame();
-/*static*/  void z80_init(void);
-/*static*/  void sms_init(void);
-/*static*/  void sms_reset(void);
-/*static*/  void sms_frame(void);
-/*static*/  void vdp_run(t_vdp *vdp);
-/*static*/  void vdp_reset(void);
-/*static*/  void system_init(void);
-/*static*/  void cpu_writemem8(unsigned int address, unsigned int data);
-/*static*/  unsigned int cpu_readmem8(unsigned int address);
+INT32 SMSInit();
+INT32 SMSExit();
+void SMSFrame();
+inline void z80_init(void);
+inline void sms_init(void);
+void sms_reset(void);  // ne pas inliner
+void sms_frame(void);
+void vdp_run(t_vdp *vdp);
+inline void vdp_reset(void);
+inline void system_init(void);
+void cpu_writemem8(unsigned int address, unsigned int data);
+unsigned int cpu_readmem8(unsigned int address);
 void PSG_Update(signed short *buffer, unsigned int length);
 void PSG_Init(unsigned int clock, unsigned int rate);
 void PSG_Write(unsigned int data);
-Sint32 getNbFiles();
 Sint32 GetFileSize(int file_id);
-/*static*/  void load_rom(void);
+void load_rom(void);
 
 //INT32 SMSScan(INT32 nAction, INT32 *pnMin);
 /* Return values from the V counter */

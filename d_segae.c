@@ -246,47 +246,48 @@ void segae_vdp_setregister ( UINT8 chip, UINT16 cmd )
 	regnumber = (cmd & 0x0f00) >> 8;
 	regdata   = (cmd & 0x00ff);
 	if (regnumber < 11) {
-		segae_vdp_regs[chip][regnumber] = regdata;
+		UINT8 *regs = &segae_vdp_regs[chip][regnumber];
+		*regs = regdata;
 
 //		if(chip==SELECTED_CHIP)
 		{
 			switch(regnumber)
 			{
 				case 0x02: /* Name Table A Base Address */
-					ntab[chip] = (segae_vdp_regs[chip][regnumber] << 10) & 0x3800;
-//					ntab[chip] = (segae_vdp_regs[chip][regnumber] & 0x0e) << 10;
+					ntab[chip] = (*regs << 10) & 0x3800;
+//					ntab[chip] = (*regs & 0x0e) << 10;
 //					ntab[chip] += (segae_vdp_vrambank[chip] * 0x4000);
 //					ntab[chip] = 0x3800;
 					break;
 
 				case 0x05: /* Sprite Attribute Table Base Address */
-//					satb[chip] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
+//					satb[chip] = ((*regs << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
 //					if (segae_vdp_vrambank[chip])
-						satb[chip] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
-//						satb[0] = ((segae_vdp_regs[chip][regnumber] << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
+						satb[chip] = ((*regs << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
+//						satb[0] = ((*regs << 7) + (segae_vdp_vrambank[chip] * 0x4000)) & 0x3F00;
 
 //					else
-//						satb[chip] = (segae_vdp_regs[chip][regnumber] << 7) & 0x3F00;
+//						satb[chip] = (*regs << 7) & 0x3F00;
 					break;
 
 				case 0x08 :
-						scroll_x[chip] =  ((segae_vdp_regs[chip][regnumber]) ^ 0xff) ;
+						scroll_x[chip] =  ((*regs) ^ 0xff) ;
 					break;
 				case 0x09 :
-						scroll_y[chip] = (segae_vdp_regs[chip][regnumber]&0xff);
+						scroll_y[chip] = (*regs&0xff);
 					break;
 			}
 		}
 
 		if (regnumber == 1  && chip == 1) {
-			if ((segae_vdp_regs[chip][0x1]&0x20) && vintpending) {
+			if ((*regs &0x20) && vintpending) {
 				CZetSetIRQLine(0, CZET_IRQSTATUS_HOLD);
 			} else {
 				CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
 			}
 		}
 		if (regnumber == 0 && chip == 1) {
-			if ((segae_vdp_regs[chip][0x0]&0x10) && hintpending) { // dink
+			if ((*regs &0x10) && hintpending) { // dink
 				CZetSetIRQLine(0, CZET_IRQSTATUS_HOLD);
 			} else {
 				CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
@@ -611,7 +612,7 @@ void MemIndex(UINT32 game)
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
-	memset(Next, 0, MALLOC_MAX);
+//	memset(Next, 0, MALLOC_MAX);
 
 	DrvMainROM	 	    = (UINT8 *)Next; Next += 0x80000;// 0x00200000;
 	
@@ -665,7 +666,7 @@ SclProcess = 2;
 
 	cleanSprites();	
 */	
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;
@@ -1025,7 +1026,7 @@ inline void initLayers(void)
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
-	scfg.plate_addr[0] = (Uint32)ss_font;
+	scfg.plate_addr[0] = (Uint32)SS_FONT;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }
@@ -1045,8 +1046,8 @@ void DrvInitSaturnS(UINT8 game)
 
  	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;		   //c
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
-	SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
-	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
+	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -1251,8 +1252,10 @@ inline void update_bg(UINT8 chip, UINT32 index)
 	}
 	/* Mark patterns as dirty */
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
+	UINT8 *ss_cache = (UINT8 *)SS_CACHE;
+		
 	UINT32 bp = *(UINT32 *)&segae_vdp_vram[chip][index & ~3];
-	UINT32 *pg = (UINT32 *) &cache[(chip<<16) + (index & ~3)];
+	UINT32 *pg = (UINT32 *) &ss_cache[(chip<<16) + (index & ~3)];
 	UINT32 *sg = (UINT32 *)&ss_vram[0x1100+ (chip<<16) + (index & ~3)];
 	UINT32 temp1 = bp_lut[bp & 0xFFFF];
 	UINT32 temp2 = bp_lut[(bp>>16) & 0xFFFF];
@@ -1350,9 +1353,9 @@ Bit 08 - 00 : Pattern Index
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void make_cram_lut(void)
+inline void make_cram_lut(void)
 {
-    for(UINT32 j = 0; j < 0x40; j++)
+    for(INT32 j = 0; j < 0x40; j++)
     {
 /*
         INT32 r = (j >> 0) & 3;

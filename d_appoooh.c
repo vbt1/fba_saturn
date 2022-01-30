@@ -887,7 +887,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 //	free (AllMem);
 //	AllMem = NULL;
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 	nSoundBufferPos=0;
 	return 0;

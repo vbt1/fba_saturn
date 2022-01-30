@@ -2203,7 +2203,7 @@ void cleanmemmap()
 	VBlankKludge = 0;
 	SwapJoyports = Joyselect = Hertz60 = BiosmodeJapan = RAMMask = RAMPages = 0;
 */
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;

@@ -399,7 +399,7 @@ for (i = 0; i < 0x80; i+=4)
 	CZ80Context = MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
 	map_offset_lut = NULL;
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos = 0;

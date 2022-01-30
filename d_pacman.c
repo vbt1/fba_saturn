@@ -573,7 +573,7 @@ INT32 DrvExit()
 	if(chip)
 		chip = NULL;
 */
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;

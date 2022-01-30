@@ -1033,7 +1033,7 @@ static void Set8PCM()
 //	DrvHasYM2203 = 0;
 //	DrvKikcubicDraw = 0;
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;

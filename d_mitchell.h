@@ -15,7 +15,7 @@ int DrvExit();
 int SpangInit();
 int PangInit();
 void DrvCalcPalette();
-inline void DrvMakeInputs();
+void DrvMakeInputs();
 UINT16 *map_lut = NULL;  //[256];
 UINT16 *map_offset_lut = NULL;  //[2048];
 UINT16 *charaddr_lut = NULL; //[0x0800];
@@ -25,7 +25,7 @@ unsigned char current_pcm=255;
 
 //#define nBurnSoundLen 128
 
- SFX sfx_pang[50] = {
+static SFX sfx_pang[50] = {
 /*000.pcm*/{0,PCM_000_SIZE,10},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},

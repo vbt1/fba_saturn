@@ -1385,7 +1385,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	CZetExit2();
 
 	nSoundBufferPos=0;
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 	
 	return 0;

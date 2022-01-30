@@ -580,7 +580,7 @@ void make_lut(void)
 	}
 
 //	for (i = 0; i < System1NumTiles;i++)code_lut[i] = (((i >> 4) & 0x800) | (i & 0x7ff))& (System1NumTiles-1);
-	for (i = 0; i < 10; i++)						cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;
+	for (i = 0; i < nInterleave; i++)						cpu_lut[i] = (i + 1) * nCyclesTotal[0] / nInterleave;
 	for(i=0;i<256;i++)							if(i%8==0)	width_lut[i] = i;else	width_lut[i] = (i + (7)) & ~(7);
 //		width_lut[i] = (i + (7)) & ~(7);
 //	for(i=0;i<0x2000;i++)		color_lut[i] = (i>>5) & 0x3f;
@@ -925,7 +925,7 @@ int System1Exit()
 
 	SPR_InitSlaveSH();
 	
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;	

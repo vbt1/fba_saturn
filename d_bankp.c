@@ -49,7 +49,7 @@ int ovlInit(char *szShortName)
 	ss_reg->n2_move_x =  0;
 }
 
-void MemIndex()
+inline void MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -217,30 +217,18 @@ void MemIndex()
 	switch (address & 0xff)
 	{
 		case 0x00: 
-//			PSG_Write(0,data);
-			SN76496Write(0, data);
-		break;
-		
 		case 0x01:
-//			PSG_Write(1,data);
-			SN76496Write(1, data);
-		break;
-		
-		case 0x02:
-//			PSG_Write(2,data);
-			SN76496Write(2, data);
-		break;
+		case 0x02:		
+//			PSG_Write(0,data);
+			SN76496Write(address&3, data);
+		return;
 
 		case 0x05:
-/*
-		scroll_x = data;
-*/
-		if (flipscreen)
-			ss_reg->n2_move_y = 272-(data);//-24;
-		else
-			ss_reg->n2_move_x = data;//-24;
-		
-		break;
+			if (flipscreen)
+				ss_reg->n2_move_y = 272-(data);//-24;
+			else
+				ss_reg->n2_move_x = data;//-24;
+		return;
 
 		case 0x07:
 		{
@@ -262,6 +250,9 @@ void MemIndex()
 void DrvDoReset()
 {
 	memset (Gfx0, 0, 0x2000);
+//	SN76496Reset(0);
+//	SN76496Reset(1);
+//	SN76496Reset(2);
 #ifdef RAZE
 //	z80_reset();
 #else
@@ -269,9 +260,8 @@ void DrvDoReset()
 	CZetReset();
 	CZetClose();
 #endif
-	/*scroll_x = 0, */priority = 0;// flipscreen = 0;
+	priority = 0;
 	interrupt_enable = 0;
-//	__port = PER_OpenPort();
 }
 
 void bankp_palette_init()
@@ -299,7 +289,7 @@ void bankp_palette_init()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-static inline void bankp_gfx_decode()
+inline void bankp_gfx_decode()
 {
 	 INT32 Char1PlaneOffsets[2] = { 0x00, 0x04 };
 	 INT32 Char2PlaneOffsets[3] = { 0x00, 0x20000, 0x40000 };
@@ -307,18 +297,20 @@ static inline void bankp_gfx_decode()
 	 INT32 Char2XOffsets[8]     = { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
 	 INT32 CharYOffsets[8]      = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
 
-	GfxDecode4Bpp(0x400, 2, 8, 8, Char1PlaneOffsets, Char1XOffsets, CharYOffsets, 0x080, Gfx0, cache+0x10000);
-	GfxDecode4Bpp(0x800, 3, 8, 8, Char2PlaneOffsets, Char2XOffsets, CharYOffsets, 0x040, Gfx1, cache);
+	UINT8 *ss_cache =(UINT8 *)SS_CACHE;
+
+	GfxDecode4Bpp(0x400, 2, 8, 8, Char1PlaneOffsets, Char1XOffsets, CharYOffsets, 0x080, Gfx0, ss_cache+0x10000);
+	GfxDecode4Bpp(0x800, 3, 8, 8, Char2PlaneOffsets, Char2XOffsets, CharYOffsets, 0x040, Gfx1, ss_cache);
 	if(flipscreen)
 	{
-		rotate_tile(0x400,0,cache+0x10000);
-		rotate_tile(0x800,0,cache);
+		rotate_tile(0x400,0,ss_cache+0x10000);
+		rotate_tile(0x800,0,ss_cache);
 	}
 
-	unsigned char *cache_ptr1=(unsigned char *)(cache+0x30000);
-	unsigned char *cache_ptr2=(unsigned char *)(cache+0x10000);
-	unsigned char *cache_ptr3=(unsigned char *)(cache+0x50000);
-	unsigned char *cache_ptr4=(unsigned char *)(cache+0x00000);
+	unsigned char *cache_ptr1=(unsigned char *)(ss_cache+0x30000);
+	unsigned char *cache_ptr2=(unsigned char *)(ss_cache+0x10000);
+	unsigned char *cache_ptr3=(unsigned char *)(ss_cache+0x50000);
+	unsigned char *cache_ptr4=(unsigned char *)(ss_cache+0x00000);
 	
 	for (UINT32 i=0x00000;i<0x10000;i++ ) 
 	{
@@ -393,9 +385,9 @@ static inline void bankp_gfx_decode()
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void make_lut(void)
+inline void make_lut(void)
 {
-	UINT32 sx, sy;
+	INT32 sx, sy;
 
 	for (UINT32 i = 0; i < 0x400;i++) 
 	{
@@ -414,13 +406,13 @@ static inline void bankp_gfx_decode()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn()
+void DrvInitSaturn()
 {
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
 	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE= cache    =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -467,7 +459,7 @@ static inline void bankp_gfx_decode()
 //	Mem = NULL;
 	DrvDips=priority=flipscreen=interrupt_enable=0;
 */	
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;
@@ -479,13 +471,13 @@ inline void 	 bg_line(UINT16 offs)
 {
 	UINT32 code, color;
 	UINT32 flipx = 0xC000;
-	UINT8 *rom = &Rom[0xf800];
-	code = rom[offs];
+	UINT8 *rom = Rom+0xf800+offs;
+	code = *rom;
 	rom+=0x400;
-	code |= ((rom[offs] & 7) << 8);
-	color = (rom[offs] >> 4) & 0x0f;
+	code |= ((*rom & 7) << 8);
+	color = (*rom >> 4) & 0x0f;
 
-	if (!flipscreen) flipx = (rom[offs] & 0x08) << 11;
+	if (!flipscreen) flipx = (*rom & 0x08) << 11;
 	
 	UINT16 *map2 = (UINT16 *)&ss_map2[map_offset_lut[offs]];	
 //NBG1
@@ -515,7 +507,7 @@ inline void 	 fg_line(UINT16 offs)
 	else							map[1] = map[0x41] = map[0x1001] = map[0x1041] = code+0x1800;//2048  //0x1800
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ INT32 DrvFrame()
+/*static*/ void DrvFrame()
 {
 	memset (DrvInputs, 0, 3);
 
@@ -550,5 +542,4 @@ inline void 	 fg_line(UINT16 offs)
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}
-	return 0;
 }

@@ -739,7 +739,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 //	free (AllMem);
 //	AllMem = NULL;
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
     SCL_SET_S0PRIN(0);
 	nSoundBufferPos=0;

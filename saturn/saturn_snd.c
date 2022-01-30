@@ -39,7 +39,7 @@ void stmInit(void)
 	STM_ResetTrBuf(stm);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-StmHn stmOpen(char *fname)
+static StmHn stmOpen(char *fname)
 {
     Sint32 fid;
 	StmKey key;

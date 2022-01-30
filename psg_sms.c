@@ -74,7 +74,7 @@ FILE *psg_debug_file = NULL;
 void PSG_Init(unsigned int clock, unsigned int rate)
 {
     int i, j;
-    double out;
+    float out;
 
 #if PSG_DEBUG_LEVEL > 0
     if (psg_debug_file == NULL)
@@ -88,8 +88,8 @@ void PSG_Init(unsigned int clock, unsigned int rate)
     {
         // Step calculation
 
-        out = (double) (clock) / (double) (i << 4);        // out = frequency
-        out /= (double) (rate);
+        out = (float) (clock) / (float) (i << 4);        // out = frequency
+        out /= (float) (rate);
         out *= 65536.0;
 
         PSG_Step_Table[i] = (unsigned int) out;
@@ -99,8 +99,8 @@ void PSG_Init(unsigned int clock, unsigned int rate)
 
     for(i = 0; i < 3; i++)
     {
-        out = (double) (clock) / (double) (1 << (9 + i));
-        out /= (double) (rate);
+        out = (float) (clock) / (float) (1 << (9 + i));
+        out /= (float) (rate);
         out *= 65536.0;
 
         PSG_Noise_Step_Table[i] = (unsigned int) out;
@@ -108,7 +108,7 @@ void PSG_Init(unsigned int clock, unsigned int rate)
 
     PSG_Noise_Step_Table[3] = 0;
 
-    out = (double) MAX_OUTPUT / 3.0;
+    out = (float) MAX_OUTPUT / 3.0;
 
     for (i = 0; i < 15; i++)
     {

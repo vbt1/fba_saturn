@@ -506,7 +506,7 @@ INT32 SolomonExit()
 	}
 	pFMBuffer = NULL;
 
-	cleanDATA();
+	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos=0;
