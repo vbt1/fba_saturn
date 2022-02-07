@@ -1,12 +1,22 @@
 //#define DEBUG 1
+#ifdef DEBUG
+void errStmFunc(void *obj, int ec);
+void errGfsFunc(void *obj, int ec);
+void errPcmFunc(void *obj, int ec);
+#endif
+
+#define OPEN_MAX        24 
+#define GRP_MAX         5   
+
 #include "saturn_snd.h"
 char *itoa(int i);
 PcmHn 	pcmStream = {NULL};
 PcmCreatePara	paraStream = {.ring_size = 0, .pcm_size = 0, .ring_addr = NULL, .pcm_addr = NULL};
 //unsigned char stm_work[STM_WORK_SIZE(12, 24)] __attribute__((section("COMMON")));
-unsigned char stm_work[0x780] = {NULL};// __attribute__((section("COMMON")));
+volatile unsigned char stm_work[STM_WORK_SIZE(GRP_MAX, OPEN_MAX)]; __attribute__((section("COMMON")));
 StmHn stm = NULL;
 static StmGrpHn grp_hd = NULL;
+static StmHn stmOpen(char *fname);
 SFX *sfx_list = NULL;
 /*
 void vout(char *string, char *fmt, ...)                                         
@@ -20,7 +30,11 @@ void vout(char *string, char *fmt, ...)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void stmInit(void)
 {
-	STM_Init(12, 24, stm_work);
+	if (STM_Init(GRP_MAX, OPEN_MAX, stm_work)==FALSE)
+	{
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"STM_Init",70,140);		
+			while(1);	
+	}
 //	STM_Init(4, 20, stm_work);
 //	STM_Init(1, 2, stm_work);
 #ifdef DEBUG
@@ -30,7 +44,8 @@ void stmInit(void)
 #endif
 	grp_hd = STM_OpenGrp();
 	if (grp_hd == NULL) {
-		return;
+			FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"STM_OpenGrp",70,140);
+		while(1);
 	}
 	STM_SetLoop(grp_hd, STM_LOOP_DFL, STM_LOOP_ENDLESS);
 	STM_SetExecGrp(grp_hd);
@@ -41,7 +56,7 @@ void stmInit(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 static StmHn stmOpen(char *fname)
 {
-    Sint32 fid;
+    int fid;
 	StmKey key;
 
     fid = GFS_NameToId((Sint8 *)fname);
@@ -57,7 +72,7 @@ void stmClose(StmHn fp)
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifdef DEBUG
-void errStmFunc(void *obj, Sint32 ec)
+void errStmFunc(void *obj, int ec)
 {
 	char texte[50];
 	sprintf(texte, "ErrStm %X %X",obj, ec); 
@@ -70,7 +85,7 @@ void errStmFunc(void *obj, Sint32 ec)
 	}while(1);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void errGfsFunc(void *obj, Sint32 ec)
+void errGfsFunc(void *obj, int ec)
 {
 	char texte[50];
 	sprintf(texte, "ErrGfs %X %X",obj, ec); 
@@ -79,7 +94,7 @@ void errGfsFunc(void *obj, Sint32 ec)
 //	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"planté gfs",70,130);
 	FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)texte,70,140);
 
-    Sint32      ret;
+    int      ret;
     GfsErrStat  stat;
     GFS_GetErrStat(&stat);
     ret = GFS_ERR_CODE(&stat);
@@ -93,7 +108,7 @@ void errGfsFunc(void *obj, Sint32 ec)
 	}while(1);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void errPcmFunc(void *obj, Sint32 ec)
+void errPcmFunc(void *obj, int ec)
 {
 //	VTV_PRINTF((VTV_s, "S:ErrPcm %X %X\n", obj, ec));
 	char texte[50];
@@ -293,7 +308,7 @@ void PlayStreamPCM(unsigned char d, unsigned char current_pcm)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void playMusic(PcmHn *hn)
 {
-	 Sint32 stat;
+	 int stat;
 	// wrong !
 #ifdef DEBUG
 	PcmWork		*work = *(PcmWork **)hn;

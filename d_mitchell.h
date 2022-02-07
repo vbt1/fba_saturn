@@ -23,7 +23,7 @@ UINT16 *cram_lut = NULL; //[4096];
 unsigned char 	color_dirty = 0;
 unsigned char current_pcm=255;
 
-//#define nBurnSoundLen 128
+#define nBurnSoundLen 128
 
 static SFX sfx_pang[50] = {
 /*000.pcm*/{0,PCM_000_SIZE,10},

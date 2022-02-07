@@ -24,7 +24,7 @@ TARGET1  = root/sl.bin
 LDFILE	 = ./$(TARGET:.elf=.lnk)
 MPFILE     = $(TARGET:.elf=.maps)
 LDFLAGS = $(LDCMNFLAGS2) -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
-SRCS       = saturn/low.s burn.c saturn/font.c saturn/file.c saturn/saturn.c 
+SRCS       = saturn/low.s burn.c saturn/font.c saturn/file.c saturn/saturn.c  saturn/pcmsys2.c 
 OBJS2     = saturn/strt1_vbt.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 #OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 
@@ -76,8 +76,9 @@ OVLMITCH                 = root/d_mitch.elf
 OVLMITCH1               = root/d_mitch.bin
 MPOVLMITCHFILE    = $(OVLMITCH:.elf=.maps)
 LDOVLMITCHFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMITCHFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c snd/msm6295.c eeprom.c load.c saturn/ovl.c saturn/pcmsys2.c saturn/pcmstm.c
-#saturn/saturn_snd.c 
+#SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c snd/msm6295.c eeprom.c load.c saturn/ovl.c saturn/pcmsys2.c saturn/pcmstm.c 
+SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c snd/msm6295.c eeprom.c load.c saturn/ovl.c saturn/pcmstm.c 
+#SRCOVLMITCH         = d_mitchell.c czet.c cz80/cz80.c kabuki.c snd/msm6295.c eeprom.c load.c saturn/ovl.c saturn/saturn_snd.c 
 #saturn/pcmsys.c
 OBJOVLMITCH         = $(SRCOVLMITCH:.c=.o)
 
@@ -288,15 +289,10 @@ OBJOVLJEDI         = $(SRCOVLJEDI:.c=.o)
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
-../../SBL62/SEGALIB/LIB/elf/sega_gfs.a \
+../../SBL6/SEGALIB/LIB/elf/sega_gfs.a \
 ../../SBL6/SEGALIB/SPR/vbtelf4/spr_slv.o \
 ../../SBL6/SEGALIB/LIB/vbtelf4/sega_int.a \
-../../SBL6/SEGALIB/LIB/vbtelf4/cdcrep.a \
-../../SBL6/SEGALIB/PCM/vbtelf4/pcm_lib.o \
-../../SBL6/SEGALIB/PCM/vbtelf4/pcm_mp.o ../../SBL6/SEGALIB/PCM/vbtelf4/pcm_audi.o \
-../../SBL6/SEGALIB/PCM/vbtelf4/pcm_drv.o ../../SBL6/SEGALIB/PCM/vbtelf4/pcm_time.o \
-../../SBL6/SEGALIB/PCM/vbtelf4/pcm_etc.o ../../SBL6/SEGALIB/PCM/vbtelf4/pcm_aif.o \
-../../SBL6/SEGALIB/PCM/vbtelf4/pcm_gfs.o
+../../SBL6/SEGALIB/LIB/vbtelf4/cdcrep.a 
 
  LIBSTM = ../../SBL6/SEGALIB/PCM/vbtelf4/pcm_stm.o ../../SBL6/SEGALIB/LIB/vbtelf4/sega_stm.a ../../SBL6/SEGALIB/LIB/vbtelf4/sega_dma.a
 
@@ -319,6 +315,9 @@ drv:  $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSMS) $(OVLSMS1) $(OVLGGCZ) $(OVLGGCZ1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) 	 
 
+img: $(OVLIMG)  $(OVLIMG1)
+
+mitch: $(OVLMITCH) $(OVLMITCH1)
 
 # Use gcc to link so it will automagically find correct libs directory
 

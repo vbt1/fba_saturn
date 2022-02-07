@@ -2,6 +2,10 @@
 
 #include "saturn/saturn.h" // ok
 
+#ifdef PONY
+#include "saturn/pcmsys2.h"
+#endif
+
 //#include "sc_saturn.h"
 //#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
@@ -23,6 +27,7 @@ extern SysPort	*__port; // __attribute__((section("COMMON")));
 static trigger_t	pltrigger[2],pltriggerE[2];
 extern unsigned char play;
 Uint32 SclColRamAlloc256[8];
+
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void	UsrVblankIn( void )
 {
@@ -33,6 +38,8 @@ static void	UsrVblankIn( void )
 
 #ifndef PONY
 	PCM_MeVblIn();
+#else
+//	sdrv_stm_vblank_rq();	
 #endif	
 	SCL_ScrollShow();
 
@@ -189,6 +196,13 @@ inline void initSound()
 //		return;
 //	}
 	PCM_Start(pcm);
+#else
+#include "sega_int.h"
+//	sound_external_audio_enable(5, 5);
+	load_drv(ADX_MASTER_2304);
+
+//wait_vblank();
+//	pcm_stream_init(SOUNDRATE, PCM_TYPE_16BIT);		
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1013,7 +1027,6 @@ void SPR_SetEraseData(Uint16 eraseData, Uint16 leftX, Uint16 topY,Uint16 rightX,
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-
 void SND_Init(SndIniDt *sys_ini)
 {
 #ifndef PONY	
@@ -1051,14 +1064,13 @@ void SND_Init(SndIniDt *sys_ini)
 /* 1994/02/24 End */
 
     PER_SMPC_SND_ON();                          /* サウンドON                */
+
 #endif
-
 }
-
 //-------------------------------------------------------------------------------------------------------------------------------------
 Uint8 SND_ChgMap(Uint8 area_no)
  {
-#ifndef PONY	 
+#ifndef PONY
 /* 1994/02/24 Start */
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
@@ -1105,6 +1117,7 @@ static void sndInit(void)
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifndef PONY
 static PcmHn createHandle(PcmCreatePara *para)
 {
 	PcmHn pcm;
@@ -1120,10 +1133,11 @@ static PcmHn createHandle(PcmCreatePara *para)
 #endif
 	return pcm;
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
+	#ifndef PONY
 SndRet SND_ChgPcm(SndPcmChgPrm *cprm)
 {
-	#ifndef PONY
 /* 1994/02/24 Start */
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
@@ -1137,8 +1151,8 @@ SndRet SND_ChgPcm(SndPcmChgPrm *cprm)
     SET_PRM(5, (SND_L_EFCT_IN(*cprm) << 3) | SND_L_EFCT_LEV(*cprm));
     SET_COMMAND(COM_CHG_PCM_PRM);               /* コマンドセット            */
     HOST_SET_RETURN(SND_RET_SET);
-	#endif
 }
+
 //-------------------------------------------------------------------------------------------------------------------------------------
 static Uint8 GetComBlockAdr(void)
 {
@@ -1175,10 +1189,11 @@ static Uint16 ChgPan(SndPan pan)
 {
     return(((pan) < 0) ? (~(pan) + 0x10 + 1) : (pan));
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifndef PONY
 SndRet SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm)
 {
-#ifndef PONY	
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
 /* 1994/02/24 End */
@@ -1196,12 +1211,11 @@ SndRet SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm)
     SET_PRM(11, 0);
     SET_COMMAND(COM_START_PCM);                 /* コマンドセット            */
     HOST_SET_RETURN(SND_RET_SET);
-#endif	
+
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 SndRet SND_StopPcm(SndPcmNum pcm_num)
 {
-#ifndef PONY	
 /* 1994/02/24 Start */
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
@@ -1210,9 +1224,8 @@ SndRet SND_StopPcm(SndPcmNum pcm_num)
     SET_PRM(0, pcm_num);                        /* パラメータセット          */
     SET_COMMAND(COM_STOP_PCM);                  /* コマンドセット            */
     HOST_SET_RETURN(SND_RET_SET);
-#endif	
 }
-
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 #define CSH_CCR			(*(volatile Uint8 * )0xfffffe92)	/*	ｷｬｯｼｭｺﾝﾄﾛｰﾙﾚｼﾞｽﾀｱﾄﾞﾚｽ	*/
 
@@ -1679,10 +1692,10 @@ inline void do_keypad(unsigned int key[])
 		InpInit();
 		InpDIP();
 		play = 1;
-
+#ifndef PONY
 		PCM_MeSetVolume(pcm,255);
 		PCM_DrvChangePcmPara(pcm,-1,-1);
-
+#endif
 	//	PER_SMPC_SND_ON();
 //		SetVblank(); // a garder
 // vbt 23/04/2020 : ne devrait pas servir
@@ -1698,8 +1711,8 @@ inline void do_keypad(unsigned int key[])
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 		else
@@ -1711,8 +1724,8 @@ inline void do_keypad(unsigned int key[])
 				_spr2_transfercommand();
 				frame_x++;
 
-				 if(frame_x>=frame_y)
-					wait_vblank();
+//				 if(frame_x>=frame_y)
+//					wait_vblank();
 			}
 		}
 	}
