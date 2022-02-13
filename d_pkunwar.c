@@ -5,6 +5,16 @@
 #include "d_pkunwar.h"
 #define nInterleave 256
 
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+#endif
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -722,14 +732,14 @@ inline void MemIndex()
 	DrvGfxROM0	= Next; Next += 0x020000;
 	DrvColPROM  = Next; Next += 0x000020;
 	
-	pFMBuffer	= (short *)Next; Next += SOUND_LEN * 6 * sizeof(short);
+	pFMBuffer	= (short *)Next; Next += nBurnSoundLen * 6 * sizeof(short);
 
-	pAY8910Buffer[0] = pFMBuffer + SOUND_LEN * 0;
-	pAY8910Buffer[1] = pFMBuffer + SOUND_LEN * 1;
-	pAY8910Buffer[2] = pFMBuffer + SOUND_LEN * 2;
-	pAY8910Buffer[3] = pFMBuffer + SOUND_LEN * 3;
-	pAY8910Buffer[4] = pFMBuffer + SOUND_LEN * 4;
-	pAY8910Buffer[5] = pFMBuffer + SOUND_LEN * 5;
+	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
+	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
+	pAY8910Buffer[2] = pFMBuffer + nBurnSoundLen * 2;
+	pAY8910Buffer[3] = pFMBuffer + nBurnSoundLen * 3;
+	pAY8910Buffer[4] = pFMBuffer + nBurnSoundLen * 4;
+	pAY8910Buffer[5] = pFMBuffer + nBurnSoundLen * 5;
 	
 	offs_lut = (UINT16 *)Next; Next += 0x400 * (sizeof(UINT16));
 	map_lut  = (UINT16 *)Next; Next += 0x400 * (sizeof(UINT16));
@@ -1227,6 +1237,25 @@ inline void initColors()
 	SCL_AllocColRam(SCL_NBG2,OFF);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef PONY
+/*
+extern SclLineparam lp;
+
+static void SCL_SetLineParamNBG0(SclLineparam *lp)
+{
+	Uint32	*addr;
+	addr = &Scl_n_reg.lineaddr[0];
+	*addr = (lp->line_addr >>1) & 0x0007ffff;
+	SclProcess = 2; //obligatoire
+}*/
+//-------------------------------------------------------------------------------------------------------------------------------------
+void vbl()
+{
+//	SCL_SetLineParamNBG0(&lp);
+	sdrv_stm_vblank_rq();
+}
+#endif	
+//-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn(INT32 i)
 {
 	cleanSprites();
@@ -1272,6 +1301,15 @@ void DrvInitSaturn(INT32 i)
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 	
 	MemIndex();
+	
+#ifdef PONY
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+	frame_x	= 0;
+	nBurnFunction = vbl;	
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 int DrvExit()
@@ -1305,6 +1343,9 @@ int DrvExit()
 */
 //	memset(cram_lut,0x00,256*sizeof(UINT16));
 //	wait_vblank();
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif	
 
 	//cleanDATA();
 	cleanBSS();
@@ -1377,7 +1418,20 @@ inline void DrvDraw()
 	DrawChars(1,(Uint16 *)SCL_VDP2_VRAM_A0);
 }
 
+#ifdef PONY
+void NovaFrame_old();
+
 void NovaFrame()
+{
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(NovaFrame_old);
+}
+
+void NovaFrame_old()
+#else
+void NovaFrame()
+#endif
 {
 	watchdog++;
  	SPR_RunSlaveSH((PARA_RTN*)updateSound, NULL);
@@ -1408,11 +1462,8 @@ void NovaFrame()
 	}
 
 	vblank = 0;
-//	UINT32 nInterleave = 256;
 
 	UINT32 nCyclesTotal = 3000000 / 60 / nInterleave;
-
-
 
 	CZetOpen(0);
 	for (UINT32 i = 0; i < nInterleave; i++) 
@@ -1430,7 +1481,11 @@ void NovaFrame()
 	ss_reg->n2_move_y =  yscroll+32 ;
 	nova_draw_sprites();
 
-//	SPR_WaitEndSlaveSH();
+#ifdef PONY
+	_spr2_transfercommand();
+	SclProcess = 1;	
+	frame_x++;
+#endif	
 }
 /*
 void DrvPalRAMUpdate()
@@ -1453,7 +1508,20 @@ void DrvPalRAMUpdate()
 */
 
 
+#ifdef PONY
+void DrvFrame_old();
+
 void DrvFrame()
+{
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+void DrvFrame()
+#endif
 {
 /*
 	memset (DrvInputs, 0xff, 2);
@@ -1482,6 +1550,10 @@ void DrvFrame()
 	DrvDraw();
 	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
+#ifdef PONY
+	_spr2_transfercommand();
+	frame_x++;
+#endif	
 }
 
 inline void NinjakunDraw()
@@ -1494,8 +1566,20 @@ inline void NinjakunDraw()
 //0x100
 //0x400
 //0x400
+#ifdef PONY
+void NinjakunFrame_old();
 
 void NinjakunFrame()
+{
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(NinjakunFrame_old);
+}
+
+void NinjakunFrame_old()
+#else
+void NinjakunFrame()
+#endif
 {
 	watchdog++;
 
@@ -1560,6 +1644,12 @@ void NinjakunFrame()
 
 	}
 	NinjakunDraw();
+	
+#ifdef PONY
+	_spr2_transfercommand();
+	SclProcess = 1;
+	frame_x++;
+#endif	
 }
 #if 0
 INT32 Raiders5Frame()
@@ -1650,8 +1740,7 @@ void pkunwar_draw_sprites()
 		DrvSprRAMptr+=32;		
 	}
 }
-#endif
-/*
+
 INT32 Raiders5Draw()
 {
 	pkunwar_draw_sprites();
@@ -1659,7 +1748,8 @@ INT32 Raiders5Draw()
 	ss_reg->n2_move_y =  yscroll+32 ;
 	return 0;
 }
-*/
+#endif
+
 void nova_draw_sprites()
 {
 	SprSpCmd *ss_spritePtr;	
@@ -1705,15 +1795,19 @@ void updateSound()
 	int nSample;
 	unsigned int deltaSlave;//soundLenSlave;//,titiSlave;
 	deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	signed short *nSoundBuffer = (signed short *)0x25a20000+deltaSlave;	
+
 //	deltaSlave    = nSoundBufferPos;
 
-//	soundLenSlave = SOUND_LEN);
+//	soundLenSlave = nBurnSoundLen);
 
-	AY8910Update(0, &pAY8910Buffer[0], SOUND_LEN);
-	AY8910Update(1, &pAY8910Buffer[3], SOUND_LEN);
 
-	for (UINT16 n = 0; n < SOUND_LEN; n++) 
+#ifndef PONY
+	signed short *nSoundBuffer = (signed short *)0x25a20000+deltaSlave;	
+	
+	AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
+	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
+
+	for (UINT16 n = 0; n < nBurnSoundLen; n++) 
 	{
 		nSample  = pAY8910Buffer[0][n]; // >> 2;
 		nSample += pAY8910Buffer[1][n]; // >> 2;
@@ -1733,7 +1827,34 @@ void updateSound()
 		deltaSlave=0;
 	}
 
-	deltaSlave+=SOUND_LEN;
+	deltaSlave+=nBurnSoundLen;
+#else
+	AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
+	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);	
+
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+deltaSlave;
+
+	for (UINT16 n = 0; n < nBurnSoundLen; n++) 
+	{
+		nSample  = pAY8910Buffer[0][n]; // >> 2;
+		nSample += pAY8910Buffer[1][n]; // >> 2;
+		nSample += pAY8910Buffer[2][n]; // >> 2;
+		nSample += pAY8910Buffer[3][n]; // >> 2;
+		nSample += pAY8910Buffer[4][n]; // >> 2;
+		nSample += pAY8910Buffer[5][n]; // >> 2;
+		nSample /=4;
+		
+		*nSoundBuffer2++ = BURN_SND_CLIP(nSample);//pAY8910Buffer[5][n];//nSample;
+	}
+	
+	deltaSlave+=(nBurnSoundLen*2);
+	
+	if(deltaSlave>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		deltaSlave=0;
+	}	
+#endif
 //	nSoundBufferPos = deltaSlave;
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }

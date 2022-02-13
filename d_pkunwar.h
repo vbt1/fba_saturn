@@ -6,7 +6,9 @@
 #include "saturn/ovl.h"
 #include "czet.h"
 
-#define SOUND_LEN 128
+#define nBurnSoundLen 128
+#define SOUNDRATE   7680L
+
 void dummy();
 inline void make_nova_lut();
 void updateSound();

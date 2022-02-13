@@ -541,7 +541,7 @@ void DrvFrame()
 
 void DrvFrame_old()
 #else
-/*static*/ void DrvFrame()
+void DrvFrame()
 #endif
 {
 	memset (DrvInputs, 0, 3);

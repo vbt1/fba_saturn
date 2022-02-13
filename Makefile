@@ -69,7 +69,7 @@ OVLPKUNW                 = root/d_pkunw.elf
 OVLPKUNW1               = root/d_pkunw.bin
 MPOVLPKUNWFILE    = $(OVLPKUNW:.elf=.maps)
 LDOVLPKUNWFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPKUNWFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLPKUNW         = d_pkunwar.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c
+SRCOVLPKUNW         = d_pkunwar.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLPKUNW         = $(SRCOVLPKUNW:.c=.o)
 
 OVLMITCH                 = root/d_mitch.elf
