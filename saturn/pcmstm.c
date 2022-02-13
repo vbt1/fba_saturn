@@ -130,6 +130,13 @@ short	add_raw_pcm_buffer(bool is8Bit, short sampleRate, int size)
 	return (numberPCMs-1); //Return the PCM # this sound received
 }
 
+void remove_raw_pcm_buffer(short pcmnum)
+{
+	int size = (m68k_com->pcmCtrl[pcmnum].bitDepth==PCM_TYPE_8BIT) ? m68k_com->pcmCtrl[pcmnum].playsize : m68k_com->pcmCtrl[pcmnum].playsize<<1;
+	scsp_load = (unsigned int *)((unsigned int )scsp_load - size);
+	numberPCMs--;	
+}
+
 /*
 	This function adds an ADX entry to the PCM CTRL list and allocates an 18KB front-buffer in sound RAM to play it back from.
 	This is used for ADX streams only.  (Normal ADX sound effects do not use or need this)

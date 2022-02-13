@@ -9,7 +9,9 @@
 //#include "saturn/sc_saturn.h"
 //#include "psg.h"
 
-#define SOUND_LEN 128
+#define nBurnSoundLen 128
+#define SOUNDRATE   7680L
+
 void dummy();
 inline void initColors();
 void NewsFrame();

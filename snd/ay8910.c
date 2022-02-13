@@ -16,6 +16,7 @@
 #define MAX_OUTPUT 0x4fff
 
 #define STEP 0x8000
+#define nBurnSoundLen 128
 
 // void (*AYStreamUpdate)(void) = NULL;
 
@@ -594,16 +595,16 @@ void AY8910Update(int chip, signed short **buffer, int length)
 
 #define OPEN_CSH_VAR(a) (((int)&a | 0x20000000))
 
-void AY8910UpdateDirect(int chip, signed short *buffer, int length)
+void AY8910UpdateDirect(int chip, signed short *buf1, signed short *buf2, signed short *buf3, int length)
 {
 	struct AY8910 *PSG = &AYPSG[chip];
 //	struct AY8910 *PSG = OPEN_CSH_VAR(AYPSG[chip]);
-	signed short *buf1,*buf2,*buf3;
+//	signed short *buf1,*buf2,*buf3;
 	int outn;
 
-	buf1 = (signed short *)buffer;
-	buf2 = (signed short *)buffer+0x04000;
-	buf3 = (signed short *)buffer+0x08000;
+//	buf1 = (signed short *)buffer[0]+position;
+//	buf2 = (signed short *)buffer[1]+position;
+//	buf3 = (signed short *)buffer[2]+position;
 
 	/* The 8910 has three outputs, each output is the mix of one of the three */
 	/* tone generators and of the (single) noise generator. The two are mixed */

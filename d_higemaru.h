@@ -26,7 +26,7 @@ PcmHn 			pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 #define SOUNDRATE   7680L
 void dummy();
 static int DrvGfxDecode();
-static int DrvFrame();
+void DrvFrame();
 static int DrvExit();
 static int DrvInit();
 static void Set6PCM();

@@ -5,6 +5,16 @@
  
  #include "d_higemaru.h"
 
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm[6];
+Sint16 *nSoundBuffer[32];
+extern unsigned int frame_x;
+#endif
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -369,9 +379,15 @@ for (i = 0; i < 0x80; i+=4)
 	initColors();
 //	memset(bg_dirtybuffer,1,1024);
 	initSprites(256+8-1,224-1,0,0,8,-16);
+
+	drawWindow(0,224,0,2,62);
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = sdrv_stm_vblank_rq;
+#else
 	PCM_MeStop(pcm);
-	Set6PCM();
-	drawWindow(0,224,0,2,62); 
+	Set6PCM();	
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/  int DrvExit()
@@ -389,16 +405,22 @@ for (i = 0; i < 0x80; i+=4)
 	AY8910Exit(1);
 	AY8910Exit(0);
 
-	for(unsigned int i=0;i<6;i++)
-	{
-		PCM_MeStop(pcm6[i]);
-		PCM_DestroyMemHandle(pcm6[i]);
-	}
 	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
 	
 	CZ80Context = MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
 	map_offset_lut = NULL;
-
+#ifdef PONY
+	for(unsigned int i=0;i<6;i++)
+	{
+		remove_raw_pcm_buffer(pcm[i]);
+	}
+#else
+	for(unsigned int i=0;i<6;i++)
+	{
+		PCM_MeStop(pcm6[i]);
+		PCM_DestroyMemHandle(pcm6[i]);
+	}	
+#endif
 	//cleanDATA();
 	cleanBSS();
 
@@ -453,8 +475,27 @@ for (i = 0; i < 0x80; i+=4)
 // 	return 0;
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef PONY
+void DrvFrame_old();
 
-/*static*/  int DrvFrame()
+void DrvFrame()
+{
+
+	for (unsigned int i=0;i<6;i++)
+	{
+		pcm[i] = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20*2);
+		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
+	}
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+ void DrvFrame()
+ #endif
 {
 //	if (DrvReset) {
 //		DrvDoReset();
@@ -491,13 +532,16 @@ for (i = 0; i < 0x80; i+=4)
 	DrvDrawSprites();
 if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
 	SPR_WaitEndSlaveSH();
-//	sc_check();
-	return 0;
+#ifdef PONY
+	_spr2_transfercommand();
+	frame_x++;	
+#endif	
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void updateSound()
+void updateSound()
 {
+#ifndef PONY	
 	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+nSoundBufferPos;
 
 	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
@@ -513,7 +557,25 @@ if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
 		}
 		nSoundBufferPos=0;
 	}
+#else
+//	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer[0]+(nSoundBufferPos<<1);
+//	signed short *nSoundBuffer3 = (signed short *)nSoundBuffer[3]+(nSoundBufferPos<<1);
+	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos<<1], &nSoundBuffer[pcm[1]][nSoundBufferPos<<1], &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
+	AY8910UpdateDirect(1, &nSoundBuffer[pcm[3]][nSoundBufferPos<<1], &nSoundBuffer[pcm[4]][nSoundBufferPos<<1],&nSoundBuffer[pcm[5]][nSoundBufferPos<<1], nBurnSoundLen);
+	nSoundBufferPos+=nBurnSoundLen;
+
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+	//	int i=0;
+		for (unsigned int i=0;i<6;i++)
+		{
+			pcm_play(pcm[i], PCM_SEMI, 7);
+		}
+		nSoundBufferPos=0;
+	}		
+#endif	
 }
+#ifndef PONY
 //-------------------------------------------------------------------------------------------------------------------------------------
 static PcmHn createHandle(PcmCreatePara *para)
 {
@@ -565,3 +627,4 @@ static void Set6PCM()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#endif

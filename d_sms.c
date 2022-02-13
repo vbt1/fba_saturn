@@ -1,13 +1,23 @@
 #include    "machine.h"
 #include "d_sms.h"
 #define OLD_SOUND 1
-#define SAMPLE 7680L
+#define SOUNDRATE 7680L
 #define TWO_WORDS 1
 #define MAX_DIR 384*2
 //GfsDirName dir_name_sms[512];
 #ifdef GG0
 unsigned char *disp_spr = NULL;
 unsigned char curr_sprite=0;
+#endif
+
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
 #endif
 
 /* Attribute expansion table */
@@ -111,7 +121,8 @@ static void	SetVblank2( void )
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifndef OLD_SOUND
  void sh2slave(unsigned int *nSoundBufferPosN)
-{
+{xxxx
+#ifndef PONY	
 	volatile signed short *nSoundBuffer = (signed short *)SOUND_BUFFER;
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos],  128);
 //	PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
@@ -122,6 +133,9 @@ static void	SetVblank2( void )
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
+#else
+	yyyyyyyyyyyyyyyyyyyyyy
+#endif
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -217,6 +231,27 @@ inline  void SaturnInitMem()
 	CZ80Context	= Next; Next += sizeof(cz80_struc);
 	sms256kbRom	= Next;
 }
+
+#ifdef PONY
+extern SclLineparam lp;
+
+static void SCL_SetLineParamNBG0(SclLineparam *lp)
+{
+	Uint32	*addr;
+	addr = &Scl_n_reg.lineaddr[0];
+	*addr = (lp->line_addr >>1) & 0x0007ffff;
+	SclProcess = 2; //obligatoire
+}
+
+void vbl()
+{
+	update_input1();
+//	sdrv_vblank_rq();
+	SCL_SetLineParamNBG0(&lp);
+	sdrv_stm_vblank_rq();
+}
+#endif	
+
 //-------------------------------------------------------------------------------------------------------------------------------------
  void DrvInitSaturn()
 {
@@ -270,7 +305,13 @@ inline  void SaturnInitMem()
 		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" ",0,180);	
 
 //	drawWindow(32,192,192,14,52);
+#ifndef PONY
 	nBurnFunction = update_input1;
+#else
+	frame_x	= 0;
+	nBurnFunction = vbl;	
+#endif
+
 #ifdef GG
 	drawWindow(48,144,144,12,76);
 #else
@@ -280,6 +321,12 @@ inline  void SaturnInitMem()
 #ifndef OLD_SOUND
 //	SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
 #endif
+
+#ifdef PONY2
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+#endif
+
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
  void sms_start()
@@ -395,6 +442,11 @@ inline  void SaturnInitMem()
 	memset(ss_scl,0x00,192*4);
 //	vram_dirty =  NULL;
 #endif
+
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
+
 	running = 0;
 	first = 0;
 	vsynch = 0;
@@ -410,7 +462,24 @@ inline  void SaturnInitMem()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef PONY
+void SMSFrame_old();
+
+void SMSFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(SMSFrame_old);
+}
+
+void SMSFrame_old()
+#else
  void SMSFrame(void)
+ #endif
 {
 #ifdef GG0
 	cleanSpritesGG();
@@ -428,6 +497,7 @@ inline  void SaturnInitMem()
 #ifdef OLD_SOUND //
 		sms_frame();
 
+#ifndef PONY
 	volatile signed short *nSoundBuffer = (signed short *)SOUND_BUFFER;
 //	PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos],  128);
@@ -438,6 +508,19 @@ inline  void SaturnInitMem()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
+#else
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
+
+	SN76496Update(0, nSoundBuffer2, nBurnSoundLen);
+	
+	nSoundBufferPos+=nBurnSoundLen;
+	
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos=0;
+	}
+#endif	
 
  #else
 		SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
@@ -468,9 +551,13 @@ inline  void SaturnInitMem()
 #endif	
 		sms_start();
 	}
+#ifdef PONY
+	frame_x++;	
+#endif
+	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void sms_frame(void)
+/*static*/inline void sms_frame(void)
 {
 #if PROFILING
 //		TIM_FRT_SET_16(0);

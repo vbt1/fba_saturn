@@ -2,12 +2,22 @@
 // a la limite en meme temps essayer de de pas remplir l'image de fond si un puyo est affiché dessus
 // FB Alpha - "News" Driver
 #define CZ80 1
+#define PONY
 //#define RAZE 1
 #define SC_RELEASE 1
 #define CACHE2 1
 #define CACHE 1
 #include "d_news.h"
 
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+#endif
+ 
+ 
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -348,6 +358,14 @@ inline void initColors()
 	colBgAddr2=(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef PONY
+void vbl()
+{
+//	sdrv_vblank_rq();
+	sdrv_stm_vblank_rq();
+}
+#endif
+//-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
@@ -369,7 +387,10 @@ void DrvInitSaturn()
 	initPosition();
 	initColors();
 
-//	drawWindow(0,240,0,0,64);
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = vbl;	
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 int NewsExit()
@@ -476,9 +497,25 @@ void NewsRenderFgLayer()
 	}
 
 }
+#ifdef PONY
+void NewsFrame_old();
 
+void NewsFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(NewsFrame_old);
+}
+
+void NewsFrame_old()
+#else
 // Frame Function
 void NewsFrame()
+#endif
 {
 
 //	if (NewsReset) NewsDoReset();
@@ -502,6 +539,8 @@ void NewsFrame()
 
 	SPR_RunSlaveSH((PARA_RTN*)NewsRenderFgLayer, NULL);
 //	NewsRenderBgLayer();
+
+#ifndef PONY
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	MSM6295RenderVBT(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 	nSoundBufferPos+=SOUND_LEN;
@@ -512,5 +551,21 @@ void NewsFrame()
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}
+#else
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
+
+	MSM6295RenderVBT(0, &nSoundBuffer2[nSoundBufferPos], nBurnSoundLen);
+	
+	nSoundBufferPos+=nBurnSoundLen;
+	
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos=0;
+	}
+	
+//	SclProcess = 1;
+	frame_x++;
+#endif	
 	SPR_WaitEndSlaveSH();  
 }

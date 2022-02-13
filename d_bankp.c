@@ -1,11 +1,19 @@
 // FB Alpha Bank Panic Driver Module
 // Based on MAME driver by Nicola Salmoria
-
+#define PONY
 //#define CZ80 1
 #define RAZE 1
 #define CACHE 1
 #define nCyclesTotal 2578000 / 60
 #include "d_bankp.h"
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+#endif
  
 int ovlInit(char *szShortName)
 {
@@ -42,7 +50,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/ INT32 DrvChInit()
+INT32 DrvChInit()
 {
 	DrvInit();
 	ss_reg->n2_move_y =  0;//(0<<16) ;
@@ -430,6 +438,11 @@ void DrvInitSaturn()
 	initPosition();
 	initColors();
 	drawWindow(0,224,240,6,66);
+	
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = sdrv_stm_vblank_rq;	
+#endif	
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -459,6 +472,10 @@ void DrvInitSaturn()
 //	Mem = NULL;
 	DrvDips=priority=flipscreen=interrupt_enable=0;
 */	
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
+
 	//cleanDATA();
 	cleanBSS();
 
@@ -507,7 +524,25 @@ inline void 	 fg_line(UINT16 offs)
 	else							map[1] = map[0x41] = map[0x1001] = map[0x1041] = code+0x1800;//2048  //0x1800
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+
+#ifdef PONY
+void DrvFrame_old();
+
+void DrvFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
 /*static*/ void DrvFrame()
+#endif
 {
 	memset (DrvInputs, 0, 3);
 
@@ -527,7 +562,9 @@ inline void 	 fg_line(UINT16 offs)
 	CZetRun(nCyclesTotal);
 	if (interrupt_enable) CZetNmi();
 //	CZetClose();
-#endif	
+#endif
+
+#ifndef PONY	
 	signed short *nSoundBuffer = (signed short *)0x25a20000;
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
 	SN76496Update(1, &nSoundBuffer[nSoundBufferPos], SOUND_LEN);
@@ -542,4 +579,22 @@ inline void 	 fg_line(UINT16 offs)
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}
+#else
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
+
+	SN76496Update(0, &nSoundBuffer2[nSoundBufferPos], nBurnSoundLen);
+	SN76496Update(1, &nSoundBuffer2[nSoundBufferPos], nBurnSoundLen);
+	SN76496Update(2, &nSoundBuffer2[nSoundBufferPos], nBurnSoundLen);
+	
+	nSoundBufferPos+=nBurnSoundLen;
+	
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos=0;
+	}
+	
+	SclProcess = 1;
+	frame_x++;
+#endif	
 }

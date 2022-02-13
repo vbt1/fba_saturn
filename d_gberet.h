@@ -7,7 +7,9 @@
 #include "saturn/ovl.h"
 #include "raze/raze.h"
 
-#define SOUND_LEN 256
+#define nBurnSoundLen 128
+#define SOUNDRATE   7680L
+
 /*static*/ void DrvFrame();
 void DrvDraw();
 /*static*/ INT32 DrvExit();

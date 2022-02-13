@@ -12,6 +12,10 @@
 
 #include "saturn/pcmstm.h"
 #include <sega_sys.h>
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+
 //--------------------------------------------------------------------------------------------------------------------------------------
  void sound_external_audio_enable(Uint8 vol_l, Uint8 vol_r) {
     volatile Uint16 *slot_ptr;
@@ -936,6 +940,10 @@ int DrvExit()
 //	free(Mem);
 //	Mem = NULL;
 */
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
+
 #ifdef LOOP
 	bg_dirtybuffer = NULL;
 #endif
@@ -1058,8 +1066,6 @@ void DrvDraw()
 
 #ifdef PONY
 void DrvFrame_old();
-int pcm1=-1;
-Sint16 *nSoundBuffer=NULL;
 
 void DrvFrame()
 {

@@ -5,7 +5,8 @@
 #include "burnint.h"
 #include "saturn/ovl.h"
 #include "raze/raze.h"
-#define SOUND_LEN 256
+#define nBurnSoundLen 128
+#define SOUNDRATE   7680L
 
 //UINT8 *MemEnd = NULL;
 UINT16 *map_offset_lut = NULL;

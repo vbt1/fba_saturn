@@ -40,7 +40,7 @@ OVERLAY	       = root/d_bankp.elf
 OVERLAY1     = root/d_bankp.bin
 MPOVLFILE    = $(OVERLAY:.elf=.maps)
 LDOVLFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFILE) -Xlinker -e -Xlinker 0x060DE000 -nostartfiles
-SRCOVL         = d_bankp.c snd/sn76496.c load.c saturn/ovl.c
+SRCOVL         = d_bankp.c snd/sn76496.c load.c saturn/ovl.c saturn/pcmstm.c 
 #SRCOVL         = d_bankp.c czet.c cz80/cz80.c snd/sn76496.c saturn/ovl.c
 OBJOVL         = $(SRCOVL:.c=.o)
 
@@ -48,21 +48,21 @@ OVLNEWS                 = root/d_news.elf
 OVLNEWS1               = root/d_news.bin
 MPOVLNEWSFILE    = $(OVLNEWS:.elf=.maps)
 LDOVLNEWSFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLNEWSFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLNEWS         = d_news.c czet.c cz80/cz80.c snd/msm6295.c load.c saturn/ovl.c
+SRCOVLNEWS         = d_news.c czet.c cz80/cz80.c snd/msm6295.c load.c saturn/ovl.c  saturn/pcmstm.c 
 OBJOVLNEWS         = $(SRCOVLNEWS:.c=.o)
 
 OVLGBERET                 = root/d_gberet.elf
 OVLGBERET1               = root/d_gberet.bin
 MPOVLGBERETFILE    = $(OVLGBERET:.elf=.maps)
 LDOVLGBERETFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGBERETFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLGBERET         = d_gberet.c czet.c cz80/cz80.c snd/sn76496.c load.c saturn/ovl.c 
+SRCOVLGBERET         = d_gberet.c czet.c cz80/cz80.c snd/sn76496.c load.c saturn/ovl.c  saturn/pcmstm.c 
 OBJOVLGBERET         = $(SRCOVLGBERET:.c=.o)
 
 OVLHIGEMARU                 = root/d_higemaru.elf
 OVLHIGEMARU1               = root/d_higema.bin
 MPOVLHIGEMARUFILE    = $(OVLHIGEMARU:.elf=.maps)
 LDOVLHIGEMARUFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLHIGEMARUFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLHIGEMARU         = d_higemaru.c czet.c cz80/cz80.c snd/ay8910.c  load.c saturn/ovl.c
+SRCOVLHIGEMARU         = d_higemaru.c czet.c cz80/cz80.c snd/ay8910.c  load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLHIGEMARU         = $(SRCOVLHIGEMARU:.c=.o)
 
 OVLPKUNW                 = root/d_pkunw.elf
@@ -123,7 +123,7 @@ OVLSMS1               = root/d_sms.bin
 MPOVLSMSFILE    = $(OVLSMS:.elf=.maps)
 LDOVLSMSFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLSMS         = d_sms.c psg_sms.c 
-SRCOVLSMS         = d_sms.c snd/sn76496.o
+SRCOVLSMS         = d_sms.c saturn/pcmstm.o snd/sn76496.o
 OBJOVLSMS         = $(SRCOVLSMS:d_sms.c=sms/d_sms.o)
 
 OVLSMSCZ80                 = root/d_smscz.elf
@@ -131,7 +131,7 @@ OVLSMSCZ801               = root/d_smscz.bin
 MPOVLSMSCZ80FILE    = $(OVLSMSCZ80:.elf=.maps)
 LDOVLSMSCZ80FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSCZ80FILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c cz80/cz80.c
-SRCOVLSMSCZ80         = d_sms.c snd/sn76496.o czet.c cz80/cz80.c
+SRCOVLSMSCZ80         = d_sms.c saturn/pcmstm.o snd/sn76496.o czet.c cz80/cz80.c
 OBJOVLSMSCZ80         = $(SRCOVLSMSCZ80:.c=.o)
 
 OVLGG                = root/d_gg.elf
@@ -139,7 +139,7 @@ OVLGG1              = root/d_gg.bin
 MPOVLGGFILE    = $(OVLGG:.elf=.maps)
 LDOVLGGFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLGG         = d_sms.c psg_sms.c 
-SRCOVLGG         = d_sms.c snd/sn76496.o
+SRCOVLGG         = d_sms.c saturn/pcmstm.o snd/sn76496.o
 OBJOVLGG         = $(SRCOVLGG:d_sms.c=gg/d_sms.o)
 
 OVLGGCZ                = root/d_ggcz.elf
@@ -147,8 +147,8 @@ OVLGGCZ1              = root/d_ggcz.bin
 MPOVLGGCZFILE    = $(OVLGGCZ:.elf=.maps)
 LDOVLGGCZFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGCZFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLGGCZ         = psg_sms.c
-SRCOVLGGCZ         = snd/sn76496.o
-SRCOVLGGCZ2        = d_sms.c
+SRCOVLGGCZ         = saturn/pcmstm.o snd/sn76496.o
+SRCOVLGGCZ2        = d_sms.c  
 OBJOVLGGCZ         = $(SRCOVLGGCZ::.c=.o) $(SRCOVLGGCZ2:d_sms.c=ggcz/d_sms.o) 
 
 OVLZAXXON                 = root/d_zaxxon.elf
@@ -318,6 +318,9 @@ drv:  $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
 img: $(OVLIMG)  $(OVLIMG1)
 
 mitch: $(OVLMITCH) $(OVLMITCH1)
+
+sms: $(OVLGGCZ) $(OVLGGCZ1) \
+     $(OVLSMSCZ80) $(OVLSMSCZ801)
 
 # Use gcc to link so it will automagically find correct libs directory
 
@@ -560,7 +563,7 @@ saturn/font.o: saturn/font.c
 saturn/img.o: saturn/img.c
 	$(CC) $< $(DFLAGS) $(CCFLAGS2) -o $@
 .c.o:
-	$(CC) $< $(DFLAGS) $(EXTRA_FLAGS) $(CCOVLFLAGS) -o $@
+	$(CC) $< $(DFLAGS) $(CCOVLFLAGS) -o $@
 sms/%.o : %.c
 	$(CC) $< $(DFLAGS) -DRAZE=1 $(CCOVLFLAGS) -o $@
 gg/%.o : %.c

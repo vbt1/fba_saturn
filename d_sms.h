@@ -7,6 +7,8 @@
 #include "raze/raze.h"
 #include "czet.h"
 
+#define nBurnSoundLen 128
+
 extern unsigned char play;
 
 static Sint32 GetFileSize(int file_id);

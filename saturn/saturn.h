@@ -129,7 +129,7 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 241>>3, 192>>3, 0>>3 ),RGB( 252>>3, 201>>3, 0>>
 extern struct BurnDriver* pDriver[];// __attribute__ ((section(".pdriver")));
 
 #ifdef FONT
-static unsigned int frame_x=0;
+extern unsigned int frame_x;
 static unsigned int frame_y=0;
 static unsigned int frame_displayed=0;
 unsigned char hz=0;
@@ -153,7 +153,7 @@ SclBgColMixRegister  SclBgColMix;// __attribute__((section("COMMON")));
 //SclPriBuffDirtyFlags SclPriBuffDirty;
 //-------------------------------------------------------------------------------------------------------------------------------------
 extern Uint8	FntAsciiFontData2bpp[1600];
-extern PcmHn 			pcm;
+//extern PcmHn 			pcm;
 
 extern Uint32   _bstart, _bend;
 static Uint32 intrflag;

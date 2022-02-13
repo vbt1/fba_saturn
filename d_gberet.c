@@ -6,6 +6,16 @@
 
 #include "d_gberet.h"
 
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+#endif
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -466,6 +476,10 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	nBurnSprites=128;
 	cleanSprites();
 	memset(ss_scl,0x00,nBurnLinescrollSize);
+	
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif	
 /*
 	bg_dirtybuffer=MemEnd=Rom=NULL;
 	game_type=0;
@@ -527,6 +541,25 @@ inline void initColors()
 	SCL_AllocColRam(SCL_NBG1,OFF);
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
+
+#ifdef PONY
+extern SclLineparam lp;
+
+static void SCL_SetLineParamNBG0(SclLineparam *lp)
+{
+	Uint32	*addr;
+	addr = &Scl_n_reg.lineaddr[0];
+	*addr = (lp->line_addr >>1) & 0x0007ffff;
+	SclProcess = 2; //obligatoire
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void vbl()
+{
+//	sdrv_vblank_rq();
+	SCL_SetLineParamNBG0(&lp);
+	sdrv_stm_vblank_rq();
+}
+#endif	
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
@@ -563,6 +596,10 @@ void DrvInitSaturn()
 	memset4_fast(&ss_map2[0],0,0x4000);
 	drawWindow(0,240,0,2,66);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = vbl;	
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void gberet_draw_sprites()
@@ -631,6 +668,7 @@ inline void DrvDraw()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void renderSound(unsigned int *nSoundBufferPos)
 {
+#ifndef PONY	
 	signed short *	nSoundBuffer = (signed short *)0x25a20000;
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos[0]], SOUND_LEN);
 	nSoundBufferPos[0]+=SOUND_LEN;
@@ -641,9 +679,39 @@ void renderSound(unsigned int *nSoundBufferPos)
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos[0]=0;
 	}
+#else
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos[0]<<1);
+
+	SN76496Update(0, nSoundBuffer2, nBurnSoundLen);
+	
+	nSoundBufferPos[0]+=nBurnSoundLen;
+	
+	if(nSoundBufferPos[0]>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos[0]=0;
+	}
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvFrame()
+#ifdef PONY
+void DrvFrame_old();
+
+void DrvFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+ void DrvFrame()
+ #endif
 {
 	unsigned int nInterleave = game_type ? 16 : 32;
 #ifdef CZ80
@@ -709,6 +777,9 @@ else
 	cleanSprites();
 	gberet_draw_sprites();
 	SPR_WaitEndSlaveSH();
+#ifdef PONY
+	frame_x++;	
+#endif	
 }
 /*static*/ int gberetInit()
 {

@@ -28,7 +28,8 @@ static void AY8910_set_clock(int chip, int clock);
 void AY8910Reset(int chip);
 
 void AY8910Update(int chip, signed short** buffer, int length);
-void AY8910UpdateDirect(int chip, signed short *buffer, int length);
+//void AY8910UpdateDirect(int chip, signed short **buffer, unsigned int position, int length);
+void AY8910UpdateDirect(int chip, signed short *buf1, signed short *buf2, signed short *buf3, int length);
 
 void AY8910Write(int chip, int a, int data);
 int AY8910Read(int chip);

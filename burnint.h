@@ -29,7 +29,7 @@ extern Uint32 SclColRamAlloc256[8];
 
 #define OPEN_CSH_VAR(a) (((int)&a | 0x20000000))
 #define	RGB( r, g, b )		(0x8000U|((b) << 10)|((g) << 5 )|(r))
-extern PcmHn pcm;
+//extern PcmHn pcm;
 extern unsigned char hz;
 extern unsigned short palette[8];
 
