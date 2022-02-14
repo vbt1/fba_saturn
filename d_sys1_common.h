@@ -10,8 +10,11 @@
 //#include "saturn/sc_saturn.h"
 #include "saturn/ovl.h"
 
+#define nBurnSoundLen 128
+#define SOUNDRATE   7680L
+
 #define SOUND_LEN 240
-#define nSegmentLength 	SOUND_LEN / 10
+#define nSegmentLength 	nBurnSoundLen / 10
 
 #define COLADDR (FBUF_ADDR-0x400)
 #define COLADDR_SPR	(COLADDR>>3)

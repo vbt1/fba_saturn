@@ -93,21 +93,21 @@ OVLSYS1                 = root/d_sys1.elf
 OVLSYS11               = root/d_sys1.bin
 MPOVLSYS1FILE    = $(OVLSYS1:.elf=.maps)
 LDOVLSYS1FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1FILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSYS1         = d_sys1.c czet.c cz80sys1/cz80.c snd/sn76496.c load.c saturn/ovl.c 
+SRCOVLSYS1         = d_sys1.c czet.c cz80sys1/cz80.c snd/sn76496.c load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLSYS1         = $(SRCOVLSYS1:.c=.o)
 
 OVLSYS1H                 = root/d_SYS1H.elf
 OVLSYS1H1               = root/d_SYS1H.bin
 MPOVLSYS1HFILE    = $(OVLSYS1H:.elf=.maps)
 LDOVLSYS1HFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS1HFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSYS1H         = d_sys1h.c czet.c cz80sys1/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c
+SRCOVLSYS1H         = d_sys1h.c czet.c cz80sys1/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLSYS1H         = $(SRCOVLSYS1H:.c=.o)
 
 OVLSYS2                 = root/d_sys2.elf
 OVLSYS21               = root/d_sys2.bin
 MPOVLSYS2FILE    = $(OVLSYS2:.elf=.maps)
 LDOVLSYS2FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS2FILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSYS2         = d_sys2.c czet.c cz80sys1/cz80.c snd/sn76496.c 8255ppi.c mc8123.c load.c saturn/ovl.c
+SRCOVLSYS2         = d_sys2.c czet.c cz80sys1/cz80.c snd/sn76496.c 8255ppi.c mc8123.c load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLSYS2         = $(SRCOVLSYS2:.c=.o)
 
 OVLPACM                 = root/d_pacm.elf

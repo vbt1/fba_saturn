@@ -3,6 +3,15 @@
 #include "SEGA_DMA.H"
 
 void dummy();
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+#endif
 
 /*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
 {
@@ -636,6 +645,11 @@ void DrvInitSaturn()
 		drawWindow(0,240,0,8,64);
 	else
 		drawWindow(0,224,240,0,66);
+	
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = sdrv_stm_vblank_rq;	
+#endif		
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2Size, int nTileRomNum, int nTileRomSize, int nSpriteRomNum, int nSpriteRomSize, bool bReset)
@@ -923,6 +937,10 @@ int System1Exit()
 	MakeInputsFunction = NULL;
 	CollisionFunction = NULL;
 
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
+
 	SPR_InitSlaveSH();
 	
 	//cleanDATA();
@@ -1114,12 +1132,20 @@ void System1DrawSprites()
 //-------------------------------------------------------------------------------------------------------------------------------------
 void renderSound(unsigned int *nSoundBufferPos)
 {
+#ifndef PONY	
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+(*nSoundBufferPos)*(sizeof(signed short)));
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 	SN76496Update(0, nSoundBuffer, nSegmentLength);
 	SN76496Update(1, nSoundBuffer, nSegmentLength);
 	*nSoundBufferPos+=nSegmentLength;
+#else
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(*nSoundBufferPos<<1);
 	
+//	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	SN76496Update(0, nSoundBuffer2, nSegmentLength);
+	SN76496Update(1, nSoundBuffer2, nSegmentLength);
+	*nSoundBufferPos+=nSegmentLength;
+#endif	
 //	System1Render();
 	//	nSoundBufferPos[0]+= nSegmentLength;
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
@@ -1128,7 +1154,24 @@ void renderSound(unsigned int *nSoundBufferPos)
 /*==============================================================================================
 Frame functions
 ===============================================================================================*/
+#ifdef PONY
+void System1Frame_old();
+
 void System1Frame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(System1Frame_old);
+}
+
+void System1Frame_old()
+#else
+void System1Frame()
+#endif
 {
 	MakeInputsFunction();
 	unsigned int nCyclesDone[2] = {0,0};
@@ -1172,16 +1215,29 @@ void System1Frame()
 	}
 
 	System1Render();
-
+#ifndef PONY
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
 	{
   		PCM_NotifyWriteSize(pcm, nSoundBufferPos);		
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
+#else
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos=0;
+	}
+#endif
 // evite plantage sur teddy boy	
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
+	
+#ifdef PONY
+	_spr2_transfercommand();
+	SclProcess = 1;	
+	frame_x++;
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void make_cram_lut(void)

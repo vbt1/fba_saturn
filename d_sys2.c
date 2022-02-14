@@ -723,6 +723,7 @@ void System1Renderx()
 {
 	System1DrawSprites();
 	wbml_draw_bg(&System1VideoRam[0x740]);
+	sdrv_stm_vblank_rq();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void System1Render()
