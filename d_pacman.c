@@ -11,6 +11,16 @@
 #define nSegmentLength 1 //nBurnSoundLen / nInterleave
 #define CACHE 1
 
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+#endif
+
 extern INT16 *p;
 //extern UINT8 namco_soundregs[0x400];
 //extern UINT8 *namco_wavedata;
@@ -549,6 +559,10 @@ void DrvInitSaturn()
     ss_spritePtr->charSize	= 0;
 	
 	drawWindow(0,240,0,2,70);
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = sdrv_stm_vblank_rq;	
+#endif		
 }
 
 INT32 DrvExit()
@@ -573,6 +587,10 @@ INT32 DrvExit()
 	if(chip)
 		chip = NULL;
 */
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
+
 	//cleanDATA();
 	cleanBSS();
 
@@ -662,7 +680,24 @@ inline void DrvDrawPacMan()
 	DrawSprites();
 }
 
+#ifdef PONY
+void DrvFrame_old();
+
 void DrvFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+void DrvFrame()
+#endif
 {
 	
 	watchdog++;
@@ -691,7 +726,9 @@ void DrvFrame()
 	}
 
 	CZetOpen(0);
+#ifndef PONY	
 	Sint16 *nSoundBuffer = (Sint16 *)(0x25a20000+nSoundBufferPos*sizeof(Sint16));	
+#endif
 	
 	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
@@ -705,18 +742,37 @@ void DrvFrame()
 		}
 	}
 	CZetClose();
+#ifndef PONY	
 	NamcoSoundUpdate(nSoundBuffer, 224);
 	nSoundBufferPos += 224;
+#else
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
+
+	NamcoSoundUpdate(nSoundBuffer2, nBurnSoundLen);
+	nSoundBufferPos += nBurnSoundLen;
+#endif	
 
     DrvDrawPacMan();
-	
+#ifndef PONY	
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
 	{
 		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
 		PCM_Task(pcm);
 		nSoundBufferPos=0;
 	}
-	
+#else
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos=0;
+	}
+#endif
+
+#ifdef PONY
+	_spr2_transfercommand();
+	SclProcess = 1;	
+	frame_x++;
+#endif		
 //	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)	
 //		SPR_WaitEndSlaveSH();
 

@@ -7,6 +7,9 @@
 #include "saturn/ovl.h"
 #include "czet.h"
 
+#define nBurnSoundLen 128
+#define SOUNDRATE   7680L
+
 //void dummy();
 INT32 mspacmanInit();
 INT32 puckmanInit();

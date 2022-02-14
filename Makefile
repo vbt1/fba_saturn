@@ -114,7 +114,7 @@ OVLPACM                 = root/d_pacm.elf
 OVLPACM1               = root/d_pacm.bin
 MPOVLPACMFILE    = $(OVLPACM:.elf=.maps)
 LDOVLPACMFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLPACMFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLPACM         = d_pacman.c czet.c snd/namco_snd.c cz80/cz80.c load.c saturn/ovl.c
+SRCOVLPACM         = d_pacman.c czet.c snd/namco_snd.c cz80/cz80.c load.c saturn/ovl.c  saturn/pcmstm.c 
 #SRCOVLPACM         = d_pacman_zet.c zet.c z80.c z80daisy.c namco_snd.c 
 OBJOVLPACM         = $(SRCOVLPACM:.c=.o)
 
