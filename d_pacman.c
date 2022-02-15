@@ -19,6 +19,7 @@
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned int frame_x;
+extern unsigned int frame_y;
 #endif
 
 extern INT16 *p;
@@ -772,6 +773,9 @@ void DrvFrame()
 	_spr2_transfercommand();
 	SclProcess = 1;	
 	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
 #endif		
 //	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)	
 //		SPR_WaitEndSlaveSH();

@@ -11,6 +11,7 @@ void dummy();
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned int frame_x;
+extern unsigned int frame_y;
 #endif
 
 /*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
@@ -1124,7 +1125,7 @@ void System1DrawSprites()
 			ss_spritePtr->ax = ss_spritePtr->ay = ss_spritePtr->charSize = ss_spritePtr->charAddr = 0;
 //			sprites_collision[i].width=0;
 		}
-		
+
 		ss_spritePtr++;
 		SpriteBase+=16;
 	}
@@ -1137,14 +1138,17 @@ void renderSound(unsigned int *nSoundBufferPos)
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 	SN76496Update(0, nSoundBuffer, nSegmentLength);
 	SN76496Update(1, nSoundBuffer, nSegmentLength);
+	
+	
+	
 	*nSoundBufferPos+=nSegmentLength;
 #else
-	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(*nSoundBufferPos<<1);
-	
+	signed short *nSoundBuffer2 = (signed short *)(nSoundBuffer+(nSoundBufferPos[0]<<1));
+
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	SN76496Update(0, nSoundBuffer2, nSegmentLength);
-	SN76496Update(1, nSoundBuffer2, nSegmentLength);
-	*nSoundBufferPos+=nSegmentLength;
+	SN76496Update(0, nSoundBuffer2, nBurnSoundLen);
+	SN76496Update(1, nSoundBuffer2, nBurnSoundLen);
+	*nSoundBufferPos+=nBurnSoundLen;
 #endif	
 //	System1Render();
 	//	nSoundBufferPos[0]+= nSegmentLength;
@@ -1175,7 +1179,8 @@ void System1Frame()
 {
 	MakeInputsFunction();
 	unsigned int nCyclesDone[2] = {0,0};
-	
+	SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
+		
 	for (UINT32 i = 0; i < nInterleave; i++) {
 		
 		// Run Z80 #1
@@ -1193,7 +1198,7 @@ void System1Frame()
 		if (i == 9) CZetRaiseIrq(0);
 		CZetClose();
 #endif
-		SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
+
 //vbt ? pr?calculer !!!
 //		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 //		nCyclesSegment = nNext - nCyclesDone[1];
@@ -1210,8 +1215,6 @@ void System1Frame()
 			z80_emulate(1);
 		}
 #endif
-	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		SPR_WaitEndSlaveSH();
 	}
 
 	System1Render();
@@ -1223,6 +1226,9 @@ void System1Frame()
 	}
 	PCM_Task(pcm);
 #else
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();	
+
 	if(nSoundBufferPos>=nBurnSoundLen*10)
 	{
 		pcm_play(pcm1, PCM_SEMI, 7);
@@ -1230,13 +1236,16 @@ void System1Frame()
 	}
 #endif
 // evite plantage sur teddy boy	
-	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		SPR_WaitEndSlaveSH();
+//	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//		SPR_WaitEndSlaveSH();
 	
 #ifdef PONY
 	_spr2_transfercommand();
 	SclProcess = 1;	
 	frame_x++;
+
+	 if(frame_x>=frame_y)
+		wait_vblank();	
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

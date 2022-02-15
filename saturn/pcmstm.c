@@ -7,6 +7,10 @@
 #include "sega_dma.h" // ok
 #include "sega_per.h" // ok
 #include "pcmstm.h"
+
+extern unsigned char play;
+extern unsigned int frame_x;
+extern unsigned int frame_y;
 extern Uint32 *shared;
 #define SS_FONT	 *(&shared + 3)
 
@@ -545,6 +549,10 @@ m68k_com = (sysComPara *)((SNDPRG + DRV_SYS_END) | 0x20000000);
 //					wait_vblank();
 					GFS_NwExecOne(file.handle);
 					GFS_NwGetStat(file.handle, &gfs_svr_status, &byte_dummy);
+
+				 if(frame_x>=frame_y)
+					wait_vblank();						
+					
 				}while(gfs_svr_status != GFS_SVR_COMPLETED);
 				
 			
@@ -608,6 +616,10 @@ m68k_com = (sysComPara *)((SNDPRG + DRV_SYS_END) | 0x20000000);
 //					wait_vblank();
 					GFS_NwExecOne(adx_stream.file.handle);
 					GFS_NwGetStat(adx_stream.file.handle, &gfs_svr_status, &byte_dummy);
+					
+				 if(frame_x>=frame_y)
+					wait_vblank();						
+					
 				}while(gfs_svr_status != GFS_SVR_COMPLETED);
 				adx_stream.file.sectors_read_so_far += file_transfer_sector;
 				//////////////////////
@@ -732,8 +744,12 @@ m68k_com = (sysComPara *)((SNDPRG + DRV_SYS_END) | 0x20000000);
 					}
 				GFS_NwExecOne(buf.file_handle);
 				GFS_NwGetStat(buf.file_handle, &gfs_svr_status, &bytes_read_now);
+				
+				
+				 if(frame_x>=frame_y)
+					wait_vblank();				
 			}
-			while(gfs_svr_status != GFS_SVR_COMPLETED);
+			while(gfs_svr_status != GFS_SVR_COMPLETED || !play);
 //FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"--gfs_svr_status = GFS_SVR_COMPLETED ?--",160/2, 80);					
 		}
 	}

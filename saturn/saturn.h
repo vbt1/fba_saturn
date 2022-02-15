@@ -130,7 +130,7 @@ extern struct BurnDriver* pDriver[];// __attribute__ ((section(".pdriver")));
 
 #ifdef FONT
 extern unsigned int frame_x;
-static unsigned int frame_y=0;
+extern unsigned int frame_y;
 static unsigned int frame_displayed=0;
 unsigned char hz=0;
 #endif

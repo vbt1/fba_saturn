@@ -18,6 +18,7 @@ unsigned char curr_sprite=0;
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned int frame_x;
+extern unsigned int frame_y;
 #endif
 
 /* Attribute expansion table */
@@ -552,7 +553,10 @@ void SMSFrame_old()
 		sms_start();
 	}
 #ifdef PONY
-	frame_x++;	
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();		
 #endif
 	
 }

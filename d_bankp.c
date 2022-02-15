@@ -13,6 +13,7 @@
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned int frame_x;
+extern unsigned int frame_y;
 #endif
  
 int ovlInit(char *szShortName)
@@ -582,9 +583,9 @@ void DrvFrame()
 #else
 	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
 
-	SN76496Update(0, &nSoundBuffer2[nSoundBufferPos], nBurnSoundLen);
-	SN76496Update(1, &nSoundBuffer2[nSoundBufferPos], nBurnSoundLen);
-	SN76496Update(2, &nSoundBuffer2[nSoundBufferPos], nBurnSoundLen);
+	SN76496Update(0, &nSoundBuffer2[0], nBurnSoundLen);
+	SN76496Update(1, &nSoundBuffer2[0], nBurnSoundLen);
+	SN76496Update(2, &nSoundBuffer2[0], nBurnSoundLen);
 	
 	nSoundBufferPos+=nBurnSoundLen;
 	
@@ -596,5 +597,8 @@ void DrvFrame()
 	
 	SclProcess = 1;
 	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
 #endif	
 }

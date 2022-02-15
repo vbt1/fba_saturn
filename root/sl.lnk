@@ -18,8 +18,9 @@ SECTIONS {
 		_play = .;
 		_hz = _play + 2;
 		_col = _hz + 2; /* size 16 */
-		_frame_x = _col + 16; /* pointer size 4 */		
-		_nBurnDrvCount = _frame_x + 4;
+		_frame_x = _col + 16; /* pointer size 4 */	
+		_frame_y = _frame_x + 4; 			
+		_nBurnDrvCount = _frame_y + 4;
 		_nBurnDrvSelect = _nBurnDrvCount + 4;
 		_nBurnSoundRate = _nBurnDrvSelect + 4;
 		_nBurnSprites = _nBurnSoundRate + 4;
