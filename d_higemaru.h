@@ -8,6 +8,7 @@
 //#include "saturn/sc_saturn.h"
 #include "czet.h"
 #define nBurnSoundLen 128
+#define SOUNDRATE   7680L
 
 /*static*/// unsigned char 	bg_dirtybuffer[2048];
 UINT16 *map_offset_lut = NULL;//[1024];

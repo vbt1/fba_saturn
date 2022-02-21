@@ -6,11 +6,24 @@
 //   cleanup(s)
 //   Robo Wres init ok?
 #define nCyclesTotal 3072000
-#define nInterleave SOUND_LEN
+#define nInterleave nBurnSoundLen
 #define cycles nCyclesTotal / 60 / nInterleave
-INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate);
+
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm[4];
+Sint16 *nSoundBuffer[32];
+extern unsigned int frame_x;
+#else
 void PCM_MeStop(PcmHn hn);
-static void Set4PCM();
+static void Set4PCM();	
+#endif
+
+INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate);
+
 inline  void make_lut(void);
 
 int ovlInit(char *szShortName)
@@ -40,7 +53,7 @@ int ovlInit(char *szShortName)
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 
-/*static*/  void DrvPaletteInit()
+void DrvPaletteInit()
 {
 	UINT16 delta = 0, delta2 = 0;
 	for (UINT32 i = 0; i < 0x220; i++)
@@ -86,7 +99,7 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/  void DrvRobowresPaletteInit()
+void DrvRobowresPaletteInit()
 {
 	UINT16 delta = 0, delta2 = 0;
 	for (UINT32 i = 0; i < 0x220; i++)
@@ -130,7 +143,7 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/  INT32 MemIndex()
+INT32 MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -163,7 +176,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void DrvGfxDecode()
+void DrvGfxDecode()
 {
 	INT32 Planes0[3] = { 2*2048*8*8, 1*2048*8*8, 0*2048*8*8 }; /* the bitplanes are separated */
 	INT32 XOffs0[8] = {7, 6, 5, 4, 3, 2, 1, 0};
@@ -189,7 +202,7 @@ int ovlInit(char *szShortName)
 	GfxDecode4Bpp(0x0200, 3, 16, 16, Planes0, XOffs1, YOffs1, 0x100, DrvGfxTMP1, DrvGfxROM3);
 }
 
-/*static*/  void DrvRobowresGfxDecode()
+void DrvRobowresGfxDecode()
 {
 	INT32 Planes0[3] = { RGN_FRAC(0x18000, 2,3), RGN_FRAC(0x18000, 1,3), RGN_FRAC(0x18000, 0,3) };
 	INT32 XOffs0[8] = { 7, 6, 5, 4, 3, 2, 1, 0 };
@@ -217,7 +230,7 @@ int ovlInit(char *szShortName)
 	memcpy(DrvGfxROM3,&DrvGfxTMP1[0x40000],0x18000);
 }
 
-/*static*/  inline void bankswitch(INT32 data)
+inline void bankswitch(INT32 data)
 {
 	DrvZ80Bank0 = (data & 0x40);
 // 1 bank de 16k																  
@@ -235,7 +248,7 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/  void __fastcall appoooh_write(unsigned short address, unsigned char data)
+void __fastcall appoooh_write(unsigned short address, unsigned char data)
 {
 	if(address >= 0xf000 && address <= 0xf01f)
 	{
@@ -314,7 +327,7 @@ int ovlInit(char *szShortName)
 	}
 }
 
-/*static*/  unsigned char __fastcall appoooh_read(unsigned short address)
+unsigned char __fastcall appoooh_read(unsigned short address)
 {
 	if(address >= 0xf000 && address <= 0xf01f)
 	{
@@ -348,12 +361,12 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/  INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate)
+INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate)
 {
 	return (INT32)((double)CZetTotalCycles() * nSoundRate / (nCyclesTotal));
 }
 
-/*static*/  void appoooh_adpcm_w( UINT8 data )
+void appoooh_adpcm_w( UINT8 data )
 {
 	adpcm_address = data << 8;
 
@@ -361,7 +374,7 @@ int ovlInit(char *szShortName)
 	adpcm_data = 0xffffffff;
 }
 
-/*static*/  void appoooh_out_w( UINT8 data )
+void appoooh_out_w( UINT8 data )
 {
 	interrupt_enable = (data & 0x01);
 
@@ -374,7 +387,7 @@ int ovlInit(char *szShortName)
 	bankswitch(data);
 }
 
-/*static*/  void DrvMSM5205Int()
+void DrvMSM5205Int()
 {
 	if (adpcm_address != 0xffffffff) {
 		if (adpcm_data == 0xffffffff) {
@@ -459,7 +472,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	}
 }
 
-/*static*/  void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
+void DrawSprites(UINT8 *sprite, UINT32 tileoffset, UINT8 spriteoffset)
 {
 	SprSpCmd *ss_spritePtr = &ss_sprite[3 + spriteoffset];
 	
@@ -485,7 +498,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	}
 }
 
-/*static*/  void DrvDraw()
+void DrvDraw()
 {
 	/* draw sprites */
 	if(priority) {
@@ -509,7 +522,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	memcpyl((SclBgPriNumRegister *)0x25F800F8, ss_BgPriNum, sizeof(ss_BgPriNum));
 }
 
-/*static*/  INT32 DrvDoReset()
+INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 	DrvZ80Bank0 = 0;
@@ -528,7 +541,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	return 0;
 }
 
-/*static*/  INT32 DrvLoadRoms()
+INT32 DrvLoadRoms()
 {
 	UINT8 *DrvGfxTMP0		= (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1		= (UINT8 *)0x00218000;
@@ -563,7 +576,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	return 0;
 }
 
-/*static*/  INT32 DrvRobowresLoadRoms()
+INT32 DrvRobowresLoadRoms()
 {
 	UINT8 *DrvGfxTMP0		= (UINT8 *)0x00200000;
 	UINT8 *DrvGfxTMP1		= (UINT8 *)0x00218000;
@@ -592,7 +605,7 @@ void __fastcall appoooh_out(UINT16 address, UINT8 data)
 	return 0;
 }
 
-/*static*/  INT32 DrvCommonInit(UINT8 game_select)
+INT32 DrvCommonInit(UINT8 game_select)
 {
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
@@ -713,7 +726,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	sega_decode_2(pDest, pDestDec, xor_table, swap_table);
 }
  
-/*static*/  INT32 DrvRobowresInit()
+INT32 DrvRobowresInit()
 {
 	nSoundBufferPos=0;
 	DrvInitSaturn();
@@ -730,7 +743,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	return 0;
 }
 
-/*static*/  INT32 DrvInit()
+INT32 DrvInit()
 {
 	nSoundBufferPos=0;
 	DrvInitSaturn();
@@ -747,7 +760,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void initLayers()
+void initLayers()
 {
     Uint16	CycleTb[]={
 		0xff56, 0xffff, //A0
@@ -789,7 +802,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void initColors()
+void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr2  = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
@@ -810,7 +823,7 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void DrvInitSaturn()
+void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
@@ -853,13 +866,18 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 		ss_spritePtr->drawMode  = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
 		ss_spritePtr->charSize  = 0x210;  //0x100 16*16
 	}
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = sdrv_stm_vblank_rq;
+#else	
 	PCM_Task(pcm);
 	PCM_MeStop(pcm);
 	Set4PCM();
+#endif	
 	drawWindow(0,224,240,0,64);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  INT32 DrvExit()
+INT32 DrvExit()
 {
 	DrvDoReset();
 	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
@@ -871,13 +889,19 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 	MSM5205Exit();
 	SN76496Exit();
 
+#ifdef PONY
+	for(unsigned int i=0;i<4;i++)
+	{
+		remove_raw_pcm_buffer(pcm[i]);
+	}
+#else
 	for(UINT32 i=0;i<4;i++)
 	{
 		PCM_Task(pcm4[i]); 
 		PCM_MeStop(pcm4[i]);
 //		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
-
+#endif
 	AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
 	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvColPROM = DrvMainROM = NULL;
 	DrvSoundROM = DrvFetch = CZ80Context = is_fg_dirty = NULL;
@@ -896,16 +920,40 @@ void sega_decode_315(UINT8 *pDest, UINT8 *pDestDec)
 void RenderSlaveSound()
 {
 	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+#ifndef PONY	
 	signed short *nSoundBuffer= (signed short *)(0x25a24000+deltaSlave*(sizeof(signed short)));
 
 	SN76496Update(0, nSoundBuffer+0x2000, SOUND_LEN);
 	SN76496Update(1, nSoundBuffer+0x4000, SOUND_LEN);
+#else
+	SN76496Update(0, &nSoundBuffer[pcm[0]][deltaSlave<<1], nBurnSoundLen);
+	SN76496Update(1, &nSoundBuffer[pcm[1]][deltaSlave<<1], nBurnSoundLen);
+#endif	
 //	SN76496Update(2, nSoundBuffer+0x6000, SOUND_LEN);
 
 //	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  INT32 DrvFrame()
+#ifdef PONY
+void DrvFrame_old();
+
+void DrvFrame()
+{
+
+	for (unsigned int i=0;i<4;i++)
+	{
+		pcm[i] = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20*2);
+		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
+	}
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+ void DrvFrame()
+#endif
 {
 	memset (DrvInputs, 0x00, 3);
 
@@ -930,11 +978,12 @@ void RenderSlaveSound()
 	}
 	CZetClose();
 
-	signed short *nSoundBuffer = (signed short *)(0x25a24000+nSoundBufferPos*(sizeof(signed short)));
-
 	SPR_RunSlaveSH((PARA_RTN*)RenderSlaveSound, 0);
 
 	DrvDraw();
+#ifndef PONY
+	signed short *nSoundBuffer = (signed short *)(0x25a24000+nSoundBufferPos*(sizeof(signed short)));
+
 	SN76496Update(2, nSoundBuffer+0x6000, SOUND_LEN);
 
 	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
@@ -953,8 +1002,31 @@ void RenderSlaveSound()
 		}
 		nSoundBufferPos=0;
 	}
-	return 0;
+#else
+	SN76496Update(2, &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
+
+	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();
+
+	MSM5205RenderDirect(0, &nSoundBuffer[pcm[3]][nSoundBufferPos<<1], nBurnSoundLen);
+	nSoundBufferPos+=(nBurnSoundLen);
+	
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		for (unsigned int i=0;i<4;i++)
+		{
+			pcm_play(pcm[i], PCM_SEMI, 7);
+		}
+		nSoundBufferPos=0;
+	}
+#endif
+
+#ifdef PONY
+	_spr2_transfercommand();
+	frame_x++;	
+#endif	
 }
+#ifndef PONY
 //-------------------------------------------------------------------------------------------------------------------------------------
 static PcmHn createHandle(PcmCreatePara *para)
 {
@@ -1005,5 +1077,5 @@ static void Set4PCM()
 		PCM_Start(pcm4[i]);
 	}
 }
-
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------

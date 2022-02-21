@@ -6,52 +6,54 @@
 #include "snd/sn76496.h"
 #include "snd/msm5205.h"
 #include "czet.h"
-#define SOUND_LEN 128
-/*static*/ INT32 DrvInit();
-/*static*/ INT32 DrvRobowresInit();
-/*static*/ INT32 DrvExit();
-/*static*/ INT32 DrvFrame();
-/*static*/ void DrvDraw();
+
+#define nBurnSoundLen 128
+
+INT32 DrvInit();
+INT32 DrvRobowresInit();
+INT32 DrvExit();
+void DrvFrame();
+void DrvDraw();
 static void Set4PCM();
 void dummy();
 
-PcmHn 			pcm4[4] = {NULL, NULL, NULL, NULL};
+//PcmHn 			pcm4[4] = {NULL, NULL, NULL, NULL};
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
 #define SOUNDRATE   7680L
 
-/*static*/ UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvJoy3[8]={0,0,0,0,0,0,0,0};
-/*static*/ UINT8 DrvInputs[3]={0,0,0};
-/*static*/ UINT8 DrvDip[2]={0,0};
-/*static*/ INT32 DrvZ80Bank0 = 0;
+UINT8 DrvJoy1[8]={0,0,0,0,0,0,0,0};
+UINT8 DrvJoy2[8]={0,0,0,0,0,0,0,0};
+UINT8 DrvJoy3[8]={0,0,0,0,0,0,0,0};
+UINT8 DrvInputs[3]={0,0,0};
+UINT8 DrvDip[2]={0,0};
+INT32 DrvZ80Bank0 = 0;
 
-/*static*/ INT16 *MSM5205Context = NULL;
-/*static*/ UINT8 *CZ80Context = NULL;
-/*static*/ //UINT8 *AllMem = NULL;
-/*static*/ UINT8 *AllRam = NULL;
-/*static*/ UINT8 *RamEnd = NULL;
-/*static*/ UINT8 *DrvRAM0 = NULL;
-/*static*/ UINT8 *DrvRAM1 = NULL;
-/*static*/ UINT8 *DrvRAM2 = NULL;
-/*static*/ UINT8 *DrvFgVidRAM = NULL;
-/*static*/ UINT8 *DrvBgVidRAM = NULL;
-/*static*/ UINT8 *DrvSprRAM0 = NULL;
-/*static*/ UINT8 *DrvSprRAM1 = NULL;
-/*static*/ UINT8 *DrvFgColRAM = NULL;
-/*static*/ UINT8 *DrvBgColRAM = NULL;
-/*static*/ UINT8 *DrvColPROM = NULL;
-/*static*/ UINT8 *DrvMainROM = NULL;
-/*static*/ UINT8 *DrvSoundROM = NULL;
-/*static*/ UINT8 *DrvFetch = NULL;
-/*static*/ UINT16 *map_offset_lut = NULL;
-/*static*/ UINT8 *is_fg_dirty = NULL;
-/*static*/ UINT8 flipscreen = 0;
-/*static*/ UINT8 priority = 0;
-/*static*/ UINT8 interrupt_enable = 0;
-/*static*/ UINT32 adpcm_data = 0;
-/*static*/ UINT32 adpcm_address = 0;
+INT16 *MSM5205Context = NULL;
+UINT8 *CZ80Context = NULL;
+//UINT8 *AllMem = NULL;
+UINT8 *AllRam = NULL;
+UINT8 *RamEnd = NULL;
+UINT8 *DrvRAM0 = NULL;
+UINT8 *DrvRAM1 = NULL;
+UINT8 *DrvRAM2 = NULL;
+UINT8 *DrvFgVidRAM = NULL;
+UINT8 *DrvBgVidRAM = NULL;
+UINT8 *DrvSprRAM0 = NULL;
+UINT8 *DrvSprRAM1 = NULL;
+UINT8 *DrvFgColRAM = NULL;
+UINT8 *DrvBgColRAM = NULL;
+UINT8 *DrvColPROM = NULL;
+UINT8 *DrvMainROM = NULL;
+UINT8 *DrvSoundROM = NULL;
+UINT8 *DrvFetch = NULL;
+UINT16 *map_offset_lut = NULL;
+UINT8 *is_fg_dirty = NULL;
+UINT8 flipscreen = 0;
+UINT8 priority = 0;
+UINT8 interrupt_enable = 0;
+UINT32 adpcm_data = 0;
+UINT32 adpcm_address = 0;
 
 static struct BurnInputInfo AppooohInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 coin"},

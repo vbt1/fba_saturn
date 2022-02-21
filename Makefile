@@ -200,7 +200,7 @@ OVLAPPOOO                 = root/d_appooo.elf
 OVLAPPOOO1               = root/d_appooo.bin
 MPOVLAPPOOOFILE    = $(OVLAPPOOO:.elf=.maps)
 LDOVLAPPOOOFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLAPPOOOFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLAPPOOO         = d_appoooh.c czet.c cz80/cz80.c snd/sn76496.c snd/msm5205.c load.c saturn/ovl.c
+SRCOVLAPPOOO         = d_appoooh.c czet.c cz80/cz80.c snd/sn76496.c snd/msm5205.c load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLAPPOOO         = $(SRCOVLAPPOOO:.c=.o)
 
 OVLBLKTGR                 = root/d_blktgr.elf
