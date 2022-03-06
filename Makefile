@@ -223,14 +223,14 @@ OVLSLPFGHT                = root/d_slpfgh.elf
 OVLSLPFGHT1              = root/d_slpfgh.bin
 MPOVLSLPFGHTFILE    = $(OVLSLPFGHT:.elf=.maps)
 LDOVLSLPFGHTFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSLPFGHTFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSLPFGHT         = d_slpfgh.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c
+SRCOVLSLPFGHT         = d_slpfgh.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLSLPFGHT         = $(SRCOVLSLPFGHT:.c=.o)
 
 OVLFREEK                 = root/d_freek.elf
 OVLFREEK1               = root/d_freek.bin
 MPOVLFREEKFILE    = $(OVLFREEK:.elf=.maps)
 LDOVLFREEKFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLFREEKFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLFREEK         = d_freekick.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c 8255ppi.c load.c saturn/ovl.c
+SRCOVLFREEK         = d_freekick.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c 8255ppi.c load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLFREEK         = $(SRCOVLFREEK:.c=.o)
 
 OVLMSX                 = root/d_msx.elf

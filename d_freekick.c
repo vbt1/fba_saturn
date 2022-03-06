@@ -3,6 +3,21 @@
 // Gigas / Freekick / Counter Run / Perfect Billiard for FBA, ported by vbt
 #define nInterleave 256
 
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+extern unsigned int frame_y;
+#else
+static void Set6PCM();
+void PCM_MeStop(PcmHn hn);	
+#endif
+
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -930,6 +945,10 @@ void DrvInitSaturn()
 	}
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	drawWindow(0,240,240,4,68);
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = sdrv_stm_vblank_rq;
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 INT32 DrvExit()
@@ -959,6 +978,10 @@ INT32 DrvExit()
 	DrvDip[0] = DrvDip[1] = DrvDip[2] = 0;
 	DrvInputs[0] = DrvInputs[1] = DrvInputs[2] = 0;	
 */
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
+
 	//cleanDATA();
 	cleanBSS();
 
@@ -966,7 +989,24 @@ INT32 DrvExit()
 	return 0;
 }
 
+#ifdef PONY
+void DrvFrame_old();
+
 void DrvFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+void DrvFrame()
+#endif
 {
 	sprite_number = 3;
 	DrvInputs[0] = 0xff; // Active LOW
@@ -1005,13 +1045,13 @@ void DrvFrame()
 		}
 	}
 	CZetClose();
-
+#ifndef PONY
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
 
-		SN76496Update(0, nSoundBuffer, nBurnSoundLen);
-		SN76496Update(1, nSoundBuffer, nBurnSoundLen);
-		SN76496Update(2, nSoundBuffer, nBurnSoundLen);
-		SN76496Update(3, nSoundBuffer, nBurnSoundLen);
+	SN76496Update(0, nSoundBuffer, nBurnSoundLen);
+	SN76496Update(1, nSoundBuffer, nBurnSoundLen);
+	SN76496Update(2, nSoundBuffer, nBurnSoundLen);
+	SN76496Update(3, nSoundBuffer, nBurnSoundLen);
 
 	nSoundBufferPos+=(nBurnSoundLen); // DOIT etre deux fois la taille copiee
 
@@ -1021,8 +1061,32 @@ void DrvFrame()
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}
+	DrvDraw();	
+#else
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
 
+	SN76496Update(0, &nSoundBuffer2[0], nBurnSoundLen);
+	SN76496Update(1, &nSoundBuffer2[0], nBurnSoundLen);
+	SN76496Update(2, &nSoundBuffer2[0], nBurnSoundLen);
+	SN76496Update(3, &nSoundBuffer2[0], nBurnSoundLen);
+	
+	nSoundBufferPos+=nBurnSoundLen;
+	
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos=0;
+	}
 	DrvDraw();
+	_spr2_transfercommand();
+	
+	SclProcess = 1;
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
+#endif	
+
 }
 
 INT32 pbillrdInit()

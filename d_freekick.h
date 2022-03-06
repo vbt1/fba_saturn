@@ -9,7 +9,9 @@
 #include "8255ppi.h"
 #include "czet.h"
 
+#define SOUNDRATE   7680L
 #define nBurnSoundLen 128
+
 INT32 DrvInit();
 INT32 DrvFreeKickInit();
 INT32 pbillrdInit();

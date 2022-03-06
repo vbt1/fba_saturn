@@ -11,6 +11,21 @@
 #define nCycleSegment0 nCyclesTotal0 / nInterleave 
 #define nCycleSegment1 nCyclesTotal1 / nInterleave 
 
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm[6];
+Sint16 *nSoundBuffer[32];
+extern unsigned int frame_x;
+extern unsigned int frame_y;
+#else
+static void Set6PCM();
+void PCM_MeStop(PcmHn hn);	
+#endif
+
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -567,9 +582,13 @@ void DrvInitSaturn()
 	ss_reg->n0_move_x = 16<<16;
 	ss_reg->n2_move_x = 0;
 
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = sdrv_stm_vblank_rq;
+#else
 	PCM_MeStop(pcm);
 	Set6PCM();
-
+#endif
 	drawWindow(0,256,0,0,68);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -590,11 +609,19 @@ INT32 DrvExit()
 /*	scrollx = scrolly = 0;
 	nTigerHeliTileMask = nSndIrqFrame = 0;	
 */
+
+#ifdef PONY
+	for(unsigned int i=0;i<6;i++)
+	{
+		remove_raw_pcm_buffer(pcm[i]);
+	}
+#else
 	for(unsigned int i=0;i<6;i++)
 	{
 		PCM_MeStop(pcm6[i]);
 		PCM_DestroyMemHandle(pcm6[i]);
 	}
+#endif	
 	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
 /*
 	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
@@ -747,8 +774,26 @@ inline void draw_sprites()
 		ram+=4;
 	}
 }
+#ifdef PONY
+void DrvFrame_old();
 
 void DrvFrame()
+{
+
+	for (unsigned int i=0;i<6;i++)
+	{
+		pcm[i] = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20*2);
+		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
+	}
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+void DrvFrame()
+#endif	
 {
 	INT32 nCyclesDone[2] = {0,0};
 
@@ -791,6 +836,14 @@ void DrvFrame()
 	ss_reg->n2_move_y = -scrollx-283;
 	
 	SPR_WaitEndSlaveSH();
+#ifdef PONY
+	_spr2_transfercommand();
+	SclProcess = 1;
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();		
+#endif		
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -845,6 +898,7 @@ void updateSound(unsigned int *nSoundBufferPos)
 */
 void updateSound()
 {
+#ifndef PONY	
 	unsigned short *nSoundBuffer1 = (unsigned short *)0x25a24000+nSoundBufferPos;
 
 	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
@@ -860,6 +914,21 @@ void updateSound()
 		}
 		nSoundBufferPos=0;
 	}
+#else
+	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos<<1], &nSoundBuffer[pcm[1]][nSoundBufferPos<<1], &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
+	AY8910UpdateDirect(1, &nSoundBuffer[pcm[3]][nSoundBufferPos<<1], &nSoundBuffer[pcm[4]][nSoundBufferPos<<1],&nSoundBuffer[pcm[5]][nSoundBufferPos<<1], nBurnSoundLen);
+	nSoundBufferPos+=nBurnSoundLen;
+
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+	//	int i=0;
+		for (unsigned int i=0;i<6;i++)
+		{
+			pcm_play(pcm[i], PCM_SEMI, 7);
+		}
+		nSoundBufferPos=0;
+	}
+#endif	
 	draw_sprites();
 }
 
@@ -888,6 +957,7 @@ inline void make_lut(void)
 //		lutptr2++;
 	}
 }
+#ifndef PONY
 //-------------------------------------------------------------------------------------------------------------------------------------
 static PcmHn createHandle(PcmCreatePara *para)
 {
@@ -939,3 +1009,4 @@ static void Set6PCM()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#endif

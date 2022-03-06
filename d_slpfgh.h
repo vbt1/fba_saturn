@@ -6,6 +6,7 @@
 #include "snd/ay8910.h"
 #include "czet.h"
 
+#define SOUNDRATE   7680L
 #define nBurnSoundLen 128
 #define	true	1
 #define	false	0
@@ -16,8 +17,7 @@ INT32 DrvInit();
 INT32 DrvExit();
 void DrvFrame();
 void DrvDoReset();
-static void Set6PCM();
-void PCM_MeStop(PcmHn hn);
+
 inline void rotate_tile16x16(unsigned int size, unsigned char *target);
 void  SCL_SetColRamOffset(Uint32 Object, Uint32 Offset,Uint8 transparent);
 void DrvLoadRoms(UINT8 nWhichGame);
@@ -44,11 +44,11 @@ UINT8 *DrvTxtRAM = NULL;
 UINT8 *CZ80Context = NULL;
 UINT16 *map_offset_lut = NULL;
 //UINT16 *map_offset_lut2 = NULL;
-
+#ifndef PONY
 PcmHn pcm6[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 #define	PCM_ADDR	((void*)0x25a20000)
 #define	PCM_SIZE	(4096L*2)				/* 2.. */
-#define SOUNDRATE   7680L
+#endif
 // ---------------------------------------------------------------------------
 // Inputs
 
