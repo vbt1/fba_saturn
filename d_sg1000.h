@@ -15,11 +15,14 @@
 #include "czet.h"	
 #endif
 
+#define SOUNDRATE   7680L
+#define nBurnSoundLen 128
+
 extern unsigned char play;
 
 /*static*/ int DrvInit();
 /*static*/ int DrvExit();
-/*static*/ int DrvFrame();
+/*static*/ void DrvFrame();
 /*static*/ int DrvDoReset();
 
 void PCM_MeInit(void);

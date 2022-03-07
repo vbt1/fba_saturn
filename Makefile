@@ -185,7 +185,7 @@ OVLSG1000                 = root/d_sg1000.elf
 OVLSG10001               = root/d_sg1000.bin
 MPOVLSG1000FILE    = $(OVLSG1000:.elf=.maps)
 LDOVLSG1000FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSG1000FILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c snd/sn76496.c czet.c cz80/cz80.c load.c saturn/ovl.c
+SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c snd/sn76496.c czet.c cz80/cz80.c load.c saturn/ovl.c saturn/pcmstm.c 
 #SRCOVLSG1000         = d_sg1000.c 8255ppi.c tms9928a.c snd/sn76496.c saturn/ovl.c
 OBJOVLSG1000         = $(SRCOVLSG1000:.c=.o)
 
