@@ -120,26 +120,6 @@ static void	SetVblank2( void )
 	SCL_SetColRam(SCL_NBG1,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-#ifndef OLD_SOUND
- void sh2slave(unsigned int *nSoundBufferPosN)
-{xxxx
-#ifndef PONY	
-	volatile signed short *nSoundBuffer = (signed short *)SOUND_BUFFER;
-	SN76496Update(0, &nSoundBuffer[nSoundBufferPos],  128);
-//	PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
-	nSoundBufferPos+=128;
-	if(nSoundBufferPos>=SAMPLE)//<<1)//256*hz)
-	{
-		PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-		nSoundBufferPos=0;
-	}
-	PCM_Task(pcm);
-#else
-	yyyyyyyyyyyyyyyyyyyyyy
-#endif
-}
-#endif
-//-------------------------------------------------------------------------------------------------------------------------------------
  void initLayers(void)
 {
 //    SclConfig	config;
@@ -148,17 +128,10 @@ static void	SetVblank2( void )
 	Uint16	CycleTb[]={
 		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
 //#ifdef GG
-#if 0
-		0xffff, 0xff5e, //A1
-		0xffff, 0xffff,	//A0
-		0x0044, 0xeeff,   //B1
-		0xffff, 0xffff  //B0
-#else
 		0xff5e, 0xeeee, //A1
 		0xffee, 0xeeee,	//A0
 		0x04ee, 0xeeee,   //B1
 		0xffee, 0xeeee  //B0
-#endif
 	};
  	SclConfig	scfg;
 
@@ -323,9 +296,10 @@ void vbl()
 //	SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
 #endif
 
-#ifdef PONY2
-	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
-	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+#ifdef PONY
+	frame_x	= 0;
+//	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+//	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
 #endif
 
 }
@@ -399,16 +373,9 @@ void vbl()
 	SS_SET_N0SPRM(0);
 	SclProcess = 2;
 	ss_regs->specialcode=0x0000;	
-//	wait_vblank();
-//	sms_reset();
 
-//	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
-//		SPR_WaitEndSlaveSH();
-
-//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-//	SPR_InitSlaveSH();
 	memset((void *)SOUND_BUFFER,0x00,0x4000*8);
-//	SPR_InitSlaveSH();
+
 #ifdef RAZE
 	z80_stop_emulating();
 	z80_add_read(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)NULL);
@@ -421,19 +388,7 @@ void vbl()
 	CZetExit2();
 	CZ80Context = NULL;
 #endif
-//	SN76496Exit();
 	vdp_reset();
-/*
-	sms256kbRom = NULL;
-	cart.rom = NULL;
-	__port = NULL;
-//	vdp.vram = NULL;
-	dummy_write = NULL;
-	cram_lut = map_lut = NULL;
-
-	bp_lut = NULL;
-	name_lut = NULL;
-*/
 #ifdef GG0
 //	disp_spr = NULL;
 	curr_sprite=0;	
@@ -471,9 +426,6 @@ void SMSFrame()
 	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
 
 	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
-
-//	InitCD(); // si on lance juste pour pang
-//	ChangeDir("PANG");  // si on lance juste pour pang
 	pcm_stream_host(SMSFrame_old);
 }
 
@@ -524,7 +476,7 @@ void SMSFrame_old()
 #endif	
 
  #else
-		SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
+//		SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
 		sms_frame();
 		
 		if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
@@ -545,8 +497,8 @@ void SMSFrame_old()
 
 		PCM_MeStart(pcm);
 		*/
-			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-			SPR_WaitEndSlaveSH();
+//			if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
+//			SPR_WaitEndSlaveSH();
 //			wait_vblank();
 //						sh2slave(&nSoundBufferPos);
 #endif	
@@ -554,8 +506,8 @@ void SMSFrame_old()
 	}
 #ifdef PONY
 	frame_x++;
-	
-	 if(frame_x>=frame_y)
+	SclProcess = 2;	
+	if(frame_x>=frame_y)
 		wait_vblank();		
 #endif
 	

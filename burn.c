@@ -6,7 +6,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 15
+#define NB_DRV 19
 volatile struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));// __attribute__((section("COMMON")));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -104,9 +104,9 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvStarjack = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvRaflesia = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvAtetris = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_cz80 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvsms_gg = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvsms_gg = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_ggcz = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvCongo = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvZaxxon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
@@ -159,16 +159,16 @@ void BurnDrvAssignList()
 
 //	static struct BurnDriver BurnDrvNineteen43b = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 
-//BurnDrvsms_akmw.szShortName="sms";
-//BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
+BurnDrvsms_akmw.szShortName="sms";
+BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
 //BurnDrvsms_akmw.szParent=NULL;
 
 BurnDrvsms_cz80.szShortName="smscz";
 BurnDrvsms_cz80.szFullNameA="Sega Master System (CZ80)";
 //BurnDrvsms_cz80.szParent=NULL;
 
-//BurnDrvsms_gg.szShortName="gg";
-//BurnDrvsms_gg.szFullNameA="Sega Game Gear (Faze)";
+BurnDrvsms_gg.szShortName="gg";
+BurnDrvsms_gg.szFullNameA="Sega Game Gear (Faze)";
 //BurnDrvsms_gg.szParent=NULL;
 
 BurnDrvsms_ggcz.szShortName="ggcz";
@@ -451,12 +451,13 @@ BurnDrvNineteen43.szFullNameA="1943: The Battle of Midway (Euro)";
 //BurnDrvFM.szParent="blktgr";
 
 unsigned int i=0;
-/*
+
 //pDriver[i++] = &BurnDrvFM;
-//pDriver[i++] = &BurnDrvsms_akmw;
+pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsms_cz80;
-//pDriver[i++] = &BurnDrvsms_gg;
+pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
+/*
 pDriver[i++] = &BurnDrvsg1k_wboy;
 //pDriver[i++] = &BurnDrvMSX_1942;
 //pDriver[i++] = &BurnDrvNineteen43;
