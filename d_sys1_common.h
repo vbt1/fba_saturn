@@ -35,6 +35,8 @@ UINT16 *spriteCache = NULL;
 UINT8 *CZ80Context = NULL;
 UINT16 *map_cache = NULL;
 UINT8 *map_dirty = NULL;
+UINT16 *map = NULL;
+UINT16 *mapf = NULL;
 typedef int bool;
 
 //typedef struct { UINT8 x, y, width, yend } sprite_collision; 
@@ -50,54 +52,54 @@ void *memset4_fast(void *, long, size_t);
 inline void System1BankRom(UINT32 System1RomBank);
 void renderSound(unsigned int *nSoundBufferPos);
 
-static UINT8 System1InputPort0[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
-static UINT8 System1InputPort1[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
-static UINT8 System1InputPort2[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
-static UINT8 System1Dip[2]           = {0, 0};
-static UINT8 System1Input[3]         = {0x00, 0x00, 0x00 };
+UINT8 System1InputPort0[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
+UINT8 System1InputPort1[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
+UINT8 System1InputPort2[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
+UINT8 System1Dip[2]           = {0, 0};
+UINT8 System1Input[3]         = {0x00, 0x00, 0x00 };
 //UINT8 System1Reset            = 0;
 
-//static UINT8 *Mem                    = NULL;
-static UINT8 *RamStart               = NULL;
-static UINT8 *RamStart1              = NULL;
-static UINT8 *System1Rom1            = NULL;
-static UINT8 *System1Rom2            = NULL;
-static UINT8 *System1PromRed         = NULL;
-static UINT8 *System1PromGreen       = NULL;
-static UINT8 *System1PromBlue        = NULL;
-static UINT8 *System1Ram1            = NULL;
-static UINT8 *System1Ram2            = NULL;
-static UINT8 *System1SpriteRam       = NULL;
-static UINT8 *System1PaletteRam      = NULL;
-static UINT8 *System1BgRam           = NULL;
-static UINT8 *System1VideoRam        = NULL;
-static UINT8 *System1ScrollXRam      = NULL;
-static UINT8 *System1BgCollisionRam  = NULL;
-static UINT8 *System1SprCollisionRam = NULL;
-static UINT8 *System1deRam           = NULL;
-static UINT8 *System1efRam           = NULL;
-static UINT8 *System1f4Ram           = NULL;
-static UINT8 *System1fcRam           = NULL;
-//static UINT8 *System1Tiles           = NULL;
-static UINT8 *System1Sprites         = NULL;
-static UINT8 *SpriteOnScreenMap      = NULL;
-static UINT8 *System1Fetch1          = NULL;
-static UINT8 *System1MC8123Key		 = NULL;
-static UINT8 *System1ScrollX		 = NULL;
-static UINT8 *System1ScrollY		 = NULL;
+//UINT8 *Mem                    = NULL;
+UINT8 *RamStart               = NULL;
+UINT8 *RamStart1              = NULL;
+UINT8 *System1Rom1            = NULL;
+UINT8 *System1Rom2            = NULL;
+UINT8 *System1PromRed         = NULL;
+UINT8 *System1PromGreen       = NULL;
+UINT8 *System1PromBlue        = NULL;
+UINT8 *System1Ram1            = NULL;
+UINT8 *System1Ram2            = NULL;
+UINT8 *System1SpriteRam       = NULL;
+UINT8 *System1PaletteRam      = NULL;
+UINT8 *System1BgRam           = NULL;
+UINT8 *System1VideoRam        = NULL;
+UINT8 *System1ScrollXRam      = NULL;
+UINT8 *System1BgCollisionRam  = NULL;
+UINT8 *System1SprCollisionRam = NULL;
+UINT8 *System1deRam           = NULL;
+UINT8 *System1efRam           = NULL;
+UINT8 *System1f4Ram           = NULL;
+UINT8 *System1fcRam           = NULL;
+//UINT8 *System1Tiles           = NULL;
+UINT8 *System1Sprites         = NULL;
+UINT8 *SpriteOnScreenMap      = NULL;
+UINT8 *System1Fetch1          = NULL;
+UINT8 *System1MC8123Key		 = NULL;
+UINT8 *System1ScrollX		 = NULL;
+UINT8 *System1ScrollY		 = NULL;
 
-static int System1BgScrollX = 0;
-static int System1BgScrollY = 0;
-static int System1VideoMode = 0;
-static int System1FlipScreen = 0;
-static int System1SoundLatch = 0;
+int System1BgScrollX = 0;
+int System1BgScrollY = 0;
+int System1VideoMode = 0;
+int System1FlipScreen = 0;
+int System1SoundLatch = 0;
 
-static UINT8 System1BgBankLatch = 0;
-static UINT8 System1BgBank = 0;
-static UINT8 System1BankSwitch = 0;
+UINT8 System1BgBankLatch = 0;
+UINT8 System1BgBank = 0;
+UINT8 System1BankSwitch = 0;
 
-static UINT8  BlockgalDial1 = 0;
-static UINT8  BlockgalDial2 = 0;
+UINT8  BlockgalDial1 = 0;
+UINT8  BlockgalDial2 = 0;
 
 unsigned int System1SpriteRomSize = 0;
 unsigned int System1NumTiles = 0;
@@ -112,13 +114,13 @@ Collision CollisionFunction = NULL;
 typedef void (*MakeInputs)();
 MakeInputs MakeInputsFunction = NULL;
 
-static unsigned int nCyclesTotal[2] = {0,0};
+ unsigned int nCyclesTotal[2] = {0,0};
 
 /*==============================================================================================
 Input Definitions
 ===============================================================================================*/
 
-static struct BurnInputInfo BlockgalInputList[] = {
+struct BurnInputInfo BlockgalInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
@@ -140,7 +142,7 @@ static struct BurnInputInfo BlockgalInputList[] = {
 
 STDINPUTINFO(Blockgal)
 
-static struct BurnInputInfo MyheroInputList[] = {
+struct BurnInputInfo MyheroInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
 	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
 	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },

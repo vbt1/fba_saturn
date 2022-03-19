@@ -9,6 +9,7 @@
 #include "czet.h"
 
 #define nBurnSoundLen 128
+#define SOUNDRATE   7680L
 
 UINT16 *map_offset_lut = NULL;
 //UINT16 *mapbg_offset_lut = NULL;

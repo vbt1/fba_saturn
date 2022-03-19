@@ -6,7 +6,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 45
+#define NB_DRV 15
 volatile struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));// __attribute__((section("COMMON")));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -91,10 +91,10 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvPang = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvSpang = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvGnga = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvBlockgal = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvBlockgal = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvWboyu = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvChplftb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvGardia = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvGardia = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvFlickys2 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvMyhero = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvTeddybb = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
@@ -222,11 +222,11 @@ BurnDrvSpang.szParent="mitch";
 BurnDrvGnga.szShortName="gnga";
 BurnDrvGnga.szFullNameA="Ghosts'n Goblins (World? set 2)";
 BurnDrvGnga.szParent="gng";
-
+*/
 BurnDrvBlockgal.szShortName="blockgal";
 BurnDrvBlockgal.szFullNameA="Block Gal (MC-8123B, 317-0029)";
 BurnDrvBlockgal.szParent="sys1h";
-*/
+
 BurnDrvWboyu.szShortName="wboyu";
 BurnDrvWboyu.szFullNameA="Wonder Boy (not encrypted)";
 BurnDrvWboyu.szParent="sys1";
@@ -234,11 +234,11 @@ BurnDrvWboyu.szParent="sys1";
 //BurnDrvChplftb.szShortName="chplftb";
 //BurnDrvChplftb.szFullNameA="Choplifter (Alternate)";
 //BurnDrvChplftb.szParent="sys2";
-/*
+
 BurnDrvGardia.szShortName="gardia";
 BurnDrvGardia.szFullNameA="Gardia (317-0006)";
 BurnDrvGardia.szParent="sys1h";
-*/
+
 BurnDrvFlickys2.szShortName="flickys2";
 BurnDrvFlickys2.szFullNameA="Flicky (128k, System 2, not encrypted)";
 BurnDrvFlickys2.szParent="sys1";
@@ -451,6 +451,7 @@ BurnDrvNineteen43.szFullNameA="1943: The Battle of Midway (Euro)";
 //BurnDrvFM.szParent="blktgr";
 
 unsigned int i=0;
+/*
 //pDriver[i++] = &BurnDrvFM;
 //pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsms_cz80;
@@ -463,7 +464,9 @@ pDriver[i++] = &BurnDrvsg1k_wboy;
 
 pDriver[i++] = &BurnDrvAppoooh;
 //pDriver[i++] = &BurnDrvAstrofl;
+*/
 pDriver[i++] = &BurnDrvRobokid;
+/*
 //pDriver[i++] = &BurnDrvOmegafs;
 //pDriver[i++] = &BurnDrvGnga;
 //pDriver[i++] = &BurnDrvAtetris;
@@ -471,55 +474,82 @@ pDriver[i++] = &BurnDrvRobokid;
 //pDriver[i++] = &BurnDrvStinger;
 //pDriver[i++] = &BurnDrvScion;
 pDriver[i++] = &BurnDrvbankp;
+*/
 pDriver[i++] = &BurnDrvBlktiger;
+
 //pDriver[i++] = &BurnDrvBlockgal;
+/*
 pDriver[i++] = &BurnDrvBombjack;
 //pDriver[i++] = &BurnDrvChplftb;
 pDriver[i++] = &BurnDrvcombh;
 pDriver[i++] = &BurnDrvCountrunb;
+*/
 pDriver[i++] = &BurnDrvFantzn2;
+
 pDriver[i++] = &BurnDrvFlickys2;
+/*
 pDriver[i++] = &BurnDrvFreekickb1;
-//pDriver[i++] = &BurnDrvGardia;
+*/
+pDriver[i++] = &BurnDrvGardia;
+/*
 pDriver[i++] = &BurnDrvGigasb;
 pDriver[i++] = &BurnDrvGigasm2;
 pDriver[i++] = &BurnDrvGberet;
 //pDriver[i++] = &BurnDrvHangonjr;
+*/
 pDriver[i++] = &BurnDrvMnight;
+/*
 pDriver[i++] = &BurnDrvMrgoemon;
+*/
 pDriver[i++] = &BurnDrvMyhero;
+/*
 pDriver[i++] = &BurnDrvNews;
 pDriver[i++] = &BurnDrvNewsa;
 pDriver[i++] = &BurnDrvNinjakun;
+*/
 pDriver[i++] = &BurnDrvNinjakd2a;
+/*
 pDriver[i++] = &BurnDrvNova2001u;
 pDriver[i++] = &BurnDrvOmega;
+*/
 pDriver[i++] = &BurnDrvOpaopa;
-pDriver[i++] = &BurnDrvPang;
+
+//pDriver[i++] = &BurnDrvPang;
+/*
 pDriver[i++] = &BurnDrvpkunwar;
 pDriver[i++] = &BurnDrvpengo2u;
 //pDriver[i++] = &BurnDrvPbillrd;
 pDriver[i++] = &BurnDrvhigemaru;
+*/
 pDriver[i++] = &BurnDrvPitfall2u;
+/*
 pDriver[i++] = &BurnDrvpuckman;
 //pDriver[i++] = &BurnDrvRaflesia;
 //pDriver[i++] = &BurnDrvRaiders5;
 pDriver[i++] = &BurnDrvRobowres;
 pDriver[i++] = &BurnDrvSidearms;
+*/
 pDriver[i++] = &BurnDrvSlapFigh;
+/*
 //pDriver[i++] = &BurnDrvSlapshtr;
 pDriver[i++] = &BurnDrvSolomon;
+*/
 pDriver[i++] = &BurnDrvStarjack;
+/*
 pDriver[i++] = &BurnDrvSpang;
 pDriver[i++] = &BurnDrvSzaxxon;	  
 //pDriver[i++] = &BurnDrvTeddybb;
+*/
 pDriver[i++] = &BurnDrvTetrisse;
 pDriver[i++] = &BurnDrvTigerHB1;
+/*
 //pDriver[i++] = &BurnDrvTransfrm;
 //pDriver[i++] = &BurnDrvVigilant;
 //pDriver[i++] = &BurnDrvWiz;
 pDriver[i++] = &BurnDrvWboyu;
+*/
 pDriver[i++] = &BurnDrvWbdeluxe;
+/*
 //pDriver[i++] = &BurnDrvWbml;
 //pDriver[i++] = &BurnDrvWbmlb;
 pDriver[i++] = &BurnDrvWbmlvc;
@@ -529,7 +559,7 @@ pDriver[i++] = &BurnDrvZaxxon;
 //pDriver[i++] = &BurnDrvAtetris;
 //pDriver[i++] = &BurnDrvZaxxonb;
 //pDriver[i++] = &BurnDrvCongo;
-
+*/
 }
 
 // Application-defined rom loading function:

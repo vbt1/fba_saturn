@@ -7,6 +7,18 @@
 #define nCycleSegment nCyclesTotal / nInterleave
 //volatile SysPort	*ss_port = NULL;
 
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+extern unsigned int frame_y;
+//UINT16 map[0x1000];
+#endif
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -659,6 +671,10 @@ INT32 DrvExit()
 	initScrollingNBG1(OFF,(UINT32)NULL);
 SclProcess = 2;
 	wait_vblank();
+	
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif	
 /*
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -770,7 +786,25 @@ void segae_interrupt ()
 	}
 }
 
+
+#ifdef PONY
+void DrvFrame_old();
+
 void DrvFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+void DrvFrame()
+#endif
 {
 //	*(Uint16 *)0x25E00000 = colBgAddr[256]; // set bg_color
 	
@@ -803,7 +837,7 @@ void DrvFrame()
 		segae_interrupt();
 	}
 	CZetClose();
-
+#ifndef PONY
 	signed short *nSoundBuffer = (signed short *)(0x25a20000+nSoundBufferPos*(sizeof(signed short)));
 //	if (pBurnSoundOut)
 	{
@@ -821,6 +855,26 @@ void DrvFrame()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm); // bon emplacement
+#else
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
+
+	SN76496Update(0, &nSoundBuffer2[0], nBurnSoundLen);
+	SN76496Update(1, &nSoundBuffer2[0], nBurnSoundLen);
+	
+	nSoundBufferPos+=nBurnSoundLen;
+	
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos=0;
+	}
+	
+	SclProcess = 2;
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();		
+#endif	
 
 	ss_reg->n0_move_y = scroll_y[0]<<16;
 	ss_reg->n1_move_y = scroll_y[1]<<16;
@@ -1104,6 +1158,10 @@ void DrvInitSaturnS(UINT8 game)
 	memset(ss_scl,0xff,nBurnLinescrollSize);
 	memset(ss_scl1,0xff,nBurnLinescrollSize);
 	nBurnFunction = SCL_SetLineParamNBG1;
+
+#ifdef PONY
+	frame_x	= 0;
+#endif		
 //	__port = PER_OpenPort();	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1111,6 +1169,9 @@ void DrvInitSaturnS(UINT8 game)
 {
 	UINT32 *address		=(UINT32 *)(SCL_VDP2_VRAM_B0+0x8000);	
 	memcpyl((void *)address,(void *)&ss_scl1[0], nBurnLinescrollSize);
+#ifdef PONY	
+	sdrv_stm_vblank_rq();
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void initScrollingNBG1(UINT8 enabled,UINT32 address)

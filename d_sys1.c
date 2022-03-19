@@ -89,9 +89,9 @@ int ovlInit(char *szShortName)
 Decode Functions
 ===============================================================================================*/
 
-/*static*/ void teddybb_decode(void)
+void teddybb_decode(void)
 {
-	/*static*/ const UINT8 convtable[32][4] =
+	const UINT8 convtable[32][4] =
 	{
 		//       opcode                   data                     address      
 		//  A    B    C    D         A    B    C    D                           
@@ -118,7 +118,7 @@ Decode Functions
 /*==============================================================================================
 Driver Inits
 ===============================================================================================*/
-/*static*/ INT32 WboyuInit()
+INT32 WboyuInit()
 {
 	INT32 nRet = 0;
 	nRet = System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
@@ -126,7 +126,7 @@ Driver Inits
 	return nRet;
 }
 
-/*static*/ INT32 Wboy2uInit()
+INT32 Wboy2uInit()
 {
 	INT32 nRet = 0;
 	nRet = System1Init(6, 0x2000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
@@ -134,7 +134,7 @@ Driver Inits
 	return nRet;
 }
 
-/*static*/ INT32 TeddybbInit()
+INT32 TeddybbInit()
 {
 	DecodeFunction = teddybb_decode;
 
@@ -153,12 +153,12 @@ int NprincsuInit()
 }
 */
 
-/*static*/ int Flicks2Init()
+int Flicks2Init()
 {
 	return System1Init(2, 0x4000, 1, 0x2000, 6, 0x2000, 2, 0x4000, 1);
 }
 
-/*static*/ INT32 PitfalluInit()
+INT32 PitfalluInit()
 {
 	int nRet;
 	
@@ -168,7 +168,7 @@ int NprincsuInit()
 	return nRet;
 }
 
-/*static*/ INT32 MyheroInit()
+INT32 MyheroInit()
 {
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }

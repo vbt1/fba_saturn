@@ -12,6 +12,7 @@ int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned int frame_x;
 extern unsigned int frame_y;
+//UINT16 map[0x1000];
 #endif
 
 /*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
@@ -283,6 +284,8 @@ inline void MemIndex()
 	map_offset_lut		= (UINT16 *)Next; Next += 0x800 * sizeof(UINT16);
 //	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
 	cpu_lut				= (UINT32 *)Next; Next += 256*sizeof(UINT32);
+	map					= (UINT16 *)Next; Next += 0x1000 * sizeof(UINT16);
+//	mapf				= (UINT16 *)Next; Next += 0x1000 * sizeof(UINT16);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
 	map_cache			= (UINT16 *)Next; Next += 0x4000 * sizeof(UINT32); // 4 banks de 4096
 	map_dirty			= Next; Next += 0x0008;
@@ -387,12 +390,12 @@ void system1_backgroundram_w(unsigned short a, UINT8 d)
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		unsigned int x = map_offset_lut[a&0x7ff];
-		UINT16 *map = &ss_map[x]; 
-//		ss_map[x]     = ss_map[x+0x40] = ss_map[x+0x1000] = ss_map[x+0x1040] = (Code >> 5) & 0x3f;;//color_lut[Code];
-//		ss_map[x+1] = ss_map[x+0x41] = ss_map[x+0x1001] = ss_map[x+0x1041] = Code & (System1NumTiles-1);
-		map[0] = map[0x40] = map[0x1000] = map[0x1040] = ((Code >> 5) & 0x3f)//	+0x3000;
+		UINT16 *map2 = &map[x]; 
+		map2[0] = map2[0x40] = /*map2[0x1000] = map2[0x1040] =*/ ((Code >> 5) & 0x3f)//	+0x3000;
+//		map[0x40] = map[0x1000] = map[0x1040] = map[x++] = ((Code >> 5) & 0x3f)//	+0x3000;
 																						|(((rs[1] & 0x08)==8)?0x2000:0x0000);//color_lut[Code];
-		map[1] = map[0x41] = map[0x1001] = map[0x1041] = Code & (System1NumTiles-1);
+		map2[1] = map2[0x41] = /*map2[0x1001] = map2[0x1041] =*/ Code & (System1NumTiles-1);
+//		map[x] = map[0x41] = map[0x1001] = map[0x1041] = Code & (System1NumTiles-1);
 	}
 }
 
@@ -407,9 +410,10 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		unsigned int x = map_offset_lut[a&0x7ff];
-		UINT16 *map = &ss_map2[x];		
-		map[0] = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
-		map[1] = Code & (System1NumTiles-1);
+		UINT16 *mapf2 = &ss_map2[x];	
+//		UINT16 *mapf2 = &mapf[x];	
+		mapf2[0] = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
+		mapf2[1] = Code & (System1NumTiles-1);
 	}
 }
 
@@ -522,7 +526,7 @@ void initLayers()
 //	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 //	scfg.datatype      = SCL_CELL;
 	scfg.plate_addr[0] = (Uint32)ss_map;
-	scfg.plate_addr[1] = (Uint32)ss_map+0x1000;
+	scfg.plate_addr[1] = (Uint32)ss_map; //+0x1000;
 //	scfg.plate_addr[2] = (Uint32)ss_map+0x1000;
 //	scfg.plate_addr[3] = (Uint32)ss_map+0x1000;
 //	scfg.plate_addr[1] = 0x00;
@@ -602,9 +606,9 @@ void DrvInitSaturn()
 	INT_ChgMsk(INT_MSK_DMA2, INT_MSK_NULL);	
 	nSoundBufferPos = 0;
 	nBurnSprites  = 35;
-	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
+	SS_MAP    = ss_map = (Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
 	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
-	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_FONT  = ss_font = (Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = cache     =(Uint8  *)SCL_VDP2_VRAM_A0;
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -1007,7 +1011,7 @@ void System1CalcPalette()
 /*		colAddr[i]				    = cram_lut[System1PaletteRam[i]];
 		colBgAddr[delta]		= cram_lut[*System1PaletteRam512++];
 		colBgAddr2[delta]		= cram_lut[*System1PaletteRam1024++];	  */
-		colAddr[i]				    = cram_lut[System1PaletteRam[i]];
+		colAddr[i]				= cram_lut[System1PaletteRam[i]];
 		colBgAddr[delta]		= cram_lut[*System1PaletteRam512];
 		++System1PaletteRam512;
 		colBgAddr2[delta]		= cram_lut[*System1PaletteRam1024];
@@ -1143,11 +1147,13 @@ void renderSound(unsigned int *nSoundBufferPos)
 	
 	*nSoundBufferPos+=nSegmentLength;
 #else
+	signed short buffer[128];
 	signed short *nSoundBuffer2 = (signed short *)(nSoundBuffer+(nSoundBufferPos[0]<<1));
 
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	SN76496Update(0, nSoundBuffer2, nBurnSoundLen);
-	SN76496Update(1, nSoundBuffer2, nBurnSoundLen);
+	SN76496Update(0, buffer, nBurnSoundLen);
+	SN76496Update(1, buffer, nBurnSoundLen);
+	memcpyl(nSoundBuffer2,buffer,nBurnSoundLen<<1);
 	*nSoundBufferPos+=nBurnSoundLen;
 #endif	
 //	System1Render();
@@ -1240,6 +1246,12 @@ void System1Frame()
 //		SPR_WaitEndSlaveSH();
 	
 #ifdef PONY
+	DMA_ScuMemCopy(ss_map,map,0x2000);
+	DMA_ScuMemCopy(ss_map+0x1000,map,0x2000);
+	
+	while(DMA_ScuResult()==2);
+
+
 	_spr2_transfercommand();
 	SclProcess = 1;	
 	frame_x++;

@@ -10,9 +10,9 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile 
 #CCFLAGS2 = -m2 -Os -Wall -Wextra --save-temps -ffreestanding -fno-web -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
-CCFLAGS2 = -m2 -O2 -Wall -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCFLAGS2 = -m2 -O2 -Wall -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
-CCOVLFLAGS = -m2 -O2 -Wall -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCOVLFLAGS = -m2 -O2 -Wall -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
 OLVSCRIPT = root/sl2.lnk
 #LDCMNFLAGS = -m2 -O2 -flto -fuse-linker-plugin  -Xlinker -n -Xlinker -S -Xlinker
@@ -193,7 +193,7 @@ OVLBOMBJACK                 = root/d_bombja.elf
 OVLBOMBJACK1               = root/d_bombja.bin
 MPOVLBOMBJACKFILE    = $(OVLBOMBJACK:.elf=.maps)
 LDOVLBOMBJACKFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBOMBJACKFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLBOMBJACK         = d_bombjack.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c
+SRCOVLBOMBJACK         = d_bombjack.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c saturn/pcmstm.c
 OBJOVLBOMBJACK         = $(SRCOVLBOMBJACK:.c=.o)
 
 OVLAPPOOO                 = root/d_appooo.elf
@@ -208,7 +208,7 @@ OVLBLKTGR1               = root/d_blktgr.bin
 MPOVLBLKTGRFILE    = $(OVLBLKTGR:.elf=.maps)
 LDOVLBLKTGRFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLBLKTGRFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c snd/timer.c snd/ay8910.c snd/fm.c snd/burn_ym2203.c load.c saturn/ovl.c
-SRCOVLBLKTGR         = d_blktiger.c load.c saturn/ovl.c saturn/saturn_snd.c
+SRCOVLBLKTGR         = d_blktiger.c load.c saturn/ovl.c saturn/pcmstm.c 
 #SRCOVLBLKTGR         = d_blktiger.c czet.c cz80/cz80.c snd/timer.c load.c saturn/ovl.c
 OBJOVLBLKTGR         = $(SRCOVLBLKTGR:.c=.o)
 
@@ -246,7 +246,7 @@ OVLSEGAE                 = root/d_segae.elf
 OVLSEGAE1               = root/d_segae.bin
 MPOVLSEGAEFILE    = $(OVLSEGAE:.elf=.maps)
 LDOVLSEGAEFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSEGAEFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c 
+SRCOVLSEGAE         = d_segae.c czet.c cz80/cz80.c snd/sn76496.c mc8123.c load.c saturn/ovl.c saturn/pcmstm.c  
 #saturn/saturn_ext.c 
 OBJOVLSEGAE         = $(SRCOVLSEGAE:.c=.o)
 
@@ -302,15 +302,16 @@ sl: $(TARGET) $(TARGET1)
 drv:  $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
 	 $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \
      $(OVLHIGEMARU) $(OVLHIGEMARU1) $(OVLPKUNW) $(OVLPKUNW1) \
+	 $(OVLNINKD2) $(OVLNINKD21) $(OVLBLKTGR) $(OVLBLKTGR1) \
      $(OVLMITCH) $(OVLMITCH1) $(OVLGNG) $(OVLGNG1) \
      $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
-     $(OVLAPPOOO) $(OVLAPPOOO1) \
-     $(OVLZAXXON) $(OVLZAXXON1)  \
+     $(OVLAPPOOO) $(OVLAPPOOO1) $(OVLZAXXON) $(OVLZAXXON1)  \
+	 $(OVLSEGAE) $(OVLSEGAE1) \
      $(OVLSLPFGHT) $(OVLSLPFGHT1) $(OVLFREEK) $(OVLFREEK1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
-     $(OVLMSX) $(OVLMSX1) $(OVLSEGAE) $(OVLSEGAE1) \
-     $(OVLNINKD2) $(OVLNINKD21) $(OVL1943) $(OVL19431) \
+     $(OVLMSX) $(OVLMSX1) 
+	 $(OVL1943) $(OVL19431) \
 	 $(OVLTETRIS) $(OVLTETRIS1) \
      $(OVLSMS) $(OVLSMS1) $(OVLGGCZ) $(OVLGGCZ1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) 	 
@@ -469,7 +470,7 @@ $(OVLAPPOOO1) : $(OBJOVLAPPOOO) $(MAKEFILE) $(LDOVLAPPOOOFILE)
 	$(CONV) -O binary $(OVLAPPOOO) $(OVLAPPOOO1)
 
 $(OVLBLKTGR) : $(OBJOVLBLKTGR) $(MAKEFILE) $(OBJOVLBLKTGR) $(LDOVLBLKTGRFILE)
-	$(CC) $(LDOVLBLKTGRFLAGS) $(OBJOVLBLKTGR) $(LIBSOVL) $(LIBSTM) raze/raze.o -o $@
+	$(CC) $(LDOVLBLKTGRFLAGS) $(OBJOVLBLKTGR) $(LIBSOVL) raze/raze.o -o $@
 #	$(CC) $(LDOVLBLKTGRFLAGS) $(OBJOVLBLKTGR) $(LIBSOVL) $(LIBSTM) raze/raze.o -o $@
 
 $(OVLBLKTGR1) : $(OBJOVLBLKTGR) $(MAKEFILE) $(LDOVLBLKTGRFILE)

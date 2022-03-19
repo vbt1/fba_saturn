@@ -6,6 +6,16 @@ inline void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 of
 void CalcAll();
 UINT32 BgSel=0xFFFF;
 //UINT32 bg_cache[1024];
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+extern unsigned int frame_y;
+#endif
 
 int ovlInit(char *szShortName)
 {
@@ -171,6 +181,10 @@ void DrvInitSaturn()
     ss_sprite[nBurnSprites-1].charSize		= 0;
 
 	nBurnFunction = CalcAll;
+#ifdef PONY
+	frame_x	= 0;
+//	nBurnFunction = sdrv_stm_vblank_rq;
+#endif	
 	drawWindow(0,240,0,6,66); 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -707,7 +721,9 @@ INT32 DrvExit()
 //	free (pFMBuffer);
 	pFMBuffer = NULL;
 	BgSel = 0;
-
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
 	//cleanDATA();
 	cleanBSS();
 
@@ -724,6 +740,10 @@ void CalcAll()
 //		CalcCol(BjPalRam[i] | (BjPalRam[i+1] << 8));
 		 		delta++; if ((delta & 7) == 0) delta += 8;
 	}
+	
+#ifdef PONY
+	sdrv_stm_vblank_rq();
+#endif	
 }
 
  void BjRenderBgLayer(UINT32 BgSel)
@@ -783,19 +803,35 @@ void draw_sprites()
 	}
 }
 
+#ifdef PONY
+void DrvFrame_old();
+
 void DrvFrame()
 {
-	{
-		DrvInputs[0] = 0x00;
-		DrvInputs[1] = 0x00;
-		DrvInputs[2] = 0x00;
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
 
-		for (INT32 i = 0; i < 8; i++) {
-			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
-			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
-			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
-		}
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+void DrvFrame()
+#endif
+{
+	DrvInputs[0] = 0x00;
+	DrvInputs[1] = 0x00;
+	DrvInputs[2] = 0x00;
+
+	for (INT32 i = 0; i < 8; i++) {
+		DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
+		DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
+		DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 	}
+
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"BjFrame                  ",10,70);
 
 	INT32 nInterleave = 10;
@@ -806,8 +842,6 @@ void DrvFrame()
 	UINT32 nCyclesDone[2] = {0,0};
 //	UINT32 nCyclesTotal[2] = {4000000 / 600,3000000 / 600};
 	UINT32 nCyclesTotal[2] = {3000000 / 600,2250000 / 600};
-
-	signed short *nSoundBuffer = (signed short *)0x25a20000;
 
 	for (INT32 i = 0; i < nInterleave; i++) 
 	{
@@ -856,12 +890,18 @@ void DrvFrame()
 		nSoundBufferPos1 += nSegmentLength;
 #endif
 	}
-#ifdef SOUND
+	
+#ifndef PONY
+	signed short *nSoundBuffer = (signed short *)0x25a20000;
+	
 	INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos1;
 	if (nSegmentLength) 
 	{
 		SoundUpdate(&nSoundBuffer[nSoundBufferPos],nSegmentLength);
 	}
+#else
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
+	SoundUpdate(&nSoundBuffer2[nSoundBufferPos],nBurnSoundLen);
 #endif
 //	SPR_RunSlaveSH((PARA_RTN*)BjDrawSprites, NULL);
 //	CalcAll();
@@ -871,9 +911,17 @@ void DrvFrame()
 		BgSel=BjRam[0x9e00];
 		BjRenderBgLayer(BgSel);
 	}
-	//BjRenderFgLayer();
+
 	draw_sprites();
-//	 SPR_WaitEndSlaveSH();
+
+#ifndef PONY
+	_spr2_transfercommand();
+	SclProcess = 2;
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
+#endif
 }
 
 void AY8910Update1Slave(INT32 *length)
@@ -983,7 +1031,7 @@ void SoundUpdate(INT16* buffer, INT32 length)
 		*buffer++ = nSample;//pAY8910Buffer[5][n];//nSample;
 	}
 	nSoundBufferPos+=length;
-
+#ifndef PONY
 //	if(deltaSlave>=RING_BUF_SIZE/2)
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)
 	{
@@ -991,7 +1039,13 @@ void SoundUpdate(INT16* buffer, INT32 length)
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos=0;
 	}
-
+#else
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos=0;
+	}	
+#endif
 //	deltaSlave+=nBurnSoundLen;
 }
 

@@ -9,6 +9,7 @@
 #include "czet.h"
 
 #define nBurnSoundLen 128
+#define SOUNDRATE   7680L
 
 extern unsigned char play;
 UINT16 *name_lut = NULL;

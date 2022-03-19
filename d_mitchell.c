@@ -5,7 +5,7 @@
 //#define PCM_MUSIC 1
 
 #include "d_mitchell.h"
-//#pragma GCC optimize ("O2")
+#pragma GCC optimize ("O3")
 #define PONY 1
 
 #ifdef PONY	
@@ -15,59 +15,8 @@
 
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
-
-//--------------------------------------------------------------------------------------------------------------------------------------
- void sound_external_audio_enable(Uint8 vol_l, Uint8 vol_r) {
-    volatile Uint16 *slot_ptr;
-
-    //max sound volume is 7
-    if (vol_l > 7) {
-        vol_l = 7;
-    }
-    if (vol_r > 7) {
-        vol_r = 7;
-    }
-
-    // Setup SCSP Slot 16 and Slot 17 for playing
-    slot_ptr = (volatile Uint16 *)(0x25B00000 + (0x20 * 16));
-    slot_ptr[0] = 0x1000;
-    slot_ptr[1] = 0x0000; 
-    slot_ptr[2] = 0x0000; 
-    slot_ptr[3] = 0x0000; 
-    slot_ptr[4] = 0x0000; 
-    slot_ptr[5] = 0x0000; 
-    slot_ptr[6] = 0x00FF; 
-    slot_ptr[7] = 0x0000; 
-    slot_ptr[8] = 0x0000; 
-    slot_ptr[9] = 0x0000; 
-    slot_ptr[10] = 0x0000; 
-    slot_ptr[11] = 0x001F | (vol_l << 5);
-    slot_ptr[12] = 0x0000; 
-    slot_ptr[13] = 0x0000; 
-    slot_ptr[14] = 0x0000; 
-    slot_ptr[15] = 0x0000; 
-
-    slot_ptr = (volatile Uint16 *)(0x25B00000 + (0x20 * 17));
-    slot_ptr[0] = 0x1000;
-    slot_ptr[1] = 0x0000; 
-    slot_ptr[2] = 0x0000; 
-    slot_ptr[3] = 0x0000; 
-    slot_ptr[4] = 0x0000; 
-    slot_ptr[5] = 0x0000; 
-    slot_ptr[6] = 0x00FF; 
-    slot_ptr[7] = 0x0000; 
-    slot_ptr[8] = 0x0000; 
-    slot_ptr[9] = 0x0000; 
-    slot_ptr[10] = 0x0000; 
-    slot_ptr[11] = 0x000F | (vol_r << 5);
-    slot_ptr[12] = 0x0000; 
-    slot_ptr[13] = 0x0000; 
-    slot_ptr[14] = 0x0000; 
-    slot_ptr[15] = 0x0000;
-
-    *((volatile Uint16 *)(0x25B00400)) = 0x020F;
-}
-//--------------------------------------------------------------------------------------------------------------------------------------
+extern unsigned int frame_x;
+extern unsigned int frame_y;
 #endif
 
 
@@ -223,16 +172,16 @@ void DrvDoReset()
 //	CZetClose();
 #else
 #ifdef RAZE
-	DrvRomBank = 0;
+//	DrvRomBank = 0;
 	z80_init_memmap();
- 	z80_map_read (0x8000, 0xbfff, DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000)); 
+ 	z80_map_read (0x8000, 0xbfff, DrvZ80Rom + 0x10000); 
 
 	if (DrvHasEEPROM) {
-	 	z80_map_fetch (0x8000, 0xbfff, DrvZ80Code + 0x10000 + (DrvRomBank * 0x4000)); 
+	 	z80_map_fetch (0x8000, 0xbfff, DrvZ80Code + 0x10000); 
 //		z80_map_read  (0x8000, 0xbfff, DrvZ80Code + 0x10000 + (DrvRomBank * 0x4000)); //2 fetch 
-		z80_map_read  (0x8000, 0xbfff, DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000)); //2 fetch 
+		z80_map_read  (0x8000, 0xbfff, DrvZ80Rom + 0x10000); //2 fetch 
 	} else {
-		z80_map_fetch (0x8000, 0xbfff, DrvZ80Rom + 0x10000 + (DrvRomBank * 0x4000)); //2 fetch 
+		z80_map_fetch (0x8000, 0xbfff, DrvZ80Rom + 0x10000); //2 fetch 
 	}
 	z80_end_memmap();  
 	z80_reset();
@@ -257,6 +206,7 @@ void DrvDoReset()
 	
 	DrvPaletteRamBank = 0;
 	DrvVideoBank = 0;
+//	*(Uint16 *)0x25E00000 = colBgAddr[0];
 }
 unsigned char __fastcall MitchellZ80Read(unsigned short a)
 {
@@ -602,9 +552,9 @@ void MitchellMachineInit()
 	z80_map_fetch (0x8000, 0xbfff, DrvZ80Code + 0x10000); 
 	z80_map_read  (0x8000, 0xbfff, DrvZ80Rom  + 0x10000); //1 write
 
-	z80_map_fetch (0xc800, 0xcfff, DrvAttrRam); //0 read
-	z80_map_read  (0xc800, 0xcfff, DrvAttrRam); //1 write
-	z80_map_write (0xc800, 0xcfff, DrvAttrRam); //2 fetch 
+	z80_map_fetch (0xc800, 0xcfff, DrvPaletteRam+0x1000); //0 read
+	z80_map_read  (0xc800, 0xcfff, DrvPaletteRam+0x1000); //1 write
+	z80_map_write (0xc800, 0xcfff, DrvPaletteRam+0x1000); //2 fetch 
 
 	z80_map_fetch (0xe000, 0xffff, DrvZ80Ram); //0 read
 	z80_map_read  (0xe000, 0xffff, DrvZ80Ram); //1 write
@@ -827,7 +777,7 @@ inline void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
-	SCL_SetColRam(SCL_NBG1,8,4,palette);
+//	SCL_SetColRam(SCL_NBG1,8,4,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -1107,8 +1057,8 @@ void DrvFrame()
 			DrvInput5Toggle = (i == 29);
 		}
 #else
-		nNext = (i + 1) * nCyclesTotal / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone;
+//		nNext = (i + 1) * nCyclesTotal / nInterleave;
+//		nCyclesSegment = nNext - nCyclesDone;
 		nCyclesDone += z80_emulate(nCyclesSegment);
 
 		if (i == 4) 
@@ -1144,9 +1094,11 @@ void DrvFrame()
 //	PCM_Task(pcm); 
 #endif
 #ifdef PONY
+	signed short buffer[128];
 	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
 
-	MSM6295RenderVBT(0, nSoundBuffer2, nBurnSoundLen);
+	MSM6295RenderVBT(0, buffer, nBurnSoundLen);
+	memcpyl(nSoundBuffer2,buffer,nBurnSoundLen<<1);	
 	nSoundBufferPos+=nBurnSoundLen;
 	
 	if(nSoundBufferPos>=nBurnSoundLen*10)
@@ -1163,7 +1115,12 @@ void DrvFrame()
 	DrvDraw();
 #endif
 #ifdef PONY
-_spr2_transfercommand();
+	_spr2_transfercommand();
+
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

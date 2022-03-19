@@ -2,13 +2,27 @@
 // Based on MAME driver by Paul Leaman
 
 //#pragma GCC optimize("Os")
+#define PCM_SFX 1
+#define PCM_MUSIC 1
+#define PONY
 
 #include "d_blktiger.h"
 #define RAZE0 1
 #define nYM2203Clockspeed 3579545
 //#define DEBUG_PCM 1
-#define PCM_SFX 1
-#define PCM_MUSIC 1
+
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+int pcm[14];
+Sint16 *nSoundBuffer[32];
+//Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+extern unsigned int frame_y;
+//UINT16 map[0x1000];
+#endif
 
 /*
 <vbt1> where and when you update the nbg map
@@ -214,53 +228,15 @@ void blacktiger_out(UINT16 port, UINT8 data)
 					st->cnt_loop = 0;
 //					st->audio_process_fp = vbt_pcm_AudioProcess;
 					st->need_ci = PCM_OFF;
-#ifdef DEBUG_PCM
-if(i==0)
-{
-					if(st->play ==PCM_STAT_PLAY_ERR_STOP)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"errstp",40,20+i*10);
-					else if (st->play ==PCM_STAT_PLAY_CREATE)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"create",40,20+i*10);
-					else if (st->play ==PCM_STAT_PLAY_PAUSE)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"pause ",40,20+i*10);
-					else if (st->play ==PCM_STAT_PLAY_START)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"start ",40,20+i*10);
-					else if (st->play ==PCM_STAT_PLAY_HEADER)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"header",40,20+i*10);
-					else if (st->play ==PCM_STAT_PLAY_TIME)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"playin",40,20+i*10);
-					else if (st->play ==PCM_STAT_PLAY_END)
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"end   ",40,20+i*10);
-					else
-							FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"error ",40,40+i*10);
-}
-#endif
-//					if (st->play == PCM_STAT_PLAY_CREATE && i>0) 
-				if((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0)
 
-//vbt
-//					if ((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0) 
+//					if (st->play == PCM_STAT_PLAY_CREATE && i>0) 
+					if((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0)
+
+	//vbt
+	//					if ((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0) 
 						break;
 				}
- #ifdef DEBUG_PCM1
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"0",10,20);
-				if(i==1)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"1",10,30);
-				if(i==2)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"2",10,40);
-				if(i==3)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"3",10,50);
-				if(i==4)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"4",10,60);
-				if(i==5)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"5",10,70);
-				if(i==6)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"6",10,80);
-				if(i==7)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"7",10,90);
-				if(i==8)
-				FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"8",10,100);
-#endif
+#ifndef PONY
 
 #ifdef PCM_SFX
 				if(sfx_list[data].size!=0)
@@ -283,17 +259,38 @@ if(i==0)
 					st->play = PCM_STAT_PLAY_HEADER;
 				}
 #endif
+
+#else
+				if(sfx_list[data].size!=0)
+				{
+//					pcm_play(pcm[i], PCM_SEMI, 7);
+
+					pcm_info[i].position = 0;
+					pcm_info[i].ring_position = 0;
+					pcm_info[i].track_position = sfx_list[data].position;
+					pcm_info[i].size = sfx_list[data].size*8;
+					pcm_info[i].num = data;
+				}
+#endif
+
 			}
 			else
 			{
 				if(	current_pcm != data)
 				{
 					current_pcm = data;
+#ifndef PONY					
 					PCM_MeStop(pcm14[0]);
 //					pcm_EndProcess(pcm14[0]);
 					PCM_DestroyStmHandle(pcm14[0]);
 					stmClose(stm);
 					UpdateStreamPCM(data, &pcm14[0], &para[0]);
+#else					
+//					stop_pcm_stream();
+					char pcm_file[14];
+					sprintf(pcm_file, "%03d%s",data,".PCM"); 			
+//					start_pcm_stream((Sint8*)pcm_file, 5);		
+#endif
 				}
 			}
 #endif
@@ -635,15 +632,23 @@ UINT8 blacktiger_sound_read(UINT16 address)
 		}
 		DrvGfxDecode();
 	}
-	PCM_MeStop(pcm);
+	
+
 
 	int fid			= GFS_NameToId((Sint8 *)"SFX.ROM");
 	long fileSize	= GetFileSize(fid);
 
 	GFS_Load(fid, 0, (UINT8*)LOWADDR, fileSize);
 #ifdef PCM_MUSIC
+
+#ifndef PONY
+	PCM_MeStop(pcm);
 	stmInit();
 	Set14PCM();
+#else
+	pcm_stream_init(SOUNDRATE, PCM_TYPE_16BIT);	
+#endif
+	
 #endif
 	drawWindow(0,224,240,0,64);
 #ifdef CZET
@@ -717,16 +722,26 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	CZetExit2();
 #endif
 #ifdef PCM_SFX
+
+#ifndef PONY
 	for(unsigned int i=0;i<8;i++)
 	{
 		PCM_MeStop(pcm14[i]);
 	}
 	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);
+#else
+	remove_raw_pcm_buffer(pcm1);
+#endif
+	
 #endif	
-#ifdef PCM_MUSIC	
+#ifdef PCM_MUSIC
+
+#ifndef PONY
 	STM_ResetTrBuf(stm);
 	PCM_DestroyStmHandle(pcm14[0]);
 	stmClose(stm);
+#endif
+	
 #endif
 	CZ80Context = DrvZ80ROM0 = DrvZ80ROM1 = /*DrvGfxROM0 = DrvGfxROM1 = DrvGfxROM2 =*/ NULL;
 	DrvZ80RAM0	 = DrvZ80RAM1 = DrvPalRAM = DrvTxRAM = DrvBgRAM = DrvSprRAM = DrvSprBuf = NULL;
@@ -754,7 +769,28 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef PONY
+void DrvFrame_old();
+
 void DrvFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	for (unsigned int i=0;i<8;i++)
+	{
+		pcm[i] = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20*2);
+		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
+	}
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+void DrvFrame()
+#endif
 {
 // cheat code level
 //DrvZ80RAM0[0xF3A1-0xe000]=4; // niveau 4 pour transparence
@@ -806,6 +842,8 @@ void DrvFrame()
 #endif
 	}
 
+#ifndef PONY
+
 #ifdef PCM_MUSIC
 		playMusic(&pcm14[0]);
 #endif
@@ -855,13 +893,61 @@ void DrvFrame()
 			}
 		}
 #endif
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame draw_sprites      ",100,40);
+
+#else
+
+#if 0
+/*
+	signed short buffer[128];
+	signed short *nSoundBuffer2 = (signed short *)(nSoundBuffer+(nSoundBufferPos[0]<<1));
+	memcpyl(nSoundBuffer2,buffer,nBurnSoundLen<<1);	
+*/	
+
+
+		for (unsigned int i=1;i<8;i++)
+		{
+			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
+			{
+				int size=nBurnSoundLen;
+				if(pcm_info[i].position+(size*2)>pcm_info[i].size)
+				{
+//					memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+					size=pcm_info[i].size-pcm_info[i].position;
+					pcm_info[i].num = 0xff;
+				}
+// VBt : ne pas utiliser de memcpyl		/// &nSoundBuffer[pcm[3]][nSoundBufferPos<<1]		
+				memcpy(&nSoundBuffer[pcm[i]][pcm_info[i].ring_position],(INT16*)(0x00200000+pcm_info[i].track_position),size);
+				
+				pcm_info[i].track_position+=size;
+				pcm_info[i].position+=size;
+				pcm_info[i].ring_position+=size;
+/*				if(pcm_info[i].ring_position>=nBurnSoundLen*10)
+				{
+					pcm_play(pcm[i], PCM_SEMI, 7);					
+					pcm_info[i].ring_position=0;
+				}
+*/
+			}
+			else
+			{
+	//			pcm_cease(pcm[i]);
+			}
+		}	
+#endif
+
+#endif
 
 	draw_sprites();
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame memcpyl      ",100,40);
-
 	memcpyl (DrvSprBuf, DrvSprRAM, 0x200);
-//FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame end        ",100,40);
+
+#ifdef PONY
+	_spr2_transfercommand();
+	SclProcess = 1;
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
+#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
  void draw_sprites()
@@ -965,6 +1051,7 @@ void DrvFrame()
 	SCL_SetColRam(SCL_NBG0,8,8,palette);	 // vbt ? remettre
 }
 #ifdef PCM_SFX
+#ifndef PONY
 //-------------------------------------------------------------------------------------------------------------------------------------
  PcmHn createHandle(PcmCreatePara *para)
 {
@@ -1059,6 +1146,9 @@ void DrvFrame()
 		PCM_Start(pcm14[i]);
 	}
 }
+#endif
+
+
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
  void make_lut(void)
@@ -1209,7 +1299,9 @@ void DrvFrame()
 #endif
 	nBurnLinescrollSize = 1;
 	nBurnSprites = 128+3;
-//	nBurnFunction = PCM_VblIn;//smpVblIn;
+#ifdef PONY	
+	nBurnFunction = sdrv_stm_vblank_rq;
+#endif	
 
 //3 nbg
 	SS_SET_N0PRIN(7); // window

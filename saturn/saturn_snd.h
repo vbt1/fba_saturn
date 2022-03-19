@@ -38,6 +38,7 @@ typedef struct
 	unsigned char num;
 }PCM_INFO;
 
+#ifndef PONY
 
 #ifdef PCM_MUSIC
 void SetStreamPCM();
@@ -66,4 +67,9 @@ extern StmHn stm;
 extern void PCM_MeTask(PcmHn hn);
 extern void PCM_MeStop(PcmHn hn);
 extern SFX *sfx_list;
+#else
+SFX *sfx_list;	
+#endif
+
+
 #endif
