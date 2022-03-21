@@ -8,10 +8,11 @@
 #include "czet.h"
 
 #define nBurnSoundLen 128
+#define SOUNDRATE   7680L
 
 INT32 SolomonInit();
 INT32 SolomonExit();
-INT32 SolomonFrame();
+void DrvFrame();
 void SolomonCalcPalette();
 void updateSound();
 void CZetRunSlave(int *nCycles);

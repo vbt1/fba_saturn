@@ -3,7 +3,18 @@
 #define	nCyclesTotal0 4000000 / 60
 #define nCyclesTotal1 3072000 / 60 / 3
 #define RAZE0 1
+#define PONY
+
 //#define USE_IDMA 1
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+extern unsigned int frame_y;
+#endif
 
 #ifdef USE_IDMA
 void vblIn()
@@ -22,7 +33,7 @@ int ovlInit(char *szShortName)
 		"solomon", "solomn",
 		"Solomon's Key (US)",
 		SolomonRomInfo, SolomonRomName, SolomonInputInfo, SolomonDIPInfo,
-		SolomonInit, SolomonExit, SolomonFrame
+		SolomonInit, SolomonExit, DrvFrame
 	};
 	memcpy(shared,&nBurnDrvSolomon,sizeof(struct BurnDriver));
 	ss_reg   = (SclNorscl *)SS_REG;
@@ -506,6 +517,9 @@ INT32 SolomonExit()
 	}
 	pFMBuffer = NULL;
 
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
 	//cleanDATA();
 	cleanBSS();
 
@@ -554,9 +568,29 @@ void SolomonCalcPalette()
 	{
 		colBgAddr[0x100 | (i / 2)] = colBgAddr[i / 2] = cram_lut[SolomonPaletteRam[i & ~1] | (SolomonPaletteRam[i | 1] << 8)];
 	}
+#ifdef PONY
+	sdrv_stm_vblank_rq();
+#endif			
 }
 
-INT32 SolomonFrame()
+#ifdef PONY
+void DrvFrame_old();
+
+void DrvFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+void DrvFrame()
+#endif
 {
 	SolomonMakeInputs();
 
@@ -586,19 +620,21 @@ INT32 SolomonFrame()
 	SPR_WaitEndSlaveSH();
 	CZetSetIRQLine(0, CZET_IRQSTATUS_AUTO);
 
-//	updateSound();
-	return 0;
+
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void updateSound()
 {
 	int nSample;
-	signed short *nSoundBuffer		= (signed short *)0x25a20000+nSoundBufferPos;
+
 
 //	SPR_RunSlaveSH((PARA_RTN*)AY8910Update1Slave, NULL);
 	AY8910Update(0, &pAY8910Buffer[0], nBurnSoundLen);
 	AY8910Update(1, &pAY8910Buffer[3], nBurnSoundLen);
 	AY8910Update(2, &pAY8910Buffer[6], nBurnSoundLen);
+
+#ifndef PONY
+	signed short *nSoundBuffer		= (signed short *)0x25a20000+nSoundBufferPos;
 
 	for (unsigned int n = 0; n < nBurnSoundLen; n++) 
 	{
@@ -636,6 +672,56 @@ INT32 SolomonFrame()
 	}
 
 	nSoundBufferPos+=nBurnSoundLen;
+#else
+	signed short buffer[128];
+
+	for (unsigned int n = 0; n < nBurnSoundLen; n++) 
+	{
+		nSample  = pAY8910Buffer[0][n]; 
+		nSample += pAY8910Buffer[1][n];
+		nSample += pAY8910Buffer[2][n];
+		nSample += pAY8910Buffer[3][n];
+		nSample += pAY8910Buffer[4][n];
+		nSample += pAY8910Buffer[5][n];
+		nSample += pAY8910Buffer[6][n];
+		nSample += pAY8910Buffer[7][n];
+		nSample += pAY8910Buffer[8][n];
+
+		nSample /=4;
+
+		if (nSample < -32768) 
+		{
+			nSample = -32768;
+		} 
+		else 
+		{
+			if (nSample > 32767) 
+			{
+				nSample = 32767;
+			}
+		}	
+		buffer[n] = nSample;
+	}
+	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);	
+	memcpyl(nSoundBuffer2,buffer,nBurnSoundLen<<1);
+	nSoundBufferPos+=nBurnSoundLen;
+	
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		nSoundBufferPos=0;
+	}
+
+#endif
+
+#ifdef PONY
+	_spr2_transfercommand();
+
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -776,6 +862,10 @@ voir plutot p355 vdp2
 		ss_spritePtr->ay    =  -32;
 		ss_spritePtr++;		
 	}
-	drawWindow(0,240,0,0,62); 
+	drawWindow(0,240,0,0,62);
+	
+#ifdef PONY
+	frame_x	= 0;
+#endif		
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

@@ -6,7 +6,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 19
+#define NB_DRV 20
 volatile struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));// __attribute__((section("COMMON")));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -531,10 +531,10 @@ pDriver[i++] = &BurnDrvRobowres;
 pDriver[i++] = &BurnDrvSidearms;
 */
 pDriver[i++] = &BurnDrvSlapFigh;
-/*
+
 //pDriver[i++] = &BurnDrvSlapshtr;
 pDriver[i++] = &BurnDrvSolomon;
-*/
+
 pDriver[i++] = &BurnDrvStarjack;
 /*
 pDriver[i++] = &BurnDrvSpang;

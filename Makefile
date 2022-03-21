@@ -254,7 +254,7 @@ OVLSOLOMN                = root/d_solomn.elf
 OVLSOLOMN1              = root/d_solomn.bin
 MPOVLSOLOMNFILE    = $(OVLSOLOMN:.elf=.maps)
 LDOVLSOLOMNFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSOLOMNFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSOLOMN         = d_solomon.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c
+SRCOVLSOLOMN         = d_solomon.c czet.c cz80/cz80.c snd/ay8910.c load.c saturn/ovl.c saturn/pcmstm.c
 OBJOVLSOLOMN         = $(SRCOVLSOLOMN:.c=.o)
 
 OVLSIDARM                 = root/d_sidarm.elf
@@ -307,13 +307,12 @@ drv:  $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
      $(OVLAPPOOO) $(OVLAPPOOO1) $(OVLZAXXON) $(OVLZAXXON1)  \
-	 $(OVLSEGAE) $(OVLSEGAE1) \
+	 $(OVLSEGAE) $(OVLSEGAE1) $(OVLSOLOMN) $(OVLSOLOMN1) \
      $(OVLSLPFGHT) $(OVLSLPFGHT1) $(OVLFREEK) $(OVLFREEK1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
      $(OVLSMS) $(OVLSMS1) $(OVLGGCZ) $(OVLGGCZ1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) \	 
-     $(OVLMSX) $(OVLMSX1) 
-	 $(OVL1943) $(OVL19431) \
+	 # $(OVL1943) $(OVL19431) \
 	 $(OVLTETRIS) $(OVLTETRIS1)
 
 
