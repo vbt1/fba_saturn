@@ -15,6 +15,17 @@
 //#define KANJI 1
 //#define DAC 1
 
+#define PONY
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm[8];
+Sint16 *nSoundBuffer[32];
+extern unsigned int frame_x;
+extern unsigned int frame_y;
+#endif
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -63,12 +74,17 @@ static void ChangeDir(char *dirname)
 	stop=0;
 //		vbt++;
 //FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"load_rom1        ",4,80);
-
+#ifndef PONY
 	for(unsigned int i=0;i<8;i++)
 	{
 		PCM_MeStop(pcm8[i]);
 	}
-
+#else
+	for(unsigned int i=0;i<8;i++)
+	{
+		remove_raw_pcm_buffer(pcm[i]);
+	}
+#endif
 	memset((void *)SOUND_BUFFER,0x00,0x20000);
 
 	memset(game, 0xff, MAX_MSX_CARTSIZE);
@@ -311,11 +327,18 @@ void msxinit(INT32 cart_len)
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 	
 
-	
+#ifndef PONY	
 	for(unsigned int i=0;i<8;i++)
 	{
 		PCM_MeStart(pcm8[i]);
 	}
+#else
+	for (unsigned int i=0;i<6;i++)
+	{
+		pcm[i] = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20*2);
+		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
+	}
+#endif	
 //-----------------------------------------------------------------------------------------------
 	for(UINT32 PSlot = 0; PSlot < 4; PSlot++) // Point all pages there by default
 	{
@@ -2030,10 +2053,11 @@ FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)" ",24,40); // nécessair
 	PPI0PortWriteA	= msx_ppi8255_portA_write;
 	PPI0PortWriteC	= msx_ppi8255_portC_write;
 
+#ifndef PONY
 	PCM_MeStop(pcm);
 	nSoundBufferPos=0;	
 	Set8PCM();
-
+#endif
 	load_rom();
 
 	return 0;
@@ -2139,11 +2163,17 @@ void cleanmemmap()
 #endif
 
 //cleanmemmap();
-
+#ifndef PONY
 	for(unsigned int i=0;i<8;i++)
 	{
 		PCM_MeStop(pcm8[i]);
 	}
+#else
+	for(unsigned int i=0;i<6;i++)
+	{
+		remove_raw_pcm_buffer(pcm[i]);
+	}
+#endif	
 	memset((void *)SOUND_BUFFER,0x00,0x20000);
 
 	TMS9928AExit();
@@ -2211,7 +2241,27 @@ void cleanmemmap()
 	return 0;
 }
 
-/*static*/ INT32 DrvFrame()
+//-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef PONY
+void DrvFrame_old();
+
+void DrvFrame()
+{
+
+	for (unsigned int i=0;i<6;i++)
+	{
+		pcm[i] = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20*2);
+		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
+	}
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+ void DrvFrame()
+ #endif
 {
 	//	SPR_InitSlaveSH();
 //FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"DrvFrame        ",4,80);
@@ -2309,20 +2359,30 @@ void cleanmemmap()
 	}
 	else
 //FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)"load_rom        ",4,80);
-	
+	{
 		load_rom();
-	return 1;
+	}
+	
+#ifdef PONY
+	_spr2_transfercommand();
+	frame_x++;	
+#endif			
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void updateSlaveSound()
 {
 	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
-	unsigned short *nSoundBuffer1 = (unsigned short *)(0x25a24000+deltaSlave);
-//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"updateSlaveSound   ",24,50);
 
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"updateSlaveSound   ",24,50);
+#ifndef PONY
+	unsigned short *nSoundBuffer1 = (unsigned short *)(0x25a24000+deltaSlave);
 	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
+#else
+	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos<<1], &nSoundBuffer[pcm[1]][nSoundBufferPos<<1], &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
+#endif
 	deltaSlave+=nBurnSoundLen;
 
+#ifndef PONY
 	if(deltaSlave>=RING_BUF_SIZE>>1)
 	{
 		PCM_NotifyWriteSize(pcm8[0], deltaSlave);
@@ -2334,6 +2394,15 @@ void cleanmemmap()
 		PCM_Task(pcm8[1]); // bon emplacement
 		PCM_Task(pcm8[2]); // bon emplacement
 	}
+#else
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm[0], PCM_SEMI, 7);
+		pcm_play(pcm[1], PCM_SEMI, 7);
+		pcm_play(pcm[2], PCM_SEMI, 7);
+		deltaSlave=0;
+	}	
+#endif
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 //	TMS9928ADraw();
 }
@@ -2341,14 +2410,27 @@ void cleanmemmap()
 /*static*/ void updateSlaveSoundSCC()
 {
 	unsigned int deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+
+#ifndef PONY	
 	INT16 *nSoundBuffer1 = (INT16 *)0x25a24000+deltaSlave;
 
 	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
 #ifdef K051649 
 	K051649UpdateDirect(&nSoundBuffer1[0x6000], nBurnSoundLen);
 #endif
+
+#else
+	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos<<1], &nSoundBuffer[pcm[1]][nSoundBufferPos<<1], &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
+#ifdef K051649 
+
+// fonction à réécrire pour poné sound
+	K051649UpdateDirect(&nSoundBuffer[pcm[4]][nSoundBufferPos<<1], nBurnSoundLen);
+#endif
+
+#endif
 	deltaSlave+=nBurnSoundLen;
 
+#ifndef PONY
 	if(deltaSlave>=RING_BUF_SIZE>>1)
 	{
 		for (unsigned int i=0;i<8;i++)
@@ -2358,6 +2440,17 @@ void cleanmemmap()
 		}
 		deltaSlave=0;
 	}
+#else
+	if(nSoundBufferPos>=nBurnSoundLen*10)
+	{
+	//	int i=0;
+		for (unsigned int i=0;i<8;i++)
+		{
+			pcm_play(pcm[i], PCM_SEMI, 7);
+		}
+		nSoundBufferPos=0;
+	}
+#endif	
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 //	TMS9928ADraw();
 }
@@ -2451,6 +2544,7 @@ void initPosition(void)
 	SetVblank2();
 //	wait_vblank();
 }
+#ifndef PONY
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ PcmHn createHandle(PcmCreatePara *para)
 {
@@ -2502,3 +2596,4 @@ void initPosition(void)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#endif

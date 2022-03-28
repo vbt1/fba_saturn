@@ -126,12 +126,8 @@ static void	SetVblank2( void )
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
 
 	Uint16	CycleTb[]={
-		  // VBT 04/02/2007 : cycle pattern qui fonctionne just test avec des ee
-//#ifdef GG
-		0xff5e, 0xeeee, //A1
-		0xffee, 0xeeee,	//A0
-		0x04ee, 0xeeee,   //B1
-		0xffee, 0xeeee  //B0
+		0x5eee, 0xeeee, 0xeeee, 0xeeee,	//A0
+		0x04ee, 0xeeee, 0xeeee, 0xeeee  //B0
 	};
  	SclConfig	scfg;
 

@@ -239,7 +239,7 @@ MPOVLMSXFILE    = $(OVLMSX:.elf=.maps)
 LDOVLMSXFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLMSXFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLMSX         = d_msx.c czet.c cz80/cz80.c tms9928a.c snd/k051649.c snd/ay8910.c 8255ppi.c saturn/ovl.c
 #SRCOVLMSX         = d_msx.c z80_intf.c z80/z80.c z80/z80daisy.c tms9928a.c snd/ay8910.c snd/dac.c 8255ppi.c saturn/ovl.c
-SRCOVLMSX         = d_msx.c tms9928a.c snd/k051649.c snd/ay8910.c 8255ppi.c load.c saturn/ovl.c
+SRCOVLMSX         = d_msx.c tms9928a.c snd/k051649.c snd/ay8910.c 8255ppi.c load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLMSX         = $(SRCOVLMSX:.c=.o)
 
 OVLSEGAE                 = root/d_segae.elf
@@ -299,29 +299,30 @@ LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
 LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf4/sega_dma.a
 sl: $(TARGET) $(TARGET1) 
 
-drv:  $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
+drv:    $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
+     $(OVLBLKTGR) $(OVLBLKTGR1) \
 	 $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \
      $(OVLHIGEMARU) $(OVLHIGEMARU1) $(OVLPKUNW) $(OVLPKUNW1) \
-	 $(OVLNINKD2) $(OVLNINKD21) $(OVLBLKTGR) $(OVLBLKTGR1) \
      $(OVLMITCH) $(OVLMITCH1) $(OVLGNG) $(OVLGNG1) \
      $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
      $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
-     $(OVLAPPOOO) $(OVLAPPOOO1) $(OVLZAXXON) $(OVLZAXXON1)  \
-	 $(OVLSEGAE) $(OVLSEGAE1) $(OVLSOLOMN) $(OVLSOLOMN1) \
+     $(OVLAPPOOO) $(OVLAPPOOO1) \
+     $(OVLZAXXON) $(OVLZAXXON1)  \
      $(OVLSLPFGHT) $(OVLSLPFGHT1) $(OVLFREEK) $(OVLFREEK1) \
      $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
+     $(OVLMSX) $(OVLMSX1) $(OVLSEGAE) $(OVLSEGAE1) \
+     $(OVLSOLOMN) $(OVLSOLOMN1) $(OVLSIDARM) $(OVLSIDARM1) \
+     $(OVLNINKD2) $(OVLNINKD21) $(OVL1943) $(OVL19431) \
+	 $(OVLTETRIS) $(OVLTETRIS1) \
      $(OVLSMS) $(OVLSMS1) $(OVLGGCZ) $(OVLGGCZ1) \
-     $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1) \	 
-	 # $(OVL1943) $(OVL19431) \
-	 $(OVLTETRIS) $(OVLTETRIS1)
-
+     $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1)
 
 img: $(OVLIMG)  $(OVLIMG1)
 
-mitch: $(OVLMITCH) $(OVLMITCH1)
+#mitch: $(OVLMITCH) $(OVLMITCH1)
 
-sms: $(OVLGGCZ) $(OVLGGCZ1) \
-     $(OVLSMSCZ80) $(OVLSMSCZ801)
+#sms: $(OVLGGCZ) $(OVLGGCZ1) \
+#     $(OVLSMSCZ80) $(OVLSMSCZ801)
 
 # Use gcc to link so it will automagically find correct libs directory
 

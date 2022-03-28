@@ -686,8 +686,8 @@ INT32 DrvInit()
 
 INT32 DrvExit()
 {	 
-	nBurnFunction = NULL;
-	wait_vblank();	
+//	nBurnFunction = NULL;
+//	wait_vblank();	
 	DrvDoReset();
 //	SPR_InitSlaveSH();
 #ifdef RAZE

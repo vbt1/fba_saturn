@@ -18,7 +18,7 @@
 
 extern unsigned char play;
 
-INT32 DrvFrame();
+void DrvFrame();
 int DrvExit();
 INT32 BasicDrvInit();
 int DrvInit();

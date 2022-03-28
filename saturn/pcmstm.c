@@ -392,7 +392,7 @@ void		pcm_stream_host(void(*game_code)(void))
 
 //	cd_init();
 
-	while(1)
+	while(play)
 	{
 	//Main system loop - system doesn't break away from this.
 	/*

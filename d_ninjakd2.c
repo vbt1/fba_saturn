@@ -1200,9 +1200,9 @@ inline void initLayersS(UINT8 game)
 {
     Uint16	CycleTb[]={
 		0xeeee,0x4567,  //A0 // nbg1 et 2 ok
-		0xeeee, 0x4ee7,	//A1
+		0xeeee, 0xeeee,	
 		0x0123,0x4ee7 ,  //B0
-		0xeeee,0x4ee7   //B1
+		0xeeee,0xeeee   
 	};
  	SclConfig	scfg;
 
@@ -1378,13 +1378,17 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 
  INT32 DrvExit()
 {
-	nBurnFunction = NULL;
+//	nBurnFunction = NULL;
 	DrvDraw = NULL;	
-	wait_vblank();	
+//	wait_vblank();	
 	DrvDoReset();
 	CZetExit2();
 
 	nSoundBufferPos=0;
+
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif	
 	//cleanDATA();
 	cleanBSS();
 	

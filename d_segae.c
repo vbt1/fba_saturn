@@ -629,10 +629,11 @@ void MemIndex(UINT32 game)
 	DrvMainROM	 	    = (UINT8 *)Next; Next += 0x80000;// 0x00200000;
 	
 	if(game>2)
+	{
 		DrvMainROMFetch	= (UINT8 *)LOWADDR+0x80000;
-
+		memset(DrvMainROMFetch,0x00,0x80000);
+	}
 	mc8123key           = Next; Next += 0x02000;
-	CZ80Context			= Next; Next += sizeof(cz80_struc);
 
 	DrvRAM			    = Next; Next += 0x10000;
 
@@ -646,7 +647,8 @@ void MemIndex(UINT32 game)
 	segae_vdp_regs[1]	= Next; Next += 0x20;
 
 	RamEnd		= Next;
-	
+
+	CZ80Context	= Next; Next += sizeof(cz80_struc);	
 	name_lut	= (UINT16 *)LOWADDR;//Next; Next += 0x10000*sizeof(UINT16);
 	bp_lut		= (UINT32 *)(LOWADDR+0x20000);//Next; Next += 0x10000*sizeof(UINT32);
 	cram_lut	= (UINT16 *)Next; Next += 0x40*sizeof(UINT16);
@@ -807,7 +809,7 @@ void DrvFrame()
 #endif
 {
 //	*(Uint16 *)0x25E00000 = colBgAddr[256]; // set bg_color
-	
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvFrame   ",24,40);		
 //	memset(&ss_sprite[3],0,131*sizeof(SprSpCmd));
 
 	DrvMakeInputs();
@@ -913,7 +915,6 @@ INT32 DrvInit(UINT8 game)
 			if (BurnLoadRom(DrvMainROM + 0x30000,  3, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x40000,  4, 1)) return 1;
 			if (BurnLoadRom(mc8123key  + 0x00000,  5, 1)) return 1;
-			memset(DrvMainROMFetch, 0, 0x80000);
 			mc8123_decrypt_rom(0, 0, DrvMainROM, DrvMainROMFetch, mc8123key);
 			mc8123 = 1;
 			break;
@@ -924,7 +925,7 @@ INT32 DrvInit(UINT8 game)
 			if (BurnLoadRom(DrvMainROM + 0x20000,  3, 1)) return 1;
 			if (BurnLoadRom(DrvMainROM + 0x28000,  4, 1)) return 1;
 			if (BurnLoadRom(mc8123key  + 0x00000,  5, 1)) return 1;
-			memset(DrvMainROMFetch, 0, 0x80000);
+		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"mc8123_decrypt_rom",24,40);				
 			mc8123_decrypt_rom(1, 8, DrvMainROM, DrvMainROMFetch, mc8123key);
 			mc8123 = 1;
 			mc8123_banked = 1;
@@ -939,6 +940,7 @@ INT32 DrvInit(UINT8 game)
 			astrofl_decode();
 			break;*/
 	}
+		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"CZetInit2     ",24,40);	
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetMapMemory(DrvMainROM, 0x0000, 0x7fff, MAP_ROM);
@@ -958,7 +960,7 @@ INT32 DrvInit(UINT8 game)
 // ajout pour eviter plantage apres appooh	
 	SN76489Init(0, 10738635 / 3, 0);
 	SN76489Init(1, 10738635 / 3, 1);
-	
+	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut   ",24,40);	
 	make_lut();	
 	for (UINT32 i = 0; i < 0x40; i++) 
 	{
@@ -1015,13 +1017,7 @@ INT32 DrvTetrisInit()
 	return DrvInit(0);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*
-inline void	SetVblank2( void )
-{
-	__port = PER_OpenPort();
-}*/
-//-------------------------------------------------------------------------------------------------------------------------------------
-inline void initColors()
+void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr		= (Uint16*)SCL_AllocColRam(SCL_NBG0,ON);
@@ -1031,7 +1027,7 @@ inline void initColors()
 	(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void initLayers(void)
+void initLayers(void)
 {
 //    SclConfig	config;
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
@@ -1075,13 +1071,13 @@ inline void initLayers(void)
 /********************************************/	
 
 //	SCL_InitConfigTb(&scfg);
-	scfg.dispenbl 	 = OFF;
-//	scfg.dispenbl 	 = ON;
+//	scfg.dispenbl 	 = OFF;
+	scfg.dispenbl 	 = ON;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
-	SCL_SetConfig(SCL_NBG2, &scfg);
+	SCL_SetConfig(SCL_NBG0, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
