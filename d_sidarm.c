@@ -1,6 +1,8 @@
 // FB Alpha Side Arms driver module
 // Based on MAME driver by Paul Leaman
 //#define DEBUG 1
+#define PONY
+
 #include "SEGA_INT.H"
 #include "SEGA_DMA.H"
 #include "machine.h"
@@ -16,6 +18,15 @@
 // https://github.com/dinkc64/FBAlphaFB/commit/e70c09bcce851c8ece3d7c48f2bce0233394b333
 // version améliorée
 // https://github.com/dinkc64/FBAlphaFB/commit/ddd14379a7aa37e356e40067b0b8186b96947836
+
+#ifdef PONY
+#include "saturn/pcmstm.h"
+
+int pcm1=-1;
+Sint16 *nSoundBuffer=NULL;
+extern unsigned int frame_x;
+extern unsigned int frame_y;
+#endif
 
 int ovlInit(char *szShortName)
 {
@@ -126,7 +137,16 @@ void __fastcall sidearms_main_write(UINT16 address, UINT8 data)
 			if(current_pcm!=data) 
 			{
 				if (data==0 || (data >=0x20 && data <=0x36))
+				{
+#ifndef PONY				
 					PlayStreamPCM(data,current_pcm);
+#else
+					char pcm_file[14];
+
+					sprintf(pcm_file, "%03d%s",data,".PCM"); 			
+					start_pcm_stream((Sint8*)pcm_file, 5);	
+#endif
+				}
 				current_pcm = data;
 			}
 		return;
@@ -476,14 +496,19 @@ INT32 SidearmsInit()
 	SS_SET_N0PRIN(3); // star field
 	SclProcess = 1;  // pour activer maj
 
+#ifndef PONY
 	PCM_MeStop(pcm);
 //-------------------------------------------------
 	stmInit();
 	SetStreamPCM();
 	PCM_Start(pcmStream);
-
+#endif
 //-------------------------------------------------
 	DrvDoReset(1);
+#endif
+
+#ifdef PONY
+	pcm_stream_init(SOUNDRATE, PCM_TYPE_16BIT);	
 #endif
 	return 0;
 }
@@ -500,20 +525,17 @@ INT32 DrvExit()
 	CZetExit2();
 #endif
 
+#ifndef PONY
 	STM_ResetTrBuf(stm);
 	PCM_MeStop(pcmStream);
 	PCM_DestroyStmHandle(pcmStream);
 	stmClose(stm);
-/*
-	bgmap_buf = NULL;
-	cram_lut = bgmap_lut = remap4to16_lut = map_lut = map_offset_lut = NULL;
-	CZ80Context = RamEnd = DrvZ80ROM0 = NULL;
-	DrvStarMap = DrvTileMap = DrvVidRAM = DrvSprBuf = DrvSprRAM = DrvPalRAM = DrvZ80RAM0 = bgscrollx = bgscrolly = NULL;
-
-	vblank=0;
-*/	
+#endif	
 	cleanSprites();
-	//cleanDATA();
+
+#ifdef PONY
+	remove_raw_pcm_buffer(pcm1);
+#endif
 	cleanBSS();
 
 	nSoundBufferPos=0;
@@ -614,7 +636,24 @@ inline void SidearmsDraw()
 	SPR_WaitEndSlaveSH();
 }
 
+#ifdef PONY
+void DrvFrame_old();
+
 void DrvFrame()
+{
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+
+//	InitCD(); // si on lance juste pour pang
+//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_host(DrvFrame_old);
+}
+
+void DrvFrame_old()
+#else
+void DrvFrame()
+#endif
 {
 	watchdog++;
 	if (watchdog > 180 && enable_watchdog) {
@@ -656,7 +695,15 @@ z80_raise_IRQ(0);
 	SidearmsDraw();
 	
 	memcpy (DrvSprBuf, DrvSprRAM, 0x1000);
+#ifndef PONY
 	playMusic(&pcmStream);
+#endif
+	
+#ifdef PONY
+	SclProcess = 1;
+	_spr2_transfercommand();
+	frame_x++;
+#endif		
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void initLayers()
@@ -778,6 +825,12 @@ void DrvInitSaturn()
 		ss_spritePtr++;
 	}
 //		SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+
+#ifdef PONY
+	frame_x	= 0;
+	nBurnFunction = sdrv_stm_vblank_rq;
+
+#endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void make_lut(void)

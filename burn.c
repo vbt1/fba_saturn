@@ -266,11 +266,11 @@ BurnDrvpengo2u.szParent="pacm";
 BurnDrvStarjack.szShortName="starjack";
 BurnDrvStarjack.szFullNameA="Star Jacker (Sega)";
 BurnDrvStarjack.szParent="sys1h";
-/*
+
 BurnDrvRaflesia.szShortName="raflesia";
 BurnDrvRaflesia.szFullNameA="Rafflesia (315-5162)";
 BurnDrvRaflesia.szParent="sys1h";
-*/
+
 //BurnDrvAtetris.szShortName="atetris";
 //BurnDrvAtetris.szFullNameA="Tetris (set 1)";
 //BurnDrvAtetris.szParent="tetris";

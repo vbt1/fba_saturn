@@ -957,32 +957,12 @@ INT32 DrvExit()
 	DrvDoReset();
 	CZetExit2();
 	ppi8255_exit();
-//	PCM_NotifyWriteSize(pcm, nSoundBufferPos);
-//	PCM_Task(pcm);
-	
 	SN76496Exit();	
-/*
-	CZ80Context = AllRam = RamEnd = DrvRAM = DrvMainROM = DrvMainROMdec = DrvSndROM = NULL;
-	DrvVidRAM = DrvSprRAM = DrvColRAM = NULL;
-	MC8123Key = NULL;
-	map_offset_lut = NULL;
-	DrawSprite = NULL;
 
-	DrvZ80Bank0 = countrunbmode = pbillrdmode = 0;
-	sprite_number = 0;
-*/	
-/*	
-	memset(DrvJoy1,0x00,8);
-	memset(DrvJoy2,0x00,8);
-
-	DrvDip[0] = DrvDip[1] = DrvDip[2] = 0;
-	DrvInputs[0] = DrvInputs[1] = DrvInputs[2] = 0;	
-*/
 #ifdef PONY
-remove_raw_pcm_buffer(pcm1);
+	remove_raw_pcm_buffer(pcm1);
 #endif
 
-	//cleanDATA();
 	cleanBSS();
 
 	nSoundBufferPos = 0;

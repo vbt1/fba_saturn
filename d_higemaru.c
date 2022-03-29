@@ -30,7 +30,7 @@ int ovlInit(char *szShortName)
 	ss_reg          = (SclNorscl *)SS_REG;
 }
 
-/*static*/  void __fastcall higemaru_write(unsigned short address, unsigned char data)
+void __fastcall higemaru_write(unsigned short address, unsigned char data)
 {
 	switch (address)
 	{
@@ -63,7 +63,7 @@ int ovlInit(char *szShortName)
 }
 
 #ifdef RAZE
-/*static*/  void __fastcall higemaru_write_d000(unsigned short address, unsigned char data)
+void __fastcall higemaru_write_d000(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
@@ -74,7 +74,7 @@ int ovlInit(char *szShortName)
 #endif
 
 
-/*static*/  unsigned char __fastcall higemaru_read(unsigned short address)
+unsigned char __fastcall higemaru_read(unsigned short address)
 {
 	unsigned char ret;
 	unsigned int i;
@@ -127,7 +127,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/  int MemIndex()
+int MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -147,7 +147,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/  int DrvDoReset()
+int DrvDoReset()
 {
 	memset (Rom + 0xd000, 0, 0x2000);
 
@@ -165,7 +165,7 @@ int ovlInit(char *szShortName)
 	return 0;
 }
 
-/*static*/  void DrvPaletteInit()
+void DrvPaletteInit()
 {
 	unsigned int tmp[0x20];
 	unsigned int i;
@@ -198,7 +198,7 @@ for (i = 0; i < 0x80; i+=4)
 	//colAddr[0x000] = RGB(10,10,10);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  int DrvGfxDecode()
+int DrvGfxDecode()
 {
 	/*static*/ int Planes[4] = { 0x10004, 0x10000, 0x00004, 0x00000 };
 	/*static*/ int XOffs[16] = { 0x000, 0x001, 0x002, 0x003, 0x008, 0x009, 0x00a, 0x00b,
@@ -214,7 +214,7 @@ for (i = 0; i < 0x80; i+=4)
 	return 0;
 }
 
-/*static*/  int DrvInit()
+int DrvInit()
 {
 	DrvInitSaturn();
 	MemIndex();
@@ -288,7 +288,7 @@ for (i = 0; i < 0x80; i+=4)
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void initLayers()
+void initLayers()
 {
     Uint16	CycleTb[]={
 		0x1f5f, 0xffff, //A0
@@ -324,7 +324,7 @@ for (i = 0; i < 0x80; i+=4)
 	SCL_SetCycleTable(CycleTb);	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void initPosition()
+void initPosition()
 {
 	SCL_Open();
 	ss_reg->n1_move_x =  (-8<<16) ;
@@ -332,7 +332,7 @@ for (i = 0; i < 0x80; i+=4)
 	SCL_Close();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void initColors()
+void initColors()
 {
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
 	(Uint16*)SCL_AllocColRam(SCL_NBG3,OFF);
@@ -340,7 +340,7 @@ for (i = 0; i < 0x80; i+=4)
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void make_lut(void)
+void make_lut(void)
 {
 	unsigned int i,delta=0;
 	int sx, sy, row,col;
@@ -353,7 +353,7 @@ for (i = 0; i < 0x80; i+=4)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  void DrvInitSaturn()
+void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
@@ -390,7 +390,7 @@ for (i = 0; i < 0x80; i+=4)
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/  int DrvExit()
+int DrvExit()
 {
 	DrvDoReset();
 #ifdef RAZE
@@ -428,7 +428,7 @@ for (i = 0; i < 0x80; i+=4)
 	return 0;
 }
 
-/*static*/  void DrvDrawSprites()
+void DrvDrawSprites()
 {
 	 // sprites
 	for (int offs = 0x170; offs >= 0; offs -= 16)
@@ -452,7 +452,7 @@ for (i = 0; i < 0x80; i+=4)
 		ss_sprite[delta].color      = (color<<4);		
 	}
 }
-/*static*/  void DrvDrawBackground()
+void DrvDrawBackground()
 {
  // back ground
 	for (int offs = 0x40; offs < 0x3c0; offs++)

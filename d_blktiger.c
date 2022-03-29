@@ -728,10 +728,15 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	{
 		PCM_MeStop(pcm14[i]);
 	}
-	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);
 #else
 	remove_raw_pcm_buffer(pcm1);
+
+	for(unsigned int i=0;i<4;i++)
+	{
+		remove_raw_pcm_buffer(pcm[i]);
+	}
 #endif
+	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);
 	
 #endif	
 #ifdef PCM_MUSIC

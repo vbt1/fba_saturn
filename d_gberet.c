@@ -478,7 +478,7 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	memset(ss_scl,0x00,nBurnLinescrollSize);
 	
 #ifdef PONY
-remove_raw_pcm_buffer(pcm1);
+	remove_raw_pcm_buffer(pcm1);
 #endif	
 /*
 	bg_dirtybuffer=MemEnd=Rom=NULL;

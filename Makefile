@@ -261,7 +261,7 @@ OVLSIDARM                 = root/d_sidarm.elf
 OVLSIDARM1               = root/d_sidarm.bin
 MPOVLSIDARMFILE    = $(OVLSIDARM:.elf=.maps)
 LDOVLSIDARMFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSIDARMFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSIDARM         = d_sidarm.c czet.c cz80/cz80.c saturn/ovl.c load.c saturn/saturn_snd.c saturn/saturn_ext.c
+SRCOVLSIDARM         = d_sidarm.c czet.c cz80/cz80.c saturn/ovl.c load.c  saturn/pcmstm.c saturn/saturn_ext.c
 OBJOVLSIDARM         = $(SRCOVLSIDARM:.c=.o)
 
 OVLNINKD2                 = root/d_ninkd2.elf
@@ -515,7 +515,8 @@ $(OVLSOLOMN1) : $(OBJOVLSOLOMN) $(MAKEFILE) $(LDOVLSOLOMNFILE)
 	$(CONV) -O binary $(OVLSOLOMN) $(OVLSOLOMN1)
 
 $(OVLSIDARM) : $(OBJOVLSIDARM) $(MAKEFILE) $(OBJOVLSIDARM) $(LDOVLSIDARMFILE)
-	$(CC) $(LDOVLSIDARMFLAGS) $(OBJOVLSIDARM) $(LIBSOVL) $(LIBSTM) -o $@
+#	$(CC) $(LDOVLSIDARMFLAGS) $(OBJOVLSIDARM) $(LIBSOVL) $(LIBSTM) -o $@
+	$(CC) $(LDOVLSIDARMFLAGS) $(OBJOVLSIDARM) $(LIBSOVL) -o $@
 
 $(OVLSIDARM1) : $(OBJOVLSIDARM) $(MAKEFILE) $(LDOVLSIDARMFILE)
 	$(CONV) -O binary $(OVLSIDARM) $(OVLSIDARM1)

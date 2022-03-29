@@ -6,6 +6,8 @@
 #include "saturn/saturn_snd.h"
 #include "czet.h"
 
+#define nBurnSoundLen 128 
+
 INT32 SidearmsInit();
 INT32 DrvExit();
 void DrvFrame();

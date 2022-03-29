@@ -481,6 +481,10 @@ static void ChangeDir(char *dirname)
 	ppi8255_exit();
 	SN76496Exit();
 
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
+
 	memset((void *)SOUND_BUFFER,0x00,0x20000);
 //	memset(TMSContext,0x00,(0x4000+0x6000+0x1000+8));
 //	memset(CZ80Context,0x00,sizeof(cz80_struc));
