@@ -17,6 +17,7 @@
 int pcm[4];
 Sint16 *nSoundBuffer[32];
 extern unsigned int frame_x;
+extern unsigned int frame_y;
 #else
 void PCM_MeStop(PcmHn hn);
 static void Set4PCM();	
@@ -164,10 +165,10 @@ INT32 MemIndex()
 	DrvBgColRAM	    = Next; Next += 0x800;
 	RamEnd			= Next;
 
-//	MSM5205Context = (INT16*)Next; Next += 0x4000*sizeof(UINT16);
+	MSM5205Context = (INT16*)Next; Next += 0x4000*sizeof(UINT16);
 	DrvColPROM		= Next; Next += 0x00220;
-	DrvSoundROM	    = Next; Next += 0x0a000;
-//	DrvSoundROM	= (UINT8*)0x2F6000;
+//	DrvSoundROM	    = Next; Next += 0x0a000;
+	DrvSoundROM	= (UINT8*)0x2F6000;
 	CZ80Context		= (UINT8 *)Next; Next += (sizeof(cz80_struc));
 //	DrvPalette        = (UINT16*)colBgAddr;
 	map_offset_lut  =  (UINT16*)Next; Next +=0x400*sizeof(UINT16);
@@ -236,14 +237,10 @@ inline void bankswitch(INT32 data)
 // 1 bank de 16k																  
 	if(DrvZ80Bank0)
 	{
-//		CZetMapArea(0xa000, 0xdfff, 0, DrvMainROM + 0x10000);
-//		CZetMapArea(0xa000, 0xdfff, 2, DrvMainROM + 0x10000);
 		CZetMapMemory((unsigned char *)(DrvMainROM + 0x10000), 0xa000, 0xdfff, MAP_ROM);
 	}
 	else
 	{
-//		CZetMapArea(0xa000, 0xdfff, 0, DrvMainROM + 0x0a000);
-//		CZetMapArea(0xa000, 0xdfff, 2, DrvMainROM + 0x0a000);
 		CZetMapMemory((unsigned char *)(DrvMainROM + 0x0a000), 0xa000, 0xdfff, MAP_ROM);
 	}
 }
@@ -522,7 +519,7 @@ void DrvDraw()
 	memcpyl((SclBgPriNumRegister *)0x25F800F8, ss_BgPriNum, sizeof(ss_BgPriNum));
 }
 
-INT32 DrvDoReset()
+void DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 	DrvZ80Bank0 = 0;
@@ -537,8 +534,6 @@ INT32 DrvDoReset()
 	CZetClose();
 	memset((Uint8 *)ss_map  ,0,0x2000);
 	memset(is_fg_dirty,1,0x400);
-
-	return 0;
 }
 
 INT32 DrvLoadRoms()
@@ -610,10 +605,8 @@ INT32 DrvCommonInit(UINT8 game_select)
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 
-	CZetMapArea(0x0000, 0x7fff, 0, DrvMainROM + 0x0000);
-	CZetMapArea(0x0000, 0x7fff, 2, DrvMainROM + 0x0000);
-	CZetMapArea(0x8000, 0x9fff, 0, DrvMainROM + 0x8000);
-	CZetMapArea(0x8000, 0x9fff, 2, DrvMainROM + 0x8000);
+	CZetMapMemory(DrvMainROM, 0x0000, 0x7fff, MAP_ROM);
+	CZetMapMemory(DrvMainROM + 0x8000, 0x8000, 0x9fff, MAP_ROM);
 	bankswitch(0);
 
 	if (game_select == 1) 
@@ -621,13 +614,8 @@ INT32 DrvCommonInit(UINT8 game_select)
 		CZetMapMemory2(DrvFetch, DrvMainROM, 0x0000, 0x7fff, MAP_ROM);		
 	}
 
-	CZetMapArea(0xe000, 0xe7ff, 0, DrvRAM0);
-	CZetMapArea(0xe000, 0xe7ff, 1, DrvRAM0);
-	CZetMapArea(0xe000, 0xe7ff, 2, DrvRAM0);
-
-	CZetMapArea(0xe800, 0xefff, 0, DrvRAM1);
-	CZetMapArea(0xe800, 0xefff, 1, DrvRAM1);
-	CZetMapArea(0xe800, 0xefff, 2, DrvRAM1);
+	CZetMapMemory(DrvRAM0			, 0xe000, 0xe7ff, MAP_RAM);
+	CZetMapMemory(DrvRAM1			, 0xe800, 0xefff, MAP_RAM);
 
  	CZetSetWriteHandler(appoooh_write);
 	CZetSetReadHandler(appoooh_read);
@@ -639,9 +627,9 @@ INT32 DrvCommonInit(UINT8 game_select)
 	SN76489Init(0, 18432000 / 6, 0);
 	SN76489Init(1, 18432000 / 6, 0);
 	SN76489Init(2, 18432000 / 6, 0);
-//	memset(MSM5205Context,0x00,0x4000*sizeof(INT16));
+	memset(MSM5205Context,0x00,0x4000*sizeof(INT16));
 
-	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0);
+	MSM5205Init(0, DrvMSM5205SynchroniseStream, 384000, DrvMSM5205Int, MSM5205_S64_4B, 0, MSM5205Context);
 	make_lut();
 	DrvDoReset();
 	return 0;
@@ -763,10 +751,10 @@ INT32 DrvInit()
 void initLayers()
 {
     Uint16	CycleTb[]={
-		0xff56, 0xffff, //A0
-		0xffff, 0xffff,	//A1
-		0x15f2,0x4eff,   //B0
-		0xffff, 0xffff  //B1
+		0xfe56, 0xeeee, //A0
+		0xeeee, 0xeeee,	//A1
+		0x15f2,0x4eee,   //B0
+		0xeeee, 0xeeee  //B1
 //		0x4eff, 0x1fff, //B1
 	};
  	SclConfig	scfg;
@@ -828,10 +816,10 @@ void DrvInitSaturn()
 	SPR_InitSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
- 	SS_MAP  = ss_map		=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
+ 	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
-	SS_FONT = ss_font		=(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum	 = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum	 = (SclSpPriNumRegister *)SS_SPPRI;
@@ -880,10 +868,10 @@ void DrvInitSaturn()
 INT32 DrvExit()
 {
 	DrvDoReset();
-	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		SPR_WaitEndSlaveSH();
+//	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//		SPR_WaitEndSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	CZetExit2();
 
 	MSM5205Exit();
@@ -902,13 +890,6 @@ INT32 DrvExit()
 //		memset(SOUND_BUFFER+(0x4000*(i+1)),0x00,RING_BUF_SIZE*8);
 	}
 #endif
-	AllRam = RamEnd = DrvRAM0 = DrvRAM1 = DrvRAM2 = DrvFgVidRAM = DrvBgVidRAM = NULL;
-	DrvSprRAM0 = DrvSprRAM1 = DrvFgColRAM = DrvBgColRAM = DrvColPROM = DrvMainROM = NULL;
-	DrvSoundROM = DrvFetch = CZ80Context = is_fg_dirty = NULL;
-	map_offset_lut = NULL;
-//	MSM5205Context = NULL;	
-
-//	free (AllMem);
 //	AllMem = NULL;
 
 	//cleanDATA();
@@ -926,8 +907,8 @@ void RenderSlaveSound()
 	SN76496Update(0, nSoundBuffer+0x2000, SOUND_LEN);
 	SN76496Update(1, nSoundBuffer+0x4000, SOUND_LEN);
 #else
-	SN76496Update(0, &nSoundBuffer[pcm[0]][deltaSlave<<1], nBurnSoundLen);
-	SN76496Update(1, &nSoundBuffer[pcm[1]][deltaSlave<<1], nBurnSoundLen);
+	SN76496Update(0, &nSoundBuffer[pcm[0]][deltaSlave], nBurnSoundLen);
+	SN76496Update(1, &nSoundBuffer[pcm[1]][deltaSlave], nBurnSoundLen);
 #endif	
 //	SN76496Update(2, nSoundBuffer+0x6000, SOUND_LEN);
 
@@ -969,12 +950,14 @@ void DrvFrame_old()
 
 	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
-	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205_vclk_callback, 0);
+//	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205_vclk_callback, 0);
 		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
 			CZetNmi();
-		if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
-			SPR_WaitEndSlaveSH();
+//		if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//			SPR_WaitEndSlaveSH();
+		MSM5205_vclk_callback(0);
+//		MSM5205Update();
 	}
 	CZetClose();
 
@@ -989,7 +972,7 @@ void DrvFrame_old()
 	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
 
-	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
+//	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
 
 	nSoundBufferPos+=(SOUND_LEN); 
 	
@@ -1003,12 +986,12 @@ void DrvFrame_old()
 		nSoundBufferPos=0;
 	}
 #else
-	SN76496Update(2, &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
+	SN76496Update(2, &nSoundBuffer[pcm[2]][nSoundBufferPos], nBurnSoundLen);
 
 	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
 
-	MSM5205RenderDirect(0, &nSoundBuffer[pcm[3]][nSoundBufferPos<<1], nBurnSoundLen);
+	MSM5205RenderDirect(0, &nSoundBuffer[pcm[3]][nSoundBufferPos], nBurnSoundLen);
 	nSoundBufferPos+=(nBurnSoundLen);
 	
 	if(nSoundBufferPos>=nBurnSoundLen*10)
@@ -1023,7 +1006,10 @@ void DrvFrame_old()
 
 #ifdef PONY
 	_spr2_transfercommand();
-	frame_x++;	
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
 #endif	
 }
 #ifndef PONY

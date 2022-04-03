@@ -646,7 +646,7 @@ void MemIndex(UINT32 game)
 	segae_vdp_cram[1]	= Next; Next += 0x20;
 	segae_vdp_regs[1]	= Next; Next += 0x20;
 
-	RamEnd		= Next;
+//	RamEnd		= Next;
 
 	CZ80Context	= Next; Next += sizeof(cz80_struc);	
 	name_lut	= (UINT16 *)LOWADDR;//Next; Next += 0x10000*sizeof(UINT16);
@@ -693,7 +693,7 @@ remove_raw_pcm_buffer(pcm1);
 
 void DrvDoReset()
 {
-	memset (DrvRAM, 0, RamEnd - DrvRAM);
+	memset (DrvRAM, 0, CZ80Context - DrvRAM);
 	
 	memset(segae_vdp_cram[0],0xFF,0x20);
 	memset(segae_vdp_cram[1],0xFF,0x20);
@@ -809,7 +809,7 @@ void DrvFrame()
 #endif
 {
 //	*(Uint16 *)0x25E00000 = colBgAddr[256]; // set bg_color
-	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvFrame   ",24,40);		
+//	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvFrame   ",24,40);		
 //	memset(&ss_sprite[3],0,131*sizeof(SprSpCmd));
 
 	DrvMakeInputs();
@@ -858,11 +858,12 @@ void DrvFrame()
 	}
 	PCM_Task(pcm); // bon emplacement
 #else
+	signed short buffer[128];
 	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
 
-	SN76496Update(0, &nSoundBuffer2[0], nBurnSoundLen);
-	SN76496Update(1, &nSoundBuffer2[0], nBurnSoundLen);
-	
+	SN76496Update(0, buffer, nBurnSoundLen);
+	SN76496Update(1, buffer, nBurnSoundLen);
+	memcpyl(nSoundBuffer2,buffer,nBurnSoundLen<<1);	
 	nSoundBufferPos+=nBurnSoundLen;
 	
 	if(nSoundBufferPos>=nBurnSoundLen*10)
@@ -890,15 +891,15 @@ INT32 DrvInit(UINT8 game)
 	memset(cache, 0, 0x80000);
 	MemIndex(game);
 
-	if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
-	if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
+	BurnLoadRom(DrvMainROM + 0x00000,  0, 1);	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
+	BurnLoadRom(DrvMainROM + 0x10000,  1, 1);	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
 	
 	
 	switch (game) {
 		case 0:
 //			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
 //			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;	// ( "rom4.ic5",   0x10000, 0x08000, CRC(ee3caab3) SHA1(f583cf92c579d1ca235e8b300e256ba58a04dc90) )
-			if (BurnLoadRom(DrvMainROM + 0x18000,  2, 1)) return 1;	// ( "rom3.ic4",   0x18000, 0x08000, CRC(d2ba9bc9) SHA1(85cf2a801883bf69f78134fc4d5075134f47dc03) )
+			BurnLoadRom(DrvMainROM + 0x18000,  2, 1);	// ( "rom3.ic4",   0x18000, 0x08000, CRC(d2ba9bc9) SHA1(85cf2a801883bf69f78134fc4d5075134f47dc03) )
 			break;
 		case 1:
 /*		case 2: // transfrm
@@ -911,10 +912,10 @@ INT32 DrvInit(UINT8 game)
 		case 3: // fantzn2
 //			if (BurnLoadRom(DrvMainROM + 0x00000,  0, 1)) return 1;
 //			if (BurnLoadRom(DrvMainROM + 0x10000,  1, 1)) return 1;
-			if (BurnLoadRom(DrvMainROM + 0x20000,  2, 1)) return 1;
-			if (BurnLoadRom(DrvMainROM + 0x30000,  3, 1)) return 1;
-			if (BurnLoadRom(DrvMainROM + 0x40000,  4, 1)) return 1;
-			if (BurnLoadRom(mc8123key  + 0x00000,  5, 1)) return 1;
+			BurnLoadRom(DrvMainROM + 0x20000,  2, 1);
+			BurnLoadRom(DrvMainROM + 0x30000,  3, 1);
+			BurnLoadRom(DrvMainROM + 0x40000,  4, 1);
+			BurnLoadRom(mc8123key  + 0x00000,  5, 1);
 			mc8123_decrypt_rom(0, 0, DrvMainROM, DrvMainROMFetch, mc8123key);
 			mc8123 = 1;
 			break;
@@ -1033,7 +1034,7 @@ void initLayers(void)
 // **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
 
     Uint16	CycleTb[]={
-		0xfff4, 0x5fff, //A0
+		0xfee4, 0x5fee, //A0
 		0xeeee, 0xeeee,	//A1
 		0x01e,0xeeee,   //B0
 		0xeeee, 0xeeee  //B1
@@ -1071,13 +1072,13 @@ void initLayers(void)
 /********************************************/	
 
 //	SCL_InitConfigTb(&scfg);
-//	scfg.dispenbl 	 = OFF;
-	scfg.dispenbl 	 = ON;
+	scfg.dispenbl 	 = OFF;
+//	scfg.dispenbl 	 = ON;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
-	scfg.plate_addr[0] = (Uint32)SS_FONT;
-	SCL_SetConfig(SCL_NBG0, &scfg);
+	scfg.plate_addr[0] = (Uint32)ss_font;
+	SCL_SetConfig(SCL_NBG2, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

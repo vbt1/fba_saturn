@@ -13,6 +13,7 @@
 int pcm[6];
 Sint16 *nSoundBuffer[32];
 extern unsigned int frame_x;
+extern unsigned int frame_y;
 #endif
 
 int ovlInit(char *szShortName)
@@ -534,7 +535,10 @@ if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
 	SPR_WaitEndSlaveSH();
 #ifdef PONY
 	_spr2_transfercommand();
-	frame_x++;	
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();		
 #endif	
 }
 
@@ -560,8 +564,8 @@ void updateSound()
 #else
 //	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer[0]+(nSoundBufferPos<<1);
 //	signed short *nSoundBuffer3 = (signed short *)nSoundBuffer[3]+(nSoundBufferPos<<1);
-	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos<<1], &nSoundBuffer[pcm[1]][nSoundBufferPos<<1], &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
-	AY8910UpdateDirect(1, &nSoundBuffer[pcm[3]][nSoundBufferPos<<1], &nSoundBuffer[pcm[4]][nSoundBufferPos<<1],&nSoundBuffer[pcm[5]][nSoundBufferPos<<1], nBurnSoundLen);
+	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos], &nSoundBuffer[pcm[1]][nSoundBufferPos], &nSoundBuffer[pcm[2]][nSoundBufferPos], nBurnSoundLen);
+	AY8910UpdateDirect(1, &nSoundBuffer[pcm[3]][nSoundBufferPos], &nSoundBuffer[pcm[4]][nSoundBufferPos],&nSoundBuffer[pcm[5]][nSoundBufferPos], nBurnSoundLen);
 	nSoundBufferPos+=nBurnSoundLen;
 
 	if(nSoundBufferPos>=nBurnSoundLen*10)

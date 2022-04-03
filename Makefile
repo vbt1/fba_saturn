@@ -55,7 +55,7 @@ OVLGBERET                 = root/d_gberet.elf
 OVLGBERET1               = root/d_gberet.bin
 MPOVLGBERETFILE    = $(OVLGBERET:.elf=.maps)
 LDOVLGBERETFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGBERETFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLGBERET         = d_gberet.c czet.c cz80/cz80.c snd/sn76496.c load.c saturn/ovl.c  saturn/pcmstm.c 
+SRCOVLGBERET         = d_gberet.c snd/sn76496.c load.c saturn/ovl.c  saturn/pcmstm.c 
 OBJOVLGBERET         = $(SRCOVLGBERET:.c=.o)
 
 OVLHIGEMARU                 = root/d_higemaru.elf

@@ -601,7 +601,13 @@ void AY8910UpdateDirect(int chip, signed short *buf1, signed short *buf2, signed
 //	struct AY8910 *PSG = OPEN_CSH_VAR(AYPSG[chip]);
 //	signed short *buf1,*buf2,*buf3;
 	int outn;
+/*	signed short buf1a[128], buf2a[128], buf3a[128];
+	signed short *pbuf1=(signed short *)&buf1a[0], *pbuf2=(signed short *)&buf2a[0], *pbuf3=(signed short *)&buf3a[0];
 
+	memset(buf1a,0x00,256);
+	memset(buf2a,0x00,256);
+	memset(buf3a,0x00,256);
+*/
 //	buf1 = (signed short *)buffer[0]+position;
 //	buf2 = (signed short *)buffer[1]+position;
 //	buf3 = (signed short *)buffer[2]+position;
@@ -863,6 +869,11 @@ void AY8910UpdateDirect(int chip, signed short *buf1, signed short *buf2, signed
 
 		length--;
 	}
+	/*
+	memcpy(buf1,buf1a,256);
+	memcpy(buf2,buf2a,256);
+	memcpy(buf3,buf3a,256);
+	*/
 }
 
 /*

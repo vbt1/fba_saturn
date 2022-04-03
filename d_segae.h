@@ -49,7 +49,7 @@ UINT8 DrvDip[2] = {0, 0};
 //static INT32 DrvWheel = 0;
 //static INT32 DrvAccel = 0;
 
-UINT8 *RamEnd = NULL;
+//UINT8 *RamEnd = NULL;
 UINT8 *DrvRAM = NULL;
 UINT8 *DrvMainROM = NULL;
 UINT8 *DrvMainROMFetch = NULL;

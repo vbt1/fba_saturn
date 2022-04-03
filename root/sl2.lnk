@@ -85,7 +85,7 @@ SECTIONS {
 		_end = .;		
 	} > ram
 
-	.malloc_max 0x0601c000:
+	.malloc_max 0x0601a000:
         {
 		__malloc_max_ram = .;
         } > ram

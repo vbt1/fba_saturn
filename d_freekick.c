@@ -900,8 +900,8 @@ void DrvInitSaturn()
 		
  	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0xC000;
-	SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum	 = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum	 = (SclSpPriNumRegister *)SS_SPPRI;

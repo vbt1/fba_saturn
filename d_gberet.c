@@ -2,7 +2,7 @@
 // Based on MAME driver by Nicola Salmoria
 //#define CZ80 1
 #define RAZE 1
-#define CACHE 1
+//#define CACHE 1
 
 #include "d_gberet.h"
 
@@ -14,6 +14,7 @@
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned int frame_x;
+extern unsigned int frame_y;
 #endif
 
 int ovlInit(char *szShortName)
@@ -38,7 +39,8 @@ int ovlInit(char *szShortName)
 		memcpy(shared,&nBurnDrvGberet,sizeof(struct BurnDriver));
 	else
 		memcpy(shared,&nBurnDrvMrgoemon,sizeof(struct BurnDriver));
-	ss_reg          = (SclNorscl *)SS_REG;
+	ss_reg   = (SclNorscl *)SS_REG;
+	ss_regs  = (SclSysreg *)SS_REGS;
 	
 	return 0;
 }
@@ -60,7 +62,7 @@ inline void mrgoemon_bankswitch(int nBank)
 #endif
 }
 
-/*static*/ void gberet_write(unsigned short address, unsigned char data)
+void gberet_write(unsigned short address, unsigned char data)
 {
 	switch (address)
 	{
@@ -129,7 +131,7 @@ inline void mrgoemon_bankswitch(int nBank)
 
 #ifdef RAZE
 #ifdef CACHE
-/*static*/ void gberet_write_cxxx(unsigned short address, unsigned char data)
+void gberet_write_cxxx(unsigned short address, unsigned char data)
 {
 	if(Rom[address]!=data)
 	{
@@ -141,7 +143,7 @@ inline void mrgoemon_bankswitch(int nBank)
 #endif
 
 
-/*static*/ unsigned char gberet_read(unsigned short address)
+unsigned char gberet_read(unsigned short address)
 {
 
 	unsigned char nRet = 0xff;
@@ -199,8 +201,10 @@ inline void mrgoemon_bankswitch(int nBank)
 	return 0;
 }
 
-/*static*/ void DrvDoReset()
+void DrvDoReset()
 {
+//	memset (Rom+0x10000, 0, MemEnd - (Rom+0x10000));	
+	
 	nmi_enable = 0;
 	irq_enable = 0;
 	gberet_spritebank = 0;
@@ -239,7 +243,9 @@ inline void MemIndex()
 
 	Rom            = Next; Next += 0x14000;
 	MemEnd         = Next;
+#ifdef CACHE
 	bg_dirtybuffer = Next; Next += 2048;
+#endif
 	load_rom	   = Next;
 }
 
@@ -267,27 +273,27 @@ inline void DrvCreatePalette()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ inline void Graphics_Decode(int *CharPlanes, int *CharXOffs, int *CharYOffs, int *SprPlanes, int *SprXOffs, int *SprYOffs, int SprMod)
+inline void Graphics_Decode(int *CharPlanes, int *CharXOffs, int *CharYOffs, int *SprPlanes, int *SprXOffs, int *SprYOffs, int SprMod)
 {
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 //	memset(cache,0x00,0x40000);
 	UINT8 *Gfx0 = (unsigned char *)load_rom;
 	UINT8 *Gfx1 = (unsigned char *)load_rom+0x10000;
 	
-	GfxDecode4Bpp(0x200, 4,  8,  8, CharPlanes, CharXOffs, CharYOffs, 0x100, Gfx0, cache);
+	GfxDecode4Bpp(0x200, 4,  8,  8, CharPlanes, CharXOffs, CharYOffs, 0x100, Gfx0, SS_CACHE);
 	GfxDecode4Bpp(0x200, 4, 16, 16, SprPlanes, SprXOffs, SprYOffs, SprMod, Gfx1, &ss_vram[0x1100]);
 }
 
 inline void DrvGfxDecode()
 {
-	/*static*/ int Planes[4] = { 0, 1, 2, 3 };
-	/*static*/ int XOffs[16] = { 0, 4, 8, 12, 16, 20, 24, 28, 256, 260, 264, 268, 272, 276, 280, 284 };
-	/*static*/ int YOffs[16] = { 0, 32, 64, 96, 128, 160, 192, 224, 512, 544, 576, 608, 640, 672, 704, 736 };
+	int Planes[4] = { 0, 1, 2, 3 };
+	int XOffs[16] = { 0, 4, 8, 12, 16, 20, 24, 28, 256, 260, 264, 268, 272, 276, 280, 284 };
+	int YOffs[16] = { 0, 32, 64, 96, 128, 160, 192, 224, 512, 544, 576, 608, 640, 672, 704, 736 };
 
 	Graphics_Decode(Planes, XOffs, YOffs, Planes, XOffs, YOffs, 0x400);
 }
 
-/*static*/ void GetRoms()
+void GetRoms()
 {
 	char* pRomName;
 	struct BurnRomInfo ri;
@@ -295,7 +301,7 @@ inline void DrvGfxDecode()
 	unsigned char *Load1 = (unsigned char *)load_rom;
 	unsigned char *Load2 = (unsigned char *)load_rom+0x10000;
 	unsigned char *Load3 = (unsigned char *)load_rom+0x20000;
-	memset4_fast(Load1,0x00,0x30000);
+	memset(Load1,0x00,0x30000);
 	
 	for (unsigned int i = 0; !BurnDrvGetRomName(&pRomName, i, 0); i++) {
 
@@ -332,17 +338,17 @@ inline void DrvGfxDecode()
 
 	if (game_type == 2) {
 		memcpy (Rom + 0x10000, Rom + 0x0c000, 0x04000);
-		memset4_fast (Rom + 0x0c000, 0, 0x04000);
+		memset (Rom + 0x0c000, 0, 0x04000);
 	} 		  
 }
 
-/*static*/ int DrvInit()
+int DrvInit()
 {
 	DrvInitSaturn();
 	MemIndex();
 
 #ifdef CACHE
-	memset4_fast(bg_dirtybuffer,1,2048);
+	memset(bg_dirtybuffer,1,2048);
 #endif	
 	
 	GetRoms();
@@ -352,7 +358,7 @@ inline void DrvGfxDecode()
 #ifdef CZ80
 //	if(game_type&2)
 //	{
-	CZetInit(1);
+	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetSetReadHandler(gberet_read);
 	CZetSetWriteHandler(gberet_write);
@@ -444,12 +450,12 @@ e020-e03f ZRAM2 bit 8 of line scroll registers
 	z80_end_memmap();     
 #endif
 #endif
-	SN76489Init(0, 18432000 / 12, 0);
+	SN76489AInit(0, 18432000 / 12, 0);
 	DrvDoReset();
 	return 0;
 }
 
-/*static*/ INT32 DrvExit()
+INT32 DrvExit()
 {
 	DrvDoReset();
 #ifdef RAZE
@@ -507,10 +513,10 @@ inline void initLayers()
 {
 
     Uint16	CycleTb[]={
-		0xff5e, 0xffff, //A1
-		0xffff, 0xffff,	//A0
-		0x04ff, 0xffff,   //B1
-		0xffff, 0xffff  //B0
+		0xfe5e, 0xeeee, //A1
+		0xeeee, 0xeeee,	//A0
+		0x04fe, 0xeeee,   //B1
+		0xeeee, 0xeeee  //B0
 	};
 
  	SclConfig	scfg;
@@ -527,11 +533,11 @@ inline void initLayers()
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void initPosition()
+void initPosition()
 {
 	SCL_Open();
-	ss_reg->n0_move_y =  (16<<16) ;
-	SCL_Close();
+	ss_reg->n0_move_y =  (8<<16) ;
+//	SCL_Close();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void initColors()
@@ -545,19 +551,12 @@ inline void initColors()
 #ifdef PONY
 extern SclLineparam lp;
 
-static void SCL_SetLineParamNBG0(SclLineparam *lp)
+void SCL_SetLineParamNBG0(SclLineparam *lp)
 {
 	Uint32	*addr;
 	addr = &Scl_n_reg.lineaddr[0];
 	*addr = (lp->line_addr >>1) & 0x0007ffff;
 	SclProcess = 2; //obligatoire
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void vbl()
-{
-//	sdrv_vblank_rq();
-	SCL_SetLineParamNBG0(&lp);
-	sdrv_stm_vblank_rq();
 }
 #endif	
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -568,7 +567,7 @@ void DrvInitSaturn()
 	nBurnSprites = 51;
 	nSoundBufferPos = 0;
 
-	SS_CACHE = cache   =(Uint8 *)SCL_VDP2_VRAM_B1;
+	SS_CACHE = (Uint8 *)SCL_VDP2_VRAM_B1;
 	SS_MAP   = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_MAP2  = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A0;
 
@@ -592,13 +591,13 @@ void DrvInitSaturn()
 	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
 //	memset(&ss_scl[0],16<<16,64);
 	memset(&ss_scl[0],16<<16,128);
-	memset4_fast(&ss_map[0],0,0x4000);
-	memset4_fast(&ss_map2[0],0,0x4000);
+	memset(&ss_map[0],0,0x4000);
+	memset(&ss_map2[0],0,0x4000);
 	drawWindow(0,240,0,2,66);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 #ifdef PONY
 	frame_x	= 0;
-	nBurnFunction = vbl;	
+	nBurnFunction = sdrv_stm_vblank_rq;	
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -632,6 +631,7 @@ void gberet_draw_sprites()
 
 inline void DrvDraw()
 {
+/*	
 	unsigned int offs;
 	unsigned char *ColorRom = &Rom[0xc040];
 	unsigned char *VideoRom = &Rom[0xc840];
@@ -639,7 +639,7 @@ inline void DrvDraw()
 	UINT8 	*bg_dirty=&bg_dirtybuffer[0x40];
 	UINT16*map  =(Uint16 *)SCL_VDP2_VRAM_B0;
 	UINT16*map2 =(Uint16 *)SCL_VDP2_VRAM_A0;
-	memset4_fast(&ss_scl[16],scroll | (scroll<<16),0x340);
+	memset(&ss_scl[16],(scroll<<16),0x340);
 
 	for (offs = 0; offs < 0x780; offs++)
 	{
@@ -663,15 +663,39 @@ inline void DrvDraw()
 		map++;
 #endif
 	}
+*/
+	INT32 scroll = Rom[0xe006] | (Rom[0xe026] << 8);
+	unsigned char *DrvColRAM = &Rom[0xc040];
+	unsigned char *DrvVidRAM = &Rom[0xc840];
+	memset4_fast(&ss_scl[64],scroll | (scroll<<16),0x300);
 
+//	for (UINT32 offs = 0x40; offs < 0x7c0; offs++)
+	for (UINT32 offs = 0; offs < 0x780; offs++)	
+	{
+#ifdef CACHE
+		if (bg_dirtybuffer[offs])
+		{
+			bg_dirtybuffer[offs] = 0;
+#endif
+			UINT32 attr = DrvColRAM[offs];
+			UINT32 code = DrvVidRAM[offs] + ((attr & 0x40)<<2);
+			UINT32 color = attr & 0x0f;
+			UINT32 flip = attr & 0x30;
+
+			ss_map2[offs] = ss_map2[offs+0x1000] = ss_map[offs] = ss_map[offs+0x1000] = (color << 12 | flip << 6 | code&0x1FF) ;
+#ifdef CACHE
+		}
+#endif
+	}	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void renderSound(unsigned int *nSoundBufferPos)
 {
 #ifndef PONY	
+/*
 	signed short *	nSoundBuffer = (signed short *)0x25a20000;
-	SN76496Update(0, &nSoundBuffer[nSoundBufferPos[0]], SOUND_LEN);
-	nSoundBufferPos[0]+=SOUND_LEN;
+	SN76496Update(0, &nSoundBuffer[nSoundBufferPos[0]], nBurnSoundLen);
+	nSoundBufferPos[0]+=nBurnSoundLen;
 
 	if(nSoundBufferPos[0]>=RING_BUF_SIZE/2)//0x2400)
 	{
@@ -679,6 +703,7 @@ void renderSound(unsigned int *nSoundBufferPos)
 		PCM_Task(pcm); // bon emplacement
 		nSoundBufferPos[0]=0;
 	}
+	*/
 #else
 	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos[0]<<1);
 
@@ -713,6 +738,7 @@ void DrvFrame_old()
  void DrvFrame()
  #endif
 {
+
 	unsigned int nInterleave = game_type ? 16 : 32;
 #ifdef CZ80
 	if(game_type & 2)
@@ -771,17 +797,29 @@ else
 	if(game_type & 2)
 		CZetClose();
 #endif
+
 	SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
 	DrvDraw();
 
 	cleanSprites();
 	gberet_draw_sprites();
+	
 	SPR_WaitEndSlaveSH();
 #ifdef PONY
-	frame_x++;	
+	ss_reg     = (SclNorscl *)SS_REG;
+//	int scroll = Rom[0xe006] | (Rom[0xe026] << 8);
+	_spr2_transfercommand();
+	SCL_SetLineParamNBG0(&lp);
+//	SclProcess = 2;
+//	ss_reg->n0_move_y = 32<<16;
+//	ss_reg->n0_move_x = scroll<<16;	
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();
 #endif	
 }
-/*static*/ int gberetInit()
+int gberetInit()
 {
 	game_type = 0;
 	_30_HZ =1;
@@ -790,7 +828,7 @@ else
 	return DrvInit();
 }
 
-/*static*/ int mrgoemonInit()
+int mrgoemonInit()
 {
 	game_type = 2;
 	_30_HZ=0;

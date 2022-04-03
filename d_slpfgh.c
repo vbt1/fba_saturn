@@ -599,7 +599,9 @@ INT32 DrvExit()
 	memset(ss_vram,0,0x2200);
 	memset(ss_sprite,0x00,nBurnSprites*sizeof(SprSpCmd));
 //	memset(ss_map,0,0x10000);
+
 	cleanSprites();
+	_spr2_transfercommand();
 	wait_vblank();
 
 //	SPR_InitSlaveSH();
@@ -915,8 +917,8 @@ void updateSound()
 		nSoundBufferPos=0;
 	}
 #else
-	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos<<1], &nSoundBuffer[pcm[1]][nSoundBufferPos<<1], &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
-	AY8910UpdateDirect(1, &nSoundBuffer[pcm[3]][nSoundBufferPos<<1], &nSoundBuffer[pcm[4]][nSoundBufferPos<<1],&nSoundBuffer[pcm[5]][nSoundBufferPos<<1], nBurnSoundLen);
+	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos], &nSoundBuffer[pcm[1]][nSoundBufferPos], &nSoundBuffer[pcm[2]][nSoundBufferPos], nBurnSoundLen);
+	AY8910UpdateDirect(1, &nSoundBuffer[pcm[3]][nSoundBufferPos], &nSoundBuffer[pcm[4]][nSoundBufferPos], &nSoundBuffer[pcm[5]][nSoundBufferPos], nBurnSoundLen);
 	nSoundBufferPos+=nBurnSoundLen;
 
 	if(nSoundBufferPos>=nBurnSoundLen*10)

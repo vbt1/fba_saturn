@@ -13,6 +13,7 @@
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned int frame_x;
+extern unsigned int frame_y;
 #endif
 
 int ovlInit(char *szShortName)
@@ -1553,6 +1554,9 @@ void DrvFrame()
 #ifdef PONY
 	_spr2_transfercommand();
 	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();		
 #endif	
 }
 
@@ -1649,6 +1653,9 @@ void NinjakunFrame()
 	_spr2_transfercommand();
 	SclProcess = 1;
 	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();		
 #endif	
 }
 #if 0

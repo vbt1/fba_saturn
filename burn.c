@@ -6,7 +6,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 50
+#define NB_DRV 46
 volatile struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));// __attribute__((section("COMMON")));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
@@ -85,7 +85,7 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvNewsa = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvNews = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvGberet = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-	static struct BurnDriver BurnDrvMrgoemon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+//	static struct BurnDriver BurnDrvMrgoemon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvhigemaru = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvpkunwar = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvPang = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
@@ -199,9 +199,9 @@ BurnDrvNews.szFullNameA="News (set 1)";
 BurnDrvGberet.szShortName="gberet";
 BurnDrvGberet.szFullNameA="Green Beret";
 
-BurnDrvMrgoemon.szShortName="mrgoemon";
-BurnDrvMrgoemon.szFullNameA="Mr. Goemon (Japan)";
-BurnDrvMrgoemon.szParent="gberet";
+//BurnDrvMrgoemon.szShortName="mrgoemon";
+//BurnDrvMrgoemon.szFullNameA="Mr. Goemon (Japan)";
+//BurnDrvMrgoemon.szParent="gberet";
 
 BurnDrvhigemaru.szShortName="higema";
 BurnDrvhigemaru.szFullNameA="Pirate Ship Higemaru";
@@ -495,7 +495,7 @@ pDriver[i++] = &BurnDrvGigasm2;
 pDriver[i++] = &BurnDrvGberet;
 //pDriver[i++] = &BurnDrvHangonjr;
 pDriver[i++] = &BurnDrvMnight;
-pDriver[i++] = &BurnDrvMrgoemon;
+//pDriver[i++] = &BurnDrvMrgoemon;
 pDriver[i++] = &BurnDrvMyhero;
 pDriver[i++] = &BurnDrvNews;
 pDriver[i++] = &BurnDrvNewsa;

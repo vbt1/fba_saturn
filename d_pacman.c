@@ -527,7 +527,7 @@ void DrvInitSaturn()
 {
 	SS_MAP  = ss_map  = (Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = ss_map2 = (Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT = ss_font = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE= cache   = (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum      = (SclBgPriNumRegister *)SS_N0PRI;
@@ -591,7 +591,6 @@ INT32 DrvExit()
 #ifdef PONY
 remove_raw_pcm_buffer(pcm1);
 #endif
-
 	//cleanDATA();
 	cleanBSS();
 

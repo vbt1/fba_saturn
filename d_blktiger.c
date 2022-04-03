@@ -1288,9 +1288,9 @@ void DrvFrame()
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8000
 // 	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1;		   //c
 //	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x8000;			//8
-	SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
+	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B1+0x0000;
 //SS_FONT = ss_font		=(Uint16 *)NULL;
-	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum	 = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum	 = (SclSpPriNumRegister *)SS_SPPRI;
@@ -1304,7 +1304,8 @@ void DrvFrame()
 #endif
 	nBurnLinescrollSize = 1;
 	nBurnSprites = 128+3;
-#ifdef PONY	
+#ifdef PONY
+	frame_x	= 0;	
 	nBurnFunction = sdrv_stm_vblank_rq;
 #endif	
 

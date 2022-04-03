@@ -2378,7 +2378,7 @@ void DrvFrame_old()
 	unsigned short *nSoundBuffer1 = (unsigned short *)(0x25a24000+deltaSlave);
 	AY8910UpdateDirect(0, &nSoundBuffer1[0], nBurnSoundLen);
 #else
-	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos<<1], &nSoundBuffer[pcm[1]][nSoundBufferPos<<1], &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
+	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos], &nSoundBuffer[pcm[1]][nSoundBufferPos], &nSoundBuffer[pcm[2]][nSoundBufferPos], nBurnSoundLen);
 #endif
 	deltaSlave+=nBurnSoundLen;
 
@@ -2420,7 +2420,7 @@ void DrvFrame_old()
 #endif
 
 #else
-	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos<<1], &nSoundBuffer[pcm[1]][nSoundBufferPos<<1], &nSoundBuffer[pcm[2]][nSoundBufferPos<<1], nBurnSoundLen);
+	AY8910UpdateDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos], &nSoundBuffer[pcm[1]][nSoundBufferPos], &nSoundBuffer[pcm[2]][nSoundBufferPos], nBurnSoundLen);
 #ifdef K051649 
 
 // fonction à réécrire pour poné sound

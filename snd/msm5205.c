@@ -1,10 +1,8 @@
-#pragma GCC optimize("Os")
-
 #include "../burnint.h"
 #include "msm5205.h"
 #include "math.h"
-#define SOUND_LEN 192
-#define MAX_MSM5205	 1
+#define SOUND_LEN 128
+#define MAX_MSM5205	 2
 /*static*/ INT32 nNumChips = 0;
 #define HZ 60
 
@@ -17,7 +15,7 @@ typedef struct
 	INT32 bitwidth;           /* bit width selector -3B/4B    */
 	INT32 signal;             /* current ADPCM signal         */
 	INT32 step;               /* current ADPCM step           */
-//	float volume;
+	float volume;
 //	INT32 output_dir;
 
 //	INT32 use_seperate_vols;  /* support custom Taito panning hardware */
@@ -35,20 +33,20 @@ typedef struct
 	INT32 diff_lookup[49*16];
 } _MSM5205_state;
 
-INT16 stream[MAX_MSM5205][0x1000] = {NULL};
-static _MSM5205_state chips[MAX_MSM5205] = {{.data = 0, .step = 0},{.data = 0, .step = 0}};
-static _MSM5205_state *voice = NULL;
+INT16 *stream[MAX_MSM5205] = {NULL};
+/*static*/ _MSM5205_state chips[MAX_MSM5205] = {{.data = 0, .volume = 0, .step = 0},{.data = 0, .volume = 0, .step = 0}};
+/*static*/ _MSM5205_state *voice = NULL;
 
 /*static*/ void MSM5205_playmode(INT32 chip, INT32 select);
 
-static const INT32 index_shift[8] = { -1, -1, -1, -1, 2, 4, 6, 8 };
+/*static const*/ INT32 index_shift[8] = { -1, -1, -1, -1, 2, 4, 6, 8 };
 
 /*static*/ void ComputeTables(UINT32 chip)
 {
 	voice = &chips[chip];
 
 	/* nibble to bit map */
-	static const INT8 nbl2bit[16][4] =
+	/*static const*/ INT32 nbl2bit[16][4] =
 	{
 		{ 1, 0, 0, 0}, { 1, 0, 0, 1}, { 1, 0, 1, 0}, { 1, 0, 1, 1},
 		{ 1, 1, 0, 0}, { 1, 1, 0, 1}, { 1, 1, 1, 0}, { 1, 1, 1, 1},
@@ -114,22 +112,21 @@ void MSM5205StreamUpdate(INT32 chip)
 		memset (stream[chip], 0, SOUND_LEN * sizeof(INT16));
 	}
 
-	if(voice->streampos!=0)
+//	if(voice->streampos!=0)
 	{
 		INT16 *buffer = stream[chip];
 		buffer += pos;
 		
 		if(voice->signal)
 		{
-//			INT32 i = 0;
+			INT32 i = 0;
 
-//			INT32 volval = (INT32)((voice->signal * 16)); // * voice->volume);
-			INT16 val = (INT16)((voice->signal * 16)); // * voice->volume);
-//			INT16 val = volval;
+			INT32 volval = (INT32)((voice->signal * 16)); // * voice->volume);
+			INT16 val = volval;
 			while (len)
 			{
-				*buffer++ = val;
-				len--; //i++;
+				buffer[i] = val;
+				len--; i++;
 			}
 		} else {
 			memset (buffer, 0, sizeof(INT16) * len);
@@ -169,16 +166,6 @@ void MSM5205StreamUpdate(INT32 chip)
 	}
 }
 
-//#define CLIP(A) ((A) < -0x8000 ? -0x8000 : (A) > 0x7fff ? 0x7fff : (A))
-#define CLIP(A) ((A) < -0x5000 ? -0x5000 : (A) > 0x4fff ? 0x4fff : (A))
-/*
-void MSM5205InitPos(INT32 chip)
-{
-	voice = &chips[chip];
-	voice->streampos = 0;
-}
-*/
-/*
 void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 {
 	voice = &chips[chip];
@@ -190,13 +177,14 @@ void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 	for (INT32 i = 0; i < len; i++) 
 	{
 //		int	Temp = buffer[0] + source[i];
-		INT16	Temp = *source++;
+		int	Temp = source[i];
 		if (Temp > 32767) Temp = 32767;
 		else {if (Temp < -32768) Temp = -32768;}
 		*buffer++ = Temp;
+		source[i] = 0; // clear dac
 	}
 }
-*/
+
 void MSM5205RenderDirect(INT32 chip, INT16 *buffer, INT32 len)
 {
 	voice = &chips[chip];
@@ -207,10 +195,12 @@ void MSM5205RenderDirect(INT32 chip, INT16 *buffer, INT32 len)
 	
 	for (UINT32 i = 0; i < len; i++) 
 	{
-		*buffer++ = *source++;
+//		*buffer++ = *source++;
+		*buffer++ = source[i];
+		source[i] = 0; // clear dac
 	}
 }
-/*
+
 void MSM5205RenderDirectSlave(INT32 chip)
 {
 	unsigned int deltaSlave		= *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
@@ -221,12 +211,12 @@ void MSM5205RenderDirectSlave(INT32 chip)
 	MSM5205StreamUpdate(chip);
 	voice->streampos = 0;
 	
-	for (UINT32 i = 0; i < SOUND_LEN; i++) 
+	for (UINT32 i = 0; i < 128; i++) 
 	{
 		*nSoundBuffer++ = *source++;
 	}
 }
-*/
+
 void MSM5205Reset()
 {
 //#if defined FBA_DEBUG
@@ -250,7 +240,7 @@ void MSM5205Reset()
 	}
 }
 
-void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd)
+void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vclk_callback)(), INT32 select, INT32 bAdd, INT16 *addr)
 {
 //	DebugSnd_MSM5205Initted = 1;
 
@@ -267,7 +257,7 @@ void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vc
 //	voice->volume	= nVolume;
 //	voice->output_dir = BURN_SND_ROUTE_BOTH;
 	
-//	stream[chip]		= (INT16*)addr;
+	stream[chip]		= (INT16*)addr;
 	ComputeTables (chip);
 	nNumChips = chip;
 }
@@ -287,7 +277,7 @@ void MSM5205Exit()
 		memset (voice, 0, sizeof(_MSM5205_state));
 
 //		free (stream[chip]);
-//		stream[chip] = NULL;
+		stream[chip] = NULL;
 	}
 	
 //	DebugSnd_MSM5205Initted = 0;
@@ -384,7 +374,7 @@ INT32 MSM5205CalcInterleave(INT32 chip, INT32 cpu_speed)
 	if (chip > nNumChips) bprintf(PRINT_ERROR, _T("MSM5205CalcInterleave called with invalid chip %x\n"), chip);
 #endif
 */
-	static const INT32 table[2][4] = { {96, 48, 64, 0}, {160, 40, 80, 20} };
+/*	static const*/ INT32 table[2][4] = { {96, 48, 64, 0}, {160, 40, 80, 20} };
 /*
 	char toto[100];
 	char *titi = &toto[0];
