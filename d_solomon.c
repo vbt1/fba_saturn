@@ -332,8 +332,8 @@ INT32 SolomonInit()
 //	SolomonTempRom = (UINT8 *)BurnMalloc(0x10000);
 	UINT8 *SolomonTempRom	= (UINT8 *)LOWADDR;
 	UINT8 *ss_vram			= (UINT8 *)SS_SPRAM;
-	UINT8 *SolomonBgTiles	= (UINT8 *)cache;
-	UINT8 *SolomonFgTiles	= (UINT8 *)cache+0x10000;
+	UINT8 *SolomonBgTiles	= (UINT8 *)SS_CACHE;
+	UINT8 *SolomonFgTiles	= (UINT8 *)SS_CACHE+0x10000;
 	UINT8 *SolomonSprites	= &ss_vram[0x1100];
 	memset(SolomonTempRom, 0, 0x10000);
 	// Load Z80 #1 Program Roms
@@ -776,7 +776,7 @@ voir plutot p355 vdp2
 	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
-	scfg.plate_addr[0]	 = (Uint32)ss_font;
+	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
 
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
@@ -822,10 +822,10 @@ voir plutot p355 vdp2
 
 	nBurnSprites  = 32+4;//27;
 
-	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
-	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
-	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE = cache     =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_MAP   = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
+	SS_MAP2  = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
+	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;

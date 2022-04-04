@@ -124,13 +124,13 @@ INT32 DrvDoReset(INT32 full_reset)
 	if (full_reset) {
 		memset(AllRam, 0, RamEnd - AllRam);
 	}
-//FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502OpenR             ",10,70);	
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"M6502OpenR             ",10,70);	
 //	M6502Open(0);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Reset             ",10,70);	
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"M6502Reset             ",10,70);	
 	M6502_Reset();
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Close             ",10,70);	
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"M6502Close             ",10,70);	
 //	M6502Close();
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticReset             ",10,70);
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"SlapsticReset             ",10,70);
 	SlapsticReset();
 
 	watchdog = 0;
@@ -170,12 +170,12 @@ INT32 CommonInit(INT32 boot)
 	{
 		if (BurnLoadRom(Drv6502ROM, 0, 1)) return 1;
 //		if (BurnLoadRom(DrvGfxROM , 1, 1)) return 1;
-		if (BurnLoadRom(cache , 1, 1)) return 1;
+		if (BurnLoadRom((UINT8 *)SS_CACHE , 1, 1)) return 1;
 	}
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502Init             ",10,70);	
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"M6502Init             ",10,70);	
 	M6502Init(0, TYPE_M6502);
 //	M6502Open(0);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502MapMemory             ",10,70);
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"M6502MapMemory             ",10,70);
 	M6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, M6502_RAM);
 //	M6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
 	M6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, M6502_ROM);
@@ -185,7 +185,7 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502MapMemory            
 	M6502MapMemory(DrvNVRAM,		0x2400, 0x25ff, M6502_ROM);
 	M6502MapMemory(DrvNVRAM,		0x2600, 0x27ff, M6502_ROM);
 	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502SetReadHandler             ",10,70);
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"M6502SetReadHandler             ",10,70);
 	M6502SetReadHandler(0x2800, 0x281f,atetris_read_0x2800);
 //	M6502SetReadHandler(0x4000, 0x7fff,atetris_read_0x4000);	
 	M6502SetReadHandler(0x4000, 0x7fff,atetris_slapstic_read);	
@@ -196,7 +196,7 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"M6502SetReadHandler       
 	M6502SetWriteHandler(0x2000, 0x20ff,atetris_write_0x2000);
 	M6502SetWriteHandler(0x1000, 0x1fff,atetris_write_0x1000);
 //	M6502Close();
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticInit             ",10,70);
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"SlapsticInit             ",10,70);
 	SlapsticInit(101);
 
 //	is_Bootleg = boot;
@@ -214,9 +214,9 @@ FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"SlapsticInit             "
 	}
 */
 	memset (DrvNVRAM, 0xff, 0x200);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvDoReset             ",10,70);
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset             ",10,70);
 	DrvDoReset(1);
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvPaletteUpdate             ",10,70);
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvPaletteUpdate             ",10,70);
 	for (UINT32 i = 0; i < 0x100; i++) 
 	{
 		DrvPaletteUpdate(i);
@@ -242,7 +242,7 @@ INT32 DrvExit()
 
 void DrvFrame()
 {
-FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvFrame                 ",10,70);	
+FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvFrame                 ",10,70);	
 	watchdog++;
 	if (watchdog >= 180) {
 		DrvDoReset(0);
@@ -332,7 +332,7 @@ void initLayers()
 //	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
-	scfg.plate_addr[0]	 = (Uint32)ss_font;
+	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
@@ -389,14 +389,14 @@ void make_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
-//	FNT_Print256_2bpp((volatile Uint8 *)ss_font,(Uint8 *)"DrvInitSaturn             ",10,70);
+//	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvInitSaturn             ",10,70);
 //	SPR_InitSlaveSH();
 	nBurnSprites  = 35;
 
-	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
+	SS_MAP    = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
 	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
-	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE = cache     =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT   = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE  = (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;

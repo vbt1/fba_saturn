@@ -208,7 +208,7 @@ int DrvGfxDecode()
 				 0x080, 0x090, 0x0a0, 0x0b0, 0x0c0, 0x0d0, 0x0e0, 0x0f0 };
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 
-	GfxDecode4Bpp(0x200, 2,  8,  8, Planes + 2, XOffs, YOffs, 0x080, Gfx0, cache);
+	GfxDecode4Bpp(0x200, 2,  8,  8, Planes + 2, XOffs, YOffs, 0x080, Gfx0, SS_CACHE);
 	GfxDecode4Bpp(0x080, 4, 16, 16, Planes,     XOffs, YOffs, 0x200, Gfx1, &ss_vram[0x1100]);
 	swapFirstLastColor(&ss_vram[0x1100],0x0f,0x8000);
 
@@ -318,7 +318,7 @@ void initLayers()
 //	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 	     = SCL_BITMAP;
 	scfg.mapover         = SCL_OVER_0;
-	scfg.plate_addr[0]   = (Uint32)ss_font;
+	scfg.plate_addr[0]   = (Uint32)SS_FONT;
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
@@ -360,9 +360,9 @@ void DrvInitSaturn()
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 51;//27;
 
-	SS_CACHE = cache      =(Uint8  *)SCL_VDP2_VRAM_A0;
-	SS_MAP     = ss_map     =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_B0;	
+	SS_MAP   = ss_map     =(Uint16 *)SCL_VDP2_VRAM_A1;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;

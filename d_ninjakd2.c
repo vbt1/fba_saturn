@@ -786,7 +786,7 @@ void DrvGfxDecode(UINT8 *rom, UINT32 len, UINT32 type)
 
 	UINT8 *tmp = (UINT8*)LOWADDR;
 	if(type==3)
-		tmp = (UINT8 *)cache;
+		tmp = (UINT8 *)SS_CACHE;
 	memcpyl (tmp, rom, len);
 			
 	switch (type)
@@ -837,10 +837,10 @@ void lineswap_gfx_roms(UINT8 *rom, INT32 len, const INT32 bit)
 
 void gfx_unscramble(INT32 gfxlen)
 {
-	UINT8 *DrvGfxROM0	= (UINT8 *)cache;// fg
+	UINT8 *DrvGfxROM0	= (UINT8 *)SS_CACHE;// fg
 	UINT8 *ss_vram 		= (UINT8 *)SS_SPRAM;
 	UINT8 *DrvGfxROM1	= (UINT8 *)(ss_vram+0x1100); // sprites
-	UINT8 *DrvGfxROM2	= (UINT8 *)(UINT8 *)cache+0x08000; // bg
+	UINT8 *DrvGfxROM2	= (UINT8 *)(UINT8 *)SS_CACHE+0x08000; // bg
 		
 	lineswap_gfx_roms(DrvGfxROM0, 0x08000, 13);
 	lineswap_gfx_roms(DrvGfxROM1, gfxlen, 14);
@@ -871,10 +871,10 @@ INT32 Ninjakd2CommonInit()
 		if (BurnLoadRom(DrvZ80ROM0 + 0x28000,  4, 1)) return 1;
 
 //		if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  5, 1)) return 1;
-		UINT8 *DrvGfxROM0	= (UINT8 *)cache;// fg
+		UINT8 *DrvGfxROM0	= (UINT8 *)SS_CACHE;// fg
 		UINT8 *ss_vram 		= (UINT8 *)SS_SPRAM;
 		UINT8 *DrvGfxROM1	= (UINT8 *)(ss_vram+0x1100); // sprites
-		UINT8 *DrvGfxROM2	= (UINT8 *)(UINT8 *)cache+0x08000; // bg
+		UINT8 *DrvGfxROM2	= (UINT8 *)(UINT8 *)SS_CACHE+0x08000; // bg
 //text		
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  6, 1)) return 1;
 		
@@ -941,10 +941,10 @@ INT32 MnightInit()
 //		if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  5, 1)) return 1;
 //		memcpy (DrvZ80ROM1 + 0x10000, DrvZ80ROM1, 0x10000);
 
-		UINT8 *DrvGfxROM0	= (UINT8 *)cache;// fg
+		UINT8 *DrvGfxROM0	= (UINT8 *)SS_CACHE;// fg
 		UINT8 *ss_vram 		= (UINT8 *)SS_SPRAM;
 		UINT8 *DrvGfxROM1	= (UINT8 *)(ss_vram+0x1100); // sprites
-		UINT8 *DrvGfxROM2	= (UINT8 *)(UINT8 *)cache+0x08000; // bg
+		UINT8 *DrvGfxROM2	= (UINT8 *)(UINT8 *)SS_CACHE+0x08000; // bg
 
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  6, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x00000,  7, 1)) return 1;
@@ -1066,7 +1066,7 @@ INT32 RobokidInit()
 		DrvGfxDecode((UINT8*)tmp, 0x60000, 3);
 		swapFirstLastColor(tmp,0x0f,0x60000);
 //text
-		UINT8 *DrvGfxROM0	 	= (UINT8 *)cache;// fg
+		UINT8 *DrvGfxROM0	 	= (UINT8 *)SS_CACHE;// fg
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  5, 1)) return 1;
 		swapFirstLastColor(DrvGfxROM0,0x0f,0x10000);
 	}
@@ -1158,7 +1158,7 @@ INT32 OmegafInit()
 		swapFirstLastColor(tmp,0x0f,0x60000);
 */
 //text
-		UINT8 *DrvGfxROM0	 	= (UINT8 *)cache;// fg
+		UINT8 *DrvGfxROM0	 	= (UINT8 *)SS_CACHE;// fg
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  3, 1)) return 1;
 		swapFirstLastColor(DrvGfxROM0,0x0f,0x10000);
 		
@@ -1230,10 +1230,10 @@ inline void initLayersS(UINT8 game)
 
 	SCL_SetConfig(SCL_NBG1, &scfg); // bg0
 	scfg.dispenbl      = ON;
-	scfg.plate_addr[0] = (Uint32)ss_font; // bg1
-	scfg.plate_addr[1] = (Uint32)ss_font;
-	scfg.plate_addr[2] = (Uint32)ss_font;
-	scfg.plate_addr[3] = (Uint32)ss_font;
+	scfg.plate_addr[0] = (Uint32)SS_FONT; // bg1
+	scfg.plate_addr[1] = (Uint32)SS_FONT;
+	scfg.plate_addr[2] = (Uint32)SS_FONT;
+	scfg.plate_addr[3] = (Uint32)SS_FONT;
 		
 	if(!game)
 	{
@@ -1311,17 +1311,17 @@ void DrvInitSaturnS(UINT8 game)
 	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x1000;			// bg0
 //	ss_map3				=(Uint16 *)SCL_VDP2_VRAM_B1+0xa000;			// bg2
 
-	SS_CACHE= cache		=(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	SS_SET_S0PRIN(4);
 	if(game)
 	{
-		SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B0;			// window
+		SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B0;			// window
 		SS_SET_N0PRIN(7);
 	}
 	else
 	{
-		SS_FONT = ss_font	=(Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
+		SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B1+0xc000;			// bg1
 		SS_SET_N0PRIN(3);
 	}
 	
@@ -1511,9 +1511,9 @@ UINT32 cacheTile(UINT8 *bgram,UINT32 *nt, UINT32 *bg1, UINT8 *src,UINT8 *dst)
 
 void RobokidDraw()
 {
-//	DrvGfxROM2	 	= (UINT8 *)cache+0x08000;// bg1 //Next; Next += 0x100000;
-//	DrvGfxROM3	 	= (UINT8 *)cache+0x28000;//bg2  //Next; Next += 0x100000;
-//	DrvGfxROM4		= (UINT8 *)cache+0x58000;//bg3 // Next; Next += 0x100000;
+//	DrvGfxROM2	 	= (UINT8 *)SS_CACHE+0x08000;// bg1 //Next; Next += 0x100000;
+//	DrvGfxROM3	 	= (UINT8 *)SS_CACHE+0x28000;//bg2  //Next; Next += 0x100000;
+//	DrvGfxROM4		= (UINT8 *)SS_CACHE+0x58000;//bg3 // Next; Next += 0x100000;
 /*
 	if (tilemap_enable[0])prepare_robokid_bg_layer(0, DrvBgRAM0, 0);
 	if (tilemap_enable[1])prepare_robokid_bg_layer(1, DrvBgRAM1, 0);
@@ -1551,7 +1551,7 @@ inline void  draw_robokid_bg_layer() //INT32 width)
 		UINT32 *nt =(UINT32 *)nextTile;
 //-----------------------------------------------------------------------------------------------------------------
 // nbg1
-		code = cacheTile(bgram,nt,bg_cache[0],(UINT8*)LOWADDR,(UINT8 *)cache+0x08000);
+		code = cacheTile(bgram,nt,bg_cache[0],(UINT8*)LOWADDR,(UINT8 *)SS_CACHE+0x08000);
 	
 		map[0] = (bgram[1] & 0x0f);
 		map[1] = (code+0x400);
@@ -1561,7 +1561,7 @@ inline void  draw_robokid_bg_layer() //INT32 width)
 		map += 0x4000;		
 		nt++;
 		
-		code = cacheTile(bgram,nt,bg_cache[2],(UINT8*)DrvGfxROM4Data1,(UINT8 *)cache+0x48000);
+		code = cacheTile(bgram,nt,bg_cache[2],(UINT8*)DrvGfxROM4Data1,(UINT8 *)SS_CACHE+0x48000);
 		
 		map[0] = (bgram[1] & 0x0f);
 		map[1] = (code+0x2400); // si 0x20000 pour bg2
@@ -1571,7 +1571,7 @@ inline void  draw_robokid_bg_layer() //INT32 width)
 		map += 0x7000;		
 		nt++;
 
-		code = cacheTile(bgram,nt,bg_cache[1],(UINT8*)0x00270000,(UINT8 *)cache+0x28000);
+		code = cacheTile(bgram,nt,bg_cache[1],(UINT8*)0x00270000,(UINT8 *)SS_CACHE+0x28000);
 		
 		map[0] = (bgram[1] & 0x0f);
 		map[1] = (code+0x1400);

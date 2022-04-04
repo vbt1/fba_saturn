@@ -220,7 +220,7 @@ int ovlInit(char *szShortName)
 		if (BurnLoadRom(Drv6502ROM, 0, 1)) return 1;
 
 //		if (BurnLoadRom(DrvGfxROM , 1, 1)) return 1;
-		if (BurnLoadRom(cache , 1, 1)) return 1;
+		if (BurnLoadRom((void *)SS_CACHE , 1, 1)) return 1;
 
 //		memcpy (cache,DrvGfxROM,sizeof(DrvGfxROM));
 //		memcpy (&ss_vram[0x1100],DrvGfxROM,sizeof(DrvGfxROM));
@@ -563,8 +563,8 @@ void initLayers()
 
 	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
 	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
-	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE = cache     =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT   = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;

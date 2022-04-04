@@ -537,7 +537,7 @@ void initLayers()
 //	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
-	scfg.plate_addr[0]	 = (Uint32)ss_font;
+	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
@@ -608,8 +608,8 @@ void DrvInitSaturn()
 	nBurnSprites  = 35;
 	SS_MAP    = ss_map = (Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
 	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
-	SS_FONT  = ss_font = (Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE = cache     =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
 	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
@@ -739,18 +739,18 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	if (System1NumTiles > 0x800)
 	{
 		INT32 NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
-		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, NoboranbTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, cache);
+		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, NoboranbTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, (void *)SS_CACHE);
 	}
 	else
-		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, cache);
+		GfxDecode4Bpp(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, (void *)SS_CACHE);
 
 	System1TempRom = NULL;
 	
 	memset((void *)&ss_map2[2048],0,768);
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"rotate_tile                     ",20,100);
 
-	if(flipscreen==1)		rotate_tile(System1NumTiles,0,cache);
-	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,cache);
+	if(flipscreen==1)		rotate_tile(System1NumTiles,0,(void *)SS_CACHE);
+	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,(void *)SS_CACHE);
 
 
 	spriteCache = (UINT16*)(0x00200000);

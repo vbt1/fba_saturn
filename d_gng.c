@@ -90,7 +90,7 @@ struct BurnDriver nBurnDrvGnga = {
 
 	RamEnd                 = Next;
 
-	DrvChars               = cache;//Next; Next += 0x400 * 8 * 8;
+	DrvChars               = (unsigned char *)SS_CACHE;//Next; Next += 0x400 * 8 * 8;
 	DrvTiles               = (unsigned char *)SCL_VDP2_VRAM_B1;//Next; Next += 0x400 * 16 * 16;
 	DrvSprites             = ss_vram+0x1100;//Next; Next += 0x400 * 16 * 16;
 	//DrvPalette             = (unsigned int*)Next; Next += 0x00100 * sizeof(unsigned int);
@@ -563,7 +563,7 @@ voir plutot p355 vdp2
 	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
-	scfg.plate_addr[0]	 = (Uint32)ss_font;
+	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
 
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
@@ -604,11 +604,12 @@ voir plutot p355 vdp2
 
 //	SS_MAP          = ss_map    =(Uint16 *)SCL_VDP2_VRAM_B0+0x10000;
 //	SS_MAP2        = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_B0+0x00000;
-	SS_FONT        = ss_font     =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_MAP          = ss_map    =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_MAP2        = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1+0x08000;
+	SS_FONT       = (Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_CACHE      = (Uint8  *)SCL_VDP2_VRAM_A0;	
+	SS_MAP        = ss_map    =(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_MAP2       = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1+0x08000;
 //	SS_FONT        = ss_font     =(Uint16 *)NULL;
-	SS_CACHE      = cache       =(Uint8  *)SCL_VDP2_VRAM_A0;
+
 
 	SS_SET_N0PRIN(7);
 	SS_SET_S0PRIN(5);

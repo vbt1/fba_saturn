@@ -278,11 +278,11 @@ void convert_gfx(UINT32 game_select)
 //	UINT8 *tmp = (UINT8*)0x00200000;
 //	memset(tmp,0x00,size * 2);
 	UINT8 tmp[0x4000];
-	memcpy (tmp, cache, size * 2);
+	memcpy (tmp, (UINT8 *)SS_CACHE, size * 2);
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
-	GfxDecode4Bpp(((size * 4) / 0x040), 2,  8,  8, PlaneOffsets, CharXOffsets + 0, YOffsets, 0x080, tmp,        cache);//DrvGfxROM + 0x0000);
+	GfxDecode4Bpp(((size * 4) / 0x040), 2,  8,  8, PlaneOffsets, CharXOffsets + 0, YOffsets, 0x080, tmp,        (UINT8 *)SS_CACHE);//DrvGfxROM + 0x0000);
 	GfxDecode4Bpp(((size * 4) / 0x100), 2, 16, 16, PlaneOffsets, SpriXOffsets + 0, YOffsets, 0x200, tmp + size, &ss_vram[0x1100]);//DrvGfxROM + 0x8000);
-	rotate_tile(((size * 4) / 0x040),0,cache);
+	rotate_tile(((size * 4) / 0x040),0,(UINT8 *)SS_CACHE);
 	rotate_tile16x16(((size * 4) / 0x100),&ss_vram[0x1100]);
 //	ss_vram = NULL;
 //	memset(tmp,0x00,size * 2);
@@ -296,7 +296,7 @@ void pacman_load(UINT32 game_select)
 	struct BurnRomInfo ri;
 
 	INT32 pOffset = 0;
-	UINT8 *gLoad = cache;
+	UINT8 *gLoad = (UINT8*)SS_CACHE;
 	UINT8 *cLoad = (UINT8*)LOWADDR;
 	UINT8 *sLoad = (UINT8*)NamcoSoundProm;
 //	UINT8 *qLoad = (UINT8*)0x00200000;
@@ -528,7 +528,7 @@ void DrvInitSaturn()
 	SS_MAP  = ss_map  = (Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = ss_map2 = (Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE= cache   = (Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum      = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum      = (SclSpPriNumRegister *)SS_SPPRI;
@@ -788,9 +788,9 @@ void PengouCallback()
 //	UINT8 *tmp = (UINT8*)0x00200000;
 	UINT8 tmp[0x2000];
 //	memset(tmp,0x00,0x20000);
-	memcpy (tmp + 0x0000, cache + 0x2000, 0x1000);
-	memcpy (tmp + 0x1000, cache + 0x1000, 0x1000);
-	memcpy (cache + 0x1000, tmp + 0x0000, 0x2000);
+	memcpy (tmp + 0x0000, (UINT8 *)SS_CACHE + 0x2000, 0x1000);
+	memcpy (tmp + 0x1000, (UINT8 *)SS_CACHE + 0x1000, 0x1000);
+	memcpy ((UINT8 *)SS_CACHE + 0x1000, tmp + 0x0000, 0x2000);
 //	memset(tmp,0x00,0x20000);
 //	tmp = NULL;
 }

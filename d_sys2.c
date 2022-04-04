@@ -804,7 +804,7 @@ void initLayers2()
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
-	scfg.plate_addr[0]	 = (Uint32)ss_font;
+	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG1, &scfg);
 

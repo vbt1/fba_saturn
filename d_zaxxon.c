@@ -316,7 +316,7 @@ void DrvGfxDecode()
 
  	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
 
-	UINT8 *DrvGfxROM0 = cache;
+	UINT8 *DrvGfxROM0 = (UINT8 *)SS_CACHE;
 	UINT8 *DrvGfxROM1	= (UINT8 *)0x25a60000;
 	UINT8 *DrvGfxROM2	= &ss_vram[0x1100];//Next; Next += 0x020000;
 //	UINT8 *DrvGfxROM3	= (UINT8 *)DrvGfxROM1+0x010000;
@@ -324,7 +324,7 @@ void DrvGfxDecode()
 	memcpy (tmp, DrvGfxROM0, 0x1000);
 // foreground (text)
 	GfxDecode4Bpp(0x0100, 2,  8,  8, CharPlane,   SpriteXOffs, SpriteYOffs, 0x040, tmp, DrvGfxROM0);
-	rotate_tile(0x0100,0,cache);
+	rotate_tile(0x0100,0,(UINT8 *)SS_CACHE);
 	memcpy (tmp, DrvGfxROM1, 0x6000);
 // background
 	GfxDecode(0x0400, 3,  8,  8, TilePlane,   SpriteXOffs, SpriteYOffs, 0x040, tmp, DrvGfxROM1);
@@ -450,7 +450,7 @@ INT32 DrvInit()
 	memset(bitmap,	 0x00,0xE000);
  	UINT8 *ss_vram	= (UINT8 *)SS_SPRAM;
 
-	UINT8 *DrvGfxROM0	= cache;
+	UINT8 *DrvGfxROM0	= (UINT8 *)SS_CACHE;
 	UINT8 *DrvGfxROM1	= (UINT8 *)0x25a60000;
 	UINT8 *DrvGfxROM2	= &ss_vram[0x1100];//Next; Next += 0x020000;
 	UINT8 *DrvGfxROM3	= (UINT8 *)DrvGfxROM1+0x010000;
@@ -947,8 +947,8 @@ inline void SaturnInitMem()
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
 	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT = ss_font  =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE= cache    =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;

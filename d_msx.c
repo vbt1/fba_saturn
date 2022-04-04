@@ -2490,7 +2490,7 @@ void initLayers(void)
 	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
-	scfg.plate_addr[0] = ss_font;
+	scfg.plate_addr[0] = SS_FONT;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }
@@ -2511,9 +2511,9 @@ void initPosition(void)
 	nBurnLinescrollSize = 0;
 	nSoundBufferPos = 0;//sound position à renommer
 
-	SS_CACHE = cache      =(Uint8  *)SCL_VDP2_VRAM_B1;
-	SS_MAP     = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_FONT   = ss_font    =(Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_B1;
+	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_MAP   = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;

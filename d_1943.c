@@ -117,7 +117,7 @@ scfg.dispenbl 		 = ON; // bg1
 	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
-	scfg.plate_addr[0]	 = (Uint32)ss_font;
+	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
 
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
@@ -378,10 +378,10 @@ static void DrvInitSaturn()
 */
 
 
-	SS_FONT        = ss_font     = NULL; //(Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_FONT        = NULL; //(Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP          = ss_map    =(Uint16 *)SCL_VDP2_VRAM_B1+0x1E000;  //char boundary 0x2000
 	SS_MAP2        = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_B1+0x1D000; //0x01D000;   //bg1  boundary 0x1000
-	SS_CACHE      = cache      =(Uint8  *)SCL_VDP2_VRAM_A0;
+	SS_CACHE      = (Uint8  *)SCL_VDP2_VRAM_A0;
 	ss_map3		=(Uint16 *)SCL_VDP2_VRAM_B1+0x001b000; 				 //bg2  boundary  0x1000
 	
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;

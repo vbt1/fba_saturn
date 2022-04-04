@@ -888,7 +888,7 @@ INT32 DrvInit(UINT8 game)
 	UINT8 mc8123 = 0;
 	DrvInitSaturnS(game);
 
-	memset(cache, 0, 0x80000);
+	memset((UINT8 *)SS_CACHE, 0, 0x80000);
 	MemIndex(game);
 
 	BurnLoadRom(DrvMainROM + 0x00000,  0, 1);	// ( "rom5.ic7",   0x00000, 0x08000, CRC(d63925a7) SHA1(699f222d9712fa42651c753fe75d7b60e016d3ad) ) /* Fixed Code */
@@ -1077,7 +1077,7 @@ void initLayers(void)
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
-	scfg.plate_addr[0] = (Uint32)ss_font;
+	scfg.plate_addr[0] = (Uint32)SS_FONT;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }

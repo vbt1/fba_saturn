@@ -60,13 +60,10 @@ void wait_vblank(void);
 /*static*/ UINT16  *colAddr = NULL; 
 /*static*/ UINT16  *colBgAddr = NULL; // color
 /*static*/ UINT16  *colBgAddr2 = NULL;
-/*static*/ Uint16  *ss_font = NULL;
 /*static*/ Uint16  *ss_map = NULL;
 /*static*/ Uint16  *ss_map2 = NULL;
 /*static*/ Fixed32 *ss_scl = NULL;
 /*static*/ //Fixed32 *ss_scl1 = NULL;
-
-static unsigned char *cache = NULL;
 
 //#define	REGADDR	    0x25F80000
 #define TVMD        (*(Uint16 *)0x25F80000)
