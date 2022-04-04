@@ -33,7 +33,8 @@ extern Uint32 SclColRamAlloc256[8];
 extern unsigned char hz;
 extern unsigned short palette[8];
 
-extern int nBurnSoundRate;			// sample rate of sound or zero for no sound
+//extern int nBurnSoundRate;			// sample rate of sound or zero for no sound
+#define nBurnSoundRate 7680L
 extern unsigned int nBurnLinescrollSize;
 //extern unsigned int nBurnLinescrollSize1;
 extern unsigned int nBurnSprites;

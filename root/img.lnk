@@ -22,8 +22,7 @@ SECTIONS {
 		_frame_y = _frame_x + 4; 			
 		_nBurnDrvCount = _frame_y + 4;
 		_nBurnDrvSelect = _nBurnDrvCount + 4;
-		_nBurnSoundRate = _nBurnDrvSelect + 4;
-		_nBurnSprites = _nBurnSoundRate + 4;
+		_nBurnSprites = _nBurnDrvSelect + 4;
 		_nBurnLinescrollSize = _nBurnSprites + 4;
 		_nBurnFunction = _nBurnLinescrollSize + 4;
 		_nSoundBufferPos = _nBurnFunction + 4;

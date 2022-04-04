@@ -64,12 +64,12 @@ static void ChangeDir(char *dirname)
 	GFS_SetDir(&dirtbl) ;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void	SetVblank2( void )
+void	SetVblank2( void )
 {
 	__port = PER_OpenPort();
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void set_memory_map(int mapper)
+void set_memory_map(int mapper)
 {
 
 #ifdef RAZE
@@ -147,7 +147,7 @@ static void ChangeDir(char *dirname)
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void load_rom()
+void load_rom()
 {
 	int mapper = MAPPER_NONE;
 	memset (AllRam, 0, RamEnd - AllRam);
@@ -197,7 +197,7 @@ static void ChangeDir(char *dirname)
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void update_input1(void)
+void update_input1(void)
 {
 	UINT8 temp = 0xFF;
 	SysDevice	*device;
@@ -279,7 +279,7 @@ static void ChangeDir(char *dirname)
 	}
 }
 
-/*static*/ UINT8 __fastcall sg1000_read_port(unsigned short port)
+UINT8 __fastcall sg1000_read_port(unsigned short port)
 {
 	switch (port & 0xff)
 	{
@@ -307,16 +307,16 @@ static void ChangeDir(char *dirname)
 	return 0;
 }
 
-/*static*/ UINT8 sg1000_ppi8255_portA_read() { return DrvInputs[0]; }
-/*static*/ UINT8 sg1000_ppi8255_portB_read() { return DrvInputs[1]; }
-/*static*/ UINT8 sg1000_ppi8255_portC_read() { return DrvDips[0]; }
+UINT8 sg1000_ppi8255_portA_read() { return DrvInputs[0]; }
+UINT8 sg1000_ppi8255_portB_read() { return DrvInputs[1]; }
+UINT8 sg1000_ppi8255_portC_read() { return DrvDips[0]; }
 
-/*static*/ void sg1000_ppi8255_portC_write(UINT8 data)
+void sg1000_ppi8255_portC_write(UINT8 data)
 {
 	data &= 0x01; // coin counter
 }
 
-/*static*/ void vdp_interrupt(int state)
+void vdp_interrupt(int state)
 {
 #ifdef RAZE
 	if(state)
@@ -328,7 +328,7 @@ static void ChangeDir(char *dirname)
 #endif
 }
 
-/*static*/ int DrvDoReset()
+int DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 
@@ -348,7 +348,7 @@ static void ChangeDir(char *dirname)
 	return 0;
 }
 
-/*static*/ int MemIndex()
+int MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -370,38 +370,38 @@ static void ChangeDir(char *dirname)
 	return 0;
 }
 
-/*static*/ void __fastcall sg1000_write(UINT16 address, UINT8 data)
+void __fastcall sg1000_write(UINT16 address, UINT8 data)
 {
 
 }
 #ifdef RAZE
 // mapper sg1000 mirror every 0x400
 // $C000-$FFFF mapped to 2k mirrored RAM
-/*static*/ UINT8 /*__fastcall*/ sg1000_read_c000(UINT16 address)
+UINT8 /*__fastcall*/ sg1000_read_c000(UINT16 address)
 {
 //	return DrvZ80RAM[(address-0xc000)&0x03ff];
 	return DrvZ80ROM[address&0xc3ff];
 }
 
-/*static*/ UINT8 /*__fastcall*/ sg1000_write_c000(UINT16 address, UINT8 data)
+UINT8 /*__fastcall*/ sg1000_write_c000(UINT16 address, UINT8 data)
 {
 //	DrvZ80RAM[(address-0xc000)&0x03ff] = data;
 	DrvZ80ROM[address&0xc3ff] = data;
 }
 
 // $2000-$3FFF mapped to 8k external RAM
-/*static*/ UINT8 /*__fastcall*/ sg1000_read_2000(UINT16 address)
+UINT8 /*__fastcall*/ sg1000_read_2000(UINT16 address)
 {
 	return DrvZ80ExtRAM[(address-0x2000)&0x1fff];
 }
 
  // $2000-$3FFF mapped to 8k external RAM
-/*static*/ UINT8 /*__fastcall*/ sg1000_write_2000(UINT16 address, UINT8 data)
+UINT8 /*__fastcall*/ sg1000_write_2000(UINT16 address, UINT8 data)
 {
 	DrvZ80ExtRAM[(address-0x2000)&0x1fff] = data;
 }
 #else
-/*static*/ UINT8 /*__fastcall*/ sg1000_read_ext2(UINT16 address)
+UINT8 /*__fastcall*/ sg1000_read_ext2(UINT16 address)
 {
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"sg1000_read_ext2     ",26,180);
 
@@ -413,7 +413,7 @@ static void ChangeDir(char *dirname)
 }
 
  // $2000-$3FFF mapped to 8k external RAM
-/*static*/ void /*__fastcall*/ sg1000_write_ext2(UINT16 address, UINT8 data)
+void /*__fastcall*/ sg1000_write_ext2(UINT16 address, UINT8 data)
 {
 //	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT, (Uint8 *)"sg1000_write_ext2     ",26,180);
 
@@ -424,12 +424,12 @@ static void ChangeDir(char *dirname)
 }
 #endif
 
-/*static*/ UINT8 /*__fastcall*/ sg1000_read(UINT16 address)
+UINT8 /*__fastcall*/ sg1000_read(UINT16 address)
 {
 	return 0xff;
 }
 
-/*static*/ int DrvInit()
+int DrvInit()
 {
 	DrvInitSaturn();
 	ChangeDir(".");
@@ -453,7 +453,7 @@ static void ChangeDir(char *dirname)
 	return 0;
 }
 
-/*static*/ int DrvExit()
+int DrvExit()
 {
 	nBurnFunction = NULL;
 	wait_vblank();
@@ -481,15 +481,9 @@ static void ChangeDir(char *dirname)
 	ppi8255_exit();
 	SN76496Exit();
 
-#ifdef PONY
-remove_raw_pcm_buffer(pcm1);
-#endif
-
-	memset((void *)SOUND_BUFFER,0x00,0x20000);
+//	memset((void *)SOUND_BUFFER,0x00,0x20000);
 //	memset(TMSContext,0x00,(0x4000+0x6000+0x1000+8));
 //	memset(CZ80Context,0x00,sizeof(cz80_struc));
-
-	CZ80Context = TMSContext = MemEnd = AllRam = RamEnd = DrvZ80ROM = DrvZ80RAM = DrvZ80ExtRAM = NULL;
 
 	file_max = 0;
 	file_id = 0;
@@ -608,7 +602,7 @@ void DrvFrame()
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void initColors()
+void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colAddr			= (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
@@ -660,7 +654,7 @@ void initPosition(void)
 
 } */
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/ void DrvInitSaturn()
+void DrvInitSaturn()
 {
 //	InitCDsms();
 	nBurnSprites  = 4+32;//131;//27;

@@ -1675,7 +1675,6 @@ inline void do_keypad(unsigned int key[])
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/ void run_fba_emulator()
 {
-	nBurnSoundRate = SOUNDRATE;
 	ChangeDir("GAMES");
 
 	if (nDrvInit(nBurnDrvSelect) != 0) 
