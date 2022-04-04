@@ -1486,6 +1486,9 @@ void NovaFrame()
 	_spr2_transfercommand();
 	SclProcess = 1;	
 	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();		
 #endif	
 }
 /*

@@ -1298,7 +1298,7 @@ void DrvFrame()
 	ss_BgColMix	= (SclBgColMixRegister *)SS_BGMIX;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-	ss_scl			= (Fixed32 *)SS_SCL;
+
 #ifdef PCM_SFX	
 	sfx_list		= &sfx_blktiger[0];
 #endif

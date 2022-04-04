@@ -15,6 +15,7 @@
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned int frame_x;
+extern unsigned int frame_y;
 #endif
  
  
@@ -236,7 +237,7 @@ int NewsInit()
 	BurnLoadRom(NewsTempGfx + 0x00000, 1, 2); //if (nRet != 0) return 1;
 	BurnLoadRom(NewsTempGfx + 0x00001, 2, 2); //if (nRet != 0) return 1;
 
-	GfxDecode4Bpp(16384, 4, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x100, NewsTempGfx, cache);//NewsTiles);
+	GfxDecode4Bpp(16384, 4, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x100, NewsTempGfx, (void *)SS_CACHE);//NewsTiles);
 //	NewsTempGfx = NULL;
 
 //	MSM6295ROM = (unsigned char *)LOWADDR;
@@ -358,14 +359,6 @@ inline void initColors()
 	colBgAddr2=(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-#ifdef PONY
-void vbl()
-{
-//	sdrv_vblank_rq();
-	sdrv_stm_vblank_rq();
-}
-#endif
-//-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
@@ -374,9 +367,9 @@ void DrvInitSaturn()
 	
 	SS_MAP  = ss_map   = (Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = ss_map2  = (Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT =  ss_font =  NULL; //(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_CACHE = cache   = (Uint8  *)SCL_VDP2_VRAM_A0;				
-	ss_BgPriNum        = (SclBgPriNumRegister *)SS_N0PRI;
+	SS_FONT = NULL; //(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;				
+	ss_BgPriNum  = (SclBgPriNumRegister *)SS_N0PRI;
 
 	SS_SET_N0PRIN(7);
 	SS_SET_N2PRIN(5);
@@ -389,7 +382,7 @@ void DrvInitSaturn()
 
 #ifdef PONY
 	frame_x	= 0;
-	nBurnFunction = vbl;	
+	nBurnFunction = sdrv_stm_vblank_rq;	
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -412,26 +405,15 @@ int NewsExit()
 #else
 //	ZetExit();
 #endif
-//	memset(MSM6295ROM,0x00,0x40000);	
-/*	MSM6295ROM = NULL;
-	pBuffer = NULL;	
-	MSM6295Context = NULL;
-	memset(CZ80Context,0x00,sizeof(cz80_struc));	
-	CZ80Context	= RamStart = NewsRom = NewsRam = NULL;
-	NewsFgVideoRam = NewsBgVideoRam = NewsPaletteRam = NULL;
-	dirty_buffer = fg_dirtybuffer = NULL;
-	cram_lut = map_offset_lut = NULL;
-
-	BgPic = 0;
-*/	
-//	NewsReset         = 0;
-//		SPR_InitSlaveSH();
-
 	memset(ss_map,0,0x20000);
 	memset(ss_map2,0,0x20000);	
 //	memset(NewsInputPort0,0x00,8);
 //	NewsDip[0] = NewsInput[0]      = 0;
 	wait_vblank();
+
+#ifdef PONY
+remove_raw_pcm_buffer(pcm1);
+#endif
 
 	//cleanDATA();
 	cleanBSS();
@@ -563,9 +545,13 @@ void NewsFrame()
 		pcm_play(pcm1, PCM_SEMI, 7);
 		nSoundBufferPos=0;
 	}
-	
-//	SclProcess = 1;
-	frame_x++;
 #endif	
-	SPR_WaitEndSlaveSH();  
+	SPR_WaitEndSlaveSH();
+	
+#ifdef PONY
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
+#endif	
 }
