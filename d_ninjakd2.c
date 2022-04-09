@@ -1387,7 +1387,7 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 	nSoundBufferPos=0;
 
 #ifdef PONY
-remove_raw_pcm_buffer(pcm1);
+//remove_raw_pcm_buffer(pcm1);
 #endif	
 	//cleanDATA();
 	cleanBSS();

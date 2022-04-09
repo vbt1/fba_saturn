@@ -892,7 +892,8 @@ int DrvExit()
 */
 #ifdef PONY
 remove_raw_pcm_buffer(pcm1);
-stop_pcm_stream();
+if(stm.pcm_num)
+	remove_pcm_stream();
 #endif
 
 #ifdef LOOP

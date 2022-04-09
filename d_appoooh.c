@@ -868,17 +868,17 @@ void DrvInitSaturn()
 INT32 DrvExit()
 {
 	DrvDoReset();
-//	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
-//		SPR_WaitEndSlaveSH();
+	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-//	SPR_InitSlaveSH();
+	SPR_InitSlaveSH();
 	CZetExit2();
 
 	MSM5205Exit();
 	SN76496Exit();
 
 #ifdef PONY
-	for(unsigned int i=0;i<4;i++)
+	for (short i=3;i>=0;i--)
 	{
 		remove_raw_pcm_buffer(pcm[i]);
 	}
@@ -997,7 +997,7 @@ void DrvFrame_old()
 	
 	if(nSoundBufferPos>=nBurnSoundLen*10)
 	{
-		for (unsigned int i=0;i<4;i++)
+		for (UINT16 i=0;i<4;i++)
 		{
 			pcm_play(pcm[i], PCM_SEMI, 7);
 		}

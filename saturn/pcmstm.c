@@ -89,9 +89,19 @@ void	start_pcm_stream(Sint8 * filename, int volume)
 // Will stop a PCM stream.
 void	stop_pcm_stream(void)
 {
-
 	stm.stopping = true;
-	
+}
+
+void	remove_pcm_stream(void)
+{
+	stop_pcm_stream();
+	remove_raw_pcm_buffer(stm.pcm_num);
+	buf.operating = false;
+	buf.needs_buffer_filled = false;
+	stm.volume = 0;
+	stm.stopping = true;
+	stm.times_to_loop = 0;
+	GFS_Close(buf.file_handle);
 }
 
 // Will stop an ADX stream.

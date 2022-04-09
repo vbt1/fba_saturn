@@ -37,7 +37,7 @@ extern unsigned short palette[8];
 
 #define nBurnSoundRate 7680L
 extern unsigned short nBurnLinescrollSize;
-extern unsigned short nBurnSprites;
+extern unsigned int nBurnSprites;
 extern unsigned short nBurnDrvSelect;	// Which game driver is selected
 
 // ---------------------------------------------------------------------------
