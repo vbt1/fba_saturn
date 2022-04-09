@@ -17,8 +17,8 @@ unsigned char curr_sprite=0;
 
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
-extern unsigned int frame_x;
-extern unsigned int frame_y;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
 #endif
 
 /* Attribute expansion table */
@@ -370,7 +370,9 @@ void vbl()
 	SclProcess = 2;
 	ss_regs->specialcode=0x0000;	
 
+#ifndef PONY
 	memset((void *)SOUND_BUFFER,0x00,0x4000*8);
+#endif
 
 #ifdef RAZE
 	z80_stop_emulating();

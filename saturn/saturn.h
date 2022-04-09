@@ -129,9 +129,9 @@ RGB( 0, 0, 0 ),RGB( 0,0,0 ),RGB( 241>>3, 192>>3, 0>>3 ),RGB( 252>>3, 201>>3, 0>>
 extern struct BurnDriver* pDriver[];// __attribute__ ((section(".pdriver")));
 
 #ifdef FONT
-extern unsigned int frame_x;
-extern unsigned int frame_y;
-static unsigned int frame_displayed=0;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
+static unsigned short frame_displayed=0;
 unsigned char hz=0;
 #endif
 

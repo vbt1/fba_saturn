@@ -23,6 +23,8 @@
 #define	SCL_MAXLINE	 384 //256//256
 #define	SCL_MAXCELL	32//32
 
+#define nBurnDrvCount 46
+
 extern void (*nBurnFunction)();
 extern Uint32 SclColRamAlloc256[8];
 //extern SclLineparam lp;
@@ -33,14 +35,10 @@ extern Uint32 SclColRamAlloc256[8];
 extern unsigned char hz;
 extern unsigned short palette[8];
 
-//extern int nBurnSoundRate;			// sample rate of sound or zero for no sound
 #define nBurnSoundRate 7680L
-extern unsigned int nBurnLinescrollSize;
-//extern unsigned int nBurnLinescrollSize1;
-extern unsigned int nBurnSprites;
-extern unsigned int nBurnDrvCount;		// Count of game drivers
-extern unsigned int nBurnDrvSelect;	// Which game driver is selected
-//extern unsigned int nBurnMallocAddr; // address before loading first game
+extern unsigned short nBurnLinescrollSize;
+extern unsigned short nBurnSprites;
+extern unsigned short nBurnDrvSelect;	// Which game driver is selected
 
 // ---------------------------------------------------------------------------
 // Tile decoding macros

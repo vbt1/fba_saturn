@@ -11,8 +11,8 @@ extern Uint32 *shared;
 //extern struct BurnDriver* pDriver[];
 //static int nBurnSoundLen;
 //static Sint8 *nSoundBuffer = (Sint8 *)0x25a20000;
-extern unsigned int  nSoundBufferPos;
-extern unsigned int nBurnSprites;
+extern unsigned short nSoundBufferPos;
+extern unsigned short nBurnSprites;
 
 #define	SZ_PERIPHERAL	20
 typedef	UINT8	SysPeripheral[SZ_PERIPHERAL+2];

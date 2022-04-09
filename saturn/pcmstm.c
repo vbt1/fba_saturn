@@ -9,8 +9,8 @@
 #include "pcmstm.h"
 
 extern unsigned char play;
-extern unsigned int frame_x;
-extern unsigned int frame_y;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
 extern Uint32 *shared;
 #define SS_FONT	 *(&shared + 3)
 
@@ -137,7 +137,16 @@ short	add_raw_pcm_buffer(bool is8Bit, short sampleRate, int size)
 void remove_raw_pcm_buffer(short pcmnum)
 {
 	int size = (m68k_com->pcmCtrl[pcmnum].bitDepth==PCM_TYPE_8BIT) ? m68k_com->pcmCtrl[pcmnum].playsize : m68k_com->pcmCtrl[pcmnum].playsize<<1;
+	m68k_com->pcmCtrl[numberPCMs].hiAddrBits = 0;
+	m68k_com->pcmCtrl[numberPCMs].loAddrBits = 0;	
+	m68k_com->pcmCtrl[numberPCMs].pitchword = 0;
+	m68k_com->pcmCtrl[numberPCMs].playsize = 0;
+	m68k_com->pcmCtrl[numberPCMs].bytes_per_blank = 0;
+	m68k_com->pcmCtrl[numberPCMs].volume = 0;
+	m68k_com->pcmCtrl[numberPCMs].sh2_permit = 0;
+//	memset(scsp_load,0x00,size);
 	scsp_load = (unsigned int *)((unsigned int )scsp_load - size);
+//	memset(scsp_load,0x00,size);	
 	numberPCMs--;	
 }
 

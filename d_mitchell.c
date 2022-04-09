@@ -5,7 +5,7 @@
 //#define PCM_MUSIC 1
 
 #include "d_mitchell.h"
-#pragma GCC optimize ("O3")
+//#pragma GCC optimize ("O3")
 #define PONY 1
 
 #ifdef PONY	
@@ -15,8 +15,8 @@
 
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
-extern unsigned int frame_x;
-extern unsigned int frame_y;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
 #endif
 
 

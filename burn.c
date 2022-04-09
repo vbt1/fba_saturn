@@ -6,8 +6,7 @@
 //#include "saturn/ovl.h"
 
 //char toto[0xF00] ={'0','0'};
-#define NB_DRV 45
-volatile struct BurnDriver* pDriver[NB_DRV] __attribute__((aligned (4)));// __attribute__((section("COMMON")));
+volatile struct BurnDriver* pDriver[nBurnDrvCount] __attribute__((aligned (4)));// __attribute__((section("COMMON")));
 // ----------------------------------------------------------------------------
 // Static functions which forward to each driver's data and functions
 
@@ -79,7 +78,7 @@ void BurnDrvExit()
 
 void BurnDrvAssignList()
 {
-	nBurnDrvCount = NB_DRV;
+//	nBurnDrvCount = NB_DRV;
 	static struct BurnDriver BurnDrvbankp = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvcombh = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvNewsa = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
@@ -479,10 +478,10 @@ pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlktiger;
 
 //pDriver[i++] = &BurnDrvBlockgal;
-/*
+
 pDriver[i++] = &BurnDrvBombjack;
 //pDriver[i++] = &BurnDrvChplftb;
-*/
+
 pDriver[i++] = &BurnDrvcombh;
 pDriver[i++] = &BurnDrvCountrunb;
 pDriver[i++] = &BurnDrvFantzn2;

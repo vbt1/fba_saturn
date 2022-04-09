@@ -16,8 +16,8 @@
 
 int pcm[4];
 Sint16 *nSoundBuffer[32];
-extern unsigned int frame_x;
-extern unsigned int frame_y;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
 #else
 void PCM_MeStop(PcmHn hn);
 static void Set4PCM();	
@@ -50,7 +50,7 @@ int ovlInit(char *szShortName)
 	if (strcmp(nBurnDrvRobowres.szShortName, szShortName) == 0) 
 	memcpy(shared,&nBurnDrvRobowres,sizeof(struct BurnDriver));
 
-	ss_reg    = (SclNorscl *)SS_REG;
+	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 }
 
@@ -882,6 +882,7 @@ INT32 DrvExit()
 	{
 		remove_raw_pcm_buffer(pcm[i]);
 	}
+	memset(DrvSoundROM,0x00,0xa000);
 #else
 	for(UINT32 i=0;i<4;i++)
 	{
@@ -907,8 +908,8 @@ void RenderSlaveSound()
 	SN76496Update(0, nSoundBuffer+0x2000, SOUND_LEN);
 	SN76496Update(1, nSoundBuffer+0x4000, SOUND_LEN);
 #else
-	SN76496Update(0, &nSoundBuffer[pcm[0]][deltaSlave], nBurnSoundLen);
-	SN76496Update(1, &nSoundBuffer[pcm[1]][deltaSlave], nBurnSoundLen);
+	SN76496Update(0, &nSoundBuffer[pcm[1]][deltaSlave], nBurnSoundLen);
+	SN76496Update(1, &nSoundBuffer[pcm[2]][deltaSlave], nBurnSoundLen);
 #endif	
 //	SN76496Update(2, nSoundBuffer+0x6000, SOUND_LEN);
 
@@ -926,8 +927,6 @@ void DrvFrame()
 		pcm[i] = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20*2);
 		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
 	}
-//	InitCD(); // si on lance juste pour pang
-//	ChangeDir("PANG");  // si on lance juste pour pang
 	pcm_stream_host(DrvFrame_old);
 }
 
@@ -946,23 +945,24 @@ void DrvFrame_old()
 
 //	CZetNewFrame();
 
+
 	CZetOpen(0);
 
 	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
-//	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205_vclk_callback, 0);
+	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205_vclk_callback, 0);
 		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
 			CZetNmi();
-//		if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
-//			SPR_WaitEndSlaveSH();
-		MSM5205_vclk_callback(0);
+		if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+			SPR_WaitEndSlaveSH();
+//		MSM5205_vclk_callback(0);
 //		MSM5205Update();
 	}
 	CZetClose();
 
-	SPR_RunSlaveSH((PARA_RTN*)RenderSlaveSound, 0);
 
+	SPR_RunSlaveSH((PARA_RTN*)RenderSlaveSound, 0);
 	DrvDraw();
 #ifndef PONY
 	signed short *nSoundBuffer = (signed short *)(0x25a24000+nSoundBufferPos*(sizeof(signed short)));
@@ -986,12 +986,13 @@ void DrvFrame_old()
 		nSoundBufferPos=0;
 	}
 #else
-	SN76496Update(2, &nSoundBuffer[pcm[2]][nSoundBufferPos], nBurnSoundLen);
+	MSM5205RenderDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos], nBurnSoundLen);
 
+	SN76496Update(2, &nSoundBuffer[pcm[3]][nSoundBufferPos], nBurnSoundLen);	
+	
 	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
-
-	MSM5205RenderDirect(0, &nSoundBuffer[pcm[3]][nSoundBufferPos], nBurnSoundLen);
+	
 	nSoundBufferPos+=(nBurnSoundLen);
 	
 	if(nSoundBufferPos>=nBurnSoundLen*10)

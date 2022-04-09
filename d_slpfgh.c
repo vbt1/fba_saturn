@@ -18,8 +18,8 @@
 
 int pcm[6];
 Sint16 *nSoundBuffer[32];
-extern unsigned int frame_x;
-extern unsigned int frame_y;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
 #else
 static void Set6PCM();
 void PCM_MeStop(PcmHn hn);	
@@ -623,10 +623,10 @@ INT32 DrvExit()
 		PCM_MeStop(pcm6[i]);
 		PCM_DestroyMemHandle(pcm6[i]);
 	}
+	memset((void *)SOUND_BUFFER,0x00,0x4000*6);		
 #endif	
-	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
+
 /*
-	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
 //	SPR_InitSlaveSH();
 //	memset(CZ80Context,0x00,sizeof(cz80_struc)*2);
 */

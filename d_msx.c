@@ -22,8 +22,8 @@
 
 int pcm[8];
 Sint16 *nSoundBuffer[32];
-extern unsigned int frame_x;
-extern unsigned int frame_y;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
 #endif
 
 int ovlInit(char *szShortName)
@@ -79,13 +79,13 @@ static void ChangeDir(char *dirname)
 	{
 		PCM_MeStop(pcm8[i]);
 	}
+	memset((void *)SOUND_BUFFER,0x00,0x20000);	
 #else
 	for(unsigned int i=0;i<8;i++)
 	{
 		remove_raw_pcm_buffer(pcm[i]);
 	}
 #endif
-	memset((void *)SOUND_BUFFER,0x00,0x20000);
 
 	memset(game, 0xff, MAX_MSX_CARTSIZE);
 	DrvDips[0] = 0x11;
@@ -2168,13 +2168,13 @@ void cleanmemmap()
 	{
 		PCM_MeStop(pcm8[i]);
 	}
+	memset((void *)SOUND_BUFFER,0x00,0x20000);	
 #else
 	for(unsigned int i=0;i<6;i++)
 	{
 		remove_raw_pcm_buffer(pcm[i]);
 	}
 #endif	
-	memset((void *)SOUND_BUFFER,0x00,0x20000);
 
 	TMS9928AExit();
 #ifdef K051649
@@ -2201,7 +2201,6 @@ void cleanmemmap()
 		ROMData[PSlot] = NULL;
 //		RAMMapper[PSlot] = 0;
 	}
-	memset((void *)SOUND_BUFFER,0x00,0x20000);
 	memset(TMSContext,0x00,(0x4000+0x6000+0x1000+8));
 	
 	maincpu = game = game_sram = AllRam = main_mem = NULL;

@@ -19,8 +19,8 @@ int pcm1=-1;
 int pcm[14];
 Sint16 *nSoundBuffer[32];
 //Sint16 *nSoundBuffer=NULL;
-extern unsigned int frame_x;
-extern unsigned int frame_y;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
 //UINT16 map[0x1000];
 #endif
 
@@ -544,7 +544,9 @@ UINT8 blacktiger_sound_read(UINT16 address)
 {
 	if (full_reset) {
 		memset (AllRam, 0, RamEnd - AllRam);
+#ifndef PONY		
 		memset((void *)SOUND_BUFFER,0x00,RING_BUF_SIZE*8);
+#endif		
 	}
 
 #ifdef RAZE0
@@ -728,6 +730,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	{
 		PCM_MeStop(pcm14[i]);
 	}
+	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);	
 #else
 	remove_raw_pcm_buffer(pcm1);
 
@@ -736,7 +739,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 		remove_raw_pcm_buffer(pcm[i]);
 	}
 #endif
-	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);
+
 	
 #endif	
 #ifdef PCM_MUSIC
@@ -1328,9 +1331,9 @@ void DrvFrame()
 	SCL_Close();
 
 
-	memset((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x10000);
+	memset((Uint8 *)SCL_VDP2_VRAM_B1  ,0x22,0x8000);
 	FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"Loading. Please Wait",24,40);
-	memset((Uint8 *)ss_map2,0x11,0x10000);
+	memset((Uint8 *)ss_map2,0x11,0x8000);
 	SprSpCmd *ss_spritePtr;
 	
 	for (unsigned int i = 3; i <nBurnSprites; i++) 

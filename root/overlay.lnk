@@ -19,17 +19,12 @@ SECTIONS {
 		_col = _hz + 2; /* size 16 */
 		_frame_x = _col + 16; /* pointer size 4 */	
 		_frame_y = _frame_x + 4; 			
-		_nBurnDrvCount = _frame_y + 4;
-		_nBurnDrvSelect = _nBurnDrvCount + 4;
+		_nBurnDrvSelect = _frame_y + 4;
 		_nBurnSprites = _nBurnDrvSelect + 4;
 		_nBurnLinescrollSize = _nBurnSprites + 4;
 		_nBurnFunction = _nBurnLinescrollSize + 4;
 		_nSoundBufferPos = _nBurnFunction + 4;
 		_SclProcess = _nSoundBufferPos + 4;
-/*		_SclColRamAlloc256 = _SclProcess + 4;*/ /* size 32 */
-/*		_per_buff = _SclProcess + 4;*/ /* pointer size 61 */
-/*		_per_data = _per_buff + 64; */ /* pointer size 4 */
-/*		_mul_info2 = _per_data + 4; */ /* pointer size 16  ??? */
 		___port = _SclProcess + 4; /* pointer size 4 */
 
 		_SPR_SlaveParam = ___port + 16; /* pointer size 4 */
@@ -52,7 +47,6 @@ SECTIONS {
 				. = ALIGN(0x10);
 	} > ram
 	
-		
 	.entry 0x6004000  (NOLOAD):
 	{
 		root/sl.elf (".entry")

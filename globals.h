@@ -1,6 +1,6 @@
 
 extern Uint32 *shared;
-extern unsigned int  nSoundBufferPos;
+extern unsigned short  nSoundBufferPos;
 #define FBA_DRV	 shared
 #define SS_MAP	 *(&shared + 1)
 #define SS_MAP2	 *(&shared + 2)

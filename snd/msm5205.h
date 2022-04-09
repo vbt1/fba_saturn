@@ -46,4 +46,4 @@ void MSM5205Exit();
 INT32 MSM5205CalcInterleave(INT32 chip, INT32 cpu_speed);
 void MSM5205Update();
 
-extern unsigned int  nSoundBufferPos;
+extern unsigned short  nSoundBufferPos;

@@ -12,8 +12,8 @@
 
 int pcm[6];
 Sint16 *nSoundBuffer[32];
-extern unsigned int frame_x;
-extern unsigned int frame_y;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
 #endif
 
 int ovlInit(char *szShortName)
@@ -406,8 +406,6 @@ int DrvExit()
 	AY8910Exit(1);
 	AY8910Exit(0);
 
-	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
-	
 	CZ80Context = MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
 	map_offset_lut = NULL;
 #ifdef PONY
@@ -416,6 +414,8 @@ int DrvExit()
 		remove_raw_pcm_buffer(pcm[i]);
 	}
 #else
+	memset((void *)SOUND_BUFFER,0x00,0x4000*6);
+
 	for(unsigned int i=0;i<6;i++)
 	{
 		PCM_MeStop(pcm6[i]);

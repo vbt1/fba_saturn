@@ -15,6 +15,7 @@ UINT16 *map_offset_lut = NULL;
 //UINT16 *mapbg_offset_lut = NULL;
 UINT8 *CZ80Context = NULL;
 UINT16 *cram_lut = NULL;
+
 UINT32 CalcCol(UINT16 nColour);
 INT32 DrvInit();
 void DrvZInit();
@@ -31,24 +32,25 @@ UINT8 DrvInputs[3] = {0, 0, 0};
 //UINT8 DrvReset = 0;
 INT32 nmi_mask = 0;
 UINT8 soundlatch = 0;
+UINT32 BgSel = 0xFFFF;
 
 //UINT8 *MemEnd = NULL;
 //UINT8 *RamStart = NULL;
 //UINT8 *RamEnd = NULL;
 UINT8 *BjGfx = NULL;
 UINT8 *BjMap = NULL;
-UINT8 *BjRom = NULL;
-UINT8 *BjRam = NULL;
-UINT8 *BjColRam = NULL;
-UINT8 *BjVidRam = NULL;
+UINT8 *DrvZ80ROM0 = NULL;
+UINT8 *DrvZ80RAM0 = NULL;
+UINT8 *DrvColRAM = NULL;
+UINT8 *DrvVidRAM = NULL;
 UINT8 *DrvSprRAM = NULL;
 
 // sound cpu
-UINT8 *SndRom = NULL;
-UINT8 *SndRam = NULL;
+UINT8 *DrvZ80ROM1 = NULL;
+UINT8 *DrvZ80RAM1 = NULL;
 
 // pallete
-UINT8 *BjPalRam = NULL;
+UINT8 *DrvPalRAM = NULL;
 //UINT32 *BjPalReal = NULL;
 
 INT16* pFMBuffer = NULL;

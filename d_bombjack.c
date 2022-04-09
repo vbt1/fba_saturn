@@ -1,10 +1,10 @@
 #include "d_bombjack.h"
 #define RAZE 1
-#define SOUND 1
+
 void SoundUpdate2(INT32 *length2);
 inline void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3);
 void CalcAll();
-UINT32 BgSel=0xFFFF;
+
 //UINT32 bg_cache[1024];
 #define PONY
 
@@ -13,8 +13,8 @@ UINT32 BgSel=0xFFFF;
 
 int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
-extern unsigned int frame_x;
-extern unsigned int frame_y;
+extern unsigned short frame_x;
+extern unsigned short frame_y;
 #endif
 
 int ovlInit(char *szShortName)
@@ -39,19 +39,11 @@ int ovlInit(char *szShortName)
     Uint16	CycleTb[]={
 		0x4e12, 0x6eee, //A0
 		0xeeee, 0xeeee,	//A1
-		0xff5f, 0xeeee,   //B0
+		0xfe5e, 0xeeee,   //B0
 		0xeeee, 0xeeee  //B1
-//		0x4eff, 0x1fff, //B1
 	};
 
-/*
-    Uint16	CycleTb[]={
-		0xf2ff, 0xffff, //A0
-		0xfff0, 0x45ef,	//A1
-		0x1fff, 0xffff,   //B0
-		0xffff, 0xffff  //B1
-	};
-*/
+
 /*
 voir page 58 vdp2
 voir plutot p355 vdp2
@@ -105,8 +97,8 @@ inline void initColors()
 {
 	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));
 	colBgAddr = (Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
-	SCL_AllocColRam(SCL_NBG3,OFF);
-	colAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
+//	SCL_AllocColRam(SCL_NBG3,OFF);
+//	colAddr = (Uint16*)SCL_AllocColRam(SCL_SPR,OFF);
 //	SCL_SetColRamOffset(SCL_NBG2,0,OFF);
 	ss_regs->dispenbl &= 0xfbff;
 
@@ -125,17 +117,10 @@ inline void make_lut(void)
 		sx = (15 - (i / 16));//<<1;
 		map_offset_lut[0x400+i] = (sx| sy);//<<1;		
 	}
-/*	
-	for (UINT32 i = 0; i < 256;i++) 
-	{
-		INT32 sy = (i % 16) <<5;//<<6
-		INT32 sx = (15 - (i / 16));//<<1;
-		mapbg_offset_lut[i] = (sx| sy);//<<1;
-	}
-*/
+
 	for (UINT32 i = 0; i < 4096; i++) 
 	{
-		UINT8 r = (i >> 0) & 0xf;
+		UINT8 r = (i >> 0) & 0x0f;
 		UINT8 g = (i >> 4) & 0x0f;
 		UINT8 b = (i >> 8) & 0x0f;
 
@@ -180,7 +165,6 @@ void DrvInitSaturn()
     ss_sprite[nBurnSprites-1].charAddr		= 0;                
     ss_sprite[nBurnSprites-1].charSize		= 0;
 
-	nBurnFunction = CalcAll;
 #ifdef PONY
 	frame_x	= 0;
 //	nBurnFunction = sdrv_stm_vblank_rq;
@@ -213,11 +197,11 @@ void __fastcall bombjack_main_write_9000(UINT16 addr,UINT8 val)
 {
 	addr &=0x3ff;
 
-	if (BjVidRam[addr]!=val)
+	if (DrvVidRAM[addr]!=val)
 	{
-		BjVidRam[addr]=val;
-		UINT32 code = val + ((BjColRam[addr] & 0x10) << 4);
-		UINT32 color = BjColRam[addr] & 0x0f;
+		DrvVidRAM[addr]=val;
+		UINT32 code = val + ((DrvColRAM[addr] & 0x10) << 4);
+		UINT32 color = DrvColRAM[addr] & 0x0f;
 
 		UINT32 offs = map_offset_lut[addr];
 		ss_map[offs] = color << 12 | code;
@@ -228,10 +212,10 @@ void __fastcall bombjack_main_write_9400(UINT16 addr,UINT8 val)
 {
 	addr &=0x3ff;
 
-	if (BjColRam[addr]!=val)
+	if (DrvColRAM[addr]!=val)
 	{
-		BjColRam[addr]=val;
-		UINT32 code = BjVidRam[addr] + ((val & 0x10) << 4);
+		DrvColRAM[addr]=val;
+		UINT32 code = DrvVidRAM[addr] + ((val & 0x10) << 4);
 
 		UINT32 offs = map_offset_lut[addr];
 		ss_map[offs] = (val & 0x0f) << 12 | code;
@@ -254,7 +238,7 @@ void __fastcall bombjack_main_write_b000(UINT16 addr,UINT8 data)
 	{
 		nmi_mask = data & 1;
 	}
-	BjRam[addr]=data;
+	DrvZ80RAM0[addr]=data;
 }
 
 void __fastcall bombjack_main_write_b800(UINT16 addr,UINT8 data)
@@ -277,7 +261,7 @@ void __fastcall bombjack_main_write(UINT16 addr,UINT8 data)
 	{
 		nmi_mask = data & 1;
 	}
-	BjRam[addr]=data;
+	DrvZ80RAM0[addr]=data;
 }
 #endif
 UINT8 __fastcall bombjack_sound_read(UINT16 address)
@@ -585,7 +569,7 @@ inline void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 of
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvDoReset()
 {
-	memset (BjRam, 0, CZ80Context - BjRam);
+	memset (DrvZ80RAM0, 0, CZ80Context - DrvZ80RAM0);
 	
 	nmi_mask = 0;
 	soundlatch = 0;
@@ -612,17 +596,18 @@ inline void MemIndex()
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
 	memset(Next, 0, MALLOC_MAX);
 
-	BjRom	  = Next; Next += 0x10000;
-	BjGfx	  = Next; Next += 0x2A000;
+	DrvZ80ROM0	= Next; Next += 0x10000;
+	DrvZ80ROM1	= Next; Next += 0x02000;	
+	BjGfx	  = Next; Next += 0x25000;
 	BjMap	  = Next; Next += 0x02000;
-	SndRom	  = Next; Next += 0x02000;
+
 //	RamStart  = Next;
-	BjRam	  = Next; Next += 0x10000;
-	SndRam	  = Next; Next += 0x01000;
-	BjPalRam  = Next; Next += 0x00100;
-	BjVidRam  = Next; Next += 0x00400;
-	BjColRam  = Next; Next += 0x00400;
-	DrvSprRAM  = Next; Next += 0x00060;
+	DrvZ80RAM0	= Next; Next += 0x10000;
+	DrvZ80RAM1	= Next; Next += 0x01000;
+	DrvPalRAM	= Next; Next += 0x00100;
+	DrvVidRAM	= Next; Next += 0x00400;
+	DrvColRAM	= Next; Next += 0x00400;	
+	DrvSprRAM	= Next; Next += 0x00100;
 //	RamEnd	  = Next;
 
 	CZ80Context	= Next; Next += sizeof(cz80_struc)*2;
@@ -631,6 +616,7 @@ inline void MemIndex()
 	map_offset_lut = (UINT16*)Next; Next += 2048 * sizeof(UINT16);
 //	mapbg_offset_lut = (UINT16*)Next; Next += 1024 * sizeof(UINT16);
 	cram_lut = (UINT16*)Next; Next += 4096 * sizeof(UINT16);
+
 //	MemEnd = Next;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -645,7 +631,7 @@ INT32 DrvInit()
 	INT32 RomOffset = 0;
 
 	for (INT32 i = 0; i < 5; i++) {
-		BurnLoadRom(BjRom + (0x2000 * i), i, 1);
+		BurnLoadRom(DrvZ80ROM0 + (0x2000 * i), i, 1);
 	}
 		
 	RomOffset = 5;
@@ -665,7 +651,7 @@ INT32 DrvInit()
 	BurnLoadRom(BjGfx + 0xD000, RomOffset + 8, 1);
 
 	BurnLoadRom(BjMap, RomOffset + 9, 1); // load Background tile maps
-	BurnLoadRom(SndRom, RomOffset + 10, 1); // load Sound CPU
+	BurnLoadRom(DrvZ80ROM1, RomOffset + 10, 1); // load Sound CPU
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"rom2                  ",10,70);
 	// Set memory access & Init
 	DrvZInit();
@@ -679,8 +665,10 @@ INT32 DrvInit()
 	DecodeTiles16_4Bpp(sprites,1024,0x7000,0x5000,0x3000);
 	DecodeTiles32_4Bpp(sprites+0x4000,32,0x7000,0x5000,0x3000);
 	DecodeTiles16_4BppTile(tiles,1024,0x9000,0xB000,0xD000);
-
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"DrvDoReset                  ",10,70);
 	DrvDoReset();
+	nBurnFunction = CalcAll;
+//FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"end DrvDoReset                  ",10,70);	
 	return 0;
 }
 
@@ -709,18 +697,9 @@ INT32 DrvExit()
 	AY8910Exit(2);
 	AY8910Exit(1);
 	AY8910Exit(0);
-/*
-	cram_lut = map_offset_lut = mapbg_offset_lut = NULL;
-	CZ80Context = RamStart = RamEnd = BjGfx = BjMap = BjRom = BjRam = BjColRam = NULL;
-	BjVidRam = DrvSprRAM = SndRom = SndRam = BjPalRam = NULL;
 
-	for (int i = 0; i < 9; i++) {
-		pAY8910Buffer[i] = NULL;
-	}
-*/
-//	free (pFMBuffer);
 	pFMBuffer = NULL;
-	BgSel = 0;
+
 #ifdef PONY
 	remove_raw_pcm_buffer(pcm1);
 #endif
@@ -732,23 +711,22 @@ INT32 DrvExit()
 
 void CalcAll()
 {
+#ifdef PONY
+	sdrv_stm_vblank_rq();
+#endif	
+
 	UINT32 delta=0;
 
 	for (UINT32 i = 0; i < 0x100; i+=2) 
 	{
-		colAddr[i / 2] = colBgAddr[delta] = cram_lut[BjPalRam[i] | (BjPalRam[i+1] << 8)];
-//		CalcCol(BjPalRam[i] | (BjPalRam[i+1] << 8));
-		 		delta++; if ((delta & 7) == 0) delta += 8;
+		colBgAddr[delta] = cram_lut[DrvPalRAM[i] | (DrvPalRAM[i+1] << 8)];
+		delta++; if ((delta & 7) == 0) delta += 8;
 	}
-	
-#ifdef PONY
-	sdrv_stm_vblank_rq();
-#endif	
 }
 
  void BjRenderBgLayer(UINT32 BgSel)
  {
- //	INT32 BgSel=BjRam[0x9e00];
+ //	INT32 BgSel=DrvZ80RAM0[0x9e00];
 
  	for (UINT32 tileCount = 0; tileCount < 256;tileCount++) 
  	{
@@ -784,7 +762,7 @@ void draw_sprites()
 //			ss_spritePtr->drawMode	= ( COLOR_0 | COMPO_REP);
 		ss_spritePtr->ax			= spr[2];
 		ss_spritePtr->ay			= spr[3];
-		ss_spritePtr->color			= colour*8;
+		ss_spritePtr->color			= colour<<4;
 
 		if (size) 
 		{
@@ -901,20 +879,20 @@ void DrvFrame()
 	}
 #else
 	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
-	SoundUpdate(&nSoundBuffer2[nSoundBufferPos],nBurnSoundLen);
+	SoundUpdate(nSoundBuffer2,nBurnSoundLen);
 #endif
 //	SPR_RunSlaveSH((PARA_RTN*)BjDrawSprites, NULL);
 //	CalcAll();
 
-	if(BgSel!=BjRam[0x9e00])
+	if(BgSel!=DrvZ80RAM0[0x9e00])
 	{
-		BgSel=BjRam[0x9e00];
+		BgSel=DrvZ80RAM0[0x9e00];
 		BjRenderBgLayer(BgSel);
 	}
 
 	draw_sprites();
 
-#ifndef PONY
+#ifdef PONY
 	_spr2_transfercommand();
 	SclProcess = 2;
 	frame_x++;
@@ -1000,7 +978,8 @@ void SoundUpdate(INT16* buffer, INT32 length)
 //	AY8910Update(1, &pAY8910Buffer[3], length);
 //	SPR_RunSlaveSH((PARA_RTN*)AY8910Update1Slave, &length);
 	AY8910Update(2, &pAY8910Buffer[6], length);
-	SPR_WaitEndSlaveSH();
+	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)	
+		SPR_WaitEndSlaveSH();
 
 	for (unsigned int n = 0; n < length; n++) 
 	{
@@ -1056,35 +1035,35 @@ void DrvZInit()
 	// Main CPU setup
 #ifdef RAZE
 	z80_init_memmap();
-	z80_map_fetch (0x0000,0x7fff,BjRom+0x0000); 
-	z80_map_read  (0x0000,0x7fff,BjRom+0x0000);  
-	z80_map_fetch (0xc000,0xdfff,BjRom+0x8000); 
-	z80_map_read  (0xc000,0xdfff,BjRom+0x8000);  
+	z80_map_fetch (0x0000,0x7fff,DrvZ80ROM0+0x0000); 
+	z80_map_read  (0x0000,0x7fff,DrvZ80ROM0+0x0000);  
+	z80_map_fetch (0xc000,0xdfff,DrvZ80ROM0+0x8000); 
+	z80_map_read  (0xc000,0xdfff,DrvZ80ROM0+0x8000);  
 
-	z80_map_fetch (0x8000,0x8fff,BjRam+0x8000);
-	z80_map_read  (0x8000,0x8fff,BjRam+0x8000);
-	z80_map_write (0x8000,0x8fff,BjRam+0x8000);
+	z80_map_fetch (0x8000,0x8fff,DrvZ80RAM0+0x8000);
+	z80_map_read  (0x8000,0x8fff,DrvZ80RAM0+0x8000);
+	z80_map_write (0x8000,0x8fff,DrvZ80RAM0+0x8000);
 
-	z80_map_fetch (0x9000,0x93ff,BjVidRam);
-	z80_map_read  (0x9000,0x93ff,BjVidRam);
-//	z80_map_write (0x9000,0x93ff,BjVidRam);
+	z80_map_fetch (0x9000,0x93ff,DrvVidRAM);
+	z80_map_read  (0x9000,0x93ff,DrvVidRAM);
+//	z80_map_write (0x9000,0x93ff,DrvVidRAM);
 
-	z80_map_fetch (0x9400,0x97ff,BjColRam);
-	z80_map_read  (0x9400,0x97ff,BjColRam);
-//	z80_map_write (0x9400,0x97ff,BjColRam);
+	z80_map_fetch (0x9400,0x97ff,DrvColRAM);
+	z80_map_read  (0x9400,0x97ff,DrvColRAM);
+//	z80_map_write (0x9400,0x97ff,DrvColRAM);
 
 	z80_map_fetch (0x9820, 0x987f,DrvSprRAM);
 	z80_map_read  (0x9820, 0x987f,DrvSprRAM);
 	z80_map_write (0x9820, 0x987f,DrvSprRAM);
 
 
-	z80_map_fetch (0x9c00,0x9cff,BjPalRam);
-	z80_map_read  (0x9c00,0x9cff,BjPalRam);
-	z80_map_write (0x9c00,0x9cff,BjPalRam);
+	z80_map_fetch (0x9c00,0x9cff,DrvPalRAM);
+	z80_map_read  (0x9c00,0x9cff,DrvPalRAM);
+	z80_map_write (0x9c00,0x9cff,DrvPalRAM);
 
-	z80_map_fetch (0x9e00,0x9e00,BjRam+0x9e00);
-	z80_map_read  (0x9e00,0x9e00,BjRam+0x9e00);
-	z80_map_write (0x9e00,0x9e00,BjRam+0x9e00);
+	z80_map_fetch (0x9e00,0x9e00,DrvZ80RAM0+0x9e00);
+	z80_map_read  (0x9e00,0x9e00,DrvZ80RAM0+0x9e00);
+	z80_map_write (0x9e00,0x9e00,DrvZ80RAM0+0x9e00);
 //	z80_end_memmap();
 
 //	z80_add_read(0x9820, 0x987f, 1, (void *)&BjMemRead_9820);
@@ -1099,56 +1078,56 @@ void DrvZInit()
 #else
 	CZetOpen(0);
 
-	CZetMapArea    (0x0000,0x7fff,0,BjRom+0x0000); // Direct Read from ROM
-	CZetMapArea    (0x0000,0x7fff,2,BjRom+0x0000); // Direct Fetch from ROM
+	CZetMapArea    (0x0000,0x7fff,0,DrvZ80ROM0+0x0000); // Direct Read from ROM
+	CZetMapArea    (0x0000,0x7fff,2,DrvZ80ROM0+0x0000); // Direct Fetch from ROM
 	
-	CZetMapArea    (0xc000,0xdfff,0,BjRom+0x8000); // Direct Read from ROM
-	CZetMapArea    (0xc000,0xdfff,2,BjRom+0x8000); // Direct Fetch from ROM
+	CZetMapArea    (0xc000,0xdfff,0,DrvZ80ROM0+0x8000); // Direct Read from ROM
+	CZetMapArea    (0xc000,0xdfff,2,DrvZ80ROM0+0x8000); // Direct Fetch from ROM
 
-	CZetMapArea    (0x8000,0x8fff,0,BjRam+0x8000);
-	CZetMapArea    (0x8000,0x8fff,1,BjRam+0x8000);
+	CZetMapArea    (0x8000,0x8fff,0,DrvZ80RAM0+0x8000);
+	CZetMapArea    (0x8000,0x8fff,1,DrvZ80RAM0+0x8000);
 
-	CZetMapArea    (0x9000,0x93ff,0,BjVidRam);
-	CZetMapArea    (0x9000,0x93ff,1,BjVidRam);
+	CZetMapArea    (0x9000,0x93ff,0,DrvVidRAM);
+	CZetMapArea    (0x9000,0x93ff,1,DrvVidRAM);
 
-	CZetMapArea    (0x9400,0x97ff,0,BjColRam);
-	CZetMapArea    (0x9400,0x97ff,1,BjColRam);
+	CZetMapArea    (0x9400,0x97ff,0,DrvColRAM);
+	CZetMapArea    (0x9400,0x97ff,1,DrvColRAM);
 
 //	CZetMapArea    (0x9820,0x987f,0,DrvSprRAM);
 //	CZetMapArea    (0x9820,0x987f,1,DrvSprRAM);
 
-	CZetMapArea    (0x9c00,0x9cff,0,BjPalRam);
-	CZetMapArea    (0x9c00,0x9cff,1,BjPalRam);
+	CZetMapArea    (0x9c00,0x9cff,0,DrvPalRAM);
+	CZetMapArea    (0x9c00,0x9cff,1,DrvPalRAM);
 
-	CZetMapArea    (0x9e00,0x9e00,0,BjRam+0x9e00);
-	CZetMapArea    (0x9e00,0x9e00,1,BjRam+0x9e00);
+	CZetMapArea    (0x9e00,0x9e00,0,DrvZ80RAM0+0x9e00);
+	CZetMapArea    (0x9e00,0x9e00,1,DrvZ80RAM0+0x9e00);
 
-	//	CZetMapArea    (0xb000,0xb000,0,BjRam+0xb000);
-	//	CZetMapArea    (0xb000,0xb000,1,BjRam+0xb000);
+	//	CZetMapArea    (0xb000,0xb000,0,DrvZ80RAM0+0xb000);
+	//	CZetMapArea    (0xb000,0xb000,1,DrvZ80RAM0+0xb000);
 
-	//	CZetMapArea    (0xb800,0xb800,0,BjRam+0xb800);
-	//	CZetMapArea    (0xb800,0xb800,1,BjRam+0xb800);
+	//	CZetMapArea    (0xb800,0xb800,0,DrvZ80RAM0+0xb800);
+	//	CZetMapArea    (0xb800,0xb800,1,DrvZ80RAM0+0xb800);
 
 	CZetSetReadHandler(bombjack_main_read);
 	CZetSetWriteHandler(bombjack_main_write);
 	CZetClose();
 #endif
 	CZetOpen(1);
-//	CZetMapArea    (0x0000,0x1fff,0,SndRom); // Direct Read from ROM
-//	CZetMapArea    (0x0000,0x1fff,2,SndRom); // Direct Fetch from ROM
-	CZetMapMemory(SndRom, 0x0000,0x1fff, MAP_ROM);
+//	CZetMapArea    (0x0000,0x1fff,0,DrvZ80ROM1); // Direct Read from ROM
+//	CZetMapArea    (0x0000,0x1fff,2,DrvZ80ROM1); // Direct Fetch from ROM
+	CZetMapMemory(DrvZ80ROM1, 0x0000,0x1fff, MAP_ROM);
 	
-//	CZetMapArea    (0x4000,0x43ff,0,SndRam);
-//	CZetMapArea    (0x4000,0x43ff,1,SndRam);
-//	CZetMapArea    (0x4000,0x43ff,2,SndRam); // fetch from ram?
-	CZetMapMemory(SndRam, 0x4000,0x43ff, MAP_RAM);
+//	CZetMapArea    (0x4000,0x43ff,0,DrvZ80RAM1);
+//	CZetMapArea    (0x4000,0x43ff,1,DrvZ80RAM1);
+//	CZetMapArea    (0x4000,0x43ff,2,DrvZ80RAM1); // fetch from ram?
+	CZetMapMemory(DrvZ80RAM1, 0x4000,0x43ff, MAP_RAM);
 	
-//	CZetMapArea    (0xff00,0xffff,0,SndRam);
-//	CZetMapArea    (0xff00,0xffff,1,SndRam);
-//	CZetMapArea    (0xff00,0xffff,2,SndRam); // more fetch from ram? What the hell . .
+//	CZetMapArea    (0xff00,0xffff,0,DrvZ80RAM1);
+//	CZetMapArea    (0xff00,0xffff,1,DrvZ80RAM1);
+//	CZetMapArea    (0xff00,0xffff,2,DrvZ80RAM1); // more fetch from ram? What the hell . .
 
-	//	CZetMapArea    (0x6000,0x6000,0,BjRam+0xb800);
-	//	CZetMapArea    (0x6000,0x6000,1,BjRam+0xb800);
+	//	CZetMapArea    (0x6000,0x6000,0,DrvZ80RAM0+0xb800);
+	//	CZetMapArea    (0x6000,0x6000,1,DrvZ80RAM0+0xb800);
 	CZetSetReadHandler(bombjack_sound_read);
 	CZetSetOutHandler(bombjack_sound_write);
 	CZetClose();
