@@ -94,14 +94,24 @@ void	stop_pcm_stream(void)
 
 void	remove_pcm_stream(void)
 {
+	wait_vblank();	
 	stop_pcm_stream();
+	pcm_cease(stm.pcm_num);
+	wait_vblank();
+	memset(buf.buffer_location_in_sndram,0x00,buf.buffer_size_bytes);
 	remove_raw_pcm_buffer(stm.pcm_num);
 	buf.operating = false;
 	buf.needs_buffer_filled = false;
 	stm.volume = 0;
 	stm.stopping = true;
 	stm.times_to_loop = 0;
+	/*
+				stm.restarting = false;
+				stm.playing = false;
+				pcm_cease(stm.pcm_num);
+		*/		
 	GFS_Close(buf.file_handle);
+		wait_vblank();
 }
 
 // Will stop an ADX stream.

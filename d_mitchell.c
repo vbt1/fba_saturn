@@ -272,18 +272,48 @@ void __fastcall MitchellZ80Write(unsigned short a, unsigned char d)
 		return;
 	}
 
+//	DrvZ80Ram[a-0xe000]=d;
+
 	if(a==0xe172)
+/*	if(a!=0xe088)	
+	if(a!=0xe030)	
+	if(a!=0xe14b)	
+	if(a!=0xe1bc)	
+	if(a!=0xe1e8)			
+		if(a!=0xfb1e)
+		if(a!=0xfb02)	
+		if(a!=0xfb03)			
+		if(a!=0xfb2b)			
+		if(a!=0xfb2a)			
+		if(a!=0xfb22)			
+		if(a!=0xfb23)			
+		if(a!=0xfd4c)			
+		if(a!=0xfc32)	*/		
+//	if(a>=0xFB00 && a <=0xFBff)
+	if(a>=0xe000 && a<=0xffff) // && (d==48||d==60))
 	{
 		DrvZ80Ram[a-0xe000]=d;
-//				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",80,130);	
-//				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)itoa(d),80,130);	
-//			if(current_pcm!=d && (d==0 || (d >=0x20 && d <=0x3D)))
+
 			if(current_pcm!=d && (d==0 || (d >=0x20 && d <=0x3D)))
+//			if(current_pcm!=d && (d==0 || (d >=0x20 && d <=0x3D)))
+//			if(d==48)
 			{
+/*				
+				FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"   ",24,40);	
+				char buffer [50];
+				sprintf (buffer,"%04x %02d   ",a,d);
+				if (d!=0)
+				{
+					
+					FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)buffer,24,40);		
+					while(1);
+				}
+*/			
 #ifdef PCM_MUSIC				
 				PlayStreamPCM(d,current_pcm);
 #endif
 #ifdef PONY
+
 				if(current_pcm!=0x3D)
 				{
 					stop_pcm_stream();
@@ -537,9 +567,17 @@ void MitchellMachineInit()
 #else
 	CZetMapMemory(DrvPaletteRam+0x1000,	0xc800, 0xcfff, MAP_ROM);	
 #endif
+
 	CZetMapMemory(DrvZ80Ram,	0xe000, 0xffff, MAP_ROM);
 	CZetMapMemory(DrvZ80Ram,	0xe000, 0xe0ff, MAP_WRITE);
 	CZetMapMemory(DrvZ80Ram+0x200, 0xe200, 0xffff, MAP_WRITE|MAP_FETCH);	
+/*
+	CZetMapMemory(DrvZ80Ram,	0xe000, 0xffff, MAP_ROM);
+//	CZetMapMemory(DrvZ80Ram,	0xe000, 0xe0ff, MAP_WRITE);
+	CZetMapMemory(DrvZ80Ram+0x0c00, 0xec00, 0xfaff, MAP_WRITE|MAP_FETCH);
+	CZetMapMemory(DrvZ80Ram+0x1c00, 0xfc00, 0xffff, MAP_WRITE|MAP_FETCH);		
+// 0000FB83
+*/
 #else
 
 #ifdef RAZE
@@ -598,16 +636,16 @@ void MitchellMachineInit()
 wait_vblank();
 #endif
 
-#ifdef PONY
-	pcm_stream_init(SOUNDRATE, PCM_TYPE_16BIT);	
-#endif
+
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 int PangInit()
 {
 	int nRet = 0;
 	DrvInitSaturn();
+#ifndef PONY	
 	sfx_list = &sfx_pang[0];
+#endif	
 	PangMemIndex();
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"make_lut   ",80,130);	
 //	make_lut();
@@ -661,8 +699,9 @@ INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144
 int SpangInit()
 {
 	DrvInitSaturn();
+#ifndef PONY	
 	sfx_list = &sfx_spang[0];
-	
+#endif	
 //	Mem = NULL;
 	PangMemIndex();
 //	make_lut();
@@ -749,8 +788,8 @@ inline void initLayers()
 #endif	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 	
-//scfg.dispenbl      = ON;
-	scfg.dispenbl 		 = OFF;		  // VBT � decommenter pour ne pas afficher l'�cran de texte
+scfg.dispenbl      = ON;
+//	scfg.dispenbl 		 = OFF;		  // VBT � decommenter pour ne pas afficher l'�cran de texte
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
@@ -799,8 +838,8 @@ inline void DrvInitSaturn()
 	nBurnLinescrollSize = 0x1;
 //	TVOFF;
 	SS_MAP2  = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT  = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
-//	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_B0;// remttre null
+//	SS_FONT  = (Uint16 *)NULL; //SCL_VDP2_VRAM_B0;// remttre null
+	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_B0;// remttre null
 	SS_MAP   = (Uint16 *)NULL;
 	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;
 
@@ -862,8 +901,6 @@ inline void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 int DrvExit()
 {
-	nBurnFunction = NULL;
-	wait_vblank();
 	DrvDoReset();	
 	MSM6295Exit(0);
 #ifdef CZ80
@@ -882,18 +919,11 @@ int DrvExit()
 	stmClose(stm);
 #endif
 
-/*	MSM6295Context = NULL;
-	CZ80Context = DrvZ80Rom = DrvZ80Code = DrvSoundRom = DrvZ80Ram = NULL;
-	RamStart = DrvPaletteRam = DrvAttrRam = DrvVideoRam = DrvSpriteRam = MSM6295ROM = NULL;
-	charaddr_lut = map_offset_lut = map_lut = cram_lut = NULL;
-	pBuffer = NULL;
-//	free(Mem);
-//	Mem = NULL;
-*/
 #ifdef PONY
-remove_raw_pcm_buffer(pcm1);
-if(stm.pcm_num)
+//if(stm.pcm_num)
+
 	remove_pcm_stream();
+remove_raw_pcm_buffer(pcm1);
 #endif
 
 #ifdef LOOP
@@ -1025,8 +1055,8 @@ void DrvFrame()
 
 	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
 
-//	InitCD(); // si on lance juste pour pang
-//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_init(SOUNDRATE, PCM_TYPE_16BIT);	
+	stm.times_to_loop = 10;
 	pcm_stream_host(DrvFrame_old);
 }
 

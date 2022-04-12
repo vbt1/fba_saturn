@@ -25,6 +25,7 @@ unsigned char current_pcm=255;
 
 #define nBurnSoundLen 128
 
+#ifndef PONY
 static SFX sfx_pang[50] = {
 /*000.pcm*/{0,PCM_000_SIZE,10},
 	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},	{0,0,0},{0,0,0},
@@ -85,6 +86,7 @@ static SFX sfx_spang[60] = {
 /*058.PCM*/	{0,0,0},
 /*059.PCM*/	{0,199678,10},	// World Cleared
 };
+#endif
 
 unsigned char DrvInputPort0[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
 unsigned char DrvInputPort1[8]  = {0, 0, 0, 0, 0, 0, 0, 0};

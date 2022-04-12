@@ -15,7 +15,7 @@
 #ifdef PONY
 #include "saturn/pcmstm.h"
 
-int pcm1=-1;
+//int pcm1=-1;
 int pcm[14];
 Sint16 *nSoundBuffer[32];
 //Sint16 *nSoundBuffer=NULL;
@@ -218,9 +218,12 @@ void blacktiger_out(UINT16 port, UINT8 data)
 			unsigned int i;
 			PcmStatus	*st=NULL;
 
+
 		if(data!=255)
 			if(sfx_list[data].loop==0 && data!=48)
 			{
+
+#ifndef PONY
 				for(i=0;i<8;i++)
 				{
 					PcmWork		*work = *(PcmWork **)pcm14[i];
@@ -236,6 +239,8 @@ void blacktiger_out(UINT16 port, UINT8 data)
 	//					if ((st->play == PCM_STAT_PLAY_CREATE || st->play == PCM_STAT_PLAY_END) && i>0) 
 						break;
 				}
+#endif
+				
 #ifndef PONY
 
 #ifdef PCM_SFX
@@ -289,7 +294,7 @@ void blacktiger_out(UINT16 port, UINT8 data)
 //					stop_pcm_stream();
 					char pcm_file[14];
 					sprintf(pcm_file, "%03d%s",data,".PCM"); 			
-//					start_pcm_stream((Sint8*)pcm_file, 5);		
+					start_pcm_stream((Sint8*)pcm_file, 5);		
 #endif
 				}
 			}
@@ -648,7 +653,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	stmInit();
 	Set14PCM();
 #else
-	pcm_stream_init(SOUNDRATE, PCM_TYPE_16BIT);	
+
 #endif
 	
 #endif
@@ -697,6 +702,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	BurnYM2203Init(2, ym_buffer, nYM2203Clockspeed, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
 	BurnTimerAttachZet(nYM2203Clockspeed);
 #endif
+
 	DrvDoReset(1);
 
 	for (UINT32 i = 0; i < 0x400; i++) 
@@ -732,12 +738,12 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	}
 	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);	
 #else
-	remove_raw_pcm_buffer(pcm1);
-
-	for(unsigned int i=0;i<4;i++)
+	for(unsigned int i=0;i<8;i++)
 	{
 		remove_raw_pcm_buffer(pcm[i]);
 	}
+if(stm.pcm_num)
+	remove_pcm_stream();	
 #endif
 
 	
@@ -782,7 +788,8 @@ void DrvFrame_old();
 
 void DrvFrame()
 {
-	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+
+//	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
 
 	for (unsigned int i=0;i<8;i++)
 	{
@@ -790,8 +797,8 @@ void DrvFrame()
 		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
 	}
 
-//	InitCD(); // si on lance juste pour pang
-//	ChangeDir("PANG");  // si on lance juste pour pang
+	pcm_stream_init(SOUNDRATE, PCM_TYPE_16BIT);	
+
 	pcm_stream_host(DrvFrame_old);
 }
 
@@ -857,7 +864,7 @@ void DrvFrame()
 #endif
 
 #ifdef PCM_SFX
-		for (unsigned int i=1;i<8;i++)
+		for (unsigned int i=1;i<4;i++)
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
 			{
@@ -904,7 +911,7 @@ void DrvFrame()
 
 #else
 
-#if 0
+#if 1
 /*
 	signed short buffer[128];
 	signed short *nSoundBuffer2 = (signed short *)(nSoundBuffer+(nSoundBufferPos[0]<<1));
@@ -912,14 +919,14 @@ void DrvFrame()
 */	
 
 
-		for (unsigned int i=1;i<8;i++)
+		for (unsigned int i=0;i<8;i++)
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
 			{
-				int size=nBurnSoundLen;
+				int size=7680; //PCM_COPY_SIZE;
 				if(pcm_info[i].position+(size*2)>pcm_info[i].size)
 				{
-//					memcpy((INT16 *)(PCM_ADDR+(PCM_BLOCK_SIZE*i))+pcm_info[i].position,(INT16*)(0x00200000+pcm_info[i].track_position),size);
+/////  ne pas remettre					memcpy(&nSoundBuffer[pcm[i]][pcm_info[i].position],(INT16*)(0x00200000+pcm_info[i].track_position),size);
 					size=pcm_info[i].size-pcm_info[i].position;
 					pcm_info[i].num = 0xff;
 				}
@@ -929,16 +936,16 @@ void DrvFrame()
 				pcm_info[i].track_position+=size;
 				pcm_info[i].position+=size;
 				pcm_info[i].ring_position+=size;
-/*				if(pcm_info[i].ring_position>=nBurnSoundLen*10)
+
+				if(pcm_info[i].ring_position>=nBurnSoundLen*10)
 				{
 					pcm_play(pcm[i], PCM_SEMI, 7);					
 					pcm_info[i].ring_position=0;
 				}
-*/
 			}
 			else
 			{
-	//			pcm_cease(pcm[i]);
+				pcm_cease(pcm[i]);
 			}
 		}	
 #endif
