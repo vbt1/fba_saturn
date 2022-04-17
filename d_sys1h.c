@@ -38,14 +38,14 @@ int ovlInit(char *szShortName)
 		StarjackRomInfo, StarjackRomName, MyheroInputInfo, StarjackDIPInfo,
 		StarjackInit, System1Exit, System1Frame
 	};
-/*
+
 struct BurnDriver nBurnDrvRaflesia = {
 	"raflesia", "sys1h",
-	"Rafflesia (315-5162)\0", 
+	"Rafflesia (315-5162)", 
 	RaflesiaRomInfo, RaflesiaRomName, MyheroInputInfo, RaflesiaDIPInfo,
 	RaflesiaInit, System1Exit, System1Frame
 };
-*/
+
 //	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
     if (strcmp(nBurnDrvBlockgal.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvBlockgal,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvGardia.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvGardia,sizeof(struct BurnDriver));
@@ -83,6 +83,7 @@ Decode Functions
 
 /*static*/ void blockgal_decode()
 {
+	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
 	mc8123_decrypt_rom(0, 0, System1Rom1, System1Fetch1, (UINT8*)System1MC8123Key);
 }
 /*==============================================================================================
@@ -116,7 +117,7 @@ void __fastcall BrainZ801PortWrite(unsigned short a, UINT8 d)
 		case 0x15:
 		case 0x19: {
 			System1VideoMode = d;
-			System1FlipScreen = d & 0x80;
+//			System1FlipScreen = d & 0x80;
 			System1BankRom(((d & 0x04) >> 2) + ((d & 0x40) >> 5));
 			return;
 		}
@@ -151,8 +152,7 @@ Driver Inits
 	int nRet;
 	flipscreen = 1;
 //	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
-//	UINT8 
-	System1MC8123Key = (UINT8*)0x002FC000;
+	UINT8 System1MC8123Key = (UINT8*)0x002FC000;
 	memset(System1MC8123Key,0x00,0x2000);
 	BurnLoadRom(System1MC8123Key, 14, 1);
 	DecodeFunction = blockgal_decode;
@@ -177,13 +177,13 @@ Driver Inits
 	return System1Init(6, 0x2000, 1, 0x2000, 6, 0x2000, 2, 0x4000, 1);
 }
 
-/* INT32 RaflesiaInit()
+ INT32 RaflesiaInit()
 {
 	DecodeFunction = fdwarrio_decode;
 	flipscreen = 2;
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }
-*/
+
 /*==============================================================================================
 Graphics Rendering
 ===============================================================================================*/

@@ -76,7 +76,7 @@ SECTIONS {
 		__malloc_max_ram = .;
         } > ram			
 	
-        .overlay 0x060DE000 :
+        .overlay 0x060de000 :
         {
 		. = ALIGN(0x10);
 		*(.boot)

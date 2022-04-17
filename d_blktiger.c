@@ -16,7 +16,7 @@
 #include "saturn/pcmstm.h"
 
 //int pcm1=-1;
-int pcm[14];
+int pcm[16];
 Sint16 *nSoundBuffer[32];
 //Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
@@ -291,9 +291,10 @@ void blacktiger_out(UINT16 port, UINT8 data)
 					stmClose(stm);
 					UpdateStreamPCM(data, &pcm14[0], &para[0]);
 #else					
-//					stop_pcm_stream();
+					stop_pcm_stream();
 					char pcm_file[14];
-					sprintf(pcm_file, "%03d%s",data,".PCM"); 			
+					sprintf(pcm_file, "%03d%s",data,".PCM"); 	
+FNT_Print256_2bpp((volatile unsigned char *)SS_FONT,(unsigned char *)pcm_file,100,80);					
 					start_pcm_stream((Sint8*)pcm_file, 5);		
 #endif
 				}
@@ -738,7 +739,7 @@ UINT8 blacktiger_sound_read(UINT16 address)
 	}
 	memset((void *)SOUND_BUFFER,0x00,PCM_BLOCK_SIZE*8);	
 #else
-	for(unsigned int i=0;i<8;i++)
+	for(unsigned int i=0;i<16;i++)
 	{
 		remove_raw_pcm_buffer(pcm[i]);
 	}
@@ -791,7 +792,7 @@ void DrvFrame()
 
 //	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
 
-	for (unsigned int i=0;i<8;i++)
+	for (unsigned int i=0;i<16;i++)
 	{
 		pcm[i] = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20*2);
 		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
@@ -919,7 +920,7 @@ void DrvFrame()
 */	
 
 
-		for (unsigned int i=0;i<8;i++)
+		for (unsigned int i=0;i<16;i++)
 		{
 			if(pcm_info[i].position<pcm_info[i].size && pcm_info[i].num != 0xff)
 			{

@@ -13,7 +13,6 @@
 #define nBurnSoundLen 128
 #define SOUNDRATE   7680L
 
-#define SOUND_LEN 240
 #define nSegmentLength 	nBurnSoundLen / 10
 
 #define COLADDR (FBUF_ADDR-0x400)
@@ -33,17 +32,17 @@ UINT16 *cram_lut = NULL;
 UINT8 *width_lut = NULL;
 UINT16 *spriteCache = NULL;
 UINT8 *CZ80Context = NULL;
+#ifdef SYS2
 UINT16 *map_cache = NULL;
 UINT8 *map_dirty = NULL;
+#endif
 UINT16 *map = NULL;
-UINT16 *mapf = NULL;
 typedef int bool;
 
 //typedef struct { UINT8 x, y, width, yend } sprite_collision; 
 //sprite_collision sprites_collision[32]={0};
 UINT16 nextSprite=0;
-UINT8 flipscreen=0;
-void make_cram_lut(void);
+
 void updateCollisions(int *values);
 void rotate_tile(unsigned int size,unsigned char flip, unsigned char *target);
 void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase);
@@ -84,22 +83,25 @@ UINT8 *System1fcRam           = NULL;
 UINT8 *System1Sprites         = NULL;
 UINT8 *SpriteOnScreenMap      = NULL;
 UINT8 *System1Fetch1          = NULL;
-UINT8 *System1MC8123Key		 = NULL;
+//UINT8 *System1MC8123Key		 = NULL;
 UINT8 *System1ScrollX		 = NULL;
 UINT8 *System1ScrollY		 = NULL;
 
 int System1BgScrollX = 0;
 int System1BgScrollY = 0;
-int System1VideoMode = 0;
-int System1FlipScreen = 0;
-int System1SoundLatch = 0;
+UINT8 System1VideoMode = 0;
+
+UINT8 System1SoundLatch = 0;
 
 UINT8 System1BgBankLatch = 0;
 UINT8 System1BgBank = 0;
 UINT8 System1BankSwitch = 0;
-
+#ifdef _D_SYS1_H_
+int System1FlipScreen = 0;
 UINT8  BlockgalDial1 = 0;
 UINT8  BlockgalDial2 = 0;
+UINT8 flipscreen=0;
+#endif
 
 unsigned int System1SpriteRomSize = 0;
 unsigned int System1NumTiles = 0;

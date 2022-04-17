@@ -3,14 +3,14 @@
 
 #include "d_sys1_common.h"
 
-static INT32 WboyuInit();
+INT32 WboyuInit();
 /*static*/ //INT32 TeddybbInit();
-static INT32 PitfalluInit();
-static INT32 MyheroInit();
-static INT32 Wboy2uInit();
+INT32 PitfalluInit();
+INT32 MyheroInit();
+INT32 Wboy2uInit();
 ///*static*/ int NprincsuInit();
 ///*static*/ int SeganinuInit();
-static INT32 Flicks2Init();
+INT32 Flicks2Init();
 ///*static*/ INT32 FourdwarrioInit();
 
 /*==============================================================================================

@@ -2,7 +2,6 @@
 #include "SEGA_INT.H"
 #include "SEGA_DMA.H"
 
-void dummy();
 #define PONY
 
 #ifdef PONY
@@ -15,7 +14,7 @@ extern unsigned short frame_y;
 //UINT16 map[0x1000];
 #endif
 
-/*static */inline void System1ClearOpposites(UINT8* nJoystickInputs)
+/*static*/ inline void System1ClearOpposites(UINT8* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x30) == 0x30) {
 		*nJoystickInputs &= ~0x30;
@@ -283,12 +282,14 @@ inline void MemIndex()
 	remap8to16_lut		= (UINT16 *)Next; Next += 512 * sizeof(UINT16);
 	map_offset_lut		= (UINT16 *)Next; Next += 0x800 * sizeof(UINT16);
 //	code_lut			= Next; Next += System1NumTiles * sizeof(UINT16);
-	cpu_lut				= (UINT32 *)Next; Next += 256*sizeof(UINT32);
+	cpu_lut				= (UINT32 *)Next; Next += 512*sizeof(UINT32);
 	map					= (UINT16 *)Next; Next += 0x1000 * sizeof(UINT16);
 //	mapf				= (UINT16 *)Next; Next += 0x1000 * sizeof(UINT16);
 //	color_lut			= Next; Next += 0x2000 * sizeof(UINT8);
+#ifdef SYS2
 	map_cache			= (UINT16 *)Next; Next += 0x4000 * sizeof(UINT32); // 4 banks de 4096
 	map_dirty			= Next; Next += 0x0008;
+#endif	
 	CZ80Context			= Next; Next += 2*sizeof(cz80_struc);
 //	spriteCache 		= Next;
 }
@@ -307,13 +308,15 @@ int System1DoReset()
 	System1BgScrollX = 0;
 	System1BgScrollY = 0;
 	System1VideoMode = 0;
-	System1FlipScreen = 0;
+//	System1FlipScreen = 0;
 	System1SoundLatch = 0;
 	System1BgBankLatch =  0;
 	System1BgBank = 0;
 	System1BankedRom = 0;
 	System1BankSwitch = 0;
+#ifdef SYS2	
 	memset(map_dirty,1,8);
+#endif	
 //		__port = PER_OpenPort();
 	return 0;
 }
@@ -368,7 +371,7 @@ void __fastcall System1Z801PortWrite(unsigned short a, UINT8 d)
 		case 0x19: 
 		{
 			System1VideoMode = d;
-			System1FlipScreen = d & 0x80;
+//			System1FlipScreen = d & 0x80;
 			return;
 		}
 		case 0x1c: return; // NOP
@@ -525,8 +528,8 @@ void initLayers()
 	scfg.platesize     = SCL_PL_SIZE_2X1; // ou 2X2 ?
 //	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 //	scfg.datatype      = SCL_CELL;
-	scfg.plate_addr[0] = (Uint32)ss_map;
-	scfg.plate_addr[1] = (Uint32)ss_map; //+0x1000;
+	scfg.plate_addr[0] = (Uint32)SS_MAP;
+	scfg.plate_addr[1] = (Uint32)SS_MAP; //+0x1000;
 //	scfg.plate_addr[2] = (Uint32)ss_map+0x1000;
 //	scfg.plate_addr[3] = (Uint32)ss_map+0x1000;
 //	scfg.plate_addr[1] = 0x00;
@@ -544,19 +547,23 @@ void initLayers()
 	SCL_SetCycleTable(CycleTb);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void initSpritesS1(void)
+inline void initSpritesS1(void)
 {
-    int i;
 	initSprites(256-1,240-1,0,0,-8,0);
 
-	for (i=3;i<35 ;i++ )
-	{
-		if(flipscreen)
-			ss_sprite[i].control = ( JUMP_NEXT |  FUNC_DISTORSP );
-		else
-			ss_sprite[i].control = ( JUMP_NEXT | FUNC_NORMALSP );
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
 
-		ss_sprite[i].drawMode   = ( COLOR_1 | ECD_DISABLE | COMPO_REP);		
+	for (UINT16 i=0;i<32 ;i++ )
+	{
+#ifdef _D_SYS1_H_		
+		if(flipscreen)
+			ss_spritePtr->control = ( JUMP_NEXT |  FUNC_DISTORSP );
+		else
+#endif			
+			ss_spritePtr->control = ( JUMP_NEXT | FUNC_NORMALSP );
+
+		ss_spritePtr->drawMode   = ( COLOR_1 | ECD_DISABLE | COMPO_REP);
+		ss_spritePtr++;
 	}
 	SS_SET_SPCLMD(1);
 }
@@ -574,11 +581,14 @@ void make_lut(void)
 
 	for (i = 0; i < 0x800;i++) 
 	{
+#ifdef _D_SYS1_H_
 		if(flipscreen==0)
+#endif			
 		{
 			sx = ((i >> 1) & 0x1f); //% 32;
 			sy = i & (~0x3f);
 		}
+#ifdef _D_SYS1_H_		
 		else if(flipscreen==1)
 		{
 			sx = ((i) & 0x3f)<<5;//% 32;
@@ -589,7 +599,7 @@ void make_lut(void)
 			sx = 36-(32-(i >> 6)) & 0x1f;	
 			sy = ((64-i) & 0x3f)<<5;//% 32;
 		}
-
+#endif
 		map_offset_lut[i] = ((sx) | sy)<<1;
 	}
 
@@ -598,24 +608,70 @@ void make_lut(void)
 	for(i=0;i<256;i++)							if(i%8==0)	width_lut[i] = i;else	width_lut[i] = (i + (7)) & ~(7);
 //		width_lut[i] = (i + (7)) & ~(7);
 //	for(i=0;i<0x2000;i++)		color_lut[i] = (i>>5) & 0x3f;
+	UINT8 r,g,b, val;
+		
+	if (System1ColourProms) 
+	{
+		for (UINT32 j = 0; j < 256; j++) 
+		{
+			UINT32 bit0, bit1, bit2, bit3;
+
+			val = System1PromRed[j];
+			bit0 = (val >> 0) & 0x01;
+			bit1 = (val >> 1) & 0x01;
+			bit2 = (val >> 2) & 0x01;
+			bit3 = (val >> 3) & 0x01;
+			r = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
+		
+			val = System1PromGreen[j];
+			bit0 = (val >> 0) & 0x01;
+			bit1 = (val >> 1) & 0x01;
+			bit2 = (val >> 2) & 0x01;
+			bit3 = (val >> 3) & 0x01;
+			g = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
+		
+			val = System1PromBlue[j];
+			bit0 = (val >> 0) & 0x01;
+			bit1 = (val >> 1) & 0x01;
+			bit2 = (val >> 2) & 0x01;
+			bit3 = (val >> 3) & 0x01;
+			b = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
+
+			cram_lut[j] = BurnHighCol(r, g, b, 0);	
+		}
+	}
+	else
+	{
+		for(UINT32 j = 0; j < 256; j++)
+		{
+			r = (j >> 0) & 7;
+			g = (j >> 3) & 7;
+			b = (j >> 6);
+
+			r = (r << 2) | (r >> 1);
+			g = (g << 2) | (g >> 1);
+			b = (b << 3) | (b << 1) | (b >> 1);
+			cram_lut[j] = RGB(r,g,b);
+		}
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
 	INT_ChgMsk(INT_MSK_DMA2, INT_MSK_NULL);	
-	nSoundBufferPos = 0;
 	nBurnSprites  = 35;
-	SS_MAP    = ss_map = (Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
+	SS_MAP    = (Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
 	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
 	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
-	ss_OtherPri       = (SclOtherPriRegister *)SS_OTHR;
+	ss_OtherPri     = (SclOtherPriRegister *)SS_OTHR;
 	ss_sprite  = (SprSpCmd *)SS_SPRIT;
-	ss_scl      = (Fixed32 *)SS_SCL;
+//	ss_scl      = (Fixed32 *)SS_SCL;
 
+#ifdef _D_SYS1_H_
 	if(flipscreen)
 	{
 		ss_regs->tvmode = 0x8011;
@@ -630,6 +686,7 @@ void DrvInitSaturn()
 	//		ss_reg->n1_move_x =  -32 <<16;
 		}
 	}
+#endif	
 	UINT8 *ss_vram   = (UINT8 *)SS_SPRAM;
 	memset(&ss_vram[0x1100],0x00,0x7EF00);
 	SS_SET_N2PRIN(4);
@@ -645,10 +702,12 @@ void DrvInitSaturn()
 	initColors();
 	initSpritesS1();
 //	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+#ifdef _D_SYS1_H_
 	if(flipscreen)
 		drawWindow(0,240,0,8,64);
 	else
+#endif		
 		drawWindow(0,224,240,0,66);
 	
 #ifdef PONY
@@ -659,7 +718,7 @@ void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2Size, int nTileRomNum, int nTileRomSize, int nSpriteRomNum, int nSpriteRomSize, bool bReset)
 {
-	int nRet = 0, i, RomOffset;
+	int i, RomOffset;
 	struct BurnRomInfo ri;
 
 	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
@@ -680,7 +739,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	// Load Z80 #1 Program roms
 	RomOffset = 0;
 	for (i = 0; i < nZ80Rom1Num; i++) {
-		nRet = BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1); if (nRet != 0) return 1;
+		BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1);
 		BurnDrvGetRomInfo(&ri, i);
 	}
 
@@ -720,14 +779,14 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	// Load Z80 #2 Program roms
 	RomOffset += nZ80Rom1Num;
 	for (i = 0; i < nZ80Rom2Num; i++) {
-		nRet = BurnLoadRom(System1Rom2 + (i * nZ80Rom2Size), i + RomOffset, 1); if (nRet != 0) return 1;
+		BurnLoadRom(System1Rom2 + (i * nZ80Rom2Size), i + RomOffset, 1);
 	}
 	
 	// Load and decode tiles
 	memset(System1TempRom, 0, 0x20000);
 	RomOffset += nZ80Rom2Num;
 	for (i = 0; i < nTileRomNum; i++) {
-		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
+		BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
 	}
 
 	INT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
@@ -748,10 +807,10 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	
 	memset((void *)&ss_map2[2048],0,768);
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"rotate_tile                     ",20,100);
-
+#ifdef _D_SYS1_H_
 	if(flipscreen==1)		rotate_tile(System1NumTiles,0,(void *)SS_CACHE);
 	else if(flipscreen==2)	rotate_tile(System1NumTiles,1,(void *)SS_CACHE);
-
+#endif
 
 	spriteCache = (UINT16*)(0x00200000);
 	memset((unsigned char *)spriteCache,0xFF,0x80000);
@@ -762,21 +821,21 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	RomOffset += nTileRomNum;
 	for (i = 0; i < nSpriteRomNum; i++) 
 	{
-		nRet = BurnLoadRom(System1Sprites + (i * nSpriteRomSize), i + RomOffset, 1);
+		BurnLoadRom(System1Sprites + (i * nSpriteRomSize), i + RomOffset, 1);
 	}
 
 	// Load Colour proms
 	if (System1ColourProms) {
 		RomOffset += nSpriteRomNum;
-		nRet = BurnLoadRom(System1PromRed, 0 + RomOffset, 1);
-		nRet = BurnLoadRom(System1PromGreen, 1 + RomOffset, 1);
-		nRet = BurnLoadRom(System1PromBlue, 2 + RomOffset, 1);
+		BurnLoadRom(System1PromRed, 0 + RomOffset, 1);
+		BurnLoadRom(System1PromGreen, 1 + RomOffset, 1);
+		BurnLoadRom(System1PromBlue, 2 + RomOffset, 1);
 	}
 	// Setup the Z80 emulation
 // remettre 1 plus tard quand choplifter sera corrig?
 	CZetInit2(2,CZ80Context);
 
-	CZetOpen(0);
+//	CZetOpen(0);
 //	CZetSetWriteHandler(System1Z801ProgWrite);
 
 	CZetSetWriteHandler2(0xd800, 0xd9ff,system1_paletteram_w);
@@ -802,44 +861,23 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		CZetMapMemory(System1Rom1, 0x0000, 0x7fff, MAP_ROM);
 		CZetMapMemory(System1Rom1 + 0x8000, 0x8000, 0xbfff, MAP_ROM);		
 	}
-	CZetMapArea(0xc000, 0xcfff, 0, System1Ram1);
-	CZetMapArea(0xc000, 0xcfff, 1, System1Ram1);
-	CZetMapArea(0xc000, 0xcfff, 2, System1Ram1);
-	CZetMapArea(0xd000, 0xd1ff, 0, System1SpriteRam);
-	CZetMapArea(0xd000, 0xd1ff, 1, System1SpriteRam);
-	CZetMapArea(0xd000, 0xd1ff, 2, System1SpriteRam);
-	CZetMapArea(0xd200, 0xd7ff, 0, System1Ram1 + 0x1000);
-	CZetMapArea(0xd200, 0xd7ff, 1, System1Ram1 + 0x1000);
-	CZetMapArea(0xd200, 0xd7ff, 2, System1Ram1 + 0x1000);
-	CZetMapArea(0xd800, 0xddff, 0, System1PaletteRam);
+	CZetMapMemory(System1Ram1,0xc000, 0xcfff, MAP_RAM);
+	CZetMapMemory(System1SpriteRam,0xd000, 0xd1ff, MAP_RAM);
+	CZetMapMemory(System1Ram1 + 0x1000,0xd200, 0xd7ff, MAP_RAM);
+	CZetMapMemory(System1deRam,0xd800, 0xddff, MAP_READ);
 //	CZetMapArea(0xd800, 0xddff, 1, System1PaletteRam);
 //	CZetMapArea(0xd800, 0xddff, 2, System1PaletteRam);
-	CZetMapArea(0xde00, 0xdfff, 0, System1deRam);
-	CZetMapArea(0xde00, 0xdfff, 1, System1deRam);
-	CZetMapArea(0xde00, 0xdfff, 2, System1deRam);
-	CZetMapArea(0xe000, 0xe7ff, 0, System1BgRam); // on enleve le read pour tester wbml
-//	CZetMapArea(0xe000, 0xe7ff, 1, System1BgRam);
-	CZetMapArea(0xe000, 0xe7ff, 2, System1BgRam);
-	CZetMapArea(0xe800, 0xeeff, 0, System1VideoRam);
-//	CZetMapArea(0xe800, 0xeeff, 1, System1VideoRam);
-	CZetMapArea(0xe800, 0xeeff, 2, System1VideoRam);
-	CZetMapArea(0xef00, 0xefff, 0, System1efRam);
-// VBT ajout
-	CZetMapArea(0xef00, 0xefff, 1, System1efRam);
+	CZetMapMemory(System1deRam,0xde00, 0xdfff, MAP_RAM);
+	CZetMapMemory(System1BgRam,0xe000, 0xe7ff, MAP_ROM);	
+	CZetMapMemory(System1VideoRam,0xe800, 0xeeff, MAP_ROM);
+	CZetMapMemory(System1efRam,0xef00, 0xefff, MAP_RAM);	
+	CZetMapMemory(System1BgCollisionRam,0xf000, 0xf3ff, MAP_ROM);
+	CZetMapMemory(System1f4Ram,0xf400, 0xf7ff, MAP_RAM);
+	CZetMapMemory(System1SprCollisionRam,0xf800, 0xfbff, MAP_ROM);
+	CZetMapMemory(System1fcRam,0xfc00, 0xffff, MAP_RAM);
 
-	CZetMapArea(0xef00, 0xefff, 2, System1efRam);
-	CZetMapArea(0xf000, 0xf3ff, 0, System1BgCollisionRam); // read 0 // write 1 // fetch 2
-	CZetMapArea(0xf000, 0xf3ff, 2, System1BgCollisionRam);
-	CZetMapArea(0xf400, 0xf7ff, 0, System1f4Ram);
-	CZetMapArea(0xf400, 0xf7ff, 1, System1f4Ram);
-	CZetMapArea(0xf400, 0xf7ff, 2, System1f4Ram);
-	CZetMapArea(0xf800, 0xfbff, 0, System1SprCollisionRam);
-	CZetMapArea(0xf800, 0xfbff, 2, System1SprCollisionRam);
-	CZetMapArea(0xfc00, 0xffff, 0, System1fcRam);
-	CZetMapArea(0xfc00, 0xffff, 1, System1fcRam);
-	CZetMapArea(0xfc00, 0xffff, 2, System1fcRam);	
-	CZetMemEnd();
-	CZetClose();
+//	CZetMemEnd();
+//	CZetClose();
 
 	z80_init_memmap();
 	z80_add_read(0xe000, 0xe001, 1, (void *)&System1Z802ProgRead); 
@@ -869,7 +907,6 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	SN76489AInit(1, 4000000, 1);//4000000
 	
 	make_lut();
-	make_cram_lut();
 	MakeInputsFunction = System1MakeInputs;
 	
 	// Reset the driver
@@ -893,7 +930,6 @@ int System1Exit()
 	SS_SET_N0SPRM(0);
 	SS_SET_N2SPRM(0);
 	ss_regs->specialcode=0x0000;
-	nBurnFunction = NULL;
 	System1DoReset();
 	CZetExit2();
 
@@ -903,7 +939,6 @@ int System1Exit()
 	z80_add_write(0xc000, 0xc003, 1, (void *)NULL);
 	z80_set_in((unsigned char (*)(unsigned short))NULL);
 	z80_set_out((void (*)(unsigned short, unsigned char))NULL);
-	nBurnFunction = NULL;
 
 //    while(((*(volatile unsigned short *)0x25F80004) & 8) == 8);
 //    while(((*(volatile unsigned short *)0x25F80004) & 8) == 0);
@@ -912,32 +947,7 @@ int System1Exit()
 //	CZ80Context = NULL;
 
 	SN76496Exit();
-/*
-	RamStart1 = RamStart               = NULL;
-	System1Rom1 = System1Rom2 = NULL;
-	System1PromRed = System1PromGreen = System1PromBlue = NULL;
-	System1Ram1 = System1Ram2 = NULL;
-	System1SpriteRam = System1PaletteRam = NULL;
-	System1BgRam = System1VideoRam = NULL;
-	System1ScrollXRam = System1BgCollisionRam = NULL;
-	System1SprCollisionRam = NULL;
-	System1deRam = System1efRam = System1f4Ram = System1fcRam = NULL;
-	SpriteOnScreenMap = NULL;
-	System1Fetch1 = NULL;
-	System1ScrollX = System1ScrollY = NULL;
 
-	remap8to16_lut = NULL;
-	map_offset_lut = NULL;
-	cpu_lut = NULL;
-	cram_lut = NULL;
-	width_lut = NULL;
-	spriteCache = NULL;
-	map_cache = NULL;
-	map_dirty = NULL;
-
-	System1Sprites = NULL;*/
-//	free(Mem);
-//	Mem = NULL;
 	DecodeFunction = NULL;
 	MakeInputsFunction = NULL;
 	CollisionFunction = NULL;
@@ -946,7 +956,7 @@ int System1Exit()
 remove_raw_pcm_buffer(pcm1);
 #endif
 
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	
 	//cleanDATA();
 	cleanBSS();
@@ -1098,7 +1108,8 @@ void System1DrawSprites()
 	{
 		for (UINT32 i = 0; i < 32; ++i)
 		{
-			ss_spritePtr[i].ax = ss_spritePtr[i].ay = ss_spritePtr[i].charSize = ss_spritePtr[i].charAddr = 0;
+			ss_spritePtr->ax = ss_spritePtr->ay = ss_spritePtr->charSize = ss_spritePtr->charAddr = 0;
+			ss_spritePtr++;
 		}
 		return; // 0xff in first byte of spriteram is sprite-disable mode
 	}
@@ -1135,30 +1146,36 @@ void System1DrawSprites()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void renderSound(unsigned int *nSoundBufferPos)
+void renderSound(unsigned int *xxxxx)
 {
 #ifndef PONY	
-	signed short *nSoundBuffer = (signed short *)(0x25a20000+(*nSoundBufferPos)*(sizeof(signed short)));
+//	signed short *nSoundBuffer = (signed short *)(0x25a20000+(*nSoundBufferPos)*(sizeof(signed short)));
 //	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 	SN76496Update(0, nSoundBuffer, nSegmentLength);
 	SN76496Update(1, nSoundBuffer, nSegmentLength);
 	
-	
-	
 	*nSoundBufferPos+=nSegmentLength;
 #else
 	signed short buffer[128];
-	signed short *nSoundBuffer2 = (signed short *)(nSoundBuffer+(nSoundBufferPos[0]<<1));
+	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
 
-//	unsigned int  deltaSlave    = *(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos);
+	signed short *nSoundBuffer2 = (signed short *)(nSoundBuffer+(deltaSlave<<1));
+
 	SN76496Update(0, buffer, nBurnSoundLen);
 	SN76496Update(1, buffer, nBurnSoundLen);
 	memcpyl(nSoundBuffer2,buffer,nBurnSoundLen<<1);
-	*nSoundBufferPos+=nBurnSoundLen;
+	deltaSlave+=nBurnSoundLen;
+	
+	if(deltaSlave>=nBurnSoundLen*10)
+	{
+		pcm_play(pcm1, PCM_SEMI, 7);
+		deltaSlave=0;
+	}
+
 #endif	
 //	System1Render();
-	//	nSoundBufferPos[0]+= nSegmentLength;
-//	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
+//	nSoundBufferPos[0]+= nSegmentLength;
+	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
 
 /*==============================================================================================
@@ -1172,9 +1189,6 @@ void System1Frame()
 	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
 
 	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
-
-//	InitCD(); // si on lance juste pour pang
-//	ChangeDir("PANG");  // si on lance juste pour pang
 	pcm_stream_host(System1Frame_old);
 }
 
@@ -1232,80 +1246,35 @@ void System1Frame()
 	}
 	PCM_Task(pcm);
 #else
-	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		SPR_WaitEndSlaveSH();	
 
+/*	nSoundBufferPos+=nBurnSoundLen;
+	
 	if(nSoundBufferPos>=nBurnSoundLen*10)
 	{
 		pcm_play(pcm1, PCM_SEMI, 7);
 		nSoundBufferPos=0;
-	}
+	}*/
 #endif
 // evite plantage sur teddy boy	
 //	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 //		SPR_WaitEndSlaveSH();
 	
 #ifdef PONY
-	DMA_ScuMemCopy(ss_map,map,0x2000);
-	DMA_ScuMemCopy(ss_map+0x1000,map,0x2000);
+
+	DMA_ScuMemCopy((void*)SS_MAP,map,0x2000);
+	DMA_ScuMemCopy((void*)SS_MAP+0x2000,map,0x2000);
 	
 	while(DMA_ScuResult()==2);
-
 
 	_spr2_transfercommand();
 	SclProcess = 1;	
 	frame_x++;
 
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();	
+
 	 if(frame_x>=frame_y)
 		wait_vblank();	
 #endif	
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-void make_cram_lut(void)
-{
-	if (System1ColourProms) 
-	{
-		for (UINT32 j = 0; j < 256; j++) 
-		{
-			UINT32 bit0, bit1, bit2, bit3, r, g, b, val;
-
-			val = System1PromRed[j];
-			bit0 = (val >> 0) & 0x01;
-			bit1 = (val >> 1) & 0x01;
-			bit2 = (val >> 2) & 0x01;
-			bit3 = (val >> 3) & 0x01;
-			r = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
-		
-			val = System1PromGreen[j];
-			bit0 = (val >> 0) & 0x01;
-			bit1 = (val >> 1) & 0x01;
-			bit2 = (val >> 2) & 0x01;
-			bit3 = (val >> 3) & 0x01;
-			g = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
-		
-			val = System1PromBlue[j];
-			bit0 = (val >> 0) & 0x01;
-			bit1 = (val >> 1) & 0x01;
-			bit2 = (val >> 2) & 0x01;
-			bit3 = (val >> 3) & 0x01;
-			b = 0x0e * bit0 + 0x1f * bit1 + 0x43 * bit2 + 0x8f * bit3;
-
-			cram_lut[j] = BurnHighCol(r, g, b, 0);	
-		}
-	}
-	else
-	{
-		for(UINT32 j = 0; j < 256; j++)
-		{
-			int r = (j >> 0) & 7;
-			int g = (j >> 3) & 7;
-			int b = (j >> 6);
-
-			r = (r << 2) | (r >> 1);
-			g = (g << 2) | (g >> 1);
-			b = (b << 3) | (b << 1) | (b >> 1);
-			cram_lut[j] = RGB(r,g,b);
-		}
-	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

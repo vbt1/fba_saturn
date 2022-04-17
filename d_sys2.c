@@ -4,6 +4,7 @@
 // Based on MAME Driver by David Haywood and Phil Stroffolino
 #define CZ80 1
 #define RAZE 1  // `EMULATE_R_REGISTER obligatoire
+#define SYS2 1
 //#define USE_RAZE0 1
 #define USE_RAZE1 1
 #define CPU2_ENABLED 1
@@ -400,9 +401,9 @@ void CommonWbmlInit()
 	CZetMapMemory(System1fcRam,				0xfc00, 0xffff, MAP_RAM);
 
 	CZetSetReadHandler(System2Z801ProgRead);
-//	CZetSetWriteHandler(System2Z801ProgWrite);
+//	CZetSetWriteHandler(System2Z801ProgWrite); vbt fonction à recréer
 //	CZetSetWriteHandler(NULL);
-	
+/*	
 	CZetSetWriteHandler2(0xd800, 0xd9ff,system1_paletteram_w);
 	CZetSetWriteHandler2(0xda00, 0xdbff,system1_paletteram2_w);
 	CZetSetWriteHandler2(0xdc00, 0xddff,system1_paletteram3_w);
@@ -412,7 +413,7 @@ void CommonWbmlInit()
 	
 	CZetSetWriteHandler2(0xf000,0xf3ff,system1_bgcollisionram_w);
 	CZetSetWriteHandler2(0xf800,0xfbff,system1_sprcollisionram_w);
-
+*/
 	CZetSetInHandler  (System2Z801PortRead);
 	CZetSetOutHandler (System2Z801PortWrite);
 	CZetClose();

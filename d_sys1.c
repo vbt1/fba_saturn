@@ -2,6 +2,8 @@
 // 17-18 fps with RAZE main & CZ80 slave
 // FB Alpha Penguin-Kun Wars Driver Module
 // Based on MAME Driver by David Haywood and Phil Stroffolino
+//#pragma GCC optimize("Os")
+
 #define CZ80 1
 #define RAZE 1  // `EMULATE_R_REGISTER obligatoire
 //#define USE_RAZE0 1
@@ -16,17 +18,27 @@
 //typedef void (*write_func)(unsigned short a, UINT8 d);
 //static write_func p[36];
 
+
+
+
+
+
+
+
+
+
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
-
+/*
 	struct BurnDriver nBurnDrvWboyu = {
 		"wboyu",  "sys1",
 		"Wonder Boy (not encrypted)",
 		WboyuRomInfo, WboyuRomName, WboyInputInfo, WboyuDIPInfo,
 		WboyuInit, System1Exit, System1Frame
 	};
-
+*/
 	struct BurnDriver nBurnDrvWbdeluxe = {
 		"wbdeluxe", "sys1",
 		"Wonder Boy Deluxe",
@@ -36,7 +48,7 @@ int ovlInit(char *szShortName)
 
 	struct BurnDriver nBurnDrvFlickys2 = {
 		"flickys2", "sys1",
-		"Flicky (128k, System 2, not encrypted)",
+		"Flicky (128k, not encrypted)",
 		Flickys2RomInfo, Flickys2RomName, FlickyInputInfo, FlickyDIPInfo,
 		Flicks2Init, System1Exit, System1Frame
 	};
@@ -70,16 +82,16 @@ int ovlInit(char *szShortName)
 	};
 */
 //	struct BurnDriver *fba_drv = 	(struct BurnDriver *)FBA_DRV;
-    if (strcmp(nBurnDrvWboyu.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvWboyu,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvFlickys2.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvFlickys2,sizeof(struct BurnDriver));
+//    if (strcmp(nBurnDrvWboyu.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvWboyu,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvFlickys2.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvFlickys2,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvMyhero.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvMyhero,sizeof(struct BurnDriver));
-//    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvMyhero,sizeof(struct BurnDriver));
-    if (strcmp(nBurnDrvPitfall2u.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvPitfall2u,sizeof(struct BurnDriver));
-//    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvTeddybb,sizeof(struct BurnDriver));
+//    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvMyhero,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvPitfall2u.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvPitfall2u,sizeof(struct BurnDriver));
+//    if (strcmp(nBurnDrvTeddybb.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvTeddybb,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvWbdeluxe.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvWbdeluxe,sizeof(struct BurnDriver));
 //    if (strcmp(nBurnDrvFourdwarrio.szShortName, szShortName) == 0)		memcpy(fba_drv,&nBurnDrvFourdwarrio,sizeof(struct BurnDriver));
 
-	ss_reg    = (SclNorscl *)SS_REG;
+	ss_reg   = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
 	
 	return 0;
@@ -88,7 +100,7 @@ int ovlInit(char *szShortName)
 /*==============================================================================================
 Decode Functions
 ===============================================================================================*/
-
+/*
 void teddybb_decode(void)
 {
 	const UINT8 convtable[32][4] =
@@ -115,6 +127,7 @@ void teddybb_decode(void)
 
 	sega_decode(convtable);
 }
+*/
 /*==============================================================================================
 Driver Inits
 ===============================================================================================*/
@@ -133,14 +146,14 @@ INT32 Wboy2uInit()
 	CollisionFunction = NULL;
 	return nRet;
 }
-
+/*
 INT32 TeddybbInit()
 {
 	DecodeFunction = teddybb_decode;
 
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }
-
+*/
 
 /*int SeganinuInit()
 {
@@ -153,7 +166,7 @@ int NprincsuInit()
 }
 */
 
-int Flicks2Init()
+INT32 Flicks2Init()
 {
 	return System1Init(2, 0x4000, 1, 0x2000, 6, 0x2000, 2, 0x4000, 1);
 }
