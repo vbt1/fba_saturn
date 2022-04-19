@@ -477,7 +477,7 @@ pDriver[i++] = &BurnDrvRobokid;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlktiger;
 
-//pDriver[i++] = &BurnDrvBlockgal;
+pDriver[i++] = &BurnDrvBlockgal;
 
 pDriver[i++] = &BurnDrvBombjack;
 //pDriver[i++] = &BurnDrvChplftb;
@@ -510,7 +510,7 @@ pDriver[i++] = &BurnDrvPbillrd;
 pDriver[i++] = &BurnDrvhigemaru;
 pDriver[i++] = &BurnDrvPitfall2u;
 pDriver[i++] = &BurnDrvpuckman;
-pDriver[i++] = &BurnDrvRaflesia;
+//pDriver[i++] = &BurnDrvRaflesia;
 //pDriver[i++] = &BurnDrvRaiders5;
 pDriver[i++] = &BurnDrvRobowres;
 pDriver[i++] = &BurnDrvSidearms;

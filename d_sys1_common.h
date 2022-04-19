@@ -27,16 +27,17 @@ void System1Frame();
 //UINT8 *SaturnMem = NULL;
 UINT16 *remap8to16_lut = NULL;
 UINT16 *map_offset_lut = NULL;
-UINT32 *cpu_lut = NULL;
+//UINT32 *cpu_lut = NULL;
 UINT16 *cram_lut = NULL;
-UINT8 *width_lut = NULL;
+//UINT8 *width_lut = NULL;
 UINT16 *spriteCache = NULL;
 UINT8 *CZ80Context = NULL;
 #ifdef SYS2
 UINT16 *map_cache = NULL;
 UINT8 *map_dirty = NULL;
 #endif
-UINT16 *map = NULL;
+//UINT16 *map = NULL;
+//UINT8 *sprbank_lut = NULL;
 typedef int bool;
 
 //typedef struct { UINT8 x, y, width, yend } sprite_collision; 

@@ -6,6 +6,7 @@
 
 #define CZ80 1
 #define RAZE 1  // `EMULATE_R_REGISTER obligatoire
+//#define USE_HANDLER_F 1
 //#define USE_RAZE0 1
 #define USE_RAZE1 1
 #define CPU2_ENABLED 1
@@ -17,16 +18,6 @@
 //modifier CZetSetReadHandler et CZetSetWriteHandler
 //typedef void (*write_func)(unsigned short a, UINT8 d);
 //static write_func p[36];
-
-
-
-
-
-
-
-
-
-
 
 int ovlInit(char *szShortName)
 {
@@ -223,11 +214,11 @@ inline void renderSpriteCache(int *values);
 
 void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
 {
-	int Src = (SpriteBase[7] << 8) | SpriteBase[6];
+	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[Skip];
+	unsigned int Width = (Skip + (7)) & ~(7);
 
-	int values[] ={Src,Height,Skip,Width, Bank,nextSprite};
+	int values[] ={Src,Height,Skip,Width, Bank};
 	renderSpriteCache(values);
 
 	ss_spritePtr->ax		= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
@@ -248,7 +239,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip, SprSpCmd *ss_sp
 void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[Skip];
+	unsigned int Width = (Skip + (7)) & ~(7);
 
 	ss_spritePtr->ax		= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
 	ss_spritePtr->ay		= SpriteBase[0] + 1;
@@ -269,5 +260,5 @@ inline void System1Render()
 	ss_reg->n2_move_x = System1BgScrollX = 256-(((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 6) & 0xff);
 	System1BgScrollY = (-System1ScrollY[0] & 0xff);
 	ss_reg->n2_move_y = System1ScrollY[0];
-	System1DrawSprites();
+	System1DrawSprites(System1SpriteRam);
 }

@@ -36,7 +36,7 @@ extern "C" {
 #endif
 #define CZ80_BIG_FLAGS_ARRAY	0
 #define CZ80_ENCRYPTED_ROM		0
-#define CZ80_USE_WORD_HANDLER   1
+#define CZ80_USE_WORD_HANDLER   0
 #define CZ80_EMULATE_R_EXACTLY	0
 
 #define zR8(A)		(*CPU->pzR8[A])

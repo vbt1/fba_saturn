@@ -50,7 +50,7 @@ struct BurnDriver nBurnDrvRaflesia = {
     if (strcmp(nBurnDrvBlockgal.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvBlockgal,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvGardia.szShortName, szShortName) == 0)		memcpy(shared,&nBurnDrvGardia,sizeof(struct BurnDriver));
     if (strcmp(nBurnDrvStarjack.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvStarjack,sizeof(struct BurnDriver));
-//    if (strcmp(nBurnDrvRaflesia.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvRaflesia,sizeof(struct BurnDriver));
+    if (strcmp(nBurnDrvRaflesia.szShortName, szShortName) == 0)	memcpy(shared,&nBurnDrvRaflesia,sizeof(struct BurnDriver));
 
 	ss_reg    = (SclNorscl *)SS_REG;
 	ss_regs  = (SclSysreg *)SS_REGS;
@@ -163,11 +163,12 @@ Driver Inits
 	CZetSetInHandler(BlockgalZ801PortRead);
 	CZetClose();
 	MakeInputsFunction = BlockgalMakeInputs;
-
+	BurnLoadRom(System1MC8123Key, 14, 1);
+	
 	nCyclesTotal[0] = 3000000 / hz ;
 	nCyclesTotal[1] = 3000000 / hz ;
 
-	for (UINT32 i = 0; i < 10; i++) cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;
+//	for (UINT32 i = 0; i < 10; i++) cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;
 	return nRet;
 }
 
@@ -191,7 +192,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spr
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[ABS(Skip)];
+	unsigned int Width = (ABS(Skip) + (7)) & ~(7); //width_lut[ABS(Skip)];
 	unsigned int values[] ={Src,Height,Skip,Width, Bank, nextSprite};
 	renderSpriteCache(values);
 //	spriteCache[addr]=nextSprite;
@@ -239,7 +240,7 @@ void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *
 {
 //	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[ABS(Skip)];
+	unsigned int Width = (ABS(Skip) + (7)) & ~(7); //width_lut[ABS(Skip)];
 
 	ss_spritePtr->ay			= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2-8;
 	if(flipscreen==2)
@@ -293,6 +294,6 @@ inline void System1Render()
 		ss_reg->n2_move_x = System1ScrollY[0];
 	}
 	System1BgScrollY = (-System1ScrollY[0] & 0xff);
-	System1DrawSprites();
+	System1DrawSprites(System1SpriteRam);
 }
 

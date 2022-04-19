@@ -39,6 +39,13 @@ void CZetSetWriteHandler(void (__fastcall *pHandler)(unsigned short, unsigned ch
 	lastCZetCPUContext->Write_Byte = pHandler;
 //	lastCZetCPUContext->Write_Word = pHandler;
 }
+#if CZ80_USE_WORD_HANDLER
+void CZetSetWrite16Handler(void (__fastcall *pHandler)(unsigned short, unsigned char))
+{
+//	lastCZetCPUContext->Write_Byte = pHandler;
+	lastCZetCPUContext->Write_Word = pHandler;
+}
+#endif
 
 void CZetSetWriteHandler2(unsigned short nStart, unsigned short nEnd,void (*pHandler)(unsigned short, unsigned char))
 {

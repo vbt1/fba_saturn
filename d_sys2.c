@@ -429,7 +429,7 @@ void CommonWbmlInit()
 	nCyclesTotal[0] = 2000000 / hz;
 	nCyclesTotal[1] = 1000000 / hz;
 
-	for (UINT32 i = 0; i < 10; i++) cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;	
+//	for (UINT32 i = 0; i < 10; i++) cpu_lut[i] = (i + 1) * nCyclesTotal[0] / 10;	
 }
 
 #if 0
@@ -442,7 +442,7 @@ INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Num, INT3
 	struct BurnRomInfo ri;
 
 	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
-	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
+	System1SpriteRomSize = (nSpriteRomNum * nSpriteRomSize)-1;
 
 	DrvInitSaturn();
 
@@ -722,7 +722,7 @@ void wbml_draw_bg(UINT8* vram)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void System1Renderx()
 {
-	System1DrawSprites();
+	System1DrawSprites(System1SpriteRam);
 	wbml_draw_bg(&System1VideoRam[0x740]);
 	sdrv_stm_vblank_rq();
 }
@@ -739,8 +739,8 @@ void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spr
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = width_lut[Skip];
-
+	unsigned int Width = (Skip + (7)) & ~(7); //width_lut[Skip];
+	
 	unsigned int values[] ={Src,Height,Skip,Width, Bank, nextSprite};
 //	spriteCache[addr]=nextSprite;
 	renderSpriteCache(values);
@@ -757,7 +757,7 @@ void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spr
 void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width  = width_lut[Skip];
+	unsigned int Width = (Skip + (7)) & ~(7); //width_lut[Skip];
 
 	ss_spritePtr->ax		= 11+ ((((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2);
 	ss_spritePtr->ay		= SpriteBase[0] + 1;
