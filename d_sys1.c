@@ -137,6 +137,7 @@ INT32 Wboy2uInit()
 	CollisionFunction = NULL;
 	return nRet;
 }
+
 /*
 INT32 TeddybbInit()
 {

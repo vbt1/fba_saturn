@@ -355,7 +355,7 @@ UINT8 __fastcall System1Z801PortRead(unsigned short a)
 	return 0;
 }
 
-void __fastcall system1_soundport_w(UINT8 d)
+inline void __fastcall system1_soundport_w(UINT8 d)
 {
 	System1SoundLatch = d;
 	z80_cause_NMI();
@@ -393,24 +393,11 @@ void system1_backgroundram_w(unsigned short a, UINT8 d)
 		RamStart[a] = d;
 		a&=~1;
 		UINT8 *rs = (UINT8 *)(RamStart+a);		
-		int Code;//, Colour;
-		Code = (rs[1] << 8) | rs[0];
-//		Code = (RamStart[a + 1] << 8) | RamStart[a + 0];
+		UINT32 Code = (rs[1] << 8) | rs[0];
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
-		unsigned int x = map_offset_lut[a&0x7ff];
-		UINT16 *map = &ss_map[x]; 
-/*		
-		map2[0] = map2[0x40] = ((Code >> 5) & 0x3f)//	+0x3000;
-//		map[0x40] = map[0x1000] = map[0x1040] = map[x++] = ((Code >> 5) & 0x3f)//	+0x3000;
-																						|(((rs[1] & 0x08)==8)?0x2000:0x0000);//color_lut[Code];
-		map2[1] = map2[0x41] = Code & (System1NumTiles-1);
-//		map[x] = map[0x41] = map[0x1001] = map[0x1041] = Code & (System1NumTiles-1);
-*/
-		map[0] = map[0x40] = map[0x1000] = map[0x1040] = ((Code >> 5) & 0x3f)//	+0x3000;
-															|(((rs[1] & 0x08)==8)?0x2000:0x0000);//color_lut[Code];
-		map[1] = map[0x41] = map[0x1001] = map[0x1041] = Code & (System1NumTiles-1);
-
+		UINT32 *map = SS_MAP+map_offset_lut[a&0x7ff]; 
+		map[0] = map[0x20] = map[0x800] = map[0x820] = (((Code >> 5) & 0x3f)	|(((rs[1] & 0x08)==8)?0x2000:0x0000))<<16|Code & (System1NumTiles-1);
 	}
 }
 
@@ -421,13 +408,11 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 		RamStart1[a] = d;
 		a&=~1;
 
-		unsigned int Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
+		UINT32 Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
-		unsigned int x = map_offset_lut[a&0x7ff];
-		UINT16 *mapf2 = &ss_map2[x];	
-//		UINT16 *mapf2 = &mapf[x];	
-		mapf2[0] = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
+		UINT16 *mapf2 = SS_MAP2+map_offset_lut[a&0x7ff];
+		mapf2[0] = (Code >> 5) & 0x3f;
 		mapf2[1] = Code & (System1NumTiles-1);
 	}
 }
@@ -464,6 +449,7 @@ void system1_paletteram3_w(unsigned short a, UINT8 d)
 #endif
 UINT8 __fastcall System1Z802ProgRead(unsigned int a)
 {
+
 	switch (a) {
 		case 0xe000: {
 			return System1SoundLatch;
@@ -472,31 +458,28 @@ UINT8 __fastcall System1Z802ProgRead(unsigned int a)
 		case 0xffff: {
 			return System1SoundLatch;
 		}
+//		default:
+//			return 0;
 	}
+	
+/*
+	if (a==0xe000)
+		return System1SoundLatch;
+
+	if (a==0xffff)
+		return System1SoundLatch;
+*/	
 	return 0;
 }
 
 void __fastcall System1Z802ProgWrite(unsigned int a, UINT8 d)
 {
-	switch (a) {
-		case 0xa000:
-		case 0xa001:
-		case 0xa002:
-		case 0xa003: {
-			SN76496Write(0, d);
-//			PSG_Write(0,d);
-			return;
-		}
-		
-		case 0xc000:
-		case 0xc001:
-		case 0xc002:
-		case 0xc003: {
-			SN76496Write(1, d);
-//			PSG_Write(1,d);
-			return;
-		}
-	}
+	SN76496Write(0, d);
+}
+
+void __fastcall System1Z802bProgWrite(unsigned int a, UINT8 d)
+{
+	SN76496Write(1, d);
 }
 /*==============================================================================================
 Driver Inits
@@ -530,7 +513,7 @@ void initLayers()
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
-	scfg.plate_addr[0] = (Uint32)ss_map2;
+	scfg.plate_addr[0] = (Uint32)SS_MAP2;
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
@@ -612,7 +595,7 @@ void make_lut(void)
 			sy = ((64-i) & 0x3f)<<5;//% 32;
 		}
 #endif
-		map_offset_lut[i] = ((sx) | sy)<<1;
+		map_offset_lut[i] = ((sx) | sy);
 	}
 
 //	for (i = 0; i < System1NumTiles;i++)code_lut[i] = (((i >> 4) & 0x800) | (i & 0x7ff))& (System1NumTiles-1);
@@ -673,8 +656,8 @@ void DrvInitSaturn()
 	SPR_InitSlaveSH();
 	INT_ChgMsk(INT_MSK_DMA2, INT_MSK_NULL);	
 	nBurnSprites  = 35;
-	SS_MAP    = ss_map =  (Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
-	SS_MAP2   = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
+	SS_MAP    = (Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
+	SS_MAP2   = (Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
 	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
@@ -978,7 +961,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	z80_init_memmap();
 	z80_add_read(0xe000, 0xe001, 1, (void *)&System1Z802ProgRead); 
 	z80_add_write(0xa000, 0xa003, 1, (void *)&System1Z802ProgWrite);
-	z80_add_write(0xc000, 0xc003, 1, (void *)&System1Z802ProgWrite);
+	z80_add_write(0xc000, 0xc003, 1, (void *)&System1Z802bProgWrite);
 	z80_map_read  (0x0000, 0x7fff, System1Rom2);
 	z80_map_fetch (0x0000, 0x7fff, System1Rom2);
 	z80_map_read  (0x8000, 0x87ff, System1Ram2);
@@ -1192,8 +1175,6 @@ inline void renderSpriteCache(int *values)
 //-------------------------------------------------------------------------------------------------------------------------------------
 void System1DrawSprites(UINT8 *System1SpriteRam)
 {
-	UINT8 *SpriteBase;
-	
 	if(CollisionFunction)
 	{
 		memset4_fast(SpriteOnScreenMap, 255, 256 * 256);
@@ -1212,17 +1193,19 @@ void System1DrawSprites(UINT8 *System1SpriteRam)
 		return; // 0xff in first byte of spriteram is sprite-disable mode
 	}
 
-	SpriteBase = System1SpriteRam;
+	UINT8 *SpriteBase = System1SpriteRam;
 	
 	for (UINT16 i = 0; i < 32; ++i) 
 	{
 
 		if (SpriteBase[1] && (SpriteBase[1] - SpriteBase[0] > 0))
 		{	
-			UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
+
 			UINT32 Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
 			Bank &= System1SpriteRomSize;
 			UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
+			UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
+			
 			unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
 
 			if (spriteCache[addr]!=0xFFFF)
