@@ -315,7 +315,6 @@ void Cz80_Init(cz80_struc *CPU)
 	CPU->pzR16[1] = pzDE;
 	CPU->pzR16[2] = pzHL;
 	CPU->pzR16[3] = pzAF;
-
 }
 
 /*--------------------------------------------------------
@@ -334,8 +333,8 @@ INT32 Cz80_Exec(cz80_struc* CPU)
     UINT32 Opcode;
     
     UINT32 adr = 0;
-	UINT32 res;
-	UINT32 val;
+	UINT32 res = 0;
+	UINT32 val = 0;
     
     INT32 nTodo = 0;
 

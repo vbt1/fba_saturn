@@ -78,6 +78,13 @@ void __fastcall ChplftZ801PortWrite(UINT16 a, UINT8 d)
 	}
 }
 */
+
+static void __fastcall system1_soundport_w2(UINT8 d)
+{
+	System1SoundLatch = d;
+	z80_cause_NMI();
+}
+
 void __fastcall System2Z801PortWrite(UINT16 a, UINT8 d)
 {
 	a &= 0x1f;
@@ -366,7 +373,7 @@ int ChplftbInit()
 void CommonWbmlInit()
 {
 	System1SpriteRam = &System1Ram1[0x1000];
-	System1PaletteRam = &System1Ram1[0x1800];	 // ? garder
+//	System1PaletteRam = &System1Ram1[0x1800];	 // ? garder
 
 //	make_cram_lut();
 //	System1CalcPalette();
@@ -393,7 +400,7 @@ void CommonWbmlInit()
 	CZetMapMemory(System1SpriteRam,	0xd000, 0xd7ff, MAP_RAM);
 
 
-  	CZetMapMemory(System1PaletteRam, 0xd800, 0xddff, MAP_READ);
+	CZetMapMemory(&System1Ram1[0x1800], 0xd800, 0xddff, MAP_READ);
 	CZetMapMemory(System1VideoRam,	 0xe000, 0xefff, MAP_ROM);
 
 	CZetMapMemory(System1f4Ram,				0xf400, 0xf7ff, MAP_RAM);
@@ -419,7 +426,7 @@ void CommonWbmlInit()
 	CZetClose();
 
 	ppi8255_init(1);
-	PPI0PortWriteA = system1_soundport_w;
+	PPI0PortWriteA = system1_soundport_w2;
 	PPI0PortWriteB = System2_bankswitch_w;
 	PPI0PortWriteC = System2PPI0WriteC;
 
@@ -631,7 +638,7 @@ INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Num, INT3
 	}
  // VBT saturn S2
 	System1SpriteRam = &System1Ram1[0x1000];
-	System1PaletteRam = &System1Ram1[0x1800];	 // ? garder
+//	System1PaletteRam = &System1Ram1[0x1800];	 // ? garder
 
 	make_cram_lut();
 	System1CalcPalette();

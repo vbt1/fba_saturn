@@ -204,7 +204,9 @@ typedef struct cz80_t
 	
 	unsigned char *pzR8[8];
 	union16 *pzR16[4];
+#ifndef USE_HANDLER_F	
 	write_func wf[0x100];
+#endif
 /*
 	unsigned char (*InnerReadByte)(unsigned short address);
 	unsigned short (*InnerReadWord)(unsigned short address);

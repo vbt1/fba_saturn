@@ -4,6 +4,7 @@
 #include "globals.h"
 #include "czet.h"
 //#define ACB_DRIVER_DATA	 (64)
+//#pragma GCC optimize("O2")
 
 static cz80_struc* CZetCPUContext = NULL;
 //static 

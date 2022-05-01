@@ -122,6 +122,7 @@ void teddybb_decode(void)
 /*==============================================================================================
 Driver Inits
 ===============================================================================================*/
+/*
 INT32 WboyuInit()
 {
 	INT32 nRet = 0;
@@ -129,7 +130,7 @@ INT32 WboyuInit()
 	CollisionFunction = NULL;
 	return nRet;
 }
-
+*/
 INT32 Wboy2uInit()
 {
 	INT32 nRet = 0;
@@ -213,36 +214,27 @@ void fillSpriteCollision(unsigned int Num, int *values)
 */
 inline void renderSpriteCache(int *values);
 
-void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
+inline void DrawSprite(unsigned int Num, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
 {
-	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
+
+	UINT32 Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
+	Bank &= System1SpriteRomSize;
+	UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
+	UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = (Skip + (7)) & ~(7);
+	unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
 
-	int values[] ={Src,Height,Skip,Width, Bank};
-	renderSpriteCache(values);
 
-	ss_spritePtr->ax		= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
-	ss_spritePtr->ay		= SpriteBase[0] + 1;
-	ss_spritePtr->charSize	= (Width<<6) + Height;
-	ss_spritePtr->color		= COLADDR_SPR | ((Num)<<2);
-	ss_spritePtr->charAddr	= 0x220+nextSprite;
-
-	if(CollisionFunction)
+	if (spriteCache[addr]==0xFFFF)
 	{
-	 	int values2[] ={ss_spritePtr->ax,ss_spritePtr->ay,Skip,Height,Num};
-//		fillSpriteCollision(Num,values2);
-		updateCollisions(values2);
+		int values[] ={Src,Height,Skip,Width, Bank};
+		spriteCache[addr]=nextSprite;
+		renderSpriteCache(values);
+		nextSprite+=(Width*Height)/8;
 	}
-	nextSprite+=(Width*Height)/8;
-}
 
-void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
-{
-	unsigned int Height = SpriteBase[1] - SpriteBase[0];
-	unsigned int Width = (Skip + (7)) & ~(7);
-
-	ss_spritePtr->ax		= (((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
+	ss_spritePtr->ax		= 8+(((SpriteBase[3] & 0x01) << 8) + SpriteBase[2] )/2;
 	ss_spritePtr->ay		= SpriteBase[0] + 1;
 	ss_spritePtr->charSize	= (Width<<6) + Height;
 	ss_spritePtr->color		= COLADDR_SPR | ((Num)<<2);
@@ -251,7 +243,6 @@ void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *
 	if(CollisionFunction)
 	{
 		int values[] ={ss_spritePtr->ax,ss_spritePtr->ay,Skip,Height,Num};
-//		fillSpriteCollision(Num,values);
 		updateCollisions(values);
 	}
 }
@@ -259,7 +250,8 @@ void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *
 inline void System1Render()
 {
 	ss_reg->n2_move_x = System1BgScrollX = 256-(((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 6) & 0xff);
-	System1BgScrollY = (-System1ScrollY[0] & 0xff);
+	if(CollisionFunction)
+		System1BgScrollY = (-System1ScrollY[0] & 0xff);// que s'il y a une fonction de collision
 	ss_reg->n2_move_y = System1ScrollY[0];
 	System1DrawSprites(System1SpriteRam);
 }

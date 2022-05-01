@@ -1415,7 +1415,7 @@ inline int DoInputBlank()
 		gi[7].pVal = bii.pVal;
 		gi[7].nType = bii.nType;
     }
-    else {
+ /*   else {
 	sprintf(controlName,"p%i fire 3",iJoyNum+1);
     if (strcmp(bii.szInfo, controlName) == 0)
     {
@@ -1446,7 +1446,8 @@ inline int DoInputBlank()
     	gi[11].nBit = 11;
 		gi[11].pVal = bii.pVal;
 		gi[11].nType = bii.nType;
-    }}}}}}}}}}}}
+    }}}}} */
+	}}}}}}}
   }
   return 0;
 }

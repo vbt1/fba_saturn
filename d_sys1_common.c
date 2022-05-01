@@ -261,7 +261,7 @@ inline void MemIndex()
 	System1Ram1            = Next; Next += 0x002100;
 	System1Ram2            = Next; Next += 0x000800;
 	System1SpriteRam       = Next; Next += 0x000200;
-	System1PaletteRam      = Next; Next += 0x000600;
+//	System1PaletteRam      = Next; Next += 0x000600;
 	System1BgRam           = Next; Next += 0x000800;
 //	System1VideoRam        = Next; Next += 0x000700;
 	System1VideoRam        = Next; Next += 0x004000;
@@ -429,22 +429,25 @@ void system1_sprcollisionram_w(unsigned short a, UINT8 d)
 void system1_paletteram_w(unsigned short a, UINT8 d)
 {
 	a&= 0x1ff;
-	if(System1PaletteRam[a]!=d)
-		{colAddr[a] = cram_lut[d];	System1PaletteRam[a] = d;}
+//	if(System1PaletteRam[a]!=d)
+//		{colAddr[a] = cram_lut[d];	System1PaletteRam[a] = d;}
+		{colAddr[a] = cram_lut[d];}//	System1PaletteRam[a] = d;}
 }
 
 void system1_paletteram2_w(unsigned short a, UINT8 d)
 {
 	a&= 0x3ff;
-	if(System1PaletteRam[a]!=d)
-		{colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];	System1PaletteRam[a] = d;}
+//	if(System1PaletteRam[a]!=d)
+//		{colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];	System1PaletteRam[a] = d;}
+		{colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];}
 }
 
 void system1_paletteram3_w(unsigned short a, UINT8 d)
 {
 	a&= 0x5ff;	
-	if(System1PaletteRam[a]!=d)
-		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d]; System1PaletteRam[a] = d;}
+//	if(System1PaletteRam[a]!=d)
+//		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d]; System1PaletteRam[a] = d;}
+		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d];}
 }
 #endif
 UINT8 __fastcall System1Z802ProgRead(unsigned int a)
@@ -772,23 +775,26 @@ void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 	}
 	if (a >= 0xd800 && a <= 0xd9ff) 
 	{ 	a&= 0x1ff;
-		if(System1PaletteRam[a]!=d)
-		{colAddr[a] = cram_lut[d];	System1PaletteRam[a] = d;} 
+//		if(System1PaletteRam[a]!=d)
+//		{colAddr[a] = cram_lut[d];	System1PaletteRam[a] = d;} 
+		{colAddr[a] = cram_lut[d];} 
 		return; 
 	}
 	if (a >= 0xda00 && a <= 0xdbff) 
 	{
 		a&= 0x3ff;
-		if(System1PaletteRam[a]!=d)
-		{colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];	System1PaletteRam[a] = d;} 
+//		if(System1PaletteRam[a]!=d)
+//		{colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];	System1PaletteRam[a] = d;} 
+		{colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];} 
 		return;
 	}
 
 	if (a >= 0xdc00 && a <= 0xddff) 
 	{	
 		a&= 0x5ff;	
-		if(System1PaletteRam[a]!=d)
-		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d]; System1PaletteRam[a] = d;}
+//		if(System1PaletteRam[a]!=d)
+//		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d]; System1PaletteRam[a] = d;}
+		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d];}
 	}
 }
 #endif
@@ -997,7 +1003,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 	}
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1CalcPalette                     ",20,100);
 	
-	System1CalcPalette();
+//	System1CalcPalette();
 
 	System1efRam[0xfe] = 0x4f;
 	System1efRam[0xff] = 0x4b;
@@ -1089,6 +1095,7 @@ void updateCollisions(int *values)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+/*
 void System1CalcPalette()
 {
 	unsigned int delta=0;		
@@ -1097,9 +1104,6 @@ void System1CalcPalette()
 
 	for (int i = 511; i > 0; i--) 
 	{
-/*		colAddr[i]				    = cram_lut[System1PaletteRam[i]];
-		colBgAddr[delta]		= cram_lut[*System1PaletteRam512++];
-		colBgAddr2[delta]		= cram_lut[*System1PaletteRam1024++];	  */
 		colAddr[i]				= cram_lut[System1PaletteRam[i]];
 		colBgAddr[delta]		= cram_lut[*System1PaletteRam512];
 		++System1PaletteRam512;
@@ -1108,6 +1112,7 @@ void System1CalcPalette()
 		delta++; if ((delta & 7) == 0) delta += 8;  
 	}
 }
+*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void renderSpriteCache(int *values)
 //(int Src,unsigned int Height,INT16 Skip,unsigned int Width, int Bank)
@@ -1173,7 +1178,7 @@ inline void renderSpriteCache(int *values)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void System1DrawSprites(UINT8 *System1SpriteRam)
+static inline void System1DrawSprites(UINT8 *System1SpriteRam)
 {
 	if(CollisionFunction)
 	{
@@ -1200,7 +1205,7 @@ void System1DrawSprites(UINT8 *System1SpriteRam)
 
 		if (SpriteBase[1] && (SpriteBase[1] - SpriteBase[0] > 0))
 		{	
-
+/*
 			UINT32 Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
 			Bank &= System1SpriteRomSize;
 			UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
@@ -1215,6 +1220,8 @@ void System1DrawSprites(UINT8 *System1SpriteRam)
 				 spriteCache[addr]=nextSprite;
 				 DrawSprite(i,Bank,Skip,ss_spritePtr,SpriteBase);
 			}
+			*/
+			DrawSprite(i,ss_spritePtr,SpriteBase);
 		}
 		else
 		{
@@ -1280,6 +1287,7 @@ void System1Frame()
 {
 	MakeInputsFunction();
 	unsigned int nCyclesDone[2] = {0,0};
+#if 0
 	SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
 		
 	for (UINT32 i = 0; i < nInterleave; i++) {
@@ -1317,6 +1325,38 @@ void System1Frame()
 		}
 #endif
 	}
+
+#else
+	const UINT32 nNext0 = nCyclesTotal[0] / nInterleave;
+	const UINT32 nNext1 = nCyclesTotal[1] / nInterleave;
+	
+	SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
+		
+	for (UINT32 i = 0; i < nInterleave; i++) {
+	
+#ifdef CZ80
+		CZetRun(nNext0);
+		if (i == 9) CZetRaiseIrq(0);
+#endif
+
+#ifdef USE_RAZE1
+		 z80_emulate(nNext1);
+
+		if (i == 2 || i == 4 || i == 6 || i == 8) 
+		{
+			z80_raise_IRQ(0);
+			z80_emulate(1);
+//			z80_lower_IRQ(0);
+			z80_lower_IRQ();
+			z80_emulate(1);
+		}
+#endif
+
+
+
+	}
+#endif
+
 
 	System1Render();
 #ifndef PONY
