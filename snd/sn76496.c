@@ -2,6 +2,8 @@
 #include "../burn_sound.h"
 #include "sn76496.h"
 
+//#define USE_LUT 1
+
 #define MAX_SN76496_CHIPS 4
 
 #define MAX_OUTPUT 0x4FFF//0x7fff
@@ -11,15 +13,19 @@
 struct SN76496
 {
 	unsigned int UpdateStep;
+#ifdef 	USE_LUT
+	UINT32 PSG_Step_Table[1024];
+	UINT32 PSG_Noise_Step_Table[4];
+#endif	
 	UINT16 VolTable[16];	/* volume table         */
 	UINT16 Register[8];	/* registers */
 	UINT16 LastRegister;	/* last register written */
 	UINT16 Volume[4];	/* volume of voice 0-2 and noise */
 	UINT16 RNG;		/* noise generator      */
-	UINT16 NoiseMode;	/* active noise mode */
+	UINT8 NoiseMode;	/* active noise mode */
 	UINT16 FeedbackMask;     /* mask for feedback */
-	UINT16 WhitenoiseTaps;   /* mask for white noise taps */
-	UINT16 WhitenoiseInvert; /* white noise invert flag */
+	UINT8 WhitenoiseTaps;   /* mask for white noise taps */
+	UINT8 WhitenoiseInvert; /* white noise invert flag */
 	INT32 Period[4];
 	INT32 Count[4];
 	INT32 Output[4];
@@ -186,7 +192,11 @@ void SN76496Write(int Num, int Data)
 	
 	c = r / 2;
 
-#if 0
+//#define USE_SWITCH 1
+//#define USE_DISPATCHER 1
+#define USE_IF 1
+
+#ifdef USE_SWITCH
 	switch (r)
 	{
 		case 0:	/* tone 0 : frequency */
@@ -194,8 +204,12 @@ void SN76496Write(int Num, int Data)
 		case 4:	/* tone 2 : frequency */
 		    if ((Data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x0f) | ((Data & 0x3f) << 4);
 
+#ifdef USE_LUT
+			R->Period[c] = R->PSG_Step_Table[R->Register[r]];
+#else
 			R->Period[c] = R->UpdateStep * R->Register[r];
 			if (R->Period[c] == 0) R->Period[c] = R->UpdateStep;
+#endif
 			if (r == 4)
 			{
 				/* update noise shift frequency */
@@ -224,7 +238,54 @@ void SN76496Write(int Num, int Data)
 			}
 			break;
 	}
+#endif
+
+#ifdef USE_IF
+        if (r & 1)
+        {
+	        R->Volume[c] = R->VolTable[Data & 0x0f];
+			if ((Data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x3f0) | (Data & 0x0f);			
+		}
+		else
+		{
+			if(c!=3)
+			{
+				if ((Data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x0f) | ((Data & 0x3f) << 4);
+
+#ifdef USE_LUT
+				R->Period[c] = R->PSG_Step_Table[R->Register[r]];
 #else
+				R->Period[c] = R->UpdateStep * R->Register[r];
+				if (R->Period[c] == 0) R->Period[c] = R->UpdateStep;
+#endif	
+				if (c == 2)
+				{
+					/* update noise shift frequency */
+					if ((R->Register[6] & 0x03) == 0x03)
+						R->Period[3] = 2 * R->Period[2];
+				}			
+			}
+			else
+			{
+			    if ((Data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x3f0) | (Data & 0x0f);
+				n = R->Register[6];
+				R->NoiseMode = (n & 4) ? 1 : 0;
+				/* N/512,N/1024,N/2048,Tone #3 output */
+#ifdef USE_LUT
+				R->PSG_Noise_Step_Table[3] = 2 * R->Period[2];
+				R->Period[3] = R->PSG_Noise_Step_Table[Data & 3];
+#else
+				R->Period[3] = ((n&3) == 3) ? 2 * R->Period[2] : (R->UpdateStep << (5+(n&3)));
+#endif
+			        /* Reset noise shifter */
+				R->RNG = R->FeedbackMask; /* this is correct according to the smspower document */
+				//R->RNG = 0xF35; /* this is not, but sounds better in do run run */
+				R->Output[3] = R->RNG & 1;				
+			}
+		}
+#endif
+
+#ifdef USE_DISPATCHER
 static void (*const reg[8])(void) = {&&lbl00,&&lbl01,&&lbl00,&&lbl01,&&lbl00,&&lbl01,&&lbl06,&&lbl01};
 #define DISPATCH() goto *reg[r]
 
@@ -236,8 +297,12 @@ lbl00:
 /* tone 2 : frequency */
 		    if ((Data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x0f) | ((Data & 0x3f) << 4);
 
+#ifdef USE_LUT
+			R->Period[c] = R->PSG_Step_Table[R->Register[r]];
+#else
 			R->Period[c] = R->UpdateStep * R->Register[r];
-			if (R->Period[c] == 0) R->Period[c] = R->UpdateStep;
+			if (R->Period[c] == 0) R->Period[c] = R->UpdateStep;	
+#endif
 			if (r == 4)
 			{
 				/* update noise shift frequency */
@@ -265,10 +330,9 @@ lbl06:	/* noise  : frequency, mode */
 				//R->RNG = 0xF35; /* this is not, but sounds better in do run run */
 				R->Output[3] = R->RNG & 1;
 			}
-
-#endif	
 end:
 ;
+#endif	
 }
 #if 1
 /*static*/ void SN76496SetGain(struct SN76496 *R,int Gain)
@@ -278,7 +342,7 @@ end:
 	Gain &= 0xff;
 
 	/* increase max output basing on gain (0.2 dB per step) */
-	Out = MAX_OUTPUT / 3;
+    Out = (double) MAX_OUTPUT / 3.0;
 //	while (Gain-- > 0)
 //		Out *= ((double)1.023292992);	/* = (10 ^ (0.2/20)) */
 
@@ -339,6 +403,7 @@ void SN76496Reset(INT32 Num)
 /*static*/ void SN76496Init2(struct SN76496 *R, unsigned int Clock)
 {
 	unsigned int i;
+	double out;
 	R->UpdateStep = (unsigned int)(((double)STEP * nBurnSoundRate * 16) / Clock);
 	R->Volume[0] = R->Volume[1] = R->Volume[2] = R->Volume[3] = 0;
 
@@ -363,6 +428,25 @@ void SN76496Reset(INT32 Num)
 	
 	R->RNG = R->FeedbackMask;
 	R->Output[3] = R->RNG & 1;
+	
+#ifdef USE_LUT	
+    for(i = 1; i < 1024; i++)
+    {
+        // Step calculation
+		out = R->UpdateStep * i;
+        R->PSG_Step_Table[i] = (unsigned int) out;
+    }
+
+    R->PSG_Step_Table[0] = R->PSG_Step_Table[1];
+	
+    for(i = 0; i < 3; i++)
+    {
+        out = (double) (Clock) / (double) (1 << (9 + i));
+        R->PSG_Noise_Step_Table[i] = (unsigned int) out;
+    }
+
+   R->PSG_Noise_Step_Table[3] = 0;
+#endif   
 }
 
 /*static*/ void GenericStart(int Num, int Clock, int FeedbackMask, int NoiseTaps, int NoiseInvert, int SignalAdd)

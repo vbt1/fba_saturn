@@ -5,6 +5,7 @@
 	CZ80 opcodeジャンプテーブル
 
 ******************************************************************************/
+#pragma GCC optimize("Os")
 
 /*static*/ const void *JumpTable[0x100] =
 {

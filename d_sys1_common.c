@@ -311,8 +311,8 @@ int System1DoReset()
 	z80_reset();
 
 	System1ScrollX[0] = System1ScrollX[1] = System1ScrollY[0] = 0;
-	System1BgScrollX = 0;
-	System1BgScrollY = 0;
+//	System1BgScrollX = 0;
+//	System1BgScrollY = 0;
 	System1VideoMode = 0;
 //	System1FlipScreen = 0;
 	System1SoundLatch = 0;
@@ -1060,6 +1060,9 @@ void updateCollisions(int *values)
 	int yend=y+values[3];
 	int Num=values[4];
 
+	int System1BgScrollY = (-System1ScrollY[0] & 0xff);// que s'il y a une fonction de collision
+	int System1BgScrollX = 256-ss_reg->n2_move_x; //((System1ScrollX[0] | (System1ScrollX[1] << 8)) & 0x1ff) ;
+	
 //	int y256;
 	if(y < 0) y = 0;
 	UINT8 *tmp= &SpriteOnScreenMap[(y<<8)+x];
@@ -1200,33 +1203,16 @@ static inline void System1DrawSprites(UINT8 *System1SpriteRam)
 
 	UINT8 *SpriteBase = System1SpriteRam;
 	
-	for (UINT16 i = 0; i < 32; ++i) 
+	for (UINT16 i = 0; i < 32; i++) 
 	{
 
 		if (SpriteBase[1] && (SpriteBase[1] - SpriteBase[0] > 0))
 		{	
-/*
-			UINT32 Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
-			Bank &= System1SpriteRomSize;
-			UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
-			UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
-			
-			unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
-
-			if (spriteCache[addr]!=0xFFFF)
-				DrawSpriteCache(i,addr,Skip,ss_spritePtr,SpriteBase);
-			else
-			{
-				 spriteCache[addr]=nextSprite;
-				 DrawSprite(i,Bank,Skip,ss_spritePtr,SpriteBase);
-			}
-			*/
 			DrawSprite(i,ss_spritePtr,SpriteBase);
 		}
 		else
 		{
 			ss_spritePtr->ax = ss_spritePtr->ay = ss_spritePtr->charSize = ss_spritePtr->charAddr = 0;
-//			sprites_collision[i].width=0;
 		}
 
 		ss_spritePtr++;
@@ -1261,7 +1247,8 @@ void renderSound(unsigned int *xxxxx)
 	}
 
 #endif	
-//	System1Render();
+	System1Render();
+//	_spr2_transfercommand();	
 //	nSoundBufferPos[0]+= nSegmentLength;
 	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = deltaSlave;
 }
@@ -1286,8 +1273,9 @@ void System1Frame()
 #endif
 {
 	MakeInputsFunction();
-	unsigned int nCyclesDone[2] = {0,0};
+
 #if 0
+	unsigned int nCyclesDone[2] = {0,0};
 	SPR_RunSlaveSH((PARA_RTN*)renderSound,&nSoundBufferPos);
 		
 	for (UINT32 i = 0; i < nInterleave; i++) {
@@ -1357,8 +1345,7 @@ void System1Frame()
 	}
 #endif
 
-
-	System1Render();
+//	System1Render();
 #ifndef PONY
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)//0x4800-nSegmentLength)//
 	{
@@ -1366,19 +1353,10 @@ void System1Frame()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
-#else
-
-/*	nSoundBufferPos+=nBurnSoundLen;
-	
-	if(nSoundBufferPos>=nBurnSoundLen*10)
-	{
-		pcm_play(pcm1, PCM_SEMI, 7);
-		nSoundBufferPos=0;
-	}*/
 #endif
 // evite plantage sur teddy boy	
-	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		SPR_WaitEndSlaveSH();
+//	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//		SPR_WaitEndSlaveSH();
 	
 #ifdef PONY
 /*
@@ -1391,8 +1369,8 @@ void System1Frame()
 	SclProcess = 1;	
 	frame_x++;
 
-//	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
-//		SPR_WaitEndSlaveSH();	
+	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
+		SPR_WaitEndSlaveSH();	
 
 //	 if(frame_x>=frame_y)
 //		wait_vblank();	

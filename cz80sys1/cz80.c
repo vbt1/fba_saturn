@@ -8,7 +8,9 @@
  * (Modified by NJ)
  *
  *****************************************************************************/
+//#pragma GCC optimize("O2")
 
+//#pragma GCC target("popcnt,lzcnt")
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

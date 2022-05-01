@@ -214,17 +214,17 @@ void fillSpriteCollision(unsigned int Num, int *values)
 */
 inline void renderSpriteCache(int *values);
 
-inline void DrawSprite(unsigned int Num, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
+void DrawSprite(unsigned int Num, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
 {
 
+	UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
+	UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
 	UINT32 Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
 	Bank &= System1SpriteRomSize;
-	UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
-	UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
+	
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = (Skip + (7)) & ~(7);
 	unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
-
 
 	if (spriteCache[addr]==0xFFFF)
 	{
@@ -249,9 +249,7 @@ inline void DrawSprite(unsigned int Num, SprSpCmd *ss_spritePtr,UINT8 *SpriteBas
 
 inline void System1Render()
 {
-	ss_reg->n2_move_x = System1BgScrollX = 256-(((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 6) & 0xff);
-	if(CollisionFunction)
-		System1BgScrollY = (-System1ScrollY[0] & 0xff);// que s'il y a une fonction de collision
+	ss_reg->n2_move_x = 256-(((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 6) & 0xff);
 	ss_reg->n2_move_y = System1ScrollY[0];
 	System1DrawSprites(System1SpriteRam);
 }

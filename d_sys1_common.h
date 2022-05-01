@@ -89,8 +89,8 @@ UINT8 *System1Fetch1          = NULL;
 UINT8 *System1ScrollX		 = NULL;
 UINT8 *System1ScrollY		 = NULL;
 
-int System1BgScrollX = 0;
-int System1BgScrollY = 0;
+//int System1BgScrollX = 0;
+//int System1BgScrollY = 0;
 UINT8 System1VideoMode = 0;
 
 UINT8 System1SoundLatch = 0;
