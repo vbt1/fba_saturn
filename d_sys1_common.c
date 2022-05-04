@@ -268,8 +268,11 @@ inline void MemIndex()
 	System1BgRam           = Next; Next += 0x000800;
 //	System1VideoRam        = Next; Next += 0x000700;
 	System1VideoRam        = Next; Next += 0x004000;
+#ifndef SYS2	
 	RamStart1 = RamStart	= System1VideoRam-0xe800;
+
 	System1ScrollXRam	   = System1VideoRam + 0x7C0;
+#endif	
 	System1BgCollisionRam  = Next; Next += 0x000400;
 	System1SprCollisionRam = Next; Next += 0x000400;
 	System1deRam           = Next; Next += 0x000200;
@@ -386,6 +389,7 @@ void __fastcall System1Z801PortWrite(unsigned short a, UINT8 d)
 		case 0x1c: return; // NOP
 	}
 }
+#ifndef SYS2
 #ifndef  USE_HANDLER_F
 void system1_backgroundram_w(unsigned short a, UINT8 d)
 {	 
@@ -418,6 +422,8 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 		mapf2[1] = Code & (System1NumTiles-1);
 	}
 }
+#endif
+#endif
 
 void system1_bgcollisionram_w(unsigned short a, UINT8 d)
 {
@@ -451,7 +457,8 @@ void system1_paletteram3_w(unsigned short a, UINT8 d)
 //		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d]; System1PaletteRam[a] = d;}
 		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d];}
 }
-#endif
+
+
 UINT8 __fastcall System1Z802ProgRead(unsigned int a)
 {
 
@@ -708,6 +715,7 @@ void DrvInitSaturn()
 #endif		
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifndef SYS2
 #ifdef USE_HANDLER_F
 void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 {
@@ -770,6 +778,8 @@ void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 		colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d];
 	}
 }
+#endif
+
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2Size, int nTileRomNum, int nTileRomSize, int nSpriteRomNum, int nSpriteRomSize, bool bReset)
@@ -894,15 +904,22 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 //	CZetSetWriteHandler(System1Z801ProgWrite);
 
 #ifdef USE_HANDLER_F
+#ifndef SYS2
 	CZetSetWriteHandler(System1Z801ProgWrite);
+#else
+void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d);	
+
+	CZetSetWriteHandler(System2Z801ProgWrite);
+#endif 
+
 #else
 	CZetSetWriteHandler2(0xd800, 0xd9ff,system1_paletteram_w);
 	CZetSetWriteHandler2(0xda00, 0xdbff,system1_paletteram2_w);
 	CZetSetWriteHandler2(0xdc00, 0xddff,system1_paletteram3_w);
-	
+#ifndef SYS2	
 	CZetSetWriteHandler2(0xe000,0xe7ff,system1_backgroundram_w);
 	CZetSetWriteHandler2(0xe800,0xefff,system1_foregroundram_w);	
-	
+#endif	
 	CZetSetWriteHandler2(0xf000,0xf3ff,system1_bgcollisionram_w);
 	CZetSetWriteHandler2(0xf800,0xfbff,system1_sprcollisionram_w);
 #endif
@@ -926,9 +943,11 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 //	CZetMapArea(0xd800, 0xddff, 1, System1PaletteRam);
 //	CZetMapArea(0xd800, 0xddff, 2, System1PaletteRam);
 	CZetMapMemory(System1deRam,0xde00, 0xdfff, MAP_RAM);
-	CZetMapMemory(System1BgRam,0xe000, 0xe7ff, MAP_ROM);	
+#ifndef SYS2	
+	CZetMapMemory(System1BgRam,0xe000, 0xe7ff, MAP_ROM);
 	CZetMapMemory(System1VideoRam,0xe800, 0xeeff, MAP_ROM);
 	CZetMapMemory(System1efRam,0xef00, 0xefff, MAP_RAM);	
+#endif
 	CZetMapMemory(System1BgCollisionRam,0xf000, 0xf3ff, MAP_ROM);
 	CZetMapMemory(System1f4Ram,0xf400, 0xf7ff, MAP_RAM);
 	CZetMapMemory(System1SprCollisionRam,0xf800, 0xfbff, MAP_ROM);

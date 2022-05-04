@@ -6,7 +6,7 @@
 
 #define CZ80 1
 #define RAZE 1  // `EMULATE_R_REGISTER obligatoire
-//#define USE_HANDLER_F 1
+#define USE_HANDLER_F 1
 //#define USE_RAZE0 1
 #define USE_RAZE1 1
 #define CPU2_ENABLED 1

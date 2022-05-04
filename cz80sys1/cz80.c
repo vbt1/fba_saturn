@@ -122,8 +122,8 @@
 		if ( ptr ) ptr[A] = D;										\
 		else {														\
 			CPU->PC = PC;											\
-/*			CPU->Write_Byte(A, D);	*/							\
-			CPU->wf[A>>8](A, D); 							\
+			CPU->Write_Byte(A, D);								\
+/*			CPU->wf[A>>8](A, D); */							\
 		}															\
 	}
 	
@@ -144,11 +144,17 @@
 #define WRITE_MEM16(A, D)											\
 	{																\
 		UINT8 * ptr = CPU->Write[(A) >> CZ80_FETCH_SFT];			\
+		if ( ptr ) {												\		
 			if ( !(A & 1))	{										\
 			((UINT16 *)ptr)[A>>1] = __builtin_bswap16(D);}			\
 			else {													\
 			ptr[A] = D;												\
 			ptr[(A)+1] = (D) >> 8; }								\
+		} else {													\
+			CPU->PC = PC;											\
+			CPU->Write_Byte(A, D);									\
+			CPU->Write_Byte((A)+1, (D) >> 8);						\
+		}															\
 	}
 	
 /*
