@@ -102,10 +102,13 @@
 	}
 */
 
+
+
 #define READ_MEM16(A, D)											\
 	{																\
 		UINT8 * ptr = CPU->Read[(A) >> CZ80_FETCH_SFT];				\
 		if ( ptr ) {												\
+			if ( !(A & 1))	{ D=__builtin_bswap16((((UINT16 *)ptr)[A>>1]));	}else			\
 			D = ptr[A] | (ptr[(A)+1] << 8);							\
 		} else {													\
 			CPU->PC = PC;											\
@@ -119,10 +122,11 @@
 		if ( ptr ) ptr[A] = D;										\
 		else {														\
 			CPU->PC = PC;											\
-/*			CPU->Write_Byte(A, D);*/								\
-			CPU->wf[A>>8](A, D);								\
+/*			CPU->Write_Byte(A, D);	*/							\
+			CPU->wf[A>>8](A, D); 							\
 		}															\
 	}
+	
 /*
 #define WRITE_MEM16(A, D)											\
 	{																\
@@ -140,17 +144,13 @@
 #define WRITE_MEM16(A, D)											\
 	{																\
 		UINT8 * ptr = CPU->Write[(A) >> CZ80_FETCH_SFT];			\
-		if ( ptr ) {												\
+			if ( !(A & 1))	{										\
+			((UINT16 *)ptr)[A>>1] = __builtin_bswap16(D);}			\
+			else {													\
 			ptr[A] = D;												\
-			ptr[(A)+1] = (D) >> 8;									\
-		} else {													\
-			CPU->PC = PC;											\
-			/*CPU->Write_Byte(A, D);*/									\
-			/*CPU->Write_Byte((A)+1, (D) >> 8);*/						\
-			CPU->wf[A>>8](A, D);								\
-			CPU->wf[A>>8]((A)+1, (D) >> 8);								\
-		}															\
+			ptr[(A)+1] = (D) >> 8; }								\
 	}
+	
 /*
 #define WRITE_MEM16(A, D)											\
 	{																\
@@ -165,8 +165,11 @@
 		zSP -= 2; 													\
 		ptr = CPU->Write[(zSP) >> CZ80_FETCH_SFT];					\
 		if ( ptr ) {												\
+			if ( !(zSP & 1))	{									\
+			((UINT16 *)ptr)[zSP>>1] = __builtin_bswap16(A);}				\
+			else {													\
 			ptr[zSP] = A;											\
-			ptr[(zSP)+1] = (A) >> 8;								\
+			ptr[(zSP)+1] = (A) >> 8;}								\
 		}															\
 	}
 

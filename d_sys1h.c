@@ -188,7 +188,8 @@ Driver Inits
 /*==============================================================================================
 Graphics Rendering
 ===============================================================================================*/
-void DrawSprite(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
+
+void DrawSpriteOld(unsigned int Num,unsigned int Bank, UINT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *SpriteBase)
 {
 	unsigned int Src = (SpriteBase[7] << 8) | SpriteBase[6];
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
@@ -281,19 +282,40 @@ void DrawSpriteCache(int Num,int addr,INT16 Skip,SprSpCmd *ss_spritePtr, UINT8 *
 //	SPR_RunSlaveSH((PARA_RTN*)updateCollisions,&values);
 }
 
+inline void renderSpriteCache(int *values);
+
+void DrawSprite(unsigned int Num, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
+{
+	UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
+	UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
+	UINT32 Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
+	Bank &= System1SpriteRomSize;
+	
+	unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
+
+	if (spriteCache[addr]!=0xFFFF)
+	{
+		DrawSpriteCache(Num,addr,Skip,ss_spritePtr,SpriteBase);
+	}
+	else
+	{
+		spriteCache[addr]=nextSprite;		
+		DrawSpriteOld(Num,Bank, Skip,ss_spritePtr, SpriteBase);		
+	}
+}
+
 inline void System1Render()
 {
 	if(flipscreen==1)	
 	{
-		ss_reg->n2_move_y = System1BgScrollX = 256-(((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 6) & 0xff);
+		ss_reg->n2_move_y = 256-(((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 6) & 0xff);
 		ss_reg->n2_move_x = System1ScrollY[0]+8;
 	}
 	else 
 	{
-		ss_reg->n2_move_y = System1BgScrollX = (((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 6) & 0xff) + 16;
+		ss_reg->n2_move_y = (((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 6) & 0xff) + 16;
 		ss_reg->n2_move_x = System1ScrollY[0];
 	}
-	System1BgScrollY = (-System1ScrollY[0] & 0xff);
 	System1DrawSprites(System1SpriteRam);
 }
 

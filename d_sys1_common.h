@@ -19,7 +19,7 @@
 #define COLADDR_SPR	(COLADDR>>3)
 //#define SC_RELEASE 1
 
-typedef void (*write_func)(unsigned short a, UINT8 d);
+//typedef void (*write_func)(unsigned short a, UINT8 d);
 
 inline void System1CalcPalette();
 int System1Exit();
@@ -71,7 +71,9 @@ UINT8 *System1PromBlue        = NULL;
 UINT8 *System1Ram1            = NULL;
 UINT8 *System1Ram2            = NULL;
 UINT8 *System1SpriteRam       = NULL;
-//UINT8 *System1PaletteRam      = NULL;
+#ifdef SYS2
+UINT8 *System1PaletteRam      = NULL;
+#endif
 UINT8 *System1BgRam           = NULL;
 UINT8 *System1VideoRam        = NULL;
 UINT8 *System1ScrollXRam      = NULL;

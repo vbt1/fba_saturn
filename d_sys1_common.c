@@ -11,6 +11,7 @@ int pcm1=-1;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
 extern unsigned short frame_y;
+static inline void DrawSprite(unsigned int Num, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase);
 //UINT16 map[0x1000];
 #endif
 
@@ -261,7 +262,9 @@ inline void MemIndex()
 	System1Ram1            = Next; Next += 0x002100;
 	System1Ram2            = Next; Next += 0x000800;
 	System1SpriteRam       = Next; Next += 0x000200;
-//	System1PaletteRam      = Next; Next += 0x000600;
+#ifdef SYS2
+	System1PaletteRam      = Next; Next += 0x000600;
+#endif
 	System1BgRam           = Next; Next += 0x000800;
 //	System1VideoRam        = Next; Next += 0x000700;
 	System1VideoRam        = Next; Next += 0x004000;
@@ -291,10 +294,10 @@ inline void MemIndex()
 #ifdef SYS2
 	map_cache			= (UINT16 *)Next; Next += 0x4000 * sizeof(UINT32); // 4 banks de 4096
 	map_dirty			= Next; Next += 0x0008;
-#endif
-//SZHVC_add= (UINT8 *)LOWADDR+0x80000;
-//SZHVC_sub= (UINT8 *)LOWADDR+0x80000+(256*256*2);
+	spriteCache = (UINT16*)(0x00200000);
+#else
 	spriteCache 		= (UINT16 *)Next; Next += 0x20000;
+#endif
 	CZ80Context			= Next; Next += 2*sizeof(cz80_struc);
 
 //	spriteCache = (UINT16*)(0x00200000);
@@ -383,7 +386,6 @@ void __fastcall System1Z801PortWrite(unsigned short a, UINT8 d)
 		case 0x1c: return; // NOP
 	}
 }
-//unsigned short ss_mapx[0x4000];
 #ifndef  USE_HANDLER_F
 void system1_backgroundram_w(unsigned short a, UINT8 d)
 {	 
@@ -393,7 +395,7 @@ void system1_backgroundram_w(unsigned short a, UINT8 d)
 		RamStart[a] = d;
 		a&=~1;
 		UINT8 *rs = (UINT8 *)(RamStart+a);		
-		UINT32 Code = (rs[1] << 8) | rs[0];
+		UINT16 Code = __builtin_bswap16(*((UINT16 *)rs));
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		UINT32 *map = SS_MAP+map_offset_lut[a&0x7ff]; 
@@ -407,8 +409,8 @@ void system1_foregroundram_w(unsigned short a, UINT8 d)
 	{
 		RamStart1[a] = d;
 		a&=~1;
-
-		UINT32 Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
+		UINT8 *rs = (UINT8 *)(RamStart1+a);
+		UINT16 Code = __builtin_bswap16(*((UINT16 *)rs));
 		Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
 		UINT16 *mapf2 = SS_MAP2+map_offset_lut[a&0x7ff];
@@ -520,22 +522,14 @@ void initLayers()
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
-//	scfg.dispenbl      = ON;
-//	scfg.charsize      = SCL_CHAR_SIZE_1X1;//OK du 1*1 surtout pas toucher
 //	scfg.pnamesize     = SCL_PN2WORD;
 	scfg.platesize     = SCL_PL_SIZE_2X1; // ou 2X2 ?
-//	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-//	scfg.datatype      = SCL_CELL;
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
 	scfg.plate_addr[1] = (Uint32)SS_MAP; //+0x1000;
-//	scfg.plate_addr[2] = (Uint32)ss_map+0x1000;
-//	scfg.plate_addr[3] = (Uint32)ss_map+0x1000;
-//	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
 //	scfg.dispenbl 		 = ON;
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
-//	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
 	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
@@ -717,16 +711,6 @@ void DrvInitSaturn()
 #ifdef USE_HANDLER_F
 void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 {
-/*
-	Line 862: 	CZetSetWriteHandler2(0xd800, 0xd9ff,system1_paletteram_w);
-	Line 863: 	CZetSetWriteHandler2(0xda00, 0xdbff,system1_paletteram2_w);
-	Line 864: 	CZetSetWriteHandler2(0xdc00, 0xddff,system1_paletteram3_w);
-	Line 866: 	CZetSetWriteHandler2(0xe000,0xe7ff,system1_backgroundram_w);
-	Line 867: 	CZetSetWriteHandler2(0xe800,0xefff,system1_foregroundram_w);	
-	Line 869: 	CZetSetWriteHandler2(0xf000,0xf3ff,system1_bgcollisionram_w);
-	Line 870: 	CZetSetWriteHandler2(0xf800,0xfbff,system1_sprcollisionram_w);
-*/	
-
 	if (a >= 0xe000 && a <= 0xe7ff) 
 	{
 		if(RamStart[a]!=d)
@@ -734,15 +718,12 @@ void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 			RamStart[a] = d;
 			a&=~1;
 			UINT8 *rs = (UINT8 *)(RamStart+a);		
-			int Code;//, Colour;
-			Code = (rs[1] << 8) | rs[0];
+			UINT16 Code = __builtin_bswap16(*((UINT16 *)rs));
+			
 			Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
-			unsigned int x = map_offset_lut[a&0x7ff];
-			UINT16 *map = &ss_map[x]; 
-			map[0] = map[0x40] = map[0x1000] = map[0x1040] = ((Code >> 5) & 0x3f)|(((rs[1] & 0x08)==8)?0x2000:0x0000);//color_lut[Code];
-			map[1] = map[0x41] = map[0x1001] = map[0x1041] = Code & (System1NumTiles-1);
-
+			UINT32 *map = SS_MAP+map_offset_lut[a&0x7ff]; 
+			map[0] = map[0x20] = map[0x800] = map[0x820] = (((Code >> 5) & 0x3f)	|(((rs[1] & 0x08)==8)?0x2000:0x0000))<<16|Code & (System1NumTiles-1);
 		}
 		return; 
 	}
@@ -752,13 +733,13 @@ void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 		{
 			RamStart1[a] = d;
 			a&=~1;
-
-			unsigned int Code = (RamStart1[a + 1] << 8) | RamStart1[a + 0];
+			UINT8 *rs = (UINT8 *)(RamStart1+a);
+			UINT16 Code = __builtin_bswap16(*((UINT16 *)rs));
+			
 			Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 
-			unsigned int x = map_offset_lut[a&0x7ff];
-			UINT16 *mapf2 = &ss_map2[x];	
-			mapf2[0] = (Code >> 5) & 0x3f; // |(((RamStart[a + 1] & 0x08)==8)?0x2000:0x0000);;//color_lut[Code];
+			UINT16 *mapf2 = SS_MAP2+map_offset_lut[a&0x7ff];
+			mapf2[0] = (Code >> 5) & 0x3f;
 			mapf2[1] = Code & (System1NumTiles-1);
 		}
 		return; 
@@ -774,27 +755,19 @@ void __fastcall System1Z801ProgWrite(unsigned short a, UINT8 d)
 		return; 
 	}
 	if (a >= 0xd800 && a <= 0xd9ff) 
-	{ 	a&= 0x1ff;
-//		if(System1PaletteRam[a]!=d)
-//		{colAddr[a] = cram_lut[d];	System1PaletteRam[a] = d;} 
-		{colAddr[a] = cram_lut[d];} 
+	{ 	
+		colAddr[a&0x1ff] = cram_lut[d]; 
 		return; 
 	}
 	if (a >= 0xda00 && a <= 0xdbff) 
 	{
-		a&= 0x3ff;
-//		if(System1PaletteRam[a]!=d)
-//		{colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];	System1PaletteRam[a] = d;} 
-		{colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];} 
+		colBgAddr[remap8to16_lut[a&0x1ff]] = cram_lut[d];
 		return;
 	}
 
 	if (a >= 0xdc00 && a <= 0xddff) 
 	{	
-		a&= 0x5ff;	
-//		if(System1PaletteRam[a]!=d)
-//		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d]; System1PaletteRam[a] = d;}
-		{	colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d];}
+		colBgAddr2[remap8to16_lut[a&0x1ff]] = cram_lut[d];
 	}
 }
 #endif
@@ -888,7 +861,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 
 	System1TempRom = NULL;
 	
-	memset((void *)&ss_map2[2048],0,768);
+	memset((void *)SS_MAP2+1024,0,768);
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"rotate_tile                     ",20,100);
 #ifdef _D_SYS1_H_
 	if(flipscreen==1)		rotate_tile(System1NumTiles,0,(void *)SS_CACHE);
@@ -1002,9 +975,9 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 		System1DoReset();
 	}
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1CalcPalette                     ",20,100);
-	
-//	System1CalcPalette();
-
+#ifdef SYS2	
+	System1CalcPalette();
+#endif
 	System1efRam[0xfe] = 0x4f;
 	System1efRam[0xff] = 0x4b;
 	return 0;
@@ -1098,7 +1071,7 @@ void updateCollisions(int *values)
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*
+#ifdef SYS2
 void System1CalcPalette()
 {
 	unsigned int delta=0;		
@@ -1115,7 +1088,7 @@ void System1CalcPalette()
 		delta++; if ((delta & 7) == 0) delta += 8;  
 	}
 }
-*/
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void renderSpriteCache(int *values)
 //(int Src,unsigned int Height,INT16 Skip,unsigned int Width, int Bank)

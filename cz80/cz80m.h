@@ -137,7 +137,7 @@ extern "C" {
 #define CZ80_IRQSTATUS_AUTO	0x2000
 #define CZ80_IRQSTATUS_ACK	0x1000
 
-typedef void (*write_func)(unsigned short a, UINT8 d);
+typedef void (*write_func)(unsigned short a, UINT16 d);
 
 typedef union
 {

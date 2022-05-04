@@ -10,14 +10,16 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile 
 #CCFLAGS2 = -m2 -Os -Wall -Wextra --save-temps -ffreestanding -fno-web -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
-CCFLAGS2 = -m2 -O2 -Wall -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=50 -fms-extensions -fno-align-loops -freorder-blocks-algorithm=simple -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCFLAGS2 = -m2 -O2 -Wall -fno-lto --save-temps -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=50 -fms-extensions -fno-align-loops -freorder-blocks-algorithm=simple -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
-CCOVLFLAGS = -m2 -O2 -Wall -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=50 -fms-extensions -freorder-blocks-algorithm=simple -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCOVLFLAGS = -m2 -O2 -Wall -fno-lto --save-temps  -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=50 -fms-extensions -freorder-blocks-algorithm=simple -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
 OLVSCRIPT = root/sl2.lnk
-#LDCMNFLAGS = -m2 -O2 -flto -fuse-linker-plugin  -Xlinker -n -Xlinker -S -Xlinker
-LDCMNFLAGS = -m2 -O2 -v --verbose -Xlinker -n -Xlinker -S -Xlinker -fno-lto -Xlinker
-LDCMNFLAGS2 = -m2 -Os -v --verbose -Xlinker -S -Xlinker -fno-lto -Xlinker
+
+#LDCMNFLAGS = -m2 -O2 -v --verbose -Xlinker -use-linker-plugin  -Xlinker -n -Xlinker -S -Xlinker -flto -Xlinker
+#LDCMNFLAGS2 = -m2 -Os -v --verbose -Xlinker -use-linker-plugin -Xlinker -S -Xlinker -flto -Xlinker
+LDCMNFLAGS = -m2 -O2 -v --verbose -Xlinker -n -Xlinker -S -Xlinker
+LDCMNFLAGS2 = -m2 -Os -v --verbose -Xlinker -S -Xlinker
 
 TARGET    = root/sl.elf
 TARGET1  = root/sl.bin
@@ -107,7 +109,7 @@ OVLSYS2                 = root/d_sys2.elf
 OVLSYS21               = root/d_sys2.bin
 MPOVLSYS2FILE    = $(OVLSYS2:.elf=.maps)
 LDOVLSYS2FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSYS2FILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLSYS2         = d_sys2.c czet.c cz80sys1/cz80.c snd/sn76496.c 8255ppi.c mc8123.c load.c saturn/ovl.c saturn/pcmstm.c 
+SRCOVLSYS2         = d_sys2.c czet.c cz80sys1/cz80.c snd/sn76496.c 8255ppi.c load.c saturn/ovl.c saturn/pcmstm.c 
 OBJOVLSYS2         = $(SRCOVLSYS2:.c=.o)
 
 OVLPACM                 = root/d_pacm.elf

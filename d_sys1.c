@@ -14,6 +14,12 @@
 #include "d_sys1.h"
 #include "d_sys1_common.c"
 
+/** meilleure taille
+.bss           0x00000000060f6760        0x0 /toolchain/bin/../lib/gcc/sh-elf/11.2.0/libgcc.a(_fpcmp_parts_df.o)
+ *(COMMON)
+                0x00000000060f6760                __bend = .
+*/
+
 //revoir WRITE_MEM16 et READ_MEM16
 //modifier CZetSetReadHandler et CZetSetWriteHandler
 //typedef void (*write_func)(unsigned short a, UINT8 d);
@@ -182,46 +188,20 @@ INT32 MyheroInit()
 /* INT32 FourdwarrioInit()
 {
 	DecodeFunction = fdwarrio_decode;
-
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
 }*/
 /*==============================================================================================
 Graphics Rendering
 ===============================================================================================*/
-/*
-void fillSpriteCollision(unsigned int Num, int *values)
-{
-	sprites_collision[Num].x=sprites_collision[Num].y=sprites_collision[Num].width=sprites_collision[Num].yend=0;
-	int skip = values[2]<<1;
-	if(values[0]>0){sprites_collision[Num].x=values[0] & 0xff;};	  //x max 255
-	if(values[1]>0){sprites_collision[Num].y=values[1] & 0xff;};	  //y max 255
-	if(skip<0)	    // width<0
-	{
-		if(values[0]>ABS(skip))		// x > abs(width)	
-		{
-			sprites_collision[Num].width=ABS(skip)  & 0xff;// width>0
-			sprites_collision[Num].x=(values[0]+skip) & 0xff; // x=x+width
-		}
-	}
-	else
-	{
-			if(sprites_collision[Num].width+sprites_collision[Num].x>255)sprites_collision[Num].width=(255-sprites_collision[Num].x) & 0xff; //width+x max 255
-			else sprites_collision[Num].width=skip  & 0xff;// max 255
-	}
-	if(values[1]+values[3]>0)
-		sprites_collision[Num].yend=(values[1]+values[3]) & 0xff; // height max 255
-}
-*/
 inline void renderSpriteCache(int *values);
 
-void DrawSprite(unsigned int Num, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
+static inline void DrawSprite(unsigned int Num, SprSpCmd *ss_spritePtr,UINT8 *SpriteBase)
 {
-
-	UINT32 Src = (SpriteBase[7] << 8) | SpriteBase[6];
-	UINT16 Skip = ((SpriteBase[5] << 8) | SpriteBase[4]);
+	UINT32 Src  = __builtin_bswap16(*((UINT16 *)SpriteBase+3));
+	UINT16 Skip = __builtin_bswap16(*((UINT16 *)SpriteBase+2));
 	UINT32 Bank = 0x8000 * (((SpriteBase[3] & 0x80) >> 7) + ((SpriteBase[3] & 0x40) >> 5));
 	Bank &= System1SpriteRomSize;
-	
+
 	unsigned int Height = SpriteBase[1] - SpriteBase[0];
 	unsigned int Width = (Skip + (7)) & ~(7);
 	unsigned int addr = Bank + ((Src + Skip) & 0x7fff);
