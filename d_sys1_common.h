@@ -71,9 +71,6 @@ UINT8 *System1PromBlue        = NULL;
 UINT8 *System1Ram1            = NULL;
 UINT8 *System1Ram2            = NULL;
 UINT8 *System1SpriteRam       = NULL;
-#ifdef SYS2
-UINT8 *System1PaletteRam      = NULL;
-#endif
 UINT8 *System1BgRam           = NULL;
 UINT8 *System1VideoRam        = NULL;
 UINT8 *System1ScrollXRam      = NULL;

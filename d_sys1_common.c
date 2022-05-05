@@ -262,9 +262,6 @@ inline void MemIndex()
 	System1Ram1            = Next; Next += 0x002100;
 	System1Ram2            = Next; Next += 0x000800;
 	System1SpriteRam       = Next; Next += 0x000200;
-#ifdef SYS2
-	System1PaletteRam      = Next; Next += 0x000600;
-#endif
 	System1BgRam           = Next; Next += 0x000800;
 //	System1VideoRam        = Next; Next += 0x000700;
 	System1VideoRam        = Next; Next += 0x004000;
@@ -994,9 +991,6 @@ void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d);
 		System1DoReset();
 	}
 //FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)"System1CalcPalette                     ",20,100);
-#ifdef SYS2	
-	System1CalcPalette();
-#endif
 	System1efRam[0xfe] = 0x4f;
 	System1efRam[0xff] = 0x4b;
 	return 0;
@@ -1089,25 +1083,6 @@ void updateCollisions(int *values)
 		tmp+=256;
 	}
 }
-//-------------------------------------------------------------------------------------------------------------------------------------
-#ifdef SYS2
-void System1CalcPalette()
-{
-	unsigned int delta=0;		
-	UINT8 *System1PaletteRam512   = System1PaletteRam+512;
-	UINT8 *System1PaletteRam1024 = System1PaletteRam+1024;
-
-	for (int i = 511; i > 0; i--) 
-	{
-		colAddr[i]				= cram_lut[System1PaletteRam[i]];
-		colBgAddr[delta]		= cram_lut[*System1PaletteRam512];
-		++System1PaletteRam512;
-		colBgAddr2[delta]		= cram_lut[*System1PaletteRam1024];
-		++System1PaletteRam1024;
-		delta++; if ((delta & 7) == 0) delta += 8;  
-	}
-}
-#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void renderSpriteCache(int *values)
 //(int Src,unsigned int Height,INT16 Skip,unsigned int Width, int Bank)
