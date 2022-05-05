@@ -876,7 +876,7 @@ int System1Init(int nZ80Rom1Num, int nZ80Rom1Size, int nZ80Rom2Num, int nZ80Rom2
 #endif
 
 //	memset((unsigned char *)spriteCache,0xFF,0x80000);
-	memset((unsigned char *)spriteCache,0xFF,0x20000);
+	memset((unsigned char *)spriteCache,0xFF,0x40000);
 	memset(System1Sprites, 0x00, System1SpriteRomSize+1);
 	
 	// Load Sprite roms

@@ -206,7 +206,7 @@ void system2_backgroundram_w(UINT16 a, UINT8 d)
 		map_dirty[real_page] = 1;
 		
 		UINT16 *map = &map_cache[(a&0x7ff)|(real_page*0x1000)];
-		map[0] = ((Code >> 5) & 0x3f);
+		map[0] = ((Code >> 5) & 0x3f)|(((rs[1] & 0x08)==0x8)?0x2000:0x0000);
 		map[1] = Code & (System1NumTiles-1);
 	}
 }
@@ -256,7 +256,7 @@ void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d)
 			map_dirty[real_page] = 1;
 
 			UINT16 *map = &map_cache[(a&0x7ff)|(real_page*0x1000)];
-			map[0] = ((Code >> 5) & 0x3f);
+			map[0] = ((Code >> 5) & 0x3f)|(((rs[1] & 0x08)==0x8)?0x2000:0x0000);
 			map[1] = Code & (System1NumTiles-1);
 		}
 		return; 
@@ -431,8 +431,8 @@ void CommonWbmlInit()
 //	System1Draw = WbmlRender;
 	memset(System1VideoRam,0x00,0x4000);
 
-	nCyclesTotal[0] = 3000000 / hz;
-	nCyclesTotal[1] = 3000000 / hz;
+	nCyclesTotal[0] = 2500000 / hz;
+	nCyclesTotal[1] = 2500000 / hz;
 	
 }
 
@@ -475,6 +475,7 @@ void wbml_draw_bg(UINT8* vram)
 			continue;
 
 		map_dirty[real_page] = 0;
+
 		register unsigned short *map = (unsigned short *)SS_MAP+v[page];
 		register unsigned short *mapc = &map_cache[real_page*0x1000];			
 		
@@ -484,19 +485,23 @@ void wbml_draw_bg(UINT8* vram)
 //			DMA_ScuMemCopy(map, mapc, 128);
 			mapc+=64;
 			map+=128;
-	/*	
-			memcpyl(map,mapc,128);
-			mapc+=128;
-			map+=128;
 
+		}		
+		
+		
+/*		
+		register unsigned int *map = (unsigned int *)SS_MAP+v[page]/2;
+		register unsigned int *mapc = &map_cache[real_page*0x1000];			
+		
+		for (unsigned int i=0;i<32 ;i++ )
+		{
 			memcpyl(map,mapc,128);
-			mapc+=128;
-			map+=128;
+//			DMA_ScuMemCopy(map, mapc, 128);
+			mapc+=32;
+			map+=64;
 
-			memcpyl(map,mapc,128);
-			mapc+=128;
-			map+=128;	*/
-		}			
+		}
+*/		
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

@@ -10,6 +10,7 @@
 //static unsigned int bg_cache[3][0x1000];
  unsigned int nextTile[3]={0,0,0};
 //static SprSpCmd ss_spriteBuff[96];
+UINT8 *CurrentBank = NULL;
 
 int ovlInit(char *szShortName)
 {
@@ -82,7 +83,11 @@ void DrvPaletteUpdate(INT32 offset)
 {
 	offset &= 0x7fe;
 
+//	UINT32 p = ((DrvPalRAM[offset+0] << 8) + DrvPalRAM[offset+1])>>4;
 	UINT32 p = ((DrvPalRAM[offset+0] << 8) + DrvPalRAM[offset+1])>>4;
+//	UINT8 *rs = (UINT8 *)(DrvPalRAM+offset);		
+//	UINT32 p = (__builtin_bswap16(*((UINT16 *)rs)))>>4;
+	
 	offset>>=1;
 
 	if(((offset+1)%16)==0)
@@ -102,9 +107,11 @@ void DrvPaletteUpdate(INT32 offset)
 inline void ninjakd2_bankswitch(INT32 data)
 {
 	UINT32 nBank = 0x10000 + (data * 0x4000);
-
-//	nZ80RomBank = data;
-
+/*
+//	CZetMapMemory(DrvZ80ROM0,			0x0000, 0x7fff, MAP_ROM);
+//	CZetMapMemory(DrvZ80ROM0 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
+*/
+//	CurrentBank = (UINT8 *)DrvZ80ROM0+0x8000 + (data * 0x4000);
 	CZetMapMemory(DrvZ80ROM0 + nBank, 	0x8000, 0xbfff, MAP_ROM);
 }
 
@@ -153,6 +160,19 @@ void ninjakd2_bgconfig(UINT32 sel, UINT32 offset, UINT8 data)
 
 UINT8 ninjakd2_main_read(UINT16 address)
 {
+/*
+//	CZetMapMemory(DrvZ80ROM0,			0x0000, 0x7fff, MAP_ROM);
+//	CZetMapMemory(DrvZ80ROM0 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
+*/
+/*	
+	if(address>=0x8000 && address <=0xbfff)
+	{
+		return CurrentBank[address];
+	}
+*/
+//	CurrentBank = (UINT8 *)DrvZ80ROM0+0x10000 + (data * 0x4000);	
+	
+	
 	switch (address)
 	{
 		case 0xc000:
@@ -202,7 +222,7 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
 			
 			code |= (attr & 0x20) << 3;
-			ss_map[off2s] = (attr & 0x0f) <<12 | (code & 0xfff);
+			((UINT16*)SS_MAP)[off2s] = (attr & 0x0f) <<12 | (code & 0xfff);
 		}
 		return;
 	}
@@ -218,9 +238,14 @@ void __fastcall ninjakd2_main_write(UINT16 address, UINT8 data)
 			UINT32 attr  = vram[1];
 			UINT32 code  = vram[0] + ((attr & 0xc0) << 2);
 			
-			UINT16 *map = (UINT16 *)&ss_map2[address];
-			map[0] = (attr & 0x0f);
-			map[1] = (0x400 + (code<<2)) & 0xffff;
+			UINT32 *map = (UINT16 *)SS_MAP2+address;
+//			map[0] = (attr & 0x0f);
+//			map[1] = (0x400 + (code<<2)) & 0xffff;
+
+			*map = (attr & 0x0f)<<16 | (0x400 + (code<<2)) & 0xffff;
+			//map[1] = (0x400 + (code<<2)) & 0xffff;
+
+
 		}
 		return;
 	}	
@@ -303,7 +328,7 @@ void mnight_main_write(UINT16 address, UINT8 data)
 			UINT32 attr  = vram[1];
 			UINT32 code  = vram[0] + ((attr & 0xc0) << 2) + ((attr & 0x10) << 6);
 			
-			UINT16 *map = (UINT16 *)&ss_map2[address];
+			UINT16 *map = (UINT16 *)&SS_MAP2+address;
 			map[0] = (attr & 0x0f);
 			map[1] = (0x400 + (code<<2)) & 0xffff;
 		}
@@ -746,7 +771,8 @@ void MemIndex(UINT32 game)
 	memset(Next, 0, MALLOC_MAX);
 	
 	DrvZ80ROM0		= (UINT8 *)Next; Next += 0x050000;
-	CZ80Context		= (UINT8 *)Next; Next += (sizeof(cz80_struc));	
+	CurrentBank		= (UINT8 *)DrvZ80ROM0+0x8000;
+	CZ80Context		= (UINT8 *)Next; Next += (sizeof(cz80_struc));
 	cram_lut 		= (UINT16 *)Next; Next += 0x1000 * (sizeof(UINT16));
 	map_lut			= (UINT16 *)Next; Next += 2048 * sizeof(UINT16);
 	ss_spriteBuff	= (SprSpCmd *)Next; Next += 96 * (sizeof(SprSpCmd));
@@ -1196,7 +1222,7 @@ INT32 OmegafInit()
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void initLayersS(UINT8 game)
+void initLayersS(UINT8 game)
 {
     Uint16	CycleTb[]={
 		0xeeee,0x4567,  //A0 // nbg1 et 2 ok
@@ -1223,10 +1249,10 @@ inline void initLayersS(UINT8 game)
 	scfg.charsize      = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.patnamecontrl =  0x0000;// VRAM A0 +0x10000?~I?t?Z?b?g 
-	scfg.plate_addr[0] = (Uint32)ss_map2;
-	scfg.plate_addr[1] = (Uint32)ss_map2;
-	scfg.plate_addr[2] = (Uint32)ss_map2;
-	scfg.plate_addr[3] = (Uint32)ss_map2;
+	scfg.plate_addr[0] = (Uint32)SS_MAP2;
+	scfg.plate_addr[1] = (Uint32)SS_MAP2;
+	scfg.plate_addr[2] = (Uint32)SS_MAP2;
+	scfg.plate_addr[3] = (Uint32)SS_MAP2;
 
 	SCL_SetConfig(SCL_NBG1, &scfg); // bg0
 	scfg.dispenbl      = ON;
@@ -1257,7 +1283,7 @@ inline void initLayersS(UINT8 game)
 	}
 
 	SCL_SetCycleTable(CycleTb);
-
+	memset((void *)SS_MAP2,0xFF,0x4000);
 	memset((void *)SCL_VDP2_VRAM_B0,0x00,0x4000);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1308,8 +1334,8 @@ void DrvInitSaturnS(UINT8 game)
 	ss_sprite           = (SprSpCmd *)SS_SPRIT;
 
  	SS_MAP  = ss_map	=(Uint16 *)SCL_VDP2_VRAM_B1+0x0000;		    // fg
-	SS_MAP2 = ss_map2	=(Uint16 *)SCL_VDP2_VRAM_B1+0x1000;			// bg0
-//	ss_map3				=(Uint16 *)SCL_VDP2_VRAM_B1+0xa000;			// bg2
+	SS_MAP2 = (Uint16 *)SCL_VDP2_VRAM_B1+0x1000;			// bg0
+//	ss_map3	=(Uint16 *)SCL_VDP2_VRAM_B1+0xa000;			// bg2
 
 	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
@@ -1534,7 +1560,7 @@ void RobokidDraw()
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void  draw_robokid_bg_layer() //INT32 width)
+void  draw_robokid_bg_layer() //INT32 width)
 {
 //	if (tilemap_enable[sel] == 0) return;
 //	UINT32 wide = (width) ? 128 : 32;
@@ -1547,15 +1573,44 @@ inline void  draw_robokid_bg_layer() //INT32 width)
 	for (UINT32 offs = 0; offs < 32 * 32; offs++)
 	{
 		UINT8 *bgram = (UINT8 *)DrvBgRAM0+*ml++;
-		UINT16 *map = (UINT16 *)(SCL_VDP2_VRAM_B1+0x2000+(*ml2++));	
+//		UINT16 *map = (UINT32 *)(SCL_VDP2_VRAM_B1+0x2000+(*ml2++));	
+		UINT32 *map = (UINT32 *)(SCL_VDP2_VRAM_B1+0x2000+(*ml2++));	
 		UINT32 *nt =(UINT32 *)nextTile;
 //-----------------------------------------------------------------------------------------------------------------
 // nbg1
 		code = cacheTile(bgram,nt,bg_cache[0],(UINT8*)LOWADDR,(UINT8 *)SS_CACHE+0x08000);
-	
-		map[0] = (bgram[1] & 0x0f);
-		map[1] = (code+0x400);
+		*map = (bgram[1] & 0x0f)<<16 | (code+0x400);
 //-----------------------------------------------------------------------------------------------------------------
+// nbg3
+		bgram+=0x2000;
+		map += 0x2000;		
+		nt++;
+		
+		code = cacheTile(bgram,nt,bg_cache[2],(UINT8*)DrvGfxROM4Data1,(UINT8 *)SS_CACHE+0x48000);
+		*map = (bgram[1] & 0x0f)<<16 | (code+0x2400);
+//-----------------------------------------------------------------------------------------------------------------
+// nbg0	
+		bgram+=0x2000; //DrvBgRAM1
+		map += 0x3800;		
+		nt++;
+
+		code = cacheTile(bgram,nt,bg_cache[1],(UINT8*)0x00270000,(UINT8 *)SS_CACHE+0x28000);
+		*map = (bgram[1] & 0x0f)<<16|(code+0x1400);
+//-----------------------------------------------------------------------------------------------------------------
+
+
+
+
+//-----------------------------------------------------------------------------------------------------------------
+/*
+
+//-----------------------------------------------------------------------------------------------------------------
+// nbg1
+		code = cacheTile(bgram,nt,bg_cache[0],(UINT8*)LOWADDR,(UINT8 *)SS_CACHE+0x08000);
+	
+		*map = (bgram[1] & 0x0f);
+		map[1] = (code+0x400);	
+
 // nbg3
 		bgram+=0x2000;
 		map += 0x4000;		
@@ -1576,6 +1631,7 @@ inline void  draw_robokid_bg_layer() //INT32 width)
 		map[0] = (bgram[1] & 0x0f);
 		map[1] = (code+0x1400);
 //-----------------------------------------------------------------------------------------------------------------
+*/
 	}
 }
 
