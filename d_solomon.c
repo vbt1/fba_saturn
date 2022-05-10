@@ -10,7 +10,7 @@
 #ifdef PONY
 #include "saturn/pcmstm.h"
 
-int pcm1=-1;
+int pcm1=0;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
 extern unsigned short frame_y;

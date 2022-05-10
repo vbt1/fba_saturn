@@ -103,9 +103,9 @@ void BurnDrvAssignList()
 	static struct BurnDriver BurnDrvStarjack = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvRaflesia = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvAtetris = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvsms_akmw = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_cz80 = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
-//	static struct BurnDriver BurnDrvsms_gg = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
+	static struct BurnDriver BurnDrvsms_gg = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvsms_ggcz = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 //	static struct BurnDriver BurnDrvCongo = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 	static struct BurnDriver BurnDrvZaxxon = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
@@ -158,16 +158,16 @@ void BurnDrvAssignList()
 
 //	static struct BurnDriver BurnDrvNineteen43b = {NULL, NULL,NULL,NULL, NULL, NULL, NULL,	NULL, NULL, NULL};
 
-//BurnDrvsms_akmw.szShortName="sms";
-//BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
+BurnDrvsms_akmw.szShortName="sms";
+BurnDrvsms_akmw.szFullNameA="Sega Master System (Faze)";
 //BurnDrvsms_akmw.szParent=NULL;
 
 BurnDrvsms_cz80.szShortName="smscz";
 BurnDrvsms_cz80.szFullNameA="Sega Master System (CZ80)";
 //BurnDrvsms_cz80.szParent=NULL;
 
-//BurnDrvsms_gg.szShortName="gg";
-//BurnDrvsms_gg.szFullNameA="Sega Game Gear (Faze)";
+BurnDrvsms_gg.szShortName="gg";
+BurnDrvsms_gg.szFullNameA="Sega Game Gear (Faze)";
 //BurnDrvsms_gg.szParent=NULL;
 
 BurnDrvsms_ggcz.szShortName="ggcz";
@@ -452,9 +452,9 @@ BurnDrvNineteen43.szFullNameA="1943: The Battle of Midway (Euro)";
 unsigned int i=0;
 
 //pDriver[i++] = &BurnDrvFM;
-//pDriver[i++] = &BurnDrvsms_akmw;
+pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsms_cz80;
-//pDriver[i++] = &BurnDrvsms_gg;
+pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
 
 pDriver[i++] = &BurnDrvsg1k_wboy;
@@ -477,7 +477,7 @@ pDriver[i++] = &BurnDrvRobokid;
 pDriver[i++] = &BurnDrvbankp;
 pDriver[i++] = &BurnDrvBlktiger;
 
-pDriver[i++] = &BurnDrvBlockgal;
+//pDriver[i++] = &BurnDrvBlockgal;
 
 pDriver[i++] = &BurnDrvBombjack;
 //pDriver[i++] = &BurnDrvChplftb;
@@ -488,7 +488,7 @@ pDriver[i++] = &BurnDrvFantzn2;
 
 pDriver[i++] = &BurnDrvFlickys2;
 pDriver[i++] = &BurnDrvFreekickb1;
-pDriver[i++] = &BurnDrvGardia;
+//pDriver[i++] = &BurnDrvGardia;
 pDriver[i++] = &BurnDrvGigasb;
 pDriver[i++] = &BurnDrvGigasm2;
 pDriver[i++] = &BurnDrvGberet;

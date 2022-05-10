@@ -10,9 +10,9 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile 
 #CCFLAGS2 = -m2 -Os -Wall -Wextra --save-temps -ffreestanding -fno-web -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
-CCFLAGS2 = -m2 -O2 -Wall -fno-lto --save-temps -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=50 -fms-extensions -fno-align-loops -freorder-blocks-algorithm=simple -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCFLAGS2 = -m2 -O2 -Wall -fno-lto --save-temps -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -fno-align-loops -freorder-blocks-algorithm=simple -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
-CCOVLFLAGS = -m2 -O2 -Wall -fno-lto --save-temps -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=50 -fms-extensions -freorder-blocks-algorithm=simple -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCOVLFLAGS = -m2 -O2 -Wall -fno-lto -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -freorder-blocks-algorithm=simple -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
 OLVSCRIPT = root/sl2.lnk
 
@@ -360,7 +360,7 @@ $(OVLGBERET1) : $(OBJOVLGBERET) $(MAKEFILE) $(LDOVLGBERETFILE)
 	$(CONV) -O binary $(OVLGBERET) $(OVLGBERET1)
 
 $(OVLHIGEMARU) : $(OBJOVLHIGEMARU) $(MAKEFILE) $(OBJOVLHIGEMARU) $(LDOVLHIGEMARUFILE)
-	$(CC) $(LDOVLHIGEMARUFLAGS) $(OBJOVLHIGEMARU) $(LIBSOVL) raze/raze.o -o $@
+	$(CC) $(LDOVLHIGEMARUFLAGS) $(OBJOVLHIGEMARU) $(LIBSOVL) -o $@
 
 $(OVLHIGEMARU1) : $(OBJOVLHIGEMARU) $(MAKEFILE) $(LDOVLHIGEMARUFILE)
 	$(CONV) -O binary $(OVLHIGEMARU) $(OVLHIGEMARU1)

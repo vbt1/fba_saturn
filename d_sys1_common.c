@@ -1,13 +1,13 @@
 #define nInterleave 10
 #include "SEGA_INT.H"
-#include "SEGA_DMA.H"
+//#include "SEGA_DMA.H"
 
 #define PONY
 
 #ifdef PONY
 #include "saturn/pcmstm.h"
 
-int pcm1=-1;
+int pcm1=0;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
 extern unsigned short frame_y;
@@ -655,7 +655,7 @@ void make_lut(void)
 void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	INT_ChgMsk(INT_MSK_DMA2, INT_MSK_NULL);	
+//	INT_ChgMsk(INT_MSK_DMA2, INT_MSK_NULL);	
 	nBurnSprites  = 35;
 	SS_MAP    = (Uint16 *)SCL_VDP2_VRAM_B1;//+0x1E000;
 	SS_MAP2   = (Uint16 *)SCL_VDP2_VRAM_A1;//+0x1C000;
@@ -666,7 +666,8 @@ void DrvInitSaturn()
 	ss_OtherPri     = (SclOtherPriRegister *)SS_OTHR;
 	ss_sprite  = (SprSpCmd *)SS_SPRIT;
 //	ss_scl      = (Fixed32 *)SS_SCL;
-
+	memset((void *)SS_MAP,0,4096);
+	memset((void *)SS_MAP2,0,4096);	
 #ifdef _D_SYS1_H_
 	if(flipscreen)
 	{
@@ -707,7 +708,7 @@ void DrvInitSaturn()
 		drawWindow(0,224,240,0,66);
 	
 #ifdef PONY
-	frame_x	= 0;
+	frame_x	= frame_y = 0;
 	nBurnFunction = sdrv_stm_vblank_rq;	
 #endif		
 }
@@ -925,8 +926,14 @@ void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d);
 
 	if (DecodeFunction) 
 	{
+/*
 		CZetMapMemory2(System1Fetch1, System1Rom1, 0x0000, 0x7fff, MAP_ROM);
 		CZetMapMemory2(System1Fetch1 + 0x10000, System1Rom1 + 0x10000, 0x8000, 0xbfff, MAP_ROM);
+	*/	
+		
+		CZetMapArea2(0x0000, 0x7fff, 2, System1Fetch1, System1Rom1);
+		CZetMapArea2(0x8000, 0xbfff, 2, System1Fetch1 + 0x10000, System1Rom1 + 0x10000);
+	
 	}
 	else
 	{

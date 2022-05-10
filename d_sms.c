@@ -15,10 +15,17 @@ unsigned char curr_sprite=0;
 #ifdef PONY
 #include "saturn/pcmstm.h"
 
-int pcm1=-1;
+int pcm1=0;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
 extern unsigned short frame_y;
+#endif
+
+//#define USE_PTR 1
+
+#ifdef USE_PTR
+UINT8 *write_ptr[8];
+UINT8 *read_ptr[8];
 #endif
 
 /* Attribute expansion table */
@@ -271,14 +278,14 @@ void vbl()
 
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 	initSprites(256-1,192-1,0,0,0,0);
-	 initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
-		FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" ",0,180);	
+	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
+	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" ",0,180);	
 
 //	drawWindow(32,192,192,14,52);
 #ifndef PONY
 	nBurnFunction = update_input1;
 #else
-	frame_x	= 0;
+	frame_x	= frame_y = 0;
 	nBurnFunction = vbl;	
 #endif
 
@@ -293,7 +300,7 @@ void vbl()
 #endif
 
 #ifdef PONY
-	frame_x	= 0;
+//	frame_x	= 0;
 //	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
 //	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
 #endif
@@ -349,6 +356,7 @@ void vbl()
 #else
 	ChangeDir(".");
 #endif
+	file_id = 2;
 	DrvInitSaturn();
 	SN76489Init(0,MASTER_CLOCK, 0);
 	sms_start();
@@ -400,14 +408,14 @@ void vbl()
 #ifdef PONY
 remove_raw_pcm_buffer(pcm1);
 #endif
-
+/*
 	running = 0;
 	first = 0;
 	vsynch = 0;
 	scroll_x=scroll_y=0;	
 	file_max = 0;
 	file_id = 0;	
-	
+*/	
 	//cleanDATA();
 	cleanBSS();
 
@@ -505,8 +513,8 @@ void SMSFrame_old()
 #ifdef PONY
 	frame_x++;
 	SclProcess = 2;	
-	if(frame_x>=frame_y)
-		wait_vblank();		
+//	if(frame_x>=frame_y)
+//		wait_vblank();		
 #endif
 	
 }
@@ -517,7 +525,6 @@ void SMSFrame_old()
 //		TIM_FRT_SET_16(0);
 		line = bcountdiff = bcount = bcNum = 0;
 #endif
-
 	if(sms.paused && first==2)
 	{
 #ifdef RAZE
@@ -737,7 +744,7 @@ inline int vdp_ctrl_r(void)
     return (temp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-/*static*/inline  void update_bg(t_vdp *vdp, int index)
+void update_bg(t_vdp *vdp, int index)
 {
 //				if(index>=vdp.ntab && index<vdp.ntab+0x700)
 // VBT 04/02/2007 : modif compilo
@@ -747,6 +754,7 @@ inline int vdp_ctrl_r(void)
 		{
 			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
 			unsigned int delta = map_lut[index - vdp->ntab];
+
 			UINT16 *map = 	(UINT16 *)SS_MAP+delta;
 #ifdef TWO_WORDS
 			map[0] =map[64] =map[0xE00] =map[0xE40] = name_lut[temp];//color + flip + prio
@@ -754,6 +762,14 @@ inline int vdp_ctrl_r(void)
 #else
 			map[0] =map[32] =map[0x700] =map[0x720] =name_lut[temp];
 #endif
+//0x00000000060f7cec
+//0x00000000060f7d74
+
+//			UINT32 *map = 	(UINT16 *)SS_MAP+delta;
+//			*map=map[32] =map[0x700] =map[0x720] = name_lut[temp]<<16 | ((temp >> 8) & 0xFF) | ((temp  & 0x01) <<8) + 0x3000;//color + flip + prio
+//			map[1] =map[65] =map[0xE01] =map[0xE41] = ((temp >> 8) & 0xFF) | ((temp  & 0x01) <<8) + 0x3000; //tilenum c00 1800
+
+
 		}
 	}
 #ifdef GG0
@@ -797,7 +813,7 @@ void cleanSpritesGG()
 	curr_sprite = 0;
 	ss_spritePtr = &ss_sprite[3];
 	
-	for (unsigned int delta=3; delta<nBurnSprites; delta++)
+	for (unsigned int delta=0; delta<nBurnSprites; delta++)
 	{
 //		ss_sprite[delta].charSize   = 0;
 //		ss_sprite[delta].charAddr   = 0;
@@ -943,7 +959,7 @@ void update_cache(void)
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void vdp_data_w(INT32 offset, UINT8 data)
+void vdp_data_w(INT32 offset, UINT8 data)
 {
     INT32 index;
 
@@ -1237,7 +1253,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /* Read data from the VDP's data port */
- int vdp_data_r(t_vdp *vdp)
+ inline int vdp_data_r(t_vdp *vdp)
 {
  //   UINT8 temp = 0;
     vdp->pending = 0;
@@ -1673,6 +1689,9 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 //	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 	z80_add_write(0xFFFC, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 #else
+	
+
+#ifndef USE_PTR
 //	CZetMapArea(0x0000, 0x3FFF, 0, cart.rom); 
 	CZetMapMemory((unsigned char *)cart.rom, 0x0000, 0x3FFF, MAP_READ);
 //	CZetMapArea(0x0000, 0x3FFF, 2, &cart.rom[0]); 
@@ -1698,7 +1717,24 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 
 //	CZetSetWriteHandler(cpu_writemem8);
 	CZetSetWriteHandler2(0xFFFC, 0xFFFF,cpu_writemem8);
+	
+	
+#else
+//	CZetSetWriteHandler(cpu_writemem8);
+	CZetSetWriteHandler2(0x0000, 0xFFFF,cpu_writemem8);
+	CZetSetReadHandler(cpu_readmem8);
 
+	for (UINT8 i=0;i<8 ;i++)
+	{
+		write_ptr[i] = dummy_write;
+		read_ptr[i] = cart.rom + (i<<13);
+	}
+
+    read_ptr[6] = sms.ram;
+    read_ptr[7] = sms.ram;
+    write_ptr[6] = sms.ram;
+    write_ptr[7] = sms.ram;	
+#endif
 	CZetSetSP(0xdff0);
 #endif
 
@@ -1711,6 +1747,74 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 	nSoundBufferPos=0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifdef USE_PTR
+UINT8 cpu_readmem8(unsigned short address)
+{
+    return read_ptr[(address >> 13) & 7][address & 0x1FFF];
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+void cpu_writemem8(unsigned int address, unsigned int data)
+{
+    write_ptr[(address >> 13) & 7][address & 0x1FFF] = data;
+#ifndef RAZE
+    if(address >= 0xFFFC)
+    {
+        UINT32 offset = (data % cart.pages) << 14; // VBT à corriger
+		sms.fcr[address] = data;
+
+        switch(address & 3)
+        {
+			case 0:
+                if(data & 8)
+                {
+					offset = (data & 0x4) ? 0x4000 : 0x0000;
+ //                   Cz80_Set_Fetch(&Cz80_struc, 0x8000, 0xBFFF, (u32)&sms.sram[offset]);
+					CZetMapArea(0x8000, 0xBFFF,2,sms.sram + offset);
+                    read_ptr[4] = sms.sram + offset + 0x0000;
+                    read_ptr[5] = sms.sram + offset + 0x2000;
+                    write_ptr[4] = sms.sram + offset + 0x0000;
+                    write_ptr[5] = sms.sram + offset + 0x2000;
+                }
+                else
+                {
+					offset = ((sms.fcr[3] % cart.pages) << 14);
+//                    Cz80_Set_Fetch(&Cz80_struc, 0x8000, 0xBFFF, (u32)&cart.rom[offset]);
+					CZetMapArea(0x8000, 0xBFFF,2,cart.rom + offset);
+                    read_ptr[4] = cart.rom + offset + 0x0000;
+                    read_ptr[5] = cart.rom + offset + 0x2000;
+                    write_ptr[4] = dummy_write;
+                    write_ptr[5] = dummy_write;
+                }
+				break;
+            case 1:
+//                Cz80_Set_Fetch(&Cz80_struc, 0x0000, 0x3FFF, (u32)&cart.rom[offset]);
+				CZetMapArea(0x0000, 0x3FFF,2,cart.rom + offset);
+                read_ptr[0] = cart.rom + offset + 0x0000;
+                read_ptr[1] = cart.rom + offset + 0x2000;
+                break;
+
+            case 2:
+ //               Cz80_Set_Fetch(&Cz80_struc, 0x4000, 0x7FFF, (u32)&cart.rom[offset]);
+ 				CZetMapArea(0x4000, 0x7FFF,2,cart.rom + offset);
+                read_ptr[2] = cart.rom + offset + 0x0000;
+                read_ptr[3] = cart.rom + offset + 0x2000;
+                break;
+
+            case 3:
+				if(!(sms.fcr[0] & 0x08))
+				{
+//                    Cz80_Set_Fetch(&Cz80_struc, 0x8000, 0xBFFF, (u32)&cart.rom[offset]);
+					CZetMapArea(0x8000, 0xBFFF,2,cart.rom + offset);
+                    read_ptr[4] = cart.rom + offset + 0x0000;
+                    read_ptr[5] = cart.rom + offset + 0x2000;
+                }
+                break;
+        }           
+    }
+#endif	
+    return;
+}
+#else
  void cpu_writemem8(unsigned int address, unsigned int data)
 {
 	sms.ram[address & 0x1FFF] = data;
@@ -1794,6 +1898,7 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 	}
 #endif
 }
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*#ifdef CZ80
 static void cpu_writemem16(unsigned int address, unsigned int data)
@@ -1803,7 +1908,7 @@ static void cpu_writemem16(unsigned int address, unsigned int data)
 }
 #endif	   */
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void z80_init(void)
+void z80_init(void)
 {
 #ifdef RAZE
 	z80_init_memmap();
@@ -1848,6 +1953,17 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 #else
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
+	
+	
+#ifdef USE_PTR
+
+	CZetMapArea(0x8000, 0x7FFF,2,(unsigned char *)cart.rom);
+	CZetMapArea(0x8000, 0xBFFF,2,(unsigned char *)cart.rom);
+	CZetMapArea(0xC000, 0xDFFF,2,(unsigned char *)cart.rom);
+	CZetMapArea(0xE000, 0xFFFF,2,(unsigned char *)cart.rom);
+	CZetSetReadHandler(cpu_readmem8);
+	
+#else	
 /* Bank #0 */ 
 	CZetMapMemory((unsigned char *)cart.rom, 0x0000, 0x3FFF, MAP_ROM);
 				
@@ -1862,7 +1978,7 @@ z80_add_write(0x0000, 0xFFFF, Z80_MAP_HANDLED, (void *)&cpu_writemem8);
 	
 /* RAM (mirror) */ 
 	CZetMapMemory((unsigned char *)cart.rom, 0xE000, 0xFFFF, MAP_ROM);
-	
+#endif	
 	CZetSetWriteHandler(cpu_writemem8);
 	CZetSetInHandler(cz80_z80_readport16);
 	CZetSetOutHandler(cz80_z80_writeport16);
@@ -1887,6 +2003,7 @@ inline  void make_map_lut()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
+#if 0
 inline  void make_name_lut(void)
 {
 	unsigned int i, j;
@@ -1912,6 +2029,8 @@ Bit 08 - 00 : Pattern Index
 #endif
 	}
 }
+
+#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline  void make_cram_lut(void)
 {
@@ -1942,7 +2061,7 @@ inline  void make_cram_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
  void make_lut()
 {
-	make_name_lut();
+//	make_name_lut();
 	make_bp_lut();
 	make_cram_lut();
 	make_map_lut();
@@ -1973,6 +2092,25 @@ inline void make_bp_lut(void)
         if(i & 0x0002) row |= 0x00000010;
         if(i & 0x0001) row |= 0x00000001;
         bp_lut[j] = row;
+		
+		i = ((j >> 8) & 0xFF) | ((j  & 0xFF) <<8);
+		unsigned int flip = (i >> 9) & 3;
+		unsigned int pal = (i >> 11) & 1;
+#ifdef TWO_WORDS
+/*
+Bit 15 - 13: Unused
+Bit 12: Priority flag
+Bit 11: Which palette to use
+Bit 10: Vertical Flip Flag
+Bit 09: Horizontal Flip Flag
+Bit 08 - 00 : Pattern Index 
+*/
+		unsigned int priority = (i >> 12) & 1;
+		name_lut[j] = (flip << 14 | priority << 13 | pal);
+#else
+		unsigned int name = (i & 0x1FF);
+		name_lut[j] = (pal << 12 | flip << 10 | name);
+#endif		
     }
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

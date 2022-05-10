@@ -10,7 +10,7 @@
 #ifdef PONY
 #include "saturn/pcmstm.h"
 
-int pcm1=-1;
+int pcm1=0;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
 extern unsigned short frame_y;
@@ -70,6 +70,8 @@ inline void MemIndex()
 	Prom = (UINT8 *)Next; Next += 0x220;
 	Palette = (UINT32 *)Next; Next += 0x100 * sizeof(UINT32);
 	map_offset_lut	= (UINT16*)Next; Next += 0x400 * sizeof(UINT16);
+	
+	make_lut();	
 }
 
 /*static*/ INT32 DrvInit()
@@ -137,7 +139,7 @@ inline void MemIndex()
 	SN76489Init(0, 15468000 / 6, 0);
 	SN76489Init(1, 15468000 / 6, 1);
 	SN76489Init(2, 15468000 / 6, 1);
-	make_lut();
+
 	DrvDoReset();
 	return 0;
 }
@@ -339,10 +341,10 @@ inline void bankp_gfx_decode()
 /*static*/ void initLayers()
 {
     Uint16	CycleTb[]={
-		0x1f56, 0xffff, //A0
-		0xffff, 0xffff,	//A1
+		0x1f56, 0xeeee, //A0
+		0xeeee, 0xeeee,	//A1
 		0xf5f2,0x4eff,   //B0
-		0xffff, 0xffff  //B1
+		0xeeee, 0xeeee  //B1
 //		0x4eff, 0x1fff, //B1
 	};
  	SclConfig	scfg;
@@ -388,8 +390,8 @@ inline void bankp_gfx_decode()
 /*static*/ void initColors()
 {
 	colBgAddr  = (Uint16*)SCL_AllocColRam(SCL_NBG1,OFF);	  //ON
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
-	(Uint16*)SCL_AllocColRam(SCL_NBG3,ON);
+	SCL_AllocColRam(SCL_NBG3,ON);
+	SCL_AllocColRam(SCL_NBG3,ON);
 	colBgAddr2 = (Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);//OFF);
 	SCL_SetColRam(SCL_NBG0,8,8,palette);
 }
@@ -418,8 +420,8 @@ inline void make_lut(void)
 void DrvInitSaturn()
 {
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
-	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_MAP  = (Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_MAP2 = (Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
@@ -497,7 +499,7 @@ inline void 	 bg_line(UINT16 offs)
 
 	if (!flipscreen) flipx = (*rom & 0x08) << 11;
 	
-	UINT16 *map2 = (UINT16 *)&ss_map2[map_offset_lut[offs]];	
+	UINT16 *map2 = ((UINT16 *)SS_MAP2)+map_offset_lut[offs];	
 //NBG1
 	map2[0] = map2[0x40] = flipx | color;
 
@@ -517,7 +519,7 @@ inline void 	 fg_line(UINT16 offs)
 
 	if(!flipscreen)	flipx = (rom[offs] & 0x04) << 12;
 	
-	UINT16 *map = (UINT16 *)&ss_map[map_offset_lut[offs]];	
+	UINT16 *map = ((UINT16 *)SS_MAP)+map_offset_lut[offs];	
 //NBG2		   //0x40
 	map[0] = map[0x40] = map[0x1000] = map[0x1040] = flipx | color;//color /8;
 

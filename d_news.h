@@ -46,7 +46,7 @@ unsigned char *RamStart = NULL;
 unsigned char *CZ80Context = NULL;
 
 // Misc Variables, system control values, etc.
-int BgPic = 1;
+int BgPic = 0;
 
 // Dip Switch and Input Definitions
 static struct BurnInputInfo NewsInputList[] =

@@ -12,7 +12,7 @@
 #ifdef PONY
 #include "saturn/pcmstm.h"
 
-int pcm1=-1;
+int pcm1=0;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
 extern unsigned short frame_y;
@@ -82,7 +82,7 @@ void NewsDoReset()
 	MSM6295Reset(0);
 }
 
-void make_lut(void)
+inline void make_lut(void)
 {
     UINT32 j;
 	for(j = 0; j < 4096; j++)
@@ -98,16 +98,10 @@ void make_lut(void)
     }
 
 	UINT16 *map_lut = &map_offset_lut[0];
-	
-	for (UINT32 my = 0; my < 32; my++) 
+
+	for (UINT32 offs = 0; offs < 1024; offs++) 
 	{
-		for (UINT32 mx = 0; mx < 64; mx+=2) 
-		{
-			*map_lut = (mx|(my*128));
-			ss_map[*map_lut+0x40] =  0x00;
-			ss_map[*map_lut+0x41] =  0x01;
-			map_lut++;
-		}
+		*map_lut++ = (offs & 0x1f) | (offs / 0x20) <<6;
 	}
 }
 
@@ -180,8 +174,9 @@ void __fastcall NewsWrite(unsigned short a, unsigned char d)
 		if(RamStart[a]!=d)
 		{
 			RamStart[a] = d;
-			a&=0x1ff;
-			colBgAddr2[a / 2] = colBgAddr[a / 2] = cram_lut[NewsPaletteRam[a | 1] | (NewsPaletteRam[a & ~1] << 8)];
+			a&=0x1fe;
+			a>>=1;
+			/*colBgAddr2[a] =*/ colBgAddr[a] = cram_lut[*((UINT16 *)NewsPaletteRam+a)];
 		}
 		return;
 	}
@@ -304,10 +299,10 @@ int NewsInit()
 void initLayers()
 {
     Uint16	CycleTb[]={
-		0x1f56, 0xffff, //A0
-		0xffff, 0xffff,	//A1
-		0xf5f2, 0x4eff,   //B0
-		0xffff, 0xffff  //B1
+		0x1f56, 0xeeee, //A0
+		0xeeee, 0xeeee,	//A1
+		0xf5f2, 0x4efe,   //B0
+		0xeeee, 0xeeee  //B1
 //		0x4eff, 0x1fff, //B1
 	};
  	SclConfig	scfg;
@@ -318,14 +313,11 @@ void initLayers()
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
-	scfg.plate_addr[0] = (Uint32)ss_map2;
+	scfg.plate_addr[0] = (Uint32)SS_MAP2;
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
-	scfg.plate_addr[0] = (Uint32)ss_map;
-	scfg.plate_addr[1] = (Uint32)ss_map;
-	scfg.plate_addr[2] = (Uint32)ss_map;
-	scfg.plate_addr[3] = (Uint32)ss_map;
+	scfg.plate_addr[0] = (Uint32)SS_MAP;
 
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
@@ -355,8 +347,8 @@ inline void initPosition()
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void initColors()
 {
+	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));	
 	colBgAddr =(Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
-	colBgAddr2=(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
@@ -365,8 +357,8 @@ void DrvInitSaturn()
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 3;
 	
-	SS_MAP  = ss_map   = (Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2  = (Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_MAP  = (Uint16 *)SCL_VDP2_VRAM_B1;
+	SS_MAP2 = (Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT = NULL; //(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;				
 	ss_BgPriNum  = (SclBgPriNumRegister *)SS_N0PRI;
@@ -376,7 +368,6 @@ void DrvInitSaturn()
 	SS_SET_N1PRIN(4);
 
 	initLayers();
-	initSprites(264-1,216-1,0,0,8,-32);
 	initPosition();
 	initColors();
 
@@ -405,8 +396,8 @@ int NewsExit()
 #else
 //	ZetExit();
 #endif
-	memset(ss_map,0,0x20000);
-	memset(ss_map2,0,0x20000);	
+	memset(SS_MAP,0,0x20000);
+	memset(SS_MAP2,0,0x20000);	
 //	memset(NewsInputPort0,0x00,8);
 //	NewsDip[0] = NewsInput[0]      = 0;
 	wait_vblank();
@@ -426,10 +417,10 @@ void NewsRenderFgLayer()
 {
 	UINT16 Code, Colour;
 //	UINT16 x;
-	UINT16 *map;
+	UINT32 *map;
 	UINT16 *lut_ptr=(UINT16 *)map_offset_lut;
-	UINT8 *fg_ptr =(UINT8 *)NewsFgVideoRam;
-	UINT8 *bg_ptr =(UINT8 *)NewsBgVideoRam;
+	UINT16 *fg_ptr =(UINT16 *)NewsFgVideoRam;
+	UINT16 *bg_ptr =(UINT16 *)NewsBgVideoRam;
 	
 	for (UINT16 TileIndex=0;TileIndex<0x400 ; TileIndex++)
 	{
@@ -439,17 +430,15 @@ void NewsRenderFgLayer()
 		{
 			dirty_buffer[TileIndex] = 0;
 #endif
-			Code = (fg_ptr[0] << 8) | fg_ptr[1];
+			Code = *fg_ptr;
 			Colour = Code >> 12;
 			Code &= 0x0fff;
 			
-//			x = map_offset_lut[TileIndex];
-			map = &ss_map[*lut_ptr];
-			map[0] = Colour;
-			map[1] =  Code;
-
-			map[0x40] =  10;
-			map[0x41] =  0x02;
+			map = ((UINT32*)SS_MAP)+(*lut_ptr);
+			*map = Colour<<16 | Code;
+			map[0x20] = 0xa0002;
+//			map[0x40] =  10;
+//			map[0x41] =  0x02;
 
 #ifdef CACHE
 		}
@@ -460,22 +449,19 @@ void NewsRenderFgLayer()
 		{
 			dirty_buffer[TileIndex+0x400] = 0;
 #endif
-			Code = (bg_ptr[0] << 8) | bg_ptr[1];			
+			Code = *bg_ptr;			
 			Colour = Code >> 12;
 			Code &= 0x0fff;
 			if ((Code & 0x0e00) == 0xe00) Code = (Code & 0x1ff) | (BgPic << 9);
 
-//			x = map_offset_lut[TileIndex];
-			map = &ss_map2[*lut_ptr];
-			map[0] = Colour;
-			map[1] =  Code;
-
+			map = ((UINT32*)SS_MAP2)+(*lut_ptr);
+			*map = Colour<<16 | Code;
 #ifdef CACHE2
 		}
 #endif
 		lut_ptr++;
-		fg_ptr+=2;
-		bg_ptr+=2;		
+		fg_ptr++;//=2;
+		bg_ptr++;		
 	}
 
 }

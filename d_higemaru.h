@@ -12,7 +12,7 @@
 
 /*static*/// unsigned char 	bg_dirtybuffer[2048];
 UINT16 *map_offset_lut = NULL;//[1024];
-/*static*/ unsigned char *MemEnd = NULL, *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
+/*static*/ unsigned char *Rom = NULL, *Gfx0 = NULL, *Gfx1 = NULL, *Prom = NULL;
 UINT8 *CZ80Context = NULL;
 /*static*/ //short *pAY8910Buffer[6], *pFMBuffer = NULL;
 /*static*/ 

@@ -71,12 +71,12 @@ SECTIONS {
 		root/sl.elf ("COMMON")
 	} > ram
 
-	.malloc_max 0x0601a000 (NOLOAD):
+	.malloc_max 0x06019000 (NOLOAD):
         {
 		__malloc_max_ram = .;
         } > ram			
 	
-        .overlay 0x060de000 :
+        .overlay 0x060dd000 :
         {
 		. = ALIGN(0x10);
 		*(.boot)

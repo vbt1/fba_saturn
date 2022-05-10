@@ -11,7 +11,7 @@
 #ifdef PONY
 #include "saturn/pcmstm.h"
 
-int pcm1=-1;
+int pcm1=0;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
 extern unsigned short frame_y;
@@ -528,7 +528,7 @@ inline void initLayers()
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
 	scfg.patnamecontrl =  0x000c;// VRAM B1 ??I?t?Z?b?g 
-	scfg.plate_addr[0] = (Uint32)ss_map;
+	scfg.plate_addr[0] = (Uint32)SS_MAP;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }
@@ -563,13 +563,13 @@ void SCL_SetLineParamNBG0(SclLineparam *lp)
 void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites = 51;
 	nSoundBufferPos = 0;
 
 	SS_CACHE = (Uint8 *)SCL_VDP2_VRAM_B1;
-	SS_MAP   = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B0;
-	SS_MAP2  = ss_map2 =(Uint16 *)SCL_VDP2_VRAM_A0;
+	SS_MAP   = (Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_MAP2  = (Uint16 *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -591,8 +591,8 @@ void DrvInitSaturn()
 	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
 //	memset(&ss_scl[0],16<<16,64);
 	memset(&ss_scl[0],16<<16,128);
-	memset(&ss_map[0],0,0x4000);
-	memset(&ss_map2[0],0,0x4000);
+	memset(SS_MAP,0,0x4000);
+	memset(SS_MAP2,0,0x4000);
 	drawWindow(0,240,0,2,66);
 //	*(unsigned int*)OPEN_CSH_VAR(nSoundBufferPos) = 0;
 #ifdef PONY
@@ -669,6 +669,9 @@ inline void DrvDraw()
 	unsigned char *DrvVidRAM = &Rom[0xc840];
 	memset4_fast(&ss_scl[64],scroll | (scroll<<16),0x300);
 
+	UINT16 *map = 	(UINT16 *)SS_MAP;
+	UINT16 *map2 = 	(UINT16 *)SS_MAP2;
+
 //	for (UINT32 offs = 0x40; offs < 0x7c0; offs++)
 	for (UINT32 offs = 0; offs < 0x780; offs++)	
 	{
@@ -682,8 +685,11 @@ inline void DrvDraw()
 			UINT32 color = attr & 0x0f;
 			UINT32 flip = attr & 0x30;
 
-			ss_map2[offs] = ss_map2[offs+0x1000] = ss_map[offs] = ss_map[offs+0x1000] = (color << 12 | flip << 6 | code&0x1FF) ;
+
+			map2[0] = map2[0x1000] = map[0] = map[0x1000] = (color << 12 | flip << 6 | code&0x1FF) ;
 #ifdef CACHE
+			map++;
+			map2++;
 		}
 #endif
 	}	

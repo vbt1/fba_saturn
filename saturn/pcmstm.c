@@ -18,8 +18,8 @@ extern Uint32 *shared;
 	_pcm_stm_buf_ctrl buf;
 	_generic_file_ctrl file;
 	
-	int file_transfer_sector = 9;
-	int file_transfer_size = (9 * 2048);
+#define file_transfer_sector 9
+#define file_transfer_size (9 * 2048)
 
 	adx_stream_param adx_stream;
 

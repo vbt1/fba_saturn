@@ -153,7 +153,7 @@ Driver Inits
 	flipscreen = 1;
 //	UINT8 *System1MC8123Key = (UINT8*)0x002FC000;
 	UINT8 System1MC8123Key = (UINT8*)0x002FC000;
-	memset(System1MC8123Key,0x00,0x2000);
+//	memset(System1MC8123Key,0x00,0x2000);
 	BurnLoadRom(System1MC8123Key, 14, 1);
 	DecodeFunction = blockgal_decode;
 
@@ -163,7 +163,7 @@ Driver Inits
 	CZetSetInHandler(BlockgalZ801PortRead);
 	CZetClose();
 	MakeInputsFunction = BlockgalMakeInputs;
-	BurnLoadRom(System1MC8123Key, 14, 1);
+//	BurnLoadRom(System1MC8123Key, 14, 1);
 	
 	nCyclesTotal[0] = 3000000 / hz ;
 	nCyclesTotal[1] = 3000000 / hz ;

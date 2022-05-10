@@ -343,7 +343,7 @@ End:
 	}
 	return 0;
 }
-/*
+
 int CZetMapArea2(int nStart, int nEnd, int nMode, unsigned char *Mem01, unsigned char *Mem02)
 {
 	unsigned int s = nStart >> CZ80_FETCH_SFT;
@@ -357,7 +357,7 @@ int CZetMapArea2(int nStart, int nEnd, int nMode, unsigned char *Mem01, unsigned
 	}
 	return 0;
 }
-*/
+
 int CZetReset()
 {
 	Cz80_Reset( lastCZetCPUContext );

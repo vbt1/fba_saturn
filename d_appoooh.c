@@ -868,10 +868,10 @@ void DrvInitSaturn()
 INT32 DrvExit()
 {
 	DrvDoReset();
-	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		SPR_WaitEndSlaveSH();
+//	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//		SPR_WaitEndSlaveSH();
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	CZetExit2();
 
 	MSM5205Exit();
@@ -950,19 +950,19 @@ void DrvFrame_old()
 
 	for (UINT32 i = 0; i < nInterleave; i++) 
 	{
-	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205_vclk_callback, 0);
+//	  	SPR_RunSlaveSH((PARA_RTN*)MSM5205_vclk_callback, 0);
 		CZetRun(cycles);
 		if (interrupt_enable && i == (nInterleave - 1))
 			CZetNmi();
-		if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
-			SPR_WaitEndSlaveSH();
-//		MSM5205_vclk_callback(0);
+//		if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//			SPR_WaitEndSlaveSH();
+		MSM5205_vclk_callback(0);
 //		MSM5205Update();
 	}
 	CZetClose();
 
-
-	SPR_RunSlaveSH((PARA_RTN*)RenderSlaveSound, 0);
+//	RenderSlaveSound();
+//	SPR_RunSlaveSH((PARA_RTN*)RenderSlaveSound, 0);
 	DrvDraw();
 #ifndef PONY
 	signed short *nSoundBuffer = (signed short *)(0x25a24000+nSoundBufferPos*(sizeof(signed short)));
@@ -972,7 +972,7 @@ void DrvFrame_old()
 	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		SPR_WaitEndSlaveSH();
 
-//	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
+	MSM5205RenderDirect(0, nSoundBuffer, SOUND_LEN);
 
 	nSoundBufferPos+=(SOUND_LEN); 
 	
@@ -987,11 +987,12 @@ void DrvFrame_old()
 	}
 #else
 	MSM5205RenderDirect(0, &nSoundBuffer[pcm[0]][nSoundBufferPos], nBurnSoundLen);
-
+	SN76496Update(0, &nSoundBuffer[pcm[1]][nSoundBufferPos], nBurnSoundLen);
+	SN76496Update(1, &nSoundBuffer[pcm[2]][nSoundBufferPos], nBurnSoundLen);
 	SN76496Update(2, &nSoundBuffer[pcm[3]][nSoundBufferPos], nBurnSoundLen);	
 	
-	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
-		SPR_WaitEndSlaveSH();
+//	if((*(Uint8 *)0xfffffe11 & 0x80) != 0x80)
+//		SPR_WaitEndSlaveSH();
 	
 	nSoundBufferPos+=(nBurnSoundLen);
 	

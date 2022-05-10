@@ -8,7 +8,7 @@
 #ifdef PONY
 #include "saturn/pcmstm.h"
 
-int pcm1=-1;
+int pcm1=0;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
 extern unsigned short frame_y;
@@ -101,104 +101,119 @@ void DrvDoReset()
 	CZetClose();
 }
 
-void pbillrd_draw_sprite(UINT32 offs)
+void pbillrd_draw_sprite()
 {
-	UINT8* spram = (UINT8*)&DrvSprRAM[offs];
-	
-	INT8 sx = spram[3];
-	INT8 sy = 224 - spram[2];
-	SprSpCmd *ss_spritePtr = &ss_sprite[sprite_number];
-	
-	if(sx > 0 && sy > 0)
-	{
-		UINT32 code = spram[0];
-		UINT32 color = spram[1] & 0x0f;
-
-		ss_spritePtr->ax		= sx;
-		ss_spritePtr->ay		= sy;
-		ss_spritePtr->charAddr	= 0x220 +(code << 4);
-		ss_spritePtr->color     = (color<<4);
-	}
-	else
-	{
-		ss_spritePtr->ax		= -16;
-		ss_spritePtr->ay		= -16;
-	}
-	sprite_number++;
-}
-
-void countrun_draw_sprite(UINT32 offs)
-{
-	UINT8* spram = (UINT8*)&DrvSprRAM[offs];
-	INT32 sx = spram[3];
-	INT32 sy = 232-spram[0];
-	SprSpCmd *ss_spritePtr = &ss_sprite[sprite_number];
-
-	if(sx > 0 && sy > 0)
-	{	
-		UINT16 code = (spram[1] + ((spram[2] & 0x20) << 3))  & 0x1ff;
-		UINT8 color = spram[2] & 0x1f;
-		UINT8 flipx	= (spram[2] & 0x80) >> 3;    //?? unused ?
-		UINT8 flipy	= 0x20 - (((spram[2] & 0x40)) >> 1);
-
-		ss_spritePtr->ax		= sx;
-		ss_spritePtr->ay		= sy;
-		ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
-		ss_spritePtr->charAddr	= 0x220 +(code << 4);
-		ss_spritePtr->color     = (color<<4);
-	}
-	else
-	{
-		ss_spritePtr->ax		= -16;
-		ss_spritePtr->ay		= -16;
-	}
-	sprite_number++;
-}
-
-void freekick_draw_sprite(UINT32 offs)
-{
-	UINT8* spram = (UINT8*)&DrvSprRAM[offs];
-	
-	INT32 sx = 224 - spram[3];
-	INT32 sy = 240 - spram[0];
-
-	if(sx > 0 && sy > 0)
-	{	
-		SprSpCmd *ss_spritePtr = &ss_sprite[sprite_number];
-	
-		UINT16 code = (spram[1] + ((spram[2] & 0x20) << 3))  & 0x1ff;
-		UINT8 color = spram[2] & 0x1f;
-		UINT8 flipx	= ((!spram[2]) & 0x80) >> 2;    //?? unused ?
-		UINT8 flipy	= 0x10-(((spram[2] & 0x40)) >> 2);
-
-		ss_spritePtr->ax		= sy;
-		ss_spritePtr->ay		= sx;
-		ss_spritePtr->control	= ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
-		ss_spritePtr->charAddr	= 0x220 +(code << 4);
-		ss_spritePtr->color     = (color<<4);
-		sprite_number++;
-	}
-}
-
-void gigas_draw_sprite(UINT32 offs)
-{
-	UINT8* spram = (UINT8*)&DrvSprRAM[offs];
-	
-	INT32 sx = 224 - spram[3];
-	INT32 sy = 240 - spram[2];
-
-	if(sx > 0 && sy > 0)
-	{
-		SprSpCmd *ss_spritePtr = &ss_sprite[sprite_number];
+	UINT8* spram = (UINT8*)DrvSprRAM;
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
 		
-		UINT16 code = (spram[0] | ((spram[1] & 0x20) << 3)) & 0x1ff;
-		UINT8 color = spram[1] & 0x1f;
+	for (UINT32 offs = 0; offs < 64; offs++)
+	{
+		INT8 sx = spram[3];
+		INT8 sy = 224 - spram[2];
+		
+		if(sx > 0 && sy > 0)
+		{
+			UINT32 code = spram[0];
+			UINT32 color = spram[1] & 0x0f;
 
-		ss_spritePtr->ax		= sy;
-		ss_spritePtr->ay		= sx;
-		ss_spritePtr->charAddr	= 0x220 +(code << 4);
-		ss_spritePtr->color     = (color<<4);
-		sprite_number++;
+			ss_spritePtr->ax		= sx;
+			ss_spritePtr->ay		= sy;
+			ss_spritePtr->charAddr	= 0x220 +(code << 4);
+			ss_spritePtr->color     = (color<<4);
+		}
+		else
+		{
+			ss_spritePtr->ax		= -16;
+			ss_spritePtr->ay		= -16;
+		}
+		ss_spritePtr++;
+		spram+=4;
+	}
+}
+
+void countrun_draw_sprite()
+{
+	UINT8* spram = (UINT8*)DrvSprRAM;
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
+		
+	for (UINT32 offs = 0; offs < 64; offs++)
+	{
+		INT32 sx = spram[3];
+		INT32 sy = 232-spram[0];
+
+		if(sx > 0 && sy > 0)
+		{	
+			UINT16 code = (spram[1] + ((spram[2] & 0x20) << 3))  & 0x1ff;
+			UINT8 color = spram[2] & 0x1f;
+			UINT8 flipx	= (spram[2] & 0x80) >> 3;    //?? unused ?
+			UINT8 flipy	= 0x20 - (((spram[2] & 0x40)) >> 1);
+
+			ss_spritePtr->ax		= sx;
+			ss_spritePtr->ay		= sy;
+			ss_spritePtr->control   = ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
+			ss_spritePtr->charAddr	= 0x220 +(code << 4);
+			ss_spritePtr->color     = (color<<4);
+		}
+		else
+		{
+			ss_spritePtr->ax		= -16;
+			ss_spritePtr->ay		= -16;
+		}
+		ss_spritePtr++;
+		spram+=4;
+	}
+}
+
+void freekick_draw_sprite()
+{
+	UINT8* spram = (UINT8*)DrvSprRAM;
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
+		
+	for (UINT32 offs = 0; offs < 64; offs++)
+	{
+		INT32 sx = 224 - spram[3];
+		INT32 sy = 240 - spram[0];
+
+		if(sx > 0 && sy > 0)
+		{	
+			UINT16 code = (spram[1] + ((spram[2] & 0x20) << 3))  & 0x1ff;
+			UINT8 color = spram[2] & 0x1f;
+			UINT8 flipx	= ((!spram[2]) & 0x80) >> 2;    //?? unused ?
+			UINT8 flipy	= 0x10-(((spram[2] & 0x40)) >> 2);
+
+			ss_spritePtr->ax		= sy;
+			ss_spritePtr->ay		= sx;
+			ss_spritePtr->control	= ( JUMP_NEXT | FUNC_NORMALSP | flipy | flipx);
+			ss_spritePtr->charAddr	= 0x220 +(code << 4);
+			ss_spritePtr->color     = (color<<4);
+		}
+		ss_spritePtr++;
+		spram+=4;		
+	}
+}
+
+void gigas_draw_sprite()
+{
+	UINT8* spram = (UINT8*)DrvSprRAM;
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];
+		
+	for (UINT32 offs = 0; offs < 64; offs++)
+	{
+		INT32 sx = 224 - spram[3];
+		INT32 sy = 240 - spram[2];
+
+		if(sx > 0 && sy > 0)
+		{
+			UINT16 code = (spram[0] | ((spram[1] & 0x20) << 3)) & 0x1ff;
+			UINT8 color = spram[1] & 0x1f;
+
+			ss_spritePtr->ax		= sy;
+			ss_spritePtr->ay		= sx;
+			ss_spritePtr->charAddr	= 0x220 +(code << 4);
+			ss_spritePtr->color     = (color<<4);
+		}
+		ss_spritePtr++;
+		spram+=4;		
 	}
 }
 
@@ -218,9 +233,9 @@ inline void DrvDraw()
 		vidram--;
 	}
 
-	for (UINT32 offs = 0; offs < 0x100; offs += 4)
+//	for (UINT32 offs = 0; offs < 0x100; offs += 4)
 	{
-		DrawSprite(offs);
+		DrawSprite();
 	}
 }
 
@@ -946,7 +961,7 @@ void DrvInitSaturn()
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	drawWindow(0,240,240,4,68);
 #ifdef PONY
-	frame_x	= 0;
+	frame_x	= frame_y = 0;
 	nBurnFunction = sdrv_stm_vblank_rq;
 #endif	
 }
@@ -988,7 +1003,6 @@ void DrvFrame_old()
 void DrvFrame()
 #endif
 {
-	sprite_number = 3;
 	DrvInputs[0] = 0xff; // Active LOW
 	DrvInputs[1] = 0xff;
 

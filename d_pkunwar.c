@@ -10,7 +10,7 @@
 #ifdef PONY
 #include "saturn/pcmstm.h"
 
-int pcm1=-1;
+int pcm1=0;
 Sint16 *nSoundBuffer=NULL;
 extern unsigned short frame_x;
 extern unsigned short frame_y;
@@ -1250,11 +1250,6 @@ static void SCL_SetLineParamNBG0(SclLineparam *lp)
 	SclProcess = 2; //obligatoire
 }*/
 //-------------------------------------------------------------------------------------------------------------------------------------
-void vbl()
-{
-//	SCL_SetLineParamNBG0(&lp);
-	sdrv_stm_vblank_rq();
-}
 #endif	
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn(INT32 i)
@@ -1309,7 +1304,7 @@ void DrvInitSaturn(INT32 i)
 	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
 
 	frame_x	= 0;
-	nBurnFunction = vbl;	
+	nBurnFunction = sdrv_stm_vblank_rq;	
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------

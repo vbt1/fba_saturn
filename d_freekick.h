@@ -42,7 +42,7 @@ UINT8 *DrvSprRAM = NULL;
 //UINT8 *DrvColPROM = NULL;
 UINT8 *MC8123Key = NULL;
 UINT16 *map_offset_lut = NULL;
-typedef void (*RenderSprite)(UINT32);
+typedef void (*RenderSprite)();
 RenderSprite DrawSprite = NULL;
 
 //UINT8 DrvZ80Bank0 = 0;
@@ -56,7 +56,7 @@ UINT16 romaddr = 0;
 UINT8 countrunbmode = 0;
 UINT8 pbillrdmode = 0;
 
-UINT16 sprite_number = 3;
+//UINT16 sprite_number = 3;
 
 static struct BurnInputInfo PbillrdInputList[] = {
 	{"P1 Coin",			BIT_DIGITAL,	DrvJoy1 + 7,	"p1 coin"	},

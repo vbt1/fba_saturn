@@ -128,7 +128,7 @@ unsigned char __fastcall higemaru_read(unsigned short address)
 	return 0;
 }
 
-int MemIndex()
+void MemIndex()
 {
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -143,12 +143,10 @@ int MemIndex()
 	Prom					= Next; Next += 0x00300;
 	CZ80Context		= Next; Next += sizeof(cz80_struc);
 	map_offset_lut	= Next; Next += 1024 * sizeof(UINT16);
-	MemEnd			= Next;
-
-	return 0;
+//	MemEnd			= Next;
 }
 
-int DrvDoReset()
+void DrvDoReset()
 {
 	memset (Rom + 0xd000, 0, 0x2000);
 
@@ -163,7 +161,6 @@ int DrvDoReset()
 	z80_reset();
 #endif
 #endif
-	return 0;
 }
 
 void DrvPaletteInit()
@@ -309,7 +306,7 @@ void initLayers()
 	scfg.datatype      = SCL_CELL;
 //	scfg.patnamecontrl =  0x000c;// VRAM B1 のオフセット 
 	//for(i=0;i<4;i++)   
-	scfg.plate_addr[0] = (Uint32)ss_map;
+	scfg.plate_addr[0] = (Uint32)SS_MAP;
 	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
@@ -357,12 +354,12 @@ void make_lut(void)
 void DrvInitSaturn()
 {
 	SPR_InitSlaveSH();
-	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
+//	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	nBurnSprites  = 51;//27;
 
 	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;
 	SS_FONT  = (Uint16 *)SCL_VDP2_VRAM_B0;	
-	SS_MAP   = ss_map     =(Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_MAP   = (Uint16 *)SCL_VDP2_VRAM_A1;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -383,7 +380,7 @@ void DrvInitSaturn()
 
 	drawWindow(0,224,0,2,62);
 #ifdef PONY
-	frame_x	= 0;
+	frame_x = frame_y = 0;
 	nBurnFunction = sdrv_stm_vblank_rq;
 #else
 	PCM_MeStop(pcm);
@@ -406,10 +403,10 @@ int DrvExit()
 	AY8910Exit(1);
 	AY8910Exit(0);
 
-	CZ80Context = MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
-	map_offset_lut = NULL;
+//	CZ80Context = MemEnd = Rom = Gfx0 = Gfx1 = Prom = NULL;
+//	map_offset_lut = NULL;
 #ifdef PONY
-	for(unsigned int i=0;i<6;i++)
+	for (short i=5;i>=0;i--)
 	{
 		remove_raw_pcm_buffer(pcm[i]);
 	}
@@ -431,26 +428,26 @@ int DrvExit()
 
 void DrvDrawSprites()
 {
+	SprSpCmd *ss_spritePtr = &ss_sprite[3];	
 	 // sprites
 	for (int offs = 0x170; offs >= 0; offs -= 16)
 	{
 		int code,color,flip;
-
 		code  = Rom[0xd880 + offs] & 0x7f;
 		color = Rom[0xd884 + offs] & 0x0f;
 //		sx    = Rom[0xd88c + offs];
 //		sy    = Rom[0xd888 + offs];
 		flip  = Rom[0xd884 + offs] & 0x30;
 			
-		unsigned int delta=((offs)>>4)+3;
-		ss_sprite[delta].ax = Rom[0xd88c + offs];
-		ss_sprite[delta].ay = Rom[0xd888 + offs];
+		ss_spritePtr->ax = Rom[0xd88c + offs];
+		ss_spritePtr->ay = Rom[0xd888 + offs];
 
-		ss_sprite[delta].control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
-		ss_sprite[delta].drawMode   = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
-		ss_sprite[delta].charSize   = 0x210;  //0x100 16*16
-		ss_sprite[delta].charAddr   = 0x220+(code<<4);
-		ss_sprite[delta].color      = (color<<4);		
+		ss_spritePtr->control    = ( JUMP_NEXT | FUNC_NORMALSP | flip);
+		ss_spritePtr->drawMode   = ( ECD_DISABLE | COMPO_REP);	// 16 couleurs
+		ss_spritePtr->charSize   = 0x210;  //0x100 16*16
+		ss_spritePtr->charAddr   = 0x220+(code<<4);
+		ss_spritePtr->color      = (color<<4);
+		ss_spritePtr++;
 	}
 }
 void DrvDrawBackground()
@@ -467,12 +464,13 @@ void DrvDrawBackground()
 #endif
 			unsigned int code = Rom[0xd000 + offs] | ((Rom[0xd400 + offs] & 0x80) << 1);
 			unsigned int color = Rom[0xd400 + offs] & 0x1f;
-			unsigned int x = map_offset_lut[offs];
-			ss_map[x] = color;
-			ss_map[x+1] =  code;
+			UINT16 *map = 	(UINT16 *)SS_MAP+map_offset_lut[offs];
+
+			map[0] = color;
+			map[1] = code;
 		}
 	}
-//	DrvDrawSprites ();
+	DrvDrawSprites ();
 // 	return 0;
 }
 
@@ -483,7 +481,7 @@ void DrvFrame_old();
 void DrvFrame()
 {
 
-	for (unsigned int i=0;i<6;i++)
+	for (int i=0;i<6;i++)
 	{
 		pcm[i] = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20*2);
 		nSoundBuffer[i] = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm[i]].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm[i]].loAddrBits);
@@ -498,11 +496,8 @@ void DrvFrame_old()
  void DrvFrame()
  #endif
 {
-//	if (DrvReset) {
-//		DrvDoReset();
-//	}
   	SPR_RunSlaveSH((PARA_RTN*)DrvDrawBackground, NULL);
-
+//	DrvDrawBackground();
 #ifdef CZ80
 	
 	CZetRun(23333);
@@ -530,9 +525,9 @@ void DrvFrame_old()
 #endif
 
 	updateSound();
-	DrvDrawSprites();
-if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-	SPR_WaitEndSlaveSH();
+//	DrvDrawSprites();
+	if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
+		SPR_WaitEndSlaveSH();
 #ifdef PONY
 	_spr2_transfercommand();
 	frame_x++;

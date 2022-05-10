@@ -49,13 +49,13 @@ UINT16 *cram_lut = NULL;
 UINT16 *map_lut = NULL;
 SprSpCmd *ss_spriteBuff	= NULL;
 UINT32 *addr_cache = NULL;
-UINT32 *bg_cache[3]={NULL,NULL,NULL};
+//UINT32 *bg_cache[3]={NULL,NULL,NULL};
 UINT8 soundlatch = 0;
 
 UINT16 scrollx[3] = {0,0,0};
 UINT16 scrolly[3] = {0,0,0};
 UINT8 tilemap_enable[3] = {0,0,0};
-INT16 previous_bank[3]={-1,-1,-1};
+//INT16 previous_bank[3]={-1,-1,-1};
 UINT8 overdraw_enable = 0;
 
 UINT8 DrvJoy1[8] = {0,0,0,0,0,0,0,0};
