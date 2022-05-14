@@ -12,7 +12,7 @@ MAKEFILE = Makefile
 #CCFLAGS2 = -m2 -Os -Wall -Wextra --save-temps -ffreestanding -fno-web -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
 CCFLAGS2 = -m2 -O2 -Wall -fno-lto --save-temps -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -fno-align-loops -freorder-blocks-algorithm=simple -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
-CCOVLFLAGS = -m2 -O2 -Wall -fno-lto -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -freorder-blocks-algorithm=simple -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCOVLFLAGS = -m2 -O2  -Wall -fno-lto -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -freorder-blocks-algorithm=simple -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
 OLVSCRIPT = root/sl2.lnk
 
@@ -25,7 +25,7 @@ TARGET    = root/sl.elf
 TARGET1  = root/sl.bin
 LDFILE	 = ./$(TARGET:.elf=.lnk)
 MPFILE     = $(TARGET:.elf=.maps)
-LDFLAGS = $(LDCMNFLAGS2) -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles
+LDFLAGS = $(LDCMNFLAGS2) -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles  
 SRCS       = saturn/low.s burn.c saturn/font.c saturn/file.c saturn/saturn.c  saturn/pcmsys2.c 
 OBJS2     = saturn/strt1_vbt.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 #OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)

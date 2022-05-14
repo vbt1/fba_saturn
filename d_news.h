@@ -28,7 +28,6 @@ unsigned char 	*dirty_buffer = NULL;
 int	 			*MSM6295Context	= NULL;
 #endif
 extern unsigned char* MSM6295ROM;
-extern int* pBuffer;
 // Input Related Variables
 unsigned char NewsInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 unsigned char NewsDip[1]        = {0};
@@ -40,7 +39,7 @@ unsigned char NewsInput[1]      = {0x00};
 unsigned char *NewsRom          = NULL;
 unsigned char *NewsRam          = NULL;
 unsigned char *NewsFgVideoRam   = NULL;
-unsigned char *NewsBgVideoRam   = NULL;
+//unsigned char *NewsBgVideoRam   = NULL;
 unsigned char *NewsPaletteRam   = NULL;
 unsigned char *RamStart = NULL;
 unsigned char *CZ80Context = NULL;

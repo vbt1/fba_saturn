@@ -23,7 +23,7 @@ extern unsigned short frame_x;
 extern unsigned short frame_y;
 //UINT16 map[0x1000];
 #endif
-
+extern GfsDirId *dir_name;
 /*
 <vbt1> where and when you update the nbg map
 <vbt1> in loop, during vblank in , during vblank out ?
@@ -644,9 +644,9 @@ UINT8 blacktiger_sound_read(UINT16 address)
 
 
 	int fid			= GFS_NameToId((Sint8 *)"SFX.ROM");
-	long fileSize	= GetFileSize(fid);
+//	long fileSize	= GetFileSize(fid);
 
-	GFS_Load(fid, 0, (UINT8*)LOWADDR, fileSize);
+	GFS_Load(fid, 0, (UINT8*)LOWADDR, dir_name[fid].dirrec.size);
 #ifdef PCM_MUSIC
 
 #ifndef PONY
@@ -1046,6 +1046,9 @@ void DrvFrame()
 	scfg.datatype 	   = SCL_BITMAP;
 	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 	scfg.dispenbl      = ON;
 //	scfg.dispenbl      = OFF;
 

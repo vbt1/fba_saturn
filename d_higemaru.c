@@ -307,7 +307,9 @@ void initLayers()
 //	scfg.patnamecontrl =  0x000c;// VRAM B1 のオフセット 
 	//for(i=0;i<4;i++)   
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	scfg.plate_addr[1] = 0x00;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
 //	scfg.dispenbl 	     = ON;
@@ -316,6 +318,9 @@ void initLayers()
 	scfg.datatype 	     = SCL_BITMAP;
 	scfg.mapover         = SCL_OVER_0;
 	scfg.plate_addr[0]   = (Uint32)SS_FONT;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 

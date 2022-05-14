@@ -10,7 +10,7 @@
 #define SOUNDRATE   7680L
 
 void dummy();
-inline void make_nova_lut();
+//inline void make_nova_lut();
 void updateSound();
 unsigned char DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0}, DrvJoy2[8] = {0, 0, 0, 0, 0, 0, 0, 0}, DrvJoy3[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 unsigned char DrvDips[2]={0,0}; //,DrvReset=0;
@@ -30,7 +30,7 @@ UINT8 *DrvPalRAM = NULL;
 //UINT8 *DrvSubRAM = NULL;
 UINT16 *offs_lut = NULL;
 UINT16 *cram_lut = NULL;
-UINT16 *map_lut = NULL;
+//UINT16 *map_lut = NULL;
 UINT8 *CZ80Context = NULL;
 
 UINT32 DrvCoinHold = 0;
@@ -61,7 +61,7 @@ void DrvGfxDescramble(UINT8 *gfx);
 void bg_line(UINT16 offs,UINT8 *ram_base);
 void fg_line(UINT16 offs,UINT8 *ram_base);
 void nova_draw_sprites();
-void make_nova_lut();
+//void make_nova_lut();
 //-------------------------------------------------------------------------------------------------
 // Input Handlers
 static struct BurnInputInfo PkunwarInputList[] = {

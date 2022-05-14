@@ -768,14 +768,16 @@ void initLayers()
 	scfg.datatype      = SCL_CELL;
 	scfg.flip          = SCL_PN_10BIT; // on force à 0
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
-	scfg.plate_addr[1] = 0x00;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
 //	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
-//	scfg.plate_addr[1] = (Uint32)SS_MAP;
-//	scfg.plate_addr[2] = (Uint32)SS_MAP;
-//	scfg.plate_addr[3] = (Uint32)SS_MAP;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
@@ -783,7 +785,9 @@ void initLayers()
 	scfg.datatype 	   = SCL_BITMAP;
 	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
-
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 //	scfg.dispenbl      = OFF;
@@ -827,7 +831,7 @@ void DrvInitSaturn()
 	ss_BgColMix	= (SclBgColMixRegister *)SS_BGMIX;
 
 	ss_sprite		= (SprSpCmd *)SS_SPRIT;
-	ss_scl			= (Fixed32 *)SS_SCL;
+//	ss_scl			= (Fixed32 *)SS_SCL;
 
 	nBurnLinescrollSize = 0;
 	nBurnSprites = 16+3;

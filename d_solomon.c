@@ -25,6 +25,11 @@ void vblIn()
 }
 #endif
 
+void dummy()
+{
+
+}
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();
@@ -754,7 +759,9 @@ voir plutot p355 vdp2
 	scfg.datatype      = SCL_CELL;
 	scfg.patnamecontrl =  0x0000;// VRAM A 0??のオフセット 
 	scfg.plate_addr[0] = (Uint32)ss_map;
-	scfg.plate_addr[1] = 0x00;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 // 3 nbg
 //	scfg.dispenbl      = ON;
@@ -768,7 +775,9 @@ voir plutot p355 vdp2
 	scfg.coltype       = SCL_COL_TYPE_16;
 	scfg.platesize     = SCL_PL_SIZE_1X1;
 	scfg.plate_addr[0] = (Uint32)ss_map2;
-//	scfg.plate_addr[1] = 0x00;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
 //	scfg.dispenbl 		 = OFF;
@@ -777,7 +786,9 @@ voir plutot p355 vdp2
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
 	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
-
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 

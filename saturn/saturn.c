@@ -229,20 +229,21 @@ static inline void resetLayers()
 
 	scfg.coltype 	   = SCL_COL_TYPE_256;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	scfg.plate_addr[1] = 0x00;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
 	scfg.coltype 	       = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.plate_addr[0]= (Uint32)SS_FONT;
-	scfg.plate_addr[1] = 0x00;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 
 	scfg.dispenbl 	   = OFF;
-	scfg.plate_addr[0]= (Uint32)NULL;
+	scfg.plate_addr[0]= (Uint32)0;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
 	scfg.dispenbl 	   = OFF;
-	scfg.plate_addr[0]= (Uint32)NULL;
+	scfg.plate_addr[0]= (Uint32)0;
 	SCL_SetConfig(SCL_NBG3, &scfg);
 
 	SCL_SetCycleTable(CycleTb);
@@ -1027,9 +1028,9 @@ void SPR_SetEraseData(Uint16 eraseData, Uint16 leftX, Uint16 topY,Uint16 rightX,
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifndef PONY	
 void SND_Init(SndIniDt *sys_ini)
 {
-#ifndef PONY	
 	Uint8 *adr_sys_info_tbl;
 	
 	/** BEGIN ****************************************************************/
@@ -1065,12 +1066,13 @@ void SND_Init(SndIniDt *sys_ini)
 
     PER_SMPC_SND_ON();                          /* サウンドON                */
 
-#endif
 }
+#endif
+
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifndef PONY
 Uint8 SND_ChgMap(Uint8 area_no)
  {
-#ifndef PONY
 /* 1994/02/24 Start */
     if(intrflag) return(SND_RET_NSET);
     intrflag = 1;
@@ -1085,14 +1087,15 @@ Uint8 SND_ChgMap(Uint8 area_no)
     SET_COMMAND(COM_CHG_MAP);                   /* コマンドセット            */
     while(PEEK_W(adr_com_block + ADR_COM_DATA)) _WAIT_();
     HOST_SET_RETURN(SND_RET_SET);
-#endif	
 }
+#endif	
 
 #define DMA_SCU_END     0
 //-------------------------------------------------------------------------------------------------------------------------------------
+#ifndef PONY
 static void sndInit(void)
 {
-#ifndef PONY	
+	
 	SndIniDt 	snd_init;
 	unsigned char sound_map[]={0xFF,0xFF};
 //	unsigned char sound_map[]={ 0x00, 0x00, 0xB0, 0x00, 0x00, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
@@ -1114,8 +1117,8 @@ static void sndInit(void)
 
 	SND_Init(&snd_init);
 	SND_ChgMap(0);
-#endif	
 }
+#endif	
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifndef PONY
 static PcmHn createHandle(PcmCreatePara *para)

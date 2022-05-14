@@ -1,7 +1,8 @@
 // Burn - Rom Loading module
 #include "burnint.h" // ok
+#if 0
 //-------------------------------------------------------------------------------------------------------------------------------------
-static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor)
+static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, /*int nGap,*/int bXor)
 {
 //	int nRet = 0;
 	char* pszFilename;
@@ -14,7 +15,7 @@ static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int
 		FNT_Print256_2bpp((volatile UINT8 *)0x25e20000,(UINT8 *)toto,10,(10*i)+20);
  */
 	int fid			= GFS_NameToId((Sint8 *)strupr(pszFilename));
-	long fileSize	= GetFileSize(fid);
+//	long fileSize	= GetFileSize(fid);
 	GFS_Load(fid, 0, Dest, ri.nLen);
 	pnWrote[0] = ri.nLen;
 	wait_vblank();
@@ -25,6 +26,7 @@ static int  SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int
 */
 	return 0;
 }
+#endif
 // Load a rom and separate out the bytes by nGap
 // Dest is the memory block to insert the rom into
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -34,28 +36,33 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
 //  if (BurnExtLoadRom==NULL) return 1; // Load function was not defined by the application
 
   // Find the length of the rom (as given by the current driver)
-  {
+  
     struct BurnRomInfo ri;
+	char* pszFilename;
+	
     ri.nType=0;
     ri.nLen=0;
     BurnDrvGetRomInfo(&ri,i);
+	BurnDrvGetRomName(&pszFilename, i, 0);
+	
     if (ri.nType==0) return 0; // Empty rom slot - don't load anything and return success
     nLen=ri.nLen;
-  }
   
-  char* RomName = ""; //add by emufan
-  BurnDrvGetRomName(&RomName, i, 0);
+  
+//  char* RomName = ""; //add by emufan
+//  BurnDrvGetRomName(&RomName, i, 0);
 
   if (nLen<=0) return 1;
 
+  int fid = GFS_NameToId((Sint8 *)strupr(pszFilename));
+
   if (nGap>1 || bXor)
   {
-    unsigned char *Load=NULL;
     unsigned char *pd=NULL,*pl=NULL,*LoadEnd=NULL;
     int nLoadLen=0;
 
     // Allocate space for the file
-    Load=(unsigned char *)0x00200000;
+     unsigned char *Load=(unsigned char *)0x00200000;
 //    if (Load==NULL) 
 //	  {
 //	return 1;
@@ -63,8 +70,11 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
     memset(Load,0,nLen);
     // Load in the file
 //static int __cdecl SaturnLoadRom(unsigned char* Dest, int* pnWrote, int i, int nGap,int bXor)
-    nRet=SaturnLoadRom(Load,&nLoadLen,i,nGap,bXor);
-	
+//    nRet=SaturnLoadRom(Load,&nLoadLen,i,/*nGap,*/bXor);
+//---------------------------------
+	GFS_Load(fid, 0, Load, nLen);
+	wait_vblank();
+//---------------------------------	
    //if (bDoPatch) ApplyPatches(Load, RomName);
     if (nRet!=0) 
 	{
@@ -73,11 +83,11 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
 		return 1;
 	}
 
-    if (nLoadLen<0) nLoadLen=0;
-    if (nLoadLen>nLen) nLoadLen=nLen;
+//    if (nLoadLen<0) nLoadLen=0;
+//    if (nLoadLen>nLen) nLoadLen=nLen;
 
     // Loaded rom okay. Now insert into Dest
-    LoadEnd=Load+nLoadLen;
+    LoadEnd=Load+nLen;
     pd=Dest; pl=Load;
     // Quickly copy in the bytes with a gap of 'nGap' between each byte
 
@@ -96,8 +106,12 @@ static int LoadRom(unsigned char *Dest,int i,int nGap,int bXor)
   else
   {
     // If no XOR, and gap of 1, just copy straight in
-    nRet=SaturnLoadRom(Dest,NULL,i,nGap,bXor);
+ //   nRet=SaturnLoadRom(Dest,NULL,i,/*nGap,*/bXor);
 //    if (bDoPatch) ApplyPatches(Dest, RomName);
+//---------------------------------
+	GFS_Load(fid, 0, Dest, nLen);
+	wait_vblank();
+//---------------------------------	
     if (nRet!=0) return 1;
   }
 

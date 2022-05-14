@@ -33,7 +33,7 @@
 //extern t_cart cart;
 #ifndef ACTION_REPLAY
 //extern signed int file_max;
-static GfsDirId dir_name[MAX_DIR];
+/*static*/ GfsDirId dir_name[MAX_DIR];
 //static Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
 #endif
 
@@ -48,12 +48,15 @@ static GfsDirId dir_name[MAX_DIR];
 ((**(void(**)(void))0x600029c)())
 #endif
 
+#define GFS_WORK_SIZE4(open_max) \
+ ( (sizeof(GfsMng) + ((open_max) - 1) * sizeof(GfsFile) + sizeof(Uint32) - 1) / sizeof(Uint32) )
+ 
 //int LoadFile(char *name, Uint8 *location, Uint32 size);
 //00200000H
 //--------------------------------------------------------------------------------------------------------------------------------------
 void InitCD()
 {
-	Uint32 lib_work[GFS_WORK_SIZE(MAX_OPEN) / sizeof(Uint32)];
+	Uint32 lib_work[GFS_WORK_SIZE4(MAX_OPEN)];
 	GfsDirTbl dirtbl; 
 
 #ifndef ACTION_REPLAY
@@ -104,14 +107,14 @@ GFS_SetDir(&dirtbl) ;
 #endif	
 }
 //--------------------------------------------------------------------------------------------------------------------------------------
-Sint32 GetFileSize(int file_id)
+/*Sint32 GetFileSize(int file_id)
 {
 #ifndef ACTION_REPLAY	
 	return (dir_name[file_id].dirrec.size);
 #else
     return 300;
 #endif	
-}
+}*/
 //--------------------------------------------------------------------------------------------------------------------------------------
 
 #ifdef DEBUG_DRV2

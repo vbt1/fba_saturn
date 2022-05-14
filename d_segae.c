@@ -1062,12 +1062,18 @@ void initLayers(void)
 // vbt : active le prioritybit en mode 1word
 	scfg.patnamecontrl =  0x0000;// VRAM A0
 	scfg.plate_addr[0] = (Uint32)ss_map;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
 //	scfg.dispenbl		= OFF;
 
 	scfg.patnamecontrl =  0x0002;// VRAM A0 + 0x10000
 	scfg.plate_addr[0] = (Uint32)ss_map2;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 	SCL_SetConfig(SCL_NBG1, &scfg);
 /********************************************/	
 
@@ -1078,6 +1084,9 @@ void initLayers(void)
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 	SCL_SetConfig(SCL_NBG2, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }

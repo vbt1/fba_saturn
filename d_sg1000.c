@@ -638,6 +638,9 @@ void initLayers(void)
 	scfg.datatype 	 = SCL_BITMAP;
 	scfg.mapover       = SCL_OVER_0;
 	scfg.plate_addr[0] = SS_FONT;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 	SCL_SetConfig(SCL_NBG1, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }

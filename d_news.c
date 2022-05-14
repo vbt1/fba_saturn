@@ -145,29 +145,15 @@ void __fastcall NewsWrite(unsigned short a, unsigned char d)
 		}
 	}
 
-#ifdef CACHE2
-	if (a >= 0x8800 && a <= 0x8fff) 
+	if (a >= 0x8000 && a <= 0x8fff) 
 	{
 		if(RamStart[a]!=d)
 		{
 			RamStart[a]=d;
-			dirty_buffer[(a>>1)&0x7ff] = 1; 
+			dirty_buffer[(a>>1)&0xfff] = 1; 
 		}
 		return;
 	}
-
-#endif
-#ifdef CACHE
-	if (a >= 0x8000 && a <= 0x87ff) 
-	{
-		if(RamStart[a]!=d)
-		{
-			RamStart[a]=d;
-			dirty_buffer[(a>>1)&0x3ff] = 1; 
-		}
-		return;
-	}
-#endif
 
 	if (a >= 0x9000 && a <= 0x91ff) 
 	{
@@ -176,7 +162,7 @@ void __fastcall NewsWrite(unsigned short a, unsigned char d)
 			RamStart[a] = d;
 			a&=0x1fe;
 			a>>=1;
-			/*colBgAddr2[a] =*/ colBgAddr[a] = cram_lut[*((UINT16 *)NewsPaletteRam+a)];
+			colBgAddr2[a] = colBgAddr[a] = cram_lut[*((UINT16 *)NewsPaletteRam+a)];
 		}
 		return;
 	}
@@ -194,10 +180,9 @@ inline void MemIndex()
 
 	NewsRam			= Next; Next += 0x02000;
 	RamStart		= Next-0x8000;
-	NewsFgVideoRam	= Next; Next += 0x00800;
-	NewsBgVideoRam	= Next; Next += 0x00800;
+	NewsFgVideoRam	= Next; Next += 0x01000;
+//	NewsBgVideoRam	= Next; Next += 0x00800;
 	NewsPaletteRam	= Next; Next += 0x00200;
-	pBuffer			= (int *)Next; Next += nBurnSoundRate * sizeof(int);
 	cram_lut		= (UINT16*)Next; Next += (4096*2);
 	map_offset_lut	= (UINT16*)Next; Next += (0x400*2);
 	dirty_buffer	= Next; Next += 2048;
@@ -233,10 +218,6 @@ int NewsInit()
 	BurnLoadRom(NewsTempGfx + 0x00001, 2, 2); //if (nRet != 0) return 1;
 
 	GfxDecode4Bpp(16384, 4, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x100, NewsTempGfx, (void *)SS_CACHE);//NewsTiles);
-//	NewsTempGfx = NULL;
-
-//	MSM6295ROM = (unsigned char *)LOWADDR;
-//	memset(MSM6295ROM,0x00,0x40000);
 
 	BurnLoadRom(MSM6295ROM, 3, 1); //if (nRet != 0) return 1;
 	// Setup the Z80 emulation
@@ -244,19 +225,7 @@ int NewsInit()
 	CZetInit2(1,CZ80Context);
 	CZetOpen(0);
 	CZetMapMemory(NewsRom,	0x0000, 0x7fff, MAP_ROM);
-	CZetMapMemory(NewsFgVideoRam,	0x8000, 0x87ff, MAP_READ);
-//	CZetMapArea(0x8000, 0x87ff, 0, NewsFgVideoRam );
-#ifndef CACHE
-//	CZetMapArea(0x8000, 0x87ff, 1, NewsFgVideoRam );
-	CZetMapMemory(NewsFgVideoRam,	0x8000, 0x87ff, MAP_WRITE);	
-#endif
-	CZetMapMemory(NewsBgVideoRam,	0x8000, 0x87ff, MAP_ROM);	
-#ifndef CACHE2
-//	CZetMapArea(0x8800, 0x8fff, 1, NewsBgVideoRam );
-	CZetMapMemory(NewsBgVideoRam,	0x8800, 0x8fff, MAP_WRITE);
-#endif
-//	CZetMapArea(0x8800, 0x8fff, 2, NewsBgVideoRam );
-	CZetMapMemory(NewsBgVideoRam,	0x8800, 0x8fff, MAP_FETCH);	
+	CZetMapMemory(NewsFgVideoRam,	0x8000, 0x8fff, MAP_ROM);
 	CZetMapMemory(NewsRam,	0xe000, 0xffff, MAP_READ|MAP_WRITE);
 //	CZetMemEnd();
 	CZetSetReadHandler(NewsRead);
@@ -314,20 +283,24 @@ void initLayers()
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
-	scfg.plate_addr[1] = 0x00;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
-
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 
 	scfg.dispenbl 		 = OFF;
 
-	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
-	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
-	scfg.datatype 		 = SCL_BITMAP;
-	scfg.mapover		 = SCL_OVER_0;
-	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
+//	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
+//	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
+//	scfg.datatype 		 = SCL_BITMAP;
+//	scfg.mapover		 = SCL_OVER_0;
+//	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
   
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
@@ -347,8 +320,9 @@ inline void initPosition()
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void initColors()
 {
-	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));	
+//	memset(SclColRamAlloc256,0,sizeof(SclColRamAlloc256));	
 	colBgAddr =(Uint16*)SCL_AllocColRam(SCL_NBG1,ON);
+	colBgAddr2=(Uint16*)SCL_AllocColRam(SCL_NBG2,OFF);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 void DrvInitSaturn()
@@ -359,15 +333,16 @@ void DrvInitSaturn()
 	
 	SS_MAP  = (Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = (Uint16 *)SCL_VDP2_VRAM_A1;
-	SS_FONT = NULL; //(Uint16 *)SCL_VDP2_VRAM_B0;
+//	SS_FONT = NULL; //(Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE = (Uint8  *)SCL_VDP2_VRAM_A0;				
 	ss_BgPriNum  = (SclBgPriNumRegister *)SS_N0PRI;
 
-	SS_SET_N0PRIN(7);
+//	SS_SET_N0PRIN(7);
 	SS_SET_N2PRIN(5);
 	SS_SET_N1PRIN(4);
 
 	initLayers();
+//	initSprites(264-1,216-1,0,0,8,-32);
 	initPosition();
 	initColors();
 
@@ -379,6 +354,7 @@ void DrvInitSaturn()
 //-------------------------------------------------------------------------------------------------------------------------------------
 int NewsExit()
 {
+	/*
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 	NewsDoReset();
 	MSM6295Exit(0);
@@ -396,13 +372,15 @@ int NewsExit()
 #else
 //	ZetExit();
 #endif
-	memset(SS_MAP,0,0x20000);
-	memset(SS_MAP2,0,0x20000);	
+*/
+//	memset(SS_MAP,0,0x20000);
+//	memset(SS_MAP2,0,0x20000);	
 //	memset(NewsInputPort0,0x00,8);
 //	NewsDip[0] = NewsInput[0]      = 0;
-	wait_vblank();
+//	wait_vblank();
 
 #ifdef PONY
+memset(nSoundBuffer,0x00,0x8000);
 remove_raw_pcm_buffer(pcm1);
 #endif
 
@@ -416,15 +394,12 @@ remove_raw_pcm_buffer(pcm1);
 void NewsRenderFgLayer()
 {
 	UINT16 Code, Colour;
-//	UINT16 x;
 	UINT32 *map;
 	UINT16 *lut_ptr=(UINT16 *)map_offset_lut;
 	UINT16 *fg_ptr =(UINT16 *)NewsFgVideoRam;
-	UINT16 *bg_ptr =(UINT16 *)NewsBgVideoRam;
 	
 	for (UINT16 TileIndex=0;TileIndex<0x400 ; TileIndex++)
 	{
-
 #ifdef CACHE
 		if (dirty_buffer[TileIndex])
 		{
@@ -437,9 +412,6 @@ void NewsRenderFgLayer()
 			map = ((UINT32*)SS_MAP)+(*lut_ptr);
 			*map = Colour<<16 | Code;
 			map[0x20] = 0xa0002;
-//			map[0x40] =  10;
-//			map[0x41] =  0x02;
-
 #ifdef CACHE
 		}
 #endif
@@ -449,7 +421,7 @@ void NewsRenderFgLayer()
 		{
 			dirty_buffer[TileIndex+0x400] = 0;
 #endif
-			Code = *bg_ptr;			
+			Code = fg_ptr[0x400];			
 			Colour = Code >> 12;
 			Code &= 0x0fff;
 			if ((Code & 0x0e00) == 0xe00) Code = (Code & 0x1ff) | (BgPic << 9);
@@ -460,10 +432,8 @@ void NewsRenderFgLayer()
 		}
 #endif
 		lut_ptr++;
-		fg_ptr++;//=2;
-		bg_ptr++;		
+		fg_ptr++;
 	}
-
 }
 #ifdef PONY
 void NewsFrame_old();
@@ -473,9 +443,6 @@ void NewsFrame()
 	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
 
 	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
-
-//	InitCD(); // si on lance juste pour pang
-//	ChangeDir("PANG");  // si on lance juste pour pang
 	pcm_stream_host(NewsFrame_old);
 }
 

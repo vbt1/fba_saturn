@@ -779,9 +779,9 @@ INT32 DrvInit()
 
 //		if (use_encrypted) {
 		if (!strcmp(BurnDrvGetTextA(DRV_NAME), "omega")) {	
-//			CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
-//			CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROMdec, DrvMainROM); // fetch ops(encrypted), opargs(unencrypted)
-			CZetMapMemory2(DrvMainROMdec, DrvMainROM, 0x0000, 0xbfff, MAP_ROM);			
+			CZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
+			CZetMapArea2(0x0000, 0xbfff, 2, DrvMainROMdec, DrvMainROM); // fetch ops(encrypted), opargs(unencrypted)
+//			CZetMapMemory2(DrvMainROMdec, DrvMainROM, 0x0000, 0xbfff, MAP_ROM);			
 		}
 	}
 
@@ -855,22 +855,26 @@ inline void initLayers()
 	scfg.datatype      = SCL_CELL;
 	scfg.flip          = SCL_PN_10BIT; // on force à 0
 	scfg.plate_addr[0] = (Uint32)SS_MAP2;
-	scfg.plate_addr[1] = 0x00;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 // 3 nbg
 	scfg.bmpsize 	   = SCL_BMP_SIZE_512X256;
 	scfg.datatype 	   = SCL_BITMAP;
 	scfg.mapover	   = SCL_OVER_0;
 	scfg.plate_addr[0] = (Uint32)SS_FONT;
-
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 
 //	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
-//	scfg.plate_addr[1] = (Uint32)SS_MAP;
-//	scfg.plate_addr[2] = (Uint32)SS_MAP;
-//	scfg.plate_addr[3] = (Uint32)SS_MAP;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 	scfg.dispenbl      = OFF;
 	SCL_SetConfig(SCL_NBG2, &scfg);
 //	scfg.dispenbl      = OFF;
@@ -969,11 +973,11 @@ void DrvInitSaturn()
 INT32 DrvExit()
 {
 	DrawSprite = NULL;
-	DrvDoReset();
+/*	DrvDoReset();
 	CZetExit2();
 	ppi8255_exit();
 	SN76496Exit();	
-
+*/
 #ifdef PONY
 	remove_raw_pcm_buffer(pcm1);
 #endif

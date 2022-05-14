@@ -36,7 +36,7 @@ void CZetMapMemory(unsigned char *Mem, int nStart, int nEnd, int nFlags);
 void CZetMapMemory2(unsigned char *Mem, unsigned char *Mem02, int nStart, int nEnd, int nFlags);
 int CZetMapArea(int nStart, int nEnd, int nMode, unsigned char *Mem);
 int CZetMapArea2(int nStart, int nEnd, int nMode, unsigned char *Mem01, unsigned char *Mem02);
-int CZetReset();
+void CZetReset();
 int CZetPc(int n);
 int CZetBc(int n);
 int CZetHL(int n);

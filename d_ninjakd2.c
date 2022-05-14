@@ -345,9 +345,9 @@ void mnight_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-void robokid_rambank(UINT8 sel, UINT8 data)
+inline void robokid_rambank(UINT8 sel, UINT8 data)
 {
-	UINT8 *ram[3] = { DrvBgRAM0, DrvBgRAM1, DrvBgRAM2 };
+	UINT8 *ram[3] = { DrvBgRAM0, DrvBgRAM1, DrvBgRAM };
 	UINT16 off[2][3]  = { { 0xd800, 0xd400, 0xd000 }, { 0xc400, 0xc800, 0xcc00 } };
 
 	UINT32 nBank = 0x400 * data;
@@ -769,8 +769,7 @@ void MemIndex(UINT32 game)
 	DrvPalRAM	= (UINT8 *)Next; Next += 0x000800;
 	DrvFgRAM	= (UINT8 *)Next; Next += 0x000800;
 	DrvBgRAM0	= (UINT8 *)Next; Next += 0x002000;
-	DrvBgRAM	= Next;
-	DrvBgRAM2	= (UINT8 *)Next; Next += 0x002000;
+	DrvBgRAM	= (UINT8 *)Next; Next += 0x002000;
 	DrvBgRAM1	= (UINT8 *)Next; Next += 0x002000;
 	RamEnd		= (UINT8 *)Next;
 
@@ -1081,7 +1080,7 @@ INT32 RobokidInit()
 	CZetMapMemory(DrvPalRAM,			0xc000, 0xc7ff, MAP_ROM);
 //	CZetMapMemory(DrvFgRAM,				0xc800, 0xcfff, MAP_RAM);
 	CZetMapMemory(DrvFgRAM,				0xc800, 0xcfff, MAP_ROM);
-	CZetMapMemory(DrvBgRAM2,			0xd000, 0xd3ff, MAP_RAM);
+	CZetMapMemory(DrvBgRAM,			0xd000, 0xd3ff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM1,			0xd400, 0xd7ff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM0,			0xd800, 0xdbff, MAP_RAM);
 	CZetMapMemory(DrvZ80RAM0,			0xe000, 0xf9ff, MAP_RAM);
@@ -1178,7 +1177,7 @@ INT32 OmegafInit()
 	CZetMapMemory(DrvZ80ROM0 + 0x10000,	0x8000, 0xbfff, MAP_ROM);
 	CZetMapMemory(DrvBgRAM0,			0xc400, 0xc7ff, MAP_RAM);
 	CZetMapMemory(DrvBgRAM1,			0xc800, 0xcbff, MAP_RAM);
-	CZetMapMemory(DrvBgRAM2,			0xcc00, 0xcfff, MAP_RAM);
+	CZetMapMemory(DrvBgRAM,				0xcc00, 0xcfff, MAP_RAM);
 	CZetMapMemory(DrvFgRAM,				0xd000, 0xd7ff, MAP_RAM);
 	CZetMapMemory(DrvPalRAM,			0xd800, 0xdfff, MAP_ROM);
 	CZetMapMemory(DrvZ80RAM0,			0xe000, 0xf9ff, MAP_RAM);
@@ -1217,8 +1216,10 @@ void initLayersS(UINT8 game)
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_CELL;
 	scfg.patnamecontrl =  0x0000;// VRAM A0 ?~I?t?Z?b?g 
-	scfg.plate_addr[0] = (Uint32)ss_map;
-	scfg.plate_addr[1] = (Uint32)ss_map;
+	scfg.plate_addr[0] = (Uint32)SS_MAP;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 	SCL_SetConfig(SCL_NBG2, &scfg); // fg
 
 	scfg.dispenbl      = ON;
@@ -1226,17 +1227,17 @@ void initLayersS(UINT8 game)
 	scfg.charsize      = SCL_CHAR_SIZE_2X2;//OK du 1*1 surtout pas toucher
 	scfg.platesize     = SCL_PL_SIZE_1X1; // ou 2X2 ?
 	scfg.patnamecontrl =  0x0000;// VRAM A0 +0x10000?~I?t?Z?b?g 
-	scfg.plate_addr[0] = (Uint32)ss_map2;
-	scfg.plate_addr[1] = (Uint32)ss_map2;
-	scfg.plate_addr[2] = (Uint32)ss_map2;
-	scfg.plate_addr[3] = (Uint32)ss_map2;
+	scfg.plate_addr[0] = (Uint32)SS_MAP2;
+	scfg.plate_addr[1] = (Uint32)SS_MAP2;
+	scfg.plate_addr[2] = (Uint32)SS_MAP2;
+	scfg.plate_addr[3] = (Uint32)SS_MAP2;
 
 	SCL_SetConfig(SCL_NBG1, &scfg); // bg0
 	scfg.dispenbl      = ON;
 	scfg.plate_addr[0] = (Uint32)SS_FONT; // bg1
-	scfg.plate_addr[1] = (Uint32)SS_FONT;
-	scfg.plate_addr[2] = (Uint32)SS_FONT;
-	scfg.plate_addr[3] = (Uint32)SS_FONT;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 		
 	if(!game)
 	{
@@ -1381,12 +1382,13 @@ void tile16x16toSaturn (unsigned int num, unsigned char *pDest)
 
  INT32 DrvExit()
 {
+/*	
 //	nBurnFunction = NULL;
 	DrvDraw = NULL;	
 //	wait_vblank();	
 	DrvDoReset();
 	CZetExit2();
-
+*/
 	nSoundBufferPos=0;
 
 #ifdef PONY
@@ -1677,7 +1679,7 @@ DrvZ80ROM0[0x13566]=0x30;
 	for (UINT32 i = 0; i < nInterleave; i++)
 	{
 
-		CZetOpen(0);
+//		CZetOpen(0);
 		CZetRun(nCycleSegment);
 
 		if (i == (nInterleave-1))
@@ -1689,7 +1691,7 @@ DrvZ80ROM0[0x13566]=0x30;
 			CZetSetIRQLine(0xd7, 0);
 		}
 
-		CZetClose();
+//		CZetClose();
 	}
 
 	DrvDraw();

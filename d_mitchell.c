@@ -779,12 +779,17 @@ inline void initLayers()
 	scfg.datatype      = SCL_CELL;
 	scfg.plate_addr[0] = (Uint32)ss_map2;
 	scfg.plate_addr[1] = (Uint32)ss_map2;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 #else
 	scfg.bmpsize 		 = SCL_BMP_SIZE_512X256;
 	scfg.coltype 		 = SCL_COL_TYPE_16;//SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
 	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 #endif	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 	
@@ -795,7 +800,9 @@ scfg.dispenbl      = ON;
 	scfg.datatype 		 = SCL_BITMAP;
 	scfg.mapover		 = SCL_OVER_0;
 	scfg.plate_addr[0]	 = (Uint32)SS_FONT;
-
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;
 // 3 nbg	
 	SCL_SetConfig(SCL_NBG1, &scfg); 
 

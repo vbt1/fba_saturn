@@ -164,7 +164,7 @@ void remove_raw_pcm_buffer(short pcmnum)
 	m68k_com->pcmCtrl[numberPCMs].bytes_per_blank = 0;
 	m68k_com->pcmCtrl[numberPCMs].volume = 0;
 	m68k_com->pcmCtrl[numberPCMs].sh2_permit = 0;
-//	memset(scsp_load,0x00,size);
+//	memset(scsp_load,0x00,size*2);
 	scsp_load = (unsigned int *)((unsigned int )scsp_load - size);
 //	memset(scsp_load,0x00,size);	
 	numberPCMs--;	

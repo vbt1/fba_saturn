@@ -28,6 +28,11 @@ extern unsigned short frame_x;
 extern unsigned short frame_y;
 #endif
 
+void dummy()
+{
+
+}
+
 int ovlInit(char *szShortName)
 {
 	cleanBSS();

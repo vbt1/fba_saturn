@@ -12,7 +12,7 @@ SECTIONS {
          	_stack = .;
 	} > ram		
 
-	.shared 0x6003700 (NOLOAD):
+	.shared 0x6003400 (NOLOAD):
 	{
 	    *(.shared)
 		_play = .;
@@ -59,11 +59,11 @@ SECTIONS {
 		*(".text*")
 		*(.rodata*)		
 		*(.strings)
-                ___dtors = . ;
+/*              ___dtors = . ; */
 /*				__D_BGN = .; */
                 *(.dtors)
 /*				__D_END = .; */
-                ___dtors_end = . ;
+/*                ___dtors_end = . ; */
                 *(.data)
 	} > ram
 

@@ -28,7 +28,7 @@
 
 struct AY8910
 {
-	int Channel;
+//	int Channel;
 	int SampleRate;
 	read8_handler PortAread;
 	read8_handler PortBread;
@@ -69,12 +69,12 @@ struct AY8910
 #define AY_PORTB	(15)
 
 
-struct AY8910 AYPSG[MAX_8910] = {
-	{ .Channel = 0, .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0},
-	{ .Channel = 0, .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0},
-	{ .Channel = 0, .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0}};		/* array of PSG's */
+static struct AY8910 AYPSG[MAX_8910] = {
+	{ /*.Channel = 0,*/ .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0},
+	{ /*.Channel = 0,*/ .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0},
+	{ /*.Channel = 0,*/ .SampleRate = 0, .register_latch = 0, .lastEnable = 0, .UpdateStep = 0, .CountEnv = 0, .RNG = 0}};		/* array of PSG's */
 
-void _AYWriteReg(int n, int r, int v)
+inline void _AYWriteReg(int n, int r, int v)
 {
 	struct AY8910 *PSG = &AYPSG[n];
 	int old;
@@ -934,7 +934,7 @@ void AY8910Reset(int chip)
 	PSG->OutputN = 0xff;
 	PSG->lastEnable = -1;	/* force a write */
 	for (i = 0;i < AY_PORTA;i++)
-		_AYWriteReg(chip,i,0);	/* AYWriteReg() uses the timer system; we cannot */
+		AYWriteReg(chip,i,0);	/* AYWriteReg() uses the timer system; we cannot */
 								/* call it at this time because the timer system */
 								/* has not been initialized. */
 }

@@ -40,6 +40,7 @@ void CZetSetWriteHandler(void (__fastcall *pHandler)(unsigned short, unsigned ch
 	lastCZetCPUContext->Write_Byte = pHandler;
 //	lastCZetCPUContext->Write_Word = pHandler;
 }
+/*
 #if CZ80_USE_WORD_HANDLER
 void CZetSetWrite16Handler(void (__fastcall *pHandler)(unsigned short, unsigned char))
 {
@@ -47,7 +48,7 @@ void CZetSetWrite16Handler(void (__fastcall *pHandler)(unsigned short, unsigned 
 	lastCZetCPUContext->Write_Word = pHandler;
 }
 #endif
-
+*/
 void CZetSetWriteHandler2(unsigned short nStart, unsigned short nEnd,void (*pHandler)(unsigned short, unsigned char))
 {
 	UINT8 cStart = (nStart >> 8);
@@ -358,13 +359,11 @@ int CZetMapArea2(int nStart, int nEnd, int nMode, unsigned char *Mem01, unsigned
 	return 0;
 }
 
-int CZetReset()
+void CZetReset()
 {
 	Cz80_Reset( lastCZetCPUContext );
-
-	return 0;
 }
-
+/*
 int CZetGetPC(int n)
 {
 	if (n < 0) {
@@ -399,7 +398,7 @@ int CZetHL(int n)
 		return Cz80_Get_HL(&CZetCPUContext[n]);
 	}
 }
-
+*/
 void CZetSetIRQLine(const int line, const int status)
 {
 //	switch (status)
@@ -430,12 +429,12 @@ int CZetIdle(int nCycles)
 
 	return nCycles;
 }
-
+/*
 int CZetSegmentCycles()
 {
 	return lastCZetCPUContext->nCyclesSegment - lastCZetCPUContext->nCyclesLeft;
 }
-
+*/
 int CZetTotalCycles()
 {
 //		int vbt = lastCZetCPUContext->nCyclesTotal - lastCZetCPUContext->nCyclesLeft;

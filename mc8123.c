@@ -314,7 +314,7 @@ void mc8123_decrypt_rom(int banknum, int numbanks, unsigned char *pRom, unsigned
 	UINT8 *key = pKey;
 	INT32 A, bank;
 
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"mc8123_decrypt_rom loop1",24,40);
+//		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"mc8123_decrypt_rom loop1",24,40);
 	for (A = 0x0000;A < main_len;A++)
 	{
 		UINT8 src = rom[A];
@@ -325,7 +325,7 @@ void mc8123_decrypt_rom(int banknum, int numbanks, unsigned char *pRom, unsigned
 		/* decode the data */
 		rom[A] = mc8123_decrypt(A,src,key,0);
 	}
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"mc8123_decrypt_rom loop2",24,40);
+//		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"mc8123_decrypt_rom loop2",24,40);
 	for (bank = 0; bank < numbanks; ++bank)
 	{
 		for (A = 0x8000;A < 0xc000;A++)
@@ -339,5 +339,5 @@ void mc8123_decrypt_rom(int banknum, int numbanks, unsigned char *pRom, unsigned
 			rom[0x8000 + 0x4000*bank + A] = mc8123_decrypt(A,src,key,0);
 		}
 	}
-		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"mc8123_decrypt_rom loop end",24,40);	
+//		FNT_Print256_2bppSel((volatile Uint8 *)SS_FONT,(Uint8 *)"mc8123_decrypt_rom loop end",24,40);	
 }

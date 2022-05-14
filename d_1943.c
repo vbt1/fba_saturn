@@ -318,9 +318,9 @@ void DrvInitDamageXsound()
 	{
 		asm("nop\n"); // waste time
 	}
-
+extern GfsDirId *dir_name;
 	signed int fid=GFS_NameToId("VGM68.BIN");
-	GFS_Load(fid,0,(void *)0x5A00000,GetFileSize(fid));
+	GFS_Load(fid,0,(void *)0x5A00000,dir_name[fid].dirrec.size);
 
 // turn on the 68000
 	*(UINT8 *)(0x2010001F)=6;

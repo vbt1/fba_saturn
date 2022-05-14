@@ -54,10 +54,10 @@ static const int logtbl[] = {
 #define PCM_SET_PITCH_WORD(oct, fns)										\
 		((int)((PCM_MSK4(-(oct)) << 11) | PCM_MSK10(fns)))
 		
-	volatile sysComPara * m68k_com = (sysComPara *)((SNDPRG + DRV_SYS_END) | 0x20000000);
+	volatile sysComPara * m68k_com = NULL; //(sysComPara *)((SNDPRG + DRV_SYS_END) | 0x20000000);
 //	volatile sysComPara * m68k_com = (sysComPara *)(PCMEND | 0x20000000);
-	volatile unsigned int * scsp_load =  (unsigned int*)(0x408 + DRV_SYS_END + 0x20); //Local loading address for sound data, is DRV_SYS_END ahead of the SNDPRG, and ahead of the communication data
-	volatile unsigned short * master_volume = (unsigned short *)(SNDRAM + 0x100400);
+	volatile unsigned int * scsp_load =  NULL; //(unsigned int*)(0x408 + DRV_SYS_END + 0x20); //Local loading address for sound data, is DRV_SYS_END ahead of the SNDPRG, and ahead of the communication data
+	volatile unsigned short * master_volume = NULL; //(unsigned short *)(SNDRAM + 0x100400);
 	volatile short numberPCMs = 0;
 	
 void	pcm_play(short pcmNumber, char ctrlType, char volume)
@@ -128,6 +128,10 @@ void	load_driver_binary(Sint8 * filename, void * buffer, int master_adx_frequenc
 	GfsHn s_gfs;
 	Sint32 file_size;
 	
+	m68k_com = (sysComPara *)((SNDPRG + DRV_SYS_END) | 0x20000000);
+//	volatile sysComPara * m68k_com = (sysComPara *)(PCMEND | 0x20000000);
+	scsp_load =  (unsigned int*)(0x408 + DRV_SYS_END + 0x20); //Local loading address for sound data, is DRV_SYS_END ahead of the SNDPRG, and ahead of the communication data
+	master_volume = (unsigned short *)(SNDRAM + 0x100400);
 //	Sint32 local_name = GFS_NameToId(filename);
 
 	//Open GFS

@@ -43,10 +43,10 @@ void cleanSprites()
 	} 
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void dummy()
+/*void dummy()
 {
 
-}
+}*/
 //-------------------------------------------------------------------------------------------------------------------------------------
 static inline int readbit(const unsigned char *src, int bitnum)
 {
@@ -71,6 +71,7 @@ static inline int readbit(const unsigned char *src, int bitnum)
 				dp = pDest + (c * (xSize/2) * ySize) + (y * (xSize/2));
 			
 				for (unsigned int x = 0; x < xSize; x+=2) {
+					 
 					if (readbit(pSrc, yoffs + xoffsets[x])) dp[x>>1] |= (planebit&0x0f)<<4;
 					if (readbit(pSrc, yoffs + xoffsets[x+1])) dp[x>>1] |= (planebit& 0x0f);
 				}
