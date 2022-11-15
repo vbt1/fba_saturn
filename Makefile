@@ -10,16 +10,16 @@ CONV = sh-elf-objcopy
 
 MAKEFILE = Makefile 
 #CCFLAGS2 = -m2 -Os -Wall -Wextra --save-temps -ffreestanding -fno-web -fno-unit-at-a-time -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
-CCFLAGS2 = -m2 -O2 -Wall -fno-lto --save-temps -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -fno-align-loops -freorder-blocks-algorithm=simple -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCFLAGS2 = -m2 -O2 -falign-functions=4 -fpeel-loops -Wall -Wl,-fuse-ld=gold -fno-lto -ftree-partial-pre -fweb -fno-common -fsingle-precision-constant -fno-printf-return-value -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -fno-align-loops -freorder-blocks-algorithm=simple -Wno-missing-braces -Wextra -fno-web -fno-unit-at-a-time -Wl,-v -Wl,--verbose -Wl,--allow-multiple-definition -std=gnu99 -Wfatal-errors -fno-exceptions -D_SH -DMODEL_S -c -I. -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
-CCOVLFLAGS = -m2 -O2  -Wall -fno-lto -fno-common -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -freorder-blocks-algorithm=simple -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
+CCOVLFLAGS = -m2 -O2 -falign-functions=4 -fpeel-loops  -Wall -Wl,-fuse-ld=gold -fno-lto -ftree-partial-pre -fweb -fno-common -fsingle-precision-constant -fno-printf-return-value -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -freorder-blocks-algorithm=simple -fno-align-loops -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
 OLVSCRIPT = root/sl2.lnk
 
 #LDCMNFLAGS = -m2 -O2 -v --verbose -Xlinker -use-linker-plugin  -Xlinker -n -Xlinker -S -Xlinker -flto -Xlinker
 #LDCMNFLAGS2 = -m2 -Os -v --verbose -Xlinker -use-linker-plugin -Xlinker -S -Xlinker -flto -Xlinker
-LDCMNFLAGS = -m2 -O2 -v --verbose -Xlinker -n -Xlinker -S -Xlinker
-LDCMNFLAGS2 = -m2 -Os -v --verbose -Xlinker -S -Xlinker
+LDCMNFLAGS = -m2 -O2 -v --verbose -Xlinker -n -Xlinker -use-linker-plugin -Xlinker -S -Xlinker
+LDCMNFLAGS2 = -m2 -Os -v --verbose -Xlinker -n -Xlinker -use-linker-plugin -Xlinker -S -Xlinker
 
 TARGET    = root/sl.elf
 TARGET1  = root/sl.bin
@@ -178,7 +178,7 @@ OVLVIGIL                 = root/d_vigil.elf
 OVLVIGIL1               = root/d_vigil.bin
 MPOVLVIGILFILE    = $(OVLVIGIL:.elf=.maps)
 LDOVLVIGILFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLVIGILFILE) -Xlinker -e -Xlinker boot -nostartfiles
-SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c load.c saturn/ovl.c 
+SRCOVLVIGIL         = d_vigilant.c czet.c cz80/cz80.c snd/ym2151_scsp.c load.c saturn/ovl.c 
 # snd/dac.c snd/ym2151.c
 #SRCOVLVIGIL         = d_vigilant.c z80_intf.c z80.c z80daisy.c burn_ym2151.c ym2151.c dac.c burn_sound_c.c load.c saturn/ovl.c
 OBJOVLVIGIL         = $(SRCOVLVIGIL:.c=.o)
@@ -315,7 +315,7 @@ drv:    $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
      $(OVLMSX) $(OVLMSX1) $(OVLSEGAE) $(OVLSEGAE1) \
      $(OVLSOLOMN) $(OVLSOLOMN1) $(OVLSIDARM) $(OVLSIDARM1) \
      $(OVLNINKD2) $(OVLNINKD21) $(OVL1943) $(OVL19431) \
-	 $(OVLTETRIS) $(OVLTETRIS1) \
+	 $(OVLTETRIS) $(OVLTETRIS1) $(OVLVIGIL) $(OVLVIGIL1) \
      $(OVLSMS) $(OVLSMS1) $(OVLGGCZ) $(OVLGGCZ1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1)
 

@@ -149,7 +149,7 @@ void __fastcall zaxxon_write8000(UINT16 address, UINT8 data)
 	{
 		DrvVidRAM[address] = data;
 		UINT32 colpromoffs = colpromoffs_lut[address];
-		UINT16 *map = (UINT16*)ss_map2+map_lut[address];
+		UINT16 *map = (UINT16*)SS_MAP2+map_lut[address];
 
 		map[0] = (DrvColPROM[colpromoffs] & 0x0f);
 		map[1] = data;
@@ -192,7 +192,7 @@ void __fastcall zaxxon_write(UINT16 address, UINT8 data)
 		{
 			DrvVidRAM[address] = data;
 			UINT32 colpromoffs = colpromoffs_lut[address];
-			UINT16 *map = (UINT16*)ss_map2+map_lut[address];			
+			UINT16 *map = (UINT16*)SS_MAP2+map_lut[address];			
 //			UINT32 x = map_lut[address];
 			map[0] = (DrvColPROM[colpromoffs] & 0x0f);
 			map[1] = data;
@@ -424,7 +424,7 @@ void bg_layer_init()
 
 void DrvDoReset()
 {
-	memset (AllRam, 0, RamEnd - AllRam);
+	memset (DrvZ80RAM, 0, RamEnd - DrvZ80RAM);
 
 #ifndef RAZE
 	CZetOpen(0);
@@ -537,6 +537,7 @@ INT32 DrvInit()
 
 INT32 DrvExit()
 {
+/*	
 	DrvDoReset();
 //	while(0 != DMA_ScuResult());
 //	wait_vblank();
@@ -554,7 +555,7 @@ INT32 DrvExit()
 	cleanSprites();
 	
 	wait_vblank();
-	
+*/	
 	//cleanDATA();
 	cleanBSS();
 
@@ -788,7 +789,7 @@ void sega_decode(const UINT8 convtable[32][4])
 	}
 }
 
-inline void szaxxon_decode()
+void szaxxon_decode()
 {
 	UINT8 convtable[32][4] =
 	{
@@ -923,7 +924,7 @@ inline void SaturnInitMem()
 //	DrvZ80ROM2		= Next; Next += 0x010000;
 	DrvColPROM		= Next; Next += 0x000200;
 
-	AllRam			= Next;
+	//AllRam			= Next;
 
 	DrvZ80RAM		= Next; Next += 0x001000;
 //	DrvZ80RAM2		= Next; Next += 0x001000;
@@ -949,8 +950,8 @@ inline void SaturnInitMem()
 //	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 //	DMA_ScuInit();
 //	nBurnSoundLen = 256;//192;//320; // ou 128 ?
-	SS_MAP  = ss_map   =(Uint16 *)SCL_VDP2_VRAM_B1;
-	SS_MAP2 = ss_map2  =(Uint16 *)SCL_VDP2_VRAM_A1;
+	SS_MAP  = NULL;
+	SS_MAP2 = (Uint16 *)SCL_VDP2_VRAM_A1;
 	SS_FONT = (Uint16 *)SCL_VDP2_VRAM_B0;
 	SS_CACHE= (Uint8  *)SCL_VDP2_VRAM_A0;
 
@@ -1028,7 +1029,7 @@ inline void SaturnInitMem()
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void rotate32_tile(unsigned int size,/*unsigned char flip,*/ unsigned char *target)
+void rotate32_tile(unsigned int size,/*unsigned char flip,*/ unsigned char *target)
 {
 	unsigned int i,j,k;
 

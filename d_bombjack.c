@@ -348,7 +348,7 @@ void DecodeTiles(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3
 	}
  }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	DecodeTiles(TilePointer, num,off1,off2, off3);
 	unsigned char tiles4[256];
@@ -414,7 +414,7 @@ inline void DecodeTiles16_4BppTile(UINT8 *TilePointer, INT32 num,INT32 off1,INT3
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	unsigned char tiles4[512];
 	unsigned char *TilePointerP=(unsigned char *)TilePointer;
@@ -508,7 +508,7 @@ inline void DecodeTiles32_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 of
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
+void DecodeTiles16_4Bpp(UINT8 *TilePointer, INT32 num,INT32 off1,INT32 off2, INT32 off3)
 {
 	DecodeTiles(TilePointer, num,off1,off2, off3);
 	unsigned char tiles4[256];

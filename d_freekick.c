@@ -808,7 +808,7 @@ INT32 DrvInit()
 	return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void rotate_tile16x16(unsigned int size, unsigned char *target)
+void rotate_tile16x16(unsigned int size, unsigned char *target)
 {
 	unsigned int i,j,k; //,l=0;
 	unsigned char temp[256];

@@ -284,7 +284,7 @@ inline void Graphics_Decode(int *CharPlanes, int *CharXOffs, int *CharYOffs, int
 	GfxDecode4Bpp(0x200, 4, 16, 16, SprPlanes, SprXOffs, SprYOffs, SprMod, Gfx1, &ss_vram[0x1100]);
 }
 
-inline void DrvGfxDecode()
+void DrvGfxDecode()
 {
 	int Planes[4] = { 0, 1, 2, 3 };
 	int XOffs[16] = { 0, 4, 8, 12, 16, 20, 24, 28, 256, 260, 264, 268, 272, 276, 280, 284 };
@@ -529,6 +529,9 @@ inline void initLayers()
 	scfg.datatype      = SCL_CELL;
 	scfg.patnamecontrl =  0x000c;// VRAM B1 ??I?t?Z?b?g 
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
+	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[2] = (Uint32)0;
+	scfg.plate_addr[3] = (Uint32)0;	
 	SCL_SetConfig(SCL_NBG0, &scfg);
 	SCL_SetCycleTable(CycleTb);
 }

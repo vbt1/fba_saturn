@@ -23,7 +23,7 @@
 #define	SCL_MAXLINE	 384 //256//256
 #define	SCL_MAXCELL	32//32
 
-#define nBurnDrvCount 46
+#define nBurnDrvCount 43
 
 extern void (*nBurnFunction)();
 extern Uint32 SclColRamAlloc256[8];

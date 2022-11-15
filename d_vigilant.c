@@ -8,13 +8,19 @@
 #define nInterleave 256//140 // dac needs 128 NMIs
 #define nCPUClockspeed 3579645 
 #define nSegmentLength nBurnSoundLen / nInterleave
-
+#define PONY 1
 #include "d_vigilant.h"
+
 void YM2151UpdateOneSlave();
 static void Set8PCM();
 UINT32 nCyclesTotal[2];
 UINT32 nBurnCurrentYM2151Register;
 //INT16 oldScroll =0;
+extern unsigned short frame_x, frame_y;
+void dummy()
+{
+	
+}
 
 int ovlInit(char *szShortName)
 {
@@ -51,18 +57,17 @@ int ovlInit(char *szShortName)
 	DrvSpriteRam           = Next; Next += 0x00100;
 	DrvPaletteRam          = Next; Next += 0x00800;
 	DrvVideoRam            = Next; Next += 0x01000;
-//	DrvPalette             = (UINT32*)Next; Next += (512 + 32) * sizeof(UINT32);
 
 //	RamEnd                 = Next;
 	
 	vb_buffer				 = Next; Next += 0x4000 * sizeof(UINT32);
-	DrvChars               = cache;//Next; Next += 0x1000 * 8 * 8;
+	DrvChars               = (UINT8 *)SS_CACHE;//Next; Next += 0x1000 * 8 * 8;
 	UINT8 *ss_vram = (UINT8 *)SS_SPRAM;
 	DrvSprites             = &ss_vram[0x1100];//Next; Next += 0x1000 * 16 * 16;
 #ifndef BMP
-	DrvBackTiles          = cache+0x20000;//Next; Next += 0x4000 * 32;
+	DrvBackTiles          = (UINT8 *)SS_CACHE+0x20000;//Next; Next += 0x4000 * 32;
 #else
-	DrvBackTiles          = cache+0x30000;//Next; Next += 0x4000 * 32;
+	DrvBackTiles          = (UINT8 *)SS_CACHE+0x30000;//Next; Next += 0x4000 * 32;
 #endif
 //	lBuffer					 = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16) * 10;
 	MemEnd                = Next;
@@ -132,7 +137,7 @@ int ovlInit(char *szShortName)
 //		CZetClose();
 	}
 	
-#ifdef SOUND
+#ifdef SOUND2
 //	BurnYM2151Reset();
 	YM2151ResetChip(0);
 	DACReset();
@@ -356,7 +361,7 @@ UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
 	
 	switch (a) {
 		case 0x01: {
-#ifdef SOUND
+#ifdef SOUND2
 			return BurnYM2151ReadStatus();
 #else
 //			return 0;
@@ -379,7 +384,6 @@ UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
 	return 0;
 }
 
-
 void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
@@ -398,24 +402,20 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 #ifdef SOUND
 //		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"W WriteR",10,120);
 //			BurnYM2151WriteRegister(d);
-			YM2151WriteReg(0, nBurnCurrentYM2151Register, d);
+//			YM2151WriteReg(0, nBurnCurrentYM2151Register, d);
+			ym2151_w(nBurnCurrentYM2151Register, d);
 #endif
 			return;
 		}
 		
 		case 0x80: {
 			DrvSampleAddress = (DrvSampleAddress & 0xff00) | ((d << 0) & 0x00ff);
-//			FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"         ",10,50);
-
-//			FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)itoa(DrvSampleAddress),10,50);
 			return;
 		}
 		
 		case 0x81: {
 //		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"W Samp81",10,120);
 			DrvSampleAddress = (DrvSampleAddress & 0x00ff) | ((d << 8) & 0xff00);
-//			FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"         ",10,60);
-//			FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)itoa(DrvSampleAddress),10,60);
 			return;
 		}
 		
@@ -426,7 +426,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		SPR_WaitEndSlaveSH();
 	}
 
-			DACSignedWrite(0, d);
+//			DACSignedWrite(0, d);
 #endif
 			DrvSampleAddress = (DrvSampleAddress + 1) & 0xffff;
 			return;
@@ -442,7 +442,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		}
 	}
 }
-
+#ifdef SOUND2
 /*static*/void VigilantYM2151IrqHandler(INT32 Irq)
 {
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
@@ -458,6 +458,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		DrvSetVector(YM2151_CLEAR);
 	}
 }
+
 //int aaa = 10;
 /*static*/ INT32 VigilantSyncDAC()
 {
@@ -489,7 +490,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	return 		(INT32)(float)	(nBurnSoundLen * (CZetTotalCycles() / ((nCPUClockspeed) / (600000.00))))
 	;
 }
-
+#endif
 /*static*/INT32 DrvInit()
 {
 	DrvInitSaturn();
@@ -514,7 +515,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	vbmap[3] = vb_buffer + (0x1000*3);
 
 	UINT8 *DrvTempRom = (UINT8 *)(0x00200000);
-//FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom                 ",10,100);
+FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom                 ",10,100);
 	// Load Z80 #1 Program Roms
 	nRet = BurnLoadRom(DrvZ80Rom1 + 0x00000,  0, 1); if (nRet != 0) return 1;
 	nRet = BurnLoadRom(DrvZ80Rom1 + 0x10000,  1, 1); if (nRet != 0) return 1;
@@ -550,9 +551,12 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	
 	// Load sample Roms
 	nRet = BurnLoadRom(DrvSamples + 0x00000, 16, 1); if (nRet != 0) return 1;
-//FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom done                ",10,100);
+FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom done                ",10,100);
 	// Setup the Z80 emulation
+#ifndef RAZE1	
 	CZetInit2(2,CZ80Context);
+#endif
+
 #ifdef RAZE0
 	z80_init_memmap();
 //	z80_add_read(0x0000, 0xffff, 1, (void *)&VigilanteZ80Read1); 	   // inutile
@@ -596,7 +600,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	nCyclesTotal[0] = nCPUClockspeed / 55;
 	nCyclesTotal[1] = nCPUClockspeed / 55;
 	
-#ifdef SOUND
+#ifdef SOUND2
 //	BurnYM2151Init(3579645);
 	YM2151Init(1, nCPUClockspeed, nBurnSoundRate);	 //11025);//
 	BurnYM2151SetIrqHandler(&VigilantYM2151IrqHandler);	
@@ -605,6 +609,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 	DACInit(0, 0, 0, VigilantSyncDAC);
 //	DACSetRoute(0, 0.45, BURN_SND_ROUTE_BOTH);
 #endif
+FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"DrvDoReset                 ",10,100);
 	DrvDoReset();
 
 	return 0;
@@ -625,6 +630,7 @@ void xxx(int *i)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void DrvFrame()
 {
+//FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"DrvFrame                 ",10,100);
 	DrvMakeInputs();
 	nCyclesDone[0] = nCyclesDone[1] = /*SS_Z80CY =*/ 0;
 
@@ -661,6 +667,7 @@ void xxx(int *i)
 
 			int nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 			int nCyclesSegment2 = nNext - nCyclesDone[1];
+//	FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"CZetRun                 ",10,100);			
 			nCyclesDone[1] += CZetRun(nCyclesSegment2);
 
 
@@ -675,18 +682,27 @@ void xxx(int *i)
 	}		
 */
 		CZetOpen(1);
-#ifdef SOUND
-		YM2151UpdateOneSlave();
-#endif
+//		YM2151UpdateOneSlave();
+
 #endif
 	}
-#ifdef SOUND
+#ifdef SOUND2
 
 	volatile signed short *	pBurnSoundOut = (signed short *)0x25a24000;
 	signed short* buffers = pBurnSoundOut + (nSoundBufferPos/2);
 	DACUpdate(buffers, nBurnSoundLen);
 #endif
 	DrvRenderDrawSound();
+	
+#ifdef PONY
+	_spr2_transfercommand();
+	frame_x++;
+	
+	 if(frame_x>=frame_y)
+		wait_vblank();	
+#endif	
+//	FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"DrvFrame end                ",10,100);
+	
 }
 
 void DrvRenderDrawSound()
@@ -700,7 +716,7 @@ void DrvRenderDrawSound()
 		DrvRenderBackground();
 	}
 
-#ifdef SOUND
+#ifdef SOUND2
 	if(nSoundBufferPos>=RING_BUF_SIZE/2)
 	{
 		unsigned int i=0;
@@ -712,6 +728,7 @@ void DrvRenderDrawSound()
 		nSoundBufferPos=0;
 	}
 #endif	
+
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void initColors()
@@ -777,7 +794,7 @@ void DrvRenderDrawSound()
 	scfg.coltype       = SCL_COL_TYPE_16;//SCL_COL_TYPE_256;
 	scfg.datatype      = SCL_BITMAP;
 	scfg.mapover	   = SCL_OVER_0;
-		scfg.plate_addr[0] = (Uint32)ss_font;
+		scfg.plate_addr[0] = (Uint32)SS_FONT;
 	SCL_SetConfig(SCL_NBG1, &scfg);
 #endif
 	SCL_SetCycleTable(CycleTb);
@@ -864,18 +881,19 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 //-------------------------------------------------------------------------------------------------------------------------------------
 /*static*/void DrvInitSaturn()
 {
+	ym2151_init();
 	SPR_InitSlaveSH();
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
-
+	nSoundBufferPos=0;
 	nBurnSprites = 27;
 	nBurnLinescrollSize = 0x380;
 
 	SS_MAP  = ss_map  =(Uint16 *)SCL_VDP2_VRAM_B1;
 	SS_MAP2 = ss_map2 = (Uint16 *)SCL_VDP2_VRAM_A1+0x8000;
 #ifdef BMP
-	SS_FONT = ss_font = (SCL_VDP2_VRAM_A1+0x00000); //(Uint16 *)SCL_VDP2_VRAM_A1;//(Uint16 *)SCL_VDP2_VRAM_B0;
+	SS_FONT = (SCL_VDP2_VRAM_A1+0x00000); //(Uint16 *)SCL_VDP2_VRAM_A1;//(Uint16 *)SCL_VDP2_VRAM_B0;
 #endif
-	SS_CACHE= cache   =(Uint8 *)SCL_VDP2_VRAM_A0;
+	SS_CACHE= (Uint8 *)SCL_VDP2_VRAM_A0;
 
 	ss_BgPriNum     = (SclBgPriNumRegister *)SS_N0PRI;
 	ss_SpPriNum     = (SclSpPriNumRegister *)SS_SPPRI;
@@ -935,6 +953,12 @@ void Bitmap2Tile(unsigned char *DrvBackTiles)
 	}
 
 	PrecalcBgMap();
+	
+#ifdef PONY
+	frame_x	= 0;
+//	nBurnFunction = sdrv_stm_vblank_rq;
+#endif	
+	
 //	Set8PCM();
 #ifdef SOUND
 	SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
@@ -951,7 +975,7 @@ static PcmHn createHandle(PcmCreatePara *para)
 	}
 	return pcm;
 }
-#ifdef SOUND
+#ifdef SOUND2
 //-------------------------------------------------------------------------------------------------------------------------------------
 static void Set8PCM()
 {
@@ -998,7 +1022,7 @@ static void Set8PCM()
 	SPR_InitSlaveSH();
 	CZetExit2();
 
-#ifdef SOUND
+#ifdef SOUND2
 	for(int i=0;i<8;i++)
 	{
 		PCM_MeStop(pcm8[i]);
@@ -1059,7 +1083,7 @@ static void Set8PCM()
 		for (unsigned int Offset = 0x300; Offset < 0x1000;Offset+=16) 
 		{
 			UINT16 *map2 = &ss_map2[Offset];
-//			map2[0] = 0; // couleur pr?calcul?e
+//			map2[0] = 0; // couleur pr�calcul�e
 			map2[1] = *map1++;
 			map2[3] = *map1++;
 			map2[5] = *map1++;
