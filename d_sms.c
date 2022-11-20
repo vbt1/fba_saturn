@@ -1,16 +1,20 @@
 #include    "machine.h"
 #include "d_sms.h"
+#include "snd/empty_drv.h"
+#include "snd/sn76496ced.h"
 #define OLD_SOUND 1
 #define SOUNDRATE 7680L
 #define TWO_WORDS 1
 #define MAX_DIR 384*2
+#define CED 1
+//#define PONY 1
 //GfsDirName dir_name_sms[512];
 #ifdef GG0
 unsigned char *disp_spr = NULL;
 unsigned char curr_sprite=0;
 #endif
 
-#define PONY
+//#undef PONY
 
 #ifdef PONY
 #include "saturn/pcmstm.h"
@@ -130,7 +134,7 @@ static void	SetVblank2( void )
  void initLayers(void)
 {
 //    SclConfig	config;
-// **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'à maintenant
+// **29/01/2007 : VBT sauvegarde cycle patter qui fonctionne jusqu'? maintenant
 
 	Uint16	CycleTb[]={
 		0x5eee, 0xeeee, 0xeeee, 0xeeee,	//A0
@@ -156,8 +160,8 @@ static void	SetVblank2( void )
 #endif
 	scfg.datatype	= SCL_CELL;
 // vbt : active le prioritybit en mode 1word
-//	scfg.patnamecontrl =  0x020c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
-	scfg.patnamecontrl =  0x000c;// VRAM B1 ‚ÌƒIƒtƒZƒbƒg 
+//	scfg.patnamecontrl =  0x020c;// VRAM B1 ?~I?t?Z?b?g 
+	scfg.patnamecontrl =  0x000c;// VRAM B1 ?~I?t?Z?b?g 
 	scfg.plate_addr[0] = (UINT32 *)SS_MAP;
 	SCL_SetConfig(SCL_NBG0, &scfg);
 /********************************************/	
@@ -235,7 +239,7 @@ void vbl()
 //	SPR_InitSlaveSH();
 	nBurnSprites  = 67;//131;//27;
 	nBurnLinescrollSize = 0x340;
-	nSoundBufferPos = 0;//sound position à renommer
+	nSoundBufferPos = 0;//sound position ? renommer
 
 	SS_CACHE  = (Uint8  *)SCL_VDP2_VRAM_B1;
 	SS_MAP    = (Uint16 *)SCL_VDP2_VRAM_B0;
@@ -278,7 +282,7 @@ void vbl()
 
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 	initSprites(256-1,192-1,0,0,0,0);
-	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
+//	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" ",0,180);	
 
 //	drawWindow(32,192,192,14,52);
@@ -300,9 +304,9 @@ void vbl()
 #endif
 
 #ifdef PONY
-//	frame_x	= 0;
-//	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
-//	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
+	frame_x	= 0;
+	pcm1 = add_raw_pcm_buffer(0,SOUNDRATE,nBurnSoundLen*20);
+	nSoundBuffer = (Sint16 *)(SNDRAM+(m68k_com->pcmCtrl[pcm1].hiAddrBits<<16) | m68k_com->pcmCtrl[pcm1].loAddrBits);
 #endif
 
 }
@@ -358,7 +362,11 @@ void vbl()
 #endif
 	file_id = 2;
 	DrvInitSaturn();
+#ifndef CED	
 	SN76489Init(0,MASTER_CLOCK, 0);
+#else
+	sn76496_init();
+#endif	
 	sms_start();
 
 	return 0;
@@ -457,6 +465,8 @@ void SMSFrame_old()
 		sms_frame();
 
 #ifndef PONY
+
+#ifndef CED
 	volatile signed short *nSoundBuffer = (signed short *)SOUND_BUFFER;
 //	PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos],  128);
@@ -467,6 +477,7 @@ void SMSFrame_old()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
+#endif
 #else
 	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
 
@@ -513,8 +524,8 @@ void SMSFrame_old()
 #ifdef PONY
 	frame_x++;
 	SclProcess = 2;	
-//	if(frame_x>=frame_y)
-//		wait_vblank();		
+	if(frame_x>=frame_y)
+		wait_vblank();		
 #endif
 	
 }
@@ -744,7 +755,7 @@ inline int vdp_ctrl_r(void)
     return (temp);
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-void update_bg(t_vdp *vdp, int index)
+inline void update_bg(t_vdp *vdp, int index)
 {
 //				if(index>=vdp.ntab && index<vdp.ntab+0x700)
 // VBT 04/02/2007 : modif compilo
@@ -959,7 +970,7 @@ void update_cache(void)
 }
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-void vdp_data_w(INT32 offset, UINT8 data)
+inline void vdp_data_w(INT32 offset, UINT8 data)
 {
     INT32 index;
 
@@ -1157,7 +1168,7 @@ void vdp_data_w(INT32 offset, UINT8 data)
 				update_bg(&vdp,index);
             }
 
-//VBT : A REMETTRE A LA PLACE  de rederSprite des que le probleme sur yp=208 est résolu
+//VBT : A REMETTRE A LA PLACE  de rederSprite des que le probleme sur yp=208 est r?solu
 // VBT04/02/2007 modif compilo
  			if(index>=vdp.satb )
 				if( index < vdp.satb+0x40)
@@ -1476,7 +1487,11 @@ void vdp_data_w(INT32 offset, UINT8 data)
         case 0x7F:
 //#ifdef SOUND
 //			if (sound)
+#ifndef CED	
 				SN76496Write(0,data);
+#else
+	sn76496_w(data);
+#endif
 //				PSG_Write(0,data);
 //				PSG_Write(data);
 //#endif
@@ -1759,7 +1774,7 @@ void cpu_writemem8(unsigned int address, unsigned int data)
 #ifndef RAZE
     if(address >= 0xFFFC)
     {
-        UINT32 offset = (data % cart.pages) << 14; // VBT à corriger
+        UINT32 offset = (data % cart.pages) << 14; // VBT ? corriger
 		sms.fcr[address] = data;
 
         switch(address & 3)
@@ -1823,7 +1838,7 @@ void cpu_writemem8(unsigned int address, unsigned int data)
 	{
 #endif
 // data & cart.pages, and set cart.pages to one less than you are
-	UINT32 offset; // = (data % cart.pages) << 14; // VBT à corriger
+	UINT32 offset; // = (data % cart.pages) << 14; // VBT ? corriger
 // vbt 15/05/2008 : exophase :	 data & cart.pages, and set cart.pages to one less than you are
 	sms.fcr[address& 3] = data;
 
@@ -2003,7 +2018,7 @@ inline  void make_map_lut()
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
-#if 0
+#if 1
 inline  void make_name_lut(void)
 {
 	unsigned int i, j;
@@ -2061,7 +2076,7 @@ inline  void make_cram_lut(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
  void make_lut()
 {
-//	make_name_lut();
+	make_name_lut();
 	make_bp_lut();
 	make_cram_lut();
 	make_map_lut();

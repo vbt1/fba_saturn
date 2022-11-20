@@ -3,7 +3,7 @@
 
 #include "syscall.h"
 #define PONY 1
-
+#define CED 1
 #include    "machine.h"
 #ifndef ACTION_REPLAY
 #include    "sega_gfs.h"

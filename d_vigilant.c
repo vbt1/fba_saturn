@@ -1,5 +1,5 @@
 #define BMP 1
-//#define SOUND 1
+#define SOUND 1
 #define CZ80 1
 //#define RAZE1 1
 #define RAZE0 1
@@ -102,14 +102,14 @@ int ovlInit(char *szShortName)
 			break;
 		}
 	}
-/*	
+	
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 	{
-		//SPR_WaitEndSlaveSH();
+		SPR_WaitEndSlaveSH();
 	}
 	nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
 	CZetOpen(1);
-*/
+
 	if (DrvIrqVector == 0xff) 
 	{
 		CZetSetIRQLine(0, CZET_IRQSTATUS_NONE);
@@ -140,7 +140,7 @@ int ovlInit(char *szShortName)
 #ifdef SOUND2
 //	BurnYM2151Reset();
 	YM2151ResetChip(0);
-	DACReset();
+//	DACReset();
 #endif
 	
 	DrvRomBank = 0;
@@ -252,7 +252,7 @@ void __fastcall VigilanteZ80PortWrite1(UINT16 a, UINT8 d)
 {
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 	{
-		//SPR_WaitEndSlaveSH();
+		SPR_WaitEndSlaveSH();
 	}
 //	nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
 
@@ -364,7 +364,7 @@ UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
 #ifdef SOUND2
 			return BurnYM2151ReadStatus();
 #else
-//			return 0;
+			return 0;
 #endif
 		}
 		
@@ -383,7 +383,7 @@ UINT8 __fastcall VigilanteZ80PortRead2(UINT16 a)
 
 	return 0;
 }
-
+int vbt=0;
 void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
@@ -400,7 +400,11 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		
 		case 0x01: {			
 #ifdef SOUND
-//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"W WriteR",10,120);
+char toto[50];
+
+//sprintf(toto,"reg %02x %02x use : %04x",nBurnCurrentYM2151Register, d,vbt++);
+
+//		FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)toto,10,120);
 //			BurnYM2151WriteRegister(d);
 //			YM2151WriteReg(0, nBurnCurrentYM2151Register, d);
 			ym2151_w(nBurnCurrentYM2151Register, d);
@@ -421,6 +425,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		
 		case 0x82: {
 #ifdef SOUND
+
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 	{
 		SPR_WaitEndSlaveSH();
@@ -442,7 +447,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 		}
 	}
 }
-#ifdef SOUND2
+#ifdef SOUND
 /*static*/void VigilantYM2151IrqHandler(INT32 Irq)
 {
 	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
@@ -465,7 +470,7 @@ void __fastcall VigilanteZ80PortWrite2(UINT16 a, UINT8 d)
 //#ifdef CZET_SLAVE
 /*		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
 		{
-			//SPR_WaitEndSlaveSH();
+			SPR_WaitEndSlaveSH();
 		}
 //		nCyclesDone[1]=*(unsigned int*)OPEN_CSH_VAR(SS_Z80CY);
 //		CZetOpen(1);
@@ -606,7 +611,7 @@ FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"load rom done          
 	BurnYM2151SetIrqHandler(&VigilantYM2151IrqHandler);	
 
 //	DACInit(0, 0, 1, VigilantSyncDAC);
-	DACInit(0, 0, 0, VigilantSyncDAC);
+//	DACInit(0, 0, 0, VigilantSyncDAC);
 //	DACSetRoute(0, 0.45, BURN_SND_ROUTE_BOTH);
 #endif
 FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"DrvDoReset                 ",10,100);
@@ -631,6 +636,7 @@ void xxx(int *i)
 /*static*/void DrvFrame()
 {
 //FNT_Print256_2bpp((volatile Uint8 *)0x25e20000,(Uint8 *)"DrvFrame                 ",10,100);
+//		VigilantYM2151IrqHandler(0);
 	DrvMakeInputs();
 	nCyclesDone[0] = nCyclesDone[1] = /*SS_Z80CY =*/ 0;
 
@@ -644,8 +650,8 @@ void xxx(int *i)
 //		nCyclesSegment = nNext - nCyclesDone[0];
 		int nCyclesSegment = nCyclesTotal[0] / nInterleave;
 
-//		xxx(&i);
-	SPR_RunSlaveSH((PARA_RTN*)xxx,&i);
+		xxx(&i);
+//	SPR_RunSlaveSH((PARA_RTN*)xxx,&i);
 /*		nCyclesDone[0] += z80_emulate(nCyclesSegment);
 
 		if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)
@@ -693,6 +699,9 @@ void xxx(int *i)
 	DACUpdate(buffers, nBurnSoundLen);
 #endif
 	DrvRenderDrawSound();
+	
+//	VigilantYM2151IrqHandler(1);
+	
 	
 #ifdef PONY
 	_spr2_transfercommand();

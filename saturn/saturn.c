@@ -149,7 +149,9 @@ void initScrolling(Uint8 enabled,void *address)
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void initSound()
 {
-#ifndef PONY	
+#ifndef PONY
+
+#ifndef CED	
 	sndInit();
 	PCM_MeInit();
 //	Sint8		*input_addr;
@@ -196,6 +198,9 @@ inline void initSound()
 //		return;
 //	}
 	PCM_Start(pcm);
+#endif	
+	
+	
 #else
 #include "sega_int.h"
 //	sound_external_audio_enable(5, 5);
@@ -280,6 +285,8 @@ static inline void resetColors()
 static inline void resetSound()
 {
 #ifndef PONY
+
+#ifndef CED	
 	PCM_MeSetVolume(pcm,0);
 	PCM_DrvChangePcmPara(pcm,-1,-1);
 	PCM_Task(pcm);
@@ -289,6 +296,8 @@ static inline void resetSound()
 	memset((int *)SOUND_BUFFER,0x00,RING_BUF_SIZE*16);
 	nSoundBufferPos=0;
 	PCM_MeStart(pcm);
+#endif
+	
 #endif
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -1697,8 +1706,12 @@ inline void do_keypad(unsigned int key[])
 		InpDIP();
 		play = 1;
 #ifndef PONY
+
+#ifndef CED	
 		PCM_MeSetVolume(pcm,255);
 		PCM_DrvChangePcmPara(pcm,-1,-1);
+#endif		
+		
 #endif
 	//	PER_SMPC_SND_ON();
 //		SetVblank(); // a garder
@@ -1715,8 +1728,8 @@ inline void do_keypad(unsigned int key[])
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 		else
@@ -1728,8 +1741,8 @@ inline void do_keypad(unsigned int key[])
 				_spr2_transfercommand();
 				frame_x++;
 
-//				 if(frame_x>=frame_y)
-//					wait_vblank();
+				 if(frame_x>=frame_y)
+					wait_vblank();
 			}
 		}
 	}

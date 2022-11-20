@@ -13,7 +13,7 @@
 #include "driver.h"
 //#include "state.h"
 #include "ym2151.h"
-#include "..\burnint.h"
+//#include "..\burnint.h"
 #include <stdarg.h>
 //char buffer[800];
 //int vspfunc(char *format, ...);
@@ -513,7 +513,7 @@ static unsigned int YMNumChips;	/* total # of YM2151's emulated */
 	#undef PI
 #endif
 #define PI 3.14159265358979323846
-
+of 0
 static void init_tables(void)
 {
 	signed int i,x,n;
@@ -523,7 +523,7 @@ static void init_tables(void)
 	for (x=0; x<TL_RES_LEN; x++)
 	{
 		m = (1<<16) / powf(2, (x+1) * (ENV_STEP/4.0) / 8.0);
-		m = floorf(m);
+		m = floor(m);
 
 		/* we never reach (1<<16) here due to the (x+1) */
 		/* result fits within 16 bits at maximum */
@@ -592,7 +592,7 @@ static void init_tables(void)
 	sample[7]=fopen("samp7.pcm","wb");
 #endif
 }
-
+#endif
 
 static void init_chip_tables(YM2151 *chip)
 {
