@@ -282,7 +282,7 @@ void vbl()
 
 //	initSprites(256+48-1,192+16-1,256-1,192-1,48,16);
 	initSprites(256-1,192-1,0,0,0,0);
-//	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
+	initScrolling(ON,(void *)SCL_VDP2_VRAM_B0+0x4000);
 	FNT_Print256_2bpp((volatile Uint8 *)SS_FONT,(Uint8 *)" ",0,180);	
 
 //	drawWindow(32,192,192,14,52);
@@ -648,7 +648,9 @@ void SMSFrame_old()
     sms_init();
 //	PSG_Init(MASTER_CLOCK, 7680);
 //	SN76489AInit(0, MASTER_CLOCK, 0);
+#ifndef CED
 	SN76496Reset(0);
+#endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline void sms_init(void)

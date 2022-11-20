@@ -125,7 +125,7 @@ OVLSMS1               = root/d_sms.bin
 MPOVLSMSFILE    = $(OVLSMS:.elf=.maps)
 LDOVLSMSFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLSMS         = d_sms.c psg_sms.c 
-SRCOVLSMS         = d_sms.c saturn/pcmstm.o snd/sn76496.o
+SRCOVLSMS         = d_sms.c 
 OBJOVLSMS         = $(SRCOVLSMS:d_sms.c=sms/d_sms.o)
 
 OVLSMSCZ80                 = root/d_smscz.elf
