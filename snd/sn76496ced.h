@@ -1,15 +1,18 @@
 #pragma once
 #include <stdint.h>
 #include <string.h>
-#include "./scsp.h"
+#include "scsp.h"
 #include "notes.h"
 
 static uint8_t sn74xx_regs[256];
 typedef struct
 {
+    uint8_t latched_chan;
     uint8_t last_register;
     uint16_t registers[8];
     uint16_t period[4];
+    uint8_t vol[4];
+    uint8_t noise_type;
 } sn76496_t;
 
 static sn76496_t sn_chip_0;
@@ -22,22 +25,29 @@ typedef struct
 
 #include "sn_map.h"
 
-//#define SN_NOTE (note_c_d_4)
-
-// The SN76489 attenuates the volume by 2dB for each step in the volume register
-// 32767, 26028, 20675, 16422, 13045, 10362,  8231,  6568,
-// 5193,  4125,  3277,  2603,  2067,  1642,  1304,     0
-uint8_t sn_scsp_tl[] = {
-
-};
-
-#define SN_NOTE (note_a4_square)
+#define SN_NOTE (note_a4)
 #define SN_PER_NOTE (sn_noise_per)
-#define SN_NOISE_NOTE (sn_noise_per)
+#define SN_NOISE_NOTE (sn76xxx_noise_a4)
 
 uint32_t sn_square_addr = (0x2000);
 uint32_t sn_periodic_addr = (0x2400);
-uint32_t sn_white_noise_addr = (0x2800);
+uint32_t sn_white_noise_addr = (0x3400);
+
+// Math.pow(2.0, -(x/16.0));
+const uint8_t volume_map[] = {
+    0, 5, 11, 16, 21, 26, 32, 37, 43, 48, 53, 58, 64, 69, 74, 255};
+
+//#include "tone_func.h"
+
+void sn76496_w(uint8_t dd);
+
+void sn_fix_note(uint16_t *note, uint32_t sz, uint16_t h, uint16_t l)
+{
+    for (int i = 0; i < sz; i++)
+    {
+        note[i] = note[i] & 0x8000 ? h : l;
+    }
+}
 
 void sn76496_init()
 {
@@ -45,6 +55,9 @@ void sn76496_init()
     // copy sinetable
     for (int i = 0; i < 1; i++)
     {
+        sn_fix_note((uint16_t *)SN_NOTE, sizeof(SN_NOTE) / 2, 0x2000, 0);
+        // sn_fix_note((uint16_t *)SN_PER_NOTE, sizeof(SN_PER_NOTE) / 2);
+        sn_fix_note((uint16_t *)SN_NOISE_NOTE, sizeof(SN_NOISE_NOTE) / 2, 0x1000, 0);
 
         memcpy((void *)(SCSP_RAM + sn_square_addr + (i * sizeof(SN_NOTE))), SN_NOTE, sizeof(SN_NOTE));
         memcpy((void *)(SCSP_RAM + sn_periodic_addr + (i * sizeof(SN_PER_NOTE))), SN_PER_NOTE, sizeof(SN_PER_NOTE));
@@ -55,54 +68,68 @@ void sn76496_init()
 
     volatile uint16_t *control = (uint16_t *)0x25b00400;
     volatile uint16_t *intr = (uint16_t *)0x25b0042a;
-    control[0] = 0xf; // master vol
+    control[0] = 0x20f; // master vol
     intr[0] = 0;      // irq
 
     // init slots...
     volatile scsp_slot_regs_t *slots = get_scsp_slot(0);
-    // 8 chanl * 4 op
-    for (int i = 0; i < 8 * 4; i++)
+
+    for (int i = 0; i < 32; i++)
     {
-        slots[i].raw[0] = (sn_square_addr << 16) + 0x130;
-        slots[i].raw[1] = sn_square_addr & 0xffff;
-        slots[i].raw[2] = 0;
-        slots[i].raw[3] = sizeof(SN_NOTE);
+        slots[i].kyonb = 0;
+        slots[i].kyonex = 0;
+    }
 
-        slots[i].raw[4] = 0x1F;
-        slots[i].raw[5] = 0x1F;
+    for (int i = 0; i < 5; i++)
+    {
+        scsp_slot_regs_t slot = {};
+        memset(&slot, 0, sizeof(scsp_slot_regs_t));
 
-        slots[i].raw[6] = 255;
-        slots[i].raw[7] = 0;
-        slots[i].raw[8] = 0;
-        slots[i].raw[9] = 0;
-        slots[i].raw[10] = 0;
+        //
+        slot.sa = sn_square_addr;
+        slot.lsa = 0;
+        slot.lea = (sizeof(SN_NOTE) / 2);
 
-        slots[i].raw[11] = 0xA000;
-        slots[i].raw[12] = 0;
-        slots[i].attack_rate = 31;
-        slots[i].release_r = 31;
-        slots[i].total_l = 7;
+        // chan 3 => noise
+        if (i == 3)
+        {
+            slot.sa = sn_white_noise_addr;
+            slot.lea = (sizeof(SN_NOISE_NOTE) / 2);
+        }
 
-        // slots[i].dipan = 0;
-        // slots[i].lpctl = 0;
+        // chan 4 => per
+        if (i == 4)
+        {
+            slot.sa = sn_periodic_addr;
+            slot.lea = (sizeof(SN_PER_NOTE) / 2);
+        }
 
-        // slots[i].lpctl = 1;
-        // slots[i].disdl = 7;
+        // uned 16 bit
+        slot.pcm8b = 0;
+        slot.sbctl = 0;
+
+        slot.lpctl = 1;
+        slot.attack_rate = 31;
+        slot.release_r = 31;
+//        slot.loop_start = 1;  // passage à 0 steve + ced
+        slot.loop_start = 0;
+        slot.kr_scale = 0;
+        slot.sdir = 0;
+        slot.disdl = 7;
+        slot.total_l = 0xff;
+
+        slot.fns = 0;
+        slot.oct = 0;
+
+        // memcpy(&slots[i], 0, sizeof(scsp_slot_regs_t));
+        for (int r = 0; r < 16; r++)
+        {
+            slots[i].raw[r] = slot.raw[r];
+        }
     }
 
     for (int i = 0; i < 4; i++)
     {
-        slots[i].total_l = 0;
-        slots[i].disdl = 7;
-    }
-
-    // slots[3].alfows = 3; // noise
-    // slots[3].plfows = 3; // noise
-    // slots[3].ssctl = 1;  // select noise
-
-    for (int i = 0; i < 4; i++)
-    {
-        slots[i].total_l = 0;
         slots[i].kyonb = 1;
         slots[i].kyonex = 1;
     }
@@ -114,19 +141,47 @@ void sn76496_init()
         chip->registers[i] = 0;
         chip->registers[i + 1] = 0x0f; /* volume = 0 */
     }
+
+    // __dbg_tuneA5(&slots[0]);
+
+    // dbg...
+    if (1)
+    {
+        // channel 0 tone 0xfe 440hz
+        sn76496_w(0b10001110); // 0b1_00_0_1110
+        sn76496_w(0b00001111); // 0b0_00_0_1111
+        // set vol to max
+        sn76496_w(0b10010000); // 0b1_00_1_0000
+    }
+ //       sn76496_w(0b10010000); // 0b1_00_1_0000
+    // periodic noise
+    if (0)
+    {
+        // use periodic noise
+        sn76496_w(0b11100110); // 0b1_11_0_0000
+        // set vol to max
+        sn76496_w(0b11110000); // 0b1_11_1_0000
+    }
 }
 
 void sn76496_w(uint8_t dd)
 {
+    // return;
     volatile scsp_slot_regs_t *slots = get_scsp_slot(0);
-    uint16_t r = 0;
     sn76496_t *chip = &sn_chip_0;
 
-    if (dd & 0x80)
+    // // emu_printf("sn76496_w %02x\n", dd);
+
+    uint16_t r = 0;
+    uint16_t n = 0;
+    uint8_t chan = 0;
+
+    if ((dd & 0x80) == 0x80)
     {
-        // r = chan + type
         r = (dd & 0x70) >> 4;
         chip->last_register = r;
+        chip->latched_chan = chan;
+
         chip->registers[r] = (chip->registers[r] & 0x3f0) | (dd & 0x0f);
     }
     else
@@ -134,88 +189,98 @@ void sn76496_w(uint8_t dd)
         r = chip->last_register;
     }
 
-    uint8_t chan = r >> 1;
-    uint16_t tone = 0;
-    uint8_t vol = 0;
-
+    chan = (r >> 1) & 3;
     switch (r)
     {
-    case 0: // tone 0: frequency
-    case 2: // tone 1: frequency
-    case 4: // tone 2: frequency
+        // tone: frequency
+    case 0:
+    case 2:
+    case 4:
         if ((dd & 0x80) == 0)
             chip->registers[r] = (chip->registers[r] & 0x0f) | ((dd & 0x3f) << 4);
-
-        chip->period[chan] = chip->registers[r];
-
-        tone = chip->registers[r] & 0x3ff;
-        slots[chan].fns = sn_scsp_map[tone].fns;
-        slots[chan].oct = sn_scsp_map[tone].oct;
+        if (chip->registers[r] != 0)
+            chip->period[chan] = chip->registers[r] & 0x3ff;
+        else
+            chip->period[chan] = 0x400;
         break;
-
-    case 1: // tone 0: volume
-    case 3: // tone 1: volume
-    case 5: // tone 2: volume
-    case 7: // noise: volume
+        // noise: frequency, mode
+    case 6:
+        n = chip->registers[6];
+        chip->noise_type = n & 4;
+        if ((dd & 0x80) == 0)
+            chip->registers[r] = (chip->registers[r] & 0x3f0) | (dd & 0x0f);
+        // N/512,N/1024,N/2048,Tone #3 output
+        chip->period[3] = ((n & 3) == 3) ? (chip->period[2] << 1) : (1 << (5 + (n & 3)));
+        break;
+        // tone/noise: volume
+    case 1:
+    case 3:
+    case 5:
+    case 7:
+        chip->vol[chan] = dd & 0x0f;
         if ((dd & 0x80) == 0)
             chip->registers[r] = (chip->registers[r] & 0x3f0) | (dd & 0x0f);
 
-        vol = chip->registers[r] & 0xf;
-        slots[chan].total_l = vol << 2;
+        // emu_printf("sn76496_w vol chan %x %d\n", chip->vol[chan], chan);
         break;
-    case 6: // noise: frequency, mode
-        if ((dd & 0x80) == 0)
-            chip->registers[r] = (chip->registers[r] & 0x3f0) | (dd & 0x0f);
+    }
 
-        uint16_t n = chip->registers[6];
+    // if (chan < 3) // skip noise
+    {
 
-        uint8_t tt = (n >> 2) & 3; // selects the mode (white (1) or "periodic" (0)).
-        uint8_t rr = n & 3;        // select the shift rate
-
-        tone = 0;
-
-        slots[3].kyonb = 0;
-        slots[3].kyonex = 0;
-        if (tt == 1)
+        if (chan == 3)
         {
-            slots[3].sa = sn_white_noise_addr;
-            slots[3].lea = sizeof(SN_PER_NOTE);
+            // return;
+            volatile scsp_slot_regs_t *slot_noise = &slots[3];
+            volatile scsp_slot_regs_t *slot_per = &slots[4];
+            volatile scsp_slot_regs_t *slot = chip->noise_type ? slot_noise : slot_per;
+
+            slot->kyonb = 0;
+//            slot->kyonex = 0;
+            slot->kyonex = 1; // vbt : modification ced + steve
+
+            if (chip->noise_type)
+            {
+                slot_per->total_l = 0xff;
+                slot_per->kyonb = 0;
+                slot_per->kyonex = 0;
+            }
+            else
+            {
+                slot_noise->total_l = 0xff;
+                slot_noise->kyonb = 0;
+                slot_noise->kyonex = 0;
+            }
+
+            slot->fns = sn_scsp_map[chip->period[chan]].fns;
+            slot->oct = sn_scsp_map[chip->period[chan]].oct;
+            slot->total_l = volume_map[chip->vol[chan]];
+
+            // need to wait for reset ?
+            asm("nop");
+            asm("nop");
+            asm("nop");
+            asm("nop");
+
+            slot->kyonb = 1;
+            slot->kyonex = 1;
+
+            // emu_printf("sn76496_w noise per %x\n", chip->period[chan]);
+            // emu_printf("sn76496_w noise fns %d\n", sn_scsp_map[chip->period[chan]].fns);
+            // emu_printf("sn76496_w noise oct %d\n", sn_scsp_map[chip->period[chan]].oct);
+            // emu_printf("sn76496_w noise vol %d\n", volume_map[chip->vol[chan]]);
         }
         else
         {
-            slots[3].sa = sn_periodic_addr;
-            slots[3].lea = sizeof(SN_NOISE_NOTE);
+            // return;
+            //* return;
+            slots[chan].fns = sn_scsp_map[chip->period[chan]].fns;
+            slots[chan].oct = sn_scsp_map[chip->period[chan]].oct;
+            slots[chan].total_l = volume_map[chip->vol[chan]];
+            // slots[chan].total_l = chip->vol[chan];
+
+            // slots[chan].kyonb = 1;
+            // slots[chan].kyonex = 1;
         }
-        slots[3].lpctl = 1;
-        slots[3].pcm8b = 1;
-        slots[3].kyonb = 1;
-        slots[3].kyonex = 1;
-
-        switch (rr)
-        {
-            // periodic
-        case 0:
-            slots[3].fns = sn_noise_scsp_map[0].fns;
-            slots[3].oct = sn_noise_scsp_map[0].oct;
-            break;
-        case 1:
-            slots[3].fns = sn_noise_scsp_map[1].fns;
-            slots[3].oct = sn_noise_scsp_map[1].oct;
-            break;
-        case 2:
-            slots[3].fns = sn_noise_scsp_map[2].fns;
-            slots[3].oct = sn_noise_scsp_map[2].oct;
-            break;
-        case 3:
-            tone = chip->period[2];
-            slots[3].fns = sn_scsp_map[tone].fns;
-            slots[3].oct = sn_scsp_map[tone].oct;
-            break;
-        }
-
-        break;
-
-    default:
-        break;
     }
 }

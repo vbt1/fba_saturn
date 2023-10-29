@@ -13,6 +13,8 @@
 
 #define IREG(x) (0x20100001UL + ((x) << 1))
 
+#define sound_driver_size 4188
+
 #define MEMORY_READ(t, x)                                                      \
     (*(volatile uint ## t ## _t *)(x))
 	
@@ -109,9 +111,10 @@ void snd_init()
       *(volatile uint32_t *)(0x25A00000 + i) = 0x00000000;
 
    // Copy driver over
-   for (int i = 0; i < sound_driver_size; i++)
-      *(volatile uint8_t *)(0x25A00000 + i) = sound_driver[i];
-
+ //  for (int i = 0; i < sound_driver_size; i++)
+ //     *(volatile uint8_t *)(0x25A00000 + i) = sound_driver[i];
+	GFS_Load(GFS_NameToId("SDRV.BIN"),0,(void *)0x25A00000,sound_driver_size);
+	
    // Turn on Sound CPU again
    smpc_smc_sndon_call();
 }
