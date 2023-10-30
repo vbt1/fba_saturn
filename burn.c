@@ -452,11 +452,11 @@ BurnDrvNineteen43.szFullNameA="1943: The Battle of Midway (Euro)";
 unsigned int i=0;
 
 //pDriver[i++] = &BurnDrvFM;
-pDriver[i++] = &BurnDrvsms_akmw;
+//pDriver[i++] = &BurnDrvsms_akmw;
 pDriver[i++] = &BurnDrvsms_cz80;
-pDriver[i++] = &BurnDrvsms_gg;
+//pDriver[i++] = &BurnDrvsms_gg;
 pDriver[i++] = &BurnDrvsms_ggcz;
-
+#if 0
 pDriver[i++] = &BurnDrvsg1k_wboy;
 //pDriver[i++] = &BurnDrvMSX_1942;
 //pDriver[i++] = &BurnDrvNineteen43;
@@ -541,7 +541,7 @@ pDriver[i++] = &BurnDrvZaxxon;
 //pDriver[i++] = &BurnDrvAtetris;
 //pDriver[i++] = &BurnDrvZaxxonb;
 //pDriver[i++] = &BurnDrvCongo;
-
+#endif
 }
 
 // Application-defined rom loading function:

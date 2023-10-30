@@ -24,4 +24,4 @@ Final Burn Alpha for Saturn
  A+B+C+Start : return to the game menu
  X+Y+Z+Start : reset the Saturn
  
- Latest release : http://vberthelot.free.fr/fba_beta5/fba_beta5.7z
+ Latest release : http://vberthelot.free.fr/fba_beta4/fba_beta4.7z

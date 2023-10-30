@@ -603,11 +603,12 @@ INT32 DrvExit()
 	cleanSprites();
 	_spr2_transfercommand();
 	wait_vblank();
-
+/*
 //	SPR_InitSlaveSH();
 	CZetExit2();
 	AY8910Exit(1);
 	AY8910Exit(0);
+*/	
 /*	scrollx = scrolly = 0;
 	nTigerHeliTileMask = nSndIrqFrame = 0;	
 */
@@ -849,7 +850,7 @@ void DrvFrame()
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-inline void rotate_tile16x16(unsigned int size, unsigned char *target)
+void rotate_tile16x16(unsigned int size, unsigned char *target)
 {
 	unsigned int i,j,k; //,l=0;
 	unsigned char temp[256];

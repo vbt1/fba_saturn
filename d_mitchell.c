@@ -651,11 +651,11 @@ int PangInit()
 //	make_lut();
 
 INT32 CharPlaneOffsets[4]         = { 0x400004, 0x400000, 4, 0 };
-INT32 CharXOffsets[8]               = { 0, 1, 2, 3, 8, 9, 10, 11 };
-INT32 CharYOffsets[8]               = { 0, 16, 32, 48, 64, 80, 96, 112 };
-INT32 SpritePlaneOffsets[4]        = { 0x100004, 0x100000, 4, 0 };
-INT32 SpriteXOffsets[16]            = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
-INT32 SpriteYOffsets[16]            = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
+INT32 CharXOffsets[8]             = { 0, 1, 2, 3, 8, 9, 10, 11 };
+INT32 CharYOffsets[8]             = { 0, 16, 32, 48, 64, 80, 96, 112 };
+INT32 SpritePlaneOffsets[4]       = { 0x100004, 0x100000, 4, 0 };
+INT32 SpriteXOffsets[16]          = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
+INT32 SpriteYOffsets[16]          = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
 
 	unsigned char *DrvTempRom = (unsigned char *)LOWADDR;
 

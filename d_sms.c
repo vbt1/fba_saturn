@@ -1,18 +1,24 @@
 #include    "machine.h"
 #include "d_sms.h"
-#include "snd/empty_drv.h"
+#define CED 1
+#ifdef CED
+//#include "snd/empty_drv.h"
+#include "snd/scsp.h"
 #include "snd/sn76496ced.h"
+#endif
 #define OLD_SOUND 1
 #define SOUNDRATE 7680L
 #define TWO_WORDS 1
-#define MAX_DIR 384*2
-#define CED 1
+#define MAX_DIR 64*2
+
 //#define PONY 1
 //GfsDirName dir_name_sms[512];
 #ifdef GG0
 unsigned char *disp_spr = NULL;
 unsigned char curr_sprite=0;
 #endif
+
+//UINT16 my_map[32*32*2];
 
 //#undef PONY
 
@@ -32,10 +38,18 @@ UINT8 *write_ptr[8];
 UINT8 *read_ptr[8];
 #endif
 
+#define SMPC_REG_SF             *((volatile uint8_t *)0x20100063)
+void smpc_wait_till_ready (void)
+{
+   // Wait until SF register is cleared
+   while(SMPC_REG_SF & 0x1) { }
+}
+
 /* Attribute expansion table */
 //-------------------------------------------------------------------------------------------------------------------------------------
 int ovlInit(char *szShortName)
 {
+//emu_printf("ovlInit\n")	;
 	cleanBSS();
 #ifdef RAZE
 	struct BurnDriver nBurnDrvsms_akmw = {
@@ -81,6 +95,24 @@ int ovlInit(char *szShortName)
 //	ss_regs  = (SclSysreg *)SS_REGS;
 	return 0;
 }
+//--------------------------------------------------------------------------------------------------------------------------------------
+
+#define CS1(x)                  (0x24000000UL + (x))
+void emu_printf(const char *format, ...)
+{
+   static char emu_printf_buffer[256];
+   char *s = emu_printf_buffer;
+   volatile uint8_t *addr = (volatile uint8_t *)CS1(0x1000);
+   va_list args;
+
+   va_start(args, format);
+   (void)vsnprintf(emu_printf_buffer, 256, format, args);
+   va_end(args);
+
+   while (*s)
+      *addr = (uint8_t)*s++;
+}
+
 //--------------------------------------------------------------------------------------------------------------------------------------
 static Sint32 GetFileSize(int file_id)
 {
@@ -188,7 +220,7 @@ inline  void initPosition(void)
 //-------------------------------------------------------------------------------------------------------------------------------------
 inline  void SaturnInitMem()
 {
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	
 	extern unsigned int _malloc_max_ram;
 	UINT8 *Next; Next = (unsigned char *)&_malloc_max_ram;
@@ -236,6 +268,7 @@ void vbl()
 //-------------------------------------------------------------------------------------------------------------------------------------
  void DrvInitSaturn()
 {
+//emu_printf("DrvInitSaturn\n")	;	
 //	SPR_InitSlaveSH();
 	nBurnSprites  = 67;//131;//27;
 	nBurnLinescrollSize = 0x340;
@@ -351,6 +384,13 @@ void vbl()
 //-------------------------------------------------------------------------------------------------------------------------------------
  INT32 SMSInit(void)
 {
+	
+//emu_printf("SMSInit\n");	
+
+#ifdef CED	
+	sn76496_init();
+#endif
+//	emu_printf("ChangeDir\n")	;
 #ifndef RAZE
 #ifdef GG
 	ChangeDir("GG");
@@ -363,9 +403,11 @@ void vbl()
 	file_id = 2;
 	DrvInitSaturn();
 #ifndef CED	
+#ifdef SEGA
 	SN76489Init(0,MASTER_CLOCK, 0);
+#endif	
 #else
-	sn76496_init();
+//	sn76496_init();
 #endif	
 	sms_start();
 
@@ -467,6 +509,8 @@ void SMSFrame_old()
 #ifndef PONY
 
 #ifndef CED
+
+#ifdef SEGA
 	volatile signed short *nSoundBuffer = (signed short *)SOUND_BUFFER;
 //	PSG_Update(&nSoundBuffer[nSoundBufferPos],  128);
 	SN76496Update(0, &nSoundBuffer[nSoundBufferPos],  128);
@@ -477,6 +521,7 @@ void SMSFrame_old()
 		nSoundBufferPos=0;
 	}
 	PCM_Task(pcm);
+#endif
 #endif
 #else
 	signed short *nSoundBuffer2 = (signed short *)nSoundBuffer+(nSoundBufferPos<<1);
@@ -496,8 +541,8 @@ void SMSFrame_old()
 //		SPR_RunSlaveSH((PARA_RTN*)sh2slave, &nSoundBufferPos);
 		sms_frame();
 		
-		if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
-			SPR_WaitEndSlaveSH();				
+//		if((*(unsigned char *)0xfffffe11 & 0x80) == 0)
+//			SPR_WaitEndSlaveSH();				
 
 #endif
 		ss_reg->n0_move_y =  scroll_y; //-(16<<16) ;
@@ -649,7 +694,9 @@ void SMSFrame_old()
 //	PSG_Init(MASTER_CLOCK, 7680);
 //	SN76489AInit(0, MASTER_CLOCK, 0);
 #ifndef CED
+#ifdef SEGA
 	SN76496Reset(0);
+#endif	
 #endif	
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
@@ -766,9 +813,10 @@ inline void update_bg(t_vdp *vdp, int index)
 		if( index<vdp->ntab+0x700)
 		{
 			UINT16 temp = *(UINT16 *)&vdp->vram[index&~1];
-			unsigned int delta = map_lut[index - vdp->ntab];
-
+			unsigned short delta = map_lut[index - vdp->ntab];
+emu_printf("delta  %d %d\n",delta,index - vdp->ntab)	;
 			UINT16 *map = 	(UINT16 *)SS_MAP+delta;
+//			UINT16 *map = 	(UINT16 *)my_map+(delta/2);
 #ifdef TWO_WORDS
 			map[0] =map[64] =map[0xE00] =map[0xE40] = name_lut[temp];//color + flip + prio
 			map[1] =map[65] =map[0xE01] =map[0xE41] = ((temp >> 8) & 0xFF) | ((temp  & 0x01) <<8) + 0x3000; //tilenum c00 1800
@@ -1490,7 +1538,9 @@ inline void vdp_data_w(INT32 offset, UINT8 data)
 //#ifdef SOUND
 //			if (sound)
 #ifndef CED	
+#ifdef SEGA
 				SN76496Write(0,data);
+#endif				
 #else
 	sn76496_w(data);
 #endif
@@ -2010,12 +2060,15 @@ inline  void make_map_lut()
 
 	for (int i = 0; i < 0x800;i++) 
 	{
-		row = i & 0x7C0;
-		column = (i>>1) & 0x1F;
+//		row = ((i) & 0x1f)<<5;//i & 0x7C0;
+//		column = (i>>1) & 0x1F;
+			row = ((i >> 6) & 0x1f)<<6;
+			column = ((i>>1) & 0x1f);		
+		
 #ifdef TWO_WORDS
-		map_lut[i] = (row+column)<<1;
+		map_lut[i] = ((row+column)<<1);
 #else
-		map_lut[i] = row+column;
+		map_lut[i] = (row+column);
 #endif
 	}
 }

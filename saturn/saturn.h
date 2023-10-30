@@ -2,7 +2,7 @@
 #define _SATURN_H_
 
 #include "syscall.h"
-#define PONY 1
+//#define PONY 1
 #define CED 1
 #include    "machine.h"
 #ifndef ACTION_REPLAY

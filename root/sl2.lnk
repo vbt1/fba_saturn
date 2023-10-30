@@ -1,7 +1,7 @@
 MEMORY 
   {
   ram  : ORIGIN = 0x6000000, l = 909312
-  ovl  : ORIGIN = 0x60dd000, l = 131072
+  ovl  : ORIGIN = 0x60da000, l = 131072
   }
 
 SECTIONS {
@@ -83,7 +83,7 @@ SECTIONS {
 		__malloc_max_ram = .;
         } > ram
 		
-  OVERLAY 0x60dd000 : NOCROSSREFS AT (0x60dd000) 
+  OVERLAY 0x60da000 : NOCROSSREFS AT (0x60da000) 
   {
 	.ovly0 { 
 		__start_ram = .;

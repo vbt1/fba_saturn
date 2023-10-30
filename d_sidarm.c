@@ -1,7 +1,7 @@
 // FB Alpha Side Arms driver module
 // Based on MAME driver by Paul Leaman
 //#define DEBUG 1
-#define PONY
+#define PONY 1
 
 #include "SEGA_INT.H"
 #include "SEGA_DMA.H"
@@ -520,9 +520,9 @@ INT32 SidearmsInit()
 
 INT32 DrvExit()
 {
-	nBurnFunction = NULL;
-	wait_vblank();
-	DrvDoReset(1);
+//	nBurnFunction = NULL;
+//	wait_vblank();
+//	DrvDoReset(1);
 //	memset(ss_map2,0x00,0x20000);
 #ifdef RAZE
 
@@ -539,6 +539,7 @@ INT32 DrvExit()
 	cleanSprites();
 
 #ifdef PONY
+	remove_pcm_stream();
 	remove_raw_pcm_buffer(pcm1);
 #endif
 	cleanBSS();
@@ -622,13 +623,15 @@ inline void SidearmsDraw()
 	if (bglayer_enable) 
 	{
 		transfer_bg_layer();
-		SPR_RunSlaveSH((PARA_RTN*)draw_bg_layer, NULL);
+		//SPR_RunSlaveSH((PARA_RTN*)draw_bg_layer, NULL);
+		draw_bg_layer();
 	}
+/*
 	else
 	{
 		SPR_RunSlaveSH((PARA_RTN*)dummy, NULL);
 	}
-
+*/
 	cleanSprites();
 
 	if (sprite_enable) {
@@ -638,7 +641,7 @@ inline void SidearmsDraw()
 		draw_sprites_region(0x0000, 0x0700, 3);
 	}
 //	if((*(volatile Uint8 *)0xfffffe11 & 0x80) != 0x80)	
-	SPR_WaitEndSlaveSH();
+//	SPR_WaitEndSlaveSH();
 }
 
 #ifdef PONY
@@ -832,7 +835,7 @@ void DrvInitSaturn()
 //		SPR_RunSlaveSH((PARA_RTN*)dummy,NULL);
 
 #ifdef PONY
-	frame_x	= 0;
+	frame_x = frame_y = 0;
 	nBurnFunction = sdrv_stm_vblank_rq;
 
 #endif

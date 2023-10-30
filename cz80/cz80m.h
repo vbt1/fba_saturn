@@ -196,7 +196,6 @@ typedef struct cz80_t
 
 	int nEI;
 	int nInterruptLatch;
-
 	unsigned char * Fetch[CZ80_FETCH_BANK];
 	unsigned char * FetchData[CZ80_FETCH_BANK];
 	unsigned char * Read[CZ80_FETCH_BANK];

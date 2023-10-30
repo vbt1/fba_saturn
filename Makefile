@@ -15,6 +15,9 @@ CCFLAGS2 = -m2 -O2 -falign-functions=4 -fpeel-loops -Wall -Wl,-fuse-ld=gold -fno
 CCOVLFLAGS = -m2 -O2 -falign-functions=4 -fpeel-loops  -Wall -Wl,-fuse-ld=gold -fno-lto -ftree-partial-pre -fweb -fno-common -fsingle-precision-constant -fno-printf-return-value -fmerge-all-constants -ffast-math --param max-inline-insns-single=500 -fms-extensions -freorder-blocks-algorithm=simple -fno-align-loops -Wno-array-bounds -Wno-missing-braces -Wextra -fno-web -Wl,-v -funit-at-a-time -Wl,--strip-all -Wl,--verbose -Wl,--allow-multiple-definition -mno-fsrra -maccumulate-outgoing-args -std=gnu99 -Wfatal-errors -fomit-frame-pointer -D_SH -DMODEL_S -c -Il:/saturn/SBL6/SEGALIB/INCLUDE
 
 OLVSCRIPT = root/sl2.lnk
+GFS = l:/saturn/SBL6/SEGALIB/GFS2/gfs2.c l:/saturn/SBL6/SEGALIB/GFS2/gfs_cdb2.c l:/saturn/SBL6/SEGALIB/GFS2/gfs_cdc2.c l:/saturn/SBL6/SEGALIB/GFS2/gfs_cdf2.c \
+l:/saturn/SBL6/SEGALIB/GFS2/gfs_trn2.c l:/saturn/SBL6/SEGALIB/GFS2/gfs_buf2.c l:/saturn/SBL6/SEGALIB/GFS2/gfs_dir2.c 
+
 
 #LDCMNFLAGS = -m2 -O2 -v --verbose -Xlinker -use-linker-plugin  -Xlinker -n -Xlinker -S -Xlinker -flto -Xlinker
 #LDCMNFLAGS2 = -m2 -Os -v --verbose -Xlinker -use-linker-plugin -Xlinker -S -Xlinker -flto -Xlinker
@@ -26,7 +29,8 @@ TARGET1  = root/sl.bin
 LDFILE	 = ./$(TARGET:.elf=.lnk)
 MPFILE     = $(TARGET:.elf=.maps)
 LDFLAGS = $(LDCMNFLAGS2) -T$(LDFILE) -Xlinker -Map -Xlinker $(MPFILE) -Xlinker -e -Xlinker 0x6004000 -nostartfiles  
-SRCS       = saturn/low.s burn.c saturn/font.c saturn/file.c saturn/saturn.c  saturn/pcmsys2.c 
+SRCS       = $(GFS) saturn/low.s burn.c saturn/font.c saturn/file.c saturn/saturn.c 
+# saturn/pcmsys2.c
 OBJS2     = saturn/strt1_vbt.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 #OBJS2     = strt/strt1_g.o strt/strt2_g.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x12.o ../../SBL6/SEGASMP/PER/SMPCLIB/per_x22.o $(SRCS:.c=.o)
 
@@ -133,7 +137,7 @@ OVLSMSCZ801               = root/d_smscz.bin
 MPOVLSMSCZ80FILE    = $(OVLSMSCZ80:.elf=.maps)
 LDOVLSMSCZ80FLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLSMSCZ80FILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLSMSCZ80         = d_sms.c psg_sms.c czet.c cz80/cz80.c
-SRCOVLSMSCZ80         = d_sms.c saturn/pcmstm.o snd/sn76496.o czet.c cz80/cz80.c
+SRCOVLSMSCZ80         = d_sms.c czet.c cz80/cz80.c
 OBJOVLSMSCZ80         = $(SRCOVLSMSCZ80:.c=.o)
 
 OVLGG                = root/d_gg.elf
@@ -141,7 +145,7 @@ OVLGG1              = root/d_gg.bin
 MPOVLGGFILE    = $(OVLGG:.elf=.maps)
 LDOVLGGFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLGG         = d_sms.c psg_sms.c 
-SRCOVLGG         = d_sms.c saturn/pcmstm.o snd/sn76496.o
+SRCOVLGG         = d_sms.c 
 OBJOVLGG         = $(SRCOVLGG:d_sms.c=gg/d_sms.o)
 
 OVLGGCZ                = root/d_ggcz.elf
@@ -149,7 +153,7 @@ OVLGGCZ1              = root/d_ggcz.bin
 MPOVLGGCZFILE    = $(OVLGGCZ:.elf=.maps)
 LDOVLGGCZFLAGS = $(LDCMNFLAGS) -T$(OLVSCRIPT) -Xlinker -Map -Xlinker $(MPOVLGGCZFILE) -Xlinker -e -Xlinker boot -nostartfiles
 #SRCOVLGGCZ         = psg_sms.c
-SRCOVLGGCZ         = saturn/pcmstm.o snd/sn76496.o
+SRCOVLGGCZ         = 
 SRCOVLGGCZ2        = d_sms.c  
 OBJOVLGGCZ         = $(SRCOVLGGCZ::.c=.o) $(SRCOVLGGCZ2:d_sms.c=ggcz/d_sms.o) 
 
@@ -291,7 +295,6 @@ OBJOVLJEDI         = $(SRCOVLJEDI:.c=.o)
 YAULMEM = libyaul/kernel/lib/memb.c libyaul/kernel/mm/free.c libyaul/kernel/mm/malloc.c libyaul/kernel/mm/slob.c
 
 LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
-../../SBL6/SEGALIB/LIB/elf/sega_gfs.a \
 ../../SBL6/SEGALIB/SPR/vbtelf4/spr_slv.o \
 ../../SBL6/SEGALIB/LIB/vbtelf4/sega_int.a \
 ../../SBL6/SEGALIB/LIB/vbtelf4/cdcrep.a 
@@ -301,22 +304,8 @@ LIBS2 =  ../../SBL6/SEGALIB/LIB/elf/sega_per.a \
 LIBSOVL =  ../../SBL6/SEGALIB/LIB/vbtelf4/sega_dma.a
 sl: $(TARGET) $(TARGET1) 
 
-drv:    $(OVERLAY)  $(OVERLAY1) $(OVLIMG)  $(OVLIMG1) \
-     $(OVLBLKTGR) $(OVLBLKTGR1) \
-	 $(OVLNEWS)  $(OVLNEWS1) $(OVLGBERET)  $(OVLGBERET1) \
-     $(OVLHIGEMARU) $(OVLHIGEMARU1) $(OVLPKUNW) $(OVLPKUNW1) \
-     $(OVLMITCH) $(OVLMITCH1) $(OVLGNG) $(OVLGNG1) \
-     $(OVLSYS1) $(OVLSYS11) $(OVLSYS1H) $(OVLSYS1H1) \
-     $(OVLSYS2) $(OVLSYS21) $(OVLPACM) $(OVLPACM1) \
-     $(OVLAPPOOO) $(OVLAPPOOO1) \
-     $(OVLZAXXON) $(OVLZAXXON1)  \
-     $(OVLSLPFGHT) $(OVLSLPFGHT1) $(OVLFREEK) $(OVLFREEK1) \
-     $(OVLSG1000) $(OVLSG10001) $(OVLBOMBJACK) $(OVLBOMBJACK1) \
-     $(OVLMSX) $(OVLMSX1) $(OVLSEGAE) $(OVLSEGAE1) \
-     $(OVLSOLOMN) $(OVLSOLOMN1) $(OVLSIDARM) $(OVLSIDARM1) \
-     $(OVLNINKD2) $(OVLNINKD21) $(OVL1943) $(OVL19431) \
-	 $(OVLTETRIS) $(OVLTETRIS1) $(OVLVIGIL) $(OVLVIGIL1) \
-     $(OVLSMS) $(OVLSMS1) $(OVLGGCZ) $(OVLGGCZ1) \
+drv: $(OVLIMG)  $(OVLIMG1) \
+      $(OVLSMS) $(OVLSMS1) $(OVLGGCZ) $(OVLGGCZ1) \
      $(OVLSMSCZ80) $(OVLSMSCZ801) $(OVLGG) $(OVLGG1)
 
 img: $(OVLIMG)  $(OVLIMG1)

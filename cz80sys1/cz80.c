@@ -349,7 +349,6 @@ INT32 Cz80_Exec(cz80_struc* CPU)
     
     INT32 nTodo = 0;
 
-
 // vbt : ori
     PC = CPU->PC;
    PCDiff = (UINT32)CPU->Fetch[(zRealPC) >> CZ80_FETCH_SFT] - (UINT32)CPU->FetchData[(zRealPC) >> CZ80_FETCH_SFT];

@@ -1,4 +1,4 @@
-//#pragma GCC optimize ("O0")
+#pragma GCC optimize ("Os")
 /******************************************************************************
  *
  * CZ80 (Z80 CPU emulator) version 0.9

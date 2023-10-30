@@ -10,7 +10,7 @@
 //#define HEAP_WALK 1
 #define GAME_BY_PAGE 16
 //#define OVLADDR  0x060A5000
-#define OVLADDR 0x060dd000
+#define OVLADDR 0x060da000
 #define OVLAEND 0x060FF000
 #define SIZEMAX  0x20000 //OVLAEND-OVLADDR //0x30000 //0x060FF800-0x060CC000
 #define LOWADDR 0x00200000
@@ -37,9 +37,10 @@ static void	UsrVblankIn( void )
 #endif
 
 #ifndef PONY
+#ifndef CED
 	PCM_MeVblIn();
-#else
 //	sdrv_stm_vblank_rq();	
+#endif	
 #endif	
 	SCL_ScrollShow();
 
@@ -1038,6 +1039,7 @@ void SPR_SetEraseData(Uint16 eraseData, Uint16 leftX, Uint16 topY,Uint16 rightX,
 
 //-------------------------------------------------------------------------------------------------------------------------------------
 #ifndef PONY	
+#ifndef CED
 void SND_Init(SndIniDt *sys_ini)
 {
 	Uint8 *adr_sys_info_tbl;
@@ -1076,10 +1078,7 @@ void SND_Init(SndIniDt *sys_ini)
     PER_SMPC_SND_ON();                          /* サウンドON                */
 
 }
-#endif
-
 //-------------------------------------------------------------------------------------------------------------------------------------
-#ifndef PONY
 Uint8 SND_ChgMap(Uint8 area_no)
  {
 /* 1994/02/24 Start */
@@ -1097,11 +1096,8 @@ Uint8 SND_ChgMap(Uint8 area_no)
     while(PEEK_W(adr_com_block + ADR_COM_DATA)) _WAIT_();
     HOST_SET_RETURN(SND_RET_SET);
 }
-#endif	
-
 #define DMA_SCU_END     0
 //-------------------------------------------------------------------------------------------------------------------------------------
-#ifndef PONY
 static void sndInit(void)
 {
 	
@@ -1127,9 +1123,7 @@ static void sndInit(void)
 	SND_Init(&snd_init);
 	SND_ChgMap(0);
 }
-#endif	
 //-------------------------------------------------------------------------------------------------------------------------------------
-#ifndef PONY
 static PcmHn createHandle(PcmCreatePara *para)
 {
 	PcmHn pcm;
@@ -1145,9 +1139,7 @@ static PcmHn createHandle(PcmCreatePara *para)
 #endif
 	return pcm;
 }
-#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-	#ifndef PONY
 SndRet SND_ChgPcm(SndPcmChgPrm *cprm)
 {
 /* 1994/02/24 Start */
@@ -1201,9 +1193,7 @@ static Uint16 ChgPan(SndPan pan)
 {
     return(((pan) < 0) ? (~(pan) + 0x10 + 1) : (pan));
 }
-#endif
 //-------------------------------------------------------------------------------------------------------------------------------------
-#ifndef PONY
 SndRet SND_StartPcm(SndPcmStartPrm *sprm, SndPcmChgPrm *cprm)
 {
     if(intrflag) return(SND_RET_NSET);
@@ -1237,6 +1227,7 @@ SndRet SND_StopPcm(SndPcmNum pcm_num)
     SET_COMMAND(COM_STOP_PCM);                  /* コマンドセット            */
     HOST_SET_RETURN(SND_RET_SET);
 }
+#endif
 #endif
 //-------------------------------------------------------------------------------------------------------------------------------------
 #define CSH_CCR			(*(volatile Uint8 * )0xfffffe92)	/*	ｷｬｯｼｭｺﾝﾄﾛｰﾙﾚｼﾞｽﾀｱﾄﾞﾚｽ	*/

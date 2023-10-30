@@ -2,6 +2,3 @@
 0.BIN=root/sl.bin
 GG=L:/PC/GAME_G~2
 SMS=L:/PC/MASTER~2
-GG/SDRV.BIN=root/SDRV.BIN
-SMS/SDRV.BIN=root/SDRV.BIN
-

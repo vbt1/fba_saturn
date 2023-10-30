@@ -1217,7 +1217,7 @@ void initLayersS(UINT8 game)
 	scfg.datatype      = SCL_CELL;
 	scfg.patnamecontrl =  0x0000;// VRAM A0 ?~I?t?Z?b?g 
 	scfg.plate_addr[0] = (Uint32)SS_MAP;
-	scfg.plate_addr[1] = (Uint32)0;
+	scfg.plate_addr[1] = (Uint32)SS_MAP;
 	scfg.plate_addr[2] = (Uint32)0;
 	scfg.plate_addr[3] = (Uint32)0;
 	SCL_SetConfig(SCL_NBG2, &scfg); // fg
@@ -1235,9 +1235,9 @@ void initLayersS(UINT8 game)
 	SCL_SetConfig(SCL_NBG1, &scfg); // bg0
 	scfg.dispenbl      = ON;
 	scfg.plate_addr[0] = (Uint32)SS_FONT; // bg1
-	scfg.plate_addr[1] = (Uint32)0;
-	scfg.plate_addr[2] = (Uint32)0;
-	scfg.plate_addr[3] = (Uint32)0;
+	scfg.plate_addr[1] = (Uint32)SS_FONT;
+	scfg.plate_addr[2] = (Uint32)SS_FONT;
+	scfg.plate_addr[3] = (Uint32)SS_FONT;
 		
 	if(!game)
 	{

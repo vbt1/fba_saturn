@@ -572,10 +572,12 @@ void DrvInitSaturn()
 
 INT32 DrvExit()
 {
+/*	
 	DrvDoReset(1);
 	
 	NamcoSoundExit();
 	CZetExit2();
+*/	
 /*	
 	NamcoContext = NULL;
 	CZ80Context = DrvZ80ROM = NULL;
